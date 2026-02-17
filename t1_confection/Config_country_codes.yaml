@@ -1,0 +1,252 @@
+# Config_country_codes.yaml
+# Single source of truth for country codes, names, and technology mappings
+
+# ============================================================
+# COUNTRY CONFIGURATION (Single Source of Truth)
+# ============================================================
+# Each country: iso3 key, english_name, olade_name (Spanish, for OLADE & Shares Excel files)
+country_data:
+  ARG:
+    english_name: "Argentina"
+    olade_name: "Argentina"
+  BOL:
+    english_name: "Bolivia"
+    olade_name: "Bolivia"
+  BRA:
+    english_name: "Brazil"
+    olade_name: "Brasil"
+  BRB:
+    english_name: "Barbados"
+    olade_name: "Barbados"
+  CHL:
+    english_name: "Chile"
+    olade_name: "Chile"
+  COL:
+    english_name: "Colombia"
+    olade_name: "Colombia"
+  CRI:
+    english_name: "Costa Rica"
+    olade_name: "Costa Rica"
+  DOM:
+    english_name: "Dominican Republic"
+    olade_name: "República Dominicana"
+  ECU:
+    english_name: "Ecuador"
+    olade_name: "Ecuador"
+  GTM:
+    english_name: "Guatemala"
+    olade_name: "Guatemala"
+  HND:
+    english_name: "Honduras"
+    olade_name: "Honduras"
+  HTI:
+    english_name: "Haiti"
+    olade_name: "Haiti"
+  MEX:
+    english_name: "Mexico"
+    olade_name: "México"
+  NIC:
+    english_name: "Nicaragua"
+    olade_name: "Nicaragua"
+  PAN:
+    english_name: "Panama"
+    olade_name: "Panamá"
+  PER:
+    english_name: "Peru"
+    olade_name: "Perú"
+  PRY:
+    english_name: "Paraguay"
+    olade_name: "Paraguay"
+  SLV:
+    english_name: "El Salvador"
+    olade_name: "El Salvador"
+  URY:
+    english_name: "Uruguay"
+    olade_name: "Uruguay"
+  NCC:
+    english_name: "NCC"
+    olade_name: "NCC"
+
+# Special entries (not model countries, used in iso_country_map)
+special_entries:
+  INT: "International Markets"
+
+# ============================================================
+# MODEL SETTINGS
+# ============================================================
+
+# Reference year for the model (first year of the model horizon)
+first_year: 2023
+
+# Whether to add missing countries' demand data from OLADE generation file
+# When true, A1 reads OLADE Excel to fill in countries not present in the input CSVs
+add_missing_countries_from_olade: false
+
+# ============================================================
+# TECHNOLOGY CONFIGURATION
+# ============================================================
+
+# OLADE technology name -> model 3-char code
+olade_tech_mapping:
+  Nuclear: URN
+  "Gas natural": NGS
+  "Carbón mineral": COA
+  Hidro: HYD
+  Geotermia: GEO
+  "Eólica": WON
+  Solar: SPV
+  # BIO is special: sum of Biogás + Biomasa sólida + Biocombustibles líquidos
+
+# Model tech code -> description
+code_to_energy:
+  MIN: "Mining tradable commodity"
+  RNW: "Mining non-tradable (renewable) commodity"
+  BIO: "Biomass"
+  GAS: "Natural Gas"
+  COA: "Coal"
+  GEO: "Geothermal"
+  HYD: "Hydroelectric"
+  OIL: "Oil"
+  OTH: "Other"
+  PET: "Petroleum"
+  SPV: "Solar Photovoltaic"
+  URN: "Nuclear"
+  WAV: "Wave"
+  WAS: "Waste"
+  WOF: "Offshore Wind"
+  WON: "Onshore Wind"
+  CCG: "Combined Cycle Natural Gas"
+  COG: "Cogeneration"
+  CSP: "Concentrated Solar Power"
+  NGS: "Natural Gas"
+  OCG: "Open Cycle Natural Gas"
+  TRN: "Transmission technology"
+  LDS: "Long duration storage"
+  SDS: "Short duration storage"
+  PWR: "Power generator"
+  ELC: "Electricity"
+  BCK: "Backstop"
+  CCS: "Carbon Capture Storage with Coal"
+
+# Renewable fuel codes (used to classify technologies)
+renewable_fuels:
+  - BIO
+  - HYD
+  - CSP
+  - GEO
+  - SPV
+  - WAS
+  - WON
+  - WOF
+
+# Shares technology name -> model tech code (for Shares_Power_Generation_Technologies.xlsx)
+shares_tech_mapping:
+  Biomasa: BIO
+  "Búnker": OIL
+  "Carbón": COA
+  "Diésel": PET
+  "Eólica": WON
+  "Fuel oil": OIL
+  "Gas natural": NGS
+  "Geotérmica": GEO
+  "Hidroeléctrica": HYD
+  Nuclear: URN
+  "Solar (GD)": SPV
+  "Solar (gran escala)": SPV
+
+# ============================================================
+# COUNTRY LIST & TRANSMISSION TECHNOLOGY PARAMETERS
+# ============================================================
+
+# List of country codes (used by A2_AddTx for region pairs)
+countries:
+  - "BRB"  # Barbados (ISO-3166 standard code)
+  - "BOL"
+  - "CHL"
+  - "COL"
+  - "CRI"
+  - "ECU"
+  - "SLV"
+  - "GTM"
+  - "HTI"
+  - "HND"
+  - "NIC"
+  - "PAN"
+  - "PRY"
+  - "PER"
+  - "DOM"
+  - "URY"
+  - "BRA"
+  - "MEX"
+  - "ARG"
+
+# ============================================================
+# TEMPLATE GENERATION (for Z_generate_country_template.py)
+# ============================================================
+# Configure here and just run: python Z_generate_country_template.py
+#
+# new_country:          3-letter code for the new country
+# reference_country:    existing country to clone data from
+# region:               region code for the new country (default: XX)
+# interconnections:     list of neighbor codes (3-letter = region XX, 5-letter = explicit region)
+#                       leave empty for zero interconnections
+#                       remove the key entirely for legacy mode (copies reference topology)
+template_generation:
+  new_country: NCC
+  reference_country: ARG
+  region: XX
+  interconnections:
+
+
+# Technology parameters
+# Renewable transmission technologies
+#Existing renewable transmission technologies
+RNWTRN:
+  CapacityToActivityUnit: 31.536
+  OperationalLife: 20
+  CapitalCost: 100
+  FixedCost: 4
+  ResidualCapacity: 5
+  TotalAnnualMaxCapacityInvestment: 5
+#Repowered renewable transmission technologies
+RNWRPO:
+  CapacityToActivityUnit: 31.536
+  OperationalLife: 20
+  CapitalCost: 100
+  FixedCost: 4
+  ResidualCapacity: 5
+  TotalAnnualMaxCapacityInvestment: 5
+#New lines of renewable transmission technologies
+RNWNLI:
+  CapacityToActivityUnit: 31.536
+  OperationalLife: 20
+  CapitalCost: 100
+  FixedCost: 4
+  ResidualCapacity: 5
+  TotalAnnualMaxCapacityInvestment: 5
+
+# Non-renewable transmission technologies
+#Existing non-renewable transmission technologies
+PWRTRN:
+  CapacityToActivityUnit: 31.536
+  OperationalLife: 20
+  CapitalCost: 100
+  FixedCost: 4
+  ResidualCapacity: 5
+  TotalAnnualMaxCapacityInvestment: 5
+#Repowered non-renewable transmission technologies
+TRNRPO:
+  CapacityToActivityUnit: 31.536
+  OperationalLife: 20
+  CapitalCost: 100
+  FixedCost: 4
+  ResidualCapacity: 5
+  TotalAnnualMaxCapacityInvestment: 5
+#New lines of non-renewable transmission technologies
+TRNNLI:
+  CapacityToActivityUnit: 31.536
+  OperationalLife: 20
+  CapitalCost: 100
+  FixedCost: 4
+  ResidualCapacity: 5
+  TotalAnnualMaxCapacityInvestment: 5

@@ -1,0 +1,61 @@
+# folders
+t1_confection/A2_Output_Params
+t1_confection/Executables
+
+# Excel files
+t1_confection/_GDP_Ref.xlsx
+t1_confection/A2_Structure_Lists.xlsx
+t1_confection/requirements
+t1_confection/COSTS_ENERGY_BE_Anualized.csv
+t1_confection/Discounted_Rate.xlsx
+t1_confection/RELAC_TX_Combined_Inputs_Outputs.csv
+t1_confection/RELAC_TX_Inputs.csv
+t1_confection/RELAC_TX_Outputs.csv
+t1_confection/RELAC_TX_Combined_Inputs_Outputs_*.csv
+t1_confection/RELAC_TX_Inputs_*.csv
+t1_confection/RELAC_TX_Outputs_*.csv
+
+# Python scripts
+t1_confection/setup_utils.py
+t1_confection/maxcapacity.py
+concatenate_files/test_inputs.py
+
+# Pickle files
+t1_confection/Blend_Shares_0.pickle
+
+# figs
+RELAC_cambiarporfecha.twbx
+workflow.pptx
+
+# Tableau files
+*.twbx
+
+# logs
+t1_confection/cplex.log
+t1_confection/clone1.log
+t1_confection/clone2.log
+t1_confection/gurobi.log
+t1_confection/secondary_techs_update_log_*.txt
+t1_confection/A1_Outputs/secondary_techs_update_log_*.txt
+
+# All files containing "log", "debug", or "backup" in their name
+*log*
+*Log*
+*LOG*
+*debug*
+*Debug*
+*DEBUG*
+*backup*
+*Backup*
+*BACKUP*
+
+# guides
+RELAC_TX_Guia_instalacion_ejecucion.pdf
+
+# Secondary Techs Editor - temporary files
+t1_confection/Secondary_Techs_Editor.xlsx
+t1_confection/~$Secondary_Techs_Editor.xlsx
+t1_confection/A1_Outputs/*/A-O_Parametrization_backup_*.xlsx
+t1_confection/A1_Outputs/*/A-O_Demand_backup_*.xlsx
+t1_confection/A1_Outputs/*/A-O_AR_Model_Base_backup_*.xlsx
+t1_confection/A1_Outputs/*/A-O_AR_Projections_backup_*.xlsx

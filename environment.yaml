@@ -1,0 +1,20 @@
+name: OG-MOMF-env
+channels:
+  - conda-forge
+dependencies:
+  # Core
+  - python=3.10
+  - git>=2.40
+
+  # Data stack
+  - pandas>=2.1
+  - numpy>=1.26
+  - openpyxl>=3.1
+  - pyyaml>=6.0
+  - xlsxwriter>=3.2.4   # por conda-forge, estable en Windows
+
+  # Pip (para DVC y otoole)
+  - pip
+  - pip:
+      - dvc
+      - otoole>=1.1.1    # instalamos otoole vía pip (suele ser lo más fiable en Win)

@@ -1,0 +1,65 @@
+# Region Consolidation Configuration
+# This file controls the consolidation of multiple regions into a unified region
+# for countries that have sub-regional granularity in the model.
+
+# Enable/disable region consolidation globally
+enabled: true
+
+# Countries with multiple regions to consolidate
+# Each country entry specifies:
+#   - regions: list of region codes to consolidate
+#   - unified_region: the code to use for the consolidated region
+countries:
+  BRA:
+    regions: ["CN", "NW", "NE", "CW", "SO", "SE", "WE"]
+    unified_region: "XX"
+  # Future example for Mexico:
+  # MEX:
+  #   regions: ["NO", "CE", "SU"]
+  #   unified_region: "XX"
+
+# Aggregation rules by parameter
+# - avg: parameters where values should be averaged across regions
+# - sum: parameters where values should be summed across regions
+# - disabled: parameters that are skipped (no data or not applicable)
+aggregation_rules:
+  avg:
+    - AvailabilityFactor
+    - CapacityFactor
+    - CapacityToActivityUnit
+    - CapitalCost
+    - CapitalCostStorage
+    - DiscountRateStorage
+    - EmissionActivityRatio
+    - FixedCost
+    - InputActivityRatio
+    - MinStorageCharge
+    - OperationalLife
+    - OperationalLifeStorage
+    - OutputActivityRatio
+    - ReserveMarginTagFuel
+    - ReserveMarginTagTechnology
+    - SpecifiedDemandProfile
+    - StorageMaxChargeRate
+    - StorageMaxDischargeRate
+    - TechnologyFromStorage
+    - TechnologyToStorage
+    - VariableCost
+
+  sum:
+    - ResidualCapacity
+    - ResidualStorageCapacity
+    - StorageLevelStart
+    - SpecifiedAnnualDemand
+    - TotalAnnualMaxCapacity
+    - TotalAnnualMaxCapacityInvestment
+    - TotalAnnualMinCapacityInvestment
+    - TotalTechnologyAnnualActivityLowerLimit
+    - TotalTechnologyAnnualActivityUpperLimit
+
+  disabled:
+    - CapacityOfOneTechnologyUnit
+    - RETagTechnology
+    - TotalAnnualMinCapacity
+    - TotalTechnologyModelPeriodActivityLowerLimit
+    - TotalTechnologyModelPeriodActivityUpperLimit

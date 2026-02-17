@@ -1,0 +1,97 @@
+schema: '2.0'
+stages:
+  executing:
+    cmd: python -u t1_confection/B2_Executing_OG_Model.py
+    deps:
+    - path: concatenate_files/concatenate_relac.py
+      hash: md5
+      md5: 73fe184e6cb2f8cfe57d85e740c87cf9
+      size: 4989
+    - path: t1_confection/A2_Output_Params/
+      hash: md5
+      md5: 0d44ef556ccf815b0961dcb2b2c6d4e4.dir
+      size: 37133291
+      nfiles: 172
+    - path: t1_confection/Config_MOMF_T1_AB.yaml
+      hash: md5
+      md5: 0dc4ccc7fbab87e3ec3c3f0550d9be9d
+      size: 1887
+    - path: t1_confection/Miscellaneous/
+      hash: md5
+      md5: 324c0f302e8f20dd6a901e9bae5e2db5.dir
+      size: 267094
+      nfiles: 72
+    - path: t1_confection/Z_AUX_capital_annualization_script.py
+      hash: md5
+      md5: dd28a97035414d458dc4d5f16f8d83e6
+      size: 27123
+    - path: t1_confection/osemosys_fast_preprocessed.txt
+      hash: md5
+      md5: 35277c7325a26e424661d9b86d95e4b2
+      size: 94156
+    outs:
+    - path: t1_confection/A2_Outputs_Params_otoole/
+      hash: md5
+      md5: 4a30530bf5c111f76754e77d5ce0ce1b.dir
+      size: 4748266
+      nfiles: 64
+    - path: t1_confection/Executables/
+      hash: md5
+      md5: 9cb2d7323cc985a6622c18735b253c64.dir
+      size: 128820721
+      nfiles: 6
+    - path: t1_confection/RELAC_TX_Combined_Inputs_Outputs.csv
+      hash: md5
+      md5: d0478f072bcb162119d7dd41d0f9224a
+      size: 168178869
+    - path: t1_confection/RELAC_TX_Combined_Inputs_Outputs_2026-02-10.csv
+      hash: md5
+      md5: d0478f072bcb162119d7dd41d0f9224a
+      size: 168178869
+    - path: t1_confection/RELAC_TX_Inputs.csv
+      hash: md5
+      md5: 2f9c74d09d3e55c3e655739074aedaca
+      size: 23886543
+    - path: t1_confection/RELAC_TX_Inputs_2026-02-10.csv
+      hash: md5
+      md5: 2f9c74d09d3e55c3e655739074aedaca
+      size: 23886543
+    - path: t1_confection/RELAC_TX_Outputs.csv
+      hash: md5
+      md5: 29a4107de2ffd99ea6220c178db087da
+      size: 101642187
+    - path: t1_confection/RELAC_TX_Outputs_2026-02-10.csv
+      hash: md5
+      md5: 29a4107de2ffd99ea6220c178db087da
+      size: 101642187
+  preprocess:
+    cmd: python -u t1_confection/B1_Run_Compiler.py
+    deps:
+    - path: t1_confection/A1_Outputs/
+      hash: md5
+      md5: 3f03ea236d6c9d72f3d3dbf7c1ad0b1d.dir
+      size: 49385139
+      nfiles: 221
+    - path: t1_confection/A2_Extra_Inputs/
+      hash: md5
+      md5: d7f3cffc58ff33d405439d6acc80fe1e.dir
+      size: 710846
+      nfiles: 34
+    - path: t1_confection/B1_Compiler.py
+      hash: md5
+      md5: 7e85a7cdbcf7c09934ef522ab47ca6c6
+      size: 96135
+    - path: t1_confection/Config_MOMF_T1_A.yaml
+      hash: md5
+      md5: c190c951cd77151ac3006d2b5f394d07
+      size: 10830
+    outs:
+    - path: t1_confection/A2_Output_Params/
+      hash: md5
+      md5: 0d44ef556ccf815b0961dcb2b2c6d4e4.dir
+      size: 37133291
+      nfiles: 172
+    - path: t1_confection/A2_Structure_Lists.xlsx
+      hash: md5
+      md5: 2380d34c99262cd405ca175f3710b637
+      size: 18337

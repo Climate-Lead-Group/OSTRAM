@@ -1,0 +1,302 @@
+"""Pre-process OSeMOSYS data file to reduce matrix generation time
+
+This script pre-processes an OSeMOSYS input data file by adding lines that list
+commodity-technology-mode combinations that data is provided for. Pre-processing
+a data file before starting a model run significantly reduces the time taken
+for matrix generation.
+
+ Pre-processing consists of the following steps:
+
+1. Reading the ``InputActivityRatio`` and ``OutputActivityRatio`` sections of the
+data file to identify commodity-technology-mode combinations that data has been
+explicitly provided for.
+2. Adding a set entry for each commodity that lists all technology-mode combinations
+that are associated with it.
+3. Values from the ``InputActivityRatios`` and ``OutputActivityRatios`` sections are
+added to the sets ``MODExTECHNOLOGYperFUELin`` and ``MODExTECHNOLOGYperFUELout`` respectively.
+4. Values from the ``TechnologyToStorage`` and ``TechnologyFromStorage`` sections
+are added to the sets ``MODExTECHNOLOGYperSTORAGEto`` and ``MODExTECHNOLOGYperSTORAGEfrom`` respectively.
+5. All values for technology-mode combinations are added to the sets
+``MODEperTECHNOLOGY``.
+
+ In order to start a model run with a pre-processed data file, the following sets
+need to be introduced to its associated OSeMOSYS model file::
+
+    set MODEperTECHNOLOGY{TECHNOLOGY} within MODE_OF_OPERATION;
+    set MODExTECHNOLOGYperFUELout{COMMODITY} within MODE_OF_OPERATION cross TECHNOLOGY;
+    set MODExTECHNOLOGYperFUELin{COMMODITY} within MODE_OF_OPERATION cross TECHNOLOGY;
+    set MODExTECHNOLOGYperSTORAGEto{STORAGE} within MODE_OF_OPERATION cross TECHNOLOGY;
+    set MODExTECHNOLOGYperSTORAGEfrom{STORAGE} within MODE_OF_OPERATION cross TECHNOLOGY;
+
+"""
+
+import sys
+from collections import defaultdict
+
+
+def main(data_infile, data_outfile):
+
+    lines = []
+
+    with open(data_infile, "r") as f1:
+        for line in f1:
+            if not line.startswith(("set MODEper", "set MODEx", "end;")):
+                lines.append(line)
+
+    with open(data_outfile, "w") as f2:
+        f2.writelines(lines)
+
+    parsing = False
+    parsing_year = False
+    parsing_tech = False
+    parsing_fuel = False
+    parsing_mode = False
+    parsing_storage = False
+    parsing_emission = False
+
+    year_list = []
+    fuel_list = []
+    tech_list = []
+    storage_list = []
+    mode_list = []
+    emission_list = []
+
+    data_all = []
+    data_out = []
+    data_inp = []
+    output_table = []
+    storage_to = []
+    storage_from = []
+    emission_table = []
+
+    params_to_check = [
+        "OutputActivityRatio",
+        "InputActivityRatio",
+        "TechnologyToStorage",
+        "TechnologyFromStorage",
+        "EmissionActivityRatio",
+    ]
+
+    with open(data_infile, "r") as f:
+        for line in f:
+            if parsing_year:
+                year_list += [line.strip()] if line.strip() not in ["", ";"] else []
+            if parsing_fuel:
+                fuel_list += [line.strip()] if line.strip() not in ["", ";"] else []
+            if parsing_tech:
+                tech_list += [line.strip()] if line.strip() not in ["", ";"] else []
+            if parsing_storage:
+                storage_list += [line.strip()] if line.strip() not in ["", ";"] else []
+            if parsing_mode:
+                mode_list += [line.strip()] if line.strip() not in ["", ";"] else []
+            if parsing_emission:
+                emission_list += [line.strip()] if line.strip() not in ["", ";"] else []
+
+            if line.startswith("set YEAR"):
+                if len(line.split("=")[1]) > 1:
+                    year_list = line.split(" ")[3:-1]
+                else:
+                    parsing_year = True
+            if line.startswith(
+                "set COMMODITY"
+            ):  # Extracts list of COMMODITIES from data file. Some models use FUEL instead.
+                if len(line.split("=")[1]) > 1:
+                    fuel_list = line.split(" ")[3:-1]
+                else:
+                    parsing_fuel = True
+            if line.startswith(
+                "set FUEL"
+            ):  # Extracts list of FUELS from data file. Some models use COMMODITIES instead.
+                if len(line.split("=")[1]) > 1:
+                    fuel_list = line.split(" ")[3:-1]
+                else:
+                    parsing_fuel = True
+            if line.startswith("set TECHNOLOGY"):
+                if len(line.split("=")[1]) > 1:
+                    tech_list = line.split(" ")[3:-1]
+                else:
+                    parsing_tech = True
+            if line.startswith("set STORAGE"):
+                if len(line.split("=")[1]) > 1:
+                    storage_list = line.split(" ")[3:-1]
+                else:
+                    parsing_storage = True
+            if line.startswith("set MODE_OF_OPERATION"):
+                if len(line.split("=")[1]) > 1:
+                    mode_list = line.split(" ")[3:-1]
+                else:
+                    parsing_mode = True
+            if line.startswith("set EMISSION"):
+                if len(line.split("=")[1]) > 1:
+                    emission_list = line.split(" ")[3:-1]
+                else:
+                    parsing_emission = True
+
+            if line.startswith(";"):
+                parsing_year = False
+                parsing_tech = False
+                parsing_fuel = False
+                parsing_mode = False
+                parsing_storage = False
+                parsing_emission = False
+
+    with open(data_infile, "r") as f:
+        for line in f:
+            details = line.split(" ")
+            if line.startswith(";"):
+                parsing = False
+            if parsing:
+                if len(details) > 1:
+                    if param_current == "OutputActivityRatio":
+                        tech = details[1].strip()
+                        fuel = details[2].strip()
+                        mode = details[3].strip()
+                        year = details[4].strip()
+                        value = details[5].strip()
+
+                        if float(value) != 0.0:
+                            data_out.append(tuple([fuel, tech, mode]))
+                            output_table.append(tuple([tech, fuel, mode, year, value]))
+                            data_all.append(tuple([tech, mode]))
+
+                    if param_current == "InputActivityRatio":
+                        tech = details[1].strip()
+                        fuel = details[2].strip()
+                        mode = details[3].strip()
+                        value = details[5].strip()
+                        if float(value) != 0.0:
+                            data_inp.append(tuple([fuel, tech, mode]))
+                            data_all.append(tuple([tech, mode]))
+
+                    if param_current == "TechnologyToStorage":
+                        tech = details[1].strip()
+                        storage = details[2].strip()
+                        mode = details[3].strip()
+                        value = details[4].strip()
+                        if float(value) > 0.0:
+                            storage_to.append(tuple([storage, tech, mode]))
+                            data_all.append(tuple([storage, mode]))
+
+                    if param_current == "TechnologyFromStorage":
+                        tech = details[1].strip()
+                        storage = details[2].strip()
+                        mode = details[3].strip()
+                        value = details[4].strip()
+                        if float(value) > 0.0:
+                            storage_from.append(tuple([storage, tech, mode]))
+                            data_all.append(tuple([storage, mode]))
+
+                    if param_current == "EmissionActivityRatio":
+                        tech = details[1].strip()
+                        emission = details[2].strip()
+                        mode = details[3].strip()
+                        value = details[5].strip()
+                        if float(value) != 0.0:
+                            emission_table.append(tuple([emission, tech, mode]))
+                            data_all.append(tuple([tech, mode]))
+
+            if any(param in line for param in params_to_check):
+                param_current = details[-2]
+                parsing = True
+
+    data_out = sorted(list(set(data_out)))  # Sort for deterministic order
+    data_inp = sorted(list(set(data_inp)))  # Sort for deterministic order
+    data_all = sorted(list(set(data_all)))  # Sort for deterministic order
+    storage_to = sorted(list(set(storage_to)))  # Sort for deterministic order
+    storage_from = sorted(list(set(storage_from)))  # Sort for deterministic order
+    emission_table = sorted(list(set(emission_table)))  # Sort for deterministic order
+
+    dict_out = defaultdict(list)
+    dict_inp = defaultdict(list)
+    dict_all = defaultdict(list)
+    dict_stt = defaultdict(list)
+    dict_stf = defaultdict(list)
+    dict_emi = defaultdict(list)
+
+    for fuel, tech, mode in data_out:
+        dict_out[fuel].append((mode, tech))
+
+    for fuel, tech, mode in data_inp:
+        dict_inp[fuel].append((mode, tech))
+
+    for tech, mode in data_all:
+        if mode not in dict_all[tech]:
+            dict_all[tech].append(mode)
+
+    for storage, tech, mode in storage_to:
+        dict_stt[storage].append((mode, tech))
+
+    for storage, tech, mode in storage_from:
+        dict_stf[storage].append((mode, tech))
+
+    for emission, tech, mode in emission_table:
+        dict_emi[emission].append((mode, tech))
+
+    def file_output_function(if_dict, str_dict, set_list, set_name, extra_char):
+        for each in set_list:
+            if each in if_dict.keys():
+                line = set_name + str(each) + "]:=" + str(str_dict[each]) + extra_char
+                if set_list == tech_list:
+                    line = (
+                        line.replace(",", "")
+                        .replace(":=[", ":= ")
+                        .replace("]*", "")
+                        .replace("'", "")
+                    )
+                else:
+                    line = (
+                        line.replace("),", ")")
+                        .replace("[(", " (")
+                        .replace(")]", ")")
+                        .replace("'", "")
+                    )
+            else:
+                line = set_name + str(each) + "]:="
+
+            file_out.write(line + ";" + "\n")
+
+    # Append lines at the end of the data file
+    with open(data_outfile, "w") as file_out:  # 'a' to open in 'append' mode
+
+        file_out.writelines(lines)
+
+        file_output_function(
+            dict_out, dict_out, fuel_list, "set MODExTECHNOLOGYperFUELout[", ""
+        )
+        file_output_function(
+            dict_inp, dict_inp, fuel_list, "set MODExTECHNOLOGYperFUELin[", ""
+        )
+        file_output_function(
+            dict_all, dict_all, tech_list, "set MODEperTECHNOLOGY[", "*"
+        )
+
+        if len(storage_list) > 0:
+            file_output_function(
+                dict_stt, dict_stt, storage_list, "set MODExTECHNOLOGYperSTORAGEto[", ""
+            )
+            file_output_function(
+                dict_stf,
+                dict_stf,
+                storage_list,
+                "set MODExTECHNOLOGYperSTORAGEfrom[",
+                "",
+            )
+
+        if len(emission_list) > 0:
+            file_output_function(
+                dict_emi, dict_emi, emission_list, "set MODExTECHNOLOGYperEMISSION[", ""
+            )
+
+        file_out.write("end;")
+
+
+if __name__ == "__main__":
+
+    if len(sys.argv) != 3:
+        msg = "Usage: python {} <infile> <outfile>"
+        print(msg.format(sys.argv[0]))
+        sys.exit(1)
+    else:
+        data_infile = sys.argv[1]
+        data_outfile = sys.argv[2]
+        main(data_infile, data_outfile)
