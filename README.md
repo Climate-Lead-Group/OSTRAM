@@ -1,100 +1,100 @@
-# RELAC TX - Energy System Optimization Model
+# OSTRAM - OSeMOSYS Transmission Model
 
-Sistema de modelado de optimización energética basado en OSeMOSYS para América Latina y el Caribe.
+Energy system optimization modeling based on OSeMOSYS.
 
-## Descripción
+## Description
 
-Este proyecto implementa un pipeline automatizado para la ejecución de modelos de optimización energética utilizando OSeMOSYS. El sistema soporta múltiples solvers (GLPK, CBC, CPLEX, Gurobi) y está diseñado para garantizar reproducibilidad completa de los resultados.
+This project implements an automated pipeline for running energy optimization models using OSeMOSYS. The system supports multiple solvers (GLPK, CBC, CPLEX, Gurobi) and is designed to ensure full reproducibility of results.
 
-## Características Principales
+## Key Features
 
-- **Pipeline Automatizado**: Gestión completa del flujo de trabajo con DVC
-- **Múltiples Solvers**: Soporte para GLPK, CBC, CPLEX y Gurobi
-- **Reproducibilidad Garantizada**: Seeds configurables para resultados determinísticos
-- **Medición de Rendimiento**: Timer integrado para monitorear tiempos de ejecución
-- **Gestión Automática de Entorno**: Creación y actualización automática del entorno Conda
+- **Automated Pipeline**: Complete workflow management with DVC
+- **Multiple Solvers**: Support for GLPK, CBC, CPLEX, and Gurobi
+- **Guaranteed Reproducibility**: Configurable seeds for deterministic results
+- **Performance Monitoring**: Built-in timer for tracking execution times
+- **Automatic Environment Management**: Automatic creation and update of the Conda environment
 
-## Requisitos del Sistema
+## System Requirements
 
-- Windows 10 o superior
-- Git para Windows
-- Miniconda o Anaconda
-- Al menos un solver: GLPK, CBC, CPLEX o Gurobi
+- Windows 10 or higher
+- Git for Windows
+- Miniconda or Anaconda
+- At least one solver: GLPK, CBC, CPLEX, or Gurobi
 
-## Inicio Rápido
+## Quick Start
 
 ```bash
-# Clonar el repositorio
-git clone https://github.com/clg-admin/relac_tx.git
-cd relac_tx
+# Clone the repository
+git clone https://github.com/Climate-Lead-Group/OSTRAM.git
+cd OSTRAM
 
-# Ejecutar el modelo (desde Anaconda Prompt)
+# Run the model (from Anaconda Prompt)
 python run.py
 ```
 
-El script `run.py` gestiona automáticamente:
-- Creación del entorno Conda
-- Instalación de dependencias
-- Ejecución del pipeline completo
-- Generación de archivos de salida
+The `run.py` script automatically handles:
+- Conda environment creation
+- Dependency installation
+- Full pipeline execution
+- Output file generation
 
-## Documentación
+## Documentation
 
-Para instrucciones detalladas de instalación y configuración, consulta la guía completa:
-- **Guía de Instalación y Ejecución**: `RELAC_TX_Guia_instalacion_ejecucion.md`
+For detailed installation and configuration instructions, see the full guide:
+- **Installation and Execution Guide**: `RELAC_TX_Guia_instalacion_ejecucion.md`
 
-## Estructura de Archivos de Salida
+## Output File Structure
 
-Los resultados se generan en `t1_confection/` con los siguientes archivos:
-- `RELAC_TX_Inputs.csv` / `RELAC_TX_Inputs_YYYY-MM-DD.csv`
-- `RELAC_TX_Outputs.csv` / `RELAC_TX_Outputs_YYYY-MM-DD.csv`
-- `RELAC_TX_Combined_Inputs_Outputs.csv` / `RELAC_TX_Combined_Inputs_Outputs_YYYY-MM-DD.csv`
+Results are generated in `t1_confection/` with the following files:
+- `OSTRAM_Inputs.csv` / `OSTRAM_Inputs_YYYY-MM-DD.csv`
+- `OSTRAM_Outputs.csv` / `OSTRAM_Outputs_YYYY-MM-DD.csv`
+- `OSTRAM_Combined_Inputs_Outputs.csv` / `OSTRAM_Combined_Inputs_Outputs_YYYY-MM-DD.csv`
 
-Los archivos con fecha mantienen un histórico completo de ejecuciones.
+Date-stamped files maintain a complete execution history.
 
-## Configuración
+## Configuration
 
-El archivo principal de configuración es `t1_confection/MOMF_T1_AB.yaml`, donde puedes ajustar:
-- Solver a utilizar (`solver: 'cplex'`)
-- Número de threads para solvers comerciales
-- Seeds para reproducibilidad
-- Anualización de capital (`annualize_capital`)
+The main configuration file is `t1_confection/MOMF_T1_AB.yaml`, where you can adjust:
+- Solver to use (`solver: 'cplex'`)
+- Number of threads for commercial solvers
+- Seeds for reproducibility
+- Capital annualization (`annualize_capital`)
 
-## Matriz Tecnología-País
+## Technology-Country Matrix
 
-El sistema incluye una matriz configurable que permite especificar qué combinaciones de tecnología y país deben procesarse, además de unificar las tecnologías CCG y OCG en NGS.
+The system includes a configurable matrix that allows you to specify which technology-country combinations should be processed, as well as unify CCG and OCG technologies into NGS.
 
-### Uso
+### Usage
 
-1. **Generar la matriz**:
+1. **Generate the matrix**:
    ```bash
    python t1_confection/A0_generate_tech_country_matrix.py
    ```
-   Esto crea el archivo `Tech_Country_Matrix.xlsx` con las siguientes hojas:
-   - **Matrix**: Matriz YES/NO para cada combinación tecnología-país
-   - **NGS_Unification**: Configuración para unificar CCG + OCG → NGS
-   - **Aggregation_Rules**: Reglas de agregación (avg/sum/disabled)
-   - **Tech_Reference**: Descripción de tecnologías
-   - **Country_Reference**: Descripción de países
+   This creates the file `Tech_Country_Matrix.xlsx` with the following sheets:
+   - **Matrix**: YES/NO matrix for each technology-country combination
+   - **NGS_Unification**: Configuration for unifying CCG + OCG → NGS
+   - **Aggregation_Rules**: Aggregation rules (avg/sum/disabled)
+   - **Tech_Reference**: Technology descriptions
+   - **Country_Reference**: Country descriptions
 
-2. **Configurar la matriz**:
-   - En la hoja **Matrix**: Cambiar YES/NO para habilitar/deshabilitar combinaciones
-   - En la hoja **NGS_Unification**: Cambiar a YES/NO para habilitar la unificación CCG+OCG→NGS
+2. **Configure the matrix**:
+   - In the **Matrix** sheet: Change YES/NO to enable/disable combinations
+   - In the **NGS_Unification** sheet: Change to YES/NO to enable CCG+OCG→NGS unification
 
-3. **Ejecutar el preprocesamiento**:
+3. **Run preprocessing**:
    ```bash
    python t1_confection/A1_Pre_processing_OG_csvs.py
    ```
-   El script aplicará automáticamente:
-   - Filtrado por matriz tecnología-país
-   - Unificación NGS (si está habilitada)
-   - Consolidación de regiones
-   - Limpieza de tecnologías PWR
+   The script will automatically apply:
+   - Technology-country matrix filtering
+   - NGS unification (if enabled)
+   - Region consolidation
+   - PWR technology cleanup
 
-### Tecnologías en la Matriz
+### Technologies in the Matrix
 
-| Código | Descripción |
-|--------|-------------|
+| Code | Description |
+|------|-------------|
 | BCK | Backstop |
 | BIO | Biomass |
 | CCS | Carbon Capture Storage with Coal |
@@ -117,165 +117,165 @@ El sistema incluye una matriz configurable que permite especificar qué combinac
 | WOF | Offshore Wind |
 | WON | Onshore Wind |
 
-**Nota:** Los prefijos estructurales (ELC, MIN, PWR, RNW, TRN) no se incluyen en la matriz porque se combinan con los códigos anteriores para formar nombres de tecnología completos (ej: PWRBIOARGXX, MINCOAARGXX).
+**Note:** Structural prefixes (ELC, MIN, PWR, RNW, TRN) are not included in the matrix because they are combined with the codes above to form full technology names (e.g., PWRBIOARGXX, MINCOAARGXX).
 
-## Editor de Tecnologías Secundarias
+## Secondary Technologies Editor
 
-El proyecto incluye un sistema para facilitar la edición de tecnologías secundarias (Secondary Techs) en los archivos de parametrización, con soporte para integración automática de datos OLADE.
+The project includes a system to facilitate editing secondary technologies (Secondary Techs) in parameterization files, with support for automatic OLADE data integration.
 
-### Uso del Editor
+### Editor Usage
 
-1. **Generar plantilla de edición**:
+1. **Generate the editor template**:
    ```bash
    python t1_confection/D1_generate_editor_template.py
    ```
-   Esto crea el archivo `Secondary_Techs_Editor.xlsx` con dos hojas:
-   - **Instructions**: Para edición manual con listas desplegables
-   - **OLADE_Config**: Configuración de integración automática con datos OLADE
+   This creates the file `Secondary_Techs_Editor.xlsx` with two sheets:
+   - **Instructions**: For manual editing with dropdown lists
+   - **OLADE_Config**: Configuration for automatic OLADE data integration
 
-2. **Edición Manual** (Hoja "Instructions"):
-   - Seleccionar: Escenario (BAU, NDC, NDC+ELC, NDC_NoRPO, o ALL)
-   - Seleccionar: País, Tecnología (Tech.Name) y Parámetro
-   - Ingresar los valores para los años deseados (2021-2050)
-   - La columna "Tech" se completa automáticamente con VLOOKUP
+2. **Manual Editing** (Sheet "Instructions"):
+   - Select: Scenario (BAU, NDC, NDC+ELC, NDC_NoRPO, or ALL)
+   - Select: Country, Technology (Tech.Name), and Parameter
+   - Enter values for the desired years (2021-2050)
+   - The "Tech" column is automatically populated via VLOOKUP
 
-3. **Integración OLADE** (Hoja "OLADE_Config"):
+3. **OLADE Integration** (Sheet "OLADE_Config"):
 
-   Permite poblar automáticamente parámetros usando datos de OLADE.
+   Allows automatic population of parameters using OLADE data.
 
-   | Parámetro | Descripción |
+   | Parameter | Description |
    |-----------|-------------|
-   | `ResidualCapacitiesFromOLADE` | YES/NO - Habilitar integración OLADE para capacidad instalada (ResidualCapacity) |
-   | `PetroleumSplitMode` | OIL_only o Split_PET_OIL - Modo de división de petróleo |
-   | `DemandFromOLADE` | YES/NO - Habilitar integración OLADE para demanda eléctrica |
-   | `ActivityLowerLimitFromOLADE` | YES/NO - Habilitar integración OLADE para TotalTechnologyAnnualActivityLowerLimit |
-   | `ActivityUpperLimitFromOLADE` | YES/NO - Habilitar integración OLADE para TotalTechnologyAnnualActivityUpperLimit |
+   | `ResidualCapacitiesFromOLADE` | YES/NO - Enable OLADE integration for installed capacity (ResidualCapacity) |
+   | `PetroleumSplitMode` | OIL_only or Split_PET_OIL - Petroleum split mode |
+   | `DemandFromOLADE` | YES/NO - Enable OLADE integration for electricity demand |
+   | `ActivityLowerLimitFromOLADE` | YES/NO - Enable OLADE integration for TotalTechnologyAnnualActivityLowerLimit |
+   | `ActivityUpperLimitFromOLADE` | YES/NO - Enable OLADE integration for TotalTechnologyAnnualActivityUpperLimit |
 
    **PetroleumSplitMode**:
-   - `OIL_only`: Asigna toda la capacidad de petróleo a OIL (Fuel oil)
-   - `Split_PET_OIL`: Divide entre PET (Diésel) y OIL (Fuel oil + Búnker) usando proporciones del archivo `Shares_PET_OIL_Split.xlsx`
+   - `OIL_only`: Assigns all petroleum capacity to OIL (Fuel oil)
+   - `Split_PET_OIL`: Splits between PET (Diesel) and OIL (Fuel oil + Bunker) using proportions from `Shares_PET_OIL_Split.xlsx`
 
    **DemandFromOLADE**:
-   - Cuando está habilitado, actualiza la demanda eléctrica en `A-O_Demand.xlsx` usando datos de generación de OLADE
-   - Configura las tasas de crecimiento por país en la hoja `Demand_Growth`
-   - Fórmula: `Demanda(año) = Demanda(2023) × (1 + tasa × (año - 2023))`
+   - When enabled, updates electricity demand in `A-O_Demand.xlsx` using OLADE generation data
+   - Configure growth rates per country in the `Demand_Growth` sheet
+   - Formula: `Demand(year) = Demand(2023) × (1 + rate × (year - 2023))`
 
-   **ActivityLowerLimit y ActivityUpperLimit**:
-   - Cuando están habilitados, poblan automáticamente los límites de actividad en `A-O_Parametrization.xlsx`
-   - Usa datos de generación eléctrica de OLADE combinados con shares de tecnologías de `Shares_Power_Generation_Technologies.xlsx`
-   - Configura objetivos de renovabilidad opcionales en la hoja `Renewability_Targets`
-   - Configura pesos personalizados de tecnologías en la hoja `Technology_Weights`
-   - Fórmula: `ActivityLimit(tech,año) = Generación_Total(PJ) × (1 + tasa × (año - 2023)) × Share(tech,año)`
-   - Incluye validación automática contra capacidades disponibles
-   - Ver hoja `Documentation` en el editor para detalles completos de cálculo y validación
+   **ActivityLowerLimit and ActivityUpperLimit**:
+   - When enabled, automatically populate activity limits in `A-O_Parametrization.xlsx`
+   - Uses OLADE electricity generation data combined with technology shares from `Shares_Power_Generation_Technologies.xlsx`
+   - Configure optional renewability targets in the `Renewability_Targets` sheet
+   - Configure custom technology weights in the `Technology_Weights` sheet
+   - Formula: `ActivityLimit(tech,year) = Total_Generation(PJ) × (1 + rate × (year - 2023)) × Share(tech,year)`
+   - Includes automatic validation against available capacities
+   - See the `Documentation` sheet in the editor for full calculation and validation details
 
-4. **Hojas Adicionales del Editor**:
+4. **Additional Editor Sheets**:
 
-   El archivo `Secondary_Techs_Editor.xlsx` también incluye:
-   - **Renewability_Targets**: Define objetivos de % renovable por año para cada país/escenario (usado por Activity Limits)
-   - **Technology_Weights**: Permite definir distribución personalizada de tecnologías renovables y no renovables
-   - **Scenarios_Demand_Growth**: Configura tasas de crecimiento de demanda específicas por escenario y país
-   - **Documentation**: Documentación técnica completa sobre el cálculo y validación de Activity Limits
+   The `Secondary_Techs_Editor.xlsx` file also includes:
+   - **Renewability_Targets**: Defines renewable % targets per year for each country/scenario (used by Activity Limits)
+   - **Technology_Weights**: Allows defining custom distribution of renewable and non-renewable technologies
+   - **Scenarios_Demand_Growth**: Configures scenario- and country-specific demand growth rates
+   - **Documentation**: Full technical documentation on Activity Limits calculation and validation
 
-5. **Aplicar cambios**:
+5. **Apply changes**:
    ```bash
    python t1_confection/D2_update_secondary_techs.py
    ```
 
-### Características del Sistema
+### System Features
 
-- **Listas desplegables**: Facilitan la selección de escenarios, países, tecnologías y parámetros
-- **Mapeo Tech.Name → Tech**: Conversión automática de nombres descriptivos a códigos técnicos
-- **Integración OLADE Capacidad**: Población automática de ResidualCapacity desde datos de capacidad instalada
-- **Integración OLADE Demanda**: Población automática de demanda eléctrica desde datos de generación
-- **Integración OLADE Activity Limits**: Población automática de TotalTechnologyAnnualActivityLowerLimit y UpperLimit
-- **Conversión de unidades**: MW → GW (capacidad), GWh → PJ (demanda y activity)
-- **Valores flat (capacidad)**: El mismo valor de capacidad se usa para todos los años
-- **Crecimiento lineal (demanda y activity)**: Tasa de crecimiento configurable por país
-- **Validación de Activity Limits**: Verifica automáticamente que los límites no excedan la capacidad disponible
-- **Objetivos de renovabilidad**: Sistema de interpolación para alcanzar metas de % renovable
-- **Respaldos automáticos**: Un backup por escenario antes de aplicar cambios
-- **Projection.Mode**: Se actualiza automáticamente a "User defined" al modificar valores
-- **Logs detallados**: Registro completo con identificación de país en cada operación
+- **Dropdown lists**: Facilitate selection of scenarios, countries, technologies, and parameters
+- **Tech.Name → Tech mapping**: Automatic conversion from descriptive names to technical codes
+- **OLADE Capacity Integration**: Automatic population of ResidualCapacity from installed capacity data
+- **OLADE Demand Integration**: Automatic population of electricity demand from generation data
+- **OLADE Activity Limits Integration**: Automatic population of TotalTechnologyAnnualActivityLowerLimit and UpperLimit
+- **Unit conversion**: MW → GW (capacity), GWh → PJ (demand and activity)
+- **Flat values (capacity)**: The same capacity value is used for all years
+- **Linear growth (demand and activity)**: Configurable growth rate per country
+- **Activity Limits validation**: Automatically verifies that limits do not exceed available capacity
+- **Renewability targets**: Interpolation system to reach renewable % goals
+- **Automatic backups**: One backup per scenario before applying changes
+- **Projection.Mode**: Automatically updated to "User defined" when values are modified
+- **Detailed logs**: Full logging with country identification for each operation
 
-### Archivos Relacionados
+### Related Files
 
-| Archivo | Descripción |
-|---------|-------------|
-| `A0_generate_tech_country_matrix.py` | Genera la matriz tecnología-país |
-| `D1_generate_editor_template.py` | Genera la plantilla Excel |
-| `D2_update_secondary_techs.py` | Aplica los cambios a los escenarios |
-| `Tech_Country_Matrix.xlsx` | Matriz tecnología-país (generada) |
-| `Secondary_Techs_Editor.xlsx` | Plantilla de edición (generada) |
-| `OLADE - Capacidad instalada por fuente - Anual.xlsx` | Datos fuente OLADE (capacidad instalada) |
-| `OLADE - Generación eléctrica por fuente - Anual.xlsx` | Datos fuente OLADE (generación eléctrica) |
-| `Shares_PET_OIL_Split.xlsx` | Proporciones para split de petróleo (Diesel, Fuel oil, Bunker) por escenario |
-| `Shares_Power_Generation_Technologies.xlsx` | Proporciones de tecnologías de generación eléctrica por país/escenario/año |
+| File | Description |
+|------|-------------|
+| `A0_generate_tech_country_matrix.py` | Generates the technology-country matrix |
+| `D1_generate_editor_template.py` | Generates the Excel template |
+| `D2_update_secondary_techs.py` | Applies changes to scenarios |
+| `Tech_Country_Matrix.xlsx` | Technology-country matrix (generated) |
+| `Secondary_Techs_Editor.xlsx` | Editor template (generated) |
+| `OLADE - Capacidad instalada por fuente - Anual.xlsx` | OLADE source data (installed capacity) |
+| `OLADE - Generación eléctrica por fuente - Anual.xlsx` | OLADE source data (electricity generation) |
+| `Shares_PET_OIL_Split.xlsx` | Petroleum split proportions (Diesel, Fuel oil, Bunker) per scenario |
+| `Shares_Power_Generation_Technologies.xlsx` | Power generation technology proportions per country/scenario/year |
 
-### Mapeo de Países OLADE → Modelo
+### OLADE → Model Country Mapping
 
-Algunos códigos de país difieren entre OLADE y el modelo:
+Some country codes differ between OLADE and the model:
 
-| País | OLADE | Modelo |
-|------|-------|--------|
+| Country | OLADE | Model |
+|---------|-------|-------|
 | Barbados | BAR | JAM |
 | Chile | CHI | CHL |
 | Costa Rica | CRC | CRI |
 
-## Herramientas de Gestión de Países
+## Country Management Tools
 
-### Validador de Datos por País
+### Country Data Validator
 
-Verifica que un país tiene todos los datos requeridos en los archivos CSV de entrada de OSeMOSYS.
-
-```bash
-python t1_confection/Z_validate_country_data.py                  # Validar todos los países RELAC
-python t1_confection/Z_validate_country_data.py --country ARG    # Validar un país específico
-python t1_confection/Z_validate_country_data.py --country NCC --report  # Generar reporte detallado
-```
-
-**Validaciones realizadas:**
-- Presencia en sets (TECHNOLOGY, FUEL, EMISSION, STORAGE)
-- Cantidad mínima de tecnologías por prefijo (PWR, MIN, RNW)
-- Datos en todos los parámetros requeridos (costos, capacidad, factores, ratios, etc.)
-- Patrones de fuels esperados por país
-
-### Generador de Plantillas para Nuevo País
-
-Crea un conjunto de archivos CSV con la estructura mínima necesaria para agregar un nuevo país, usando un país existente como referencia.
+Verifies that a country has all required data in the OSeMOSYS input CSV files.
 
 ```bash
-python t1_confection/Z_generate_country_template.py                              # Lee config desde YAML
-python t1_confection/Z_generate_country_template.py --new NCC --ref ARG -i BOL PRY  # Override por CLI
+python t1_confection/Z_validate_country_data.py                  # Validate all countries
+python t1_confection/Z_validate_country_data.py --country ARG    # Validate a specific country
+python t1_confection/Z_validate_country_data.py --country NCC --report  # Generate detailed report
 ```
 
-**Configuración** (sección `template_generation` en `Config_country_codes.yaml`):
+**Validations performed:**
+- Presence in sets (TECHNOLOGY, FUEL, EMISSION, STORAGE)
+- Minimum number of technologies per prefix (PWR, MIN, RNW)
+- Data in all required parameters (costs, capacity, factors, ratios, etc.)
+- Expected fuel patterns per country
 
-| Parámetro | Descripción |
+### New Country Template Generator
+
+Creates a set of CSV files with the minimum structure needed to add a new country, using an existing country as a reference.
+
+```bash
+python t1_confection/Z_generate_country_template.py                              # Read config from YAML
+python t1_confection/Z_generate_country_template.py --new NCC --ref ARG -i BOL PRY  # CLI override
+```
+
+**Configuration** (`template_generation` section in `Config_country_codes.yaml`):
+
+| Parameter | Description |
 |-----------|-------------|
-| `new_country` | Código de 3 letras del nuevo país |
-| `reference_country` | País existente del cual clonar datos |
-| `region` | Código de región (default: XX) |
-| `interconnections` | Lista de vecinos para interconexiones (vacío = sin interconexiones) |
+| `new_country` | 3-letter code for the new country |
+| `reference_country` | Existing country to clone data from |
+| `region` | Region code (default: XX) |
+| `interconnections` | List of neighbors for interconnections (empty = no interconnections) |
 
-**Características:**
-- Genera CSVs en `templates/{CÓDIGO}/` sin modificar los archivos originales
-- Manejo dinámico de interconexiones: soporta más, menos, igual o cero interconexiones respecto al país de referencia
-- Transformación correcta de códigos de fuel y mode-of-operation para tecnologías TRN
-- Incluye script `merge_into_inputs.py` en la carpeta generada para facilitar la integración
+**Features:**
+- Generates CSVs in `templates/{CODE}/` without modifying original files
+- Dynamic interconnection handling: supports more, fewer, equal, or zero interconnections relative to the reference country
+- Correct transformation of fuel and mode-of-operation codes for TRN technologies
+- Includes a `merge_into_inputs.py` script in the generated folder for easy integration
 
-### Archivos Relacionados
+### Related Files
 
-| Archivo | Descripción |
-|---------|-------------|
-| `Z_validate_country_data.py` | Valida datos de un país en OG_csvs_inputs |
-| `Z_generate_country_template.py` | Genera plantilla CSV para agregar un país |
-| `Config_country_codes.yaml` | Configuración centralizada (incluye sección `template_generation`) |
+| File | Description |
+|------|-------------|
+| `Z_validate_country_data.py` | Validates country data in OG_csvs_inputs |
+| `Z_generate_country_template.py` | Generates CSV template for adding a country |
+| `Config_country_codes.yaml` | Centralized configuration (includes `template_generation` section) |
 
-## Licencia
+## License
 
-Este proyecto está licenciado bajo la Licencia Apache 2.0 - consulta el archivo [LICENSE](LICENSE) para más detalles.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 Copyright 2025 Climate Lead Group
 
-Este proyecto está desarrollado por Climate Lead Group para análisis de sistemas energéticos en América Latina y el Caribe.
+This project is developed by Climate Lead Group for energy system analysis.
