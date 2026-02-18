@@ -142,27 +142,41 @@ template_generation:
   region: XX
   interconnections:
 
-# Implausible technology-country combinations based on OLADE 2023 installed capacity data
-# These combinations have zero installed capacity and are marked as NO with red highlighting
-# Source: "OLADE - Capacidad instalada por fuente - Anual.xlsx" (sieLAC-OLADE, Nov 2024)
+# Implausible technology-country combinations based on installed capacity data
+# and generation expansion plans (IRENA, IEA, CEA India, CEB Sri Lanka, NEA Nepal, etc.)
+# These combinations have zero installed capacity and no realistic expansion prospects
 # Format: technology_code -> list of country codes where it is implausible
 implausible_combinations:
-  # BIO (Biomass) - No capacity in HTI, BRB
-  BIO: [HTI, BRB]
-  # COA (Coal) - No capacity in BOL, CRI, ECU, HND, HTI, BRB, NIC, PRY, SLV, URY
-  COA: [BOL, CRI, ECU, HND, HTI, BRB, NIC, PRY, SLV, URY]
-  # GAS (Natural Gas) - No capacity in CRI, HND, HTI, BRB, NIC, PRY, URY
-  GAS: [CRI, HND, HTI, BRB, NIC, PRY, URY]
-  # GEO (Geothermal) - Only in CHL, CRI, GTM, HND, MEX, NIC, SLV
-  GEO: [ARG, BOL, BRA, BRB, COL, DOM, ECU, HTI, PAN, PER, PRY, URY]
-  # HYD (Hydroelectric) - No capacity in BRB
-  HYD: [BRB]
+  # BIO (Biomass) - No biomass resources or grid-connected capacity
+  BIO: [BTN, MDV]
+  # CCS (Carbon Capture Storage with Coal) - No coal infrastructure to retrofit
+  CCS: [BTN, NPL, LKA, MDV]
+  # COA (Coal) - No coal plants, no coal resources, no plans
+  COA: [BTN, NPL, MDV]
+  # COG (Cogeneration) - No industrial base for cogeneration
+  COG: [BTN, NPL, MDV]
+  # CSP (Concentrated Solar Power) - Unsuitable climate/terrain or insufficient land area
+  CSP: [BGD, BTN, NPL, LKA, MDV]
+  # GAS (Natural Gas) - No gas infrastructure; landlocked or dispersed islands
+  GAS: [BTN, NPL, MDV]
+  # GEO (Geothermal) - No geothermal resources in any modeled country
+  GEO: [BGD, BTN, IND, NPL, LKA, MDV]
+  # HYD (Hydroelectric) - Flat coral atolls, no rivers or elevation
+  HYD: [MDV]
   # NGS (Natural Gas unified) - Same as GAS
-  NGS: [CRI, HND, HTI, BRB, NIC, PRY, URY]
-  # URN (Nuclear) - Only in ARG, BRA, MEX
-  URN: [BOL, BRB, CHL, COL, CRI, DOM, ECU, GTM, HND, HTI, NIC, PAN, PER, PRY, SLV, URY]
-  # WON (Onshore Wind) - No capacity in BRB
-  WON: [BRB]
+  NGS: [BTN, NPL, MDV]
+  # OIL (Oil/Fuel Oil) - No oil-fired grid power plants
+  OIL: [BTN, NPL]
+  # URN (Nuclear) - No nuclear program or plans
+  URN: [BTN, NPL, LKA, MDV]
+  # WAS (Waste-to-Energy) - No waste-to-energy plants or plans
+  WAS: [BTN]
+  # WAV (Wave Energy) - No capacity or plans; BTN and NPL are landlocked
+  WAV: [BGD, BTN, IND, NPL, LKA, MDV]
+  # WOF (Offshore Wind) - BTN/NPL landlocked; MDV scale economically unviable
+  WOF: [BTN, NPL, MDV]
+  # WON (Onshore Wind) - Insufficient wind speeds, negligible potential
+  WON: [MDV]
 
 # Technology parameters
 # Renewable transmission technologies

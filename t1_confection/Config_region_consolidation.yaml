@@ -3,16 +3,16 @@
 # for countries that have sub-regional granularity in the model.
 
 # Enable/disable region consolidation globally
-enabled: true
+enabled: false
 
 # Countries with multiple regions to consolidate
 # Each country entry specifies:
 #   - regions: list of region codes to consolidate
 #   - unified_region: the code to use for the consolidated region
 countries:
-  BRA:
-    regions: ["CN", "NW", "NE", "CW", "SO", "SE", "WE"]
-    unified_region: "XX"
+  # BRA:
+  #  regions: ["CN", "NW", "NE", "CW", "SO", "SE", "WE"]
+  #  unified_region: "XX"
   # Future example for Mexico:
   # MEX:
   #   regions: ["NO", "CE", "SU"]
