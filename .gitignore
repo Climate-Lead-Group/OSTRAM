@@ -59,3 +59,6 @@ t1_confection/A1_Outputs/*/A-O_Parametrization_backup_*.xlsx
 t1_confection/A1_Outputs/*/A-O_Demand_backup_*.xlsx
 t1_confection/A1_Outputs/*/A-O_AR_Model_Base_backup_*.xlsx
 t1_confection/A1_Outputs/*/A-O_AR_Projections_backup_*.xlsx
+
+# OG csvs inputs - backup files
+t1_confection/OG_csvs_inputs/*backup*
