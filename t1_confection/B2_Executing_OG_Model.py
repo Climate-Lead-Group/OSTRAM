@@ -214,23 +214,10 @@ def check_enviro_variables(solver_command):
         print(f"No '{solver_command}' found on the system.")
     #
 
-def get_config_main_path(full_path, base_folder):
-    # Split the path into parts
-    parts = full_path.split(os.sep)
-
-    # Find the index of the target directory 'relac_tx'
-    target_index = parts.index('relac_tx') if 'relac_tx' in parts else None
-
-    # If the directory is found, reconstruct the path up to that point
-    if target_index is not None:
-        base_path = os.sep.join(parts[:target_index + 1])
-    else:
-        base_path = full_path  # If not found, return the original path
-
-    # Append the specified directory to the base path
-    appended_path = os.path.join(base_path, base_folder)
-
-    return appended_path
+def get_config_main_path(base_folder):
+    # Navigate to the repository root (parent of t1_confection)
+    repo_root = Path(HERE).parent
+    return str(repo_root / base_folder)
 
 def main_executer(params, scenario_name, HERE):
     
@@ -339,7 +326,7 @@ def main_executer(params, scenario_name, HERE):
 
     # Module to concatenate csvs otoole outputs
     if solver in ['glpk', 'cbc', 'cplex', 'gurobi']:
-        file_conca_csvs = get_config_main_path(os.path.abspath(''), params['concatenate_folder'])
+        file_conca_csvs = get_config_main_path(params['concatenate_folder'])
         script_concate_csv = os.path.join(file_conca_csvs, params['concat_csvs'])
         str_otoole_concate_csv = f'python -u {script_concate_csv} {file_path_outputs} {output_file}'  # last int is the ID tier
         if params['concat_otoole_csv']:
@@ -630,7 +617,7 @@ if __name__ == "__main__":
     # Start timer
     start1 = time.time()
     
-    # Carpeta donde vive este script: .../relac_tx/t1_confection
+    # Carpeta donde vive este script: .../OSTRAM/t1_confection
     global HERE
     def get_here() -> Path:
         # 1) Script normal
