@@ -2960,27 +2960,53 @@ def update_yaml_xtra_scen(og_data, yaml_path):
         lines = f.readlines()
 
     updated_lines = []
-    for line in lines:
-        updated = False
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        matched = False
+
         for yaml_key, new_values in replacements.items():
             if yaml_key == "Region":
-                pattern = rf"^(\s*{yaml_key}:\s*)'(.*?)'(.*)$"
+                # Match Region with or without quotes
+                pattern = rf"^(\s*{yaml_key}:\s*).*$"
                 match = re.match(pattern, line)
                 if match:
-                    prefix, _, suffix = match.groups()
-                    line = f"{prefix}'{new_values}'{suffix}\n"
-                    updated = True
+                    prefix = match.group(1)
+                    updated_lines.append(f"{prefix}{new_values}\n")
+                    i += 1
+                    matched = True
                     break
             else:
-                pattern = rf"^(\s*{yaml_key}:\s*)\[[^\]]*\](.*)$"
-                match = re.match(pattern, line)
-                if match:
-                    prefix, suffix = match.groups()
+                # Check for inline list: Key: [item1, item2]
+                inline_pattern = rf"^(\s*{yaml_key}:\s*)\[.*\](.*)$"
+                inline_match = re.match(inline_pattern, line)
+                if inline_match:
+                    prefix, suffix = inline_match.groups()
                     formatted = ", ".join(map(str, new_values))
-                    line = f"{prefix}[{formatted}]{suffix}\n"
-                    updated = True
+                    updated_lines.append(f"{prefix}[{formatted}]{suffix}\n")
+                    i += 1
+                    matched = True
                     break
-        updated_lines.append(line)
+
+                # Check for multi-line list: Key:\n  - item1\n  - item2
+                multiline_pattern = rf"^(\s*){yaml_key}:\s*$"
+                multiline_match = re.match(multiline_pattern, line)
+                if multiline_match:
+                    indent = multiline_match.group(1)
+                    updated_lines.append(line)
+                    i += 1
+                    # Skip old list items
+                    while i < len(lines) and re.match(rf"^{indent}- ", lines[i]):
+                        i += 1
+                    # Insert new list items
+                    for val in new_values:
+                        updated_lines.append(f"{indent}- {val}\n")
+                    matched = True
+                    break
+
+        if not matched:
+            updated_lines.append(line)
+            i += 1
 
     with open(yaml_path, "w", encoding="utf-8") as f:
         f.writelines(updated_lines)
