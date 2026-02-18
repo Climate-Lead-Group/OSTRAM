@@ -24,7 +24,7 @@ stages:
       # files
       - t1_confection/Config_MOMF_T1_AB.yaml
       - t1_confection/osemosys_fast_preprocessed.txt
-      - concatenate_files/concatenate_relac.py
+      - concatenate_files/concatenate_ostram.py
       - t1_confection/Z_AUX_capital_annualization_script.py
 
       # folder with data
@@ -41,21 +41,21 @@ stages:
           persist: true
 
       # files (without cache)
-      - t1_confection/RELAC_TX_Inputs.csv:
+      - t1_confection/OSTRAM_Inputs.csv:
           cache: false
           persist: true
-      - t1_confection/RELAC_TX_Inputs_fecha.csv:
+      - t1_confection/OSTRAM_Inputs_fecha.csv:
           cache: false
           persist: true
-      - t1_confection/RELAC_TX_Outputs.csv:
+      - t1_confection/OSTRAM_Outputs.csv:
           cache: false
           persist: true
-      - t1_confection/RELAC_TX_Outputs_fecha.csv:
+      - t1_confection/OSTRAM_Outputs_fecha.csv:
           cache: false
           persist: true
-      - t1_confection/RELAC_TX_Combined_Inputs_Outputs.csv:
+      - t1_confection/OSTRAM_Combined_Inputs_Outputs.csv:
           cache: false
           persist: true
-      - t1_confection/RELAC_TX_Combined_Inputs_Outputs_fecha.csv:
+      - t1_confection/OSTRAM_Combined_Inputs_Outputs_fecha.csv:
           cache: false
           persist: true

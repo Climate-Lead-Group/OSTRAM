@@ -35,7 +35,7 @@ DISCOUNT_RATE = 0.0639  # Discount rate (3% = 0.03). Typical range: 0.03 to 0.10
 ASSET_LIFETIME = 15   # Asset lifetime in years. Typical range: 10 to 30 years
 
 # File parameters
-INPUT_FILENAME = "RELAC_TX_Combined_Inputs_Outputs.csv"  # Name of the input CSV file to process
+INPUT_FILENAME = "OSTRAM_Combined_Inputs_Outputs.csv"  # Name of the input CSV file to process
 
 # Column names
 CAPITAL_COLUMN = "CapitalInvestment"  # Name of the column with capital investment data

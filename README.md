@@ -41,7 +41,7 @@ The `run.py` script automatically handles:
 ## Documentation
 
 For detailed installation and configuration instructions, see the full guide:
-- **Installation and Execution Guide**: `RELAC_TX_Guia_instalacion_ejecucion.md`
+- **Installation and Execution Guide**: `OSTRAM_Guia_instalacion_ejecucion.md`
 
 ## Output File Structure
 

@@ -3,19 +3,19 @@ stages:
   executing:
     cmd: python -u t1_confection/B2_Executing_OG_Model.py
     deps:
-    - path: concatenate_files/concatenate_relac.py
+    - path: concatenate_files/concatenate_ostram.py
       hash: md5
-      md5: 73fe184e6cb2f8cfe57d85e740c87cf9
-      size: 4989
+      md5: c4b9b1aea845f46ed23d7547d4213452
+      size: 5073
     - path: t1_confection/A2_Output_Params/
       hash: md5
-      md5: 0d44ef556ccf815b0961dcb2b2c6d4e4.dir
-      size: 37133291
+      md5: d497b42b664e71d07a6f2dc8de27b0b7.dir
+      size: 16861860
       nfiles: 172
     - path: t1_confection/Config_MOMF_T1_AB.yaml
       hash: md5
-      md5: 0dc4ccc7fbab87e3ec3c3f0550d9be9d
-      size: 1887
+      md5: 6411ce9a52de71938f3adcda32f697ff
+      size: 1886
     - path: t1_confection/Miscellaneous/
       hash: md5
       md5: 324c0f302e8f20dd6a901e9bae5e2db5.dir
@@ -32,50 +32,50 @@ stages:
     outs:
     - path: t1_confection/A2_Outputs_Params_otoole/
       hash: md5
-      md5: 4a30530bf5c111f76754e77d5ce0ce1b.dir
-      size: 4748266
-      nfiles: 64
+      md5: 7c1abb1ffda2f79a3d181f1d7ef0215b.dir
+      size: 8806840
+      nfiles: 256
     - path: t1_confection/Executables/
       hash: md5
-      md5: 9cb2d7323cc985a6622c18735b253c64.dir
-      size: 128820721
-      nfiles: 6
-    - path: t1_confection/RELAC_TX_Combined_Inputs_Outputs.csv
+      md5: 77da4e2fe0fbe01b62a377f42bafd01e.dir
+      size: 85476756
+      nfiles: 12
+    - path: t1_confection/OSTRAM_Combined_Inputs_Outputs.csv
       hash: md5
-      md5: d0478f072bcb162119d7dd41d0f9224a
-      size: 168178869
-    - path: t1_confection/RELAC_TX_Combined_Inputs_Outputs_2026-02-10.csv
+      md5: 9ea8c5cf5162f3fdc1f40eccf942455b
+      size: 111644692
+    - path: t1_confection/OSTRAM_Combined_Inputs_Outputs_2026-02-18.csv
       hash: md5
-      md5: d0478f072bcb162119d7dd41d0f9224a
-      size: 168178869
-    - path: t1_confection/RELAC_TX_Inputs.csv
+      md5: 9ea8c5cf5162f3fdc1f40eccf942455b
+      size: 111644692
+    - path: t1_confection/OSTRAM_Inputs.csv
       hash: md5
-      md5: 2f9c74d09d3e55c3e655739074aedaca
-      size: 23886543
-    - path: t1_confection/RELAC_TX_Inputs_2026-02-10.csv
+      md5: d8d083892bbe8ea7f2509f57abe08e1d
+      size: 20177965
+    - path: t1_confection/OSTRAM_Inputs_2026-02-18.csv
       hash: md5
-      md5: 2f9c74d09d3e55c3e655739074aedaca
-      size: 23886543
-    - path: t1_confection/RELAC_TX_Outputs.csv
+      md5: d8d083892bbe8ea7f2509f57abe08e1d
+      size: 20177965
+    - path: t1_confection/OSTRAM_Outputs.csv
       hash: md5
-      md5: 29a4107de2ffd99ea6220c178db087da
-      size: 101642187
-    - path: t1_confection/RELAC_TX_Outputs_2026-02-10.csv
+      md5: c1e810365215a870008dd396e193d25e
+      size: 63118561
+    - path: t1_confection/OSTRAM_Outputs_2026-02-18.csv
       hash: md5
-      md5: 29a4107de2ffd99ea6220c178db087da
-      size: 101642187
+      md5: c1e810365215a870008dd396e193d25e
+      size: 63118561
   preprocess:
     cmd: python -u t1_confection/B1_Run_Compiler.py
     deps:
     - path: t1_confection/A1_Outputs/
       hash: md5
-      md5: 3f03ea236d6c9d72f3d3dbf7c1ad0b1d.dir
-      size: 49385139
-      nfiles: 221
+      md5: 115bc8f57ceb5d115227a4013f91694b.dir
+      size: 4173906
+      nfiles: 36
     - path: t1_confection/A2_Extra_Inputs/
       hash: md5
-      md5: d7f3cffc58ff33d405439d6acc80fe1e.dir
-      size: 710846
+      md5: d8cf767122664f743cc970d04b0a19c4.dir
+      size: 703829
       nfiles: 34
     - path: t1_confection/B1_Compiler.py
       hash: md5
@@ -83,15 +83,15 @@ stages:
       size: 96135
     - path: t1_confection/Config_MOMF_T1_A.yaml
       hash: md5
-      md5: c190c951cd77151ac3006d2b5f394d07
-      size: 10830
+      md5: 85195e4f90cec1763ad75f01c7985ccb
+      size: 10570
     outs:
     - path: t1_confection/A2_Output_Params/
       hash: md5
-      md5: 0d44ef556ccf815b0961dcb2b2c6d4e4.dir
-      size: 37133291
+      md5: d497b42b664e71d07a6f2dc8de27b0b7.dir
+      size: 16861860
       nfiles: 172
     - path: t1_confection/A2_Structure_Lists.xlsx
       hash: md5
-      md5: 2380d34c99262cd405ca175f3710b637
-      size: 18337
+      md5: 4ba6541f0778ac4409e54b6a41181f52
+      size: 11904

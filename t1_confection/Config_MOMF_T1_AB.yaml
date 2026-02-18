@@ -14,12 +14,12 @@ otoole_config: 'conversion_format.yaml'
 preprocess_data: 'preprocess_data.py'
 osemosys_model: 'osemosys_fast_preprocessed.txt'
 conv_format: 'conversion_format.yaml'
-concat_csvs: 'concatenate_relac.py'
+concat_csvs: 'concatenate_ostram.py'
 inputs_file: 'Inputs.csv'
 outputs_file: 'Outputs.csv'
 
 # Prefixes and suffixes
-prefix_final_files: 'RELAC_TX_'
+prefix_final_files: 'OSTRAM_'
 preprocess_data_name: 'Pre_processed_'
 output_files: '_output'
 
@@ -27,7 +27,7 @@ base_scenario: 'BAU'
 
 # Configuration parameters
 ########################################################################################
-solver: 'cplex' # Could you use: 'glpk', 'cbc', 'cplex' and 'gurobi'
+solver: 'cbc' # Could you use: 'glpk', 'cbc', 'cplex' and 'gurobi'
 
 # For CBC use
 iteration_time: 20000
@@ -45,7 +45,7 @@ gurobi_seed: 12345            # Random seed for reproducibility
 del_files: True
 
 # For run only the main scenarios
-only_main_scenario: True
+only_main_scenario: False
 
 # Paralle scenarios
 parallel: True

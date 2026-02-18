@@ -19,8 +19,8 @@ if __name__ == '__main__':
     outputs_folder = main_path[1]
     output_file = main_path[2]
     
-    # outputs_folder = 'C:\\Users\\ClimateLeadGroup\\Desktop\\CLG_repositories\\relac_tx\\t1_confection\\Executables\\BAU_0\\Outputs'
-    # output_file = 'C:\\Users\\ClimateLeadGroup\\Desktop\\CLG_repositories\\relac_tx\\t1_confection\\Executables\\BAU_0\\Pre_processed_BAU_0_output'
+    # outputs_folder = 'C:\\Users\\ClimateLeadGroup\\Desktop\\CLG_repositories\\OSTRAM\\t1_confection\\Executables\\BAU_0\\Outputs'
+    # output_file = 'C:\\Users\\ClimateLeadGroup\\Desktop\\CLG_repositories\\OSTRAM\\t1_confection\\Executables\\BAU_0\\Pre_processed_BAU_0_output'
 
 
     sets_csv = [

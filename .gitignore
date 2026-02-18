@@ -8,12 +8,12 @@ t1_confection/A2_Structure_Lists.xlsx
 t1_confection/requirements
 t1_confection/COSTS_ENERGY_BE_Anualized.csv
 t1_confection/Discounted_Rate.xlsx
-t1_confection/RELAC_TX_Combined_Inputs_Outputs.csv
-t1_confection/RELAC_TX_Inputs.csv
-t1_confection/RELAC_TX_Outputs.csv
-t1_confection/RELAC_TX_Combined_Inputs_Outputs_*.csv
-t1_confection/RELAC_TX_Inputs_*.csv
-t1_confection/RELAC_TX_Outputs_*.csv
+t1_confection/OSTRAM_Combined_Inputs_Outputs.csv
+t1_confection/OSTRAM_Inputs.csv
+t1_confection/OSTRAM_Outputs.csv
+t1_confection/OSTRAM_Combined_Inputs_Outputs_*.csv
+t1_confection/OSTRAM_Inputs_*.csv
+t1_confection/OSTRAM_Outputs_*.csv
 
 # Python scripts
 t1_confection/setup_utils.py
@@ -50,7 +50,7 @@ t1_confection/A1_Outputs/secondary_techs_update_log_*.txt
 *BACKUP*
 
 # guides
-RELAC_TX_Guia_instalacion_ejecucion.pdf
+OSTRAM_Guia_instalacion_ejecucion.pdf
 
 # Secondary Techs Editor - temporary files
 t1_confection/Secondary_Techs_Editor.xlsx
