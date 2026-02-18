@@ -77,6 +77,7 @@ if __name__ == '__main__':
             
             df_list.append(local_df)
         columns_check.insert(0,'Parameter')
+        df_list = [df.dropna(axis=1, how='all') for df in df_list if not df.empty]
         df_all = pd.concat(df_list, ignore_index=True, sort=True)  # Sort for deterministic column order
         common_values = sorted(list(set(df_all.columns) & set(sets_csv_temp)))  # Sort for deterministic order
         df_all = df_all[ common_values ]
