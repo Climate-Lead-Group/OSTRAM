@@ -6,66 +6,24 @@
 # ============================================================
 # Each country: iso3 key, english_name, olade_name (Spanish, for OLADE & Shares Excel files)
 country_data:
-  ARG:
-    english_name: "Argentina"
-    olade_name: "Argentina"
-  BOL:
-    english_name: "Bolivia"
-    olade_name: "Bolivia"
-  BRA:
-    english_name: "Brazil"
-    olade_name: "Brasil"
-  BRB:
-    english_name: "Barbados"
-    olade_name: "Barbados"
-  CHL:
-    english_name: "Chile"
-    olade_name: "Chile"
-  COL:
-    english_name: "Colombia"
-    olade_name: "Colombia"
-  CRI:
-    english_name: "Costa Rica"
-    olade_name: "Costa Rica"
-  DOM:
-    english_name: "Dominican Republic"
-    olade_name: "República Dominicana"
-  ECU:
-    english_name: "Ecuador"
-    olade_name: "Ecuador"
-  GTM:
-    english_name: "Guatemala"
-    olade_name: "Guatemala"
-  HND:
-    english_name: "Honduras"
-    olade_name: "Honduras"
-  HTI:
-    english_name: "Haiti"
-    olade_name: "Haiti"
-  MEX:
-    english_name: "Mexico"
-    olade_name: "México"
-  NIC:
-    english_name: "Nicaragua"
-    olade_name: "Nicaragua"
-  PAN:
-    english_name: "Panama"
-    olade_name: "Panamá"
-  PER:
-    english_name: "Peru"
-    olade_name: "Perú"
-  PRY:
-    english_name: "Paraguay"
-    olade_name: "Paraguay"
-  SLV:
-    english_name: "El Salvador"
-    olade_name: "El Salvador"
-  URY:
-    english_name: "Uruguay"
-    olade_name: "Uruguay"
-  NCC:
-    english_name: "NCC"
-    olade_name: "NCC"
+  BGD:
+    english_name: "Bangladesh"
+    olade_name: "Bangladesh"
+  BTN:
+    english_name: "Bhutan"
+    olade_name: "Bhutan"
+  IND:
+    english_name: "India"
+    olade_name: "India"
+  NPL:
+    english_name: "Nepal"
+    olade_name: "Nepal"
+  LKA:
+    english_name: "Sri Lanka"
+    olade_name: "Sri Lanka"
+  MDV:
+    english_name: "Maldives"
+    olade_name: "Maldives"
 
 # Special entries (not model countries, used in iso_country_map)
 special_entries:
@@ -160,25 +118,12 @@ shares_tech_mapping:
 
 # List of country codes (used by A2_AddTx for region pairs)
 countries:
-  - "BRB"  # Barbados (ISO-3166 standard code)
-  - "BOL"
-  - "CHL"
-  - "COL"
-  - "CRI"
-  - "ECU"
-  - "SLV"
-  - "GTM"
-  - "HTI"
-  - "HND"
-  - "NIC"
-  - "PAN"
-  - "PRY"
-  - "PER"
-  - "DOM"
-  - "URY"
-  - "BRA"
-  - "MEX"
-  - "ARG"
+  - "BGD"
+  - "BTN"
+  - "IND"
+  - "NPL"
+  - "LKA"
+  - "MDV"
 
 # ============================================================
 # TEMPLATE GENERATION (for Z_generate_country_template.py)
@@ -192,11 +137,32 @@ countries:
 #                       leave empty for zero interconnections
 #                       remove the key entirely for legacy mode (copies reference topology)
 template_generation:
-  new_country: NCC
-  reference_country: ARG
+  new_country: MDV
+  reference_country: LKA
   region: XX
   interconnections:
 
+# Implausible technology-country combinations based on OLADE 2023 installed capacity data
+# These combinations have zero installed capacity and are marked as NO with red highlighting
+# Source: "OLADE - Capacidad instalada por fuente - Anual.xlsx" (sieLAC-OLADE, Nov 2024)
+# Format: technology_code -> list of country codes where it is implausible
+implausible_combinations:
+  # BIO (Biomass) - No capacity in HTI, BRB
+  BIO: [HTI, BRB]
+  # COA (Coal) - No capacity in BOL, CRI, ECU, HND, HTI, BRB, NIC, PRY, SLV, URY
+  COA: [BOL, CRI, ECU, HND, HTI, BRB, NIC, PRY, SLV, URY]
+  # GAS (Natural Gas) - No capacity in CRI, HND, HTI, BRB, NIC, PRY, URY
+  GAS: [CRI, HND, HTI, BRB, NIC, PRY, URY]
+  # GEO (Geothermal) - Only in CHL, CRI, GTM, HND, MEX, NIC, SLV
+  GEO: [ARG, BOL, BRA, BRB, COL, DOM, ECU, HTI, PAN, PER, PRY, URY]
+  # HYD (Hydroelectric) - No capacity in BRB
+  HYD: [BRB]
+  # NGS (Natural Gas unified) - Same as GAS
+  NGS: [CRI, HND, HTI, BRB, NIC, PRY, URY]
+  # URN (Nuclear) - Only in ARG, BRA, MEX
+  URN: [BOL, BRB, CHL, COL, CRI, DOM, ECU, GTM, HND, HTI, NIC, PAN, PER, PRY, SLV, URY]
+  # WON (Onshore Wind) - No capacity in BRB
+  WON: [BRB]
 
 # Technology parameters
 # Renewable transmission technologies
