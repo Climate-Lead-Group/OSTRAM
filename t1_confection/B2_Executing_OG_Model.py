@@ -214,9 +214,9 @@ def check_enviro_variables(solver_command):
         print(f"No '{solver_command}' found on the system.")
     #
 
-def get_config_main_path(base_folder):
+def get_config_main_path(here, base_folder):
     # Navigate to the repository root (parent of t1_confection)
-    repo_root = Path(HERE).parent
+    repo_root = Path(here).parent
     return str(repo_root / base_folder)
 
 def main_executer(params, scenario_name, HERE):
@@ -326,7 +326,7 @@ def main_executer(params, scenario_name, HERE):
 
     # Module to concatenate csvs otoole outputs
     if solver in ['glpk', 'cbc', 'cplex', 'gurobi']:
-        file_conca_csvs = get_config_main_path(params['concatenate_folder'])
+        file_conca_csvs = get_config_main_path(HERE, params['concatenate_folder'])
         script_concate_csv = os.path.join(file_conca_csvs, params['concat_csvs'])
         str_otoole_concate_csv = f'python -u {script_concate_csv} {file_path_outputs} {output_file}'  # last int is the ID tier
         if params['concat_otoole_csv']:
