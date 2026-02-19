@@ -13,18 +13,16 @@ import os
 import sys
 import argparse
 from collections import defaultdict
-
+import yaml
+from Z_AUX_config_loader import get_countries
 # ============================================================================
 # Configuration
 # ============================================================================
 
 INPUT_DIR = os.path.join(os.path.dirname(__file__), "OG_csvs_inputs")
 
-# Default RELAC countries
-RELAC_COUNTRIES = [
-    "ARG", "BOL", "BRA", "BRB", "CHL", "COL", "CRI", "DOM", "ECU",
-    "GTM", "HND", "HTI", "MEX", "NIC", "PAN", "PER", "PRY", "SLV", "URY",
-]
+# Countries ISO-3 (read from Config_country_codes.yaml instead of hardcoded list)
+OSTRAM_COUNTRIES  = get_countries()
 
 # Sets that must contain entries for the country
 REQUIRED_SETS = {
@@ -603,7 +601,7 @@ def main():
         print(f"ERROR: Input directory not found: {INPUT_DIR}")
         sys.exit(1)
 
-    countries = [args.country.upper()] if args.country else RELAC_COUNTRIES
+    countries = [args.country.upper()] if args.country else OSTRAM_COUNTRIES
     verbose = not args.quiet
 
     overall_results = {}
