@@ -80,6 +80,11 @@ def get_add_missing_countries_from_olade():
     return _load_raw().get("add_missing_countries_from_olade", False)
 
 
+def get_pwr_cleanup_mode():
+    """Returns PWR cleanup mode: 'drop', 'merge', or False (disabled)."""
+    return _load_raw().get("pwr_cleanup_mode", False)
+
+
 # --- Technology accessors ---
 
 def get_olade_tech_mapping():

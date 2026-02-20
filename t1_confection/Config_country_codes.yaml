@@ -40,6 +40,12 @@ first_year: 2023
 # When true, A1 reads OLADE Excel to fill in countries not present in the input CSVs
 add_missing_countries_from_olade: false
 
+# PWR technology cleanup mode (handles PWR00/PWR01 duplicates):
+#   "drop"  - drop PWR00 rows when PWR01 exists, then rename PWR01 (removes '01' suffix)
+#   "merge" - sum PWR00 values into PWR01, then drop PWR00, then rename PWR01
+#   false   - skip PWR cleanup entirely
+pwr_cleanup_mode: merge
+
 # ============================================================
 # TECHNOLOGY CONFIGURATION
 # ============================================================
@@ -118,9 +124,19 @@ shares_tech_mapping:
 
 # List of country codes (used by A2_AddTx for region pairs)
 countries:
+  # - "BGD"
+  # - "BTN"
+  # - "IND"
+  # - "NPL"
+  # - "LKA"
+  # - "MDV"
   - "BGD"
   - "BTN"
-  - "IND"
+  - "INDEA"    # India East
+  - "INDNE"    # India North-East
+  - "INDNO"    # India North
+  - "INDSO"    # India South
+  - "INDWE"    # India West
   - "NPL"
   - "LKA"
   - "MDV"
@@ -142,9 +158,9 @@ template_generation:
   region: XX
   interconnections:
 
-# Implausible technology-country combinations based on installed capacity data
-# and generation expansion plans (IRENA, IEA, CEA India, CEB Sri Lanka, NEA Nepal, etc.)
-# These combinations have zero installed capacity and no realistic expansion prospects
+# Implausible technology-country combinations based on OG_csvs_inputs data
+# (ResidualCapacity, CapitalCost, TotalAnnualMaxCapacityInvestment, TotalAnnualMaxCapacity)
+# A combo is implausible when all four parameters are zero for every year
 # Format: technology_code -> list of country codes where it is implausible
 implausible_combinations:
   # BIO (Biomass) - No biomass resources or grid-connected capacity
@@ -157,25 +173,25 @@ implausible_combinations:
   COG: [BTN, NPL, MDV]
   # CSP (Concentrated Solar Power) - Unsuitable climate/terrain or insufficient land area
   CSP: [BGD, BTN, NPL, LKA, MDV]
-  # GAS (Natural Gas) - No gas infrastructure; landlocked or dispersed islands
-  GAS: [BTN, NPL, MDV]
+  # GAS (Natural Gas) - No PWRGAS technology in model; gas generation modeled via CCG/OCG → NGS
+  GAS: [BGD, BTN, IND, NPL, LKA, MDV]
   # GEO (Geothermal) - No geothermal resources in any modeled country
   GEO: [BGD, BTN, IND, NPL, LKA, MDV]
   # HYD (Hydroelectric) - Flat coral atolls, no rivers or elevation
   HYD: [MDV]
-  # NGS (Natural Gas unified) - Same as GAS
-  NGS: [BTN, NPL, MDV]
+  # NGS (Natural Gas unified) - No CCG/OCG/NGS power data
+  NGS: [BGD, BTN, NPL, MDV]
   # OIL (Oil/Fuel Oil) - No oil-fired grid power plants
-  OIL: [BTN, NPL]
+  OIL: [BTN, NPL, MDV]
   # URN (Nuclear) - No nuclear program or plans
   URN: [BTN, NPL, LKA, MDV]
   # WAS (Waste-to-Energy) - No waste-to-energy plants or plans
-  WAS: [BTN]
+  WAS: [BTN, MDV]
   # WAV (Wave Energy) - No capacity or plans; BTN and NPL are landlocked
   WAV: [BGD, BTN, IND, NPL, LKA, MDV]
   # WOF (Offshore Wind) - BTN/NPL landlocked; MDV scale economically unviable
   WOF: [BTN, NPL, MDV]
-  # WON (Onshore Wind) - Insufficient wind speeds, negligible potential
+  # WON (Onshore Wind) - No country lacks onshore wind data except MDV
   WON: [MDV]
 
 # Technology parameters

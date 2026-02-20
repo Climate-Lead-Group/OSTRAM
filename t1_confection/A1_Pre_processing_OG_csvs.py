@@ -17,7 +17,7 @@ from pathlib import Path
 import yaml
 from Z_AUX_config_loader import (
     get_olade_country_mapping, get_iso_country_map, get_code_to_energy,
-    get_first_year, get_add_missing_countries_from_olade
+    get_first_year, get_add_missing_countries_from_olade, get_pwr_cleanup_mode
 )
 
 def list_scenario_suffixes(base_dir: Path) -> List[str]:
@@ -976,6 +976,169 @@ def clean_pwr_technologies(og_data: Dict[str, pd.DataFrame]) -> Dict[str, pd.Dat
 
     print("\n" + "=" * 70)
     print("PWR technology cleanup completed.")
+    print("=" * 70 + "\n")
+
+    return og_data
+
+
+def merge_pwr_technologies(og_data: Dict[str, pd.DataFrame], matrix_config: Dict[str, Any]) -> Dict[str, pd.DataFrame]:
+    """
+    Merge PWR technology codes by aggregating PWR00 values into PWR01 before removal.
+
+    Unlike clean_pwr_technologies (which simply drops PWR00), this function:
+    1. Finds PWR00 technologies that have a PWR01 counterpart
+    2. Aggregates PWR00 VALUE into the matching PWR01 rows using the aggregation
+       rules from Tech_Country_Matrix.xlsx (sum or avg per parameter)
+    3. Removes PWR00 rows (their contribution is now in PWR01)
+    4. Renames PWR01 technologies by removing the '01' suffix
+
+    Args:
+        og_data: Dictionary of DataFrames from OG_csvs_inputs
+        matrix_config: Configuration from load_tech_country_matrix() with aggregation_rules
+
+    Returns:
+        Modified dictionary with merged PWR technology codes
+    """
+    print("\n" + "=" * 70)
+    print("PWR TECHNOLOGY MERGE (00 -> 01)")
+    print("=" * 70)
+
+    # Load aggregation rules
+    agg_rules = matrix_config.get("aggregation_rules", {})
+    avg_params = set(agg_rules.get("avg", []))
+    sum_params = set(agg_rules.get("sum", []))
+    disabled_params = set(agg_rules.get("disabled", []))
+
+    # Collect all PWR technologies across all DataFrames
+    all_pwr_techs = set()
+    for param_name, df in og_data.items():
+        if "TECHNOLOGY" in df.columns:
+            pwr_techs = df[df["TECHNOLOGY"].str.startswith("PWR", na=False)]["TECHNOLOGY"].unique()
+            all_pwr_techs.update(pwr_techs)
+
+    # Find PWR00 technologies that have a PWR01 counterpart
+    pwr00_with_01 = set()
+    for tech in all_pwr_techs:
+        if tech.endswith("00"):
+            tech01 = tech[:-2] + "01"
+            if tech01 in all_pwr_techs:
+                pwr00_with_01.add(tech)
+
+    if pwr00_with_01:
+        print(f"\n[Step 1] Merging PWR00 values into PWR01:")
+        print(f"    Found {len(pwr00_with_01)} PWR00 technologies to merge")
+        for tech in sorted(list(pwr00_with_01))[:10]:
+            print(f"    - {tech} -> {tech[:-2]}01")
+        if len(pwr00_with_01) > 10:
+            print(f"    ... and {len(pwr00_with_01) - 10} more")
+    else:
+        print(f"\n[Step 1] No PWR00 technologies to merge (no PWR01 counterparts found)")
+
+    if disabled_params:
+        print(f"\n    Disabled parameters (no merge): {', '.join(sorted(disabled_params))}")
+
+    # Merge PWR00 values into PWR01 for each DataFrame
+    total_rows_merged = 0
+    for param_name, df in og_data.items():
+        if "TECHNOLOGY" not in df.columns:
+            continue
+
+        # Skip disabled parameters
+        if param_name in disabled_params:
+            continue
+
+        # Determine aggregation method for this parameter
+        if param_name in avg_params:
+            agg_func = "mean"
+        elif param_name in sum_params:
+            agg_func = "sum"
+        else:
+            # Parameter not in any aggregation list - skip merge, just drop PWR00
+            continue
+
+        # Check if this DataFrame has any PWR00 rows to merge
+        has_pwr00 = df["TECHNOLOGY"].isin(pwr00_with_01).any()
+        if not has_pwr00:
+            continue
+
+        if "VALUE" in df.columns:
+            # Identify grouping columns (everything except TECHNOLOGY and VALUE)
+            group_cols = [c for c in df.columns if c not in ("TECHNOLOGY", "VALUE")]
+
+            # Separate: PWR00, PWR01 (with counterpart), and everything else
+            mask00 = df["TECHNOLOGY"].isin(pwr00_with_01)
+            pwr01_set = {tech[:-2] + "01" for tech in pwr00_with_01}
+            mask01 = df["TECHNOLOGY"].isin(pwr01_set)
+
+            df_00 = df[mask00].copy()
+            df_01 = df[mask01].copy()
+            df_rest = df[~mask00 & ~mask01].copy()
+
+            # Map PWR00 tech names to their PWR01 equivalents for joining
+            df_00["TECHNOLOGY"] = df_00["TECHNOLOGY"].apply(lambda x: x[:-2] + "01")
+
+            # Concatenate PWR00 (now renamed to 01) with PWR01 and aggregate
+            df_combined = pd.concat([df_01, df_00], ignore_index=True)
+            if group_cols:
+                df_merged = df_combined.groupby(
+                    ["TECHNOLOGY"] + group_cols, as_index=False
+                ).agg({"VALUE": agg_func})
+            else:
+                df_merged = df_combined.groupby(
+                    ["TECHNOLOGY"], as_index=False
+                ).agg({"VALUE": agg_func})
+
+            rows_before = len(df_01) + len(df_00)
+            rows_after = len(df_merged)
+            if rows_before > rows_after:
+                total_rows_merged += (rows_before - rows_after)
+                print(f"    {param_name}: {len(df_00)} PWR00 + {len(df_01)} PWR01 -> {rows_after} rows ({agg_func})")
+
+            og_data[param_name] = pd.concat([df_rest, df_merged], ignore_index=True)
+        else:
+            # For set DataFrames (no VALUE column), just remove PWR00 entries
+            og_data[param_name] = df[~df["TECHNOLOGY"].isin(pwr00_with_01)].copy()
+
+    if total_rows_merged > 0:
+        print(f"\n    Total rows merged: {total_rows_merged}")
+
+    # Now rename PWR01 to remove '01' suffix (same as clean_pwr_technologies Step 2)
+    print(f"\n[Step 2] Renaming PWR01 technologies (removing '01' suffix):")
+
+    pwr01_techs = set()
+    for param_name, df in og_data.items():
+        if "TECHNOLOGY" in df.columns:
+            pwr_techs = df[df["TECHNOLOGY"].str.startswith("PWR", na=False) &
+                          df["TECHNOLOGY"].str.endswith("01", na=False)]["TECHNOLOGY"].unique()
+            pwr01_techs.update(pwr_techs)
+
+    if pwr01_techs:
+        print(f"    Found {len(pwr01_techs)} PWR01 technologies to rename")
+        for tech in sorted(list(pwr01_techs))[:10]:
+            print(f"    - {tech} -> {tech[:-2]}")
+        if len(pwr01_techs) > 10:
+            print(f"    ... and {len(pwr01_techs) - 10} more")
+    else:
+        print(f"    No PWR01 technologies found to rename")
+
+    rename_map = {tech: tech[:-2] for tech in pwr01_techs}
+
+    total_rows_renamed = 0
+    for param_name, df in og_data.items():
+        if "TECHNOLOGY" in df.columns:
+            mask = df["TECHNOLOGY"].isin(pwr01_techs)
+            if mask.any():
+                og_data[param_name] = df.copy()
+                og_data[param_name].loc[mask, "TECHNOLOGY"] = og_data[param_name].loc[mask, "TECHNOLOGY"].map(
+                    lambda x: rename_map.get(x, x)
+                )
+                total_rows_renamed += mask.sum()
+
+    if total_rows_renamed > 0:
+        print(f"    Total rows renamed: {total_rows_renamed}")
+
+    print("\n" + "=" * 70)
+    print("PWR technology merge completed.")
     print("=" * 70 + "\n")
 
     return og_data
@@ -3278,8 +3441,14 @@ def main():
     # Apply region consolidation if enabled
     OG_Input_Data = consolidate_regions(OG_Input_Data)
 
-    # Clean PWR technologies (remove 00 when 01 exists, rename 01 to remove suffix)
-    # OG_Input_Data = clean_pwr_technologies(OG_Input_Data)
+    # Clean/merge PWR technologies based on config flag
+    pwr_mode = get_pwr_cleanup_mode()
+    if pwr_mode == "drop":
+        OG_Input_Data = clean_pwr_technologies(OG_Input_Data)
+    elif pwr_mode == "merge":
+        OG_Input_Data = merge_pwr_technologies(OG_Input_Data, matrix_config)
+    else:
+        print("[Info] PWR technology cleanup is disabled (pwr_cleanup_mode = false).")
 
     scenario_suffixes = list_scenario_suffixes(OUTPUT_FOLDER)
     for scen in scenario_suffixes:
