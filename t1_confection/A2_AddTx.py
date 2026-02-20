@@ -22,33 +22,23 @@ iso_country_map = get_iso_country_map()
 # Helper functions
 # ---------------------------------------------------------------------------
 def load_country_region_pairs(yaml_path):
-    """Return list of (country, region) tuples derived from YAML codes.
+    """Return list of (country, region) tuples from the 'countries' key in YAML.
 
-    YAML may be a list of strings or a mapping whose values include codes.
     3‑letter codes ⇒ region='XX'
     5‑letter codes ⇒ last 2 letters are region
     """
     with open(yaml_path, 'r', encoding='utf-8') as fh:
         data = yaml.safe_load(fh)
 
-    def extract_codes(obj):
-        if isinstance(obj, str):
-            return [obj]
-        if isinstance(obj, list):
-            res = []
-            for item in obj:
-                res.extend(extract_codes(item))
-            return res
-        if isinstance(obj, dict):
-            res = []
-            for v in obj.values():
-                res.extend(extract_codes(v))
-            return res
+    codes = data.get('countries', [])
+    if not isinstance(codes, list):
+        print("⚠️  'countries' key in YAML is not a list", file=sys.stderr)
         return []
 
-    codes = extract_codes(data)
     pairs = []
     for code in codes:
+        if not isinstance(code, str):
+            continue
         code = code.strip().upper()
         if len(code) == 3:
             pairs.append((code, "XX"))
