@@ -998,8 +998,12 @@ def load_tech_country_matrix() -> Dict[str, Any]:
         return {"enabled": False}
 
     try:
-        # Read the Matrix sheet
-        df_matrix = pd.read_excel(TECH_COUNTRY_MATRIX_FILE, sheet_name="Matrix", index_col=0)
+        # Read the "Enable Matrix Filtering" flag from row 1
+        df_flag = pd.read_excel(TECH_COUNTRY_MATRIX_FILE, sheet_name="Matrix", header=None, nrows=1)
+        matrix_filtering_enabled = str(df_flag.iloc[0, 1]).upper() == "YES"
+
+        # Read the Matrix sheet (skip flag row + empty spacer = 2 rows)
+        df_matrix = pd.read_excel(TECH_COUNTRY_MATRIX_FILE, sheet_name="Matrix", index_col=0, skiprows=2)
 
         # Convert to dict: {tech: {country: True/False}}
         matrix = {}
@@ -1034,6 +1038,7 @@ def load_tech_country_matrix() -> Dict[str, Any]:
 
         return {
             "enabled": True,
+            "matrix_filtering_enabled": matrix_filtering_enabled,
             "matrix": matrix,
             "ngs_enabled": ngs_enabled,
             "aggregation_rules": agg_rules
@@ -1078,6 +1083,14 @@ def filter_by_tech_country_matrix(og_data: Dict[str, pd.DataFrame], matrix_confi
         Filtered dictionary of DataFrames
     """
     if not matrix_config.get("enabled", False):
+        return og_data
+
+    # Check the "Enable Matrix Filtering" flag from the Excel
+    if not matrix_config.get("matrix_filtering_enabled", True):
+        print("\n" + "=" * 70)
+        print("TECH-COUNTRY MATRIX FILTERING: DISABLED")
+        print("  (All technologies from data will be passed through)")
+        print("=" * 70 + "\n")
         return og_data
 
     matrix = matrix_config.get("matrix", {})
@@ -3266,7 +3279,7 @@ def main():
     OG_Input_Data = consolidate_regions(OG_Input_Data)
 
     # Clean PWR technologies (remove 00 when 01 exists, rename 01 to remove suffix)
-    OG_Input_Data = clean_pwr_technologies(OG_Input_Data)
+    # OG_Input_Data = clean_pwr_technologies(OG_Input_Data)
 
     scenario_suffixes = list_scenario_suffixes(OUTPUT_FOLDER)
     for scen in scenario_suffixes:

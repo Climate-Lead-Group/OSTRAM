@@ -166,22 +166,52 @@ def create_tech_country_matrix():
         bottom=Side(style='thin')
     )
 
-    # Header row - Countries
-    ws_matrix.cell(row=1, column=1, value="Tech \\ Country")
-    ws_matrix.cell(row=1, column=1).fill = header_fill
-    ws_matrix.cell(row=1, column=1).font = header_font
-    ws_matrix.cell(row=1, column=1).alignment = center_align
-    ws_matrix.cell(row=1, column=1).border = thin_border
+    # Row 1: Enable Matrix Filtering flag
+    flag_label_fill = PatternFill(start_color="FFC000", end_color="FFC000", fill_type="solid")  # Gold
+    flag_font = Font(bold=True, size=11)
+
+    cell_label = ws_matrix.cell(row=1, column=1, value="Enable Matrix Filtering:")
+    cell_label.fill = flag_label_fill
+    cell_label.font = flag_font
+    cell_label.alignment = center_align
+    cell_label.border = thin_border
+
+    cell_flag = ws_matrix.cell(row=1, column=2, value="YES")
+    cell_flag.fill = flag_label_fill
+    cell_flag.font = flag_font
+    cell_flag.alignment = center_align
+    cell_flag.border = thin_border
+
+    # Data validation for the flag cell
+    dv_flag = DataValidation(type="list", formula1='"YES,NO"', allow_blank=False)
+    dv_flag.error = "Please select YES or NO"
+    dv_flag.errorTitle = "Invalid Input"
+    ws_matrix.add_data_validation(dv_flag)
+    dv_flag.add(cell_flag)
+
+    # Note explaining the flag
+    note_cell = ws_matrix.cell(row=1, column=3, value="YES = only pass technologies marked YES below  |  NO = pass ALL technologies from data")
+    note_cell.font = Font(italic=True, color="666666")
+
+    # Row 2: empty spacer
+
+    # Row 3: Header row - Countries (shifted down by 2)
+    MATRIX_START_ROW = 3
+    ws_matrix.cell(row=MATRIX_START_ROW, column=1, value="Tech \\ Country")
+    ws_matrix.cell(row=MATRIX_START_ROW, column=1).fill = header_fill
+    ws_matrix.cell(row=MATRIX_START_ROW, column=1).font = header_font
+    ws_matrix.cell(row=MATRIX_START_ROW, column=1).alignment = center_align
+    ws_matrix.cell(row=MATRIX_START_ROW, column=1).border = thin_border
 
     for col_idx, country in enumerate(COUNTRIES, start=2):
-        cell = ws_matrix.cell(row=1, column=col_idx, value=country)
+        cell = ws_matrix.cell(row=MATRIX_START_ROW, column=col_idx, value=country)
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = center_align
         cell.border = thin_border
 
-    # Technology rows
-    for row_idx, tech in enumerate(TECHNOLOGIES, start=2):
+    # Technology rows (shifted down by 2)
+    for row_idx, tech in enumerate(TECHNOLOGIES, start=MATRIX_START_ROW + 1):
         # Tech code in first column
         cell = ws_matrix.cell(row=row_idx, column=1, value=tech)
         cell.fill = tech_fill
@@ -204,14 +234,14 @@ def create_tech_country_matrix():
                 cell.fill = implausible_fill
                 cell.font = implausible_font
 
-    # Data validation for YES/NO
+    # Data validation for YES/NO in matrix cells
     dv = DataValidation(type="list", formula1='"YES,NO"', allow_blank=False)
     dv.error = "Please select YES or NO"
     dv.errorTitle = "Invalid Input"
     ws_matrix.add_data_validation(dv)
 
-    # Apply validation to all data cells
-    for row_idx in range(2, len(TECHNOLOGIES) + 2):
+    # Apply validation to all data cells (shifted down by 2)
+    for row_idx in range(MATRIX_START_ROW + 1, MATRIX_START_ROW + 1 + len(TECHNOLOGIES)):
         for col_idx in range(2, len(COUNTRIES) + 2):
             dv.add(ws_matrix.cell(row=row_idx, column=col_idx))
 
