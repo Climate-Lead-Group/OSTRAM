@@ -160,6 +160,113 @@ def collect_data_from_all_scenarios():
     }
 
 
+def collect_trn_interconnections():
+    """
+    Collect TRN interconnection technologies from A-O_AR_Model_Base_Year.xlsx.
+
+    Reads the base scenario's Base Year file to discover all cross-border and
+    intra-country interconnection technologies (13-character TRN codes).
+
+    Returns:
+        list of dicts sorted by tech code:
+        [
+            {
+                'tech': 'TRNBGDXXINDEA',
+                'mode1_label': 'BGD-XX -> IND-EA',
+                'mode2_label': 'IND-EA -> BGD-XX',
+                'mode1_input_fuel': 'ELCBGDXX02',
+                'mode1_output_fuel': 'ELCINDEA01',
+                'mode2_input_fuel': 'ELCINDEA02',
+                'mode2_output_fuel': 'ELCBGDXX01',
+            },
+            ...
+        ]
+    """
+    base_scenario = read_base_scenario()
+    base_year_path = Path(__file__).parent / "A1_Outputs" / f"A1_Outputs_{base_scenario}" / "A-O_AR_Model_Base_Year.xlsx"
+
+    if not base_year_path.exists():
+        print(f"WARNING: Base Year file not found: {base_year_path}")
+        return []
+
+    print(f"Reading TRN interconnections from {base_year_path.name}...")
+
+    wb = openpyxl.load_workbook(base_year_path, data_only=True)
+    if 'Secondary' not in wb.sheetnames:
+        print("WARNING: 'Secondary' sheet not found in Base Year file")
+        wb.close()
+        return []
+
+    ws = wb['Secondary']
+
+    # Headers: Mode.Operation(1), Fuel.I(2), Fuel.I.Name(3), Value.Fuel.I(4),
+    #          Unit.Fuel.I(5), Tech(6), Tech.Name(7), Fuel.O(8), Fuel.O.Name(9),
+    #          Value.Fuel.O(10), Unit.Fuel.O(11)
+    # Find column indices by header name for robustness
+    headers = {str(cell.value).strip(): idx for idx, cell in enumerate(ws[1], 1) if cell.value}
+    mode_col = headers.get('Mode.Operation', 1)
+    fuel_i_col = headers.get('Fuel.I', 2)
+    tech_col = headers.get('Tech', 6)
+    fuel_o_col = headers.get('Fuel.O', 8)
+
+    # Collect TRN interconnection rows
+    # Pattern: TRN + origin_country(3) + origin_region(2) + dest_country(3) + dest_region(2) = 13 chars
+    trn_data = {}  # tech_code -> {mode -> {input_fuel, output_fuel}}
+
+    for row_idx in range(2, ws.max_row + 1):
+        tech = ws.cell(row_idx, tech_col).value
+        if not tech:
+            continue
+        tech_str = str(tech).strip()
+
+        # Only 13-char TRN codes are cross-border/intra-country interconnections
+        if not tech_str.startswith('TRN') or len(tech_str) != 13:
+            continue
+
+        mode = ws.cell(row_idx, mode_col).value
+        fuel_i = ws.cell(row_idx, fuel_i_col).value
+        fuel_o = ws.cell(row_idx, fuel_o_col).value
+
+        if tech_str not in trn_data:
+            trn_data[tech_str] = {}
+
+        mode_int = int(mode) if mode else 0
+        trn_data[tech_str][mode_int] = {
+            'input_fuel': str(fuel_i).strip() if fuel_i else '',
+            'output_fuel': str(fuel_o).strip() if fuel_o else '',
+        }
+
+    wb.close()
+
+    # Build result list
+    result = []
+    for tech_code in sorted(trn_data.keys()):
+        modes = trn_data[tech_code]
+
+        # Derive labels from tech code
+        origin_country = tech_code[3:6]
+        origin_region = tech_code[6:8]
+        dest_country = tech_code[8:11]
+        dest_region = tech_code[11:13]
+
+        mode1_label = f"{origin_country}-{origin_region} -> {dest_country}-{dest_region}"
+        mode2_label = f"{dest_country}-{dest_region} -> {origin_country}-{origin_region}"
+
+        entry = {
+            'tech': tech_code,
+            'mode1_label': mode1_label,
+            'mode2_label': mode2_label,
+            'mode1_input_fuel': modes.get(1, {}).get('input_fuel', ''),
+            'mode1_output_fuel': modes.get(1, {}).get('output_fuel', ''),
+            'mode2_input_fuel': modes.get(2, {}).get('input_fuel', ''),
+            'mode2_output_fuel': modes.get(2, {}).get('output_fuel', ''),
+        }
+        result.append(entry)
+
+    print(f"  Found {len(result)} TRN interconnections ({sum(len(m) for m in trn_data.values())} total directions)")
+    return result
+
+
 def create_editor_template(data, output_path):
     """
     Create the Excel editor template with dropdowns and validation
@@ -389,12 +496,22 @@ def create_editor_template(data, output_path):
     ws_olade.cell(9, 2, "NO").border = border_style
     dv_yes_no.add('B9')
 
-    # Add detailed descriptions with formulas and data sources
-    ws_olade.cell(11, 1, "DETAILED DESCRIPTIONS AND FORMULAS")
-    ws_olade.cell(11, 1).font = Font(bold=True, size=12, color="366092")
-    ws_olade.merge_cells('A11:B11')
+    # TradeBalanceDemandAdjustment
+    ws_olade.cell(10, 1, "TradeBalanceDemandAdjustment").border = border_style
+    ws_olade.cell(10, 2, "NO").border = border_style
+    dv_yes_no.add('B10')
 
-    current_row = 13
+    # InterconnectionsControl
+    ws_olade.cell(11, 1, "InterconnectionsControl").border = border_style
+    ws_olade.cell(11, 2, "NO").border = border_style
+    dv_yes_no.add('B11')
+
+    # Add detailed descriptions with formulas and data sources
+    ws_olade.cell(13, 1, "DETAILED DESCRIPTIONS AND FORMULAS")
+    ws_olade.cell(13, 1).font = Font(bold=True, size=12, color="366092")
+    ws_olade.merge_cells('A13:B13')
+
+    current_row = 15
 
     # ResidualCapacitiesFromOLADE
     ws_olade.cell(current_row, 1, "1. ResidualCapacitiesFromOLADE")
@@ -614,6 +731,37 @@ def create_editor_template(data, output_path):
         ws_olade.cell(current_row, 1).font = Font(size=9)
         ws_olade.merge_cells(f'A{current_row}:B{current_row}')
         current_row += 1
+    current_row += 1
+
+    # InterconnectionsControl
+    ws_olade.cell(current_row, 1, "7. InterconnectionsControl")
+    ws_olade.cell(current_row, 1).font = Font(bold=True, size=11)
+    ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+    current_row += 1
+
+    intercon_desc = [
+        "Controls ON/OFF state of TRN (transmission interconnection) technologies.",
+        "Each interconnection is bidirectional and can be toggled per direction.",
+        "",
+        "WHEN ENABLED (InterconnectionsControl = YES):",
+        "  The 'Interconnections' sheet controls each direction independently.",
+        "  Changes are applied to both A-O_AR_Model_Base_Year.xlsx and A-O_AR_Projections.xlsx.",
+        "",
+        "OFF DIRECTION:",
+        "  - Base Year: Value.Fuel.I = 0, Value.Fuel.O = 0",
+        "  - Projections: Projection.Mode = 'EMPTY'",
+        "",
+        "ON DIRECTION:",
+        "  - Base Year: Value.Fuel.I = 1, Value.Fuel.O = 1",
+        "  - Projections: Projection.Mode = 'User defined'",
+        "",
+        "NOTE: Year values in Projections (efficiency/loss factors) are NOT modified.",
+    ]
+    for line in intercon_desc:
+        ws_olade.cell(current_row, 1, line)
+        ws_olade.cell(current_row, 1).font = Font(size=9)
+        ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+        current_row += 1
 
     # Populate instructions sheet
     instructions = [
@@ -655,6 +803,14 @@ def create_editor_template(data, output_path):
         ["  * Shares are calculated from Renewability_Targets and OLADE generation weights", ""],
         ["  * Demand values come from A-O_Demand.xlsx (with projected growth)", ""],
         ["", ""],
+        ["INTERCONNECTION CONTROL:", ""],
+        ["- If InterconnectionsControl = YES in OLADE_Config sheet:", ""],
+        ["  * The 'Interconnections' sheet controls TRN cross-border/intra-country links", ""],
+        ["  * Set each direction to ON or OFF independently", ""],
+        ["  * OFF directions: InputActivityRatio=0, OutputActivityRatio=0, Projection.Mode='EMPTY'", ""],
+        ["  * ON directions: InputActivityRatio=1, OutputActivityRatio=1, Projection.Mode='User defined'", ""],
+        ["  * Changes apply to A-O_AR_Model_Base_Year.xlsx and A-O_AR_Projections.xlsx", ""],
+        ["", ""],
         ["IMPORTANT NOTES:", ""],
         ["- You can add as many rows as needed", ""],
         ["- The 'Tech' column is automatically filled when you select a 'Tech.Name'", ""],
@@ -670,7 +826,8 @@ def create_editor_template(data, output_path):
         cell = ws_instructions.cell(row_idx, 1, row_data[0])
         if row_idx == 1:
             cell.font = Font(size=16, bold=True, color="366092")
-        elif row_data[0].startswith("HOW TO USE:") or row_data[0].startswith("IMPORTANT NOTES:") or row_data[0].startswith("OLADE INTEGRATION:"):
+        elif (row_data[0].startswith("HOW TO USE:") or row_data[0].startswith("IMPORTANT NOTES:") or
+              row_data[0].startswith("OLADE INTEGRATION:") or row_data[0].startswith("INTERCONNECTION CONTROL:")):
             cell.font = Font(size=12, bold=True)
 
         cell.alignment = Alignment(wrap_text=True, vertical="top")
@@ -959,6 +1116,136 @@ def create_editor_template(data, output_path):
 
     # Freeze panes
     ws_weights.freeze_panes = f'C{header_row + 1}'
+
+    # =========================================================================
+    # Create Interconnections sheet (toggle ON/OFF for TRN technologies)
+    # =========================================================================
+    trn_data = collect_trn_interconnections()
+
+    if trn_data:
+        ws_intercon = wb.create_sheet("Interconnections", 6)
+        ws_intercon.column_dimensions['A'].width = 18   # Technology
+        ws_intercon.column_dimensions['B'].width = 22   # Direction
+        ws_intercon.column_dimensions['C'].width = 8    # Mode
+        ws_intercon.column_dimensions['D'].width = 10   # Status
+        ws_intercon.column_dimensions['E'].width = 45   # Description
+
+        # Colors
+        intercon_header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+        intercon_header_font = Font(bold=True, color="FFFFFF")
+        readonly_fill = PatternFill(start_color="D9D9D9", end_color="D9D9D9", fill_type="solid")
+        alt_fill_a = PatternFill(start_color="E8EDF3", end_color="E8EDF3", fill_type="solid")
+        alt_fill_b = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+
+        # Title
+        cell = ws_intercon.cell(1, 1, "INTERCONNECTION CONTROLS")
+        cell.font = Font(size=14, bold=True, color="366092")
+        ws_intercon.merge_cells('A1:E1')
+
+        # Instructions
+        ws_intercon.cell(2, 1, "Toggle ON/OFF each direction of TRN interconnection technologies. Requires InterconnectionsControl = YES in OLADE_Config.")
+        ws_intercon.merge_cells('A2:E2')
+        ws_intercon.cell(2, 1).font = Font(italic=True)
+
+        # Header row (row 4)
+        intercon_headers = ['Technology', 'Direction', 'Mode', 'Status', 'Description']
+        for col_idx, header in enumerate(intercon_headers, 1):
+            cell = ws_intercon.cell(4, col_idx, header)
+            cell.fill = intercon_header_fill
+            cell.font = intercon_header_font
+            cell.border = border_style
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+
+        # Data rows starting at row 5
+        row_idx = 5
+        for trn_idx, trn in enumerate(trn_data):
+            # Determine alternating color for this pair
+            pair_fill = alt_fill_a if trn_idx % 2 == 0 else alt_fill_b
+
+            # Mode 1 row
+            ws_intercon.cell(row_idx, 1, trn['tech']).border = border_style
+            ws_intercon.cell(row_idx, 1).fill = pair_fill
+            ws_intercon.cell(row_idx, 1).alignment = Alignment(horizontal="center")
+            ws_intercon.cell(row_idx, 1).protection = Protection(locked=True)
+
+            ws_intercon.cell(row_idx, 2, trn['mode1_label']).border = border_style
+            ws_intercon.cell(row_idx, 2).fill = pair_fill
+            ws_intercon.cell(row_idx, 2).alignment = Alignment(horizontal="center")
+            ws_intercon.cell(row_idx, 2).protection = Protection(locked=True)
+
+            ws_intercon.cell(row_idx, 3, 1).border = border_style
+            ws_intercon.cell(row_idx, 3).fill = pair_fill
+            ws_intercon.cell(row_idx, 3).alignment = Alignment(horizontal="center")
+            ws_intercon.cell(row_idx, 3).protection = Protection(locked=True)
+
+            ws_intercon.cell(row_idx, 4, "ON").border = border_style
+            ws_intercon.cell(row_idx, 4).alignment = Alignment(horizontal="center")
+            ws_intercon.cell(row_idx, 4).protection = Protection(locked=False)
+
+            desc_1 = f"{trn['mode1_input_fuel']} -> {trn['mode1_output_fuel']}"
+            ws_intercon.cell(row_idx, 5, desc_1).border = border_style
+            ws_intercon.cell(row_idx, 5).fill = pair_fill
+            ws_intercon.cell(row_idx, 5).protection = Protection(locked=True)
+            ws_intercon.cell(row_idx, 5).font = Font(size=9)
+            row_idx += 1
+
+            # Mode 2 row
+            ws_intercon.cell(row_idx, 1, trn['tech']).border = border_style
+            ws_intercon.cell(row_idx, 1).fill = pair_fill
+            ws_intercon.cell(row_idx, 1).alignment = Alignment(horizontal="center")
+            ws_intercon.cell(row_idx, 1).protection = Protection(locked=True)
+
+            ws_intercon.cell(row_idx, 2, trn['mode2_label']).border = border_style
+            ws_intercon.cell(row_idx, 2).fill = pair_fill
+            ws_intercon.cell(row_idx, 2).alignment = Alignment(horizontal="center")
+            ws_intercon.cell(row_idx, 2).protection = Protection(locked=True)
+
+            ws_intercon.cell(row_idx, 3, 2).border = border_style
+            ws_intercon.cell(row_idx, 3).fill = pair_fill
+            ws_intercon.cell(row_idx, 3).alignment = Alignment(horizontal="center")
+            ws_intercon.cell(row_idx, 3).protection = Protection(locked=True)
+
+            ws_intercon.cell(row_idx, 4, "ON").border = border_style
+            ws_intercon.cell(row_idx, 4).alignment = Alignment(horizontal="center")
+            ws_intercon.cell(row_idx, 4).protection = Protection(locked=False)
+
+            desc_2 = f"{trn['mode2_input_fuel']} -> {trn['mode2_output_fuel']}"
+            ws_intercon.cell(row_idx, 5, desc_2).border = border_style
+            ws_intercon.cell(row_idx, 5).fill = pair_fill
+            ws_intercon.cell(row_idx, 5).protection = Protection(locked=True)
+            ws_intercon.cell(row_idx, 5).font = Font(size=9)
+            row_idx += 1
+
+        # Add ON/OFF dropdown validation for column D
+        dv_on_off = DataValidation(type="list", formula1='"ON,OFF"', allow_blank=False)
+        dv_on_off.error = 'Please select ON or OFF'
+        dv_on_off.errorTitle = 'Invalid Status'
+        ws_intercon.add_data_validation(dv_on_off)
+        dv_on_off.add(f'D5:D{row_idx - 1}')
+
+        # Notes at bottom
+        note_row = row_idx + 1
+        notes = [
+            "HOW IT WORKS:",
+            "  - ON: InputActivityRatio=1, OutputActivityRatio=1, Projection.Mode='User defined'",
+            "  - OFF: InputActivityRatio=0, OutputActivityRatio=0, Projection.Mode='EMPTY'",
+            "  - Changes are applied to A-O_AR_Model_Base_Year.xlsx and A-O_AR_Projections.xlsx",
+            "  - All scenario folders are updated",
+            "",
+            "NOTE: Year values in Projections (efficiency/loss factors) are NOT modified by this control.",
+        ]
+        for note in notes:
+            ws_intercon.cell(note_row, 1, note)
+            ws_intercon.cell(note_row, 1).font = Font(size=9)
+            ws_intercon.merge_cells(f'A{note_row}:E{note_row}')
+            note_row += 1
+
+        # Freeze panes
+        ws_intercon.freeze_panes = 'D5'
+
+        print(f"  Interconnections sheet created with {len(trn_data)} technologies ({(row_idx - 5)} rows)")
+    else:
+        print("  No TRN interconnections found - skipping Interconnections sheet")
 
     # =========================================================================
     # Create Scenarios_Demand_Growth sheet (after Demand_Growth, before Renewability_Targets)

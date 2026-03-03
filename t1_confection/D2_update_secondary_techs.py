@@ -64,6 +64,7 @@ def read_olade_config(editor_path):
             'activity_lower_limit_enabled': False,
             'activity_upper_limit_enabled': False,
             'trade_balance_enabled': False,
+            'interconnections_enabled': False,
             'demand_growth_rates': {},
             'scenarios_demand_adjustments': {},
             'renewability_targets': {},
@@ -75,13 +76,14 @@ def read_olade_config(editor_path):
     # Read configuration values
     # Row 5 = ResidualCapacitiesFromOLADE, Row 6 = PetroleumSplitMode, Row 7 = DemandFromOLADE
     # Row 8 = ActivityLowerLimitFromOLADE, Row 9 = ActivityUpperLimitFromOLADE
-    # Row 10 = TradeBalanceDemandAdjustment
+    # Row 10 = TradeBalanceDemandAdjustment, Row 11 = InterconnectionsControl
     enabled = str(ws['B5'].value).upper() == 'YES' if ws['B5'].value else False
     petroleum_split_mode = str(ws['B6'].value) if ws['B6'].value else 'Split_PET_OIL'
     demand_enabled = str(ws['B7'].value).upper() == 'YES' if ws['B7'].value else False
     activity_lower_limit_enabled = str(ws['B8'].value).upper() == 'YES' if ws['B8'].value else False
     activity_upper_limit_enabled = str(ws['B9'].value).upper() == 'YES' if ws['B9'].value else False
     trade_balance_enabled = str(ws['B10'].value).upper() == 'YES' if ws['B10'].value else False
+    interconnections_enabled = str(ws['B11'].value).upper() == 'YES' if ws['B11'].value else False
 
     # Read demand growth rates from Demand_Growth sheet
     demand_growth_rates = {}
@@ -251,6 +253,7 @@ def read_olade_config(editor_path):
         'activity_lower_limit_enabled': activity_lower_limit_enabled,
         'activity_upper_limit_enabled': activity_upper_limit_enabled,
         'trade_balance_enabled': trade_balance_enabled,
+        'interconnections_enabled': interconnections_enabled,
         'demand_growth_rates': demand_growth_rates,
         'scenarios_demand_adjustments': scenarios_demand_adjustments,
         'renewability_targets': renewability_targets,
@@ -3515,6 +3518,217 @@ class SecondaryTechsUpdater:
         """Legacy wrapper - calls update_activity_limits"""
         self.update_activity_limits(all_years)
 
+    def read_interconnections_config(self):
+        """
+        Read the Interconnections sheet from Secondary_Techs_Editor.xlsx.
+
+        Returns a list of dicts: [{tech, mode, status}, ...]
+        where status is 'ON' or 'OFF' and mode is 1 or 2.
+        """
+        try:
+            wb = openpyxl.load_workbook(self.editor_path, data_only=True)
+        except Exception as e:
+            self.log(f"ERROR: Could not open editor file for interconnections: {e}", "ERROR")
+            return []
+
+        if 'Interconnections' not in wb.sheetnames:
+            self.log("WARNING: 'Interconnections' sheet not found in editor file", "WARNING")
+            wb.close()
+            return []
+
+        ws = wb['Interconnections']
+        config = []
+        # Data starts at row 5: Col A=Tech, Col C=Mode, Col D=Status
+        for row_idx in range(5, ws.max_row + 1):
+            tech = ws.cell(row_idx, 1).value
+            mode = ws.cell(row_idx, 3).value
+            status = ws.cell(row_idx, 4).value
+
+            if tech is None or mode is None or status is None:
+                continue
+
+            tech = str(tech).strip()
+            try:
+                mode = int(mode)
+            except (ValueError, TypeError):
+                continue
+            status = str(status).strip().upper()
+
+            if status in ('ON', 'OFF'):
+                config.append({'tech': tech, 'mode': mode, 'status': status})
+
+        wb.close()
+        self.log(f"Read {len(config)} interconnection entries from editor")
+        on_count = sum(1 for c in config if c['status'] == 'ON')
+        off_count = sum(1 for c in config if c['status'] == 'OFF')
+        self.log(f"  ON: {on_count}, OFF: {off_count}")
+        return config
+
+    def apply_interconnections(self, interconnections_config):
+        """
+        Apply interconnection ON/OFF controls to AR files for all scenarios.
+
+        For OFF: Base Year Value.Fuel.I=0, Value.Fuel.O=0; Projections Projection.Mode='EMPTY'
+        For ON:  Base Year Value.Fuel.I=1, Value.Fuel.O=1; Projections Projection.Mode='User defined'
+
+        Args:
+            interconnections_config: list of {tech, mode, status} dicts
+        """
+        self.log("")
+        self.log("=" * 80)
+        self.log("APPLYING INTERCONNECTION CONTROLS")
+        self.log("=" * 80)
+
+        # Build lookup: (tech, mode) -> status
+        status_lookup = {}
+        for entry in interconnections_config:
+            key = (entry['tech'], entry['mode'])
+            status_lookup[key] = entry['status']
+
+        off_entries = [(t, m) for (t, m), s in status_lookup.items() if s == 'OFF']
+        if off_entries:
+            self.log(f"Interconnections to disable: {len(off_entries)}")
+            for tech, mode in off_entries:
+                self.log(f"  OFF: {tech} Mode {mode}")
+        else:
+            self.log("All interconnections are ON - no changes needed")
+            return
+
+        total_base_year_changes = 0
+        total_projections_changes = 0
+
+        for scenario in self.scenarios:
+            scenario_path = self.base_path / f"A1_Outputs_{scenario}"
+            if not scenario_path.exists():
+                continue
+
+            self.log(f"\n--- Scenario: {scenario} ---")
+
+            # ===== Part A: A-O_AR_Model_Base_Year.xlsx =====
+            base_year_path = scenario_path / "A-O_AR_Model_Base_Year.xlsx"
+            if base_year_path.exists():
+                try:
+                    wb_by = openpyxl.load_workbook(base_year_path)
+                    if 'Secondary' in wb_by.sheetnames:
+                        ws_by = wb_by['Secondary']
+
+                        # Find column indices by header name (row 1)
+                        headers_by = {}
+                        for col_idx in range(1, ws_by.max_column + 1):
+                            val = ws_by.cell(1, col_idx).value
+                            if val:
+                                headers_by[str(val).strip()] = col_idx
+
+                        col_mode = headers_by.get('Mode.Operation')
+                        col_tech = headers_by.get('Tech')
+                        col_val_fi = headers_by.get('Value.Fuel.I')
+                        col_val_fo = headers_by.get('Value.Fuel.O')
+
+                        if not all([col_mode, col_tech, col_val_fi, col_val_fo]):
+                            self.log(f"  WARNING: Missing required columns in Base Year Secondary sheet", "WARNING")
+                            self.log(f"  Found headers: {list(headers_by.keys())}", "WARNING")
+                        else:
+                            base_year_changes = 0
+                            for row_idx in range(2, ws_by.max_row + 1):
+                                tech = ws_by.cell(row_idx, col_tech).value
+                                mode = ws_by.cell(row_idx, col_mode).value
+                                if tech is None or mode is None:
+                                    continue
+                                tech = str(tech).strip()
+                                try:
+                                    mode = int(mode)
+                                except (ValueError, TypeError):
+                                    continue
+
+                                key = (tech, mode)
+                                if key in status_lookup:
+                                    status = status_lookup[key]
+                                    if status == 'OFF':
+                                        ws_by.cell(row_idx, col_val_fi).value = 0
+                                        ws_by.cell(row_idx, col_val_fo).value = 0
+                                        base_year_changes += 1
+                                    else:  # ON
+                                        ws_by.cell(row_idx, col_val_fi).value = 1
+                                        ws_by.cell(row_idx, col_val_fo).value = 1
+                                        base_year_changes += 1
+
+                            if base_year_changes > 0:
+                                wb_by.save(base_year_path)
+                                self.log(f"  Base Year: {base_year_changes} rows updated")
+                                total_base_year_changes += base_year_changes
+                            else:
+                                self.log(f"  Base Year: no matching rows found")
+                    else:
+                        self.log(f"  WARNING: 'Secondary' sheet not found in Base Year file", "WARNING")
+                    wb_by.close()
+                except Exception as e:
+                    self.log(f"  ERROR processing Base Year for {scenario}: {e}", "ERROR")
+            else:
+                self.log(f"  Base Year file not found: {base_year_path}")
+
+            # ===== Part B: A-O_AR_Projections.xlsx =====
+            proj_path = scenario_path / "A-O_AR_Projections.xlsx"
+            if proj_path.exists():
+                try:
+                    wb_proj = openpyxl.load_workbook(proj_path)
+                    if 'Secondary' in wb_proj.sheetnames:
+                        ws_proj = wb_proj['Secondary']
+
+                        # Find column indices by header name (row 1)
+                        headers_proj = {}
+                        for col_idx in range(1, ws_proj.max_column + 1):
+                            val = ws_proj.cell(1, col_idx).value
+                            if val:
+                                headers_proj[str(val).strip()] = col_idx
+
+                        col_mode_p = headers_proj.get('Mode.Operation')
+                        col_tech_p = headers_proj.get('Tech')
+                        col_proj_mode = headers_proj.get('Projection.Mode')
+
+                        if not all([col_mode_p, col_tech_p, col_proj_mode]):
+                            self.log(f"  WARNING: Missing required columns in Projections Secondary sheet", "WARNING")
+                            self.log(f"  Found headers: {list(headers_proj.keys())}", "WARNING")
+                        else:
+                            proj_changes = 0
+                            for row_idx in range(2, ws_proj.max_row + 1):
+                                tech = ws_proj.cell(row_idx, col_tech_p).value
+                                mode = ws_proj.cell(row_idx, col_mode_p).value
+                                if tech is None or mode is None:
+                                    continue
+                                tech = str(tech).strip()
+                                try:
+                                    mode = int(mode)
+                                except (ValueError, TypeError):
+                                    continue
+
+                                key = (tech, mode)
+                                if key in status_lookup:
+                                    status = status_lookup[key]
+                                    if status == 'OFF':
+                                        ws_proj.cell(row_idx, col_proj_mode).value = 'EMPTY'
+                                        proj_changes += 1
+                                    else:  # ON
+                                        ws_proj.cell(row_idx, col_proj_mode).value = 'User defined'
+                                        proj_changes += 1
+
+                            if proj_changes > 0:
+                                wb_proj.save(proj_path)
+                                self.log(f"  Projections: {proj_changes} rows updated")
+                                total_projections_changes += proj_changes
+                            else:
+                                self.log(f"  Projections: no matching rows found")
+                    else:
+                        self.log(f"  WARNING: 'Secondary' sheet not found in Projections file", "WARNING")
+                    wb_proj.close()
+                except Exception as e:
+                    self.log(f"  ERROR processing Projections for {scenario}: {e}", "ERROR")
+            else:
+                self.log(f"  Projections file not found: {proj_path}")
+
+        self.log(f"\nInterconnection controls completed:")
+        self.log(f"  Base Year rows updated: {total_base_year_changes}")
+        self.log(f"  Projections rows updated: {total_projections_changes}")
+
     def run(self):
         """Main execution"""
         self.log("=" * 80)
@@ -3646,6 +3860,14 @@ class SecondaryTechsUpdater:
                 self.log("")
                 self.log("Trade Balance Demand Adjustment: DISABLED")
 
+            # Check Interconnections Control
+            if self.olade_config.get('interconnections_enabled'):
+                self.log("")
+                self.log("Interconnections Control: ENABLED")
+            else:
+                self.log("")
+                self.log("Interconnections Control: DISABLED")
+
             self.log("")
 
             # Read editor file
@@ -3715,6 +3937,12 @@ class SecondaryTechsUpdater:
             # Adjust demand by trade balance if enabled (runs LAST - must not affect activity limits)
             if self.olade_config.get('trade_balance_enabled') and self.trade_balance_data:
                 self.update_demand_with_trade_balance(sorted(all_years))
+
+            # Apply interconnection controls if enabled
+            if self.olade_config.get('interconnections_enabled'):
+                interconnections_config = self.read_interconnections_config()
+                if interconnections_config:
+                    self.apply_interconnections(interconnections_config)
 
             # Summary
             self.log("")
