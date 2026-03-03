@@ -11,10 +11,10 @@ dependencies:
   - numpy>=1.26
   - openpyxl>=3.1
   - pyyaml>=6.0
-  - xlsxwriter>=3.2.4   # por conda-forge, estable en Windows
+  - xlsxwriter>=3.2.4   # from conda-forge, stable on Windows
 
-  # Pip (para DVC y otoole)
+  # Pip (for DVC and otoole)
   - pip
   - pip:
       - dvc
-      - otoole>=1.1.1    # instalamos otoole vía pip (suele ser lo más fiable en Win)
+      - otoole>=1.1.1    # install otoole via pip (usually the most reliable on Win)

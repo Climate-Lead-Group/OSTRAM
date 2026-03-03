@@ -20,7 +20,7 @@ from datetime import datetime
 import shutil
 from collections import defaultdict
 
-# Importar el script de normalización de perfiles CSV
+# Import the CSV profile normalization script
 try:
     from Z_AUX_fix_all_profiles_normalization import (
         normalize_specified_demand_profile,
@@ -34,7 +34,7 @@ except ImportError as e:
     print(f"[INIT] ✗ Failed to import profile normalization module: {e}")
     print("[INIT]   Normalization will be skipped")
 
-# Importar el script de normalización de perfiles Excel
+# Import the Excel profile normalization script
 try:
     from Z_AUX_fix_excel_profiles import normalize_excel_profiles
     EXCEL_NORMALIZATION_AVAILABLE = True

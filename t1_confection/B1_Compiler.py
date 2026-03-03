@@ -1630,7 +1630,7 @@ df_structure['REGION'] = df_structure_region
 df_structure['DAYTYPE'] = df_structure_daytype
 df_structure['DAILYTIMEBRACKET'] = df_structure_dtb
 df_structure['SEASON'] = df_structure_season
-df_structure['STORAGE'] = df_structure_storage # Esto se debe de cambiar cuando sen añada algo de storage
+df_structure['STORAGE'] = df_structure_storage # This should be changed when storage is added
 writer_Structure_df = pd.ExcelWriter(params['Print_A2_Struct_List'], engine='xlsxwriter')
 df_structure.to_excel( writer_Structure_df, sheet_name = params['lists'], index=False)
 writer_Structure_df.close()

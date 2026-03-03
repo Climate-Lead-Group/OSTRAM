@@ -274,15 +274,15 @@ PARAM_LIST = [
 def process_parametrization(path, pairs, yaml_data):
     print(f"Processing '{path}' …")
 
-    # ───── 1. Cargar hojas ───────────────────────────────────────────────────
+    # ───── 1. Load sheets ───────────────────────────────────────────────────
     fhp   = pd.read_excel(path, sheet_name='Fixed Horizon Parameters',
                           engine='openpyxl')
     dtech = pd.read_excel(path, sheet_name='Demand Techs',
                           engine='openpyxl')
 
 
-    # Mapa rápido Tech → Tech.ID ya existentes (solo para techs NO de transmisión)
-    # Las tecnologías de transmisión tendrán IDs secuenciales empezando desde 1
+    # Quick map Tech → Tech.ID for already existing techs (only for NON-transmission techs)
+    # Transmission technologies will have sequential IDs starting from 1
     transmission_prefixes = ('RNWTRN', 'RNWRPO', 'RNWNLI', 'TRNRPO', 'TRNNLI', 'PWRTRN')
     existing_ids = {}
     for _, row in fhp.iterrows():
@@ -291,23 +291,23 @@ def process_parametrization(path, pairs, yaml_data):
         if tech and not any(tech.startswith(p) for p in transmission_prefixes):
             existing_ids[tech] = tech_id
 
-    new_rows_fhp   = []          # filas nuevas (o que faltan) para FHP
-    new_rows_dtech = []          # todas las filas que se añadirán a Demand Techs
+    new_rows_fhp   = []          # new (or missing) rows for FHP
+    new_rows_dtech = []          # all rows to be added to Demand Techs
 
-    # Tech.ID contador para tecnologías de transmisión (empezando desde 1)
+    # Tech.ID counter for transmission technologies (starting from 1)
     tx_tech_id = 0
 
-    # ───── 2. Generar / actualizar tecnologías ─────────────────────────────
+    # ───── 2. Generate / update technologies ─────────────────────────────
     for country, region in pairs:
         for tech_prefix in transmission_prefixes:
             tech_code = f"{tech_prefix}{country}{region}"
             countryname = iso_country_map.get(country, f"Unknown ({country})")
-            # 2.1 Tech.ID: asignar ID secuencial para tecnologías de transmisión
+            # 2.1 Tech.ID: assign sequential ID for transmission technologies
             tx_tech_id += 1
             tech_id = tx_tech_id
             existing_ids[tech_code] = tech_id
 
-            # 2.2 Nombre descriptivo
+            # 2.2 Descriptive name
             tech_name = (
                 'Existing' if tech_prefix in ('RNWTRN','PWRTRN') else
                 'Repower'  if tech_prefix in ('RNWRPO','TRNRPO') else
@@ -317,19 +317,19 @@ def process_parametrization(path, pairs, yaml_data):
                  ' transmission technology from NO renewable power plants, ') \
               + f"{countryname}, Region {region}"
 
-            # 2.3 Configuración YAML
+            # 2.3 YAML configuration
             cfg = yaml_data.get(tech_prefix, {})
             cap_to_act       = cfg.get('CapacityToActivityUnit', '')
             operational_life = cfg.get('OperationalLife', '')
 
             # ── A) FIXED HORIZON PARAMETERS ────────────────────────────────
-            # Actualizar (o crear si no estaban) CapacityToActivityUnit y OperationalLife
+            # Update (or create if missing) CapacityToActivityUnit and OperationalLife
             for par_id, (par_name, par_val) in enumerate(
                     [('CapacityToActivityUnit', cap_to_act),
                      ('OperationalLife',       operational_life)], start=1):
                 mask = (fhp['Tech'] == tech_code) & (fhp['Parameter'] == par_name)
                 if mask.any():
-                    fhp.loc[mask, 'Value'] = par_val             # solo actualizar
+                    fhp.loc[mask, 'Value'] = par_val             # just update
                 else:
                     new_rows_fhp.append({
                         'Tech.Type'  : 'Demand',
@@ -343,10 +343,10 @@ def process_parametrization(path, pairs, yaml_data):
                     })
 
             # ── B) DEMAND TECHS ────────────────────────────────────────────
-            # 1) Elimina cualquier fila previa (así evitamos duplicados)
+            # 1) Remove any previous rows (to avoid duplicates)
             dtech = dtech[dtech['Tech'] != tech_code]
 
-            # 2) Añade el bloque de 12 parámetros con el Tech.ID correcto
+            # 2) Add the block of 12 parameters with the correct Tech.ID
             years = [c for c in dtech.columns if str(c).isdigit()]
             base_row = {
                 'Tech.ID'            : tech_id,
@@ -362,15 +362,15 @@ def process_parametrization(path, pairs, yaml_data):
                 row['Parameter']    = param
                 value_cfg = cfg.get(param, None)
 
-                if isinstance(value_cfg, dict):                 # valores año–a–año
+                if isinstance(value_cfg, dict):                 # year-by-year values
                     row['Projection.Mode'] = 'User defined'
                     for yr in years:
                         row[yr] = value_cfg.get(yr, '')
-                elif value_cfg is not None:                     # valor constante
+                elif value_cfg is not None:                     # constant value
                     row['Projection.Mode'] = 'User defined'
                     for yr in years:
                         row[yr] = value_cfg
-                else:                                           # sin dato
+                else:                                           # no data
                     row['Projection.Mode'] = 'EMPTY'
                     for yr in years:
                         row[yr] = ''
@@ -382,7 +382,7 @@ def process_parametrization(path, pairs, yaml_data):
         fhp = pd.concat([fhp, pd.DataFrame(new_rows_fhp)],
                         ignore_index=True)
 
-    # Concatena todas las filas (nuevas o recreadas) de Demand Techs
+    # Concatenate all rows (new or recreated) of Demand Techs
     dtech = pd.concat([dtech, pd.DataFrame(new_rows_dtech)],
                       ignore_index=True)
 

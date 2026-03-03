@@ -59,7 +59,7 @@ olade_tech_mapping:
   Geotermia: GEO
   "Eólica": WON
   Solar: SPV
-  # BIO is special: sum of Biogás + Biomasa sólida + Biocombustibles líquidos
+  # BIO is special: sum of Biogas + Solid biomass + Liquid biofuels
 
 # Model tech code -> description
 code_to_energy:

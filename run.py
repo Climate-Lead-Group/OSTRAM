@@ -1,19 +1,19 @@
 # run.py
 # -*- coding: utf-8 -*-
 """
-Runner para DVC en Windows con manejo de entorno Conda y parche temporal del dvc.yaml.
+DVC runner for Windows with Conda environment management and temporary dvc.yaml patching.
 
-Características:
-- Backup de dvc.yaml, reemplazo temporal de 'fecha' -> YYYY-MM-DD (cualquier aparición).
-- Si el entorno Conda existe, NO lo recrea.
-- Si el entorno existe, verifica dependencias e instala las faltantes:
+Features:
+- Backup of dvc.yaml, temporary replacement of 'fecha' -> YYYY-MM-DD (any occurrence).
+- If the Conda environment exists, it is NOT recreated.
+- If the environment exists, verifies dependencies and installs missing ones:
     * conda-forge: pandas, numpy, openpyxl, pyyaml, xlsxwriter
     * pip: dvc, otoole
-  (instala 'pip' en el entorno si hiciera falta).
-- Inicializa repo DVC si falta (.dvc/).
-- Ejecuta 'dvc pull' solo si hay remoto configurado.
-- Ejecuta 'dvc repro'.
-- Restaura el dvc.yaml desde el backup y ELIMINA el archivo .bak (siempre).
+  (installs 'pip' in the environment if needed).
+- Initializes DVC repo if missing (.dvc/).
+- Runs 'dvc pull' only if a remote is configured.
+- Runs 'dvc repro'.
+- Restores dvc.yaml from backup and DELETES the .bak file (always).
 """
 
 import argparse
@@ -31,9 +31,9 @@ ENV_NAME_DEFAULT = "OG-MOMF-env"
 ENV_FILE_DEFAULT = "environment.yaml"
 DVC_FILE_DEFAULT = "dvc.yaml"
 
-# Dependencias a verificar/instalar
+# Dependencies to verify/install
 CONDA_DEPS = {
-    # módulo_python: paquete_conda
+    # python_module: conda_package
     "pandas": "pandas",
     "numpy": "numpy",
     "openpyxl": "openpyxl",
@@ -41,7 +41,7 @@ CONDA_DEPS = {
     "xlsxwriter": "xlsxwriter"
 }
 PIP_DEPS = {
-    # módulo_python: paquete_pip
+    # python_module: pip_package
     "dvc": "dvc",
     "otoole": "otoole>=1.1.1",
 }
@@ -59,16 +59,16 @@ def check_tool_available(tool: str) -> None:
                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception as exc:
         raise RuntimeError(
-            f"Requisito '{tool}' no encontrado en PATH. "
-            f"Abre una Anaconda/Miniconda Prompt o instala la herramienta. Error original: {exc}"
+            f"Requirement '{tool}' not found in PATH. "
+            f"Open an Anaconda/Miniconda Prompt or install the tool. Original error: {exc}"
         )
 
-# ---------- Manejo de entorno Conda ----------
+# ---------- Conda environment management ----------
 def env_exists(name: str) -> bool:
     """
-    Devuelve True si existe un entorno conda cuyo directorio final se llama 'name'.
-    Ej.: .../envs/OG-MOMF-env  -> name == 'OG-MOMF-env'
-    Usa 'conda env list --json' y hace fallback al parseo de texto.
+    Returns True if a conda environment whose final directory matches 'name' exists.
+    E.g.: .../envs/OG-MOMF-env  -> name == 'OG-MOMF-env'
+    Uses 'conda env list --json' with fallback to text parsing.
     """
     target = name.lower()
 
@@ -82,11 +82,11 @@ def env_exists(name: str) -> bool:
         data = json.loads(out)
         envs = data.get("envs", []) or []
         return any(Path(p).name.lower() == target for p in envs)
-    # Si conda es muy viejo o algo falla, pasamos al fallback
+    # If conda is too old or something fails, fall back to text parsing
     except Exception:
         pass
 
-    # 2) Fallback: parseo de texto de 'conda env list'
+    # 2) Fallback: text parsing of 'conda env list'
     try:
         txt = subprocess.check_output(
             ["conda", "env", "list"],
@@ -97,13 +97,13 @@ def env_exists(name: str) -> bool:
             line = line.strip()
             if not line or line.startswith(("#", "conda environments:")):
                 continue
-            # líneas típicas:
+            # typical lines:
             # base                  *  C:\Users\...\anaconda3
             # OG-MOMF-env              C:\Users\...\envs\OG-MOMF-env
             parts = line.split()
             if not parts:
                 continue
-            # Si la segunda columna es '*', la primera es el nombre
+            # If the second column is '*', the first one is the name
             cand = parts[0].lower()
             if cand == target:
                 return True
@@ -117,7 +117,7 @@ def guess_env_name_from_yaml(env_file: str) -> str | None:
     if not p.exists():
         return None
     try:
-        # Parseo sencillo: buscar línea 'name: ...'
+        # Simple parsing: look for 'name: ...' line
         for line in p.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if line.lower().startswith("name:"):
@@ -129,16 +129,16 @@ def guess_env_name_from_yaml(env_file: str) -> str | None:
 
 def create_env_if_missing(env_name: str, env_file: str) -> None:
     if env_exists(env_name):
-        print(f"Conda env '{env_name}' ya existe. No se recrea.")
+        print(f"Conda env '{env_name}' already exists. Not recreating.")
         return
-    print(f"Creando Conda env '{env_name}' desde {env_file} …")
+    print(f"Creating Conda env '{env_name}' from {env_file} …")
     run(f"conda env create -n {env_name} -f {env_file} -y")
 
 def ensure_pip_available(env_name: str) -> None:
     try:
         run(f"conda run -n {env_name} python -m pip --version")
     except subprocess.CalledProcessError:
-        print("pip no encontrado en el entorno. Instalando 'pip' en el env…")
+        print("pip not found in the environment. Installing 'pip' in the env…")
         run(f"conda install -n {env_name} pip -y")
 
 def module_present(env_name: str, module: str) -> bool:
@@ -154,11 +154,11 @@ def module_present(env_name: str, module: str) -> bool:
 
 def ensure_deps(env_name: str) -> None:
     """
-    Verifica módulos en el entorno y los instala si faltan.
-    - Conda (conda-forge) para stack de datos.
-    - Pip para dvc/otoole.
+    Verifies modules in the environment and installs missing ones.
+    - Conda (conda-forge) for the data stack.
+    - Pip for dvc/otoole.
     """
-    # Asegura pip dentro del entorno si lo necesitaremos
+    # Ensure pip is available inside the environment if we'll need it
     need_pip = any(not module_present(env_name, m) for m in list(PIP_DEPS.keys()))
     if need_pip:
         ensure_pip_available(env_name)
@@ -167,14 +167,14 @@ def ensure_deps(env_name: str) -> None:
     missing_conda = [pkg for mod, pkg in CONDA_DEPS.items() if not module_present(env_name, mod)]
     if missing_conda:
         pkgs = " ".join(missing_conda)
-        print(f"Instalando conda deps que faltan: {missing_conda}")
+        print(f"Installing missing conda deps: {missing_conda}")
         run(f"conda install -n {env_name} -c conda-forge -y {pkgs}")
 
     # Pip deps
     missing_pip = [pkg for mod, pkg in PIP_DEPS.items() if not module_present(env_name, mod)]
     if missing_pip:
         for spec in missing_pip:
-            print(f"Instalando pip dep que falta: {spec}")
+            print(f"Installing missing pip dep: {spec}")
             run(f"conda run -n {env_name} python -m pip install -U {spec}")
 
 # ---------- DVC ----------
@@ -192,14 +192,14 @@ def ensure_dvc_repo(env_name: str) -> None:
 
     # Check if we're in a Git repo to decide how to init DVC
     if is_git_repo():
-        print("No hay repo DVC. Ejecutando `dvc init`…")
+        print("No DVC repo found. Running `dvc init`…")
         run(f"conda run -n {env_name} dvc init")
     else:
-        print("No hay repo Git. Ejecutando `dvc init --no-scm`…")
+        print("No Git repo found. Running `dvc init --no-scm`…")
         run(f"conda run -n {env_name} dvc init --no-scm")
 
     if not is_dvc_repo():
-        raise RuntimeError("Fallo al inicializar DVC (no se creó .dvc).")
+        raise RuntimeError("Failed to initialize DVC (.dvc was not created).")
 
 def has_dvc_remote(env_name: str) -> bool:
     try:
@@ -212,32 +212,32 @@ def has_dvc_remote(env_name: str) -> bool:
 def dvc_command(env_name: str, args: str) -> None:
     run(f"conda run -n {env_name} dvc {args}")
 
-# ---------- Backup / parche dvc.yaml ----------
+# ---------- Backup / patch dvc.yaml ----------
 def backup_file(src: Path) -> Path:
     if not src.exists():
-        raise FileNotFoundError(f"No se encontró {src} para hacer backup.")
+        raise FileNotFoundError(f"{src} not found for backup.")
     ts = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
     bak = src.with_suffix(src.suffix + f".bak.{ts}")
     shutil.copy2(src, bak)
-    print(f"Backup creado: {bak.name}")
+    print(f"Backup created: {bak.name}")
     return bak
 
 def restore_and_delete_backup(backup_path: Path, target: Path) -> None:
     if backup_path and backup_path.exists():
         shutil.copy2(backup_path, target)
-        print(f"Restaurado {target.name} desde backup: {backup_path.name}")
+        print(f"Restored {target.name} from backup: {backup_path.name}")
         try:
-            backup_path.unlink()  # borrar el .bak
-            print(f"Backup eliminado: {backup_path.name}")
+            backup_path.unlink()  # delete the .bak
+            print(f"Backup deleted: {backup_path.name}")
         except Exception as e:
-            print(f"Advertencia: no se pudo borrar el backup ({e})")
+            print(f"Warning: could not delete the backup ({e})")
     else:
-        print("Backup no encontrado; nada que restaurar/borrar.")
+        print("Backup not found; nothing to restore/delete.")
 
 def patch_fecha_anywhere(dvc_path: Path, date_stamp: str) -> int:
     """
-    Reemplaza TODAS las apariciones literales de 'fecha' por la fecha (YYYY-MM-DD).
-    No usa regex, así también cubre '..._fecha.csv' (con guión bajo).
+    Replaces ALL literal occurrences of 'fecha' with the date (YYYY-MM-DD).
+    Does not use regex, so it also covers '..._fecha.csv' (with underscore).
     """
     text = dvc_path.read_text(encoding="utf-8")
     count = text.count("fecha")
@@ -247,62 +247,62 @@ def patch_fecha_anywhere(dvc_path: Path, date_stamp: str) -> int:
 
 # ---------- Main ----------
 def main():
-    parser = argparse.ArgumentParser(description="Runner de DVC con entorno Conda y parche temporal de dvc.yaml")
-    parser.add_argument("--env-name", default=None, help="Nombre del entorno Conda (si no se pasa, intenta leer del YAML).")
-    parser.add_argument("--env-file", default=ENV_FILE_DEFAULT, help="Ruta del environment.yaml.")
-    parser.add_argument("--dvc-file", default=DVC_FILE_DEFAULT, help="Ruta del dvc.yaml a parchear.")
-    parser.add_argument("--date", default=None, help="Fecha YYYY-MM-DD (por defecto hoy).")
+    parser = argparse.ArgumentParser(description="DVC runner with Conda environment and temporary dvc.yaml patching")
+    parser.add_argument("--env-name", default=None, help="Conda environment name (if not provided, tries to read from YAML).")
+    parser.add_argument("--env-file", default=ENV_FILE_DEFAULT, help="Path to environment.yaml.")
+    parser.add_argument("--dvc-file", default=DVC_FILE_DEFAULT, help="Path to dvc.yaml to patch.")
+    parser.add_argument("--date", default=None, help="Date YYYY-MM-DD (defaults to today).")
     args = parser.parse_args()
 
-    # Determinar env_name
+    # Determine env_name
     env_name = args.env_name or guess_env_name_from_yaml(args.env_file) or ENV_NAME_DEFAULT
     env_file = args.env_file
     dvc_file = Path(args.dvc_file).resolve()
 
-    # Fecha
+    # Date
     if args.date:
         try:
             dt.date.fromisoformat(args.date)
         except ValueError:
-            raise SystemExit("Formato de --date inválido. Usa YYYY-MM-DD (ej. 2025-08-21).")
+            raise SystemExit("Invalid --date format. Use YYYY-MM-DD (e.g. 2025-08-21).")
         date_stamp = args.date
     else:
         date_stamp = dt.date.today().isoformat()
 
-    print(f"Usando entorno: {env_name}")
+    print(f"Using environment: {env_name}")
     print(f"Usando date stamp: {date_stamp}")
     print(f"dvc.yaml: {dvc_file}")
 
-    # Requisitos base
+    # Base requirements
     check_tool_available("conda")
 
     backup_path = None
     try:
-        # 1) Backup + parcheo de 'fecha' antes de cualquier cosa
+        # 1) Backup + patching of 'fecha' before anything else
         backup_path = backup_file(dvc_file)
         replaced = patch_fecha_anywhere(dvc_file, date_stamp)
         if replaced:
-            print(f"Parche aplicado: {replaced} ocurrencia(s) de 'fecha' cambiadas por '{date_stamp}'.")
+            print(f"Patch applied: {replaced} occurrence(s) of 'fecha' replaced with '{date_stamp}'.")
         else:
-            print("No se encontraron ocurrencias de 'fecha' en dvc.yaml.")
+            print("No occurrences of 'fecha' found in dvc.yaml.")
 
-        # 2) Entorno: crear si falta; si existe, NO recrear.
+        # 2) Environment: create if missing; if it exists, do NOT recreate.
         create_env_if_missing(env_name, env_file)
 
-        # 3) Verificar/instalar dependencias dentro del entorno
+        # 3) Verify/install dependencies inside the environment
         ensure_deps(env_name)
 
-        # 4) Asegurar repo DVC
+        # 4) Ensure DVC repo
         ensure_dvc_repo(env_name)
 
-        # 5) Pull solo si hay remoto
+        # 5) Pull only if a remote is configured
         if has_dvc_remote(env_name):
             print("📥 dvc pull…")
             dvc_command(env_name, "pull")
         else:
-            print("ℹ️ Sin remoto DVC configurado. Se omite `dvc pull`.")
+            print("ℹ️ No DVC remote configured. Skipping `dvc pull`.")
 
-        # 6) Reproducir pipeline
+        # 6) Reproduce pipeline
         print("🔄 dvc repro…")
         start_time = dt.datetime.now()
         dvc_command(env_name, "repro")
@@ -321,10 +321,10 @@ def main():
             duration_str.append(f"{minutes}m")
         duration_str.append(f"{seconds}s")
 
-        print(f"✅ ¡Pipeline completado en {' '.join(duration_str)}!")
+        print(f"✅ Pipeline completed in {' '.join(duration_str)}!")
 
     finally:
-        # 7) Restaurar dvc.yaml y borrar backup
+        # 7) Restore dvc.yaml and delete backup
         if backup_path:
             restore_and_delete_backup(backup_path, dvc_file)
 
@@ -332,7 +332,7 @@ if __name__ == "__main__":
     try:
         main()
     except subprocess.CalledProcessError as e:
-        print(f"\n❌ Falla de comando (exit {e.returncode}): {e.cmd}", file=sys.stderr)
+        print(f"\n❌ Command failure (exit {e.returncode}): {e.cmd}", file=sys.stderr)
         sys.exit(e.returncode)
     except Exception as e:
         print(f"\n❌ Error: {e}", file=sys.stderr)

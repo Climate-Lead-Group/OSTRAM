@@ -1,38 +1,38 @@
 """
-Generador de Dashboards HTML Interactivos para Tecnologías PWR - VERSIÓN AGREGADA
+Interactive HTML Dashboard Generator for PWR Technologies - AGGREGATED VERSION
 
-Este script genera dashboards HTML con gráficos AGREGADOS POR ESCENARIO:
+This script generates HTML dashboards with graphs AGGREGATED BY SCENARIO:
 
-DIFERENCIA CLAVE con la versión estándar:
-- Los gráficos muestran valores SUMADOS por escenario únicamente
-- Si seleccionas 5 países y 6 combustibles, todos sus valores se suman
-- La selección de combustibles y países actualiza automáticamente las tecnologías incluidas
+KEY DIFFERENCE from the standard version:
+- Graphs show values SUMMED by scenario only
+- If you select 5 countries and 6 fuels, all their values are summed
+- The selection of fuels and countries automatically updates the included technologies
 
-Filtros Interactivos:
-- Selección de Escenarios
-- Selección de Combustibles (FUEL) → Filtra tecnologías automáticamente
-- Selección de Países (COUNTRY) → Filtra tecnologías automáticamente
-- Vista de Tecnologías (auto-seleccionadas, no editable)
-- Botones rápidos: Renovables / No Renovables / Seleccionar Todo / Resetear
-- Cambio entre gráficos de líneas y barras
+Interactive Filters:
+- Scenario Selection
+- Fuel Selection (FUEL) -> Filters technologies automatically
+- Country Selection (COUNTRY) -> Filters technologies automatically
+- Technology View (auto-selected, not editable)
+- Quick buttons: Renewables / Non-Renewables / Select All / Reset
+- Switch between line and bar charts
 
-Gráficos Incluidos (TODOS AGREGADOS POR ESCENARIO):
-1. Shares de Renovabilidad (% basado en ProductionByTechnology)
-2. Suma Total por Escenario - Lower Limit (agregado de todos los años)
-3. Suma Total por Escenario - Production (agregado de todos los años)
-4. Evolución Temporal - Lower Limit (por año, sumado por escenario)
-5. Evolución Temporal - Production (por año, sumado por escenario)
+Included Charts (ALL AGGREGATED BY SCENARIO):
+1. Renewability Shares (% based on ProductionByTechnology)
+2. Total Sum by Scenario - Lower Limit (aggregated across all years)
+3. Total Sum by Scenario - Production (aggregated across all years)
+4. Temporal Evolution - Lower Limit (by year, summed by scenario)
+5. Temporal Evolution - Production (by year, summed by scenario)
 
-Características:
-- Filtrado automático de tecnologías PWR válidas (patrón regex)
-- Auto-selección de tecnologías basada en FUEL y COUNTRY
-- Agregación automática por escenario
-- Clasificación visual con colores (Verde=Renovable, Rojo=No Renovable)
-- Completamente standalone (no requieren servidor)
-- Actualización en tiempo real sin recargar la página
+Features:
+- Automatic filtering of valid PWR technologies (regex pattern)
+- Auto-selection of technologies based on FUEL and COUNTRY
+- Automatic aggregation by scenario
+- Visual classification with colors (Green=Renewable, Red=Non-Renewable)
+- Completely standalone (no server required)
+- Real-time updates without page reload
 
-Autor: Climate Lead Group
-Fecha: 2026-01-22
+Author: Climate Lead Group
+Date: 2026-01-22
 """
 
 import pandas as pd
@@ -42,17 +42,17 @@ import os
 import glob
 import re
 
-# Clasificación de combustibles
+# Fuel classification
 RENEWABLE_FUELS = ['BIO', 'WAS', 'CSP', 'SPV', 'GEO', 'HYD', 'WAV', 'WON', 'WOF']
 NON_RENEWABLE_FUELS = ['URN', 'NGS', 'COA', 'COG', 'OIL', 'PET', 'CCS', 'OTH']
 
-# Todos los combustibles válidos para tecnologías PWR
+# All valid fuels for PWR technologies
 VALID_FUELS = RENEWABLE_FUELS + NON_RENEWABLE_FUELS
 
-# Patrón regex para tecnologías PWR válidas: PWR + FUEL(3 letras) + COUNTRY(3 letras) + XX
+# Regex pattern for valid PWR technologies: PWR + FUEL(3 letters) + COUNTRY(3 letters) + XX
 TECH_PATTERN = r'^PWR(' + '|'.join(VALID_FUELS) + r')[A-Z]{3}XX$'
 
-# Colores
+# Colors
 COLORS = {
     'background': '#f8f9fa',
     'card': '#ffffff',
@@ -67,13 +67,13 @@ COLORS = {
 
 def is_valid_pwr_technology(tech):
     """
-    Valida si una tecnología cumple con el patrón PWR esperado
+    Validates whether a technology matches the expected PWR pattern
 
     Args:
-        tech: Código de tecnología (ej: 'PWRBIOARGXX')
+        tech: Technology code (e.g.: 'PWRBIOARGXX')
 
     Returns:
-        True si cumple el patrón, False en caso contrario
+        True if it matches the pattern, False otherwise
     """
     if pd.isna(tech):
         return False
@@ -82,42 +82,42 @@ def is_valid_pwr_technology(tech):
 
 def filter_pwr_technologies(df):
     """
-    Filtra solo las tecnologías PWR válidas según el patrón especificado
+    Filters only valid PWR technologies according to the specified pattern
 
     Args:
-        df: DataFrame con columna TECHNOLOGY
+        df: DataFrame with TECHNOLOGY column
 
     Returns:
-        DataFrame filtrado con solo tecnologías PWR válidas
+        DataFrame filtered with only valid PWR technologies
     """
     if 'TECHNOLOGY' not in df.columns:
         return df
 
     rows_before = len(df)
 
-    # Aplicar filtro de tecnologías válidas
+    # Apply valid technology filter
     df_filtered = df[df['TECHNOLOGY'].apply(is_valid_pwr_technology)].copy()
 
     rows_after = len(df_filtered)
     rows_removed = rows_before - rows_after
 
     if rows_removed > 0:
-        print(f"   🔍 Filtrado de tecnologías PWR:")
-        print(f"      - Filas antes: {rows_before:,}")
-        print(f"      - Filas después: {rows_after:,}")
-        print(f"      - Filas eliminadas: {rows_removed:,}")
-        print(f"      - Tecnologías únicas válidas: {df_filtered['TECHNOLOGY'].nunique():,}")
+        print(f"   🔍 PWR technology filtering:")
+        print(f"      - Rows before: {rows_before:,}")
+        print(f"      - Rows after: {rows_after:,}")
+        print(f"      - Rows removed: {rows_removed:,}")
+        print(f"      - Valid unique technologies: {df_filtered['TECHNOLOGY'].nunique():,}")
 
     return df_filtered
 
 
 def extract_fuel_country(df):
     """
-    Extrae FUEL y COUNTRY desde la columna TECHNOLOGY
+    Extracts FUEL and COUNTRY from the TECHNOLOGY column
 
-    Formato esperado: PWR[FUEL][COUNTRY]XX
-    - FUEL: posiciones 3-5 (caracteres 3, 4, 5)
-    - COUNTRY: posiciones 6-8 (caracteres 6, 7, 8)
+    Expected format: PWR[FUEL][COUNTRY]XX
+    - FUEL: positions 3-5 (characters 3, 4, 5)
+    - COUNTRY: positions 6-8 (characters 6, 7, 8)
     """
     df = df.copy()
     df['FUEL'] = df['TECHNOLOGY'].str[3:6]
@@ -126,21 +126,21 @@ def extract_fuel_country(df):
 
 
 def generate_interactive_dashboard(df, source_file):
-    """Genera un dashboard HTML interactivo"""
-    print(f"\n📊 Procesando: {source_file}")
+    """Generates an interactive HTML dashboard"""
+    print(f"\n📊 Processing: {source_file}")
 
-    # Validar columnas requeridas
+    # Validate required columns
     required_cols = ['Scenario', 'YEAR', 'TECHNOLOGY',
                      'ProductionByTechnology',
                      'TotalTechnologyAnnualActivityLowerLimit']
 
     missing_cols = [col for col in required_cols if col not in df.columns]
     if missing_cols:
-        print(f"   ❌ Error: Faltan columnas requeridas: {missing_cols}")
+        print(f"   ❌ Error: Missing required columns: {missing_cols}")
         return None
 
-    # Limpiar y convertir columnas numéricas
-    print(f"   🔄 Limpiando datos...")
+    # Clean and convert numeric columns
+    print(f"   🔄 Cleaning data...")
     df = df.copy()
 
     numeric_cols = ['YEAR', 'ProductionByTechnology', 'TotalTechnologyAnnualActivityLowerLimit']
@@ -153,43 +153,43 @@ def generate_interactive_dashboard(df, source_file):
     df['TotalTechnologyAnnualActivityLowerLimit'] = df['TotalTechnologyAnnualActivityLowerLimit'].fillna(0)
 
     if df.empty:
-        print(f"   ❌ Error: No hay datos válidos")
+        print(f"   ❌ Error: No valid data")
         return None
 
-    print(f"   ✅ Datos limpios: {len(df):,} filas válidas")
+    print(f"   ✅ Clean data: {len(df):,} valid rows")
 
-    # Filtrar solo tecnologías PWR válidas
+    # Filter only valid PWR technologies
     df = filter_pwr_technologies(df)
 
     if df.empty:
-        print(f"   ❌ Error: No hay tecnologías PWR válidas después del filtrado")
+        print(f"   ❌ Error: No valid PWR technologies after filtering")
         return None
 
-    # Extraer FUEL y COUNTRY
+    # Extract FUEL and COUNTRY
     df = extract_fuel_country(df)
 
-    # Obtener listas únicas
+    # Get unique lists
     scenarios = sorted(df['Scenario'].unique().tolist())
     fuels = sorted(df['FUEL'].unique().tolist())
     countries = sorted(df['COUNTRY'].unique().tolist())
     technologies = sorted(df['TECHNOLOGY'].unique().tolist())
     year_range = f"{df['YEAR'].min():.0f} - {df['YEAR'].max():.0f}"
 
-    # Preparar datos para exportar a JSON
-    print(f"   🔄 Preparando datos para JavaScript...")
+    # Prepare data for JSON export
+    print(f"   🔄 Preparing data for JavaScript...")
     df_export = df[['Scenario', 'YEAR', 'TECHNOLOGY', 'FUEL', 'COUNTRY',
                      'ProductionByTechnology', 'TotalTechnologyAnnualActivityLowerLimit']].copy()
 
-    # Convertir a JSON
+    # Convert to JSON
     data_json = df_export.to_json(orient='records')
 
-    # Generar nombre de archivo (con sufijo Aggregated)
+    # Generate filename (with Aggregated suffix)
     base_name = os.path.splitext(os.path.basename(source_file))[0]
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file = f"Dashboard_Interactive_Aggregated_{base_name}_{timestamp}.html"
 
-    # Crear HTML interactivo
-    print(f"   🔄 Generando HTML interactivo...")
+    # Create interactive HTML
+    print(f"   🔄 Generating interactive HTML...")
 
     html_content = f"""<!DOCTYPE html>
 <html lang="es">
@@ -372,200 +372,200 @@ def generate_interactive_dashboard(df, source_file):
 </head>
 <body>
     <div class="container">
-        <h1>📊 Dashboard PWR Interactivo - AGREGADO POR ESCENARIO</h1>
-        <p class="subtitle">Análisis: {base_name}</p>
+        <h1>📊 Interactive PWR Dashboard - AGGREGATED BY SCENARIO</h1>
+        <p class="subtitle">Analysis: {base_name}</p>
         <div style="text-align: center; margin-bottom: 20px; padding: 10px; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 5px;">
             <p style="margin: 0; color: #856404; font-weight: bold;">
-                ⚠️ VERSIÓN AGREGADA: Los gráficos muestran valores sumados por escenario únicamente.
+                ⚠️ AGGREGATED VERSION: Graphs show values summed by scenario only.
             </p>
             <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #856404;">
-                Los filtros de Combustibles y Países determinan qué tecnologías incluir en la suma.
+                The Fuel and Country filters determine which technologies to include in the sum.
             </p>
         </div>
 
-        <!-- Card: Información -->
+        <!-- Card: Information -->
         <div class="card">
-            <h3 style="margin-bottom: 15px;">📋 Información del Dataset</h3>
-            <p><strong>Archivo:</strong> {source_file}</p>
-            <p><strong>Rango de años:</strong> {year_range}</p>
-            <p><strong>Total de filas:</strong> {len(df):,}</p>
-            <p><strong>Tecnologías PWR únicas:</strong> {df['TECHNOLOGY'].nunique():,}</p>
+            <h3 style="margin-bottom: 15px;">📋 Dataset Information</h3>
+            <p><strong>File:</strong> {source_file}</p>
+            <p><strong>Year range:</strong> {year_range}</p>
+            <p><strong>Total rows:</strong> {len(df):,}</p>
+            <p><strong>Unique PWR technologies:</strong> {df['TECHNOLOGY'].nunique():,}</p>
             <p style="font-size: 0.9em; color: {COLORS['secondary']}; margin-top: 10px;">
-                ℹ️ <strong>Patrón de tecnologías PWR:</strong> PWR + [FUEL] + [COUNTRY] + XX<br>
-                Donde FUEL puede ser: {', '.join(VALID_FUELS)}
+                ℹ️ <strong>PWR technology pattern:</strong> PWR + [FUEL] + [COUNTRY] + XX<br>
+                Where FUEL can be: {', '.join(VALID_FUELS)}
             </p>
             <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; padding: 10px; margin-top: 15px;">
                 <p style="margin: 0; color: #856404; font-size: 0.9em;">
-                    <strong>⚠️ VERSIÓN AGREGADA:</strong> En esta versión, los gráficos muestran valores <strong>sumados por escenario</strong>.
+                    <strong>⚠️ AGGREGATED VERSION:</strong> In this version, graphs show values <strong>summed by scenario</strong>.
                 </p>
                 <p style="margin: 5px 0 0 0; color: #856404; font-size: 0.85em;">
-                    • Los filtros de FUEL y COUNTRY determinan qué tecnologías incluir en la suma<br>
-                    • Las tecnologías se seleccionan automáticamente según los filtros<br>
-                    • Ideal para comparar el total de cada escenario, no tecnologías individuales
+                    • FUEL and COUNTRY filters determine which technologies to include in the sum<br>
+                    • Technologies are automatically selected based on filters<br>
+                    • Ideal for comparing the total of each scenario, not individual technologies
                 </p>
             </div>
 
             <div class="legend-box">
                 <div class="legend-item renewable">
-                    <strong>🌱 Combustibles Renovables</strong><br>
+                    <strong>🌱 Renewable Fuels</strong><br>
                     BIO, WAS, CSP, SPV, GEO, HYD, WAV, WON, WOF
                 </div>
                 <div class="legend-item non-renewable">
-                    <strong>⚫ Combustibles No Renovables</strong><br>
+                    <strong>⚫ Non-Renewable Fuels</strong><br>
                     URN, NGS, COA, COG, OIL, PET, CCS, OTH
                 </div>
             </div>
         </div>
 
-        <!-- Card: Filtros -->
+        <!-- Card: Filters -->
         <div class="card">
-            <h3 style="margin-bottom: 15px;">🔍 Filtros Interactivos</h3>
+            <h3 style="margin-bottom: 15px;">🔍 Interactive Filters</h3>
 
             <div class="filters-grid">
                 <div class="filter-group">
-                    <label for="scenario-filter">Escenarios:</label>
+                    <label for="scenario-filter">Scenarios:</label>
                     <select id="scenario-filter" multiple>
-                        <!-- Opciones cargadas por JavaScript -->
+                        <!-- Options loaded by JavaScript -->
                     </select>
                 </div>
 
                 <div class="filter-group">
-                    <label for="fuel-filter">Combustibles (FUEL):</label>
+                    <label for="fuel-filter">Fuels (FUEL):</label>
                     <select id="fuel-filter" multiple>
-                        <!-- Opciones cargadas por JavaScript -->
+                        <!-- Options loaded by JavaScript -->
                     </select>
                 </div>
 
                 <div class="filter-group">
-                    <label for="country-filter">Países (COUNTRY):</label>
+                    <label for="country-filter">Countries (COUNTRY):</label>
                     <select id="country-filter" multiple>
-                        <!-- Opciones cargadas por JavaScript -->
+                        <!-- Options loaded by JavaScript -->
                     </select>
                 </div>
 
                 <div class="filter-group">
                     <label for="technology-filter">
-                        Tecnologías (auto-seleccionadas):
+                        Technologies (auto-selected):
                         <span style="font-size: 0.85em; font-weight: normal; color: {COLORS['secondary']};">
-                            ℹ️ Se actualizan automáticamente según FUEL y COUNTRY
+                            ℹ️ Automatically updated based on FUEL and COUNTRY
                         </span>
                     </label>
                     <select id="technology-filter" multiple disabled style="background-color: #f0f0f0; cursor: not-allowed;">
-                        <!-- Opciones cargadas y seleccionadas automáticamente por JavaScript -->
+                        <!-- Options loaded and selected automatically by JavaScript -->
                     </select>
                 </div>
             </div>
 
             <div class="controls">
                 <div class="graph-type-group">
-                    <label>Tipo de Gráfico:</label>
+                    <label>Chart Type:</label>
                     <div class="radio-option">
                         <input type="radio" id="type-line" name="graph-type" value="line" checked>
-                        <label for="type-line">📈 Líneas</label>
+                        <label for="type-line">📈 Lines</label>
                     </div>
                     <div class="radio-option">
                         <input type="radio" id="type-bar" name="graph-type" value="bar">
-                        <label for="type-bar">📊 Barras</label>
+                        <label for="type-bar">📊 Bars</label>
                     </div>
                 </div>
 
-                <button class="btn btn-primary" onclick="updateAllGraphs()">🔄 Actualizar Gráficos</button>
-                <button class="btn btn-secondary" onclick="resetFilters()">↺ Resetear Filtros</button>
-                <button class="btn btn-secondary" onclick="selectAll()">☑️ Seleccionar Todo</button>
-                <button class="btn btn-secondary" onclick="selectRenewable()">🌱 Solo Renovables</button>
-                <button class="btn btn-secondary" onclick="selectNonRenewable()">⚫ Solo No Renovables</button>
+                <button class="btn btn-primary" onclick="updateAllGraphs()">🔄 Update Charts</button>
+                <button class="btn btn-secondary" onclick="resetFilters()">↺ Reset Filters</button>
+                <button class="btn btn-secondary" onclick="selectAll()">☑️ Select All</button>
+                <button class="btn btn-secondary" onclick="selectRenewable()">🌱 Renewables Only</button>
+                <button class="btn btn-secondary" onclick="selectNonRenewable()">⚫ Non-Renewables Only</button>
             </div>
 
             <div class="filter-info" id="filter-info"></div>
         </div>
 
-        <!-- Gráficos -->
-        <!-- Sección: Shares de Renovabilidad -->
+        <!-- Charts -->
+        <!-- Section: Renewability Shares -->
         <div class="card">
-            <h3 style="margin-bottom: 15px;">🌱 Shares de Renovabilidad</h3>
+            <h3 style="margin-bottom: 15px;">🌱 Renewability Shares</h3>
             <p style="font-size: 0.9em; color: {COLORS['secondary']}; margin-bottom: 10px;">
-                Porcentaje de generación renovable vs no renovable - Respeta todos los filtros seleccionados (Escenarios, Combustibles, Países)
+                Percentage of renewable vs non-renewable generation - Respects all selected filters (Scenarios, Fuels, Countries)
             </p>
             <p style="font-size: 0.85em; color: {COLORS['primary']}; margin-bottom: 10px;">
-                ℹ️ Al cambiar FUEL o COUNTRY, el gráfico se actualiza automáticamente
+                ℹ️ When changing FUEL or COUNTRY, the chart updates automatically
             </p>
             <div id="renewability-graph" class="graph-container"></div>
         </div>
 
-        <!-- Sección: Gráficos de Suma Total por Tecnología -->
+        <!-- Section: Total Sum by Technology Charts -->
         <div style="margin: 30px 0; padding: 15px; background: linear-gradient(to right, {COLORS['primary']}, {COLORS['primary']}33); border-radius: 10px;">
             <h2 style="color: white; text-align: center; margin: 0; font-size: 1.5em;">
-                📊 SUMA TOTAL POR TECNOLOGÍA
+                📊 TOTAL SUM BY TECHNOLOGY
             </h2>
             <p style="color: white; text-align: center; margin: 5px 0 0 0; font-size: 0.95em; opacity: 0.95;">
-                Valores agregados de todos los años - Top 30 tecnologías
+                Aggregated values across all years - Top 30 technologies
             </p>
         </div>
 
         <div class="card">
-            <h3 style="margin-bottom: 15px;">📊 Suma Total por Escenario - Lower Limit</h3>
+            <h3 style="margin-bottom: 15px;">📊 Total Sum by Scenario - Lower Limit</h3>
             <p style="font-size: 0.9em; color: {COLORS['secondary']}; margin-bottom: 10px;">
-                Suma total de TotalTechnologyAnnualActivityLowerLimit <strong>agregado por escenario</strong> (suma de todos los años, tecnologías, combustibles y países seleccionados)
+                Total sum of TotalTechnologyAnnualActivityLowerLimit <strong>aggregated by scenario</strong> (sum of all selected years, technologies, fuels and countries)
             </p>
             <p style="font-size: 0.85em; color: {COLORS['primary']}; margin-bottom: 10px;">
-                ℹ️ Las barras muestran la composición renovable (verde) vs no renovable (rojo)
+                ℹ️ Bars show the renewable (green) vs non-renewable (red) composition
             </p>
             <div id="total-lowerlimit-by-tech-graph" class="graph-container"></div>
         </div>
 
         <div class="card">
-            <h3 style="margin-bottom: 15px;">📊 Suma Total por Escenario - Production</h3>
+            <h3 style="margin-bottom: 15px;">📊 Total Sum by Scenario - Production</h3>
             <p style="font-size: 0.9em; color: {COLORS['secondary']}; margin-bottom: 10px;">
-                Suma total de ProductionByTechnology <strong>agregado por escenario</strong> (suma de todos los años, tecnologías, combustibles y países seleccionados)
+                Total sum of ProductionByTechnology <strong>aggregated by scenario</strong> (sum of all selected years, technologies, fuels and countries)
             </p>
             <p style="font-size: 0.85em; color: {COLORS['primary']}; margin-bottom: 10px;">
-                ℹ️ Las barras muestran la composición renovable (verde) vs no renovable (rojo)
+                ℹ️ Bars show the renewable (green) vs non-renewable (red) composition
             </p>
             <div id="total-production-by-tech-graph" class="graph-container"></div>
         </div>
 
-        <!-- Sección: Gráficos de Evolución Temporal -->
+        <!-- Section: Temporal Evolution Charts -->
         <div style="margin: 30px 0; padding: 15px; background: linear-gradient(to right, {COLORS['secondary']}, {COLORS['secondary']}33); border-radius: 10px;">
             <h2 style="color: white; text-align: center; margin: 0; font-size: 1.5em;">
-                📈 EVOLUCIÓN TEMPORAL
+                📈 TEMPORAL EVOLUTION
             </h2>
             <p style="color: white; text-align: center; margin: 5px 0 0 0; font-size: 0.95em; opacity: 0.95;">
-                Valores por año - Gráficos de líneas o barras
+                Values by year - Line or bar charts
             </p>
         </div>
 
         <div class="card">
-            <h3 style="margin-bottom: 15px;">📉 Total Technology Annual Activity Lower Limit (Por Año - Agregado por Escenario)</h3>
+            <h3 style="margin-bottom: 15px;">📉 Total Technology Annual Activity Lower Limit (By Year - Aggregated by Scenario)</h3>
             <p style="font-size: 0.9em; color: {COLORS['secondary']}; margin-bottom: 10px;">
-                Valores agregados por escenario - Suma de todas las tecnologías, combustibles y países seleccionados
+                Values aggregated by scenario - Sum of all selected technologies, fuels and countries
             </p>
             <p style="font-size: 0.85em; color: {COLORS['primary']}; margin-bottom: 10px;">
-                ℹ️ Los tooltips muestran el desglose renovable/no renovable
+                ℹ️ Tooltips show the renewable/non-renewable breakdown
             </p>
             <div id="lower-limit-graph" class="graph-container"></div>
         </div>
 
         <div class="card">
-            <h3 style="margin-bottom: 15px;">⚡ Production By Technology (Por Año - Agregado por Escenario)</h3>
+            <h3 style="margin-bottom: 15px;">⚡ Production By Technology (By Year - Aggregated by Scenario)</h3>
             <p style="font-size: 0.9em; color: {COLORS['secondary']}; margin-bottom: 10px;">
-                Valores agregados por escenario - Suma de todas las tecnologías, combustibles y países seleccionados
+                Values aggregated by scenario - Sum of all selected technologies, fuels and countries
             </p>
             <p style="font-size: 0.85em; color: {COLORS['primary']}; margin-bottom: 10px;">
-                ℹ️ Los tooltips muestran el desglose renovable/no renovable
+                ℹ️ Tooltips show the renewable/non-renewable breakdown
             </p>
             <div id="production-graph" class="graph-container"></div>
         </div>
 
         <div class="footer">
-            <p><strong>Dashboard Interactivo - Climate Lead Group | Proyecto ReLAC-TX</strong></p>
-            <p>Generado: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-            <p>Archivo: {output_file}</p>
+            <p><strong>Interactive Dashboard - Climate Lead Group | ReLAC-TX Project</strong></p>
+            <p>Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+            <p>File: {output_file}</p>
         </div>
     </div>
 
     <script>
         // ============================================================================
-        // DATOS Y CONFIGURACIÓN
+        // DATA AND CONFIGURATION
         // ============================================================================
         const RAW_DATA = {data_json};
         const RENEWABLE_FUELS = {json.dumps(RENEWABLE_FUELS)};
@@ -577,18 +577,18 @@ def generate_interactive_dashboard(df, source_file):
         const TECHNOLOGIES = {json.dumps(technologies)};
 
         // ============================================================================
-        // INICIALIZACIÓN
+        // INITIALIZATION
         // ============================================================================
         document.addEventListener('DOMContentLoaded', function() {{
             initializeFilters();
             updateAllGraphs();
 
-            // Event listeners para actualización automática
+            // Event listeners for automatic update
             document.querySelectorAll('input[name="graph-type"]').forEach(radio => {{
                 radio.addEventListener('change', updateAllGraphs);
             }});
 
-            // Event listeners para actualizar tecnologías automáticamente cuando cambien FUEL o COUNTRY
+            // Event listeners to automatically update technologies when FUEL or COUNTRY change
             document.getElementById('fuel-filter').addEventListener('change', function() {{
                 updateTechnologiesBasedOnFilters();
                 updateAllGraphs();
@@ -605,7 +605,7 @@ def generate_interactive_dashboard(df, source_file):
             populateSelect('fuel-filter', FUELS, FUELS);
             populateSelect('country-filter', COUNTRIES, COUNTRIES);
 
-            // Las tecnologías se actualizan automáticamente basadas en FUEL y COUNTRY
+            // Technologies are automatically updated based on FUEL and COUNTRY
             updateTechnologiesBasedOnFilters();
         }}
 
@@ -622,11 +622,11 @@ def generate_interactive_dashboard(df, source_file):
         }}
 
         function updateTechnologiesBasedOnFilters() {{
-            // Obtener FUEL y COUNTRY seleccionados
+            // Get selected FUEL and COUNTRY
             const selectedFuels = getSelectedValues('fuel-filter');
             const selectedCountries = getSelectedValues('country-filter');
 
-            // Filtrar tecnologías que coincidan con FUEL y COUNTRY seleccionados
+            // Filter technologies that match selected FUEL and COUNTRY
             const matchingTechs = TECHNOLOGIES.filter(tech => {{
                 const fuel = tech.substring(3, 6);
                 const country = tech.substring(6, 9);
@@ -637,7 +637,7 @@ def generate_interactive_dashboard(df, source_file):
                 return fuelMatch && countryMatch;
             }});
 
-            // Actualizar el selector de tecnologías
+            // Update the technology selector
             populateSelect('technology-filter', matchingTechs, matchingTechs);
 
             return matchingTechs;
@@ -678,7 +678,7 @@ def generate_interactive_dashboard(df, source_file):
         }}
 
         // ============================================================================
-        // FILTRADO DE DATOS
+        // DATA FILTERING
         // ============================================================================
         function getFilteredData() {{
             const scenarios = getSelectedValues('scenario-filter');
@@ -704,18 +704,18 @@ def generate_interactive_dashboard(df, source_file):
             if (fuels.length > 0) {{
                 const renewableCount = fuels.filter(f => RENEWABLE_FUELS.includes(f)).length;
                 const nonRenewableCount = fuels.filter(f => NON_RENEWABLE_FUELS.includes(f)).length;
-                fuelTypeInfo = ` (🌱 ${{renewableCount}} renovables, ⚫ ${{nonRenewableCount}} no renovables)`;
+                fuelTypeInfo = ` (🌱 ${{renewableCount}} renewable, ⚫ ${{nonRenewableCount}} non-renewable)`;
             }}
 
             document.getElementById('filter-info').textContent =
-                `📊 Filtros aplicados: ${{nScenarios}} escenarios, ${{nFuels}} combustibles${{fuelTypeInfo}}, ${{nCountries}} países, ${{nTechs}} tecnologías`;
+                `📊 Filters applied: ${{nScenarios}} scenarios, ${{nFuels}} fuels${{fuelTypeInfo}}, ${{nCountries}} countries, ${{nTechs}} technologies`;
         }}
 
         // ============================================================================
-        // CÁLCULO DE SHARES DE RENOVABILIDAD
+        // RENEWABILITY SHARES CALCULATION
         // ============================================================================
         function calculateRenewabilityShares(data) {{
-            // Usar los mismos filtros que getFilteredData() para que respete FUEL, COUNTRY y TECHNOLOGY
+            // Use the same filters as getFilteredData() so it respects FUEL, COUNTRY and TECHNOLOGY
             const scenarios = getSelectedValues('scenario-filter');
             const fuels = getSelectedValues('fuel-filter');
             const countries = getSelectedValues('country-filter');
@@ -728,12 +728,12 @@ def generate_interactive_dashboard(df, source_file):
                        (technologies.length === 0 || technologies.includes(row.TECHNOLOGY));
             }});
 
-            // Agrupar y clasificar
+            // Group and classify
             const grouped = {{}};
             filtered.forEach(row => {{
-                let fuelType = 'Otro';
-                if (RENEWABLE_FUELS.includes(row.FUEL)) fuelType = 'Renovable';
-                else if (NON_RENEWABLE_FUELS.includes(row.FUEL)) fuelType = 'No Renovable';
+                let fuelType = 'Other';
+                if (RENEWABLE_FUELS.includes(row.FUEL)) fuelType = 'Renewable';
+                else if (NON_RENEWABLE_FUELS.includes(row.FUEL)) fuelType = 'Non-Renewable';
 
                 const key = `${{row.Scenario}}|${{row.YEAR}}|${{fuelType}}`;
                 if (!grouped[key]) {{
@@ -747,7 +747,7 @@ def generate_interactive_dashboard(df, source_file):
                 grouped[key].Production += row.ProductionByTechnology || 0;
             }});
 
-            // Calcular totales y shares
+            // Calculate totals and shares
             const totals = {{}};
             Object.values(grouped).forEach(item => {{
                 const key = `${{item.Scenario}}|${{item.YEAR}}`;
@@ -761,22 +761,22 @@ def generate_interactive_dashboard(df, source_file):
                     ...item,
                     Share: total > 0 ? (item.Production / total) * 100 : 0
                 }};
-            }}).filter(item => item.Type !== 'Otro');
+            }}).filter(item => item.Type !== 'Other');
 
             return result;
         }}
 
         // ============================================================================
-        // CREACIÓN DE GRÁFICOS
+        // CHART CREATION
         // ============================================================================
         function updateAllGraphs() {{
             const graphType = document.querySelector('input[name="graph-type"]:checked').value;
 
             createRenewabilityGraph(graphType);
             createTotalByScenarioGraph('total-lowerlimit-by-tech-graph', 'TotalTechnologyAnnualActivityLowerLimit',
-                                        'Suma Total por Escenario - Lower Limit');
+                                        'Total Sum by Scenario - Lower Limit');
             createTotalByScenarioGraph('total-production-by-tech-graph', 'ProductionByTechnology',
-                                        'Suma Total por Escenario - Production');
+                                        'Total Sum by Scenario - Production');
             createMetricGraph('lower-limit-graph', 'TotalTechnologyAnnualActivityLowerLimit',
                             'Total Technology Annual Activity Lower Limit', graphType);
             createMetricGraph('production-graph', 'ProductionByTechnology',
@@ -787,9 +787,9 @@ def generate_interactive_dashboard(df, source_file):
             const shares = calculateRenewabilityShares();
             if (shares.length === 0) {{
                 const emptyLayout = {{
-                    title: '🌱 Shares de Renovabilidad (% basado en ProductionByTechnology) - Filtros Aplicados',
+                    title: '🌱 Renewability Shares (% based on ProductionByTechnology) - Filters Applied',
                     annotations: [{{
-                        text: 'No hay datos para calcular shares con los filtros seleccionados',
+                        text: 'No data to calculate shares with the selected filters',
                         xref: 'paper',
                         yref: 'paper',
                         x: 0.5,
@@ -797,7 +797,7 @@ def generate_interactive_dashboard(df, source_file):
                         showarrow: false,
                         font: {{ size: 16, color: '{COLORS['secondary']}' }}
                     }}],
-                    xaxis: {{ title: 'Año' }},
+                    xaxis: {{ title: 'Year' }},
                     yaxis: {{ title: 'Share (%)' }}
                 }};
                 Plotly.newPlot('renewability-graph', [], emptyLayout, {{responsive: true}});
@@ -807,19 +807,19 @@ def generate_interactive_dashboard(df, source_file):
             const traces = [];
             const scenarios = [...new Set(shares.map(d => d.Scenario))].sort();
             const colorMap = {{
-                'Renovable': '#2ecc71',
-                'No Renovable': '#e74c3c'
+                'Renewable': '#2ecc71',
+                'Non-Renewable': '#e74c3c'
             }};
 
             scenarios.forEach(scenario => {{
-                ['Renovable', 'No Renovable'].forEach(type => {{
+                ['Renewable', 'Non-Renewable'].forEach(type => {{
                     const data = shares
                         .filter(d => d.Scenario === scenario && d.Type === type)
                         .sort((a, b) => a.YEAR - b.YEAR);
 
                     if (data.length === 0) return;
 
-                    const icon = type === 'Renovable' ? '🌱' : '⚫';
+                    const icon = type === 'Renewable' ? '🌱' : '⚫';
                     const color = colorMap[type];
 
                     const trace = {{
@@ -836,16 +836,16 @@ def generate_interactive_dashboard(df, source_file):
                         line: graphType === 'line' ? {{
                             color: color,
                             width: 3.5,
-                            dash: type === 'Renovable' ? 'solid' : 'dash'
+                            dash: type === 'Renewable' ? 'solid' : 'dash'
                         }} : undefined,
                         text: data.map(d => `${{d.Share.toFixed(1)}}%`),
                         textposition: graphType === 'bar' ? 'outside' : 'top center',
                         textfont: {{ size: 9 }},
                         hovertemplate: (
                             `<b>${{icon}} ${{scenario}} - ${{type}}</b><br>` +
-                            `Año: %{{x}}<br>` +
+                            `Year: %{{x}}<br>` +
                             `Share: %{{y:.2f}}%<br>` +
-                            `Producción: %{{customdata:.2f}} PJ<br>` +
+                            `Production: %{{customdata:.2f}} PJ<br>` +
                             `<extra></extra>`
                         ),
                         customdata: data.map(d => d.Production)
@@ -856,11 +856,11 @@ def generate_interactive_dashboard(df, source_file):
 
             const layout = {{
                 title: {{
-                    text: '🌱 Shares de Renovabilidad (% basado en ProductionByTechnology) - Filtros Aplicados',
+                    text: '🌱 Renewability Shares (% based on ProductionByTechnology) - Filters Applied',
                     font: {{ size: 18 }}
                 }},
                 xaxis: {{
-                    title: 'Año',
+                    title: 'Year',
                     dtick: 1,
                     gridcolor: '{COLORS['border']}'
                 }},
@@ -903,7 +903,7 @@ def generate_interactive_dashboard(df, source_file):
                     y: 50,
                     xref: 'paper',
                     yref: 'y',
-                    text: '50% línea de referencia',
+                    text: '50% reference line',
                     showarrow: false,
                     font: {{ size: 10, color: '{COLORS['secondary']}' }},
                     xanchor: 'left'
@@ -919,7 +919,7 @@ def generate_interactive_dashboard(df, source_file):
                 const emptyLayout = {{
                     title: title,
                     annotations: [{{
-                        text: 'No hay datos para los filtros seleccionados',
+                        text: 'No data for the selected filters',
                         xref: 'paper',
                         yref: 'paper',
                         x: 0.5,
@@ -927,14 +927,14 @@ def generate_interactive_dashboard(df, source_file):
                         showarrow: false,
                         font: {{ size: 16, color: '{COLORS['secondary']}' }}
                     }}],
-                    xaxis: {{ title: 'Valor Total' }},
-                    yaxis: {{ title: 'Escenario' }}
+                    xaxis: {{ title: 'Total Value' }},
+                    yaxis: {{ title: 'Scenario' }}
                 }};
                 Plotly.newPlot(divId, [], emptyLayout, {{responsive: true}});
                 return;
             }}
 
-            // Agrupar SOLO por Scenario, sumando TODO (años, tecnologías, combustibles, países)
+            // Group ONLY by Scenario, summing EVERYTHING (years, technologies, fuels, countries)
             const grouped = {{}};
             data.forEach(row => {{
                 const key = row.Scenario;
@@ -949,7 +949,7 @@ def generate_interactive_dashboard(df, source_file):
                 const value = row[metric] || 0;
                 grouped[key].Value += value;
 
-                // Clasificar por tipo de combustible
+                // Classify by fuel type
                 if (RENEWABLE_FUELS.includes(row.FUEL)) {{
                     grouped[key].RenewableValue += value;
                 }} else if (NON_RENEWABLE_FUELS.includes(row.FUEL)) {{
@@ -959,14 +959,14 @@ def generate_interactive_dashboard(df, source_file):
 
             const groupedArray = Object.values(grouped);
 
-            // Filtrar valores significativos (mayores a 0)
+            // Filter significant values (greater than 0)
             const filteredArray = groupedArray.filter(d => d.Value > 0);
 
             if (filteredArray.length === 0) {{
                 const emptyLayout = {{
                     title: title,
                     annotations: [{{
-                        text: 'No hay valores mayores a 0 para esta métrica',
+                        text: 'No values greater than 0 for this metric',
                         xref: 'paper',
                         yref: 'paper',
                         x: 0.5,
@@ -974,23 +974,23 @@ def generate_interactive_dashboard(df, source_file):
                         showarrow: false,
                         font: {{ size: 16, color: '{COLORS['secondary']}' }}
                     }}],
-                    xaxis: {{ title: 'Valor Total' }},
-                    yaxis: {{ title: 'Escenario' }}
+                    xaxis: {{ title: 'Total Value' }},
+                    yaxis: {{ title: 'Scenario' }}
                 }};
                 Plotly.newPlot(divId, [], emptyLayout, {{responsive: true}});
                 return;
             }}
 
-            // Ordenar por valor descendente
+            // Sort by descending value
             filteredArray.sort((a, b) => b.Value - a.Value);
 
-            // Crear trazas: una barra por escenario con colores según composición renovable/no renovable
+            // Create traces: one bar per scenario with colors based on renewable/non-renewable composition
             const traces = [
-                // Traza para renovables
+                // Trace for renewables
                 {{
                     x: filteredArray.map(d => d.RenewableValue),
                     y: filteredArray.map(d => d.Scenario),
-                    name: '🌱 Renovable',
+                    name: '🌱 Renewable',
                     type: 'bar',
                     orientation: 'h',
                     marker: {{
@@ -1001,18 +1001,18 @@ def generate_interactive_dashboard(df, source_file):
                     textposition: 'inside',
                     textfont: {{ size: 10, color: 'white' }},
                     hovertemplate: filteredArray.map(d =>
-                        `<b>🌱 Renovable</b><br>` +
-                        `Escenario: ${{d.Scenario}}<br>` +
-                        `Valor: %{{x:.6f}}<br>` +
-                        `% del total: ${{((d.RenewableValue / d.Value) * 100).toFixed(1)}}%<br>` +
+                        `<b>🌱 Renewable</b><br>` +
+                        `Scenario: ${{d.Scenario}}<br>` +
+                        `Value: %{{x:.6f}}<br>` +
+                        `% of total: ${{((d.RenewableValue / d.Value) * 100).toFixed(1)}}%<br>` +
                         `<extra></extra>`
                     )
                 }},
-                // Traza para no renovables
+                // Trace for non-renewables
                 {{
                     x: filteredArray.map(d => d.NonRenewableValue),
                     y: filteredArray.map(d => d.Scenario),
-                    name: '⚫ No Renovable',
+                    name: '⚫ Non-Renewable',
                     type: 'bar',
                     orientation: 'h',
                     marker: {{
@@ -1023,10 +1023,10 @@ def generate_interactive_dashboard(df, source_file):
                     textposition: 'inside',
                     textfont: {{ size: 10, color: 'white' }},
                     hovertemplate: filteredArray.map(d =>
-                        `<b>⚫ No Renovable</b><br>` +
-                        `Escenario: ${{d.Scenario}}<br>` +
-                        `Valor: %{{x:.6f}}<br>` +
-                        `% del total: ${{((d.NonRenewableValue / d.Value) * 100).toFixed(1)}}%<br>` +
+                        `<b>⚫ Non-Renewable</b><br>` +
+                        `Scenario: ${{d.Scenario}}<br>` +
+                        `Value: %{{x:.6f}}<br>` +
+                        `% of total: ${{((d.NonRenewableValue / d.Value) * 100).toFixed(1)}}%<br>` +
                         `<extra></extra>`
                     )
                 }}
@@ -1034,15 +1034,15 @@ def generate_interactive_dashboard(df, source_file):
 
             const layout = {{
                 title: {{
-                    text: title + ' (Agregado)',
+                    text: title + ' (Aggregated)',
                     font: {{ size: 18 }}
                 }},
                 xaxis: {{
-                    title: 'Valor Total (suma de todos los años)',
+                    title: 'Total Value (sum of all years)',
                     gridcolor: '{COLORS['border']}'
                 }},
                 yaxis: {{
-                    title: 'Escenario',
+                    title: 'Scenario',
                     automargin: true,
                     tickfont: {{ size: 11 }}
                 }},
@@ -1082,7 +1082,7 @@ def generate_interactive_dashboard(df, source_file):
                 const emptyLayout = {{
                     title: title,
                     annotations: [{{
-                        text: 'No hay datos para los filtros seleccionados',
+                        text: 'No data for the selected filters',
                         xref: 'paper',
                         yref: 'paper',
                         x: 0.5,
@@ -1090,14 +1090,14 @@ def generate_interactive_dashboard(df, source_file):
                         showarrow: false,
                         font: {{ size: 16, color: '{COLORS['secondary']}' }}
                     }}],
-                    xaxis: {{ title: 'Valor Total' }},
-                    yaxis: {{ title: 'Tecnología' }}
+                    xaxis: {{ title: 'Total Value' }},
+                    yaxis: {{ title: 'Technology' }}
                 }};
                 Plotly.newPlot(divId, [], emptyLayout, {{responsive: true}});
                 return;
             }}
 
-            // Agrupar por Scenario y TECHNOLOGY, sumando todos los años
+            // Group by Scenario and TECHNOLOGY, summing all years
             const grouped = {{}};
             data.forEach(row => {{
                 const key = `${{row.Scenario}}|${{row.TECHNOLOGY}}`;
@@ -1115,14 +1115,14 @@ def generate_interactive_dashboard(df, source_file):
 
             const groupedArray = Object.values(grouped);
 
-            // Filtrar valores significativos (mayores a 0)
+            // Filter significant values (greater than 0)
             const filteredArray = groupedArray.filter(d => d.Value > 0);
 
             if (filteredArray.length === 0) {{
                 const emptyLayout = {{
                     title: title,
                     annotations: [{{
-                        text: 'No hay valores mayores a 0 para esta métrica',
+                        text: 'No values greater than 0 for this metric',
                         xref: 'paper',
                         yref: 'paper',
                         x: 0.5,
@@ -1130,28 +1130,28 @@ def generate_interactive_dashboard(df, source_file):
                         showarrow: false,
                         font: {{ size: 16, color: '{COLORS['secondary']}' }}
                     }}],
-                    xaxis: {{ title: 'Valor Total' }},
-                    yaxis: {{ title: 'Tecnología' }}
+                    xaxis: {{ title: 'Total Value' }},
+                    yaxis: {{ title: 'Technology' }}
                 }};
                 Plotly.newPlot(divId, [], emptyLayout, {{responsive: true}});
                 return;
             }}
 
-            // Ordenar por valor descendente
+            // Sort by descending value
             filteredArray.sort((a, b) => b.Value - a.Value);
 
-            // Limitar a las top 30 tecnologías para no sobrecargar el gráfico
+            // Limit to top 30 technologies to avoid overloading the chart
             const topN = 30;
             const topTechs = filteredArray.slice(0, topN);
 
-            // Función para obtener color según tipo de combustible
+            // Function to get color based on fuel type
             const getColorForFuel = (fuel) => {{
                 if (RENEWABLE_FUELS.includes(fuel)) {{
-                    return '#2ecc71'; // Verde para renovables
+                    return '#2ecc71'; // Green for renewables
                 }} else if (NON_RENEWABLE_FUELS.includes(fuel)) {{
-                    return '#e74c3c'; // Rojo para no renovables
+                    return '#e74c3c'; // Red for non-renewables
                 }} else {{
-                    return '#95a5a6'; // Gris para otros
+                    return '#95a5a6'; // Gray for others
                 }}
             }};
 
@@ -1163,7 +1163,7 @@ def generate_interactive_dashboard(df, source_file):
 
                 if (scenarioData.length === 0) return;
 
-                // Crear una traza por escenario
+                // Create one trace per scenario
                 const trace = {{
                     x: scenarioData.map(d => d.Value),
                     y: scenarioData.map(d => `${{d.TECHNOLOGY}}`),
@@ -1188,10 +1188,10 @@ def generate_interactive_dashboard(df, source_file):
                         const fuelType = RENEWABLE_FUELS.includes(d.FUEL) ? '🌱' :
                                        NON_RENEWABLE_FUELS.includes(d.FUEL) ? '⚫' : '❓';
                         return `<b>${{fuelType}} ${{d.TECHNOLOGY}}</b><br>` +
-                               `Escenario: ${{scenario}}<br>` +
+                               `Scenario: ${{scenario}}<br>` +
                                `FUEL: ${{d.FUEL}}<br>` +
-                               `País: ${{d.COUNTRY}}<br>` +
-                               `Valor Total: %{{x:.6f}}<br>` +
+                               `Country: ${{d.COUNTRY}}<br>` +
+                               `Total Value: %{{x:.6f}}<br>` +
                                `<extra></extra>`;
                     }})
                 }};
@@ -1205,11 +1205,11 @@ def generate_interactive_dashboard(df, source_file):
                     font: {{ size: 18 }}
                 }},
                 xaxis: {{
-                    title: 'Valor Total (suma de todos los años)',
+                    title: 'Total Value (sum of all years)',
                     gridcolor: '{COLORS['border']}'
                 }},
                 yaxis: {{
-                    title: 'Tecnología',
+                    title: 'Technology',
                     automargin: true,
                     tickfont: {{ size: 10 }}
                 }},
@@ -1240,7 +1240,7 @@ def generate_interactive_dashboard(df, source_file):
                 const emptyLayout = {{
                     title: title,
                     annotations: [{{
-                        text: 'No hay datos para los filtros seleccionados',
+                        text: 'No data for the selected filters',
                         xref: 'paper',
                         yref: 'paper',
                         x: 0.5,
@@ -1248,14 +1248,14 @@ def generate_interactive_dashboard(df, source_file):
                         showarrow: false,
                         font: {{ size: 16, color: '{COLORS['secondary']}' }}
                     }}],
-                    xaxis: {{ title: 'Año' }},
+                    xaxis: {{ title: 'Year' }},
                     yaxis: {{ title: title }}
                 }};
                 Plotly.newPlot(divId, [], emptyLayout, {{responsive: true}});
                 return;
             }}
 
-            // Agrupar SOLO por Scenario y YEAR (no por FUEL) - VERSIÓN AGREGADA
+            // Group ONLY by Scenario and YEAR (not by FUEL) - AGGREGATED VERSION
             const grouped = {{}};
             data.forEach(row => {{
                 const key = `${{row.Scenario}}|${{row.YEAR}}`;
@@ -1271,7 +1271,7 @@ def generate_interactive_dashboard(df, source_file):
                 const value = row[metric] || 0;
                 grouped[key].Value += value;
 
-                // Clasificar por tipo de combustible para información adicional
+                // Classify by fuel type for additional information
                 if (RENEWABLE_FUELS.includes(row.FUEL)) {{
                     grouped[key].RenewableValue += value;
                 }} else if (NON_RENEWABLE_FUELS.includes(row.FUEL)) {{
@@ -1281,14 +1281,14 @@ def generate_interactive_dashboard(df, source_file):
 
             const groupedArray = Object.values(grouped);
 
-            // Filtrar valores significativos (mayores a 0)
+            // Filter significant values (greater than 0)
             const filteredArray = groupedArray.filter(d => d.Value > 0);
 
             if (filteredArray.length === 0) {{
                 const emptyLayout = {{
                     title: title,
                     annotations: [{{
-                        text: 'No hay valores mayores a 0 para esta métrica',
+                        text: 'No values greater than 0 for this metric',
                         xref: 'paper',
                         yref: 'paper',
                         x: 0.5,
@@ -1296,7 +1296,7 @@ def generate_interactive_dashboard(df, source_file):
                         showarrow: false,
                         font: {{ size: 16, color: '{COLORS['secondary']}' }}
                     }}],
-                    xaxis: {{ title: 'Año' }},
+                    xaxis: {{ title: 'Year' }},
                     yaxis: {{ title: title }}
                 }};
                 Plotly.newPlot(divId, [], emptyLayout, {{responsive: true}});
@@ -1305,7 +1305,7 @@ def generate_interactive_dashboard(df, source_file):
 
             const scenarios = [...new Set(filteredArray.map(d => d.Scenario))].sort();
 
-            // Colores para cada escenario (paleta de colores variados)
+            // Colors for each scenario (varied color palette)
             const scenarioColors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b',
                                    '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'];
 
@@ -1340,10 +1340,10 @@ def generate_interactive_dashboard(df, source_file):
                     textfont: {{ size: 9 }},
                     hovertemplate: scenarioData.map(d =>
                         `<b>${{scenario}}</b><br>` +
-                        `Año: %{{x}}<br>` +
+                        `Year: %{{x}}<br>` +
                         `${{title}}: %{{y:.6f}}<br>` +
-                        `🌱 Renovable: ${{d.RenewableValue.toFixed(6)}} (${{((d.RenewableValue / d.Value) * 100).toFixed(1)}}%)<br>` +
-                        `⚫ No Renovable: ${{d.NonRenewableValue.toFixed(6)}} (${{((d.NonRenewableValue / d.Value) * 100).toFixed(1)}}%)<br>` +
+                        `🌱 Renewable: ${{d.RenewableValue.toFixed(6)}} (${{((d.RenewableValue / d.Value) * 100).toFixed(1)}}%)<br>` +
+                        `⚫ Non-Renewable: ${{d.NonRenewableValue.toFixed(6)}} (${{((d.NonRenewableValue / d.Value) * 100).toFixed(1)}}%)<br>` +
                         `<extra></extra>`
                     ),
                     customdata: scenarioData.map(d => [d.RenewableValue, d.NonRenewableValue])
@@ -1353,11 +1353,11 @@ def generate_interactive_dashboard(df, source_file):
 
             const layout = {{
                 title: {{
-                    text: title + ' (Agregado por Escenario)',
+                    text: title + ' (Aggregated by Scenario)',
                     font: {{ size: 18 }}
                 }},
                 xaxis: {{
-                    title: 'Año',
+                    title: 'Year',
                     dtick: 1,
                     gridcolor: '{COLORS['border']}'
                 }},
@@ -1389,43 +1389,43 @@ def generate_interactive_dashboard(df, source_file):
 </body>
 </html>"""
 
-    # Guardar archivo
-    print(f"   💾 Guardando dashboard: {output_file}")
+    # Save file
+    print(f"   💾 Saving dashboard: {output_file}")
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(html_content)
 
-    print(f"   ✅ Dashboard interactivo generado exitosamente!")
+    print(f"   ✅ Interactive dashboard generated successfully!")
     return output_file
 
 
 def find_csv_files():
-    """Busca archivos CSV en el directorio actual"""
+    """Searches for CSV files in the current directory"""
     csv_files = glob.glob("*.csv")
     return sorted(csv_files)
 
 
 def select_files_interactive():
-    """Permite al usuario seleccionar archivos interactivamente"""
+    """Allows the user to select files interactively"""
     csv_files = find_csv_files()
 
     if not csv_files:
-        print("\n⚠️  No se encontraron archivos CSV en el directorio actual.")
+        print("\n⚠️  No CSV files found in the current directory.")
         return []
 
-    print("\n📁 Archivos CSV disponibles:")
+    print("\n📁 Available CSV files:")
     print("-" * 70)
     for idx, file in enumerate(csv_files, 1):
         size_mb = os.path.getsize(file) / (1024 * 1024)
         print(f"   {idx}. {file} ({size_mb:.2f} MB)")
     print("-" * 70)
 
-    print("\n💡 Opciones:")
-    print("   • Ingresa números separados por comas (ej: 1,3,5)")
-    print("   • Ingresa 'all' para procesar todos los archivos")
-    print("   • Ingresa 'q' para cancelar")
+    print("\n💡 Options:")
+    print("   • Enter numbers separated by commas (e.g.: 1,3,5)")
+    print("   • Enter 'all' to process all files")
+    print("   • Enter 'q' to cancel")
 
     while True:
-        selection = input("\n👉 Tu selección: ").strip().lower()
+        selection = input("\n👉 Your selection: ").strip().lower()
 
         if selection == 'q':
             return []
@@ -1439,40 +1439,40 @@ def select_files_interactive():
                 selected_files = [csv_files[idx - 1] for idx in indices]
                 return selected_files
             else:
-                print(f"   ❌ Error: Los números deben estar entre 1 y {len(csv_files)}")
+                print(f"   ❌ Error: Numbers must be between 1 and {len(csv_files)}")
         except ValueError:
-            print("   ❌ Error: Formato inválido. Usa números separados por comas.")
+            print("   ❌ Error: Invalid format. Use numbers separated by commas.")
 
 
 def main():
-    """Función principal"""
+    """Main function"""
     print("=" * 70)
-    print("  GENERADOR DE DASHBOARDS HTML - TECNOLOGÍAS PWR - VERSIÓN AGREGADA")
+    print("  HTML DASHBOARD GENERATOR - PWR TECHNOLOGIES - AGGREGATED VERSION")
     print("=" * 70)
-    print("\n⚠️  VERSIÓN AGREGADA: Los gráficos muestran valores sumados POR ESCENARIO")
-    print("\nEste script genera dashboards HTML interactivos con:")
-    print("  • ✅ Filtrado automático de tecnologías PWR válidas")
-    print(f"  • ✅ Patrón: {TECH_PATTERN}")
-    print("  • ✅ Filtros por Escenario, FUEL y País")
-    print("  • ✅ Auto-selección de tecnologías basada en FUEL y COUNTRY")
-    print("  • ✅ Botones rápidos para Renovables/No Renovables")
-    print("  • ✅ 5 gráficos AGREGADOS POR ESCENARIO:")
-    print("      - Shares de Renovabilidad")
-    print("      - Suma Total por Escenario (Lower Limit)")
-    print("      - Suma Total por Escenario (Production)")
-    print("      - Evolución Temporal por Escenario (Lower Limit)")
-    print("      - Evolución Temporal por Escenario (Production)")
-    print("  • ✅ Desglose renovable/no renovable en gráficos y tooltips")
-    print("  • ✅ Cambio entre gráficos de líneas y barras")
-    print("  • ✅ Completamente standalone (no requiere servidor)")
+    print("\n⚠️  AGGREGATED VERSION: Graphs show values summed BY SCENARIO")
+    print("\nThis script generates interactive HTML dashboards with:")
+    print("  • ✅ Automatic filtering of valid PWR technologies")
+    print(f"  • ✅ Pattern: {TECH_PATTERN}")
+    print("  • ✅ Filters by Scenario, FUEL and Country")
+    print("  • ✅ Auto-selection of technologies based on FUEL and COUNTRY")
+    print("  • ✅ Quick buttons for Renewables/Non-Renewables")
+    print("  • ✅ 5 charts AGGREGATED BY SCENARIO:")
+    print("      - Renewability Shares")
+    print("      - Total Sum by Scenario (Lower Limit)")
+    print("      - Total Sum by Scenario (Production)")
+    print("      - Temporal Evolution by Scenario (Lower Limit)")
+    print("      - Temporal Evolution by Scenario (Production)")
+    print("  • ✅ Renewable/non-renewable breakdown in charts and tooltips")
+    print("  • ✅ Switch between line and bar charts")
+    print("  • ✅ Completely standalone (no server required)")
 
     selected_files = select_files_interactive()
 
     if not selected_files:
-        print("\n❌ No se seleccionaron archivos. Saliendo...")
+        print("\n❌ No files selected. Exiting...")
         return
 
-    print(f"\n🚀 Procesando {len(selected_files)} archivo(s)...")
+    print(f"\n🚀 Processing {len(selected_files)} file(s)...")
     print("=" * 70)
 
     generated_files = []
@@ -1480,73 +1480,73 @@ def main():
 
     for file in selected_files:
         try:
-            print(f"\n📂 Cargando archivo: {file}")
+            print(f"\n📂 Loading file: {file}")
             df = pd.read_csv(file, low_memory=False)
-            print(f"   ✅ Archivo cargado: {len(df):,} filas")
+            print(f"   ✅ File loaded: {len(df):,} rows")
 
             output_file = generate_interactive_dashboard(df, file)
 
             if output_file:
                 generated_files.append(output_file)
             else:
-                errors.append((file, "No se pudo generar el dashboard"))
+                errors.append((file, "Could not generate the dashboard"))
 
         except FileNotFoundError:
-            print(f"   ❌ Error: Archivo no encontrado: {file}")
-            errors.append((file, "Archivo no encontrado"))
+            print(f"   ❌ Error: File not found: {file}")
+            errors.append((file, "File not found"))
 
         except pd.errors.EmptyDataError:
-            print(f"   ❌ Error: El archivo está vacío: {file}")
-            errors.append((file, "Archivo vacío"))
+            print(f"   ❌ Error: The file is empty: {file}")
+            errors.append((file, "Empty file"))
 
         except Exception as e:
-            print(f"   ❌ Error inesperado procesando {file}")
-            print(f"      Detalles: {type(e).__name__}: {str(e)}")
+            print(f"   ❌ Unexpected error processing {file}")
+            print(f"      Details: {type(e).__name__}: {str(e)}")
             errors.append((file, f"{type(e).__name__}: {str(e)}"))
 
-    # Resumen
+    # Summary
     print("\n" + "=" * 70)
-    print("  RESUMEN")
+    print("  SUMMARY")
     print("=" * 70)
-    print(f"\n✅ Dashboards interactivos generados: {len(generated_files)}")
+    print(f"\n✅ Interactive dashboards generated: {len(generated_files)}")
 
     if generated_files:
-        print("\n📄 Archivos generados:")
+        print("\n📄 Generated files:")
         for file in generated_files:
             print(f"   • {file}")
 
     if errors:
-        print(f"\n❌ Errores: {len(errors)}")
+        print(f"\n❌ Errors: {len(errors)}")
         for file, error in errors:
             print(f"   • {file}: {error}")
 
-    print("\n💡 Características de los dashboards agregados (VERSIÓN AGREGADA):")
-    print("   • ⚠️  AGREGADO POR ESCENARIO: Los gráficos suman todos los valores por escenario")
-    print("   • ✅ Filtrado automático de tecnologías PWR válidas")
-    print(f"   • ✅ Patrón de validación: {TECH_PATTERN}")
-    print("   • ✅ Auto-selección de tecnologías basada en filtros FUEL y COUNTRY")
-    print("   • ✅ Filtros interactivos por Escenario, FUEL y País")
-    print("   • ✅ Botones rápidos: Renovables / No Renovables")
-    print("   • ✅ 5 gráficos AGREGADOS POR ESCENARIO:")
-    print("      - 🌱 Shares de Renovabilidad (con línea de referencia al 50%)")
-    print("      - 📊 Suma Total por Escenario - Lower Limit (barras apiladas renovable/no renovable)")
-    print("      - 📊 Suma Total por Escenario - Production (barras apiladas renovable/no renovable)")
-    print("      - 📉 Evolución Temporal por Escenario - Lower Limit (una línea por escenario)")
-    print("      - ⚡ Evolución Temporal por Escenario - Production (una línea por escenario)")
-    print("   • ✅ Desglose renovable/no renovable en tooltips")
-    print("   • ✅ Clasificación visual con colores")
-    print("   • ✅ Cambio dinámico entre gráficos de líneas y barras")
-    print("   • ✅ Actualización en tiempo real sin recargar la página")
-    print("\n📌 Próximos pasos:")
-    print("   1. Abre los archivos HTML en tu navegador")
-    print("   2. Usa los filtros de FUEL y COUNTRY para seleccionar qué incluir")
-    print("   3. Las tecnologías se actualizan automáticamente según los filtros")
-    print("   4. Los gráficos muestran valores SUMADOS por escenario")
-    print("   5. Cambia entre líneas y barras según prefieras")
-    print("   6. Compara múltiples escenarios en el mismo gráfico")
-    print("\n💡 Diferencia clave:")
-    print("   • VERSIÓN ESTÁNDAR: Muestra cada tecnología/combustible por separado")
-    print("   • VERSIÓN AGREGADA: Suma todo por escenario (esta versión)")
+    print("\n💡 Features of the aggregated dashboards (AGGREGATED VERSION):")
+    print("   • ⚠️  AGGREGATED BY SCENARIO: Charts sum all values by scenario")
+    print("   • ✅ Automatic filtering of valid PWR technologies")
+    print(f"   • ✅ Validation pattern: {TECH_PATTERN}")
+    print("   • ✅ Auto-selection of technologies based on FUEL and COUNTRY filters")
+    print("   • ✅ Interactive filters by Scenario, FUEL and Country")
+    print("   • ✅ Quick buttons: Renewables / Non-Renewables")
+    print("   • ✅ 5 charts AGGREGATED BY SCENARIO:")
+    print("      - 🌱 Renewability Shares (with 50% reference line)")
+    print("      - 📊 Total Sum by Scenario - Lower Limit (stacked bars renewable/non-renewable)")
+    print("      - 📊 Total Sum by Scenario - Production (stacked bars renewable/non-renewable)")
+    print("      - 📉 Temporal Evolution by Scenario - Lower Limit (one line per scenario)")
+    print("      - ⚡ Temporal Evolution by Scenario - Production (one line per scenario)")
+    print("   • ✅ Renewable/non-renewable breakdown in tooltips")
+    print("   • ✅ Visual classification with colors")
+    print("   • ✅ Dynamic switch between line and bar charts")
+    print("   • ✅ Real-time updates without page reload")
+    print("\n📌 Next steps:")
+    print("   1. Open the HTML files in your browser")
+    print("   2. Use the FUEL and COUNTRY filters to select what to include")
+    print("   3. Technologies are automatically updated based on filters")
+    print("   4. Charts show values SUMMED by scenario")
+    print("   5. Switch between lines and bars as preferred")
+    print("   6. Compare multiple scenarios in the same chart")
+    print("\n💡 Key difference:")
+    print("   • STANDARD VERSION: Shows each technology/fuel separately")
+    print("   • AGGREGATED VERSION: Sums everything by scenario (this version)")
     print("\n" + "=" * 70)
 
 

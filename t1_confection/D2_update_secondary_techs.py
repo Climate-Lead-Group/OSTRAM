@@ -420,14 +420,14 @@ def read_olade_data(olade_file_path):
         if tech_name_str in OLADE_TECH_MAPPING:
             tech_code = OLADE_TECH_MAPPING[tech_name_str]
 
-        # Special handling for BIO (sum of Biogás and Biomasa sólida)
-        if tech_name_str == 'Biogás':
+        # Special handling for BIO (sum of Biogas and Solid biomass)
+        if tech_name_str == 'Biogás':  # OLADE Spanish name
             tech_code = 'BIO'
-        elif tech_name_str == 'Biomasa sólida':
+        elif tech_name_str == 'Biomasa sólida':  # OLADE Spanish name
             tech_code = 'BIO'
 
-        # Special handling for Petróleo y derivados (will be split into PET and OIL later)
-        elif tech_name_str == 'Petróleo y derivados':
+        # Special handling for Petroleum and derivatives (will be split into PET and OIL later)
+        elif tech_name_str == 'Petróleo y derivados':  # OLADE Spanish name
             tech_code = 'PETROLEUM'  # Temporary code, will be split later
 
         if not tech_code:
@@ -448,7 +448,7 @@ def read_olade_data(olade_file_path):
                     if country_iso3 not in data:
                         data[country_iso3] = {}
 
-                    # For BIO, sum Biogás + Biomasa sólida
+                    # For BIO, sum Biogas + Solid biomass
                     if tech_code == 'BIO':
                         if tech_code in data[country_iso3]:
                             data[country_iso3][tech_code] += capacity_gw
@@ -497,29 +497,29 @@ def read_olade_generation_data(generation_file_path):
 
     # Technology row mapping (OLADE row -> model tech code)
     # Row 6: Nuclear
-    # Row 8: Petróleo y derivados (will be mapped to OIL+PET combined as 'PETROLEUM')
-    # Row 9: Gas natural
-    # Row 10: Carbón mineral
-    # Row 13: Biogás
-    # Row 14: Biomasa sólida
-    # Row 15: Biocombustibles líquidos
+    # Row 8: Petroleum and derivatives (will be mapped to OIL+PET combined as 'PETROLEUM')
+    # Row 9: Natural gas
+    # Row 10: Coal
+    # Row 13: Biogas
+    # Row 14: Solid biomass
+    # Row 15: Liquid biofuels
     # Row 17: Hidro
     # Row 18: Geotermia
-    # Row 19: Eólica
+    # Row 19: Wind
     # Row 20: Solar
     # Row 21: Total
 
     tech_row_mapping = {
         6: 'URN',      # Nuclear
-        8: 'PETROLEUM', # Petróleo y derivados (combined PET+OIL)
-        9: 'NGS',      # Gas natural
-        10: 'COA',     # Carbón mineral
-        13: 'BIO',     # Biogás (will be summed with biomass)
-        14: 'BIO',     # Biomasa sólida
-        15: 'BIO',     # Biocombustibles líquidos
+        8: 'PETROLEUM', # Petroleum and derivatives (combined PET+OIL)
+        9: 'NGS',      # Natural gas
+        10: 'COA',     # Coal
+        13: 'BIO',     # Biogas (will be summed with biomass)
+        14: 'BIO',     # Solid biomass
+        15: 'BIO',     # Liquid biofuels
         17: 'HYD',     # Hidro
         18: 'GEO',     # Geotermia
-        19: 'WON',     # Eólica
+        19: 'WON',     # Wind
         20: 'SPV',     # Solar
     }
 
@@ -603,7 +603,7 @@ def read_trade_balance_data(trade_balance_file_path):
 
     wb = openpyxl.load_workbook(trade_balance_file_path, data_only=True)
 
-    # Find the 'Imp-Exp por País' sheet (accent-insensitive match)
+    # Find the 'Imp-Exp por País' sheet (accent-insensitive match, OLADE Spanish name)
     target_sheet = None
     for name in wb.sheetnames:
         if strip_accents(name) == 'Imp-Exp por Pais':
@@ -1343,8 +1343,8 @@ class SecondaryTechsUpdater:
 
                     else:
                         # Option 2: Split petroleum into PET and OIL using shares
-                        # PET = Petroleum × Diésel
-                        # OIL = Petroleum × (Fuel oil + Búnker)
+                        # PET = Petroleum × Diesel
+                        # OIL = Petroleum × (Fuel oil + Bunker)
                         for scenario in self.scenarios:
                             pet_year_values = {}
                             oil_year_values = {}
@@ -1375,7 +1375,7 @@ class SecondaryTechsUpdater:
                                 pet_year_values[year] = round(pet_capacity, 6)
                                 oil_year_values[year] = round(oil_capacity, 6)
 
-                            # Create instruction for PET (Diésel)
+                            # Create instruction for PET (Diesel)
                             instruction_pet = {
                                 'row': 'OLADE',
                                 'scenario': scenario,
@@ -1388,7 +1388,7 @@ class SecondaryTechsUpdater:
                             }
                             instructions.append(instruction_pet)
 
-                            # Create instruction for OIL (Fuel oil + Búnker)
+                            # Create instruction for OIL (Fuel oil + Bunker)
                             instruction_oil = {
                                 'row': 'OLADE',
                                 'scenario': scenario,
@@ -2130,7 +2130,7 @@ class SecondaryTechsUpdater:
         renewable_olade_shares = {}
         for fuel in renewable_fuels:
             if fuel == 'WON':
-                # OLADE uses 'Eólica' -> mapped to 'WON' in OLADE_TECH_MAPPING
+                # OLADE uses 'Eólica' (Spanish for Wind) -> mapped to 'WON' in OLADE_TECH_MAPPING
                 share = olade_tech_shares.get(fuel, 0.0)
             else:
                 share = olade_tech_shares.get(fuel, 0.0)

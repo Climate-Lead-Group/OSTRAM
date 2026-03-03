@@ -32,13 +32,13 @@ def sort_csv_files_in_folder(folder_path):
             file_path = os.path.join(folder_path, filename)
             print(f"Processing: {filename}")
             try:
-                # Leer el CSV preservando la cabecera
+                # Read the CSV preserving the header
                 df = pd.read_csv(file_path)
 
-                # Ordenar usando todas las columnas
+                # Sort using all columns
                 df_sorted = df.sort_values(by=list(df.columns))
 
-                # Sobrescribir el archivo original
+                # Overwrite the original file
                 df_sorted.to_csv(file_path, index=False)
             except Exception as e:
                 print(f"Error processing {filename}: {e}")
@@ -484,7 +484,7 @@ def concatenate_all_scenarios(HERE, params):
     df_inputs_outputs_all = pd.concat([df_inputs_all,df_outputs_all], ignore_index=True, sort=True)  # Sort for deterministic column order
     
 
-    # Función para reordenar columnas: metadata first, then alfabetico
+    # Function to reorder columns: metadata first, then alphabetical
     def reorder_columns(df):
         front = ['Future','Scenario'] + [c for c in keys_sets_delete if c in df.columns]
         rest = sorted([c for c in df.columns if c not in front])
@@ -492,7 +492,7 @@ def concatenate_all_scenarios(HERE, params):
 
     today = date.today().isoformat()  # 'YYYY-MM-DD'
 
-    # 1) Guardar inputs
+    # 1) Save inputs
     if not df_inputs_all.empty:
         df_inputs_all = reorder_columns(df_inputs_all)
         # Sort rows for deterministic output
@@ -506,7 +506,7 @@ def concatenate_all_scenarios(HERE, params):
     else:
         path_in = None
 
-    # 2) Guardar outputs
+    # 2) Save outputs
     if not df_outputs_all.empty:
         df_outputs_all = reorder_columns(df_outputs_all)
         # Sort rows for deterministic output
@@ -617,7 +617,7 @@ if __name__ == "__main__":
     # Start timer
     start1 = time.time()
     
-    # Carpeta donde vive este script: .../OSTRAM/t1_confection
+    # Folder where this script lives: .../OSTRAM/t1_confection
     global HERE
     def get_here() -> Path:
         # 1) Script normal
@@ -627,13 +627,13 @@ if __name__ == "__main__":
         main = sys.modules.get('__main__')
         if hasattr(main, '__file__'):
             return Path(main.__file__).resolve().parent
-        # 3) Consola/ejecución interactiva: carpeta de trabajo actual
+        # 3) Console/interactive execution: current working directory
         return Path.cwd().resolve()
     
     HERE = get_here()
     
     
-    # (Opcional) Cambiar CWD a la carpeta del script
+    # (Optional) Change CWD to the script's folder
     if Path.cwd() != HERE:
         os.chdir(HERE)
         print(f"[INFO] Working dir -> {HERE}")
@@ -818,11 +818,11 @@ if __name__ == "__main__":
     # df_inputs_all = pd.read_csv('REALC_TX_Inputs.csv', low_memory=False)
     # df_outputs_all = pd.read_csv('REALC_TX_Outputs.csv', low_memory=False)
     
-    # # 2. Concaténalos verticalmente (uno debajo del otro)
+    # # 2. Concatenate them vertically (one below the other)
     # df_combined = pd.concat([df_inputs_all, df_outputs_all], ignore_index=True, sort=False)
     
-    # # 3. (Opcional) Reordena columnas si lo deseas,
-    # #    por ejemplo, poniendo 'Scenario' y 'Future' al frente
+    # # 3. (Optional) Reorder columns if desired,
+    # #    for example, putting 'Scenario' and 'Future' at the front
     # cols_front = ['Scenario', 'Future']
     # other_cols = [c for c in df_combined.columns if c not in cols_front]
     # df_combined = df_combined[cols_front + other_cols]
@@ -832,7 +832,7 @@ if __name__ == "__main__":
     # combined_filename = f"{params['prefix_final_files']}Combined_Inputs_Outputs_{today}.csv"
     # df_combined.to_csv(combined_filename, index=False)
     
-    # print(f"Archivo combinado guardado en: {combined_filename}")
+    # print(f"Combined file saved to: {combined_filename}")
     ###############################################################################################
     
     

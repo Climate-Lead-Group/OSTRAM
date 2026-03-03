@@ -3397,13 +3397,13 @@ def sort_csv_files_in_folder(folder_path):
             file_path = os.path.join(folder_path, filename)
             print(f"Processing: {filename}")
             try:
-                # Leer el CSV preservando la cabecera
+                # Read the CSV preserving the header
                 df = pd.read_csv(file_path)
 
-                # Ordenar usando todas las columnas
+                # Sort using all columns
                 df_sorted = df.sort_values(by=list(df.columns))
 
-                # Sobrescribir el archivo original
+                # Overwrite the original file
                 df_sorted.to_csv(file_path, index=False)
             except Exception as e:
                 print(f"Error processing {filename}: {e}")
