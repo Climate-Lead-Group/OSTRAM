@@ -4,26 +4,26 @@
 # ============================================================
 # COUNTRY CONFIGURATION (Single Source of Truth)
 # ============================================================
-# Each country: iso3 key, english_name, olade_name (Spanish, for OLADE & Shares Excel files)
+# Each country: iso3 key, english_name, ostram_name (Spanish, for OSTRAM & Shares Excel files)
 country_data:
   BGD:
     english_name: "Bangladesh"
-    olade_name: "Bangladesh"
+    ostram_name: "Bangladesh"
   BTN:
     english_name: "Bhutan"
-    olade_name: "Bhutan"
+    ostram_name: "Bhutan"
   IND:
     english_name: "India"
-    olade_name: "India"
+    ostram_name: "India"
   NPL:
     english_name: "Nepal"
-    olade_name: "Nepal"
+    ostram_name: "Nepal"
   LKA:
     english_name: "Sri Lanka"
-    olade_name: "Sri Lanka"
+    ostram_name: "Sri Lanka"
   MDV:
     english_name: "Maldives"
-    olade_name: "Maldives"
+    ostram_name: "Maldives"
 
 # Special entries (not model countries, used in iso_country_map)
 special_entries:
@@ -36,9 +36,9 @@ special_entries:
 # Reference year for the model (first year of the model horizon)
 first_year: 2023
 
-# Whether to add missing countries' demand data from OLADE generation file
-# When true, A1 reads OLADE Excel to fill in countries not present in the input CSVs
-add_missing_countries_from_olade: false
+# Whether to add missing countries' demand data from OSTRAM generation file
+# When true, A1 reads OSTRAM Excel to fill in countries not present in the input CSVs
+add_missing_countries_from_ostram: false
 
 # PWR technology cleanup mode (handles PWR00/PWR01 duplicates):
 #   "drop"  - drop PWR00 rows when PWR01 exists, then rename PWR01 (removes '01' suffix)
@@ -50,14 +50,14 @@ pwr_cleanup_mode: merge
 # TECHNOLOGY CONFIGURATION
 # ============================================================
 
-# OLADE technology name -> model 3-char code
-olade_tech_mapping:
+# Technology name (in Excel source files) -> model 3-char code
+ostram_tech_mapping:
   Nuclear: URN
-  "Gas natural": NGS
-  "Carbón mineral": COA
-  Hidro: HYD
-  Geotermia: GEO
-  "Eólica": WON
+  "Natural gas": NGS
+  "Mineral coal": COA
+  Hydro: HYD
+  Geothermal: GEO
+  Wind: WON
   Solar: SPV
   # BIO is special: sum of Biogas + Solid biomass + Liquid biofuels
 
@@ -105,18 +105,18 @@ renewable_fuels:
 
 # Shares technology name -> model tech code (for Shares_Power_Generation_Technologies.xlsx)
 shares_tech_mapping:
-  Biomasa: BIO
-  "Búnker": OIL
-  "Carbón": COA
-  "Diésel": PET
-  "Eólica": WON
+  Biomass: BIO
+  Bunker: OIL
+  Coal: COA
+  Diesel: PET
+  Wind: WON
   "Fuel oil": OIL
-  "Gas natural": NGS
-  "Geotérmica": GEO
-  "Hidroeléctrica": HYD
+  "Natural gas": NGS
+  Geothermal: GEO
+  Hydroelectric: HYD
   Nuclear: URN
-  "Solar (GD)": SPV
-  "Solar (gran escala)": SPV
+  "Solar (DG)": SPV
+  "Solar (utility scale)": SPV
 
 # ============================================================
 # COUNTRY LIST & TRANSMISSION TECHNOLOGY PARAMETERS

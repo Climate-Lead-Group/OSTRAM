@@ -78,15 +78,6 @@ Results are displayed as:
 - **FAIL**: Critical issue that will cause model errors.
 - **WARN**: Potential issue that should be reviewed.
 
-### Expected Minimums
-
-| Category | Minimum Count |
-|----------|---------------|
-| Technologies | 30 |
-| Fuels | 15 |
-| Emissions | 1 |
-| Storages | 2 |
-
 ---
 
 ## New Country Template Generator

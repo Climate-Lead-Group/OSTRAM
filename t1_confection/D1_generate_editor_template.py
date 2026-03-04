@@ -14,11 +14,11 @@ import sys
 from pathlib import Path
 from datetime import datetime
 import yaml
-from Z_AUX_config_loader import get_olade_country_mapping, get_olade_tech_mapping, get_country_names
+from Z_AUX_config_loader import get_ostram_country_mapping, get_ostram_tech_mapping, get_country_names
 
 # Country and technology mappings from centralized config
-OLADE_COUNTRY_MAPPING = get_olade_country_mapping()
-OLADE_TECH_MAPPING = get_olade_tech_mapping()
+OSTRAM_COUNTRY_MAPPING = get_ostram_country_mapping()
+OSTRAM_TECH_MAPPING = get_ostram_tech_mapping()
 
 
 def read_base_scenario():
@@ -51,7 +51,17 @@ def collect_data_from_all_scenarios():
     """
     base_path = Path(__file__).parent / "A1_Outputs"
 
-    scenarios = ["BAU", "NDC", "NDC+ELC", "NDC_NoRPO"]
+    # Auto-discover scenarios from A1_Outputs_* folders
+    scenarios = []
+    for item in sorted(base_path.iterdir()):
+        if item.is_dir() and item.name.startswith("A1_Outputs_"):
+            suffix = item.name.split("A1_Outputs_", 1)[1]
+            if suffix:
+                scenarios.append(suffix)
+
+    if not scenarios:
+        print("WARNING: No 'A1_Outputs_*' folders found. Nothing to do.")
+        return None
 
     all_countries = set()
     tech_mapping = {}  # Tech.Name -> Tech code
@@ -434,10 +444,10 @@ def create_editor_template(data, output_path):
     ws_instructions = wb.create_sheet("Instructions", 0)
     ws_instructions.column_dimensions['A'].width = 80
 
-    # Add OLADE Configuration sheet (second sheet - index 1)
-    ws_olade = wb.create_sheet("OLADE_Config", 1)
-    ws_olade.column_dimensions['A'].width = 80
-    ws_olade.column_dimensions['B'].width = 20
+    # Add OSTRAM Configuration sheet (second sheet - index 1)
+    ws_ostram = wb.create_sheet("OSTRAM_Config", 1)
+    ws_ostram.column_dimensions['A'].width = 80
+    ws_ostram.column_dimensions['B'].width = 20
 
     # Style for configuration sheet
     header_fill_config = PatternFill(start_color="FFA500", end_color="FFA500", fill_type="solid")
@@ -450,102 +460,102 @@ def create_editor_template(data, output_path):
     )
 
     # Title
-    cell = ws_olade.cell(1, 1, "OLADE CONFIGURATION")
+    cell = ws_ostram.cell(1, 1, "OSTRAM CONFIGURATION")
     cell.font = Font(size=14, bold=True, color="366092")
-    ws_olade.merge_cells('A1:B1')
+    ws_ostram.merge_cells('A1:B1')
 
     # Instructions
-    ws_olade.cell(2, 1, "Fill in the configuration below to automatically populate ResidualCapacity from OLADE data")
-    ws_olade.merge_cells('A2:B2')
-    ws_olade.cell(2, 1).font = Font(italic=True)
+    ws_ostram.cell(2, 1, "Fill in the configuration below to automatically populate ResidualCapacity from OSTRAM data")
+    ws_ostram.merge_cells('A2:B2')
+    ws_ostram.cell(2, 1).font = Font(italic=True)
 
     # Configuration headers
-    ws_olade.cell(4, 1, "Configuration Parameter").fill = header_fill_config
-    ws_olade.cell(4, 1).font = header_font_config
-    ws_olade.cell(4, 1).border = border_style
-    ws_olade.cell(4, 2, "Value").fill = header_fill_config
-    ws_olade.cell(4, 2).font = header_font_config
-    ws_olade.cell(4, 2).border = border_style
+    ws_ostram.cell(4, 1, "Configuration Parameter").fill = header_fill_config
+    ws_ostram.cell(4, 1).font = header_font_config
+    ws_ostram.cell(4, 1).border = border_style
+    ws_ostram.cell(4, 2, "Value").fill = header_fill_config
+    ws_ostram.cell(4, 2).font = header_font_config
+    ws_ostram.cell(4, 2).border = border_style
 
-    # ResidualCapacitiesFromOLADE
-    ws_olade.cell(5, 1, "ResidualCapacitiesFromOLADE").border = border_style
-    ws_olade.cell(5, 2, "NO").border = border_style
+    # ResidualCapacitiesFromOSTRAM
+    ws_ostram.cell(5, 1, "ResidualCapacitiesFromOSTRAM").border = border_style
+    ws_ostram.cell(5, 2, "NO").border = border_style
     dv_yes_no = DataValidation(type="list", formula1='"YES,NO"', allow_blank=False)
-    ws_olade.add_data_validation(dv_yes_no)
+    ws_ostram.add_data_validation(dv_yes_no)
     dv_yes_no.add('B5')
 
     # PetroleumSplitMode
-    ws_olade.cell(6, 1, "PetroleumSplitMode").border = border_style
-    ws_olade.cell(6, 2, "Split_PET_OIL").border = border_style
+    ws_ostram.cell(6, 1, "PetroleumSplitMode").border = border_style
+    ws_ostram.cell(6, 2, "Split_PET_OIL").border = border_style
     dv_petroleum = DataValidation(type="list", formula1='"OIL_only,Split_PET_OIL"', allow_blank=False)
-    ws_olade.add_data_validation(dv_petroleum)
+    ws_ostram.add_data_validation(dv_petroleum)
     dv_petroleum.add('B6')
 
-    # DemandFromOLADE
-    ws_olade.cell(7, 1, "DemandFromOLADE").border = border_style
-    ws_olade.cell(7, 2, "NO").border = border_style
+    # DemandFromOSTRAM
+    ws_ostram.cell(7, 1, "DemandFromOSTRAM").border = border_style
+    ws_ostram.cell(7, 2, "NO").border = border_style
     dv_yes_no.add('B7')
 
-    # ActivityLowerLimitFromOLADE
-    ws_olade.cell(8, 1, "ActivityLowerLimitFromOLADE").border = border_style
-    ws_olade.cell(8, 2, "NO").border = border_style
+    # ActivityLowerLimitFromOSTRAM
+    ws_ostram.cell(8, 1, "ActivityLowerLimitFromOSTRAM").border = border_style
+    ws_ostram.cell(8, 2, "NO").border = border_style
     dv_yes_no.add('B8')
 
-    # ActivityUpperLimitFromOLADE
-    ws_olade.cell(9, 1, "ActivityUpperLimitFromOLADE").border = border_style
-    ws_olade.cell(9, 2, "NO").border = border_style
+    # ActivityUpperLimitFromOSTRAM
+    ws_ostram.cell(9, 1, "ActivityUpperLimitFromOSTRAM").border = border_style
+    ws_ostram.cell(9, 2, "NO").border = border_style
     dv_yes_no.add('B9')
 
     # TradeBalanceDemandAdjustment
-    ws_olade.cell(10, 1, "TradeBalanceDemandAdjustment").border = border_style
-    ws_olade.cell(10, 2, "NO").border = border_style
+    ws_ostram.cell(10, 1, "TradeBalanceDemandAdjustment").border = border_style
+    ws_ostram.cell(10, 2, "NO").border = border_style
     dv_yes_no.add('B10')
 
     # InterconnectionsControl
-    ws_olade.cell(11, 1, "InterconnectionsControl").border = border_style
-    ws_olade.cell(11, 2, "NO").border = border_style
+    ws_ostram.cell(11, 1, "InterconnectionsControl").border = border_style
+    ws_ostram.cell(11, 2, "NO").border = border_style
     dv_yes_no.add('B11')
 
     # Add detailed descriptions with formulas and data sources
-    ws_olade.cell(13, 1, "DETAILED DESCRIPTIONS AND FORMULAS")
-    ws_olade.cell(13, 1).font = Font(bold=True, size=12, color="366092")
-    ws_olade.merge_cells('A13:B13')
+    ws_ostram.cell(13, 1, "DETAILED DESCRIPTIONS AND FORMULAS")
+    ws_ostram.cell(13, 1).font = Font(bold=True, size=12, color="366092")
+    ws_ostram.merge_cells('A13:B13')
 
     current_row = 15
 
-    # ResidualCapacitiesFromOLADE
-    ws_olade.cell(current_row, 1, "1. ResidualCapacitiesFromOLADE")
-    ws_olade.cell(current_row, 1).font = Font(bold=True, size=11)
-    ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+    # ResidualCapacitiesFromOSTRAM
+    ws_ostram.cell(current_row, 1, "1. ResidualCapacitiesFromOSTRAM")
+    ws_ostram.cell(current_row, 1).font = Font(bold=True, size=11)
+    ws_ostram.merge_cells(f'A{current_row}:B{current_row}')
     current_row += 1
 
     residual_desc = [
         "Populates the ResidualCapacity parameter for PWR (power generation) technologies.",
         "",
         "DATA SOURCE:",
-        "  File: 'OLADE - Capacidad instalada por fuente - Anual.xlsx'",
+        "  File: 'OSTRAM - Installed Capacity by Source - Annual.xlsx'",
         "  Sheet: '1.2023' (or corresponding year)",
         "  Row 5: Country names",
         "  Rows 6-20: Technology capacities in MW",
         "",
         "FORMULA:",
-        "  ResidualCapacity (GW) = OLADE_Capacity (MW) / 1000",
+        "  ResidualCapacity (GW) = OSTRAM_Capacity (MW) / 1000",
         "",
         "NOTES:",
         "  - Same flat capacity value is used for all model years",
         "  - Only applies to PWR technologies (power plants)",
     ]
     for line in residual_desc:
-        ws_olade.cell(current_row, 1, line)
-        ws_olade.cell(current_row, 1).font = Font(size=9)
-        ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+        ws_ostram.cell(current_row, 1, line)
+        ws_ostram.cell(current_row, 1).font = Font(size=9)
+        ws_ostram.merge_cells(f'A{current_row}:B{current_row}')
         current_row += 1
     current_row += 1
 
     # PetroleumSplitMode
-    ws_olade.cell(current_row, 1, "2. PetroleumSplitMode")
-    ws_olade.cell(current_row, 1).font = Font(bold=True, size=11)
-    ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+    ws_ostram.cell(current_row, 1, "2. PetroleumSplitMode")
+    ws_ostram.cell(current_row, 1).font = Font(bold=True, size=11)
+    ws_ostram.merge_cells(f'A{current_row}:B{current_row}')
     current_row += 1
 
     petroleum_desc = [
@@ -565,29 +575,29 @@ def create_editor_template(data, output_path):
         "  OIL_share = Fuel_oil_share + Bunker_share",
     ]
     for line in petroleum_desc:
-        ws_olade.cell(current_row, 1, line)
-        ws_olade.cell(current_row, 1).font = Font(size=9)
-        ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+        ws_ostram.cell(current_row, 1, line)
+        ws_ostram.cell(current_row, 1).font = Font(size=9)
+        ws_ostram.merge_cells(f'A{current_row}:B{current_row}')
         current_row += 1
     current_row += 1
 
-    # DemandFromOLADE
-    ws_olade.cell(current_row, 1, "3. DemandFromOLADE")
-    ws_olade.cell(current_row, 1).font = Font(bold=True, size=11)
-    ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+    # DemandFromOSTRAM
+    ws_ostram.cell(current_row, 1, "3. DemandFromOSTRAM")
+    ws_ostram.cell(current_row, 1).font = Font(bold=True, size=11)
+    ws_ostram.merge_cells(f'A{current_row}:B{current_row}')
     current_row += 1
 
     demand_desc = [
         "Populates SpecifiedAnnualDemand in A-O_Demand.xlsx for electricity demand.",
         "",
         "DATA SOURCE:",
-        "  File: 'Generacion electrica por fuente - Anual - OLADE.xlsx'",
+        "  File: 'OSTRAM - Electric Generation by Source - Annual.xlsx'",
         "  Sheet: '1.2023'",
         "  Row 21: Total generation by country (GWh)",
         "  Reference year: 2023 (from cell A4)",
         "",
         "FORMULA:",
-        "  Demand(year) = Generation_OLADE(PJ) x (1 + growth_rate x (year - 2023))",
+        "  Demand(year) = Generation_OSTRAM(PJ) x (1 + growth_rate x (year - 2023))",
         "",
         "UNIT CONVERSION:",
         "  1 GWh = 0.0036 PJ",
@@ -597,23 +607,23 @@ def create_editor_template(data, output_path):
         "  Configured per country in 'Demand_Growth' sheet (default: 2% annual)",
     ]
     for line in demand_desc:
-        ws_olade.cell(current_row, 1, line)
-        ws_olade.cell(current_row, 1).font = Font(size=9)
-        ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+        ws_ostram.cell(current_row, 1, line)
+        ws_ostram.cell(current_row, 1).font = Font(size=9)
+        ws_ostram.merge_cells(f'A{current_row}:B{current_row}')
         current_row += 1
     current_row += 1
 
-    # ActivityLowerLimitFromOLADE
-    ws_olade.cell(current_row, 1, "4. ActivityLowerLimitFromOLADE")
-    ws_olade.cell(current_row, 1).font = Font(bold=True, size=11)
-    ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+    # ActivityLowerLimitFromOSTRAM
+    ws_ostram.cell(current_row, 1, "4. ActivityLowerLimitFromOSTRAM")
+    ws_ostram.cell(current_row, 1).font = Font(bold=True, size=11)
+    ws_ostram.merge_cells(f'A{current_row}:B{current_row}')
     current_row += 1
 
     lower_desc = [
         "Populates TotalTechnologyAnnualActivityLowerLimit in A-O_Parametrization.xlsx.",
         "",
         "DATA SOURCES:",
-        "  1. 'Generacion electrica por fuente - Anual - OLADE.xlsx' - Total generation",
+        "  1. 'OSTRAM - Electric Generation by Source - Annual.xlsx' - Total generation",
         "  2. 'Shares_Power_Generation_Technologies.xlsx' - Technology shares by country/scenario/year",
         "  3. 'Renewability_Targets' sheet - Target renewable % by year (optional)",
         "  4. 'Technology_Weights' sheet - Custom tech distribution (optional)",
@@ -630,16 +640,16 @@ def create_editor_template(data, output_path):
         "  - 'flat_step': Keep flat until target year, then step up (staircase)",
     ]
     for line in lower_desc:
-        ws_olade.cell(current_row, 1, line)
-        ws_olade.cell(current_row, 1).font = Font(size=9)
-        ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+        ws_ostram.cell(current_row, 1, line)
+        ws_ostram.cell(current_row, 1).font = Font(size=9)
+        ws_ostram.merge_cells(f'A{current_row}:B{current_row}')
         current_row += 1
     current_row += 1
 
-    # ActivityUpperLimitFromOLADE
-    ws_olade.cell(current_row, 1, "5. ActivityUpperLimitFromOLADE")
-    ws_olade.cell(current_row, 1).font = Font(bold=True, size=11)
-    ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+    # ActivityUpperLimitFromOSTRAM
+    ws_ostram.cell(current_row, 1, "5. ActivityUpperLimitFromOSTRAM")
+    ws_ostram.cell(current_row, 1).font = Font(bold=True, size=11)
+    ws_ostram.merge_cells(f'A{current_row}:B{current_row}')
     current_row += 1
 
     upper_desc = [
@@ -654,43 +664,43 @@ def create_editor_template(data, output_path):
         "  - The +0.1 margin allows slight flexibility in the optimization",
     ]
     for line in upper_desc:
-        ws_olade.cell(current_row, 1, line)
-        ws_olade.cell(current_row, 1).font = Font(size=9)
-        ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+        ws_ostram.cell(current_row, 1, line)
+        ws_ostram.cell(current_row, 1).font = Font(size=9)
+        ws_ostram.merge_cells(f'A{current_row}:B{current_row}')
         current_row += 1
     current_row += 1
 
     # ActivityLowerLimitMethod (DemandBased)
-    ws_olade.cell(current_row, 1, "6. ActivityLowerLimit Calculation Method")
-    ws_olade.cell(current_row, 1).font = Font(bold=True, size=11)
-    ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+    ws_ostram.cell(current_row, 1, "6. ActivityLowerLimit Calculation Method")
+    ws_ostram.cell(current_row, 1).font = Font(bold=True, size=11)
+    ws_ostram.merge_cells(f'A{current_row}:B{current_row}')
     current_row += 1
 
     method_desc = [
         "Calculates TotalTechnologyAnnualActivityLowerLimit directly from projected demand and normalized shares.",
-        "Only applies when ActivityLowerLimitFromOLADE = YES.",
+        "Only applies when ActivityLowerLimitFromOSTRAM = YES.",
         "",
         "CALCULATION METHOD:",
         "  Formula: LowerLimit[tech,year] = Demand[country,year] × Share_normalized[tech,year]",
         "  Step 1: Read projected demand from A-O_Demand.xlsx (SpecifiedAnnualDemand)",
         "  Step 2: Read % renewable from Renewability_Targets (with interpolation)",
-        "  Step 3: Distribute % renewable among renewable fuels using OLADE generation weights",
-        "  Step 4: Distribute % non-renewable among non-renewable fuels using OLADE generation weights",
+        "  Step 3: Distribute % renewable among renewable fuels using OSTRAM generation weights",
+        "  Step 4: Distribute % non-renewable among non-renewable fuels using OSTRAM generation weights",
         "  Step 5: Normalize all shares year-by-year to ensure Σ(shares) = 1.0",
         "  Step 6: For non-base scenarios, override years 2023-2025 with base scenario shares",
         "  Step 7: Calculate LowerLimit = Demand × Share for each technology/year",
         "",
         "REQUIREMENTS:",
-        "  - ActivityLowerLimitFromOLADE must be YES",
+        "  - ActivityLowerLimitFromOSTRAM must be YES",
         "  - A-O_Demand.xlsx must exist in the scenario output folder",
         "  - Renewability_Targets sheet must define % renewable targets",
-        "  - OLADE generation data must be available for weight calculation",
+        "  - OSTRAM generation data must be available for weight calculation",
         "  - base_scenario defined in Config_MOMF_T1_AB.yaml",
         "",
         "FUEL GROUPS:",
         "  Renewable: HYD, SPV, WON, GEO, BIO, CSP, WOF, WAV",
         "  Non-renewable: COA, NGS, OIL, PET, URN",
-        "  Other (weight=0 if no OLADE data): BCK, CCS, COG, LDS, OTH, SDS, WAS",
+        "  Other (weight=0 if no OSTRAM data): BCK, CCS, COG, LDS, OTH, SDS, WAS",
         "",
         "BASE SCENARIO OVERRIDE:",
         "  - For all scenarios different from base_scenario (defined in Config_MOMF_T1_AB.yaml)",
@@ -698,45 +708,45 @@ def create_editor_template(data, output_path):
         "  - This ensures realistic transition timing",
     ]
     for line in method_desc:
-        ws_olade.cell(current_row, 1, line)
-        ws_olade.cell(current_row, 1).font = Font(size=9)
-        ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+        ws_ostram.cell(current_row, 1, line)
+        ws_ostram.cell(current_row, 1).font = Font(size=9)
+        ws_ostram.merge_cells(f'A{current_row}:B{current_row}')
         current_row += 1
     current_row += 1
 
     # Technology mapping section
-    ws_olade.cell(current_row, 1, "TECHNOLOGY MAPPING (OLADE -> Model)")
-    ws_olade.cell(current_row, 1).font = Font(bold=True, size=11, color="366092")
-    ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+    ws_ostram.cell(current_row, 1, "TECHNOLOGY MAPPING (Source files -> Model)")
+    ws_ostram.cell(current_row, 1).font = Font(bold=True, size=11, color="366092")
+    ws_ostram.merge_cells(f'A{current_row}:B{current_row}')
     current_row += 1
 
     tech_mapping_desc = [
         "",
         "RENEWABLE TECHNOLOGIES:",
-        "  Biomasa         -> BIO (Biomass)",
-        "  Eolica          -> WND (Wind)",
-        "  Geotermica      -> GEO (Geothermal)",
-        "  Hidroelectrica  -> HYD (Hydro)",
-        "  Solar (GD + gran escala) -> SPV (Solar PV)",
+        "  Biomass         -> BIO (Biomass)",
+        "  Wind            -> WON (Wind)",
+        "  Geothermal      -> GEO (Geothermal)",
+        "  Hydro           -> HYD (Hydro)",
+        "  Solar           -> SPV (Solar PV)",
         "",
         "NON-RENEWABLE TECHNOLOGIES:",
-        "  Carbon          -> COA (Coal)",
-        "  Diesel          -> PET (Petroleum/Diesel)",
-        "  Gas natural     -> NGS (Natural Gas)",
+        "  Mineral coal    -> COA (Coal)",
+        "  Petroleum       -> PET (Petroleum/Diesel)",
+        "  Natural gas     -> NGS (Natural Gas)",
         "  Nuclear         -> URN (Uranium/Nuclear)",
         "  Fuel oil + Bunker -> OIL (Oil/Fuel oil)",
     ]
     for line in tech_mapping_desc:
-        ws_olade.cell(current_row, 1, line)
-        ws_olade.cell(current_row, 1).font = Font(size=9)
-        ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+        ws_ostram.cell(current_row, 1, line)
+        ws_ostram.cell(current_row, 1).font = Font(size=9)
+        ws_ostram.merge_cells(f'A{current_row}:B{current_row}')
         current_row += 1
     current_row += 1
 
     # InterconnectionsControl
-    ws_olade.cell(current_row, 1, "7. InterconnectionsControl")
-    ws_olade.cell(current_row, 1).font = Font(bold=True, size=11)
-    ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+    ws_ostram.cell(current_row, 1, "7. InterconnectionsControl")
+    ws_ostram.cell(current_row, 1).font = Font(bold=True, size=11)
+    ws_ostram.merge_cells(f'A{current_row}:B{current_row}')
     current_row += 1
 
     intercon_desc = [
@@ -758,9 +768,9 @@ def create_editor_template(data, output_path):
         "NOTE: Year values in Projections (efficiency/loss factors) are NOT modified.",
     ]
     for line in intercon_desc:
-        ws_olade.cell(current_row, 1, line)
-        ws_olade.cell(current_row, 1).font = Font(size=9)
-        ws_olade.merge_cells(f'A{current_row}:B{current_row}')
+        ws_ostram.cell(current_row, 1, line)
+        ws_ostram.cell(current_row, 1).font = Font(size=9)
+        ws_ostram.merge_cells(f'A{current_row}:B{current_row}')
         current_row += 1
 
     # Populate instructions sheet
@@ -770,7 +780,7 @@ def create_editor_template(data, output_path):
         ["This Excel file allows you to edit Secondary Techs data easily.", ""],
         ["", ""],
         ["HOW TO USE:", ""],
-        ["1. (Optional) Configure OLADE settings in 'OLADE_Config' sheet", ""],
+        ["1. (Optional) Configure OSTRAM settings in 'OSTRAM_Config' sheet", ""],
         ["2. Go to the 'Editor' sheet", ""],
         ["3. Fill in each row with:", ""],
         ["   - Scenario: Select BAU, NDC, NDC+ELC, NDC_NoRPO, or ALL (applies to all scenarios)", ""],
@@ -783,28 +793,28 @@ def create_editor_template(data, output_path):
         ["4. Save and close this file", ""],
         ["5. Run: python t1_confection/D2_update_secondary_techs.py", ""],
         ["", ""],
-        ["OLADE INTEGRATION:", ""],
-        ["- If ResidualCapacitiesFromOLADE = YES in OLADE_Config sheet:", ""],
+        ["OSTRAM INTEGRATION:", ""],
+        ["- If ResidualCapacitiesFromOSTRAM = YES in OSTRAM_Config sheet:", ""],
         ["  * The script will automatically populate ResidualCapacity for PWR technologies", ""],
-        ["  * Data comes from 'OLADE - Capacidad instalada por fuente - Anual.xlsx'", ""],
-        ["  * OLADE data takes priority over manual Editor entries for ResidualCapacity", ""],
+        ["  * Data comes from 'OSTRAM - Installed Capacity by Source - Annual.xlsx'", ""],
+        ["  * OSTRAM data takes priority over manual Editor entries for ResidualCapacity", ""],
         ["  * Flat capacity values are used (same value for all years)", ""],
         ["", ""],
-        ["- If DemandFromOLADE = YES in OLADE_Config sheet:", ""],
+        ["- If DemandFromOSTRAM = YES in OSTRAM_Config sheet:", ""],
         ["  * The script will populate electricity demand in A-O_Demand.xlsx", ""],
-        ["  * Data comes from 'OLADE - Generación eléctrica por fuente - Anual.xlsx'", ""],
+        ["  * Data comes from 'OSTRAM - Electric Generation by Source - Annual.xlsx'", ""],
         ["  * Configure growth rates per country in the 'Demand_Growth' sheet", ""],
         ["  * Data is converted from GWh to PJ (1 GWh = 0.0036 PJ)", ""],
-        ["  * Linear growth is applied from the OLADE reference year (2023)", ""],
+        ["  * Linear growth is applied from the OSTRAM reference year (2023)", ""],
         ["", ""],
-        ["- If ActivityLowerLimitFromOLADE = YES in OLADE_Config sheet:", ""],
+        ["- If ActivityLowerLimitFromOSTRAM = YES in OSTRAM_Config sheet:", ""],
         ["  * The script will populate TotalTechnologyAnnualActivityLowerLimit in A-O_Parametrization.xlsx", ""],
         ["  * Formula: LowerLimit[tech,year] = Demand[country,year] × Share_normalized[tech,year]", ""],
-        ["  * Shares are calculated from Renewability_Targets and OLADE generation weights", ""],
+        ["  * Shares are calculated from Renewability_Targets and OSTRAM generation weights", ""],
         ["  * Demand values come from A-O_Demand.xlsx (with projected growth)", ""],
         ["", ""],
         ["INTERCONNECTION CONTROL:", ""],
-        ["- If InterconnectionsControl = YES in OLADE_Config sheet:", ""],
+        ["- If InterconnectionsControl = YES in OSTRAM_Config sheet:", ""],
         ["  * The 'Interconnections' sheet controls TRN cross-border/intra-country links", ""],
         ["  * Set each direction to ON or OFF independently", ""],
         ["  * OFF directions: InputActivityRatio=0, OutputActivityRatio=0, Projection.Mode='EMPTY'", ""],
@@ -827,7 +837,7 @@ def create_editor_template(data, output_path):
         if row_idx == 1:
             cell.font = Font(size=16, bold=True, color="366092")
         elif (row_data[0].startswith("HOW TO USE:") or row_data[0].startswith("IMPORTANT NOTES:") or
-              row_data[0].startswith("OLADE INTEGRATION:") or row_data[0].startswith("INTERCONNECTION CONTROL:")):
+              row_data[0].startswith("OSTRAM INTEGRATION:") or row_data[0].startswith("INTERCONNECTION CONTROL:")):
             cell.font = Font(size=12, bold=True)
 
         cell.alignment = Alignment(wrap_text=True, vertical="top")
@@ -882,7 +892,7 @@ def create_editor_template(data, output_path):
 
     # Add note at the bottom
     note_row = 5 + len(demand_countries) + 1
-    ws_demand.cell(note_row, 1, "Note: Growth rate is applied linearly from the OLADE reference year (2023).")
+    ws_demand.cell(note_row, 1, "Note: Growth rate is applied linearly from the OSTRAM reference year (2023).")
     ws_demand.merge_cells(f'A{note_row}:C{note_row}')
     ws_demand.cell(note_row, 1).font = Font(italic=True, size=9)
 
@@ -898,9 +908,9 @@ def create_editor_template(data, output_path):
     ws_renew.column_dimensions['B'].width = 15
     ws_renew.column_dimensions['C'].width = 15
 
-    # OLADE base year is 2023 - filter years to start from 2023
-    olade_base_year = 2023
-    renew_years = [y for y in data['years'] if y >= olade_base_year]
+    # OSTRAM base year is 2023 - filter years to start from 2023
+    ostram_base_year = 2023
+    renew_years = [y for y in data['years'] if y >= ostram_base_year]
 
     # Title
     cell = ws_renew.cell(1, 1, "RENEWABILITY TARGETS")
@@ -912,7 +922,7 @@ def create_editor_template(data, output_path):
     ws_renew.merge_cells(f'A2:{openpyxl.utils.get_column_letter(3 + len(renew_years))}2')
     ws_renew.cell(2, 1).font = Font(italic=True)
 
-    ws_renew.cell(3, 1, f"Base year is {olade_base_year} (from OLADE data). Only define targets for years where you want to set a specific renewable %.")
+    ws_renew.cell(3, 1, f"Base year is {ostram_base_year} (from OSTRAM data). Only define targets for years where you want to set a specific renewable %.")
     ws_renew.merge_cells(f'A3:{openpyxl.utils.get_column_letter(3 + len(renew_years))}3')
     ws_renew.cell(3, 1).font = Font(italic=True, size=9)
 
@@ -931,7 +941,7 @@ def create_editor_template(data, output_path):
             ws_renew.column_dimensions[openpyxl.utils.get_column_letter(col_idx)].width = 8
 
     # Pre-populate rows for each country+scenario combination
-    scenarios = ['BAU', 'NDC', 'NDC+ELC', 'NDC_NoRPO']
+    scenarios = data['scenarios']
     countries_list = sorted(data['countries'])
 
     row_idx = 6
@@ -962,7 +972,7 @@ def create_editor_template(data, output_path):
     note_row += 1
 
     notes = [
-        f"1. Base year ({olade_base_year}): Uses actual renewable % from OLADE/Shares_Power_Generation_Technologies.xlsx data",
+        f"1. Base year ({ostram_base_year}): Uses actual renewable % from OSTRAM/Shares_Power_Generation_Technologies.xlsx data",
         "2. Target years: Define your desired renewable % in specific years (e.g., 50% in 2030, 70% in 2040)",
         "3. Empty cells: Values are interpolated based on the interpolation mode selected",
         "",
@@ -993,7 +1003,7 @@ def create_editor_template(data, output_path):
     ws_weights.column_dimensions['A'].width = 12
     ws_weights.column_dimensions['B'].width = 15
 
-    # All technology columns (same as OLADE sources)
+    # All technology columns (same as OSTRAM sources)
     # Renewables: HYD, SPV, WND, GEO, BIO
     # Non-renewables: COA, PET, NGS, URN, OIL
     all_techs = ['HYD', 'SPV', 'WND', 'GEO', 'BIO', 'COA', 'PET', 'NGS', 'URN', 'OIL']
@@ -1016,8 +1026,8 @@ def create_editor_template(data, output_path):
     ws_weights.cell(3, 1).font = Font(bold=True, size=10)
 
     default_explanation = [
-        "  The renewable % target is distributed PROPORTIONALLY based on each technology's share in OLADE base year data.",
-        "  Example: If OLADE shows HYD=60%, SPV=25%, WND=10%, GEO=3%, BIO=2% and you set 70% renewable target:",
+        "  The renewable % target is distributed PROPORTIONALLY based on each technology's share in OSTRAM base year data.",
+        "  Example: If OSTRAM shows HYD=60%, SPV=25%, WND=10%, GEO=3%, BIO=2% and you set 70% renewable target:",
         "    -> HYD gets 70% x (60/100) = 42%, SPV gets 70% x (25/100) = 17.5%, etc.",
         "  Non-renewable technologies are also distributed proportionally within the remaining (1 - renewable%) share.",
     ]
@@ -1077,7 +1087,7 @@ def create_editor_template(data, output_path):
             ws_weights.cell(row_idx, 1).alignment = Alignment(horizontal="center")
             ws_weights.cell(row_idx, 2, scenario).border = border_style
             ws_weights.cell(row_idx, 2).alignment = Alignment(horizontal="center")
-            # Weight columns - leave empty for default (proportional to OLADE)
+            # Weight columns - leave empty for default (proportional to OSTRAM)
             for col_idx in range(3, 3 + len(all_techs)):
                 ws_weights.cell(row_idx, col_idx).border = border_style
                 ws_weights.cell(row_idx, col_idx).number_format = '0.00'
@@ -1098,9 +1108,9 @@ def create_editor_template(data, output_path):
         "  - Non-renewable weights (COA+PET+NGS+URN+OIL) must sum to 1.0",
         "  - The renewable % from Renewability_Targets determines how much goes to each group",
         "",
-        "TECHNOLOGY CODES (same as OLADE sources):",
-        "  RENEWABLE: HYD=Hidroelectrica, SPV=Solar, WND=Eolica, GEO=Geotermica, BIO=Biomasa",
-        "  NON-RENEWABLE: COA=Carbon, PET=Diesel, NGS=Gas natural, URN=Nuclear, OIL=Fuel oil+Bunker",
+        "TECHNOLOGY CODES (same as OSTRAM sources):",
+        "  RENEWABLE: HYD=Hydro, SPV=Solar, WND=Wind, GEO=Geothermal, BIO=Biomass",
+        "  NON-RENEWABLE: COA=Coal, PET=Diesel, NGS=Natural gas, URN=Nuclear, OIL=Fuel oil+Bunker",
         "",
         "EXAMPLE:",
         "  If Renewability_Targets says 60% renewable for 2030, and you set weights:",
@@ -1143,7 +1153,7 @@ def create_editor_template(data, output_path):
         ws_intercon.merge_cells('A1:E1')
 
         # Instructions
-        ws_intercon.cell(2, 1, "Toggle ON/OFF each direction of TRN interconnection technologies. Requires InterconnectionsControl = YES in OLADE_Config.")
+        ws_intercon.cell(2, 1, "Toggle ON/OFF each direction of TRN interconnection technologies. Requires InterconnectionsControl = YES in OSTRAM_Config.")
         ws_intercon.merge_cells('A2:E2')
         ws_intercon.cell(2, 1).font = Font(italic=True)
 
@@ -1258,9 +1268,9 @@ def create_editor_template(data, output_path):
     ws_scenarios_demand.column_dimensions['A'].width = 15
     ws_scenarios_demand.column_dimensions['B'].width = 15
 
-    # OLADE base year is 2023 - filter years to start from 2023
-    olade_base_year = 2023
-    demand_adj_years = [y for y in data['years'] if y >= olade_base_year]
+    # OSTRAM base year is 2023 - filter years to start from 2023
+    ostram_base_year = 2023
+    demand_adj_years = [y for y in data['years'] if y >= ostram_base_year]
 
     # Title
     cell = ws_scenarios_demand.cell(1, 1, "SCENARIO-SPECIFIC DEMAND GROWTH ADJUSTMENTS")
@@ -1370,7 +1380,7 @@ def create_editor_template(data, output_path):
     ws_doc.merge_cells(f'A{doc_row}:H{doc_row}')
 
     doc_row += 1
-    ws_doc[f'A{doc_row}'] = 'ActivityLimit = Generation_OLADE × (1 + growth_rate × (year - ref_year)) × Share_technology'
+    ws_doc[f'A{doc_row}'] = 'ActivityLimit = Generation_OSTRAM × (1 + growth_rate × (year - ref_year)) × Share_technology'
     ws_doc[f'A{doc_row}'].font = Font(italic=True)
     ws_doc.merge_cells(f'A{doc_row}:H{doc_row}')
 
@@ -1378,11 +1388,11 @@ def create_editor_template(data, output_path):
     ws_doc[f'A{doc_row}'] = 'Where:'
     ws_doc[f'A{doc_row}'].font = Font(bold=True)
     doc_row += 1
-    ws_doc[f'A{doc_row}'] = '  • Generation_OLADE: Total electricity generation for country in base year (PJ)'
+    ws_doc[f'A{doc_row}'] = '  • Generation_OSTRAM: Total electricity generation for country in base year (PJ)'
     doc_row += 1
     ws_doc[f'A{doc_row}'] = '  • growth_rate: Annual growth rate (e.g., 0.02 = 2%)'
     doc_row += 1
-    ws_doc[f'A{doc_row}'] = '  • ref_year: OLADE reference year (2023)'
+    ws_doc[f'A{doc_row}'] = '  • ref_year: OSTRAM reference year (2023)'
     doc_row += 1
     ws_doc[f'A{doc_row}'] = '  • Share_technology: Technology share (from Shares_Total or Renewability_Targets)'
 
@@ -1484,7 +1494,7 @@ def create_editor_template(data, output_path):
     ws_doc[f'A{doc_row}'] = 'Input Data:'
     ws_doc[f'A{doc_row}'].font = Font(bold=True)
     doc_row += 1
-    ws_doc[f'A{doc_row}'] = '  • Generation_OLADE (2023) = 100 PJ'
+    ws_doc[f'A{doc_row}'] = '  • Generation_OSTRAM (2023) = 100 PJ'
     doc_row += 1
     ws_doc[f'A{doc_row}'] = '  • Growth rate = 2% (0.02)'
     doc_row += 1
@@ -1540,10 +1550,10 @@ def create_editor_template(data, output_path):
     ws_doc.merge_cells(f'A{doc_row}:H{doc_row}')
 
     # Reorder sheets: Documentation should come after Instructions (index 1)
-    # Current order after creation: Instructions(0), OLADE_Config(1), Demand_Growth(2),
+    # Current order after creation: Instructions(0), OSTRAM_Config(1), Demand_Growth(2),
     # Scenarios_Demand_Growth(3), Renewability_Targets(4), Technology_Weights(5),
     # Editor, _hidden sheets, Documentation(last)
-    # Target order: Instructions(0), Documentation(1), OLADE_Config(2), ...
+    # Target order: Instructions(0), Documentation(1), OSTRAM_Config(2), ...
     doc_sheet_index = wb.sheetnames.index('Documentation')
     wb.move_sheet('Documentation', offset=-(doc_sheet_index - 1))
 

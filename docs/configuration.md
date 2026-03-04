@@ -2,6 +2,10 @@
 
 OSTRAM uses four YAML configuration files and two Excel-based configuration files. This page documents every option.
 
+:::{warning}
+All data entered in the configuration files (technologies, years, countries, codes) **must match values that exist in the model**. Using technology codes, country codes, year ranges, or any other identifiers that are not present in the model data can cause the pipeline to fail during execution.
+:::
+
 ## Config_country_codes.yaml
 
 **Location:** `t1_confection/Config_country_codes.yaml`

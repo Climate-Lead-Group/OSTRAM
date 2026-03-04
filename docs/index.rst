@@ -28,6 +28,9 @@ Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
 
    configuration
    data-reference
+
+..
+   auxiliary-tools is commented out for now but kept for future use:
    auxiliary-tools
 
 

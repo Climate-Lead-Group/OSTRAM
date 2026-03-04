@@ -113,7 +113,7 @@ A typical modeling workflow follows these steps:
 3. **Preprocess raw CSVs into Excel model files** (`A1`).
 4. **Add transmission technologies** (`A2`).
 5. **Optionally edit secondary technologies** (`D1` + manual editing + `D2`).
-6. **Run the full pipeline** with `python run.py`.
+6. **Run the full pipeline** with `python run.py` (this executes stages **B1** and **B2** only -- data preparation stages A0--A2 and the secondary techs editor D1/D2 must be run separately beforehand).
 7. **Analyze results** using the output CSVs or the interactive dashboards.
 
 See {doc}`pipeline` for a detailed walkthrough of each stage.

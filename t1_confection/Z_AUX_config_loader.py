@@ -30,7 +30,7 @@ def strip_accents(text):
 # --- Country accessors ---
 
 def get_country_data():
-    """Returns raw country_data dict from YAML: {iso3: {english_name, olade_name}}"""
+    """Returns raw country_data dict from YAML: {iso3: {english_name, ostram_name}}"""
     return _load_raw().get("country_data", {})
 
 
@@ -52,20 +52,20 @@ def get_iso_country_map():
     return result
 
 
-def get_olade_country_mapping():
-    """Returns {olade_spanish_name: iso3} dict. Used for reading OLADE Excel files."""
-    return {d["olade_name"]: iso3 for iso3, d in get_country_data().items()}
+def get_ostram_country_mapping():
+    """Returns {ostram_spanish_name: iso3} dict. Used for reading OSTRAM Excel files."""
+    return {d["ostram_name"]: iso3 for iso3, d in get_country_data().items()}
 
 
-def get_olade_country_mapping_normalized():
+def get_ostram_country_mapping_normalized():
     """Returns accent-stripped {name: iso3} dict for fuzzy matching."""
-    return {strip_accents(name): iso3 for name, iso3 in get_olade_country_mapping().items()}
+    return {strip_accents(name): iso3 for name, iso3 in get_ostram_country_mapping().items()}
 
 
 def get_shares_country_mapping():
     """Returns {shares_name: iso3} dict. Used for Shares Excel files.
-    Shares files use the same country names as OLADE files."""
-    return get_olade_country_mapping()
+    Shares files use the same country names as OSTRAM files."""
+    return get_ostram_country_mapping()
 
 
 # --- Model settings ---
@@ -75,9 +75,9 @@ def get_first_year():
     return _load_raw().get("first_year", 2023)
 
 
-def get_add_missing_countries_from_olade():
-    """Returns whether to add missing countries from OLADE generation data."""
-    return _load_raw().get("add_missing_countries_from_olade", False)
+def get_add_missing_countries_from_ostram():
+    """Returns whether to add missing countries from OSTRAM generation data."""
+    return _load_raw().get("add_missing_countries_from_ostram", False)
 
 
 def get_pwr_cleanup_mode():
@@ -87,9 +87,9 @@ def get_pwr_cleanup_mode():
 
 # --- Technology accessors ---
 
-def get_olade_tech_mapping():
-    """Returns {olade_tech_name: model_code} dict."""
-    return _load_raw().get("olade_tech_mapping", {})
+def get_ostram_tech_mapping():
+    """Returns {ostram_tech_name: model_code} dict."""
+    return _load_raw().get("ostram_tech_mapping", {})
 
 
 def get_code_to_energy():

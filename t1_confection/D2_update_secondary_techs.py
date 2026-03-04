@@ -14,15 +14,15 @@ from datetime import datetime
 import shutil
 import yaml
 from Z_AUX_config_loader import (
-    get_olade_country_mapping, get_olade_country_mapping_normalized,
-    get_olade_tech_mapping, get_shares_country_mapping, get_shares_tech_mapping,
+    get_ostram_country_mapping, get_ostram_country_mapping_normalized,
+    get_ostram_tech_mapping, get_shares_country_mapping, get_shares_tech_mapping,
     strip_accents
 )
 
 # Country and technology mappings from centralized config
-OLADE_COUNTRY_MAPPING = get_olade_country_mapping()
-OLADE_COUNTRY_MAPPING_NORMALIZED = get_olade_country_mapping_normalized()
-OLADE_TECH_MAPPING = get_olade_tech_mapping()
+OSTRAM_COUNTRY_MAPPING = get_ostram_country_mapping()
+OSTRAM_COUNTRY_MAPPING_NORMALIZED = get_ostram_country_mapping_normalized()
+OSTRAM_TECH_MAPPING = get_ostram_tech_mapping()
 
 
 def read_base_scenario():
@@ -44,9 +44,9 @@ def read_base_scenario():
         return 'BAU'
 
 
-def read_olade_config(editor_path):
+def read_ostram_config(editor_path):
     """
-    Read OLADE configuration from the editor Excel file
+    Read OSTRAM configuration from the editor Excel file
 
     Returns:
         dict with config: {enabled, petroleum_split_mode, demand_enabled, activity_lower_limit_enabled,
@@ -55,7 +55,7 @@ def read_olade_config(editor_path):
     """
     wb = openpyxl.load_workbook(editor_path, data_only=True)
 
-    if 'OLADE_Config' not in wb.sheetnames:
+    if 'OSTRAM_Config' not in wb.sheetnames:
         wb.close()
         return {
             'enabled': False,
@@ -71,11 +71,11 @@ def read_olade_config(editor_path):
             'technology_weights': {}
         }
 
-    ws = wb['OLADE_Config']
+    ws = wb['OSTRAM_Config']
 
     # Read configuration values
-    # Row 5 = ResidualCapacitiesFromOLADE, Row 6 = PetroleumSplitMode, Row 7 = DemandFromOLADE
-    # Row 8 = ActivityLowerLimitFromOLADE, Row 9 = ActivityUpperLimitFromOLADE
+    # Row 5 = ResidualCapacitiesFromOSTRAM, Row 6 = PetroleumSplitMode, Row 7 = DemandFromOSTRAM
+    # Row 8 = ActivityLowerLimitFromOSTRAM, Row 9 = ActivityUpperLimitFromOSTRAM
     # Row 10 = TradeBalanceDemandAdjustment, Row 11 = InterconnectionsControl
     enabled = str(ws['B5'].value).upper() == 'YES' if ws['B5'].value else False
     petroleum_split_mode = str(ws['B6'].value) if ws['B6'].value else 'Split_PET_OIL'
@@ -263,18 +263,18 @@ def read_olade_config(editor_path):
 
 def read_shares_data(shares_file_path):
     """
-    Read Shares_PET_OIL_Split.xlsx file to get Diésel, Fuel oil, and Búnker shares by scenario, country, and year
+    Read Shares_PET_OIL_Split.xlsx file to get Diesel, Fuel oil, and Bunker shares by scenario, country, and year
 
-    The file should be normalized so that Diésel + Fuel oil + Búnker = 1.0
+    The file should be normalized so that Diesel + Fuel oil + Bunker = 1.0
 
     Returns:
         dict: {
             scenario: {
                 country_iso3: {
                     year: {
-                        'Diésel': share_value,
+                        'Diesel': share_value,
                         'Fuel oil': share_value,
-                        'Búnker': share_value
+                        'Bunker': share_value
                     }
                 }
             }
@@ -338,7 +338,7 @@ def read_shares_data(shares_file_path):
                 continue
 
             # If we have a current country, check for fuel types
-            if current_country_iso3 and cell_str in ['Diésel', 'Fuel oil', 'Búnker']:
+            if current_country_iso3 and cell_str in ['Diesel', 'Fuel oil', 'Bunker']:
                 fuel_name = cell_str
 
                 # Read shares for all years
@@ -362,11 +362,11 @@ def read_shares_data(shares_file_path):
     return shares_data
 
 
-def read_olade_data(olade_file_path):
+def read_ostram_data(ostram_file_path):
     """
-    Read OLADE capacity data from Excel file
+    Read OSTRAM capacity data from Excel file
 
-    Note: OLADE data is in MW, but is converted to GW for the model (1 GW = 1000 MW)
+    Note: OSTRAM data is in MW, but is converted to GW for the model (1 GW = 1000 MW)
 
     Returns:
         dict: {
@@ -378,10 +378,10 @@ def read_olade_data(olade_file_path):
             }
         }
     """
-    if not olade_file_path.exists():
-        raise FileNotFoundError(f"OLADE file not found: {olade_file_path}")
+    if not ostram_file_path.exists():
+        raise FileNotFoundError(f"OSTRAM file not found: {ostram_file_path}")
 
-    wb = openpyxl.load_workbook(olade_file_path, data_only=True)
+    wb = openpyxl.load_workbook(ostram_file_path, data_only=True)
     ws = wb['1.2023']
 
     # Extract reference year from A4
@@ -394,8 +394,8 @@ def read_olade_data(olade_file_path):
     country_columns = {}
     for col_idx in range(3, ws.max_column + 1):
         country_name = ws.cell(5, col_idx).value
-        if country_name and str(country_name) in OLADE_COUNTRY_MAPPING:
-            iso3_code = OLADE_COUNTRY_MAPPING[str(country_name)]
+        if country_name and str(country_name) in OSTRAM_COUNTRY_MAPPING:
+            iso3_code = OSTRAM_COUNTRY_MAPPING[str(country_name)]
             country_columns[col_idx] = iso3_code
 
     # Read technology data (rows 6-20)
@@ -410,24 +410,24 @@ def read_olade_data(olade_file_path):
         tech_name_str = str(tech_name).strip()
 
         # Skip non-applicable technologies
-        if tech_name_str in ['Térmica no renovable (combustión)', 'Otras fuentes',
-                             'Térmica renovable (combustión)', 'Fuentes renovable (no combustión)',
-                             'Biocombustibles líquidos', 'Total']:
+        if tech_name_str in ['Non-renewable thermal (combustion)', 'Other sources',
+                             'Renewable thermal (combustion)', 'Renewable sources (non-combustion)',
+                             'Liquid biofuels', 'Total']:
             continue
 
-        # Map OLADE tech name to model tech code
+        # Map tech name to model tech code
         tech_code = None
-        if tech_name_str in OLADE_TECH_MAPPING:
-            tech_code = OLADE_TECH_MAPPING[tech_name_str]
+        if tech_name_str in OSTRAM_TECH_MAPPING:
+            tech_code = OSTRAM_TECH_MAPPING[tech_name_str]
 
         # Special handling for BIO (sum of Biogas and Solid biomass)
-        if tech_name_str == 'Biogás':  # OLADE Spanish name
+        if tech_name_str == 'Biogas':
             tech_code = 'BIO'
-        elif tech_name_str == 'Biomasa sólida':  # OLADE Spanish name
+        elif tech_name_str == 'Solid biomass':
             tech_code = 'BIO'
 
         # Special handling for Petroleum and derivatives (will be split into PET and OIL later)
-        elif tech_name_str == 'Petróleo y derivados':  # OLADE Spanish name
+        elif tech_name_str == 'Petroleum and derivatives':
             tech_code = 'PETROLEUM'  # Temporary code, will be split later
 
         if not tech_code:
@@ -468,11 +468,11 @@ def read_olade_data(olade_file_path):
     }
 
 
-def read_olade_generation_data(generation_file_path):
+def read_ostram_generation_data(generation_file_path):
     """
-    Read OLADE electricity generation data from Excel file
+    Read OSTRAM electricity generation data from Excel file
 
-    Note: OLADE data is in GWh, converted to PJ for the model (1 GWh = 0.0036 PJ)
+    Note: OSTRAM data is in GWh, converted to PJ for the model (1 GWh = 0.0036 PJ)
 
     Returns:
         dict: {
@@ -488,14 +488,14 @@ def read_olade_generation_data(generation_file_path):
         }
     """
     if not generation_file_path.exists():
-        raise FileNotFoundError(f"OLADE generation file not found: {generation_file_path}")
+        raise FileNotFoundError(f"OSTRAM generation file not found: {generation_file_path}")
 
     wb = openpyxl.load_workbook(generation_file_path, data_only=True)
     ws = wb['1.2023']
 
     ref_year = 2023  # Reference year
 
-    # Technology row mapping (OLADE row -> model tech code)
+    # Technology row mapping (OSTRAM row -> model tech code)
     # Row 6: Nuclear
     # Row 8: Petroleum and derivatives (will be mapped to OIL+PET combined as 'PETROLEUM')
     # Row 9: Natural gas
@@ -503,8 +503,8 @@ def read_olade_generation_data(generation_file_path):
     # Row 13: Biogas
     # Row 14: Solid biomass
     # Row 15: Liquid biofuels
-    # Row 17: Hidro
-    # Row 18: Geotermia
+    # Row 17: Hydro
+    # Row 18: Geothermal
     # Row 19: Wind
     # Row 20: Solar
     # Row 21: Total
@@ -517,8 +517,8 @@ def read_olade_generation_data(generation_file_path):
         13: 'BIO',     # Biogas (will be summed with biomass)
         14: 'BIO',     # Solid biomass
         15: 'BIO',     # Liquid biofuels
-        17: 'HYD',     # Hidro
-        18: 'GEO',     # Geotermia
+        17: 'HYD',     # Hydro
+        18: 'GEO',     # Geothermal
         19: 'WON',     # Wind
         20: 'SPV',     # Solar
     }
@@ -527,8 +527,8 @@ def read_olade_generation_data(generation_file_path):
     country_columns = {}
     for col_idx in range(3, ws.max_column + 1):
         country_name = ws.cell(5, col_idx).value
-        if country_name and str(country_name) in OLADE_COUNTRY_MAPPING:
-            iso3_code = OLADE_COUNTRY_MAPPING[str(country_name)]
+        if country_name and str(country_name) in OSTRAM_COUNTRY_MAPPING:
+            iso3_code = OSTRAM_COUNTRY_MAPPING[str(country_name)]
             country_columns[col_idx] = iso3_code
 
     # Read Total generation from row 21 and individual technologies
@@ -583,7 +583,7 @@ def read_trade_balance_data(trade_balance_file_path):
     """
     Read per-country electricity import/export data from the 'Imp-Exp por País' sheet.
 
-    Uses accent-normalized country names to match against OLADE_COUNTRY_MAPPING.
+    Uses accent-normalized country names to match against OSTRAM_COUNTRY_MAPPING.
 
     Args:
         trade_balance_file_path: Path to flujos_energia_estimados_optimizacion.xlsx
@@ -603,7 +603,7 @@ def read_trade_balance_data(trade_balance_file_path):
 
     wb = openpyxl.load_workbook(trade_balance_file_path, data_only=True)
 
-    # Find the 'Imp-Exp por País' sheet (accent-insensitive match, OLADE Spanish name)
+    # Find the 'Imp-Exp por País' sheet (accent-insensitive match, OSTRAM Spanish name)
     target_sheet = None
     for name in wb.sheetnames:
         if strip_accents(name) == 'Imp-Exp por Pais':
@@ -653,7 +653,7 @@ def read_trade_balance_data(trade_balance_file_path):
 
         year = int(year_val)
         country_name_clean = strip_accents(str(country_val).strip())
-        iso3 = OLADE_COUNTRY_MAPPING_NORMALIZED.get(country_name_clean)
+        iso3 = OSTRAM_COUNTRY_MAPPING_NORMALIZED.get(country_name_clean)
 
         if not iso3:
             continue  # Country not in our mapping
@@ -756,16 +756,16 @@ def read_shares_total_data(shares_total_path):
 
     The file has a structure where countries are followed by their technology rows.
     Technologies in Shares_Power_Generation_Technologies are mapped to model tech codes:
-    - Biomasa → BIO
-    - Búnker + Fuel oil → OIL
-    - Carbón → COA
-    - Diésel → PET
-    - Eólica → WON
-    - Gas natural → NGS (not CCG, since NGS is the generic natural gas code)
-    - Geotérmica → GEO
-    - Hidroeléctrica → HYD
+    - Biomass → BIO
+    - Bunker + Fuel oil → OIL
+    - Coal → COA
+    - Diesel → PET
+    - Wind → WON
+    - Natural gas → NGS (not CCG, since NGS is the generic natural gas code)
+    - Geothermal → GEO
+    - Hydroelectric → HYD
     - Nuclear → URN
-    - Solar (GD) + Solar (gran escala) → SPV
+    - Solar (DG) + Solar (utility scale) → SPV
 
     Returns:
         dict: {
@@ -869,10 +869,10 @@ def read_shares_total_data(shares_total_path):
 
 
 class SecondaryTechsUpdater:
-    def __init__(self, editor_path, base_path, olade_file_path=None, shares_file_path=None, generation_file_path=None, shares_total_file_path=None, trade_balance_file_path=None):
+    def __init__(self, editor_path, base_path, ostram_file_path=None, shares_file_path=None, generation_file_path=None, shares_total_file_path=None, trade_balance_file_path=None):
         self.editor_path = editor_path
         self.base_path = base_path
-        self.olade_file_path = olade_file_path
+        self.ostram_file_path = ostram_file_path
         self.shares_file_path = shares_file_path
         self.generation_file_path = generation_file_path
         self.shares_total_file_path = shares_total_file_path
@@ -881,8 +881,8 @@ class SecondaryTechsUpdater:
         self.log_lines = []
         self.changes_applied = 0
         self.rows_failed = 0
-        self.olade_config = None
-        self.olade_data = None
+        self.ostram_config = None
+        self.ostram_data = None
         self.shares_data = None
         self.generation_data = None
         self.shares_total_data = None
@@ -998,8 +998,8 @@ class SecondaryTechsUpdater:
         if instruction['scenario'] not in valid_scenarios:
             return False, f"Invalid scenario '{instruction['scenario']}'. Must be one of: {valid_scenarios}"
 
-        # Skip tech validation for OLADE instructions (they use 3-char codes)
-        if instruction.get('is_olade'):
+        # Skip tech validation for OSTRAM instructions (they use 3-char codes)
+        if instruction.get('is_ostram'):
             return True, None
 
         # Validate that tech contains country code (for PWR technologies: PWRTRNARGXX -> ARG is at position 6-8)
@@ -1028,13 +1028,13 @@ class SecondaryTechsUpdater:
         shutil.copy2(file_path, backup_path)
         return backup_path
 
-    def find_and_update_row(self, ws, tech, parameter, year_values, year_col_map, projection_mode_col, is_olade=False, country=None):
+    def find_and_update_row(self, ws, tech, parameter, year_values, year_col_map, projection_mode_col, is_ostram=False, country=None):
         """
         Find the row matching tech and parameter, and update year values
 
         Args:
-            is_olade: If True, tech is a 3-char code and we need to match PWR technologies by first 9 chars
-            country: Country code (needed for OLADE matching)
+            is_ostram: If True, tech is a 3-char code and we need to match PWR technologies by first 9 chars
+            country: Country code (needed for OSTRAM matching)
 
         Returns:
             (success, message, values_updated)
@@ -1063,8 +1063,8 @@ class SecondaryTechsUpdater:
                 continue
 
             # Check tech match
-            if is_olade:
-                # For OLADE: match PWR technologies by first 9 chars (PWR + 3 chars + country code)
+            if is_ostram:
+                # For OSTRAM: match PWR technologies by first 9 chars (PWR + 3 chars + country code)
                 # Example: Looking for tech_code='URN' country='ARG' should match 'PWRURNARGXX'
                 if row_tech_str.upper().startswith('PWR') and len(row_tech_str) >= 9:
                     # Extract positions 4-6 (tech type) and 7-9 (country)
@@ -1079,7 +1079,7 @@ class SecondaryTechsUpdater:
                     target_rows.append((row_idx, row_tech_str.upper()))
 
         if not target_rows:
-            tech_desc = f"Tech type='{tech}' Country='{country}'" if is_olade else f"Tech='{tech}'"
+            tech_desc = f"Tech type='{tech}' Country='{country}'" if is_ostram else f"Tech='{tech}'"
             return False, f"No matching row found for {tech_desc} and Parameter='{parameter}'", 0
 
         # Update year values for all matching rows
@@ -1145,7 +1145,7 @@ class SecondaryTechsUpdater:
         """
         try:
             # Apply update
-            is_olade = instruction.get('is_olade', False)
+            is_ostram = instruction.get('is_ostram', False)
             country = instruction.get('country')
 
             success, message, values_updated = self.find_and_update_row(
@@ -1155,7 +1155,7 @@ class SecondaryTechsUpdater:
                 instruction['year_values'],
                 year_col_map,
                 projection_mode_col,
-                is_olade=is_olade,
+                is_ostram=is_ostram,
                 country=country
             )
 
@@ -1283,15 +1283,15 @@ class SecondaryTechsUpdater:
                 except:
                     pass
 
-    def generate_olade_instructions(self, all_years):
+    def generate_ostram_instructions(self, all_years):
         """
-        Generate instructions from OLADE data
+        Generate instructions from OSTRAM data
 
         Uses flat capacity values (same for all years, no growth applied).
 
         For PETROLEUM:
-        - PET = Petroleum × Diésel share
-        - OIL = Petroleum × (Fuel oil + Búnker) share
+        - PET = Petroleum × Diesel share
+        - OIL = Petroleum × (Fuel oil + Bunker) share
 
         Args:
             all_years: list of years from Secondary Techs
@@ -1299,29 +1299,29 @@ class SecondaryTechsUpdater:
         Returns:
             list of instruction dicts
         """
-        if not self.olade_config['enabled']:
+        if not self.ostram_config['enabled']:
             return []
 
         self.log("")
         self.log("=" * 80)
-        self.log("PROCESSING OLADE DATA")
+        self.log("PROCESSING OSTRAM DATA")
         self.log("=" * 80)
-        self.log(f"Reference year: {self.olade_data['reference_year']}")
-        self.log(f"Petroleum split mode: {self.olade_config.get('petroleum_split_mode', 'Split_PET_OIL')}")
+        self.log(f"Reference year: {self.ostram_data['reference_year']}")
+        self.log(f"Petroleum split mode: {self.ostram_config.get('petroleum_split_mode', 'Split_PET_OIL')}")
         self.log("Using FLAT capacity values (same for all years)")
         self.log("")
 
         instructions = []
 
         # Generate instructions for each country and technology
-        for country_iso3, techs in self.olade_data['data'].items():
+        for country_iso3, techs in self.ostram_data['data'].items():
             self.log(f"Processing country: {country_iso3}")
             for tech_code, base_capacity in techs.items():
 
                 # Special handling for PETROLEUM
                 if tech_code == 'PETROLEUM':
                     # Check split mode
-                    split_mode = self.olade_config.get('petroleum_split_mode', 'Split_PET_OIL')
+                    split_mode = self.ostram_config.get('petroleum_split_mode', 'Split_PET_OIL')
 
                     if split_mode == 'OIL_only':
                         # Option 1: Assign all petroleum to OIL only
@@ -1330,14 +1330,14 @@ class SecondaryTechsUpdater:
                             oil_year_values = {year: round(base_capacity, 6) for year in all_years}
 
                             instruction_oil = {
-                                'row': 'OLADE',
+                                'row': 'OSTRAM',
                                 'scenario': scenario,
                                 'country': country_iso3,
                                 'tech_name': 'PWR-OIL',
                                 'tech': 'OIL',
                                 'parameter': 'ResidualCapacity',
                                 'year_values': oil_year_values,
-                                'is_olade': True
+                                'is_ostram': True
                             }
                             instructions.append(instruction_oil)
 
@@ -1361,13 +1361,13 @@ class SecondaryTechsUpdater:
                                     year in self.shares_data[scenario][country_iso3]):
 
                                     year_shares = self.shares_data[scenario][country_iso3][year]
-                                    diesel_share = year_shares.get('Diésel', 0.0)
+                                    diesel_share = year_shares.get('Diesel', 0.0)
                                     fuel_oil_share = year_shares.get('Fuel oil', 0.0)
-                                    bunker_share = year_shares.get('Búnker', 0.0)
+                                    bunker_share = year_shares.get('Bunker', 0.0)
 
                                 # Shares should already be normalized (sum to 1.0)
-                                # PET = Petroleum × Diésel
-                                # OIL = Petroleum × (Fuel oil + Búnker)
+                                # PET = Petroleum × Diesel
+                                # OIL = Petroleum × (Fuel oil + Bunker)
                                 pet_capacity = base_capacity * diesel_share
                                 oil_capacity = base_capacity * (fuel_oil_share + bunker_share)
 
@@ -1377,27 +1377,27 @@ class SecondaryTechsUpdater:
 
                             # Create instruction for PET (Diesel)
                             instruction_pet = {
-                                'row': 'OLADE',
+                                'row': 'OSTRAM',
                                 'scenario': scenario,
                                 'country': country_iso3,
                                 'tech_name': 'PWR-PET',
                                 'tech': 'PET',
                                 'parameter': 'ResidualCapacity',
                                 'year_values': pet_year_values,
-                                'is_olade': True
+                                'is_ostram': True
                             }
                             instructions.append(instruction_pet)
 
                             # Create instruction for OIL (Fuel oil + Bunker)
                             instruction_oil = {
-                                'row': 'OLADE',
+                                'row': 'OSTRAM',
                                 'scenario': scenario,
                                 'country': country_iso3,
                                 'tech_name': 'PWR-OIL',
                                 'tech': 'OIL',
                                 'parameter': 'ResidualCapacity',
                                 'year_values': oil_year_values,
-                                'is_olade': True
+                                'is_ostram': True
                             }
                             instructions.append(instruction_oil)
 
@@ -1409,18 +1409,18 @@ class SecondaryTechsUpdater:
                     # Create instruction for each scenario
                     for scenario in self.scenarios:
                         instruction = {
-                            'row': 'OLADE',
+                            'row': 'OSTRAM',
                             'scenario': scenario,
                             'country': country_iso3,
                             'tech_name': f'PWR-{tech_code}',
                             'tech': tech_code,  # This will be used to match PWR technologies
                             'parameter': 'ResidualCapacity',
                             'year_values': year_values,
-                            'is_olade': True
+                            'is_ostram': True
                         }
                         instructions.append(instruction)
 
-        self.log(f"Generated {len(instructions)} OLADE instructions")
+        self.log(f"Generated {len(instructions)} OSTRAM instructions")
         self.log("")
 
         return instructions
@@ -1496,14 +1496,14 @@ class SecondaryTechsUpdater:
 
     def update_demand_files(self, all_years):
         """
-        Update A-O_Demand.xlsx files with electricity demand from OLADE generation data
+        Update A-O_Demand.xlsx files with electricity demand from OSTRAM generation data
 
         Applies linear growth: Demand(year) = Demand(2023) × (1 + rate × (year - 2023))
 
         Args:
             all_years: list of years to populate
         """
-        if not self.olade_config.get('demand_enabled') or not self.generation_data:
+        if not self.ostram_config.get('demand_enabled') or not self.generation_data:
             return
 
         self.log("")
@@ -1512,7 +1512,7 @@ class SecondaryTechsUpdater:
         self.log("=" * 80)
 
         ref_year = self.generation_data['reference_year']
-        growth_rates = self.olade_config.get('demand_growth_rates', {})
+        growth_rates = self.ostram_config.get('demand_growth_rates', {})
 
         self.log(f"Reference year: {ref_year}")
         self.log(f"Growth type: Linear")
@@ -1586,7 +1586,7 @@ class SecondaryTechsUpdater:
 
                             # Apply scenario-specific demand adjustment if defined
                             # Formula: Demand(scenario, year) = Base_Demand(year) × (1 + adjustment_percentage)
-                            adjustments_dict = self.olade_config.get('scenarios_demand_adjustments', {})
+                            adjustments_dict = self.ostram_config.get('scenarios_demand_adjustments', {})
                             adjustment_key = (country_code, scenario)
                             if adjustment_key in adjustments_dict:
                                 year_adjustments = adjustments_dict[adjustment_key]
@@ -1617,9 +1617,9 @@ class SecondaryTechsUpdater:
                         base_demand_pj = self.generation_data['data'][country_code]
                         growth_rate = growth_rates.get(country_code, 0.02)
 
-                        # Find country name from OLADE mapping
+                        # Find country name from OSTRAM mapping
                         country_name = None
-                        for name, code in OLADE_COUNTRY_MAPPING.items():
+                        for name, code in OSTRAM_COUNTRY_MAPPING.items():
                             if code == country_code:
                                 country_name = name
                                 break
@@ -1646,7 +1646,7 @@ class SecondaryTechsUpdater:
                                 demand_year = base_demand_pj * (1 + growth_rate * years_diff)
 
                                 # Apply scenario-specific demand adjustment if defined
-                                adjustments_dict = self.olade_config.get('scenarios_demand_adjustments', {})
+                                adjustments_dict = self.ostram_config.get('scenarios_demand_adjustments', {})
                                 adjustment_key = (country_code, scenario)
                                 if adjustment_key in adjustments_dict:
                                     year_adjustments = adjustments_dict[adjustment_key]
@@ -1716,7 +1716,7 @@ class SecondaryTechsUpdater:
         Args:
             all_years: list of years to process
         """
-        if not self.olade_config.get('trade_balance_enabled') or not self.trade_balance_data:
+        if not self.ostram_config.get('trade_balance_enabled') or not self.trade_balance_data:
             return
 
         GWH_TO_PJ = 0.0036
@@ -1839,7 +1839,7 @@ class SecondaryTechsUpdater:
         """
         Calculate technology shares for each year based on renewability targets.
 
-        Uses OLADE base year data and interpolates to reach renewability targets.
+        Uses OSTRAM base year data and interpolates to reach renewability targets.
         Renewable techs: HYD, SPV, WND, GEO, BIO
         Non-renewable techs: COA, NGS, OIL, PET, URN
 
@@ -1856,12 +1856,12 @@ class SecondaryTechsUpdater:
 
         # Get renewability target configuration for this country/scenario
         target_key = (country_code, scenario)
-        target_config = self.olade_config.get('renewability_targets', {}).get(target_key)
+        target_config = self.ostram_config.get('renewability_targets', {}).get(target_key)
 
         # Get custom weights if defined (new structure: {'renewable': {...}, 'non_renewable': {...}})
-        custom_weights = self.olade_config.get('technology_weights', {}).get(target_key)
+        custom_weights = self.ostram_config.get('technology_weights', {}).get(target_key)
 
-        # Get base year shares from OLADE (via shares_total_data)
+        # Get base year shares from OSTRAM (via shares_total_data)
         if scenario not in self.shares_total_data or country_code not in self.shares_total_data[scenario]:
             return {}
 
@@ -1875,27 +1875,27 @@ class SecondaryTechsUpdater:
         targets = target_config['targets']  # {year: renewable_percentage}
         interpolation = target_config['interpolation']  # 'linear' or 'flat_step'
 
-        # Find base year (first year in all_years that has OLADE data)
+        # Find base year (first year in all_years that has OSTRAM data)
         ref_year = self.generation_data['reference_year']
         base_year = min(all_years) if all_years else ref_year
 
-        # Get base year shares from OLADE direct calculations (tech_shares)
-        # These are the actual percentages calculated from OLADE generation data for 2023
-        olade_tech_shares = {}
+        # Get base year shares from OSTRAM direct calculations (tech_shares)
+        # These are the actual percentages calculated from OSTRAM generation data for 2023
+        ostram_tech_shares = {}
         if 'tech_shares' in self.generation_data and country_code in self.generation_data['tech_shares']:
-            olade_tech_shares = self.generation_data['tech_shares'][country_code]
+            ostram_tech_shares = self.generation_data['tech_shares'][country_code]
 
-        # Calculate base renewable share from OLADE direct data
-        # Note: OLADE uses 'PETROLEUM' (combined PET+OIL), so we need to handle this
-        if olade_tech_shares:
-            # Use OLADE direct shares for base year
+        # Calculate base renewable share from OSTRAM direct data
+        # Note: OSTRAM uses 'PETROLEUM' (combined PET+OIL), so we need to handle this
+        if ostram_tech_shares:
+            # Use OSTRAM direct shares for base year
             base_renewable_share = 0.0
             for tech in renewable_techs:
-                base_renewable_share += olade_tech_shares.get(tech, 0.0)
+                base_renewable_share += ostram_tech_shares.get(tech, 0.0)
 
             base_non_renewable_share = 1.0 - base_renewable_share
         else:
-            # Fallback to Shares_Total if OLADE data not available
+            # Fallback to Shares_Total if OSTRAM data not available
             base_renewable_share = sum(base_shares.get(tech, {}).get(base_year, 0.0) for tech in renewable_techs)
             base_non_renewable_share = 1.0 - base_renewable_share
 
@@ -1908,12 +1908,12 @@ class SecondaryTechsUpdater:
             if total_weight > 0 and abs(total_weight - 1.0) > 0.001:
                 renewable_proportions = {k: v / total_weight for k, v in renewable_proportions.items()}
         else:
-            # Use proportional distribution based on OLADE direct data
-            if olade_tech_shares:
-                total_renewable = sum(olade_tech_shares.get(tech, 0.0) for tech in renewable_techs)
+            # Use proportional distribution based on OSTRAM direct data
+            if ostram_tech_shares:
+                total_renewable = sum(ostram_tech_shares.get(tech, 0.0) for tech in renewable_techs)
                 if total_renewable > 0:
                     renewable_proportions = {
-                        tech: olade_tech_shares.get(tech, 0.0) / total_renewable
+                        tech: ostram_tech_shares.get(tech, 0.0) / total_renewable
                         for tech in renewable_techs
                     }
                 else:
@@ -1940,17 +1940,17 @@ class SecondaryTechsUpdater:
             if total_weight > 0 and abs(total_weight - 1.0) > 0.001:
                 non_renewable_proportions = {k: v / total_weight for k, v in non_renewable_proportions.items()}
         else:
-            # Use proportional distribution based on OLADE direct data
-            # Note: OLADE has 'PETROLEUM' instead of separate 'PET' and 'OIL'
+            # Use proportional distribution based on OSTRAM direct data
+            # Note: OSTRAM has 'PETROLEUM' instead of separate 'PET' and 'OIL'
             # We need to handle this specially
-            if olade_tech_shares:
+            if ostram_tech_shares:
                 # Build non-renewable shares, handling PETROLEUM specially
                 non_renewable_shares = {}
                 for tech in non_renewable_techs:
                     if tech in ['PET', 'OIL']:
                         # Split PETROLEUM between PET and OIL
                         # Use Shares_Power_Generation_Technologies.xlsx to get the split ratio for base year
-                        petroleum_share = olade_tech_shares.get('PETROLEUM', 0.0)
+                        petroleum_share = ostram_tech_shares.get('PETROLEUM', 0.0)
                         if petroleum_share > 0:
                             # Get PET and OIL shares from Shares_Power_Generation_Technologies for the split ratio
                             pet_share_total = base_shares.get('PET', {}).get(base_year, 0.0)
@@ -1969,7 +1969,7 @@ class SecondaryTechsUpdater:
                         else:
                             non_renewable_shares[tech] = 0.0
                     else:
-                        non_renewable_shares[tech] = olade_tech_shares.get(tech, 0.0)
+                        non_renewable_shares[tech] = ostram_tech_shares.get(tech, 0.0)
 
                 total_non_renewable = sum(non_renewable_shares.values())
                 if total_non_renewable > 0:
@@ -2043,7 +2043,7 @@ class SecondaryTechsUpdater:
                     else:  # flat_step
                         # After target year, grow proportionally with demand
                         # Get demand growth rate for this country
-                        growth_rates = self.olade_config.get('demand_growth_rates', {})
+                        growth_rates = self.ostram_config.get('demand_growth_rates', {})
                         demand_growth_rate = growth_rates.get(country_code, 0.02)  # Default 2%
 
                         # Apply compound growth from last target year
@@ -2094,15 +2094,15 @@ class SecondaryTechsUpdater:
 
         return result
 
-    def calculate_fuel_shares_from_olade(self, country_code, renewable_pct, year, all_years):
+    def calculate_fuel_shares_from_ostram(self, country_code, renewable_pct, year, all_years):
         """
         Distribute renewable percentage among renewable fuels and non-renewable percentage
-        among non-renewable fuels using OLADE generation weights.
+        among non-renewable fuels using OSTRAM generation weights.
 
         Fuel groups:
         - Renewable: HYD, SPV, WON, GEO, BIO, CSP, WOF, WAV
         - Non-renewable: COA, NGS, OIL, PET, URN
-        - Other (weight=0 if no OLADE data): BCK, CCS, COG, LDS, OTH, SDS, WAS
+        - Other (weight=0 if no OSTRAM data): BCK, CCS, COG, LDS, OTH, SDS, WAS
 
         Args:
             country_code: ISO3 country code
@@ -2120,31 +2120,31 @@ class SecondaryTechsUpdater:
 
         result = {fuel: 0.0 for fuel in all_fuels}
 
-        # Get OLADE tech shares for this country
-        olade_tech_shares = {}
+        # Get OSTRAM tech shares for this country
+        ostram_tech_shares = {}
         if 'tech_shares' in self.generation_data and country_code in self.generation_data['tech_shares']:
-            olade_tech_shares = self.generation_data['tech_shares'][country_code]
+            ostram_tech_shares = self.generation_data['tech_shares'][country_code]
 
-        # Calculate renewable fuel proportions from OLADE
-        total_renewable_olade = 0.0
-        renewable_olade_shares = {}
+        # Calculate renewable fuel proportions from OSTRAM
+        total_renewable_ostram = 0.0
+        renewable_ostram_shares = {}
         for fuel in renewable_fuels:
             if fuel == 'WON':
-                # OLADE uses 'Eólica' (Spanish for Wind) -> mapped to 'WON' in OLADE_TECH_MAPPING
-                share = olade_tech_shares.get(fuel, 0.0)
+                # 'Wind' is mapped to 'WON' in OSTRAM_TECH_MAPPING
+                share = ostram_tech_shares.get(fuel, 0.0)
             else:
-                share = olade_tech_shares.get(fuel, 0.0)
-            renewable_olade_shares[fuel] = share
-            total_renewable_olade += share
+                share = ostram_tech_shares.get(fuel, 0.0)
+            renewable_ostram_shares[fuel] = share
+            total_renewable_ostram += share
 
-        # Calculate non-renewable fuel proportions from OLADE
-        total_non_renewable_olade = 0.0
-        non_renewable_olade_shares = {}
+        # Calculate non-renewable fuel proportions from OSTRAM
+        total_non_renewable_ostram = 0.0
+        non_renewable_ostram_shares = {}
         for fuel in non_renewable_fuels:
             if fuel in ['PET', 'OIL']:
-                # OLADE has 'PETROLEUM' for combined PET+OIL
+                # OSTRAM has 'PETROLEUM' for combined PET+OIL
                 # Split using proportions from Shares_Total if available
-                petroleum_share = olade_tech_shares.get('PETROLEUM', 0.0)
+                petroleum_share = ostram_tech_shares.get('PETROLEUM', 0.0)
                 if petroleum_share > 0:
                     # Try to get split ratio from shares_total_data
                     base_year = min(all_years) if all_years else 2023
@@ -2155,45 +2155,45 @@ class SecondaryTechsUpdater:
                             total_petroleum = pet_share_total + oil_share_total
                             if total_petroleum > 0:
                                 if fuel == 'PET':
-                                    non_renewable_olade_shares[fuel] = petroleum_share * (pet_share_total / total_petroleum)
+                                    non_renewable_ostram_shares[fuel] = petroleum_share * (pet_share_total / total_petroleum)
                                 else:
-                                    non_renewable_olade_shares[fuel] = petroleum_share * (oil_share_total / total_petroleum)
+                                    non_renewable_ostram_shares[fuel] = petroleum_share * (oil_share_total / total_petroleum)
                             else:
-                                non_renewable_olade_shares[fuel] = petroleum_share * 0.5
+                                non_renewable_ostram_shares[fuel] = petroleum_share * 0.5
                             break
                     else:
                         # No Shares_Total data, use 50/50 split
-                        non_renewable_olade_shares[fuel] = petroleum_share * 0.5
+                        non_renewable_ostram_shares[fuel] = petroleum_share * 0.5
                 else:
-                    non_renewable_olade_shares[fuel] = 0.0
+                    non_renewable_ostram_shares[fuel] = 0.0
             else:
-                non_renewable_olade_shares[fuel] = olade_tech_shares.get(fuel, 0.0)
-            total_non_renewable_olade += non_renewable_olade_shares.get(fuel, 0.0)
+                non_renewable_ostram_shares[fuel] = ostram_tech_shares.get(fuel, 0.0)
+            total_non_renewable_ostram += non_renewable_ostram_shares.get(fuel, 0.0)
 
         # Distribute renewable percentage among renewable fuels
-        if total_renewable_olade > 0:
+        if total_renewable_ostram > 0:
             for fuel in renewable_fuels:
-                proportion = renewable_olade_shares.get(fuel, 0.0) / total_renewable_olade
+                proportion = renewable_ostram_shares.get(fuel, 0.0) / total_renewable_ostram
                 result[fuel] = renewable_pct * proportion
         else:
-            # No OLADE data for renewables, distribute equally among HYD, SPV, WON
+            # No OSTRAM data for renewables, distribute equally among HYD, SPV, WON
             default_renewables = ['HYD', 'SPV', 'WON']
             for fuel in default_renewables:
                 result[fuel] = renewable_pct / len(default_renewables)
 
         # Distribute non-renewable percentage among non-renewable fuels
         non_renewable_pct = 1.0 - renewable_pct
-        if total_non_renewable_olade > 0:
+        if total_non_renewable_ostram > 0:
             for fuel in non_renewable_fuels:
-                proportion = non_renewable_olade_shares.get(fuel, 0.0) / total_non_renewable_olade
+                proportion = non_renewable_ostram_shares.get(fuel, 0.0) / total_non_renewable_ostram
                 result[fuel] = non_renewable_pct * proportion
         else:
-            # No OLADE data for non-renewables, distribute equally among COA, NGS
+            # No OSTRAM data for non-renewables, distribute equally among COA, NGS
             default_non_renewables = ['COA', 'NGS']
             for fuel in default_non_renewables:
                 result[fuel] = non_renewable_pct / len(default_non_renewables)
 
-        # Other fuels stay at 0.0 (no OLADE data)
+        # Other fuels stay at 0.0 (no OSTRAM data)
         # print(country_code,year,result)
         return result
 
@@ -2555,7 +2555,7 @@ class SecondaryTechsUpdater:
 
         Steps:
         1. Read % renewable from Renewability_Targets (with interpolation)
-        2. Calculate shares from renewability using OLADE weights
+        2. Calculate shares from renewability using OSTRAM weights
         3. Normalize shares year-by-year (Σ = 1.0)
         4. For non-base scenarios, apply base scenario override for 2023-2025
         5. LowerLimit = Demand × Share for each tech/year
@@ -2579,15 +2579,15 @@ class SecondaryTechsUpdater:
 
         # Get renewability target configuration for this country/scenario
         target_key = (country_code, scenario)
-        target_config = self.olade_config.get('renewability_targets', {}).get(target_key)
+        target_config = self.ostram_config.get('renewability_targets', {}).get(target_key)
 
-        # Get base renewable share from OLADE
-        olade_tech_shares = {}
+        # Get base renewable share from OSTRAM
+        ostram_tech_shares = {}
         if 'tech_shares' in self.generation_data and country_code in self.generation_data['tech_shares']:
-            olade_tech_shares = self.generation_data['tech_shares'][country_code]
+            ostram_tech_shares = self.generation_data['tech_shares'][country_code]
 
         renewable_fuels = ['HYD', 'SPV', 'WON', 'GEO', 'BIO', 'CSP', 'WOF', 'WAV']
-        base_renewable_share = sum(olade_tech_shares.get(tech, 0.0) for tech in renewable_fuels if tech in olade_tech_shares)
+        base_renewable_share = sum(ostram_tech_shares.get(tech, 0.0) for tech in renewable_fuels if tech in ostram_tech_shares)
 
         ref_year = self.generation_data['reference_year']
         base_year = min(all_years) if all_years else ref_year
@@ -2649,7 +2649,7 @@ class SecondaryTechsUpdater:
                 else:  # flat_step
                     # After target year, grow proportionally with demand
                     # Get demand growth rate for this country
-                    growth_rates = self.olade_config.get('demand_growth_rates', {})
+                    growth_rates = self.ostram_config.get('demand_growth_rates', {})
                     demand_growth_rate = growth_rates.get(country_code, 0.02)  # Default 2%
 
                     # Apply compound growth from last target year
@@ -2685,8 +2685,8 @@ class SecondaryTechsUpdater:
                 else:  # flat_step
                     renewable_pct = prev_pct
 
-            # Calculate shares for this year using OLADE weights
-            year_shares = self.calculate_fuel_shares_from_olade(country_code, renewable_pct, year, all_years)
+            # Calculate shares for this year using OSTRAM weights
+            year_shares = self.calculate_fuel_shares_from_ostram(country_code, renewable_pct, year, all_years)
             for fuel in year_shares:
                 tech_shares[fuel][year] = year_shares[fuel]
 
@@ -2736,7 +2736,7 @@ class SecondaryTechsUpdater:
             country_code: ISO3 country code
             tech_shares: dict {tech_type: {year: share}}
             all_years: list of years
-            ref_year: OLADE reference year
+            ref_year: OSTRAM reference year
             base_generation_pj: base generation in PJ
             growth_rate: annual growth rate
 
@@ -3035,7 +3035,7 @@ class SecondaryTechsUpdater:
         in A-O_Parametrization.xlsx files.
 
         Uses renewability targets from Renewability_Targets sheet to calculate shares.
-        Formula: Generation_OLADE × (1 + growth_rate × (year - ref_year)) × Share_technology
+        Formula: Generation_OSTRAM × (1 + growth_rate × (year - ref_year)) × Share_technology
         UpperLimit = LowerLimit + 0.1
 
         IMPORTANT: LowerLimit is capped to ensure it doesn't exceed what the MaxCapacity can produce.
@@ -3047,8 +3047,8 @@ class SecondaryTechsUpdater:
         # Only DemandBased method is used after removing CapacityBased and ShareBased
         limit_method = 'DemandBased'
 
-        update_lower = self.olade_config.get('activity_lower_limit_enabled', False)
-        update_upper = self.olade_config.get('activity_upper_limit_enabled', False)
+        update_lower = self.ostram_config.get('activity_lower_limit_enabled', False)
+        update_upper = self.ostram_config.get('activity_upper_limit_enabled', False)
 
         if not update_lower and not update_upper:
             return
@@ -3063,8 +3063,8 @@ class SecondaryTechsUpdater:
         self.log("=" * 80)
 
         ref_year = self.generation_data['reference_year']
-        growth_rates = self.olade_config.get('demand_growth_rates', {})
-        renewability_targets = self.olade_config.get('renewability_targets', {})
+        growth_rates = self.ostram_config.get('demand_growth_rates', {})
+        renewability_targets = self.ostram_config.get('renewability_targets', {})
 
         # Read base_scenario from YAML for DemandBased override logic
         base_scenario = read_base_scenario()
@@ -3076,7 +3076,7 @@ class SecondaryTechsUpdater:
         self.log(f"Renewability targets defined for: {len(renewability_targets)} country/scenario combinations")
         self.log("Calculation Method: LowerLimit = Demand × Normalized_Share")
         self.log("  - Reads demand from A-O_Demand.xlsx")
-        self.log("  - Distributes shares using OLADE weights")
+        self.log("  - Distributes shares using OSTRAM weights")
         self.log(f"  - Non-base scenarios: years 2023-2025 use {base_scenario} shares")
         self.log("")
 
@@ -3328,7 +3328,7 @@ class SecondaryTechsUpdater:
                 # UNIVERSAL VALIDATION (UNIFIED FOR ALL METHODS)
                 # Check power technologies with LowerLimit
                 # When LowerLimit > MaxPossibleActivity: INCREASE MaxCapacity instead of capping limit
-                # Applies to the 10 main PWR generation technologies from OLADE:
+                # Applies to the 10 main PWR generation technologies from OSTRAM:
                 # URN, NGS, COA, HYD, GEO, WON, SPV, BIO, PET, OIL
                 # Excludes storage (PWRSDS, PWRLDS), backup (PWRBCK), and transmission (TRN)
                 # ============================================================
@@ -3739,16 +3739,16 @@ class SecondaryTechsUpdater:
         self.log("")
 
         try:
-            # Read OLADE configuration
-            self.olade_config = read_olade_config(self.editor_path)
+            # Read OSTRAM configuration
+            self.ostram_config = read_ostram_config(self.editor_path)
 
-            if self.olade_config['enabled']:
-                self.log("OLADE integration: ENABLED")
-                if self.olade_file_path and self.olade_file_path.exists():
-                    self.log(f"OLADE file: {self.olade_file_path}")
+            if self.ostram_config['enabled']:
+                self.log("OSTRAM integration: ENABLED")
+                if self.ostram_file_path and self.ostram_file_path.exists():
+                    self.log(f"OSTRAM file: {self.ostram_file_path}")
                     try:
-                        self.olade_data = read_olade_data(self.olade_file_path)
-                        self.log(f"OLADE data loaded: {len(self.olade_data['data'])} countries")
+                        self.ostram_data = read_ostram_data(self.ostram_file_path)
+                        self.log(f"OSTRAM data loaded: {len(self.ostram_data['data'])} countries")
 
                         # Load Shares data for petroleum split
                         if self.shares_file_path and self.shares_file_path.exists():
@@ -3766,45 +3766,45 @@ class SecondaryTechsUpdater:
                             self.shares_data = None
 
                     except Exception as e:
-                        self.log(f"ERROR loading OLADE data: {e}", "ERROR")
-                        self.log("Continuing without OLADE data...", "WARNING")
-                        self.olade_config['enabled'] = False
+                        self.log(f"ERROR loading OSTRAM data: {e}", "ERROR")
+                        self.log("Continuing without OSTRAM data...", "WARNING")
+                        self.ostram_config['enabled'] = False
                 else:
-                    self.log(f"WARNING: OLADE file not found: {self.olade_file_path}", "WARNING")
-                    self.log("Continuing without OLADE data...", "WARNING")
-                    self.olade_config['enabled'] = False
+                    self.log(f"WARNING: OSTRAM file not found: {self.ostram_file_path}", "WARNING")
+                    self.log("Continuing without OSTRAM data...", "WARNING")
+                    self.ostram_config['enabled'] = False
             else:
-                self.log("OLADE integration: DISABLED")
+                self.log("OSTRAM integration: DISABLED")
 
             # Check Demand integration (also needed for ActivityLowerLimit)
-            demand_or_activity_enabled = (self.olade_config.get('demand_enabled') or
-                                          self.olade_config.get('activity_lower_limit_enabled'))
+            demand_or_activity_enabled = (self.ostram_config.get('demand_enabled') or
+                                          self.ostram_config.get('activity_lower_limit_enabled'))
             if demand_or_activity_enabled:
                 self.log("")
                 self.log("Demand/ActivityLowerLimit integration: ENABLED")
                 if self.generation_file_path and self.generation_file_path.exists():
                     self.log(f"Generation file: {self.generation_file_path}")
                     try:
-                        self.generation_data = read_olade_generation_data(self.generation_file_path)
+                        self.generation_data = read_ostram_generation_data(self.generation_file_path)
                         self.log(f"Generation data loaded: {len(self.generation_data['data'])} countries")
-                        self.log(f"Growth rates configured: {len(self.olade_config.get('demand_growth_rates', {}))} countries")
+                        self.log(f"Growth rates configured: {len(self.ostram_config.get('demand_growth_rates', {}))} countries")
                     except Exception as e:
                         self.log(f"ERROR loading generation data: {e}", "ERROR")
                         self.log("Continuing without demand/activity update...", "WARNING")
-                        self.olade_config['demand_enabled'] = False
-                        self.olade_config['activity_lower_limit_enabled'] = False
+                        self.ostram_config['demand_enabled'] = False
+                        self.ostram_config['activity_lower_limit_enabled'] = False
                 else:
                     self.log(f"WARNING: Generation file not found: {self.generation_file_path}", "WARNING")
                     self.log("Continuing without demand/activity update...", "WARNING")
-                    self.olade_config['demand_enabled'] = False
-                    self.olade_config['activity_lower_limit_enabled'] = False
+                    self.ostram_config['demand_enabled'] = False
+                    self.ostram_config['activity_lower_limit_enabled'] = False
             else:
                 self.log("")
                 self.log("Demand integration: DISABLED")
 
             # Check Activity Limits integration - needs Shares_Power_Generation_Technologies.xlsx
-            lower_enabled = self.olade_config.get('activity_lower_limit_enabled')
-            upper_enabled = self.olade_config.get('activity_upper_limit_enabled')
+            lower_enabled = self.ostram_config.get('activity_lower_limit_enabled')
+            upper_enabled = self.ostram_config.get('activity_upper_limit_enabled')
 
             if lower_enabled or upper_enabled:
                 self.log("")
@@ -3812,8 +3812,8 @@ class SecondaryTechsUpdater:
                 self.log(f"ActivityUpperLimit integration: {'ENABLED' if upper_enabled else 'DISABLED'}")
 
                 # Log renewability targets info
-                renewability_targets = self.olade_config.get('renewability_targets', {})
-                technology_weights = self.olade_config.get('technology_weights', {})
+                renewability_targets = self.ostram_config.get('renewability_targets', {})
+                technology_weights = self.ostram_config.get('technology_weights', {})
                 if renewability_targets:
                     self.log(f"Renewability targets: {len(renewability_targets)} country/scenario combinations")
                 if technology_weights:
@@ -3827,19 +3827,19 @@ class SecondaryTechsUpdater:
                     except Exception as e:
                         self.log(f"ERROR loading Shares_Total data: {e}", "ERROR")
                         self.log("Continuing without activity limits update...", "WARNING")
-                        self.olade_config['activity_lower_limit_enabled'] = False
-                        self.olade_config['activity_upper_limit_enabled'] = False
+                        self.ostram_config['activity_lower_limit_enabled'] = False
+                        self.ostram_config['activity_upper_limit_enabled'] = False
                 else:
                     self.log(f"WARNING: Shares_Total file not found: {self.shares_total_file_path}", "WARNING")
                     self.log("Continuing without activity limits update...", "WARNING")
-                    self.olade_config['activity_lower_limit_enabled'] = False
-                    self.olade_config['activity_upper_limit_enabled'] = False
+                    self.ostram_config['activity_lower_limit_enabled'] = False
+                    self.ostram_config['activity_upper_limit_enabled'] = False
             else:
                 self.log("")
                 self.log("Activity Limits integration: DISABLED")
 
             # Check Trade Balance Demand Adjustment
-            if self.olade_config.get('trade_balance_enabled'):
+            if self.ostram_config.get('trade_balance_enabled'):
                 self.log("")
                 self.log("Trade Balance Demand Adjustment: ENABLED")
                 if self.trade_balance_file_path and self.trade_balance_file_path.exists():
@@ -3851,17 +3851,17 @@ class SecondaryTechsUpdater:
                     except Exception as e:
                         self.log(f"ERROR loading trade balance data: {e}", "ERROR")
                         self.log("Continuing without trade balance adjustment...", "WARNING")
-                        self.olade_config['trade_balance_enabled'] = False
+                        self.ostram_config['trade_balance_enabled'] = False
                 else:
                     self.log(f"WARNING: Trade balance file not found: {self.trade_balance_file_path}", "WARNING")
                     self.log("Continuing without trade balance adjustment...", "WARNING")
-                    self.olade_config['trade_balance_enabled'] = False
+                    self.ostram_config['trade_balance_enabled'] = False
             else:
                 self.log("")
                 self.log("Trade Balance Demand Adjustment: DISABLED")
 
             # Check Interconnections Control
-            if self.olade_config.get('interconnections_enabled'):
+            if self.ostram_config.get('interconnections_enabled'):
                 self.log("")
                 self.log("Interconnections Control: ENABLED")
             else:
@@ -3897,26 +3897,26 @@ class SecondaryTechsUpdater:
             if not all_years:
                 self.log("WARNING: Could not find any scenario with year columns!", "WARNING")
 
-            # Generate OLADE instructions if enabled
-            olade_instructions = []
-            if self.olade_config['enabled'] and self.olade_data:
-                olade_instructions = self.generate_olade_instructions(sorted(all_years))
+            # Generate OSTRAM instructions if enabled
+            ostram_instructions = []
+            if self.ostram_config['enabled'] and self.ostram_data:
+                ostram_instructions = self.generate_ostram_instructions(sorted(all_years))
 
-            # Combine instructions: OLADE takes priority for ResidualCapacity
-            # Filter out manual ResidualCapacity instructions for PWR techs if OLADE is enabled
-            if olade_instructions:
+            # Combine instructions: OSTRAM takes priority for ResidualCapacity
+            # Filter out manual ResidualCapacity instructions for PWR techs if OSTRAM is enabled
+            if ostram_instructions:
                 filtered_instructions = []
                 for instr in instructions:
                     # Check if this is a ResidualCapacity instruction for a PWR tech
                     if (instr.get('parameter') == 'ResidualCapacity' and
                         instr.get('tech') and str(instr.get('tech')).upper().startswith('PWR')):
-                        # Skip it - OLADE will handle it
-                        self.log(f"Skipping manual ResidualCapacity for {instr['tech']} - using OLADE data", "DEBUG")
+                        # Skip it - OSTRAM will handle it
+                        self.log(f"Skipping manual ResidualCapacity for {instr['tech']} - using OSTRAM data", "DEBUG")
                         continue
                     filtered_instructions.append(instr)
-                instructions = filtered_instructions + olade_instructions
+                instructions = filtered_instructions + ostram_instructions
             else:
-                # No OLADE, use manual instructions as-is
+                # No OSTRAM, use manual instructions as-is
                 pass
 
             # Apply instructions in batch mode (one file open per scenario) if any
@@ -3926,20 +3926,20 @@ class SecondaryTechsUpdater:
                 self.log("No manual instructions to process.")
 
             # Update demand files if enabled
-            if self.olade_config.get('demand_enabled') and self.generation_data:
+            if self.ostram_config.get('demand_enabled') and self.generation_data:
                 self.update_demand_files(sorted(all_years))
 
             # Update activity limits if enabled (LowerLimit and/or UpperLimit)
-            if (self.olade_config.get('activity_lower_limit_enabled') or
-                self.olade_config.get('activity_upper_limit_enabled')) and self.generation_data:
+            if (self.ostram_config.get('activity_lower_limit_enabled') or
+                self.ostram_config.get('activity_upper_limit_enabled')) and self.generation_data:
                 self.update_activity_limits(sorted(all_years))
 
             # Adjust demand by trade balance if enabled (runs LAST - must not affect activity limits)
-            if self.olade_config.get('trade_balance_enabled') and self.trade_balance_data:
+            if self.ostram_config.get('trade_balance_enabled') and self.trade_balance_data:
                 self.update_demand_with_trade_balance(sorted(all_years))
 
             # Apply interconnection controls if enabled
-            if self.olade_config.get('interconnections_enabled'):
+            if self.ostram_config.get('interconnections_enabled'):
                 interconnections_config = self.read_interconnections_config()
                 if interconnections_config:
                     self.apply_interconnections(interconnections_config)
@@ -3978,14 +3978,14 @@ def main():
         script_dir = Path(__file__).parent
         editor_path = script_dir / "Secondary_Techs_Editor.xlsx"
         base_path = script_dir / "A1_Outputs"
-        olade_file_path = script_dir / "OLADE - Capacidad instalada por fuente - Anual.xlsx"
+        ostram_file_path = script_dir / "OSTRAM - Installed Capacity by Source - Annual.xlsx"
         shares_file_path = script_dir / "Shares_PET_OIL_Split.xlsx"
-        generation_file_path = script_dir / "OLADE - Generación eléctrica por fuente - Anual.xlsx"
+        generation_file_path = script_dir / "OSTRAM - Electric Generation by Source - Annual.xlsx"
         shares_total_file_path = script_dir / "Shares_Power_Generation_Technologies.xlsx"
         trade_balance_file_path = script_dir / "Matriz Balance energético" / "flujos_energia_estimados_optimizacion.xlsx"
 
         # Create updater and run
-        updater = SecondaryTechsUpdater(editor_path, base_path, olade_file_path, shares_file_path, generation_file_path, shares_total_file_path, trade_balance_file_path)
+        updater = SecondaryTechsUpdater(editor_path, base_path, ostram_file_path, shares_file_path, generation_file_path, shares_total_file_path, trade_balance_file_path)
         return updater.run()
 
     except Exception as e:

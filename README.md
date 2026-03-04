@@ -207,8 +207,8 @@ The project includes a system to facilitate editing secondary technologies (Seco
 | `D2_update_secondary_techs.py` | Applies changes to scenarios |
 | `Tech_Country_Matrix.xlsx` | Technology-country matrix (generated) |
 | `Secondary_Techs_Editor.xlsx` | Editor template (generated) |
-| `OLADE - Capacidad instalada por fuente - Anual.xlsx` | OLADE source data (installed capacity) |
-| `OLADE - Generación eléctrica por fuente - Anual.xlsx` | OLADE source data (electricity generation) |
+| `OSTRAM - Installed Capacity by Source - Annual.xlsx` | OLADE source data (installed capacity) |
+| `OSTRAM - Electric Generation by Source - Annual.xlsx` | OLADE source data (electricity generation) |
 | `Shares_PET_OIL_Split.xlsx` | Petroleum split proportions (Diesel, Fuel oil, Bunker) per scenario |
 | `Shares_Power_Generation_Technologies.xlsx` | Power generation technology proportions per country/scenario/year |
 

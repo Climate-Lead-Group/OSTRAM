@@ -26,13 +26,14 @@ The script generates `Secondary_Techs_Editor.xlsx` with these sheets:
 | Sheet | Purpose |
 |-------|---------|
 | **Instructions** | User guide with editing instructions |
+| **Documentation** | Full technical documentation on calculations |
 | **OLADE_Config** | Toggle switches for automatic OLADE data integration |
-| **Editor** | Main editing area with dropdown lists |
 | **Demand_Growth** | Demand growth rate configuration per country |
 | **Scenarios_Demand_Growth** | Scenario-specific demand growth rates |
 | **Renewability_Targets** | Renewable percentage targets per year/country |
 | **Technology_Weights** | Custom distribution of renewable/non-renewable technologies |
-| **Documentation** | Full technical documentation on calculations |
+| **Editor** | Main editing area with dropdown lists |
+| **Interconnections** | Transmission interconnection technologies (only if TRN technologies exist) |
 | *(Hidden sheets)* | Validation data for dropdown lists |
 
 ### How It Works
@@ -51,7 +52,7 @@ The script:
 
 ### Manual Editing (Editor Sheet)
 
-In the **Editor** sheet:
+In the **Editor** sheet (and similarly in the **Interconnections** sheet for transmission technologies):
 
 1. **Select a Scenario**: Choose from BAU, NDC, NDC+ELC, NDC_NoRPO, or ALL (applies to every scenario).
 2. **Select a Country**: Pick a country from the dropdown.
@@ -153,7 +154,7 @@ python t1_confection/D2_update_secondary_techs.py
 | `D1_generate_editor_template.py` | Generates the Excel template |
 | `D2_update_secondary_techs.py` | Applies changes to scenario files |
 | `Secondary_Techs_Editor.xlsx` | The editor template (generated) |
-| `OLADE - Capacidad instalada por fuente - Anual.xlsx` | OLADE installed capacity source data |
-| `OLADE - Generacion electrica por fuente - Anual.xlsx` | OLADE electricity generation source data |
+| `OSTRAM - Installed Capacity by Source - Annual.xlsx` | OLADE installed capacity source data |
+| `OSTRAM - Electric Generation by Source - Annual.xlsx` | OLADE electricity generation source data |
 | `Shares_PET_OIL_Split.xlsx` | Petroleum/oil split proportions per scenario |
 | `Shares_Power_Generation_Technologies.xlsx` | Power generation technology shares |
