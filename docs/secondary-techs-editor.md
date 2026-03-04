@@ -1,6 +1,6 @@
 # Secondary Technologies Editor
 
-The Secondary Technologies Editor provides a user-friendly Excel interface for modifying technology parameters across scenarios, with support for automatic OLADE data integration.
+The Secondary Technologies Editor provides a user-friendly Excel interface for modifying technology parameters across scenarios, with support for automatic OSTRAM source data integration.
 
 ## Overview
 
@@ -27,7 +27,7 @@ The script generates `Secondary_Techs_Editor.xlsx` with these sheets:
 |-------|---------|
 | **Instructions** | User guide with editing instructions |
 | **Documentation** | Full technical documentation on calculations |
-| **OLADE_Config** | Toggle switches for automatic OLADE data integration |
+| **OSTRAM_Config** | Toggle switches for automatic OSTRAM data integration |
 | **Demand_Growth** | Demand growth rate configuration per country |
 | **Scenarios_Demand_Growth** | Scenario-specific demand growth rates |
 | **Renewability_Targets** | Renewable percentage targets per year/country |
@@ -54,23 +54,23 @@ The script:
 
 In the **Editor** sheet (and similarly in the **Interconnections** sheet for transmission technologies):
 
-1. **Select a Scenario**: Choose from BAU, NDC, NDC+ELC, NDC_NoRPO, or ALL (applies to every scenario).
+1. **Select a Scenario**: Choose from the auto-discovered scenarios (based on existing `A1_Outputs_*` folders), or ALL (applies to every scenario).
 2. **Select a Country**: Pick a country from the dropdown.
 3. **Select a Technology**: Choose by Tech.Name (descriptive name). The Tech code auto-populates.
 4. **Select a Parameter**: Choose which parameter to modify (e.g., CapitalCost, ResidualCapacity).
 5. **Enter values**: Fill in the year columns (2021--2050) with your desired values.
 
-### OLADE Configuration (OLADE_Config Sheet)
+### OSTRAM Configuration (OSTRAM_Config Sheet)
 
-The **OLADE_Config** sheet provides toggle switches for automatic data population:
+The **OSTRAM_Config** sheet provides toggle switches for automatic data population:
 
 | Parameter | Values | Description |
 |-----------|--------|-------------|
-| `ResidualCapacitiesFromOLADE` | YES / NO | Auto-populate ResidualCapacity from OLADE installed capacity data |
+| `ResidualCapacitiesFromOSTRAM` | YES / NO | Auto-populate ResidualCapacity from installed capacity data |
 | `PetroleumSplitMode` | `OIL_only` / `Split_PET_OIL` | How to handle petroleum capacity allocation |
-| `DemandFromOLADE` | YES / NO | Auto-populate electricity demand from OLADE generation data |
-| `ActivityLowerLimitFromOLADE` | YES / NO | Auto-populate TotalTechnologyAnnualActivityLowerLimit |
-| `ActivityUpperLimitFromOLADE` | YES / NO | Auto-populate TotalTechnologyAnnualActivityUpperLimit |
+| `DemandFromOSTRAM` | YES / NO | Auto-populate electricity demand from generation data |
+| `ActivityLowerLimitFromOSTRAM` | YES / NO | Auto-populate TotalTechnologyAnnualActivityLowerLimit |
+| `ActivityUpperLimitFromOSTRAM` | YES / NO | Auto-populate TotalTechnologyAnnualActivityUpperLimit |
 | `TradeBalanceDemandAdjustment` | YES / NO | Adjust demand based on trade balance data |
 | `InterconnectionsControl` | ON / OFF | Enable/disable interconnection technologies |
 
@@ -83,16 +83,16 @@ The **OLADE_Config** sheet provides toggle switches for automatic data populatio
 
 ### Demand Configuration (Demand_Growth Sheet)
 
-When `DemandFromOLADE` is YES, configure growth rates per country:
+When `DemandFromOSTRAM` is YES, configure growth rates per country:
 
-- Uses OLADE generation data as the base.
+- Uses OSTRAM generation data as the base.
 - Applies linear growth: `Demand(year) = Demand(2023) * (1 + rate * (year - 2023))`.
 - Growth rates are specified per country in the **Demand_Growth** sheet.
 - Scenario-specific overrides are available in **Scenarios_Demand_Growth**.
 
 ### Renewability Targets (Renewability_Targets Sheet)
 
-When Activity Limits from OLADE are enabled:
+When Activity Limits from OSTRAM are enabled:
 
 - Define target renewable percentages per year and country.
 - The system interpolates between specified target years.
@@ -118,13 +118,13 @@ python t1_confection/D2_update_secondary_techs.py
 ### What It Does
 
 1. Reads the filled `Secondary_Techs_Editor.xlsx`.
-2. Reads OLADE configuration toggles.
+2. Reads OSTRAM configuration toggles.
 3. For each scenario:
    - Creates a **backup** of the parametrization file.
    - Applies manual edits from the Editor sheet.
-   - If OLADE integration is enabled:
-     - Reads OLADE capacity data (MW to GW conversion).
-     - Reads OLADE generation data (GWh to PJ conversion).
+   - If OSTRAM integration is enabled:
+     - Reads capacity data (MW to GW conversion).
+     - Reads generation data (GWh to PJ conversion).
      - Applies petroleum split logic.
      - Calculates activity limits with renewability targets.
      - Validates limits against available capacities.
@@ -136,8 +136,8 @@ python t1_confection/D2_update_secondary_techs.py
 
 | Source | Target | Conversion |
 |--------|--------|------------|
-| MW (OLADE capacity) | GW (model) | / 1000 |
-| GWh (OLADE generation) | PJ (model) | * 0.0036 |
+| MW (source capacity) | GW (model) | / 1000 |
+| GWh (source generation) | PJ (model) | * 0.0036 |
 
 ### Safety Features
 
@@ -154,7 +154,7 @@ python t1_confection/D2_update_secondary_techs.py
 | `D1_generate_editor_template.py` | Generates the Excel template |
 | `D2_update_secondary_techs.py` | Applies changes to scenario files |
 | `Secondary_Techs_Editor.xlsx` | The editor template (generated) |
-| `OSTRAM - Installed Capacity by Source - Annual.xlsx` | OLADE installed capacity source data |
-| `OSTRAM - Electric Generation by Source - Annual.xlsx` | OLADE electricity generation source data |
+| `OSTRAM - Installed Capacity by Source - Annual.xlsx` | Installed capacity source data |
+| `OSTRAM - Electric Generation by Source - Annual.xlsx` | Electricity generation source data |
 | `Shares_PET_OIL_Split.xlsx` | Petroleum/oil split proportions per scenario |
 | `Shares_Power_Generation_Technologies.xlsx` | Power generation technology shares |

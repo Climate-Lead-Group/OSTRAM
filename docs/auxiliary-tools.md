@@ -15,14 +15,14 @@ A centralized module (not run directly) that provides cached access to `Config_c
 | `get_countries()` | `list[str]` | Sorted list of active country codes |
 | `get_country_names()` | `dict[str, str]` | `{iso3: english_name}` |
 | `get_iso_country_map()` | `dict[str, str]` | `{iso3: english_name}` including special entries |
-| `get_olade_country_mapping()` | `dict[str, str]` | `{olade_name: iso3}` |
-| `get_olade_country_mapping_normalized()` | `dict[str, str]` | Accent-stripped version of the above |
+| `get_ostram_country_mapping()` | `dict[str, str]` | `{ostram_name: iso3}` |
+| `get_ostram_country_mapping_normalized()` | `dict[str, str]` | Accent-stripped version of the above |
 | `get_first_year()` | `int` | Model start year (default: 2023) |
 | `get_pwr_cleanup_mode()` | `str \| bool` | `"drop"`, `"merge"`, or `False` |
 | `get_code_to_energy()` | `dict[str, str]` | `{tech_code: description}` |
 | `get_renewable_fuels()` | `set[str]` | Set of renewable fuel codes |
-| `get_add_missing_countries_from_olade()` | `bool` | Whether to fill from OLADE |
-| `get_olade_tech_mapping()` | `dict[str, str]` | OLADE name to model code mapping |
+| `get_add_missing_countries_from_ostram()` | `bool` | Whether to fill from OSTRAM source data |
+| `get_ostram_tech_mapping()` | `dict[str, str]` | OSTRAM tech name to model code mapping |
 | `get_shares_tech_mapping()` | `dict[str, str]` | Shares file name to model code mapping |
 | `get_raw_config()` | `dict` | The full raw YAML dictionary |
 

@@ -121,7 +121,7 @@ The system includes a configurable matrix that allows you to specify which techn
 
 ## Secondary Technologies Editor
 
-The project includes a system to facilitate editing secondary technologies (Secondary Techs) in parameterization files, with support for automatic OLADE data integration.
+The project includes a system to facilitate editing secondary technologies (Secondary Techs) in parameterization files, with support for automatic OSTRAM data integration.
 
 ### Editor Usage
 
@@ -131,38 +131,38 @@ The project includes a system to facilitate editing secondary technologies (Seco
    ```
    This creates the file `Secondary_Techs_Editor.xlsx` with two sheets:
    - **Instructions**: For manual editing with dropdown lists
-   - **OLADE_Config**: Configuration for automatic OLADE data integration
+   - **OSTRAM_Config**: Configuration for automatic OSTRAM data integration
 
 2. **Manual Editing** (Sheet "Instructions"):
-   - Select: Scenario (BAU, NDC, NDC+ELC, NDC_NoRPO, or ALL)
+   - Select: Scenario (auto-discovered from existing `A1_Outputs_*` folders, or ALL)
    - Select: Country, Technology (Tech.Name), and Parameter
    - Enter values for the desired years (2021-2050)
    - The "Tech" column is automatically populated via VLOOKUP
 
-3. **OLADE Integration** (Sheet "OLADE_Config"):
+3. **OSTRAM Integration** (Sheet "OSTRAM_Config"):
 
-   Allows automatic population of parameters using OLADE data.
+   Allows automatic population of parameters using OSTRAM source data.
 
    | Parameter | Description |
    |-----------|-------------|
-   | `ResidualCapacitiesFromOLADE` | YES/NO - Enable OLADE integration for installed capacity (ResidualCapacity) |
+   | `ResidualCapacitiesFromOSTRAM` | YES/NO - Enable integration for installed capacity (ResidualCapacity) |
    | `PetroleumSplitMode` | OIL_only or Split_PET_OIL - Petroleum split mode |
-   | `DemandFromOLADE` | YES/NO - Enable OLADE integration for electricity demand |
-   | `ActivityLowerLimitFromOLADE` | YES/NO - Enable OLADE integration for TotalTechnologyAnnualActivityLowerLimit |
-   | `ActivityUpperLimitFromOLADE` | YES/NO - Enable OLADE integration for TotalTechnologyAnnualActivityUpperLimit |
+   | `DemandFromOSTRAM` | YES/NO - Enable integration for electricity demand |
+   | `ActivityLowerLimitFromOSTRAM` | YES/NO - Enable integration for TotalTechnologyAnnualActivityLowerLimit |
+   | `ActivityUpperLimitFromOSTRAM` | YES/NO - Enable integration for TotalTechnologyAnnualActivityUpperLimit |
 
    **PetroleumSplitMode**:
    - `OIL_only`: Assigns all petroleum capacity to OIL (Fuel oil)
    - `Split_PET_OIL`: Splits between PET (Diesel) and OIL (Fuel oil + Bunker) using proportions from `Shares_PET_OIL_Split.xlsx`
 
-   **DemandFromOLADE**:
-   - When enabled, updates electricity demand in `A-O_Demand.xlsx` using OLADE generation data
+   **DemandFromOSTRAM**:
+   - When enabled, updates electricity demand in `A-O_Demand.xlsx` using OSTRAM generation data
    - Configure growth rates per country in the `Demand_Growth` sheet
    - Formula: `Demand(year) = Demand(2023) × (1 + rate × (year - 2023))`
 
    **ActivityLowerLimit and ActivityUpperLimit**:
    - When enabled, automatically populate activity limits in `A-O_Parametrization.xlsx`
-   - Uses OLADE electricity generation data combined with technology shares from `Shares_Power_Generation_Technologies.xlsx`
+   - Uses OSTRAM electricity generation data combined with technology shares from `Shares_Power_Generation_Technologies.xlsx`
    - Configure optional renewability targets in the `Renewability_Targets` sheet
    - Configure custom technology weights in the `Technology_Weights` sheet
    - Formula: `ActivityLimit(tech,year) = Total_Generation(PJ) × (1 + rate × (year - 2023)) × Share(tech,year)`
@@ -186,9 +186,9 @@ The project includes a system to facilitate editing secondary technologies (Seco
 
 - **Dropdown lists**: Facilitate selection of scenarios, countries, technologies, and parameters
 - **Tech.Name → Tech mapping**: Automatic conversion from descriptive names to technical codes
-- **OLADE Capacity Integration**: Automatic population of ResidualCapacity from installed capacity data
-- **OLADE Demand Integration**: Automatic population of electricity demand from generation data
-- **OLADE Activity Limits Integration**: Automatic population of TotalTechnologyAnnualActivityLowerLimit and UpperLimit
+- **Capacity Integration**: Automatic population of ResidualCapacity from installed capacity data
+- **Demand Integration**: Automatic population of electricity demand from generation data
+- **Activity Limits Integration**: Automatic population of TotalTechnologyAnnualActivityLowerLimit and UpperLimit
 - **Unit conversion**: MW → GW (capacity), GWh → PJ (demand and activity)
 - **Flat values (capacity)**: The same capacity value is used for all years
 - **Linear growth (demand and activity)**: Configurable growth rate per country
@@ -207,20 +207,10 @@ The project includes a system to facilitate editing secondary technologies (Seco
 | `D2_update_secondary_techs.py` | Applies changes to scenarios |
 | `Tech_Country_Matrix.xlsx` | Technology-country matrix (generated) |
 | `Secondary_Techs_Editor.xlsx` | Editor template (generated) |
-| `OSTRAM - Installed Capacity by Source - Annual.xlsx` | OLADE source data (installed capacity) |
-| `OSTRAM - Electric Generation by Source - Annual.xlsx` | OLADE source data (electricity generation) |
+| `OSTRAM - Installed Capacity by Source - Annual.xlsx` | Source data (installed capacity) |
+| `OSTRAM - Electric Generation by Source - Annual.xlsx` | Source data (electricity generation) |
 | `Shares_PET_OIL_Split.xlsx` | Petroleum split proportions (Diesel, Fuel oil, Bunker) per scenario |
 | `Shares_Power_Generation_Technologies.xlsx` | Power generation technology proportions per country/scenario/year |
-
-### OLADE → Model Country Mapping
-
-Some country codes differ between OLADE and the model:
-
-| Country | OLADE | Model |
-|---------|-------|-------|
-| Barbados | BAR | JAM |
-| Chile | CHI | CHL |
-| Costa Rica | CRC | CRI |
 
 ## Country Management Tools
 

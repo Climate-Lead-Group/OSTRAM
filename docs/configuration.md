@@ -20,14 +20,14 @@ Master registry of countries. Each entry is keyed by a 3-letter ISO code and con
 country_data:
   BGD:
     english_name: "Bangladesh"
-    olade_name: "Bangladesh"
+    ostram_name: "Bangladesh"
   IND:
     english_name: "India"
-    olade_name: "India"
+    ostram_name: "India"
 ```
 
 - `english_name`: Display name used in reports and documentation.
-- `olade_name`: Name used for matching against OLADE data files (Spanish/local spelling).
+- `ostram_name`: Name used for matching against OSTRAM source data Excel files.
 
 ### `special_entries`
 
@@ -80,20 +80,20 @@ pwr_cleanup_mode: "merge"
 | `"merge"` | Sum PWR00 values into PWR01, drop PWR00, rename PWR01 to PWR |
 | `false` | Skip PWR cleanup entirely |
 
-### `add_missing_countries_from_olade`
+### `add_missing_countries_from_ostram`
 
-Whether the preprocessing step should fill missing country data from OLADE files:
+Whether the preprocessing step should fill missing country data from OSTRAM source files:
 
 ```yaml
-add_missing_countries_from_olade: false
+add_missing_countries_from_ostram: false
 ```
 
-### `olade_tech_mapping`
+### `ostram_tech_mapping`
 
-Maps OLADE technology names (in Spanish) to 3-character model codes:
+Maps technology names from the OSTRAM source Excel files to 3-character model codes:
 
 ```yaml
-olade_tech_mapping:
+ostram_tech_mapping:
   "Nuclear": URN
   "Carbon mineral": COA
   "Eolica": WON
@@ -103,7 +103,7 @@ olade_tech_mapping:
 ```
 
 :::{note}
-BIO (Biomass) is a special case: it is the sum of Biogas + Solid biomass + Liquid biofuels from the OLADE data.
+BIO (Biomass) is a special case: it is the sum of Biogas + Solid biomass + Liquid biofuels from the source data.
 :::
 
 ### `code_to_energy`
