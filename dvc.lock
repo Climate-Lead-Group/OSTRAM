@@ -9,13 +9,13 @@ stages:
       size: 5069
     - path: t1_confection/A2_Output_Params/
       hash: md5
-      md5: a61ca07f14f68e6792b18b1a8a4bb921.dir
-      size: 16861876
-      nfiles: 172
+      md5: f8ed0263cbaeed8adf1138af3e1955ea.dir
+      size: 4736707
+      nfiles: 43
     - path: t1_confection/Config_MOMF_T1_AB.yaml
       hash: md5
-      md5: e8ee017aff44766a3b187c4017a94050
-      size: 1885
+      md5: 553612574596a663f16de0f40d544258
+      size: 1886
     - path: t1_confection/Miscellaneous/
       hash: md5
       md5: 324c0f302e8f20dd6a901e9bae5e2db5.dir
@@ -32,66 +32,66 @@ stages:
     outs:
     - path: t1_confection/A2_Outputs_Params_otoole/
       hash: md5
-      md5: 8f90ae3a2933ca25078bad8cd422fdb5.dir
-      size: 8806872
-      nfiles: 256
+      md5: de1adc0368f710db6072dd4f1c53e09b.dir
+      size: 2572810
+      nfiles: 64
     - path: t1_confection/Executables/
       hash: md5
-      md5: 3792fdbd5e7d851533ce890829a5abca.dir
-      size: 85476960
-      nfiles: 12
+      md5: e57ee5ed7d46273d0455c3319cdcf778.dir
+      size: 28953554
+      nfiles: 3
     - path: t1_confection/OSTRAM_Combined_Inputs_Outputs.csv
       hash: md5
-      md5: 9ea8c5cf5162f3fdc1f40eccf942455b
-      size: 111644692
-    - path: t1_confection/OSTRAM_Combined_Inputs_Outputs_2026-02-18.csv
+      md5: e14ce77f1d860bf0dfe04bc3ed051b6e
+      size: 37041959
+    - path: t1_confection/OSTRAM_Combined_Inputs_Outputs_2026-03-04.csv
       hash: md5
-      md5: 9ea8c5cf5162f3fdc1f40eccf942455b
-      size: 111644692
+      md5: e14ce77f1d860bf0dfe04bc3ed051b6e
+      size: 37041959
     - path: t1_confection/OSTRAM_Inputs.csv
       hash: md5
-      md5: d8d083892bbe8ea7f2509f57abe08e1d
-      size: 20177965
-    - path: t1_confection/OSTRAM_Inputs_2026-02-18.csv
+      md5: 7e9cfbd312e325956f75d3d75c02b1f5
+      size: 5736526
+    - path: t1_confection/OSTRAM_Inputs_2026-03-04.csv
       hash: md5
-      md5: d8d083892bbe8ea7f2509f57abe08e1d
-      size: 20177965
+      md5: 7e9cfbd312e325956f75d3d75c02b1f5
+      size: 5736526
     - path: t1_confection/OSTRAM_Outputs.csv
       hash: md5
-      md5: c1e810365215a870008dd396e193d25e
-      size: 63118561
-    - path: t1_confection/OSTRAM_Outputs_2026-02-18.csv
+      md5: cf75dfa62c993c2614a572c471478539
+      size: 22180036
+    - path: t1_confection/OSTRAM_Outputs_2026-03-04.csv
       hash: md5
-      md5: c1e810365215a870008dd396e193d25e
-      size: 63118561
+      md5: cf75dfa62c993c2614a572c471478539
+      size: 22180036
   preprocess:
     cmd: python -u t1_confection/B1_Run_Compiler.py
     deps:
     - path: t1_confection/A1_Outputs/
       hash: md5
-      md5: 2e0a87d9dac1a97b65fbf344c57bb4ca.dir
-      size: 4109474
-      nfiles: 32
+      md5: b8062c923b4c2903aacc08a356e9d151.dir
+      size: 1162840
+      nfiles: 8
     - path: t1_confection/A2_Extra_Inputs/
       hash: md5
-      md5: d8cf767122664f743cc970d04b0a19c4.dir
-      size: 703829
-      nfiles: 34
+      md5: f2ead1aa1ddd5b508638a19bc52786c9.dir
+      size: 71712
+      nfiles: 5
     - path: t1_confection/B1_Compiler.py
       hash: md5
-      md5: 7e85a7cdbcf7c09934ef522ab47ca6c6
-      size: 96135
+      md5: f34db684a8acaca4995e252e6a148d99
+      size: 96122
     - path: t1_confection/Config_MOMF_T1_A.yaml
       hash: md5
-      md5: 85195e4f90cec1763ad75f01c7985ccb
-      size: 10570
+      md5: 65ea2a7fa6ac401f367e7ca03bc230cd
+      size: 10606
     outs:
     - path: t1_confection/A2_Output_Params/
       hash: md5
-      md5: a61ca07f14f68e6792b18b1a8a4bb921.dir
-      size: 16861876
-      nfiles: 172
+      md5: f8ed0263cbaeed8adf1138af3e1955ea.dir
+      size: 4736707
+      nfiles: 43
     - path: t1_confection/A2_Structure_Lists.xlsx
       hash: md5
-      md5: 997f5650d1ea6c469f64ef1e3491fd49
-      size: 11921
+      md5: d39746d10053ebc2c2eb1617e00f9ac5
+      size: 13074
