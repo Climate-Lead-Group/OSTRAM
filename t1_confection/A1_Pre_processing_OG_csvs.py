@@ -16,8 +16,8 @@ from typing import List, Dict, Any
 from pathlib import Path
 import yaml
 from Z_AUX_config_loader import (
-    get_olade_country_mapping, get_iso_country_map, get_code_to_energy,
-    get_first_year, get_add_missing_countries_from_olade, get_pwr_cleanup_mode
+    get_ostram_country_mapping, get_iso_country_map, get_code_to_energy,
+    get_first_year, get_add_missing_countries_from_ostram, get_pwr_cleanup_mode
 )
 
 def list_scenario_suffixes(base_dir: Path) -> List[str]:
@@ -51,7 +51,7 @@ FIRST_YEAR = get_first_year()
 MODEL_YEARS = list(range(FIRST_YEAR, LAST_YEAR + 1))
 
 # Country and technology mappings from centralized config
-OLADE_COUNTRY_MAPPING = get_olade_country_mapping()
+OLADE_COUNTRY_MAPPING = get_ostram_country_mapping()
 iso_country_map = get_iso_country_map()
 code_to_energy = get_code_to_energy()
 
@@ -1747,8 +1747,8 @@ def update_demand_demand_projection(df, output_excel_path, input_excel_path):
 
         records.append(record)
 
-    # Add missing countries from OLADE data (controlled by config flag)
-    if not get_add_missing_countries_from_olade():
+    # Add missing countries from OSTRAM data (controlled by config flag)
+    if not get_add_missing_countries_from_ostram():
         olade_data = None
     else:
         olade_data = read_olade_generation_data()
