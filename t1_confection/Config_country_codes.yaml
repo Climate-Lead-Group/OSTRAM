@@ -145,18 +145,76 @@ countries:
 # TEMPLATE GENERATION (for Z_generate_country_template.py)
 # ============================================================
 # Configure here and just run: python Z_generate_country_template.py
+# The script processes each entry in the list sequentially.
 #
-# new_country:          3-letter code for the new country
-# reference_country:    existing country to clone data from
-# region:               region code for the new country (default: XX)
-# interconnections:     list of neighbor codes (3-letter = region XX, 5-letter = explicit region)
-#                       leave empty for zero interconnections
-#                       remove the key entirely for legacy mode (copies reference topology)
+# Fields per entry:
+#   new_country:          3-letter ISO code for the new country
+#   reference_country:    existing country to clone data from
+#   region:               region code (default: XX). Use 2-letter code for sub-regions
+#   interconnections:     list of neighbor codes (3-letter = region XX, 5-letter = explicit region)
+#                         leave empty for zero interconnections
+#                         remove the key entirely for legacy mode (copies reference topology)
+#   centerpoint_lat:      latitude of the country/region centerpoint
+#   centerpoint_lon:      longitude of the country/region centerpoint
+#
+# ── EXAMPLES ──────────────────────────────────────────────────
+#
+# Example 1: Single country, single region (most common case)
+#   - new_country: MDV
+#     reference_country: LKA
+#     region: XX
+#     centerpoint_lat: 1.924992
+#     centerpoint_lon: 73.399658
+#     interconnections:
+#       - LKA
+#
+# Example 2: Multiple countries at once
+#   - new_country: MMR
+#     reference_country: BGD
+#     region: XX
+#     centerpoint_lat: 16.871311
+#     centerpoint_lon: 96.199379
+#     interconnections:
+#       - BGD
+#       - IND
+#   - new_country: PAK
+#     reference_country: IND
+#     region: XX
+#     centerpoint_lat: 24.87
+#     centerpoint_lon: 66.99
+#     interconnections:
+#       - INDNO
+#       - INDWE
+#
+# Example 3: Country with multiple regions (like India)
+#   Each region needs its own entry with its own centerpoint.
+#   Use 5-letter codes for interconnections to specific regions.
+#   - new_country: CHN
+#     reference_country: IND
+#     region: SO                          # China South → CHNSO
+#     centerpoint_lat: 23.145
+#     centerpoint_lon: 113.325
+#     interconnections:
+#       - MMRXX
+#       - CHNNO                           # connected to China North
+#   - new_country: CHN
+#     reference_country: IND
+#     region: NO                          # China North → CHNNO
+#     centerpoint_lat: 39.929
+#     centerpoint_lon: 116.388
+#     interconnections:
+#       - CHNSO                           # connected to China South
+#       - MNGXX
+#
+# ── ACTIVE CONFIGURATION ─────────────────────────────────────
 template_generation:
-  new_country: MDV
-  reference_country: LKA
-  region: XX
-  interconnections:
+  - new_country: MDV
+    reference_country: LKA
+    region: XX
+    centerpoint_lat: 1.924992
+    centerpoint_lon: 73.399658
+    interconnections:
+      - LKA
 
 # Implausible technology-country combinations based on OG_csvs_inputs data
 # (ResidualCapacity, CapitalCost, TotalAnnualMaxCapacityInvestment, TotalAnnualMaxCapacity)

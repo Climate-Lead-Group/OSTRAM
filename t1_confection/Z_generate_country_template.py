@@ -425,6 +425,25 @@ def write_templates(templates, output_dir, mode="new_only"):
         print(f"  Written: {filename}.csv ({len(df)} rows)")
 
 
+def generate_centerpoint_template(new_cc, new_rr, lat, lon, output_dir):
+    """Generate a centerpoint CSV for the new country.
+
+    Args:
+        new_cc: 3-letter country code
+        new_rr: 2-letter region code
+        lat: latitude
+        lon: longitude
+        output_dir: directory to write the file to
+    """
+    region_code = f"{new_cc}{new_rr}"
+    df = pd.DataFrame({"region": [region_code], "lat": [lat], "long": [lon]})
+    os.makedirs(output_dir, exist_ok=True)
+    filepath = os.path.join(output_dir, "centerpoint.csv")
+    df.to_csv(filepath, index=False)
+    print(f"  Written: centerpoint.csv ({region_code}: {lat}, {lon})")
+    return df
+
+
 def generate_merge_script(new_cc, output_dir):
     """Generate a helper script to merge templates into the main files."""
     script_path = os.path.join(output_dir, "merge_into_inputs.py")
@@ -432,6 +451,9 @@ def generate_merge_script(new_cc, output_dir):
     # Use forward slashes to avoid Unicode escape issues on Windows
     template_dir_str = os.path.abspath(output_dir).replace("\\", "/")
     input_dir_str = os.path.abspath(INPUT_DIR).replace("\\", "/")
+    centerpoints_str = os.path.abspath(
+        os.path.join(SCRIPT_DIR, "Miscellaneous", "centerpoints.csv")
+    ).replace("\\", "/")
     rel_path_str = os.path.relpath(
         script_path, os.path.dirname(__file__)
     ).replace("\\", "/")
@@ -455,6 +477,7 @@ def generate_merge_script(new_cc, output_dir):
         '',
         f'TEMPLATE_DIR = "{template_dir_str}"',
         f'INPUT_DIR = "{input_dir_str}"',
+        f'CENTERPOINTS_PATH = "{centerpoints_str}"',
         '',
         'backup_suffix = datetime.now().strftime("%Y%m%d_%H%M%S")',
         '',
@@ -505,6 +528,26 @@ def generate_merge_script(new_cc, output_dir):
         'for p in params:',
         '    merge_file(p)',
         '',
+        '# Centerpoint',
+        'centerpoint_template = os.path.join(TEMPLATE_DIR, "centerpoint.csv")',
+        'if os.path.exists(centerpoint_template):',
+        '    cp_new = pd.read_csv(centerpoint_template)',
+        '    if len(cp_new) > 0:',
+        '        if os.path.exists(CENTERPOINTS_PATH):',
+        '            cp_existing = pd.read_csv(CENTERPOINTS_PATH)',
+        '            backup_path = CENTERPOINTS_PATH.replace(".csv", f"_backup_{backup_suffix}.csv")',
+        '            shutil.copy2(CENTERPOINTS_PATH, backup_path)',
+        '            # Remove existing entry for same region to avoid duplicates',
+        '            new_regions = set(cp_new["region"].astype(str))',
+        '            cp_existing = cp_existing[~cp_existing["region"].astype(str).isin(new_regions)]',
+        '            merged = pd.concat([cp_existing, cp_new], ignore_index=True)',
+        '            merged = merged.sort_values("region").reset_index(drop=True)',
+        '            merged.to_csv(CENTERPOINTS_PATH, index=False)',
+        '            print(f"  Merged centerpoint.csv into {CENTERPOINTS_PATH}")',
+        '        else:',
+        '            cp_new.to_csv(CENTERPOINTS_PATH, index=False)',
+        '            print(f"  Created {CENTERPOINTS_PATH}")',
+        '',
         'print("\\nDone! Backup files created with suffix: " + backup_suffix)',
         f'print("Run the validation script to verify: python Z_validate_country_data.py --country {new_cc}")',
     ]
@@ -520,91 +563,39 @@ def generate_merge_script(new_cc, output_dir):
 # ============================================================================
 
 def load_yaml_config():
-    """Load template_generation config from Config_country_codes.yaml."""
+    """Load template_generation config from Config_country_codes.yaml.
+
+    Returns a list of entry dicts. Supports both the legacy single-dict
+    format and the new list format.
+    """
     if not os.path.exists(CONFIG_PATH):
         return None
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
-    return cfg.get("template_generation")
+    tg = cfg.get("template_generation")
+    if tg is None:
+        return None
+    # Normalise to list: legacy single-dict → list of one
+    if isinstance(tg, dict):
+        return [tg]
+    if isinstance(tg, list):
+        return tg
+    return None
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Generate country template for OG_csvs_inputs. "
-                    "Reads from Config_country_codes.yaml by default; "
-                    "CLI args override the YAML values."
-    )
-    parser.add_argument(
-        "--new", "-n",
-        help="New country code (3 letters). Overrides YAML new_country."
-    )
-    parser.add_argument(
-        "--ref", "-r",
-        help="Reference country code. Overrides YAML reference_country."
-    )
-    parser.add_argument(
-        "--output", "-o",
-        help="Output directory (default: templates/<new_code>)"
-    )
-    parser.add_argument(
-        "--interconnections", "-i", nargs="*",
-        help="Neighbor codes for interconnections. Overrides YAML."
-    )
-    parser.add_argument(
-        "--region",
-        help="Region code for the new country. Overrides YAML region."
-    )
-
-    args = parser.parse_args()
-
-    # --- Resolve config: YAML defaults, CLI overrides ---
-    yaml_cfg = load_yaml_config()
-
-    if yaml_cfg:
-        print(f"Config loaded from: {os.path.basename(CONFIG_PATH)}")
-
-    new_cc = (args.new or (yaml_cfg and yaml_cfg.get("new_country")) or None)
-    ref_cc = (args.ref or (yaml_cfg and yaml_cfg.get("reference_country")) or "ARG")
-    new_rr = (args.region or (yaml_cfg and yaml_cfg.get("region")) or "XX")
-
-    if new_cc is None:
-        print("ERROR: No new country code provided.")
-        print("  Set 'new_country' in Config_country_codes.yaml")
-        print("  or pass --new NCC on the command line.")
-        sys.exit(1)
-
-    new_cc = new_cc.upper()
-    ref_cc = ref_cc.upper()
-    new_rr = new_rr.upper()
-
-    # Interconnections: CLI takes priority, then YAML, then None (legacy)
-    ixn_raw = None
-    ixn_source = None
-    if args.interconnections is not None:
-        # CLI was used (even if empty list)
-        ixn_raw = args.interconnections
-        ixn_source = "CLI"
-    elif yaml_cfg and "interconnections" in yaml_cfg:
-        yaml_ixn = yaml_cfg["interconnections"]
-        if yaml_ixn is None:
-            # interconnections: (empty) → zero interconnections
-            ixn_raw = []
-            ixn_source = "YAML"
-        else:
-            ixn_raw = [str(x) for x in yaml_ixn]
-            ixn_source = "YAML"
-
-    if len(new_cc) != 3:
-        print("ERROR: Country code must be exactly 3 letters")
-        sys.exit(1)
-
-    output_dir = args.output or os.path.join(SCRIPT_DIR, "templates", new_cc)
+def process_entry(new_cc, ref_cc, new_rr, ixn_raw, ixn_source,
+                  cp_lat, cp_lon, output_dir):
+    """Process a single country/region template entry."""
 
     if not os.path.isdir(INPUT_DIR):
         print(f"ERROR: Input directory not found: {INPUT_DIR}")
-        sys.exit(1)
+        return
 
-    print(f"Generating template for {new_cc} based on {ref_cc}")
+    if len(new_cc) != 3:
+        print(f"ERROR: Country code must be exactly 3 letters, got '{new_cc}'")
+        return
+
+    print(f"\nGenerating template for {new_cc}{new_rr} based on {ref_cc}")
     print(f"Output directory: {output_dir}")
 
     # Build interconnection mapping
@@ -637,8 +628,18 @@ def main():
 
     print()
 
+    # Generate centerpoint
+    print("--- CENTERPOINT ---")
+    if cp_lat is not None and cp_lon is not None:
+        generate_centerpoint_template(new_cc, new_rr, cp_lat, cp_lon, output_dir)
+    else:
+        print("  WARNING: No centerpoint coordinates provided.")
+        print("  Add 'centerpoint_lat' and 'centerpoint_lon' to Config_country_codes.yaml")
+        print("  or pass --lat and --lon on the command line.")
+        print("  The centerpoint will NOT be included in the merge script.")
+
     # Generate sets
-    print("--- SETS ---")
+    print("\n--- SETS ---")
     sets_templates = generate_sets_template(
         ref_cc, new_cc, interconnection_mapping
     )
@@ -656,20 +657,26 @@ def main():
     generate_merge_script(new_cc, output_dir)
 
     # Summary
-    total_files = len(sets_templates) + len(param_templates) + 1
+    total_files = len(sets_templates) + len(param_templates) + 1  # +1 for merge script
+    if cp_lat is not None and cp_lon is not None:
+        total_files += 1  # centerpoint.csv
     total_rows = sum(len(df) for df in sets_templates.values())
     total_rows += sum(len(df) for df in param_templates.values())
 
     print(f"\n{'=' * 50}")
     print(f"TEMPLATE GENERATION COMPLETE")
     print(f"{'=' * 50}")
-    print(f"  Country: {new_cc} (based on {ref_cc})")
+    print(f"  Country: {new_cc}{new_rr} (based on {ref_cc})")
     if interconnection_mapping is not None:
         print(f"  Interconnections: {len(interconnection_mapping)}")
         for m in interconnection_mapping:
             print(f"    {m['new_tech']}")
     else:
         print(f"  Interconnections: copied from {ref_cc} (legacy mode)")
+    if cp_lat is not None and cp_lon is not None:
+        print(f"  Centerpoint: {new_cc}{new_rr} ({cp_lat}, {cp_lon})")
+    else:
+        print(f"  Centerpoint: NOT SET (add --lat/--lon or YAML config)")
     print(f"  Files created: {total_files}")
     print(f"  Total data rows: {total_rows}")
     print(f"  Output: {output_dir}")
@@ -680,6 +687,111 @@ def main():
     print(f"  3. Update Config_country_codes.yaml with {new_cc} entry")
     print(f"  4. Run: python {os.path.join(output_dir, 'merge_into_inputs.py')}")
     print(f"  5. Validate: python Z_validate_country_data.py --country {new_cc}")
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Generate country template for OG_csvs_inputs. "
+                    "Reads from Config_country_codes.yaml by default; "
+                    "CLI args override the YAML values."
+    )
+    parser.add_argument(
+        "--new", "-n",
+        help="New country code (3 letters). Overrides YAML new_country."
+    )
+    parser.add_argument(
+        "--ref", "-r",
+        help="Reference country code. Overrides YAML reference_country."
+    )
+    parser.add_argument(
+        "--output", "-o",
+        help="Output directory (default: templates/<new_code>)"
+    )
+    parser.add_argument(
+        "--interconnections", "-i", nargs="*",
+        help="Neighbor codes for interconnections. Overrides YAML."
+    )
+    parser.add_argument(
+        "--region",
+        help="Region code for the new country. Overrides YAML region."
+    )
+    parser.add_argument(
+        "--lat", type=float,
+        help="Latitude for the country centerpoint. Overrides YAML."
+    )
+    parser.add_argument(
+        "--lon", type=float,
+        help="Longitude for the country centerpoint. Overrides YAML."
+    )
+
+    args = parser.parse_args()
+
+    # --- Load YAML config ---
+    yaml_entries = load_yaml_config()
+
+    # --- CLI mode: single entry, CLI args override YAML first entry ---
+    if args.new:
+        entry = (yaml_entries[0] if yaml_entries else {}) if not args.ref else {}
+        new_cc = args.new.upper()
+        ref_cc = (args.ref or entry.get("reference_country", "ARG")).upper()
+        new_rr = (args.region or entry.get("region", "XX")).upper()
+        cp_lat = args.lat if args.lat is not None else entry.get("centerpoint_lat")
+        cp_lon = args.lon if args.lon is not None else entry.get("centerpoint_lon")
+
+        ixn_raw = None
+        ixn_source = None
+        if args.interconnections is not None:
+            ixn_raw = args.interconnections
+            ixn_source = "CLI"
+        elif "interconnections" in entry:
+            yaml_ixn = entry["interconnections"]
+            ixn_raw = [] if yaml_ixn is None else [str(x) for x in yaml_ixn]
+            ixn_source = "YAML"
+
+        output_dir = args.output or os.path.join(SCRIPT_DIR, "templates", new_cc)
+        process_entry(new_cc, ref_cc, new_rr, ixn_raw, ixn_source,
+                      cp_lat, cp_lon, output_dir)
+        return
+
+    # --- YAML mode: process all entries in the list ---
+    if not yaml_entries:
+        print("ERROR: No configuration found.")
+        print("  Set 'template_generation' in Config_country_codes.yaml")
+        print("  or pass --new NCC on the command line.")
+        sys.exit(1)
+
+    print(f"Config loaded from: {os.path.basename(CONFIG_PATH)}")
+    print(f"Found {len(yaml_entries)} entry/entries to process.\n")
+
+    for i, entry in enumerate(yaml_entries, 1):
+        new_cc = entry.get("new_country")
+        if new_cc is None:
+            print(f"WARNING: Entry {i} has no 'new_country', skipping.")
+            continue
+        new_cc = new_cc.upper()
+        ref_cc = entry.get("reference_country", "ARG").upper()
+        new_rr = entry.get("region", "XX").upper()
+        cp_lat = entry.get("centerpoint_lat")
+        cp_lon = entry.get("centerpoint_lon")
+
+        ixn_raw = None
+        ixn_source = None
+        if "interconnections" in entry:
+            yaml_ixn = entry["interconnections"]
+            ixn_raw = [] if yaml_ixn is None else [str(x) for x in yaml_ixn]
+            ixn_source = "YAML"
+
+        # For multi-region countries, use CC+RR as subfolder
+        subfolder = f"{new_cc}{new_rr}" if new_rr != "XX" else new_cc
+        output_dir = os.path.join(SCRIPT_DIR, "templates", subfolder)
+
+        if len(yaml_entries) > 1:
+            print(f"\n{'#' * 50}")
+            print(f"# Entry {i}/{len(yaml_entries)}: {new_cc}{new_rr}")
+            print(f"{'#' * 50}")
+
+        process_entry(new_cc, ref_cc, new_rr, ixn_raw, ixn_source,
+                      cp_lat, cp_lon, output_dir)
 
 
 if __name__ == "__main__":
