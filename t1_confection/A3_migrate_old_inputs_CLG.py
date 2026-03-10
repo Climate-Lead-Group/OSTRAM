@@ -552,7 +552,8 @@ class OldInputsMigrator:
                 #   - PWRTRN, TRNRPO, TRNNLI (non-renewable transmission)
                 transmission_prefixes = ('PWRBCK', 'TRN', 'MIN',
                                         'RNWTRN', 'RNWRPO', 'RNWNLI',
-                                        'PWRTRN', 'TRNRPO', 'TRNNLI')
+                                        'PWRTRN', 'TRNRPO', 'TRNNLI',
+                                        'DSPTRN')
                 storage_prefixes = ('LDS', 'SDS')
                 if old_tech.startswith(transmission_prefixes):
                     if not old_tech[-2:].isdigit():
@@ -727,7 +728,8 @@ class OldInputsMigrator:
                 # Check if it's an unchanged tech
                 transmission_prefixes = ('PWRBCK', 'TRN', 'MIN',
                                         'RNWTRN', 'RNWRPO', 'RNWNLI',
-                                        'PWRTRN', 'TRNRPO', 'TRNNLI')
+                                        'PWRTRN', 'TRNRPO', 'TRNNLI',
+                                        'DSPTRN')
                 storage_prefixes = ('LDS', 'SDS')
                 if tech_str.startswith(transmission_prefixes):
                     if not tech_str[-2:].isdigit():

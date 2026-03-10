@@ -8,6 +8,7 @@ Created on 2025
 import argparse
 import sys
 import os
+import re
 import yaml
 import pandas as pd
 from typing import List
@@ -17,6 +18,10 @@ from Z_AUX_config_loader import get_renewable_fuels, get_iso_country_map
 # Country and technology mappings from centralized config
 RENEWABLE_FUELS = get_renewable_fuels()
 iso_country_map = get_iso_country_map()
+
+# Pattern to detect 13-char TRN interconnection codes (e.g. TRNBGDXXNPLXX)
+# Does NOT match PWRTRN, TRNRPO, TRNNLI (those are <=11 chars)
+TRN_INTERCONNECTION = re.compile(r'^TRN[A-Z]{5}[A-Z]{5}$')
 
 # ---------------------------------------------------------------------------
 # Helper functions
@@ -118,8 +123,21 @@ def process_base_year(path, pairs):
             except ValueError:
                 continue
             sec.at[idx,'Fuel.O'] = f"ELC{country}{region}00"
-            sec.at[idx,'Fuel.O.Name'] = f"Electricity, {countryname}, Region {region}, renewable power plant output"    
-        sec.to_excel(writer, sheet_name='Secondary', index=False)    
+            sec.at[idx,'Fuel.O.Name'] = f"Electricity, {countryname}, Region {region}, renewable power plant output"
+        # ---------- TRN interconnection: update fuel codes 02->03, 01->03 ----------
+        mask_trn = sec['Tech'].apply(lambda x: bool(TRN_INTERCONNECTION.match(str(x))))
+        for idx in sec[mask_trn].index:
+            for fcol, ncol in [('Fuel.I','Fuel.I.Name'), ('Fuel.O','Fuel.O.Name')]:
+                fuel = str(sec.at[idx, fcol])
+                if fuel.startswith('ELC') and fuel.endswith('02'):
+                    sec.at[idx, fcol] = fuel[:-2] + '03'
+                    sec.at[idx, ncol] = str(sec.at[idx, ncol]).replace(
+                        'transmission line output', 'dispatch-ready for interconnection')
+                elif fuel.startswith('ELC') and fuel.endswith('01'):
+                    sec.at[idx, fcol] = fuel[:-2] + '03'
+                    sec.at[idx, ncol] = str(sec.at[idx, ncol]).replace(
+                        'NO renewable power plant output', 'dispatch-ready for interconnection')
+        sec.to_excel(writer, sheet_name='Secondary', index=False)
         # ---------- Demand Techs sheet ----------
         dtech = pd.read_excel(path, sheet_name='Demand Techs', engine='openpyxl')
         header = list(dtech.columns)
@@ -163,6 +181,41 @@ def process_base_year(path, pairs):
                 }
                 rows.append(row)
 
+            # --- DSPTRN: Dispatch technology (2 modes of operation) ---
+            dsp_tech = f"DSPTRN{country}{region}"
+            dsp_02   = f"ELC{country}{region}02"
+            dsp_03   = f"ELC{country}{region}03"
+            dsp_01   = f"ELC{country}{region}01"
+            dsp_name = f"Dispatch technology, {countryname}, Region {region}"
+            # Mode 1: ELC...02 -> ELC...03 (dispatch to interconnection)
+            rows.append({
+                'Mode.Operation': 1,
+                'Fuel.I': dsp_02,
+                'Fuel.I.Name': f"Electricity, {countryname}, Region {region}, transmission line output",
+                'Value.Fuel.I': 1,
+                'Unit.Fuel.I': '',
+                'Tech': dsp_tech,
+                'Tech.Name': dsp_name,
+                'Fuel.O': dsp_03,
+                'Fuel.O.Name': f"Electricity, {countryname}, Region {region}, dispatch-ready for interconnection",
+                'Value.Fuel.O': 1,
+                'Unit.Fuel.O': ''
+            })
+            # Mode 2: ELC...03 -> ELC...01 (receive from interconnection)
+            rows.append({
+                'Mode.Operation': 2,
+                'Fuel.I': dsp_03,
+                'Fuel.I.Name': f"Electricity, {countryname}, Region {region}, dispatch-ready for interconnection",
+                'Value.Fuel.I': 1,
+                'Unit.Fuel.I': '',
+                'Tech': dsp_tech,
+                'Tech.Name': dsp_name,
+                'Fuel.O': dsp_01,
+                'Fuel.O.Name': f"Electricity, {countryname}, Region {region}, NO renewable power plant output",
+                'Value.Fuel.O': 1,
+                'Unit.Fuel.O': ''
+            })
+
         dtech = pd.DataFrame(rows, columns=header)
         dtech.to_excel(writer, sheet_name='Demand Techs', index=False)
 
@@ -202,7 +255,20 @@ def process_projections(path, pairs):
                 continue
             sec.at[idx,'Fuel'] = f"ELC{country}{region}00"
             sec.at[idx,'Fuel.Name'] = f"Electricity, {countryname}, Region {region}, renewable power plant output"
-        sec.to_excel(writer, sheet_name='Secondary', index=False)    
+        # ---------- TRN interconnection: update fuel codes 02->03, 01->03 ----------
+        mask_trn = sec['Tech'].apply(lambda x: bool(TRN_INTERCONNECTION.match(str(x))))
+        for idx in sec[mask_trn].index:
+            fuel = str(sec.at[idx, 'Fuel'])
+            name = str(sec.at[idx, 'Fuel.Name'])
+            if fuel.startswith('ELC') and fuel.endswith('02'):
+                sec.at[idx, 'Fuel'] = fuel[:-2] + '03'
+                sec.at[idx, 'Fuel.Name'] = name.replace(
+                    'transmission line output', 'dispatch-ready for interconnection')
+            elif fuel.startswith('ELC') and fuel.endswith('01'):
+                sec.at[idx, 'Fuel'] = fuel[:-2] + '03'
+                sec.at[idx, 'Fuel.Name'] = name.replace(
+                    'NO renewable power plant output', 'dispatch-ready for interconnection')
+        sec.to_excel(writer, sheet_name='Secondary', index=False)
 
         # ---------- Demand Techs ----------
         dtech = pd.read_excel(path, sheet_name='Demand Techs', engine='openpyxl')
@@ -260,6 +326,61 @@ def process_projections(path, pairs):
                     **{yr:1 for yr in year_cols}
                 })
 
+            # --- DSPTRN: Dispatch technology (2 modes of operation) ---
+            dsp_tech = f"DSPTRN{country}{region}"
+            dsp_02   = f"ELC{country}{region}02"
+            dsp_03   = f"ELC{country}{region}03"
+            dsp_01   = f"ELC{country}{region}01"
+            dsp_name = f"Dispatch technology, {countryname}, Region {region}"
+            # Mode 1 Input: ELC...02
+            rows.append({
+                'Mode.Operation': 1,
+                'Tech': dsp_tech,
+                'Tech.Name': dsp_name,
+                'Fuel': dsp_02,
+                'Fuel.Name': f"Electricity, {countryname}, Region {region}, transmission line output",
+                'Direction': 'Input',
+                'Projection.Mode': 'User defined',
+                'Projection.Parameter': 0,
+                **{yr: 1 for yr in year_cols}
+            })
+            # Mode 1 Output: ELC...03
+            rows.append({
+                'Mode.Operation': 1,
+                'Tech': dsp_tech,
+                'Tech.Name': dsp_name,
+                'Fuel': dsp_03,
+                'Fuel.Name': f"Electricity, {countryname}, Region {region}, dispatch-ready for interconnection",
+                'Direction': 'Output',
+                'Projection.Mode': 'User defined',
+                'Projection.Parameter': 0,
+                **{yr: 1 for yr in year_cols}
+            })
+            # Mode 2 Input: ELC...03
+            rows.append({
+                'Mode.Operation': 2,
+                'Tech': dsp_tech,
+                'Tech.Name': dsp_name,
+                'Fuel': dsp_03,
+                'Fuel.Name': f"Electricity, {countryname}, Region {region}, dispatch-ready for interconnection",
+                'Direction': 'Input',
+                'Projection.Mode': 'User defined',
+                'Projection.Parameter': 0,
+                **{yr: 1 for yr in year_cols}
+            })
+            # Mode 2 Output: ELC...01
+            rows.append({
+                'Mode.Operation': 2,
+                'Tech': dsp_tech,
+                'Tech.Name': dsp_name,
+                'Fuel': dsp_01,
+                'Fuel.Name': f"Electricity, {countryname}, Region {region}, NO renewable power plant output",
+                'Direction': 'Output',
+                'Projection.Mode': 'User defined',
+                'Projection.Parameter': 0,
+                **{yr: 1 for yr in year_cols}
+            })
+
         dtech = pd.DataFrame(rows, columns=header)
         dtech.to_excel(writer, sheet_name='Demand Techs', index=False)
     print("✔ Projections file updated.")
@@ -283,7 +404,7 @@ def process_parametrization(path, pairs, yaml_data):
 
     # Quick map Tech → Tech.ID for already existing techs (only for NON-transmission techs)
     # Transmission technologies will have sequential IDs starting from 1
-    transmission_prefixes = ('RNWTRN', 'RNWRPO', 'RNWNLI', 'TRNRPO', 'TRNNLI', 'PWRTRN')
+    transmission_prefixes = ('RNWTRN', 'RNWRPO', 'RNWNLI', 'TRNRPO', 'TRNNLI', 'PWRTRN', 'DSPTRN')
     existing_ids = {}
     for _, row in fhp.iterrows():
         tech = row.get('Tech', '')
@@ -308,14 +429,17 @@ def process_parametrization(path, pairs, yaml_data):
             existing_ids[tech_code] = tech_id
 
             # 2.2 Descriptive name
-            tech_name = (
-                'Existing' if tech_prefix in ('RNWTRN','PWRTRN') else
-                'Repower'  if tech_prefix in ('RNWRPO','TRNRPO') else
-                'New line'
-            ) + (' transmission technology from renewable power plants, '
-                 if tech_prefix.startswith('RNW') else
-                 ' transmission technology from NO renewable power plants, ') \
-              + f"{countryname}, Region {region}"
+            if tech_prefix == 'DSPTRN':
+                tech_name = f"Dispatch technology, {countryname}, Region {region}"
+            else:
+                tech_name = (
+                    'Existing' if tech_prefix in ('RNWTRN','PWRTRN') else
+                    'Repower'  if tech_prefix in ('RNWRPO','TRNRPO') else
+                    'New line'
+                ) + (' transmission technology from renewable power plants, '
+                     if tech_prefix.startswith('RNW') else
+                     ' transmission technology from NO renewable power plants, ') \
+                  + f"{countryname}, Region {region}"
 
             # 2.3 YAML configuration
             cfg = yaml_data.get(tech_prefix, {})

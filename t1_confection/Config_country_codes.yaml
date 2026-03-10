@@ -304,3 +304,11 @@ TRNNLI:
   FixedCost: 4
   ResidualCapacity: 5
   TotalAnnualMaxCapacityInvestment: 5
+
+DSPTRN:
+  CapacityToActivityUnit: 31.536
+  OperationalLife: 20
+  CapitalCost: 0
+  FixedCost: 0
+  ResidualCapacity: 9999
+  TotalAnnualMaxCapacityInvestment: 9999
