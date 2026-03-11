@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 Created on 2021
-@author: Luis Victor-Gallardo
+@author: Climate Lead Group, Luis Victor-Gallardo, Andrey Salazar-Vargas
 
 Updated on 2025
-@author: ClimateLeadGroup, Andrey Salazar-Vargas
 """
 import pandas as pd
 import pickle

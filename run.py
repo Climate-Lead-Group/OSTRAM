@@ -3,6 +3,8 @@
 """
 DVC runner for Windows with Conda environment management and temporary dvc.yaml patching.
 
+Author: Climate Lead Group, Andrey Salazar-Vargas
+
 Features:
 - Backup of dvc.yaml, temporary replacement of 'fecha' -> YYYY-MM-DD (any occurrence).
 - If the Conda environment exists, it is NOT recreated.

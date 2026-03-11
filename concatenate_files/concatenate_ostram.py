@@ -2,7 +2,7 @@
 """
 Created on 2025
 
-@author: ClimateLeadGroup, Andrey Salazar-Vargas
+@author: Climate Lead Group, Andrey Salazar-Vargas
 """
 
 import os

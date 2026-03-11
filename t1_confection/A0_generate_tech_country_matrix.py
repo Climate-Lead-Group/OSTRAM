@@ -10,7 +10,7 @@ This script creates:
 2. An NGS unification configuration sheet (CCG + OCG → NGS)
 3. Aggregation rules following the same pattern as region consolidation
 
-Author: ClimateLeadGroup
+Author: Climate Lead Group, Andrey Salazar-Vargas
 """
 
 import yaml

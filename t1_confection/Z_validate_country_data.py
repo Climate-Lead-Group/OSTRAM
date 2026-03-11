@@ -6,6 +6,8 @@ Usage:
     python Z_validate_country_data.py                  # Validate all RELAC countries
     python Z_validate_country_data.py --country ARG    # Validate specific country
     python Z_validate_country_data.py --country NCC --report  # Generate detailed report
+
+Author: Climate Lead Group, Andrey Salazar-Vargas
 """
 
 import pandas as pd

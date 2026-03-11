@@ -14,6 +14,8 @@ then just run: python Z_generate_country_template.py
 This script does NOT modify the original files in OG_csvs_inputs.
 It creates new CSV files in the output directory that can be manually
 reviewed and then merged into the input files.
+
+Author: Climate Lead Group, Andrey Salazar-Vargas
 """
 
 import pandas as pd

@@ -5,6 +5,7 @@
 CAPITAL INVESTMENT ANNUALIZATION SCRIPT FOR MOMF
 ================================================================================
 Author: Climate Lead Group, Andrey Salazar-Vargas
+
 Purpose: This script reads a CSV file containing OSeMOSYS model outputs,
          calculates the annualized capital investment for each technology,
          and adds a new column with the accumulated annualized values.

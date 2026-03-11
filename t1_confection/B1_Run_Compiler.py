@@ -3,7 +3,7 @@
 """
 Created on Wed Aug 13 09:02:18 2025
 
-@author: ClimateLeadGroup, Andrey Salazar-Vargas
+@author: Climate Lead Group, Andrey Salazar-Vargas
 
 
 Run scenarios by:

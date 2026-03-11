@@ -2,7 +2,7 @@
 """
 Created on Tue Jul 29 11:20:29 2025
 
-@author: ClimateLeadGroup
+@author: Climate Lead Group, Andrey Salazar-Vargas
 """
 
 import pandas as pd

@@ -6,6 +6,8 @@ the changes to the corresponding A-O_Parametrization.xlsx files.
 
 Usage:
     python t1_confection/D2_update_secondary_techs.py
+
+Author: Climate Lead Group, Andrey Salazar-Vargas
 """
 import openpyxl
 import sys

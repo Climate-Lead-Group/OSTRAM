@@ -17,7 +17,7 @@ Features:
 No countries, technologies, years, or scenarios are hardcoded.
 Everything is discovered dynamically from the input data.
 
-Author: Climate Lead Group
+Author: Climate Lead Group, Andrey Salazar-Vargas
 """
 
 import pandas as pd

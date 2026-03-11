@@ -2,7 +2,7 @@
 """
 Created on 2025
 
-@author: ClimateLeadGroup, Javier Monge-Matamoros
+@author: Climate Lead Group, Javier Monge-Matamoros, Andrey Salazar-Vargas
 """
 
 import argparse

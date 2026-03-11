@@ -7,7 +7,7 @@ of A-O_Demand.xlsx files so they sum to exactly 1.0 per country/year.
 Problem: Some countries have profiles that sum to 1.01 or 0.99 instead of 1.0,
 which causes errors in the OSeMOSYS model.
 
-Author: Claude Code
+Author: Climate Lead Group, Andrey Salazar-Vargas
 Date: 2026-02-03
 """
 

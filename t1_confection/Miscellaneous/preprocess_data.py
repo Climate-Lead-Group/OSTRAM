@@ -1,4 +1,5 @@
-"""Pre-process OSeMOSYS data file to reduce matrix generation time
+"""
+Pre-process OSeMOSYS data file to reduce matrix generation time
 
 This script pre-processes an OSeMOSYS input data file by adding lines that list
 commodity-technology-mode combinations that data is provided for. Pre-processing
@@ -28,6 +29,7 @@ need to be introduced to its associated OSeMOSYS model file::
     set MODExTECHNOLOGYperSTORAGEto{STORAGE} within MODE_OF_OPERATION cross TECHNOLOGY;
     set MODExTECHNOLOGYperSTORAGEfrom{STORAGE} within MODE_OF_OPERATION cross TECHNOLOGY;
 
+Author: Climate Lead Group, Andrey Salazar-Vargas
 """
 
 import sys

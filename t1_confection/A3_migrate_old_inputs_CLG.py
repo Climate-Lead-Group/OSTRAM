@@ -10,6 +10,8 @@ Usage:
 
 Options:
     --dry-run    Show what would be migrated without making changes
+
+Author: Climate Lead Group, Andrey Salazar-Vargas
 """
 import openpyxl
 import yaml

@@ -6,6 +6,8 @@ a user-friendly Excel template for editing Secondary Techs data.
 
 Usage:
     python t1_confection/generate_editor_template.py
+
+Author: Climate Lead Group, Andrey Salazar-Vargas
 """
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Protection, Border, Side

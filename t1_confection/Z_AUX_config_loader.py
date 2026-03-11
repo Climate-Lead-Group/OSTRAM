@@ -2,6 +2,8 @@
 """
 Shared configuration loader for country and technology data.
 Single source of truth: Config_country_codes.yaml
+
+Author: Climate Lead Group, Andrey Salazar-Vargas
 """
 import yaml
 import unicodedata

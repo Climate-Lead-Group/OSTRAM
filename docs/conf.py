@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+"""
+Sphinx configuration file for OSTRAM documentation.
+
+Author: Climate Lead Group, Andrey Salazar-Vargas
+Date: 2025
+"""
+
 project = "OSTRAM"
 copyright = "2025, Climate Lead Group"
 author = "Climate Lead Group"

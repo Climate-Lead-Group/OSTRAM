@@ -31,7 +31,7 @@ Features:
 - Completely standalone (no server required)
 - Real-time updates without page reload
 
-Author: Climate Lead Group
+Author: Climate Lead Group, Andrey Salazar-Vargas
 Date: 2026-01-22
 """
 

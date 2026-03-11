@@ -11,6 +11,8 @@ and writes Lower/Upper activity limits into Secondary_Techs_Editor.xlsx.
 
 Usage:
     python t1_confection/D1b_set_trn_limits_from_flows.py
+
+Author: Climate Lead Group, Andrey Salazar-Vargas
 """
 import openpyxl
 import unicodedata
