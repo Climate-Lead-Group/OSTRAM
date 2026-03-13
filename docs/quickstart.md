@@ -106,14 +106,19 @@ OSTRAM/
 
 ## 5. Typical Workflow
 
-A typical modeling workflow follows these steps:
+A typical modeling workflow follows these steps. All terminal commands must be run from an **Anaconda Prompt** (or any terminal with conda available) with the `OG-MOMF-env` environment activated.
 
 1. **Configure countries and technologies** in `Config_country_codes.yaml`.
 2. **Generate the Tech-Country Matrix** (`A0`).
 3. **Preprocess raw CSVs into Excel model files** (`A1`).
 4. **Add transmission technologies** (`A2`).
-5. **Optionally edit secondary technologies** (`D1` + manual editing + `D2`).
-6. **Run the full pipeline** with `python run.py` (this executes stages **B1** and **B2** only -- data preparation stages A0--A2 and the secondary techs editor D1/D2 must be run separately beforehand).
-7. **Analyze results** using the output CSVs or the interactive dashboards.
+5. **Optionally edit secondary technologies** (`D1` + manual editing + `D2`):
+   - Run `D1` to generate the `Secondary_Techs_Editor.xlsx` template.
+   - Fill in parameter edits, interconnection toggles, demand growth rates, etc. in the Excel editor.
+   - Run `D2` to apply all changes to the model files.
+6. **To create a new scenario**: duplicate the base scenario folder (usually BAU), then use `D2` to parametrize `A-O_Parametrization.xlsx` and toggle interconnections. For demand changes, edit `A-O_Demand.xlsx` directly.
+7. **To edit parameters in an existing scenario**: either edit the `A1_Outputs` files directly, or use `Secondary_Techs_Editor.xlsx` + `D2` for the parameters that the editor supports (see {doc}`pipeline` for details on which parameters are covered).
+8. **Run the full pipeline** with `python run.py` (this executes stages **B1** and **B2** only -- data preparation stages A0--A2 and the secondary techs editor D1/D2 must be run separately beforehand).
+9. **Analyze results** using the output CSVs or the interactive dashboards.
 
 See {doc}`pipeline` for a detailed walkthrough of each stage.

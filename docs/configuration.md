@@ -170,26 +170,71 @@ implausible_combinations:
 
 ### `template_generation`
 
-Configuration for the country template generator (`Z_generate_country_template.py`):
+Configuration for the country template generator (`Z_generate_country_template.py`). This section is a **list**, so multiple countries can be generated in a single run. Each entry defines one country to create:
 
 ```yaml
 template_generation:
-  new_country: MDV
-  reference_country: LKA
-  region: XX
-  interconnections: []
+  - new_country: MDV
+    reference_country: LKA
+    region: XX
+    centerpoint_lat: 1.924992
+    centerpoint_lon: 73.399658
+    interconnections:
+      - LKA
 ```
 
-| Key | Description |
-|-----|-------------|
-| `new_country` | 3-letter code for the country to create |
-| `reference_country` | Existing country to clone data from |
-| `region` | Region suffix (default: `XX`) |
-| `interconnections` | List of neighbor country codes for TRN links. Empty = no interconnections |
+| Key | Required | Description |
+|-----|----------|-------------|
+| `new_country` | Yes | 3-letter ISO code for the country to create |
+| `reference_country` | Yes | Existing country to clone data from |
+| `region` | No | Region suffix (default: `XX`) |
+| `centerpoint_lat` | No | Latitude for the country's geographic centerpoint |
+| `centerpoint_lon` | No | Longitude for the country's geographic centerpoint |
+| `interconnections` | No | List of neighbor country codes for TRN links. Empty or omitted = no interconnections |
+
+Multiple countries can be defined as separate list entries:
+
+```yaml
+template_generation:
+  - new_country: MDV
+    reference_country: LKA
+    region: XX
+    centerpoint_lat: 1.924992
+    centerpoint_lon: 73.399658
+    interconnections:
+      - LKA
+  - new_country: BTN
+    reference_country: NPL
+    region: XX
+    centerpoint_lat: 27.5142
+    centerpoint_lon: 90.4336
+    interconnections:
+      - IND
+```
+
+The script also accepts command-line overrides (which take precedence over YAML values). From an **Anaconda Prompt** (with the `OG-MOMF-env` environment activated):
+
+```bash
+# Read all entries from YAML
+python t1_confection/Z_generate_country_template.py
+
+# Override with CLI arguments (single country)
+python t1_confection/Z_generate_country_template.py --new MDV --ref LKA -i LKA --lat 1.92 --lon 73.40
+```
+
+| CLI Flag | Description |
+|----------|-------------|
+| `--new`, `-n` | New country code (3 letters) |
+| `--ref`, `-r` | Reference country code |
+| `--region` | Region code (2 letters) |
+| `-i`, `--interconnections` | Neighbor country codes (space-separated) |
+| `--lat` | Centerpoint latitude |
+| `--lon` | Centerpoint longitude |
+| `-o`, `--output` | Output directory (default: `templates/<new_code>`) |
 
 ### Transmission Technology Parameters
 
-Six sections define default parameters for transmission technologies:
+Seven sections define default parameters for transmission and dispatch technologies:
 
 | Section | Description |
 |---------|-------------|
@@ -199,6 +244,7 @@ Six sections define default parameters for transmission technologies:
 | `PWRTRN` | Non-renewable transmission (existing) |
 | `TRNRPO` | Non-renewable transmission (repowered) |
 | `TRNNLI` | Non-renewable transmission (new lines) |
+| `DSPTRN` | Dispatch (interconnection routing) |
 
 Each section contains:
 
@@ -210,6 +256,18 @@ RNWTRN:
   FixedCost: 4
   ResidualCapacity: 5
   TotalAnnualMaxCapacityInvestment: 5
+```
+
+DSPTRN is a virtual dispatch node with zero costs and high capacity, used to route electricity to/from cross-border interconnections:
+
+```yaml
+DSPTRN:
+  CapacityToActivityUnit: 31.536
+  OperationalLife: 20
+  CapitalCost: 0
+  FixedCost: 0
+  ResidualCapacity: 9999
+  TotalAnnualMaxCapacityInvestment: 9999
 ```
 
 ---
