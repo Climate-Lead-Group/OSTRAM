@@ -37,6 +37,7 @@ Technology names in OSTRAM follow a structured format that encodes the technolog
 | `RNW` | Renewable energy supply |
 | `ELC` | Electricity distribution |
 | `TRN` | Transmission (cross-border) |
+| `DSPTRN` | Dispatch (interconnection routing) |
 
 ### Fuel Codes
 
@@ -55,6 +56,7 @@ Fuel names follow a similar pattern:
 | `ELC00BGDXX` | Renewable electricity, Bangladesh |
 | `ELC01BGDXX` | Non-renewable electricity, Bangladesh |
 | `ELC02BGDXX` | Transmission output electricity, Bangladesh |
+| `ELC03BGDXX` | Dispatch-ready electricity for interconnection, Bangladesh |
 
 ### Emission Codes
 
@@ -280,18 +282,22 @@ Projection activity ratios (same structure as base year, with projection modes).
 OSTRAM uses a single-region (`GLOBAL`) architecture where geographic granularity is embedded in the technology and fuel naming conventions. Each country's technologies operate independently, connected only through explicit transmission (TRN) technologies.
 
 ```
-Mining (MIN)  →  Power (PWR)  →  Electricity (ELC)  →  Demand
-                      ↕
-              Transmission (TRN)  ←→  Other Countries
-                      ↕
-               Renewables (RNW)
+Mining (MIN)  →  Power (PWR)  →  Electricity (ELC)  →  Transmission  →  Demand
+                                                            ↕
+                                                    Dispatch (DSPTRN)
+                                                            ↕
+                                                Interconnection (TRN)  ←→  Other Countries
+                                                            ↕
+                                                     Renewables (RNW)
 ```
 
 ### Energy Flow
 
 1. **Mining technologies** extract primary commodities (coal, gas, oil, etc.).
-2. **Power technologies** convert fuels into electricity.
+2. **Power technologies** convert fuels into electricity (`ELC*00` renewable, `ELC*01` non-renewable).
 3. **Renewable technologies** supply renewable electricity.
-4. **Transmission technologies** route electricity between countries.
-5. **Electricity distribution** delivers power to meet demand.
-6. **Storage technologies** balance supply and demand across timeslices.
+4. **Transmission technologies** route electricity within the country grid (`ELC*02` transmission output).
+5. **Dispatch technologies** (DSPTRN) route electricity to/from cross-border interconnections (`ELC*02` → `ELC*03` for export, `ELC*03` → `ELC*01` for import).
+6. **Interconnection technologies** (TRN) transport electricity between countries via `ELC*03`.
+7. **Electricity distribution** delivers power to meet demand from `ELC*02`.
+8. **Storage technologies** balance supply and demand across timeslices.
