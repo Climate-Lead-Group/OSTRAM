@@ -77,7 +77,7 @@ def ensure_columns(df, cols):
 # ---------------------------------------------------------------------------
 # 1. Process A-O_AR_Model_Base_Year.xlsx
 # ---------------------------------------------------------------------------
-def process_base_year(path, pairs):
+def process_base_year(path, pairs, enable_dsptrn=False):
     print(f"Processing '{path}' …")
     with pd.ExcelWriter(path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
         # ---------- Secondary sheet ----------
@@ -125,18 +125,33 @@ def process_base_year(path, pairs):
             sec.at[idx,'Fuel.O'] = f"ELC{country}{region}00"
             sec.at[idx,'Fuel.O.Name'] = f"Electricity, {countryname}, Region {region}, renewable power plant output"
         # ---------- TRN interconnection: update fuel codes 02->03, 01->03 ----------
-        mask_trn = sec['Tech'].apply(lambda x: bool(TRN_INTERCONNECTION.match(str(x))))
-        for idx in sec[mask_trn].index:
-            for fcol, ncol in [('Fuel.I','Fuel.I.Name'), ('Fuel.O','Fuel.O.Name')]:
-                fuel = str(sec.at[idx, fcol])
-                if fuel.startswith('ELC') and fuel.endswith('02'):
-                    sec.at[idx, fcol] = fuel[:-2] + '03'
-                    sec.at[idx, ncol] = str(sec.at[idx, ncol]).replace(
+        if enable_dsptrn:
+            mask_trn = sec['Tech'].apply(lambda x: bool(TRN_INTERCONNECTION.match(str(x))))
+            for idx in sec[mask_trn].index:
+                # --- Fuel.I: rewrite to ELC..03 (dispatch-ready for interconnection) ---
+                fuel_i = str(sec.at[idx, 'Fuel.I'])
+                if fuel_i.startswith('ELC') and fuel_i.endswith('02'):
+                    sec.at[idx, 'Fuel.I'] = fuel_i[:-2] + '03'
+                    sec.at[idx, 'Fuel.I.Name'] = str(sec.at[idx, 'Fuel.I.Name']).replace(
                         'transmission line output', 'dispatch-ready for interconnection')
-                elif fuel.startswith('ELC') and fuel.endswith('01'):
-                    sec.at[idx, fcol] = fuel[:-2] + '03'
-                    sec.at[idx, ncol] = str(sec.at[idx, ncol]).replace(
+                elif fuel_i.startswith('ELC') and fuel_i.endswith('01'):
+                    sec.at[idx, 'Fuel.I'] = fuel_i[:-2] + '03'
+                    sec.at[idx, 'Fuel.I.Name'] = str(sec.at[idx, 'Fuel.I.Name']).replace(
                         'NO renewable power plant output', 'dispatch-ready for interconnection')
+                # --- Fuel.O: rewrite to ELC..04 (imported electricity) ---
+                fuel_o = str(sec.at[idx, 'Fuel.O'])
+                if fuel_o.startswith('ELC') and fuel_o.endswith('02'):
+                    sec.at[idx, 'Fuel.O'] = fuel_o[:-2] + '04'
+                    sec.at[idx, 'Fuel.O.Name'] = str(sec.at[idx, 'Fuel.O.Name']).replace(
+                        'transmission line output', 'imported electricity')
+                elif fuel_o.startswith('ELC') and fuel_o.endswith('01'):
+                    sec.at[idx, 'Fuel.O'] = fuel_o[:-2] + '04'
+                    sec.at[idx, 'Fuel.O.Name'] = str(sec.at[idx, 'Fuel.O.Name']).replace(
+                        'NO renewable power plant output', 'imported electricity')
+                elif fuel_o.startswith('ELC') and fuel_o.endswith('03'):
+                    sec.at[idx, 'Fuel.O'] = fuel_o[:-2] + '04'
+                    sec.at[idx, 'Fuel.O.Name'] = str(sec.at[idx, 'Fuel.O.Name']).replace(
+                        'dispatch-ready for interconnection', 'imported electricity')
         sec.to_excel(writer, sheet_name='Secondary', index=False)
         # ---------- Demand Techs sheet ----------
         dtech = pd.read_excel(path, sheet_name='Demand Techs', engine='openpyxl')
@@ -182,39 +197,40 @@ def process_base_year(path, pairs):
                 rows.append(row)
 
             # --- DSPTRN: Dispatch technology (2 modes of operation) ---
-            dsp_tech = f"DSPTRN{country}{region}"
-            dsp_02   = f"ELC{country}{region}02"
-            dsp_03   = f"ELC{country}{region}03"
-            dsp_01   = f"ELC{country}{region}01"
-            dsp_name = f"Dispatch technology, {countryname}, Region {region}"
-            # Mode 1: ELC...02 -> ELC...03 (dispatch to interconnection)
-            rows.append({
-                'Mode.Operation': 1,
-                'Fuel.I': dsp_02,
-                'Fuel.I.Name': f"Electricity, {countryname}, Region {region}, transmission line output",
-                'Value.Fuel.I': 1,
-                'Unit.Fuel.I': '',
-                'Tech': dsp_tech,
-                'Tech.Name': dsp_name,
-                'Fuel.O': dsp_03,
-                'Fuel.O.Name': f"Electricity, {countryname}, Region {region}, dispatch-ready for interconnection",
-                'Value.Fuel.O': 1,
-                'Unit.Fuel.O': ''
-            })
-            # Mode 2: ELC...03 -> ELC...01 (receive from interconnection)
-            rows.append({
-                'Mode.Operation': 2,
-                'Fuel.I': dsp_03,
-                'Fuel.I.Name': f"Electricity, {countryname}, Region {region}, dispatch-ready for interconnection",
-                'Value.Fuel.I': 1,
-                'Unit.Fuel.I': '',
-                'Tech': dsp_tech,
-                'Tech.Name': dsp_name,
-                'Fuel.O': dsp_01,
-                'Fuel.O.Name': f"Electricity, {countryname}, Region {region}, NO renewable power plant output",
-                'Value.Fuel.O': 1,
-                'Unit.Fuel.O': ''
-            })
+            if enable_dsptrn:
+                dsp_tech = f"DSPTRN{country}{region}"
+                dsp_02   = f"ELC{country}{region}02"
+                dsp_03   = f"ELC{country}{region}03"
+                dsp_04   = f"ELC{country}{region}04"
+                dsp_name = f"Dispatch technology, {countryname}, Region {region}"
+                # Mode 1: ELC...02 -> ELC...03 (dispatch to interconnection)
+                rows.append({
+                    'Mode.Operation': 1,
+                    'Fuel.I': dsp_02,
+                    'Fuel.I.Name': f"Electricity, {countryname}, Region {region}, transmission line output",
+                    'Value.Fuel.I': 1,
+                    'Unit.Fuel.I': '',
+                    'Tech': dsp_tech,
+                    'Tech.Name': dsp_name,
+                    'Fuel.O': dsp_03,
+                    'Fuel.O.Name': f"Electricity, {countryname}, Region {region}, dispatch-ready for interconnection",
+                    'Value.Fuel.O': 1,
+                    'Unit.Fuel.O': ''
+                })
+                # Mode 2: ELC...04 -> ELC...03 (receive from interconnection)
+                rows.append({
+                    'Mode.Operation': 2,
+                    'Fuel.I': dsp_04,
+                    'Fuel.I.Name': f"Electricity, {countryname}, Region {region}, imported electricity",
+                    'Value.Fuel.I': 1,
+                    'Unit.Fuel.I': '',
+                    'Tech': dsp_tech,
+                    'Tech.Name': dsp_name,
+                    'Fuel.O': dsp_03,
+                    'Fuel.O.Name': f"Electricity, {countryname}, Region {region}, dispatch-ready for interconnection",
+                    'Value.Fuel.O': 1,
+                    'Unit.Fuel.O': ''
+                })
 
         dtech = pd.DataFrame(rows, columns=header)
         dtech.to_excel(writer, sheet_name='Demand Techs', index=False)
@@ -224,7 +240,7 @@ def process_base_year(path, pairs):
 # ---------------------------------------------------------------------------
 # 2. Process A-O_AR_Projections.xlsx
 # ---------------------------------------------------------------------------
-def process_projections(path, pairs):
+def process_projections(path, pairs, enable_dsptrn=False):
     print(f"Processing '{path}' …")
     with pd.ExcelWriter(path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
         # ---------- Secondary ----------
@@ -255,19 +271,37 @@ def process_projections(path, pairs):
                 continue
             sec.at[idx,'Fuel'] = f"ELC{country}{region}00"
             sec.at[idx,'Fuel.Name'] = f"Electricity, {countryname}, Region {region}, renewable power plant output"
-        # ---------- TRN interconnection: update fuel codes 02->03, 01->03 ----------
-        mask_trn = sec['Tech'].apply(lambda x: bool(TRN_INTERCONNECTION.match(str(x))))
-        for idx in sec[mask_trn].index:
-            fuel = str(sec.at[idx, 'Fuel'])
-            name = str(sec.at[idx, 'Fuel.Name'])
-            if fuel.startswith('ELC') and fuel.endswith('02'):
-                sec.at[idx, 'Fuel'] = fuel[:-2] + '03'
-                sec.at[idx, 'Fuel.Name'] = name.replace(
-                    'transmission line output', 'dispatch-ready for interconnection')
-            elif fuel.startswith('ELC') and fuel.endswith('01'):
-                sec.at[idx, 'Fuel'] = fuel[:-2] + '03'
-                sec.at[idx, 'Fuel.Name'] = name.replace(
-                    'NO renewable power plant output', 'dispatch-ready for interconnection')
+        # ---------- TRN interconnection: update fuel codes (Input->03, Output->04) ----------
+        if enable_dsptrn:
+            mask_trn = sec['Tech'].apply(lambda x: bool(TRN_INTERCONNECTION.match(str(x))))
+            for idx in sec[mask_trn].index:
+                fuel = str(sec.at[idx, 'Fuel'])
+                name = str(sec.at[idx, 'Fuel.Name'])
+                direction = str(sec.at[idx, 'Direction']) if 'Direction' in sec.columns else ''
+                if direction == 'Input':
+                    # Input side: rewrite to ELC..03 (dispatch-ready for interconnection)
+                    if fuel.startswith('ELC') and fuel.endswith('02'):
+                        sec.at[idx, 'Fuel'] = fuel[:-2] + '03'
+                        sec.at[idx, 'Fuel.Name'] = name.replace(
+                            'transmission line output', 'dispatch-ready for interconnection')
+                    elif fuel.startswith('ELC') and fuel.endswith('01'):
+                        sec.at[idx, 'Fuel'] = fuel[:-2] + '03'
+                        sec.at[idx, 'Fuel.Name'] = name.replace(
+                            'NO renewable power plant output', 'dispatch-ready for interconnection')
+                elif direction == 'Output':
+                    # Output side: rewrite to ELC..04 (imported electricity)
+                    if fuel.startswith('ELC') and fuel.endswith('02'):
+                        sec.at[idx, 'Fuel'] = fuel[:-2] + '04'
+                        sec.at[idx, 'Fuel.Name'] = name.replace(
+                            'transmission line output', 'imported electricity')
+                    elif fuel.startswith('ELC') and fuel.endswith('01'):
+                        sec.at[idx, 'Fuel'] = fuel[:-2] + '04'
+                        sec.at[idx, 'Fuel.Name'] = name.replace(
+                            'NO renewable power plant output', 'imported electricity')
+                    elif fuel.startswith('ELC') and fuel.endswith('03'):
+                        sec.at[idx, 'Fuel'] = fuel[:-2] + '04'
+                        sec.at[idx, 'Fuel.Name'] = name.replace(
+                            'dispatch-ready for interconnection', 'imported electricity')
         sec.to_excel(writer, sheet_name='Secondary', index=False)
 
         # ---------- Demand Techs ----------
@@ -327,59 +361,60 @@ def process_projections(path, pairs):
                 })
 
             # --- DSPTRN: Dispatch technology (2 modes of operation) ---
-            dsp_tech = f"DSPTRN{country}{region}"
-            dsp_02   = f"ELC{country}{region}02"
-            dsp_03   = f"ELC{country}{region}03"
-            dsp_01   = f"ELC{country}{region}01"
-            dsp_name = f"Dispatch technology, {countryname}, Region {region}"
-            # Mode 1 Input: ELC...02
-            rows.append({
-                'Mode.Operation': 1,
-                'Tech': dsp_tech,
-                'Tech.Name': dsp_name,
-                'Fuel': dsp_02,
-                'Fuel.Name': f"Electricity, {countryname}, Region {region}, transmission line output",
-                'Direction': 'Input',
-                'Projection.Mode': 'User defined',
-                'Projection.Parameter': 0,
-                **{yr: 1 for yr in year_cols}
-            })
-            # Mode 1 Output: ELC...03
-            rows.append({
-                'Mode.Operation': 1,
-                'Tech': dsp_tech,
-                'Tech.Name': dsp_name,
-                'Fuel': dsp_03,
-                'Fuel.Name': f"Electricity, {countryname}, Region {region}, dispatch-ready for interconnection",
-                'Direction': 'Output',
-                'Projection.Mode': 'User defined',
-                'Projection.Parameter': 0,
-                **{yr: 1 for yr in year_cols}
-            })
-            # Mode 2 Input: ELC...03
-            rows.append({
-                'Mode.Operation': 2,
-                'Tech': dsp_tech,
-                'Tech.Name': dsp_name,
-                'Fuel': dsp_03,
-                'Fuel.Name': f"Electricity, {countryname}, Region {region}, dispatch-ready for interconnection",
-                'Direction': 'Input',
-                'Projection.Mode': 'User defined',
-                'Projection.Parameter': 0,
-                **{yr: 1 for yr in year_cols}
-            })
-            # Mode 2 Output: ELC...01
-            rows.append({
-                'Mode.Operation': 2,
-                'Tech': dsp_tech,
-                'Tech.Name': dsp_name,
-                'Fuel': dsp_01,
-                'Fuel.Name': f"Electricity, {countryname}, Region {region}, NO renewable power plant output",
-                'Direction': 'Output',
-                'Projection.Mode': 'User defined',
-                'Projection.Parameter': 0,
-                **{yr: 1 for yr in year_cols}
-            })
+            if enable_dsptrn:
+                dsp_tech = f"DSPTRN{country}{region}"
+                dsp_02   = f"ELC{country}{region}02"
+                dsp_03   = f"ELC{country}{region}03"
+                dsp_04   = f"ELC{country}{region}04"
+                dsp_name = f"Dispatch technology, {countryname}, Region {region}"
+                # Mode 1 Input: ELC...02
+                rows.append({
+                    'Mode.Operation': 1,
+                    'Tech': dsp_tech,
+                    'Tech.Name': dsp_name,
+                    'Fuel': dsp_02,
+                    'Fuel.Name': f"Electricity, {countryname}, Region {region}, transmission line output",
+                    'Direction': 'Input',
+                    'Projection.Mode': 'User defined',
+                    'Projection.Parameter': 0,
+                    **{yr: 1 for yr in year_cols}
+                })
+                # Mode 1 Output: ELC...03
+                rows.append({
+                    'Mode.Operation': 1,
+                    'Tech': dsp_tech,
+                    'Tech.Name': dsp_name,
+                    'Fuel': dsp_03,
+                    'Fuel.Name': f"Electricity, {countryname}, Region {region}, dispatch-ready for interconnection",
+                    'Direction': 'Output',
+                    'Projection.Mode': 'User defined',
+                    'Projection.Parameter': 0,
+                    **{yr: 1 for yr in year_cols}
+                })
+                # Mode 2 Input: ELC...04 (imported electricity)
+                rows.append({
+                    'Mode.Operation': 2,
+                    'Tech': dsp_tech,
+                    'Tech.Name': dsp_name,
+                    'Fuel': dsp_04,
+                    'Fuel.Name': f"Electricity, {countryname}, Region {region}, imported electricity",
+                    'Direction': 'Input',
+                    'Projection.Mode': 'User defined',
+                    'Projection.Parameter': 0,
+                    **{yr: 1 for yr in year_cols}
+                })
+                # Mode 2 Output: ELC...03 (dispatch-ready for interconnection)
+                rows.append({
+                    'Mode.Operation': 2,
+                    'Tech': dsp_tech,
+                    'Tech.Name': dsp_name,
+                    'Fuel': dsp_03,
+                    'Fuel.Name': f"Electricity, {countryname}, Region {region}, dispatch-ready for interconnection",
+                    'Direction': 'Output',
+                    'Projection.Mode': 'User defined',
+                    'Projection.Parameter': 0,
+                    **{yr: 1 for yr in year_cols}
+                })
 
         dtech = pd.DataFrame(rows, columns=header)
         dtech.to_excel(writer, sheet_name='Demand Techs', index=False)
@@ -392,7 +427,7 @@ PARAM_LIST = [
     'CapitalCost','FixedCost','ResidualCapacity','TotalAnnualMinCapacityInvestment', 'TotalAnnualMaxCapacity'
 ]
 
-def process_parametrization(path, pairs, yaml_data):
+def process_parametrization(path, pairs, yaml_data, enable_dsptrn=False):
     print(f"Processing '{path}' …")
 
     # ───── 1. Load sheets ───────────────────────────────────────────────────
@@ -404,7 +439,9 @@ def process_parametrization(path, pairs, yaml_data):
 
     # Quick map Tech → Tech.ID for already existing techs (only for NON-transmission techs)
     # Transmission technologies will have sequential IDs starting from 1
-    transmission_prefixes = ('RNWTRN', 'RNWRPO', 'RNWNLI', 'TRNRPO', 'TRNNLI', 'PWRTRN', 'DSPTRN')
+    transmission_prefixes = ('RNWTRN', 'RNWRPO', 'RNWNLI', 'TRNRPO', 'TRNNLI', 'PWRTRN')
+    if enable_dsptrn:
+        transmission_prefixes = transmission_prefixes + ('DSPTRN',)
     existing_ids = {}
     for _, row in fhp.iterrows():
         tech = row.get('Tech', '')
@@ -562,9 +599,10 @@ def main():
             if not isinstance(yaml_data, dict):
                 yaml_data = {}
     
-        process_base_year(args.base, pairs)
-        process_projections(args.proj, pairs)
-        process_parametrization(args.param, pairs, yaml_data)
+        enable_dsptrn = yaml_data.get('enable_dsptrn', False)
+        process_base_year(args.base, pairs, enable_dsptrn=enable_dsptrn)
+        process_projections(args.proj, pairs, enable_dsptrn=enable_dsptrn)
+        process_parametrization(args.param, pairs, yaml_data, enable_dsptrn=enable_dsptrn)
 
     print("\n  All done!")
 

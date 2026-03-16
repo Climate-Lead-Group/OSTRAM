@@ -21,6 +21,7 @@ from pathlib import Path
 from datetime import datetime
 import shutil
 from collections import defaultdict
+from Z_AUX_config_loader import get_force_empty_max_capacity_investment_pwr                                                                           
 
 # Import the CSV profile normalization script
 try:
@@ -238,6 +239,15 @@ class OldInputsMigrator:
         self.matrix = TechCountryMatrix(self.base_path / "Tech_Country_Matrix.xlsx")
         self.equivalences = TechEquivalences(self.base_path / "Config_tech_equivalences.yaml")
 
+        # Load country codes config for DSPTRN support
+        yaml_path = self.base_path / "Config_country_codes.yaml"
+        if yaml_path.exists():
+            with open(yaml_path, 'r', encoding='utf-8') as fh:
+                self.country_codes_config = yaml.safe_load(fh) or {}
+        else:
+            self.country_codes_config = {}
+        self.enable_dsptrn = self.country_codes_config.get('enable_dsptrn', False)
+        
         # Scenarios
         self.scenarios = ["BAU", "NDC", "NDC+ELC", "NDC_NoRPO"]
 
@@ -855,6 +865,47 @@ class OldInputsMigrator:
 
         self.log(f"      Projection.Mode updated: {updated}")
 
+    def update_pwr_max_capacity_investment_mode(self, ws, sheet_name):
+        """
+        For all PWR technologies, set Projection.Mode to "EMPTY" for
+        TotalAnnualMaxCapacityInvestment.
+        Controlled by force_empty_max_capacity_investment_pwr flag in Config_country_codes.yaml.
+        """
+        if not get_force_empty_max_capacity_investment_pwr():
+            self.log(f"    Skipping PWR TotalAnnualMaxCapacityInvestment override (flag disabled)")
+            return
+
+        self.log(f"    Updating Projection.Mode for PWR TotalAnnualMaxCapacityInvestment in {sheet_name}...")
+
+        tech_col = 2
+        param_col = 5
+        proj_mode_col = 7
+
+        updated = 0
+        for row in range(2, ws.max_row + 1):
+            tech = ws.cell(row, tech_col).value
+            param = ws.cell(row, param_col).value
+            proj_mode = ws.cell(row, proj_mode_col).value
+
+            if not tech or not param or not proj_mode:
+                continue
+
+            tech_str = str(tech).strip()
+            param_str = str(param).strip()
+            proj_mode_str = str(proj_mode).strip()
+
+            if param_str != 'TotalAnnualMaxCapacityInvestment':
+                continue
+
+            if proj_mode_str == 'EMPTY':
+                continue
+
+            if tech_str.startswith('PWR'):
+                if not self.dry_run:
+                    ws.cell(row, proj_mode_col, "EMPTY")
+                updated += 1
+
+        self.log(f"      Projection.Mode updated: {updated}")
     def update_capacity_investment_projection_mode(self, ws, sheet_name):
         """
         Update Projection.Mode for specific parameters in Secondary Techs sheet.
@@ -1423,6 +1474,77 @@ class OldInputsMigrator:
             self.log("")
             self.log("❌ No Excel files were normalized")
 
+    def _has_dsptrn(self, scenario):
+        """Check if the migrated data already contains DSPTRN/ELC03/ELC04 technologies."""
+        base_year_path = (self.base_path / "A1_Outputs" / f"A1_Outputs_{scenario}"
+                          / "A-O_AR_Model_Base_Year.xlsx")
+        if not base_year_path.exists():
+            return False
+        try:
+            import pandas as pd
+            sec = pd.read_excel(base_year_path, sheet_name='Secondary', engine='openpyxl')
+            # Check if any tech starts with DSPTRN or any fuel contains ELC...03/04
+            has_dsptrn_tech = sec['Tech'].str.startswith('DSPTRN', na=False).any()
+            has_elc03 = False
+            has_elc04 = False
+            for col in ['Fuel.I', 'Fuel.O']:
+                if col in sec.columns:
+                    has_elc03 = has_elc03 or sec[col].str.endswith('03', na=False).any()
+                    has_elc04 = has_elc04 or sec[col].str.endswith('04', na=False).any()
+            return has_dsptrn_tech or has_elc03 or has_elc04
+        except Exception:
+            return False
+
+    def inject_dsptrn_if_missing(self, scenario):
+        """If enable_dsptrn is True and data doesn't have DSPTRN/ELC03, inject them.
+
+        This replicates the A2_AddTx logic: rewrites TRN interconnection fuel codes
+        to ELC03 and adds DSPTRN dispatch technology rows.
+        """
+        if not self.enable_dsptrn:
+            return
+        if self._has_dsptrn(scenario):
+            self.log(f"  DSPTRN/ELC03/ELC04 already present in {scenario}, skipping injection")
+            return
+        if self.dry_run:
+            self.log(f"  [DRY RUN] Would inject DSPTRN into {scenario}")
+            return
+
+        self.log(f"  Injecting DSPTRN dispatch technology into {scenario}...")
+
+        # Import A2_AddTx functions
+        try:
+            from A2_AddTx import (load_country_region_pairs, process_base_year,
+                                  process_projections, process_parametrization)
+        except ImportError:
+            self.log("  WARNING: Could not import A2_AddTx, skipping DSPTRN injection", "WARNING")
+            return
+
+        yaml_path = self.base_path / "Config_country_codes.yaml"
+        pairs = load_country_region_pairs(str(yaml_path))
+        if not pairs:
+            self.log("  WARNING: No country pairs found, skipping DSPTRN injection", "WARNING")
+            return
+
+        with open(yaml_path, 'r', encoding='utf-8') as fh:
+            yaml_data = yaml.safe_load(fh) or {}
+
+        scenario_dir = self.base_path / "A1_Outputs" / f"A1_Outputs_{scenario}"
+        base_path = str(scenario_dir / "A-O_AR_Model_Base_Year.xlsx")
+        proj_path = str(scenario_dir / "A-O_AR_Projections.xlsx")
+        param_path = str(scenario_dir / "A-O_Parametrization.xlsx")
+
+        try:
+            if Path(base_path).exists():
+                process_base_year(base_path, pairs, enable_dsptrn=True)
+            if Path(proj_path).exists():
+                process_projections(proj_path, pairs, enable_dsptrn=True)
+            if Path(param_path).exists():
+                process_parametrization(param_path, pairs, yaml_data, enable_dsptrn=True)
+            self.log(f"  ✔ DSPTRN injected into {scenario}")
+        except Exception as e:
+            self.log(f"  ERROR injecting DSPTRN into {scenario}: {e}", "ERROR")
+            self.stats['errors'] += 1
     def run(self):
         """Main execution"""
         self.log("=" * 80)

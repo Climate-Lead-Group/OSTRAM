@@ -46,6 +46,10 @@ add_missing_countries_from_ostram: false
 #   false   - skip PWR cleanup entirely
 pwr_cleanup_mode: merge
 
+# Force Projection.Mode = "EMPTY" for TotalAnnualMaxCapacityInvestment on all PWR technologies
+#   true  - override Projection.Mode to EMPTY for all PWR techs on that parameter
+#   false - keep the auto-detected Projection.Mode
+force_empty_max_capacity_investment_pwr: true                                                                                              
 # ============================================================
 # TECHNOLOGY CONFIGURATION
 # ============================================================
@@ -305,6 +309,10 @@ TRNNLI:
   ResidualCapacity: 5
   TotalAnnualMaxCapacityInvestment: 5
 
+# Enable DSPTRN dispatch technology (adds ELC03/ELC04 tier for interconnections)
+enable_dsptrn: true
+
+# Dispatch transmission technology (routes electricity through ELC03 tier)
 DSPTRN:
   CapacityToActivityUnit: 31.536
   OperationalLife: 20
