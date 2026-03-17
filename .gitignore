@@ -38,10 +38,10 @@ t1_confection/gurobi.log
 t1_confection/secondary_techs_update_log_*.txt
 t1_confection/A1_Outputs/secondary_techs_update_log_*.txt
 
-# All files containing "log", "debug", or "backup" in their name
-*log*
-*Log*
-*LOG*
+# Log files (by extension only, to avoid matching "Technology" etc.)
+*.log
+*.Log
+*.LOG
 *debug*
 *Debug*
 *DEBUG*
