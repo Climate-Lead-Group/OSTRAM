@@ -87,6 +87,9 @@ def get_pwr_cleanup_mode():
     return _load_raw().get("pwr_cleanup_mode", False)
 
 
+def get_force_empty_max_capacity_investment_pwr():
+    """Returns whether to force Projection.Mode=EMPTY for TotalAnnualMaxCapacityInvestment on all PWR techs."""
+    return _load_raw().get("force_empty_max_capacity_investment_pwr", False)                                                  
 # --- Technology accessors ---
 
 def get_ostram_tech_mapping():
@@ -107,6 +110,40 @@ def get_renewable_fuels():
 def get_shares_tech_mapping():
     """Returns {shares_tech_name: model_code} dict."""
     return _load_raw().get("shares_tech_mapping", {})
+
+
+def get_enable_dsptrn():
+    """Returns whether the DSPTRN dispatch layer is enabled (ELC..03 instead of ELC..02 for demand)."""
+    return _load_raw().get("enable_dsptrn", False)
+
+
+def get_model_countries_list():
+    """Returns the 'countries' list from config (used by A2_AddTx).
+    May contain 3-char (BGD) or 5-char (INDEA) codes for regions."""
+    return _load_raw().get("countries", [])
+
+
+def get_multi_region_map():
+    """Returns {iso3: [region_codes]} for countries with multiple regions.
+
+    Derived from the 'countries' list in config. A country has multiple regions
+    when it appears as 5-char codes (e.g., INDEA, INDNE) rather than a single
+    3-char code. Single-region countries (only XX) are NOT included.
+
+    Example: {'IND': ['EA', 'NE', 'NO', 'SO', 'WE']}
+    """
+    from collections import defaultdict
+    countries_list = get_model_countries_list()
+    by_iso3 = defaultdict(list)
+    for code in countries_list:
+        code = code.strip()
+        if len(code) == 3:
+            by_iso3[code].append('XX')
+        elif len(code) == 5:
+            by_iso3[code[:3]].append(code[3:5])
+    # Return only countries with multiple regions (not just a single XX)
+    return {iso3: sorted(regions) for iso3, regions in by_iso3.items()
+            if not (len(regions) == 1 and regions[0] == 'XX')}
 
 
 def get_raw_config():

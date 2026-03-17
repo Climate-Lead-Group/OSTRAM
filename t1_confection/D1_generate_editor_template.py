@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 from datetime import datetime
 import yaml
-from Z_AUX_config_loader import get_ostram_country_mapping, get_ostram_tech_mapping, get_country_names
+from Z_AUX_config_loader import get_ostram_country_mapping, get_ostram_tech_mapping, get_country_names, get_multi_region_map
 
 # Country and technology mappings from centralized config
 OSTRAM_COUNTRY_MAPPING = get_ostram_country_mapping()
@@ -71,7 +71,12 @@ def collect_data_from_all_scenarios():
     all_parameters = set()
     all_years = set()
 
+    # Detect which countries have multiple regions (e.g., IND -> [EA, NE, NO, SO, WE])
+    multi_region = get_multi_region_map()
+
     print("Collecting data from all scenarios...")
+    if multi_region:
+        print(f"Multi-region countries: {', '.join(f'{k} ({len(v)} regions)' for k, v in multi_region.items())}")
     print()
 
     for scenario in scenarios:
@@ -121,26 +126,40 @@ def collect_data_from_all_scenarios():
                 # Build mapping: Tech.Name -> Tech
                 tech_mapping[tech_name_str] = tech_code_str
 
-                # Extract country code from PWR and TRN technologies
-                # PWR Format: PWRURNARGXX -> country code is ARG (characters 6-8)
-                # TRN Format: TRNBRAXXPRYXX -> origin country is BRA (characters 3-5)
-                country_code = None
+                # Extract country/region identifier from PWR and TRN technologies.
+                # For multi-region countries (e.g., IND with regions EA, NE, NO, SO, WE),
+                # use the 5-char code (e.g., INDEA) so the editor can distinguish regions.
+                # For single-region countries, use the 3-char ISO code (e.g., BGD).
+                #
+                # PWR Format: PWRHYDINDEA -> country=IND(6-8), region=EA(9-10)
+                # TRN Format: TRNBGDXXINDEA -> origin country=BGD(3-5), region=XX(6-7)
+                country_key = None
 
                 if tech_code_str.upper().startswith('PWR') and len(tech_code_str) >= 9:
-                    # PWR technologies: country at positions 6-8
-                    country_code = tech_code_str[6:9].upper()
+                    # PWR technologies: country at positions 6-8, region at 9-10
+                    iso3 = tech_code_str[6:9].upper()
+                    region = tech_code_str[9:11].upper() if len(tech_code_str) >= 11 else 'XX'
+                    if iso3 in multi_region and region != 'XX':
+                        country_key = iso3 + region  # e.g., INDEA
+                    else:
+                        country_key = iso3  # e.g., BGD
                 elif tech_code_str.upper().startswith('TRN') and len(tech_code_str) >= 8:
-                    # TRN technologies: origin country at positions 3-5
-                    # Example: TRNBRAXXPRYXX -> BRA is origin
-                    country_code = tech_code_str[3:6].upper()
+                    # TRN technologies: origin country at positions 3-5, region at 6-7
+                    # Example: TRNBGDXXINDEA -> BGD is origin, XX is origin region
+                    iso3 = tech_code_str[3:6].upper()
+                    region = tech_code_str[6:8].upper() if len(tech_code_str) >= 8 else 'XX'
+                    if iso3 in multi_region and region != 'XX':
+                        country_key = iso3 + region  # e.g., INDEA
+                    else:
+                        country_key = iso3  # e.g., BGD
 
-                if country_code:
-                    all_countries.add(country_code)
+                if country_key:
+                    all_countries.add(country_key)
 
-                    # Group Tech.Name by country
-                    if country_code not in tech_by_country:
-                        tech_by_country[country_code] = set()
-                    tech_by_country[country_code].add(tech_name_str)
+                    # Group Tech.Name by country/region
+                    if country_key not in tech_by_country:
+                        tech_by_country[country_key] = set()
+                    tech_by_country[country_key].add(tech_name_str)
 
             if parameter:
                 all_parameters.add(str(parameter).strip())
@@ -878,11 +897,21 @@ def create_editor_template(data, output_path):
     ws_demand.cell(4, 3).border = border_style
     ws_demand.cell(4, 3).alignment = Alignment(horizontal="center", vertical="center")
 
-    # Country list with growth rates (default 2.0%) from centralized config
-    country_names = get_country_names()
-    demand_countries = [
-        (iso3, name, 2.0) for iso3, name in sorted(country_names.items())
-    ]
+    # Country/region list with growth rates (default 2.0%)
+    # Uses data['countries'] which includes region codes (e.g., INDEA) for multi-region countries
+    country_names = get_country_names()  # {iso3: english_name}
+    multi_region = get_multi_region_map()  # {iso3: [region_codes]}
+    demand_countries = []
+    for code in sorted(data['countries']):
+        if len(code) == 3:
+            name = country_names.get(code, code)
+        else:
+            # Multi-region: e.g., INDEA -> "India (EA)"
+            iso3 = code[:3]
+            region = code[3:]
+            base_name = country_names.get(iso3, iso3)
+            name = f"{base_name} ({region})"
+        demand_countries.append((code, name, 2.0))
 
     for row_idx, (code, name, rate) in enumerate(demand_countries, 5):
         ws_demand.cell(row_idx, 1, code).border = border_style
@@ -1304,18 +1333,24 @@ def create_editor_template(data, output_path):
 
     # Pre-populate rows for each country+scenario combination (excluding base scenario)
     row_idx = 6
-    for country in countries_list:
-        for scenario in scenarios_for_demand:
-            ws_scenarios_demand.cell(row_idx, 1, country).border = border_style
-            ws_scenarios_demand.cell(row_idx, 1).alignment = Alignment(horizontal="center")
-            ws_scenarios_demand.cell(row_idx, 2, scenario).border = border_style
-            ws_scenarios_demand.cell(row_idx, 2).alignment = Alignment(horizontal="center")
-            # Year columns - default 0%
-            for col_idx in range(3, 3 + len(demand_adj_years)):
-                ws_scenarios_demand.cell(row_idx, col_idx, 0).border = border_style
-                ws_scenarios_demand.cell(row_idx, col_idx).number_format = '0.00%'
-                ws_scenarios_demand.cell(row_idx, col_idx).alignment = Alignment(horizontal="center")
-            row_idx += 1
+    if not scenarios_for_demand:
+        ws_scenarios_demand.cell(row_idx, 1, f"No additional scenarios found (only base scenario '{base_scenario}' exists).")
+        ws_scenarios_demand.merge_cells(f'A{row_idx}:{openpyxl.utils.get_column_letter(2 + len(demand_adj_years))}{row_idx}')
+        ws_scenarios_demand.cell(row_idx, 1).font = Font(italic=True, color="808080")
+        row_idx += 1
+    else:
+        for country in countries_list:
+            for scenario in scenarios_for_demand:
+                ws_scenarios_demand.cell(row_idx, 1, country).border = border_style
+                ws_scenarios_demand.cell(row_idx, 1).alignment = Alignment(horizontal="center")
+                ws_scenarios_demand.cell(row_idx, 2, scenario).border = border_style
+                ws_scenarios_demand.cell(row_idx, 2).alignment = Alignment(horizontal="center")
+                # Year columns - default 0%
+                for col_idx in range(3, 3 + len(demand_adj_years)):
+                    ws_scenarios_demand.cell(row_idx, col_idx, 0).border = border_style
+                    ws_scenarios_demand.cell(row_idx, col_idx).number_format = '0.00%'
+                    ws_scenarios_demand.cell(row_idx, col_idx).alignment = Alignment(horizontal="center")
+                row_idx += 1
 
     # Add detailed notes at the bottom
     note_row = row_idx + 1

@@ -18,13 +18,52 @@ import yaml
 from Z_AUX_config_loader import (
     get_ostram_country_mapping, get_ostram_country_mapping_normalized,
     get_ostram_tech_mapping, get_shares_country_mapping, get_shares_tech_mapping,
-    strip_accents
+    strip_accents, get_enable_dsptrn, get_multi_region_map
 )
 
 # Country and technology mappings from centralized config
 OSTRAM_COUNTRY_MAPPING = get_ostram_country_mapping()
 OSTRAM_COUNTRY_MAPPING_NORMALIZED = get_ostram_country_mapping_normalized()
 OSTRAM_TECH_MAPPING = get_ostram_tech_mapping()
+MULTI_REGION_MAP = get_multi_region_map()
+
+
+def elc_country_key(fuel_str):
+    """Extract the country/region key from an ELC fuel code.
+
+    For multi-region countries returns 5-char key (e.g., 'INDEA' from 'ELCINDEA02').
+    For single-region countries returns 3-char key (e.g., 'BGD' from 'ELCBGDXX02').
+    """
+    iso3 = fuel_str[3:6]
+    region = fuel_str[6:8]
+    if iso3 in MULTI_REGION_MAP and region != 'XX':
+        return iso3 + region
+    return iso3
+
+
+def pwr_country_key(tech_str):
+    """Extract the country/region key from a PWR technology code.
+
+    For multi-region countries returns 5-char key (e.g., 'INDEA' from 'PWRHYDINDEA').
+    For single-region countries returns 3-char key (e.g., 'BGD' from 'PWRHYDBGDXX').
+    """
+    iso3 = tech_str[6:9]
+    region = tech_str[9:11] if len(tech_str) >= 11 else 'XX'
+    if iso3 in MULTI_REGION_MAP and region != 'XX':
+        return iso3 + region
+    return iso3
+
+
+def lookup_growth_rate(rates_dict, country_key, default=0.02):
+    """Look up growth rate by country key, with fallback from region to country level.
+
+    Tries the exact key first (e.g., 'INDEA'), then the 3-char ISO code ('IND').
+    """
+    if country_key in rates_dict:
+        return rates_dict[country_key]
+    if len(country_key) > 3 and country_key[:3] in rates_dict:
+        return rates_dict[country_key[:3]]
+    return default
 
 
 def read_base_scenario():
@@ -727,12 +766,12 @@ def read_demand_data(demand_file_path):
 
         tech_str = str(tech_code).strip().upper()
 
-        # Extract country code from ELCxxxXX02 format (positions 3-6, 0-indexed)
-        # Example: ELCARGXX02 -> ARG
-        if not tech_str.startswith('ELC') or len(tech_str) < 6:
+        # Extract country/region key from ELC fuel code
+        # Single-region: ELCBGDXX02 -> BGD, Multi-region: ELCINDEA02 -> INDEA
+        if not tech_str.startswith('ELC') or len(tech_str) < 10:
             continue
 
-        country_code = tech_str[3:6]
+        country_code = elc_country_key(tech_str)
 
         if country_code not in demand_data:
             demand_data[country_code] = {}
@@ -1004,16 +1043,27 @@ class SecondaryTechsUpdater:
         if instruction.get('is_ostram'):
             return True, None
 
-        # Validate that tech contains country code (for PWR technologies: PWRTRNARGXX -> ARG is at position 6-8)
+        # Validate that tech contains country code
+        # For PWR technologies: PWRHYDBGDXX -> BGD at positions 6-8
+        # For multi-region countries: PWRHYDINDEA -> country+region INDEA at positions 6-10
         tech = instruction['tech'].upper()
         country = instruction['country'].upper()
 
         if tech.startswith('PWR'):
-            # For PWR technologies, country code is at positions 6-8
             if len(tech) >= 9:
-                tech_country = tech[6:9]
-                if tech_country != country:
-                    return False, f"Tech '{instruction['tech']}' contains country code '{tech_country}', but '{country}' was specified"
+                if len(country) == 5:
+                    # Multi-region: compare country+region (positions 6-10)
+                    if len(tech) >= 11:
+                        tech_country_region = tech[6:11]
+                        if tech_country_region != country:
+                            return False, f"Tech '{instruction['tech']}' contains country+region '{tech_country_region}', but '{country}' was specified"
+                    else:
+                        return False, f"Tech '{instruction['tech']}' has invalid format (too short for multi-region PWR technology)"
+                else:
+                    # Single-region: compare country only (positions 6-8)
+                    tech_country = tech[6:9]
+                    if tech_country != country:
+                        return False, f"Tech '{instruction['tech']}' contains country code '{tech_country}', but '{country}' was specified"
             else:
                 return False, f"Tech '{instruction['tech']}' has invalid format (too short for PWR technology)"
         else:
@@ -1513,6 +1563,13 @@ class SecondaryTechsUpdater:
         self.log("UPDATING ELECTRICITY DEMAND")
         self.log("=" * 80)
 
+        # Determine demand fuel suffix: ELC..03 when DSPTRN dispatch is enabled, ELC..02 otherwise
+        enable_dsptrn = get_enable_dsptrn()
+        demand_suffix = "03" if enable_dsptrn else "02"
+        demand_label = "dispatch-ready" if enable_dsptrn else "transmission lines"
+        if enable_dsptrn:
+            self.log("DSPTRN dispatch enabled: using ELC*XX03 fuel codes for demand")
+
         ref_year = self.generation_data['reference_year']
         growth_rates = self.ostram_config.get('demand_growth_rates', {})
 
@@ -1557,27 +1614,47 @@ class SecondaryTechsUpdater:
                         except:
                             pass
 
-                # Find existing ELC*XX02 country codes and their row indices
-                # Format: ELC + country(3) + XX02 = 10 characters (e.g., ELCARGXX02)
-                existing_countries = {}  # {country_code: row_idx}
+                # Find existing ELC demand fuel codes and their row indices
+                # Format: ELC + country(3) + region(2) + 02|03 = 10 characters
+                # Single-region: ELCBGDXX02 (region=XX), Multi-region: ELCINDEA02 (region=EA)
+                existing_countries = {}  # {country_key: row_idx}
                 for row_idx in range(2, ws.max_row + 1):
                     fuel_code = ws.cell(row_idx, 2).value
                     if fuel_code:
                         fuel_str = str(fuel_code).strip().upper()
-                        if fuel_str.startswith('ELC') and fuel_str.endswith('XX02') and len(fuel_str) == 10:
-                            country_code = fuel_str[3:6]
-                            existing_countries[country_code] = row_idx
+                        if (fuel_str.startswith('ELC') and len(fuel_str) == 10
+                                and fuel_str[-2:] in ('02', '03')):
+                            country_key = elc_country_key(fuel_str)
+                            region = fuel_str[6:8]
+                            existing_countries[country_key] = row_idx
+                            # Update fuel code to target suffix if needed
+                            current_suffix = fuel_str[-2:]
+                            if current_suffix != demand_suffix:
+                                new_fuel = f"ELC{fuel_str[3:8]}{demand_suffix}"
+                                ws.cell(row_idx, 2, new_fuel)
+                                # Also update the Name column (col 3)
+                                name_val = ws.cell(row_idx, 3).value
+                                if name_val:
+                                    name_val = str(name_val).replace(
+                                        'transmission lines', demand_label
+                                    ).replace(
+                                        'dispatch-ready', demand_label
+                                    )
+                                    ws.cell(row_idx, 3, name_val)
 
-                # Update existing ELC*XX02 rows with generation data
-                for country_code, row_idx in existing_countries.items():
+                # Update existing ELC demand rows with generation data
+                for country_key, row_idx in existing_countries.items():
                     # Check if we have generation data for this country
-                    if country_code not in self.generation_data['data']:
+                    # OSTRAM data uses 3-char ISO codes, so try both the key and its ISO3 prefix
+                    iso3 = country_key[:3]
+                    if country_key not in self.generation_data['data'] and iso3 not in self.generation_data['data']:
                         continue
 
-                    base_demand_pj = self.generation_data['data'][country_code]
-                    growth_rate = growth_rates.get(country_code, 0.02)  # Default 2%
+                    base_demand_pj = self.generation_data['data'].get(country_key,
+                                     self.generation_data['data'].get(iso3))
+                    growth_rate = lookup_growth_rate(growth_rates, country_key)
 
-                    self.log(f"  {country_code}: Base={base_demand_pj:.2f} PJ, Growth={growth_rate*100:.1f}%")
+                    self.log(f"  {country_key}: Base={base_demand_pj:.2f} PJ, Growth={growth_rate*100:.1f}%")
 
                     # Update each year with linear growth
                     for year in all_years:
@@ -1589,7 +1666,10 @@ class SecondaryTechsUpdater:
                             # Apply scenario-specific demand adjustment if defined
                             # Formula: Demand(scenario, year) = Base_Demand(year) × (1 + adjustment_percentage)
                             adjustments_dict = self.ostram_config.get('scenarios_demand_adjustments', {})
-                            adjustment_key = (country_code, scenario)
+                            adjustment_key = (country_key, scenario)
+                            if adjustment_key not in adjustments_dict:
+                                # Fallback to 3-char ISO code for backwards compatibility
+                                adjustment_key = (iso3, scenario)
                             if adjustment_key in adjustments_dict:
                                 year_adjustments = adjustments_dict[adjustment_key]
                                 if year in year_adjustments:
@@ -1601,8 +1681,12 @@ class SecondaryTechsUpdater:
                             ws.cell(row_idx, year_col_map[year], demand_year)
                             demand_changes += 1
 
-                # Add missing countries that have generation data but aren't in the sheet
-                missing_countries = set(self.generation_data['data'].keys()) - set(existing_countries.keys())
+                # Add missing countries that have generation data but aren't in the sheet.
+                # OSTRAM generation data uses 3-char ISO codes (e.g., "IND"), while
+                # existing_countries uses region-aware keys (e.g., "INDEA", "INDNE").
+                # A country is covered if any of its regions already exist in the sheet.
+                existing_iso3s = {key[:3] for key in existing_countries.keys()}
+                missing_countries = set(self.generation_data['data'].keys()) - existing_iso3s
                 if missing_countries:
                     self.log(f"  Adding missing countries: {', '.join(sorted(missing_countries))}")
 
@@ -1614,52 +1698,65 @@ class SecondaryTechsUpdater:
                         if header:
                             fixed_col_map[str(header)] = col_idx
 
-                    # Add a row for each missing country
-                    for country_code in sorted(missing_countries):
-                        base_demand_pj = self.generation_data['data'][country_code]
-                        growth_rate = growth_rates.get(country_code, 0.02)
+                    # Add a row for each missing country/region
+                    for iso3_code in sorted(missing_countries):
+                        base_demand_pj = self.generation_data['data'][iso3_code]
 
                         # Find country name from OSTRAM mapping
                         country_name = None
                         for name, code in OSTRAM_COUNTRY_MAPPING.items():
-                            if code == country_code:
+                            if code == iso3_code:
                                 country_name = name
                                 break
 
-                        # Create new row
-                        new_row = ws.max_row + 1
-                        fuel_code = f"ELC{country_code}XX02"
+                        # For multi-region countries, create one row per region
+                        # For single-region countries, create one row with XX
+                        if iso3_code in MULTI_REGION_MAP:
+                            regions = MULTI_REGION_MAP[iso3_code]
+                        else:
+                            regions = ['XX']
 
-                        ws.cell(new_row, fixed_col_map.get('Demand/Share', 1), 'Demand')
-                        ws.cell(new_row, fixed_col_map.get('Fuel/Tech', 2), fuel_code)
-                        ws.cell(new_row, fixed_col_map.get('Name', 3), f"Output demand of transmission lines in {country_name or country_code}")
-                        ws.cell(new_row, fixed_col_map.get('Ref.Cap.BY', 4), 'not needed')
-                        ws.cell(new_row, fixed_col_map.get('Ref.OAR.BY', 5), 'not needed')
-                        ws.cell(new_row, fixed_col_map.get('Ref.km.BY', 6), 'not needed')
-                        ws.cell(new_row, fixed_col_map.get('Projection.Mode', 7), 'User defined')
-                        ws.cell(new_row, fixed_col_map.get('Projection.Parameter', 8), 0)
+                        for region in regions:
+                            region_key = iso3_code + region if region != 'XX' else iso3_code
+                            growth_rate = lookup_growth_rate(growth_rates, region_key)
+                            fuel_code = f"ELC{iso3_code}{region}{demand_suffix}"
+                            region_label = f" ({region})" if region != 'XX' else ""
 
-                        self.log(f"  + {country_code}: Base={base_demand_pj:.2f} PJ, Growth={growth_rate*100:.1f}%")
+                            # Create new row
+                            new_row = ws.max_row + 1
 
-                        # Add year values
-                        for year in all_years:
-                            if year in year_col_map:
-                                years_diff = year - ref_year
-                                demand_year = base_demand_pj * (1 + growth_rate * years_diff)
+                            ws.cell(new_row, fixed_col_map.get('Demand/Share', 1), 'Demand')
+                            ws.cell(new_row, fixed_col_map.get('Fuel/Tech', 2), fuel_code)
+                            ws.cell(new_row, fixed_col_map.get('Name', 3), f"Output demand of {demand_label} in {country_name or iso3_code}{region_label}")
+                            ws.cell(new_row, fixed_col_map.get('Ref.Cap.BY', 4), 'not needed')
+                            ws.cell(new_row, fixed_col_map.get('Ref.OAR.BY', 5), 'not needed')
+                            ws.cell(new_row, fixed_col_map.get('Ref.km.BY', 6), 'not needed')
+                            ws.cell(new_row, fixed_col_map.get('Projection.Mode', 7), 'User defined')
+                            ws.cell(new_row, fixed_col_map.get('Projection.Parameter', 8), 0)
 
-                                # Apply scenario-specific demand adjustment if defined
-                                adjustments_dict = self.ostram_config.get('scenarios_demand_adjustments', {})
-                                adjustment_key = (country_code, scenario)
-                                if adjustment_key in adjustments_dict:
-                                    year_adjustments = adjustments_dict[adjustment_key]
-                                    if year in year_adjustments:
-                                        adjustment_pct = year_adjustments[year]
-                                        demand_year = demand_year * (1 + adjustment_pct)
+                            self.log(f"  + {fuel_code}: Base={base_demand_pj:.2f} PJ, Growth={growth_rate*100:.1f}%")
 
-                                demand_year = round(demand_year, 2)
+                            # Add year values
+                            for year in all_years:
+                                if year in year_col_map:
+                                    years_diff = year - ref_year
+                                    demand_year = base_demand_pj * (1 + growth_rate * years_diff)
 
-                                ws.cell(new_row, year_col_map[year], demand_year)
-                                demand_changes += 1
+                                    # Apply scenario-specific demand adjustment if defined
+                                    adjustments_dict = self.ostram_config.get('scenarios_demand_adjustments', {})
+                                    adjustment_key = (region_key, scenario)
+                                    if adjustment_key not in adjustments_dict:
+                                        adjustment_key = (iso3_code, scenario)
+                                    if adjustment_key in adjustments_dict:
+                                        year_adjustments = adjustments_dict[adjustment_key]
+                                        if year in year_adjustments:
+                                            adjustment_pct = year_adjustments[year]
+                                            demand_year = demand_year * (1 + adjustment_pct)
+
+                                    demand_year = round(demand_year, 2)
+
+                                    ws.cell(new_row, year_col_map[year], demand_year)
+                                    demand_changes += 1
 
                 # Save
                 wb.save(demand_path)
@@ -1777,19 +1874,22 @@ class SecondaryTechsUpdater:
                         except (ValueError, TypeError):
                             pass
 
-                # Find ELC*XX02 rows and apply adjustments
+                # Find ELC demand rows and apply adjustments
                 for row_idx in range(2, ws.max_row + 1):
                     fuel_code = ws.cell(row_idx, 2).value
                     if not fuel_code:
                         continue
 
                     fuel_str = str(fuel_code).strip().upper()
-                    if not (fuel_str.startswith('ELC') and fuel_str.endswith('XX02') and len(fuel_str) == 10):
+                    if not (fuel_str.startswith('ELC') and len(fuel_str) == 10
+                            and fuel_str[-2:] in ('02', '03')):
                         continue
 
-                    country_code = fuel_str[3:6]  # e.g., 'ARG' from 'ELCARGXX02'
+                    country_code = elc_country_key(fuel_str)
+                    # Trade balance data uses 3-char ISO codes
+                    iso3 = country_code[:3]
 
-                    if country_code not in self.trade_balance_data:
+                    if iso3 not in self.trade_balance_data:
                         continue  # No trade data for this country
 
                     first_year_logged = False
@@ -1807,7 +1907,7 @@ class SecondaryTechsUpdater:
                         except (ValueError, TypeError):
                             continue
 
-                        imports_gwh, exports_gwh = self._get_trade_for_year(country_code, year)
+                        imports_gwh, exports_gwh = self._get_trade_for_year(iso3, year)
 
                         # Adjust: New_Demand = Current - Exports + Imports (all in PJ)
                         imports_pj = imports_gwh * GWH_TO_PJ
@@ -2046,7 +2146,7 @@ class SecondaryTechsUpdater:
                         # After target year, grow proportionally with demand
                         # Get demand growth rate for this country
                         growth_rates = self.ostram_config.get('demand_growth_rates', {})
-                        demand_growth_rate = growth_rates.get(country_code, 0.02)  # Default 2%
+                        demand_growth_rate = lookup_growth_rate(growth_rates, country_code)  # Default 2%
 
                         # Apply compound growth from last target year
                         years_beyond = year - last_target_year
@@ -2652,7 +2752,7 @@ class SecondaryTechsUpdater:
                     # After target year, grow proportionally with demand
                     # Get demand growth rate for this country
                     growth_rates = self.ostram_config.get('demand_growth_rates', {})
-                    demand_growth_rate = growth_rates.get(country_code, 0.02)  # Default 2%
+                    demand_growth_rate = lookup_growth_rate(growth_rates, country_code)  # Default 2%
 
                     # Apply compound growth from last target year
                     years_beyond = year - last_target_year
@@ -3175,10 +3275,11 @@ class SecondaryTechsUpdater:
                                     pass
 
                 # Get unique countries from the technology codes
+                # Uses pwr_country_key to get region-aware keys for multi-region countries
                 countries_in_sheet = set()
                 for tech_str in set(lower_limit_rows.keys()) | set(upper_limit_rows.keys()):
                     if tech_str.startswith('PWR') and len(tech_str) >= 9:
-                        country_code = tech_str[6:9]
+                        country_code = pwr_country_key(tech_str)
                         countries_in_sheet.add(country_code)
 
                 # For DemandBased method: read demand data and prepare BAU shares for NDC override
@@ -3211,11 +3312,14 @@ class SecondaryTechsUpdater:
                 # Process each country
                 for country_code in countries_in_sheet:
                     # Check if we have generation data for this country
-                    if country_code not in self.generation_data['data']:
+                    # OSTRAM data uses 3-char ISO codes, so try both the key and its ISO3 prefix
+                    iso3 = country_code[:3]
+                    if country_code not in self.generation_data['data'] and iso3 not in self.generation_data['data']:
                         continue
 
-                    base_generation_pj = self.generation_data['data'][country_code]
-                    growth_rate = growth_rates.get(country_code, 0.02)
+                    base_generation_pj = self.generation_data['data'].get(country_code,
+                                         self.generation_data['data'].get(iso3))
+                    growth_rate = lookup_growth_rate(growth_rates, country_code)
 
                     # Calculate technology shares using renewability targets
                     tech_shares = self.calculate_technology_shares(country_code, scenario, all_years)
