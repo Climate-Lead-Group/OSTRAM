@@ -144,8 +144,6 @@ def get_multi_region_map():
     # Return only countries with multiple regions (not just a single XX)
     return {iso3: sorted(regions) for iso3, regions in by_iso3.items()
             if not (len(regions) == 1 and regions[0] == 'XX')}
-
-
 def get_raw_config():
     """Returns the full raw YAML dict (for A2_AddTx transmission params)."""
     return _load_raw()

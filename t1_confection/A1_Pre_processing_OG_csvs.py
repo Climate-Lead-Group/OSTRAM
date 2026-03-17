@@ -17,7 +17,8 @@ from pathlib import Path
 import yaml
 from Z_AUX_config_loader import (
     get_ostram_country_mapping, get_iso_country_map, get_code_to_energy,
-    get_first_year, get_add_missing_countries_from_ostram, get_pwr_cleanup_mode
+    get_first_year, get_add_missing_countries_from_ostram, get_pwr_cleanup_mode,
+    get_force_empty_max_capacity_investment_pwr, get_enable_dsptrn
 )
 
 def list_scenario_suffixes(base_dir: Path) -> List[str]:
@@ -55,6 +56,8 @@ OLADE_COUNTRY_MAPPING = get_ostram_country_mapping()
 iso_country_map = get_iso_country_map()
 code_to_energy = get_code_to_energy()
 
+# Flag: force Projection.Mode=EMPTY for TotalAnnualMaxCapacityInvestment on PWR techs
+FORCE_EMPTY_MAX_CAP_INV_PWR = get_force_empty_max_capacity_investment_pwr()                                                                           
 #-------------------------------------Formated functions--------------------------------------------#
 def read_csv_files(input_dir):
     """Reads all CSV files in the given directory and returns a dictionary of DataFrames."""
@@ -867,6 +870,24 @@ def consolidate_regions(og_data: Dict[str, pd.DataFrame]) -> Dict[str, pd.DataFr
                 unified=unified,
                 agg_method=agg_method
             )
+        # Consolidate set DataFrames (STORAGE, TECHNOLOGY, FUEL)
+        # These only have a VALUE column with codes that contain regional patterns
+        for set_name in ["STORAGE", "TECHNOLOGY", "FUEL"]:
+            if set_name not in og_data:
+                continue
+            df_set = og_data[set_name]
+            if "VALUE" not in df_set.columns:
+                continue
+            original_count = len(df_set)
+            df_set = df_set.copy()
+            df_set["VALUE"] = df_set["VALUE"].apply(
+                lambda x: replace_region_in_code(str(x), country_code, regions, unified) if pd.notna(x) else x
+            )
+            df_set = df_set.drop_duplicates(subset=["VALUE"]).reset_index(drop=True)
+            consolidated = original_count - len(df_set)
+            if consolidated > 0:
+                print(f"    {set_name} set: {original_count} -> {len(df_set)} entries (deduplicated)")
+            og_data[set_name] = df_set                                                                
 
         # Remove internal interconnections for this country
         print(f"\n    Removing internal interconnections ({country_code}{unified}{country_code}{unified}):")
@@ -1684,6 +1705,22 @@ def update_demand_profiles(df, output_excel_path, input_excel_path):
     ]
     df_timeslices = df_timeslices[fixed_cols + year_cols]
 
+    # When DSPTRN dispatch is enabled, convert all ELC*02 → ELC*03 fuel codes
+    if get_enable_dsptrn():
+        import re
+        elc02_pat = re.compile(r'^(ELC[A-Z]{5})02$')
+        mask = df_timeslices['Fuel/Tech'].str.match(r'^ELC[A-Z]{5}02$', na=False)
+        if mask.any():
+            df_timeslices.loc[mask, 'Fuel/Tech'] = (
+                df_timeslices.loc[mask, 'Fuel/Tech'].str.replace(elc02_pat, r'\g<1>03', regex=True)
+            )
+            df_timeslices.loc[mask, 'Name'] = (
+                df_timeslices.loc[mask, 'Name']
+                .str.replace('transmission lines', 'dispatch-ready', regex=False)
+                .str.replace('transmission line output', 'dispatch-ready', regex=False)
+            )
+            print(f"[Info] DSPTRN enabled: converted {mask.sum()} ELC*02 → ELC*03 in Profiles")
+
     # Update the Excel sheet
     wb = load_workbook(input_excel_path)
     ws = wb["Profiles"]
@@ -1797,6 +1834,22 @@ def update_demand_demand_projection(df, output_excel_path, input_excel_path):
         "Ref.Cap.BY", "Ref.OAR.BY", "Ref.km.BY", "Projection.Mode", "Projection.Parameter"
     ]
     df_demand_projection = df_demand_projection[fixed_cols + year_cols]
+
+    # When DSPTRN dispatch is enabled, convert all ELC*02 → ELC*03 fuel codes
+    if get_enable_dsptrn():
+        import re
+        elc02_pat = re.compile(r'^(ELC[A-Z]{5})02$')
+        mask = df_demand_projection['Fuel/Tech'].str.match(r'^ELC[A-Z]{5}02$', na=False)
+        if mask.any():
+            df_demand_projection.loc[mask, 'Fuel/Tech'] = (
+                df_demand_projection.loc[mask, 'Fuel/Tech'].str.replace(elc02_pat, r'\g<1>03', regex=True)
+            )
+            df_demand_projection.loc[mask, 'Name'] = (
+                df_demand_projection.loc[mask, 'Name']
+                .str.replace('transmission lines', 'dispatch-ready', regex=False)
+                .str.replace('transmission line output', 'dispatch-ready', regex=False)
+            )
+            print(f"[Info] DSPTRN enabled: converted {mask.sum()} ELC*02 → ELC*03 in Demand_Projection")
 
     # Update the Excel sheet
     wb = load_workbook(output_excel_path)
@@ -2103,6 +2156,11 @@ def update_parametrization_primary_secondary_demand_techs(og_data, output_excel_
                 for y in available_years:
                     record[int(y)] = year_values.get(y, float("nan"))
 
+            # Force EMPTY for TotalAnnualMaxCapacityInvestment on all PWR techs (if flag is active)
+            if (FORCE_EMPTY_MAX_CAP_INV_PWR
+                    and param == "TotalAnnualMaxCapacityInvestment"
+                    and tech.startswith("PWR")):
+                record["Projection.Mode"] = "EMPTY"                                                                                                   
             target.append(record)
 
     # Use MODEL_YEARS as fallback if no data provided years

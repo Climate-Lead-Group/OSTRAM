@@ -2,15 +2,17 @@
 """
 Transmission Maps Generator for OSTRAM
 
-Generates a standalone interactive HTML file with two map views:
+Generates a standalone interactive HTML file with three map views:
   - Transmission Capacity (GW/TW)
   - Transmission Flow (PJ/TWh/GWh)
+  - Load-Capacity Ratio (ratio/%)
 
 Features:
   - Year selector (all years discovered from data)
   - Scenario selector (all scenarios discovered from data)
-  - Unit toggle (GW↔TW for capacity; PJ↔TWh↔GWh for flow)
+  - Unit toggle (GW↔TW for capacity; PJ↔TWh↔GWh for flow; ratio↔% for load-capacity)
   - Interactive Plotly Scattergeo maps with hover info
+  - Color-coded lines for load-capacity ratio (green→red by utilization)
   - PNG download button
   - Fully standalone (no server required)
 
@@ -24,6 +26,7 @@ import pandas as pd
 import json
 import os
 import re
+import glob
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -33,12 +36,33 @@ INTERCONNECTION_PATTERN = re.compile(r'^TRN[A-Z]{5}[A-Z]{5}$')
 
 CAPACITY_COL = 'TotalCapacityAnnual'
 FLOW_COL = 'ProductionByTechnologyAnnual'
+PRODUCTION_BY_TIMESLICE_COL = 'ProductionByTechnology'
+CAPACITY_TO_ACTIVITY_COL = 'CapacityToActivityUnit'
+YEAR_SPLIT_COL = 'YearSplit'
 
 
+def find_combined_csv(script_dir):
+    """Find the combined inputs/outputs CSV by glob pattern."""
+    pattern = str(script_dir / '*_Combined_Inputs_Outputs.csv')
+    matches = glob.glob(pattern)
+    if matches:
+        return Path(matches[0])
+    return None
 def load_data(csv_path):
-    """Load the combined CSV and filter to interconnection technologies."""
+    """Load the combined CSV and filter to interconnection technologies.
+
+    Also extracts the global YearSplit lookup (TIMESLICE -> fraction)
+    from the full CSV before filtering, since YearSplit is not
+    technology-specific.
+
+    Returns (filtered_df, year_split_dict).
+    """
     print(f"  Loading data from {csv_path} ...")
     df = pd.read_csv(csv_path, low_memory=False)
+
+    # Extract YearSplit before filtering (it is a global parameter)
+    ys_rows = df[df[YEAR_SPLIT_COL].notna()][['TIMESLICE', YEAR_SPLIT_COL]].drop_duplicates()
+    year_split = dict(zip(ys_rows['TIMESLICE'], ys_rows[YEAR_SPLIT_COL]))
 
     mask = df['TECHNOLOGY'].astype(str).apply(
         lambda t: bool(INTERCONNECTION_PATTERN.match(t))
@@ -46,7 +70,7 @@ def load_data(csv_path):
     df = df[mask].copy()
     print(f"  Found {len(df):,} rows with interconnection technologies")
     print(f"  Unique interconnections: {df['TECHNOLOGY'].nunique()}")
-    return df
+    return df, year_split
 
 
 def load_centerpoints(csv_path):
@@ -68,10 +92,10 @@ def extract_from_to(tech):
     return tech[3:8], tech[8:13]
 
 
-def prepare_json_data(df, centerpoints):
+def prepare_json_data(df, centerpoints, year_split):
     """Prepare all data as nested dicts for JSON embedding in HTML.
 
-    Returns two dicts (capacity_data, flow_data) structured as:
+    Returns three dicts (capacity_data, flow_data, ratio_data) structured as:
       { scenario: { year: [ {from, to, from_lat, from_lon, to_lat, to_lon, value}, ... ] } }
     """
     df = df.copy()
@@ -88,7 +112,7 @@ def prepare_json_data(df, centerpoints):
 
     if df.empty:
         print("  WARNING: No interconnections match known centerpoints!")
-        return {}, {}
+        return {}, {}, {}
 
     # Add coordinates
     df['from_lat'] = df['FROM'].map(lambda r: centerpoints[r]['lat'])
@@ -96,15 +120,21 @@ def prepare_json_data(df, centerpoints):
     df['to_lat'] = df['TO'].map(lambda r: centerpoints[r]['lat'])
     df['to_lon'] = df['TO'].map(lambda r: centerpoints[r]['long'])
 
+    # Build CapacityToActivityUnit lookup: TECHNOLOGY -> value
+    cta_rows = df[df[CAPACITY_TO_ACTIVITY_COL].notna()][['TECHNOLOGY', CAPACITY_TO_ACTIVITY_COL]].drop_duplicates()
+    cta_map = dict(zip(cta_rows['TECHNOLOGY'], cta_rows[CAPACITY_TO_ACTIVITY_COL]))
+
     scenarios = sorted(df['Scenario'].dropna().unique().tolist())
     years = sorted(df['YEAR'].unique().tolist())
 
     capacity_data = {}
     flow_data = {}
+    ratio_data = {}
 
     for scenario in scenarios:
         capacity_data[scenario] = {}
         flow_data[scenario] = {}
+        ratio_data[scenario] = {}
         sdf = df[df['Scenario'] == scenario]
 
         for year in years:
@@ -142,16 +172,57 @@ def prepare_json_data(df, centerpoints):
                 for _, row in flw_agg.iterrows()
             ]
 
+            # --- Load-Capacity Ratio ---
+            pbt = ydf[
+                ydf[PRODUCTION_BY_TIMESLICE_COL].notna()
+                & (ydf[PRODUCTION_BY_TIMESLICE_COL] != 0)
+                & ydf['TIMESLICE'].notna()
+            ].copy()
+            cap_nonzero = ydf[ydf[CAPACITY_COL].notna() & (ydf[CAPACITY_COL] != 0)]
+
+            if not pbt.empty and not cap_nonzero.empty and year_split:
+                pbt['_ys'] = pbt['TIMESLICE'].map(year_split)
+                pbt = pbt[pbt['_ys'].notna() & (pbt['_ys'] > 0)]
+                pbt['_rate'] = pbt[PRODUCTION_BY_TIMESLICE_COL] / pbt['_ys']
+
+                # Max rate per interconnection
+                max_rate = (
+                    pbt.groupby(['TECHNOLOGY', 'FROM', 'TO', 'from_lat', 'from_lon', 'to_lat', 'to_lon'])
+                    ['_rate'].max().reset_index()
+                )
+
+                # Capacity per technology
+                cap_by_tech = (
+                    cap_nonzero.groupby(['TECHNOLOGY'])[CAPACITY_COL].sum().reset_index()
+                )
+
+                # Merge and compute ratio
+                merged = max_rate.merge(cap_by_tech, on='TECHNOLOGY', how='inner')
+                merged['_cta'] = merged['TECHNOLOGY'].map(cta_map).fillna(31.536)
+                merged['_ratio'] = merged['_rate'] / (merged[CAPACITY_COL] * merged['_cta'])
+
+                ratio_data[scenario][str(year)] = [
+                    {
+                        'from': row['FROM'], 'to': row['TO'],
+                        'from_lat': row['from_lat'], 'from_lon': row['from_lon'],
+                        'to_lat': row['to_lat'], 'to_lon': row['to_lon'],
+                        'value': round(float(row['_ratio']), 4)
+                    }
+                    for _, row in merged.iterrows()
+                ]
+            else:
+                ratio_data[scenario][str(year)] = []
+
     print(f"  Scenarios: {scenarios}")
     print(f"  Years: {years[0]}-{years[-1]} ({len(years)} years)")
 
-    return capacity_data, flow_data
+    return capacity_data, flow_data, ratio_data
 
 
-def build_node_list(centerpoints, capacity_data, flow_data):
+def build_node_list(centerpoints, capacity_data, flow_data, ratio_data):
     """Build list of all nodes involved in any interconnection."""
     nodes = set()
-    for scenario_data in [capacity_data, flow_data]:
+    for scenario_data in [capacity_data, flow_data, ratio_data]:
         for scenario in scenario_data.values():
             for year_links in scenario.values():
                 for link in year_links:
@@ -164,11 +235,12 @@ def build_node_list(centerpoints, capacity_data, flow_data):
     ]
 
 
-def generate_html(capacity_data, flow_data, nodes, output_path):
+def generate_html(capacity_data, flow_data, ratio_data, nodes, output_path):
     """Generate standalone HTML file with interactive transmission maps."""
 
     capacity_json = json.dumps(capacity_data)
     flow_json = json.dumps(flow_data)
+    ratio_json = json.dumps(ratio_data)
     nodes_json = json.dumps(nodes)
 
     html = f"""<!DOCTYPE html>
@@ -247,6 +319,7 @@ def generate_html(capacity_data, flow_data, nodes, output_path):
 // ─── Embedded data ───────────────────────────────────────────────
 const capacityData = {capacity_json};
 const flowData = {flow_json};
+const ratioData = {ratio_json};
 const nodes = {nodes_json};
 
 // ─── Unit definitions ────────────────────────────────────────────
@@ -259,12 +332,16 @@ const UNITS = {{
     {{ label: 'PJ', factor: 1 }},
     {{ label: 'TWh', factor: 0.277778 }},
     {{ label: 'GWh', factor: 277.778 }}
+  ],
+  ratio: [
+    {{ label: 'Ratio', factor: 1 }},
+    {{ label: '%', factor: 100 }}
   ]
 }};
 
 // ─── State ───────────────────────────────────────────────────────
 let currentTab = 'capacity';
-let currentUnit = {{ capacity: 0, flow: 0 }};
+let currentUnit = {{ capacity: 0, flow: 0, ratio: 0 }};
 let currentScenario = '';
 let currentYear = '';
 
@@ -272,10 +349,11 @@ let currentYear = '';
 function init() {{
   // Tabs
   const tabsEl = document.getElementById('tabsContainer');
-  ['capacity', 'flow'].forEach(t => {{
+  const tabLabels = {{ capacity: 'Transmission Capacity', flow: 'Transmission Flow', ratio: 'Load-Capacity Ratio' }};
+  ['capacity', 'flow', 'ratio'].forEach(t => {{
     const btn = document.createElement('div');
     btn.className = 'tab' + (t === currentTab ? ' active' : '');
-    btn.textContent = t === 'capacity' ? 'Transmission Capacity' : 'Transmission Flow';
+    btn.textContent = tabLabels[t];
     btn.onclick = () => {{ currentTab = t; updateAll(); }};
     tabsEl.appendChild(btn);
   }});
@@ -297,6 +375,8 @@ function init() {{
   for (const sc of Object.values(capacityData))
     for (const y of Object.keys(sc)) allYears.add(y);
   for (const sc of Object.values(flowData))
+    for (const y of Object.keys(sc)) allYears.add(y);
+  for (const sc of Object.values(ratioData))
     for (const y of Object.keys(sc)) allYears.add(y);
   const years = [...allYears].sort((a, b) => Number(a) - Number(b));
   years.forEach(y => {{
@@ -328,9 +408,9 @@ function buildUnitToggle() {{
 
 function updateAll() {{
   // Update tab styling
+  const tabKeys = ['capacity', 'flow', 'ratio'];
   document.querySelectorAll('.tab').forEach((el, i) => {{
-    el.className = 'tab' + ((i === 0 && currentTab === 'capacity') ||
-                             (i === 1 && currentTab === 'flow') ? ' active' : '');
+    el.className = 'tab' + (tabKeys[i] === currentTab ? ' active' : '');
   }});
   buildUnitToggle();
   updateMap();
@@ -338,10 +418,12 @@ function updateAll() {{
 
 // ─── Map rendering ──────────────────────────────────────────────
 function updateMap() {{
-  const data = currentTab === 'capacity' ? capacityData : flowData;
+  const dataMap = {{ capacity: capacityData, flow: flowData, ratio: ratioData }};
+  const data = dataMap[currentTab];
   const unitDef = UNITS[currentTab][currentUnit[currentTab]];
   const links = (data[currentScenario] || {{}})[currentYear] || [];
-  const baseLabel = currentTab === 'capacity' ? 'Capacity' : 'Flow';
+  const labelMap = {{ capacity: 'Capacity', flow: 'Flow', ratio: 'Load-Capacity Ratio' }};
+  const baseLabel = labelMap[currentTab];
 
   // Compute max value for line width scaling
   const values = links.map(l => l.value * unitDef.factor);
@@ -353,12 +435,22 @@ function updateMap() {{
   links.forEach((link, idx) => {{
     const val = link.value * unitDef.factor;
     const width = Math.max(0.8, (val / maxVal) * 6);
+
+    // Color: green→red for ratio tab, fixed red for others
+    let lineColor = '#b71c1c';
+    if (currentTab === 'ratio') {{
+      const normalized = Math.min(Math.max(link.value, 0), 1);
+      const r = Math.round(220 * normalized + 30);
+      const g = Math.round(200 * (1 - normalized) + 30);
+      lineColor = `rgb(${{r}}, ${{g}}, 30)`;
+    }}
+
     traces.push({{
       type: 'scattergeo',
       lon: [link.from_lon, link.to_lon],
       lat: [link.from_lat, link.to_lat],
       mode: 'lines',
-      line: {{ width: width, color: '#b71c1c' }},
+      line: {{ width: width, color: lineColor }},
       hoverinfo: 'text',
       text: `${{link.from}} → ${{link.to}}: ${{val.toFixed(2)}} ${{unitDef.label}}`,
       showlegend: false
@@ -431,7 +523,8 @@ function updateMap() {{
 
 function downloadPNG() {{
   const unitDef = UNITS[currentTab][currentUnit[currentTab]];
-  const baseLabel = currentTab === 'capacity' ? 'TransmissionCapacity' : 'TransmissionFlow';
+  const dlLabels = {{ capacity: 'TransmissionCapacity', flow: 'TransmissionFlow', ratio: 'LoadCapacityRatio' }};
+  const baseLabel = dlLabels[currentTab];
   Plotly.downloadImage('map', {{
     format: 'png', width: 1600, height: 1000,
     filename: `${{baseLabel}}_${{currentScenario}}_${{currentYear}}_${{unitDef.label}}`
@@ -473,13 +566,13 @@ def main():
     print("OSTRAM Transmission Maps Generator")
     print("=" * 60)
 
-    df = load_data(str(csv_path))
+    df, year_split = load_data(str(csv_path))
     centerpoints = load_centerpoints(str(centerpoints_path))
 
-    capacity_data, flow_data = prepare_json_data(df, centerpoints)
-    node_list = build_node_list(centerpoints, capacity_data, flow_data)
+    capacity_data, flow_data, ratio_data = prepare_json_data(df, centerpoints, year_split)
+    node_list = build_node_list(centerpoints, capacity_data, flow_data, ratio_data)
 
-    generate_html(capacity_data, flow_data, node_list, str(output_path))
+    generate_html(capacity_data, flow_data, ratio_data, node_list, str(output_path))
 
     print("=" * 60)
     print(f"Done! Open {output_path}")
