@@ -1515,7 +1515,8 @@ class OldInputsMigrator:
         # Import A2_AddTx functions
         try:
             from A2_AddTx import (load_country_region_pairs, process_base_year,
-                                  process_projections, process_parametrization)
+                                  process_projections, process_parametrization,
+                                  process_demand)
         except ImportError:
             self.log("  WARNING: Could not import A2_AddTx, skipping DSPTRN injection", "WARNING")
             return
@@ -1533,6 +1534,7 @@ class OldInputsMigrator:
         base_path = str(scenario_dir / "A-O_AR_Model_Base_Year.xlsx")
         proj_path = str(scenario_dir / "A-O_AR_Projections.xlsx")
         param_path = str(scenario_dir / "A-O_Parametrization.xlsx")
+        demand_path = str(scenario_dir / "A-O_Demand.xlsx")
 
         try:
             if Path(base_path).exists():
@@ -1541,6 +1543,8 @@ class OldInputsMigrator:
                 process_projections(proj_path, pairs, enable_dsptrn=True)
             if Path(param_path).exists():
                 process_parametrization(param_path, pairs, yaml_data, enable_dsptrn=True)
+            if Path(demand_path).exists():
+                process_demand(demand_path, enable_dsptrn=True)
             self.log(f"  ✔ DSPTRN injected into {scenario}")
         except Exception as e:
             self.log(f"  ERROR injecting DSPTRN into {scenario}: {e}", "ERROR")
@@ -1597,6 +1601,7 @@ class OldInputsMigrator:
             self.migrate_demand(scenario)
             self.migrate_ar_projections(scenario)
             self.migrate_ar_model_base_year(scenario)
+            self.inject_dsptrn_if_missing(scenario)
 
         # 🎯 NORMALIZE TEMPORAL PROFILES AFTER ALL DEMAND MIGRATIONS
         self.log("")

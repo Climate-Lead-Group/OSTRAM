@@ -554,6 +554,67 @@ def process_parametrization(path, pairs, yaml_data, enable_dsptrn=False):
 
     print("✔ Parametrization file updated.")
 
+# ---------------------------------------------------------------------------
+# 4. Process A-O_Demand.xlsx
+# ---------------------------------------------------------------------------
+def process_demand(path, enable_dsptrn=False):
+    """Rewrite ELC…02 → ELC…03 in the Demand file when DSPTRN dispatch is enabled.
+
+    With the dispatch layer active the demand point moves from ELC…02
+    (transmission-line output) to ELC…03 (dispatch-ready electricity).
+    Both sheets (Demand_Projection and Profiles) are updated in-place.
+    """
+    if not enable_dsptrn:
+        return
+
+    print(f"Processing '{path}' (Demand – ELC02→ELC03) …")
+
+    elc02 = re.compile(r'^(ELC[A-Z]{5})02$')
+
+    with pd.ExcelWriter(path, engine='openpyxl', mode='a',
+                         if_sheet_exists='overlay') as writer:
+
+        # --- Demand_Projection sheet (Fuel/Tech in col B) ---
+        dp = pd.read_excel(path, sheet_name='Demand_Projection', engine='openpyxl')
+        fuel_col = 'Fuel/Tech'
+        name_col = 'Name'
+        updated = 0
+        for idx in dp.index:
+            fuel = str(dp.at[idx, fuel_col]) if pd.notna(dp.at[idx, fuel_col]) else ''
+            m = elc02.match(fuel)
+            if m:
+                dp.at[idx, fuel_col] = m.group(1) + '03'
+                if name_col in dp.columns and pd.notna(dp.at[idx, name_col]):
+                    dp.at[idx, name_col] = (
+                        str(dp.at[idx, name_col])
+                        .replace('transmission line', 'dispatch-ready')
+                        .replace('transmission lines', 'dispatch-ready')
+                    )
+                updated += 1
+        dp.to_excel(writer, sheet_name='Demand_Projection', index=False)
+        print(f"  Demand_Projection: {updated} fuel codes updated.")
+
+        # --- Profiles sheet (Fuel/Tech in col C) ---
+        pf = pd.read_excel(path, sheet_name='Profiles', engine='openpyxl')
+        updated = 0
+        for idx in pf.index:
+            fuel = str(pf.at[idx, fuel_col]) if pd.notna(pf.at[idx, fuel_col]) else ''
+            m = elc02.match(fuel)
+            if m:
+                pf.at[idx, fuel_col] = m.group(1) + '03'
+                if name_col in pf.columns and pd.notna(pf.at[idx, name_col]):
+                    pf.at[idx, name_col] = (
+                        str(pf.at[idx, name_col])
+                        .replace('transmission line', 'dispatch-ready')
+                        .replace('transmission lines', 'dispatch-ready')
+                    )
+                updated += 1
+        pf.to_excel(writer, sheet_name='Profiles', index=False)
+        print(f"  Profiles: {updated} fuel codes updated.")
+
+    print("✔ Demand file updated.")
+
+
 def list_scenario_suffixes(base_dir: Path) -> List[str]:
     """Return list like ['BAU_NoRPO','NDC','NDC+ELC'] from folders 'A1_Outputs_*'."""
     suffixes: List[str] = []
@@ -579,30 +640,33 @@ def main():
             "yaml": str(script_dir / "Config_country_codes.yaml"),
             "base": str(script_dir / f"A1_Outputs/A1_Outputs_{scen}/A-O_AR_Model_Base_Year.xlsx"),
             "proj": str(script_dir / f"A1_Outputs/A1_Outputs_{scen}/A-O_AR_Projections.xlsx"),
-            "param": str(script_dir / f"A1_Outputs/A1_Outputs_{scen}/A-O_Parametrization.xlsx")
+            "param": str(script_dir / f"A1_Outputs/A1_Outputs_{scen}/A-O_Parametrization.xlsx"),
+            "demand": str(script_dir / f"A1_Outputs/A1_Outputs_{scen}/A-O_Demand.xlsx"),
         }
         ap = argparse.ArgumentParser(description='Process CLG model spreadsheets.')
         ap.add_argument('--yaml', help='Config_country_codes.yaml')
         ap.add_argument('--base', help='A-O_AR_Model_Base_Year.xlsx')
         ap.add_argument('--proj', help='A-O_AR_Projections.xlsx')
         ap.add_argument('--param', help='A-O_Parametrization.xlsx')
+        ap.add_argument('--demand', help='A-O_Demand.xlsx')
         ap.set_defaults(**defaults)
         args = ap.parse_args()
-       
+
         pairs = load_country_region_pairs(args.yaml)
         if not pairs:
             sys.exit('No valid country/region codes found in YAML.')
-    
+
         # Optional detailed YAML per-tech/parameter values
         with open(args.yaml,'r',encoding='utf-8') as fh:
             yaml_data = yaml.safe_load(fh)
             if not isinstance(yaml_data, dict):
                 yaml_data = {}
-    
+
         enable_dsptrn = yaml_data.get('enable_dsptrn', False)
         process_base_year(args.base, pairs, enable_dsptrn=enable_dsptrn)
         process_projections(args.proj, pairs, enable_dsptrn=enable_dsptrn)
         process_parametrization(args.param, pairs, yaml_data, enable_dsptrn=enable_dsptrn)
+        process_demand(args.demand, enable_dsptrn=enable_dsptrn)
 
     print("\n  All done!")
 
