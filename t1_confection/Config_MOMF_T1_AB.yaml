@@ -27,7 +27,7 @@ base_scenario: 'BAU'
 
 # Configuration parameters
 ########################################################################################
-solver: 'cplex' # Could you use: 'glpk', 'cbc', 'cplex' and 'gurobi'
+solver: 'cbc' # Could you use: 'glpk', 'cbc', 'cplex' and 'gurobi'
 
 # For CBC use
 iteration_time: 20000
