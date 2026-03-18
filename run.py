@@ -145,7 +145,7 @@ def ensure_pip_available(env_name: str) -> None:
 
 def module_present(env_name: str, module: str) -> bool:
     code = (
-        "import importlib,sys;"
+        "import importlib.util,sys;"
         f"sys.exit(0) if importlib.util.find_spec('{module}') else sys.exit(1)"
     )
     try:
