@@ -15,29 +15,29 @@ from typing import List
 from pathlib import Path
 from Z_AUX_config_loader import get_renewable_fuels, get_iso_country_map
 
-# Country and technology mappings from centralized config
+# Mapeos de países y tecnologías desde configuración centralizada
 RENEWABLE_FUELS = get_renewable_fuels()
 iso_country_map = get_iso_country_map()
 
-# Pattern to detect 13-char TRN interconnection codes (e.g. TRNBGDXXNPLXX)
-# Does NOT match PWRTRN, TRNRPO, TRNNLI (those are <=11 chars)
+# Patrón para detectar códigos de interconexión TRN de 13 caracteres (ej. TRNBGDXXNPLXX)
+# NO coincide con PWRTRN, TRNRPO, TRNNLI (esos son <=11 caracteres)
 TRN_INTERCONNECTION = re.compile(r'^TRN[A-Z]{5}[A-Z]{5}$')
 
 # ---------------------------------------------------------------------------
-# Helper functions
+# Funciones auxiliares
 # ---------------------------------------------------------------------------
 def load_country_region_pairs(yaml_path):
-    """Return list of (country, region) tuples from the 'countries' key in YAML.
+    """Retorna lista de tuplas (país, región) desde la clave 'countries' en YAML.
 
-    3‑letter codes ⇒ region='XX'
-    5‑letter codes ⇒ last 2 letters are region
+    Códigos de 3 letras ⇒ region='XX'
+    Códigos de 5 letras ⇒ últimas 2 letras son la región
     """
     with open(yaml_path, 'r', encoding='utf-8') as fh:
         data = yaml.safe_load(fh)
 
     codes = data.get('countries', [])
     if not isinstance(codes, list):
-        print("⚠️  'countries' key in YAML is not a list", file=sys.stderr)
+        print("⚠️  La clave 'countries' en YAML no es una lista", file=sys.stderr)
         return []
 
     pairs = []
@@ -50,8 +50,8 @@ def load_country_region_pairs(yaml_path):
         elif len(code) == 5:
             pairs.append((code[:3], code[3:]))
         else:
-            print(f"⚠️  Skipping unrecognised code '{code}'", file=sys.stderr)
-    # Remove duplicates while preserving order
+            print(f"⚠️  Omitiendo código no reconocido '{code}'", file=sys.stderr)
+    # Eliminar duplicados preservando el orden
     seen = set()
     ordered = []
     for c,r in pairs:
@@ -68,19 +68,19 @@ def parse_pwr_code(tech_code):
     return fuel, country, region
 
 def ensure_columns(df, cols):
-    """Make sure DataFrame contains each column in *cols* (creates if absent)."""
+    """Asegurar que el DataFrame contenga cada columna en *cols* (crea si no existe)."""
     for col in cols:
         if col not in df.columns:
             df[col] = ""
     return df
 
 # ---------------------------------------------------------------------------
-# 1. Process A-O_AR_Model_Base_Year.xlsx
+# 1. Procesar A-O_AR_Model_Base_Year.xlsx
 # ---------------------------------------------------------------------------
 def process_base_year(path, pairs, enable_dsptrn=False):
-    print(f"Processing '{path}' …")
+    print(f"Procesando '{path}' …")
     with pd.ExcelWriter(path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-        # ---------- Secondary sheet ----------
+        # ---------- Hoja Secondary ----------
         sec = pd.read_excel(path, sheet_name='Secondary', engine='openpyxl')
         sec = ensure_columns(sec, ['Fuel.O','Fuel.O.Name'])
         mask_pwr = (
@@ -90,7 +90,7 @@ def process_base_year(path, pairs, enable_dsptrn=False):
             )
         sto_mode1 = ((sec['Mode.Operation'] == 1) & (sec['Tech'].str.startswith(('PWRLDS','PWRSDS'), na=False))) # Storage mode 1
         sto_mode2 = ((sec['Mode.Operation'] == 2) & (sec['Tech'].str.startswith(('PWRLDS','PWRSDS'), na=False))) # Storage mode 2
-        print(f"  Found {mask_pwr.sum()} power plant output techs in Secondary sheet.")
+        print(f"  Se encontraron {mask_pwr.sum()} techs de salida de planta en hoja Secondary.")
         for idx in sec[mask_pwr].index:
             tech = sec.at[idx,'Tech']
             try:
@@ -124,11 +124,11 @@ def process_base_year(path, pairs, enable_dsptrn=False):
                 continue
             sec.at[idx,'Fuel.O'] = f"ELC{country}{region}00"
             sec.at[idx,'Fuel.O.Name'] = f"Electricity, {countryname}, Region {region}, renewable power plant output"
-        # ---------- TRN interconnection: update fuel codes 02->03, 01->03 ----------
+        # ---------- Interconexión TRN: actualizar códigos de combustible 02->03, 01->03 ----------
         if enable_dsptrn:
             mask_trn = sec['Tech'].apply(lambda x: bool(TRN_INTERCONNECTION.match(str(x))))
             for idx in sec[mask_trn].index:
-                # --- Fuel.I: rewrite to ELC..03 (dispatch-ready for interconnection) ---
+                # --- Fuel.I: reescribir a ELC..03 (listo para despacho de interconexión) ---
                 fuel_i = str(sec.at[idx, 'Fuel.I'])
                 if fuel_i.startswith('ELC') and fuel_i.endswith('02'):
                     sec.at[idx, 'Fuel.I'] = fuel_i[:-2] + '03'
@@ -138,7 +138,7 @@ def process_base_year(path, pairs, enable_dsptrn=False):
                     sec.at[idx, 'Fuel.I'] = fuel_i[:-2] + '03'
                     sec.at[idx, 'Fuel.I.Name'] = str(sec.at[idx, 'Fuel.I.Name']).replace(
                         'NO renewable power plant output', 'dispatch-ready for interconnection')
-                # --- Fuel.O: rewrite to ELC..04 (imported electricity) ---
+                # --- Fuel.O: reescribir a ELC..04 (electricidad importada) ---
                 fuel_o = str(sec.at[idx, 'Fuel.O'])
                 if fuel_o.startswith('ELC') and fuel_o.endswith('02'):
                     sec.at[idx, 'Fuel.O'] = fuel_o[:-2] + '04'
@@ -153,7 +153,7 @@ def process_base_year(path, pairs, enable_dsptrn=False):
                     sec.at[idx, 'Fuel.O.Name'] = str(sec.at[idx, 'Fuel.O.Name']).replace(
                         'dispatch-ready for interconnection', 'imported electricity')
         sec.to_excel(writer, sheet_name='Secondary', index=False)
-        # ---------- Demand Techs sheet ----------
+        # ---------- Hoja Demand Techs ----------
         dtech = pd.read_excel(path, sheet_name='Demand Techs', engine='openpyxl')
         header = list(dtech.columns)
         dtech = dtech.iloc[0:0]  # clear rows
@@ -196,14 +196,14 @@ def process_base_year(path, pairs, enable_dsptrn=False):
                 }
                 rows.append(row)
 
-            # --- DSPTRN: Dispatch technology (2 modes of operation) ---
+            # --- DSPTRN: Tecnología de despacho (2 modos de operación) ---
             if enable_dsptrn:
                 dsp_tech = f"DSPTRN{country}{region}"
                 dsp_02   = f"ELC{country}{region}02"
                 dsp_03   = f"ELC{country}{region}03"
                 dsp_04   = f"ELC{country}{region}04"
                 dsp_name = f"Dispatch technology, {countryname}, Region {region}"
-                # Mode 1: ELC...02 -> ELC...03 (dispatch to interconnection)
+                # Modo 1: ELC...02 -> ELC...03 (despacho a interconexión)
                 rows.append({
                     'Mode.Operation': 1,
                     'Fuel.I': dsp_02,
@@ -217,7 +217,7 @@ def process_base_year(path, pairs, enable_dsptrn=False):
                     'Value.Fuel.O': 1,
                     'Unit.Fuel.O': ''
                 })
-                # Mode 2: ELC...04 -> ELC...03 (receive from interconnection)
+                # Modo 2: ELC...04 -> ELC...03 (recibir de interconexión)
                 rows.append({
                     'Mode.Operation': 2,
                     'Fuel.I': dsp_04,
@@ -235,15 +235,15 @@ def process_base_year(path, pairs, enable_dsptrn=False):
         dtech = pd.DataFrame(rows, columns=header)
         dtech.to_excel(writer, sheet_name='Demand Techs', index=False)
 
-    print("✔ Base‑year file updated.")
+    print("✔ Archivo de año base actualizado.")
 
 # ---------------------------------------------------------------------------
-# 2. Process A-O_AR_Projections.xlsx
+# 2. Procesar A-O_AR_Projections.xlsx
 # ---------------------------------------------------------------------------
 def process_projections(path, pairs, enable_dsptrn=False):
-    print(f"Processing '{path}' …")
+    print(f"Procesando '{path}' …")
     with pd.ExcelWriter(path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-        # ---------- Secondary ----------
+        # ---------- Hoja Secondary ----------
         sec = pd.read_excel(path, sheet_name='Secondary', engine='openpyxl')
         sec = ensure_columns(sec, ['Fuel','Fuel.Name'])
         mask = sec['Tech'].str.startswith('PWR', na=False) & (sec.get('Direction','')=='Output')
@@ -271,7 +271,7 @@ def process_projections(path, pairs, enable_dsptrn=False):
                 continue
             sec.at[idx,'Fuel'] = f"ELC{country}{region}00"
             sec.at[idx,'Fuel.Name'] = f"Electricity, {countryname}, Region {region}, renewable power plant output"
-        # ---------- TRN interconnection: update fuel codes (Input->03, Output->04) ----------
+        # ---------- Interconexión TRN: actualizar códigos de combustible (Input->03, Output->04) ----------
         if enable_dsptrn:
             mask_trn = sec['Tech'].apply(lambda x: bool(TRN_INTERCONNECTION.match(str(x))))
             for idx in sec[mask_trn].index:
@@ -279,7 +279,7 @@ def process_projections(path, pairs, enable_dsptrn=False):
                 name = str(sec.at[idx, 'Fuel.Name'])
                 direction = str(sec.at[idx, 'Direction']) if 'Direction' in sec.columns else ''
                 if direction == 'Input':
-                    # Input side: rewrite to ELC..03 (dispatch-ready for interconnection)
+                    # Lado Input: reescribir a ELC..03 (listo para despacho de interconexión)
                     if fuel.startswith('ELC') and fuel.endswith('02'):
                         sec.at[idx, 'Fuel'] = fuel[:-2] + '03'
                         sec.at[idx, 'Fuel.Name'] = name.replace(
@@ -289,7 +289,7 @@ def process_projections(path, pairs, enable_dsptrn=False):
                         sec.at[idx, 'Fuel.Name'] = name.replace(
                             'NO renewable power plant output', 'dispatch-ready for interconnection')
                 elif direction == 'Output':
-                    # Output side: rewrite to ELC..04 (imported electricity)
+                    # Lado Output: reescribir a ELC..04 (electricidad importada)
                     if fuel.startswith('ELC') and fuel.endswith('02'):
                         sec.at[idx, 'Fuel'] = fuel[:-2] + '04'
                         sec.at[idx, 'Fuel.Name'] = name.replace(
@@ -304,10 +304,10 @@ def process_projections(path, pairs, enable_dsptrn=False):
                             'dispatch-ready for interconnection', 'imported electricity')
         sec.to_excel(writer, sheet_name='Secondary', index=False)
 
-        # ---------- Demand Techs ----------
+        # ---------- Hoja Demand Techs ----------
         dtech = pd.read_excel(path, sheet_name='Demand Techs', engine='openpyxl')
         header = list(dtech.columns)
-        # Identify year columns (numeric headers from column index >=8)
+        # Identificar columnas de años (encabezados numéricos desde índice de columna >=8)
         year_cols = [c for c in header if str(c).isdigit()]
         dtech = dtech.iloc[0:0]
 
@@ -327,7 +327,7 @@ def process_projections(path, pairs, enable_dsptrn=False):
             for tech_prefix, fuel_in, label in tech_entries:
                 tech = f"{tech_prefix}{country}{region}"
                 countryname = iso_country_map.get(country, f"Unknown ({country})")
-                # input row
+                # fila de entrada
                 rows.append({
                     'Mode.Operation': 1,
                     'Tech': tech,
@@ -343,7 +343,7 @@ def process_projections(path, pairs, enable_dsptrn=False):
                     'Projection.Parameter': 0,
                     **{yr:1 for yr in year_cols}
                 })
-                # output row
+                # fila de salida
                 rows.append({
                     'Mode.Operation': 1,
                     'Tech': tech,
@@ -360,14 +360,14 @@ def process_projections(path, pairs, enable_dsptrn=False):
                     **{yr:1 for yr in year_cols}
                 })
 
-            # --- DSPTRN: Dispatch technology (2 modes of operation) ---
+            # --- DSPTRN: Tecnología de despacho (2 modos de operación) ---
             if enable_dsptrn:
                 dsp_tech = f"DSPTRN{country}{region}"
                 dsp_02   = f"ELC{country}{region}02"
                 dsp_03   = f"ELC{country}{region}03"
                 dsp_04   = f"ELC{country}{region}04"
                 dsp_name = f"Dispatch technology, {countryname}, Region {region}"
-                # Mode 1 Input: ELC...02
+                # Modo 1 Input: ELC...02
                 rows.append({
                     'Mode.Operation': 1,
                     'Tech': dsp_tech,
@@ -379,7 +379,7 @@ def process_projections(path, pairs, enable_dsptrn=False):
                     'Projection.Parameter': 0,
                     **{yr: 1 for yr in year_cols}
                 })
-                # Mode 1 Output: ELC...03
+                # Modo 1 Output: ELC...03
                 rows.append({
                     'Mode.Operation': 1,
                     'Tech': dsp_tech,
@@ -391,7 +391,7 @@ def process_projections(path, pairs, enable_dsptrn=False):
                     'Projection.Parameter': 0,
                     **{yr: 1 for yr in year_cols}
                 })
-                # Mode 2 Input: ELC...04 (imported electricity)
+                # Modo 2 Input: ELC...04 (electricidad importada)
                 rows.append({
                     'Mode.Operation': 2,
                     'Tech': dsp_tech,
@@ -403,7 +403,7 @@ def process_projections(path, pairs, enable_dsptrn=False):
                     'Projection.Parameter': 0,
                     **{yr: 1 for yr in year_cols}
                 })
-                # Mode 2 Output: ELC...03 (dispatch-ready for interconnection)
+                # Modo 2 Output: ELC...03 (listo para despacho de interconexión)
                 rows.append({
                     'Mode.Operation': 2,
                     'Tech': dsp_tech,
@@ -418,27 +418,27 @@ def process_projections(path, pairs, enable_dsptrn=False):
 
         dtech = pd.DataFrame(rows, columns=header)
         dtech.to_excel(writer, sheet_name='Demand Techs', index=False)
-    print("✔ Projections file updated.")
+    print("✔ Archivo de proyecciones actualizado.")
 
 # ---------------------------------------------------------------------------
-# 3. Process A-O_Parametrization.xlsx
+# 3. Procesar A-O_Parametrization.xlsx
 # ---------------------------------------------------------------------------
 PARAM_LIST = [
     'CapitalCost','FixedCost','ResidualCapacity','TotalAnnualMinCapacityInvestment', 'TotalAnnualMaxCapacity'
 ]
 
 def process_parametrization(path, pairs, yaml_data, enable_dsptrn=False):
-    print(f"Processing '{path}' …")
+    print(f"Procesando '{path}' …")
 
-    # ───── 1. Load sheets ───────────────────────────────────────────────────
+    # ───── 1. Cargar hojas ───────────────────────────────────────────────────
     fhp   = pd.read_excel(path, sheet_name='Fixed Horizon Parameters',
                           engine='openpyxl')
     dtech = pd.read_excel(path, sheet_name='Demand Techs',
                           engine='openpyxl')
 
 
-    # Quick map Tech → Tech.ID for already existing techs (only for NON-transmission techs)
-    # Transmission technologies will have sequential IDs starting from 1
+    # Mapa rápido Tech → Tech.ID para techs ya existentes (solo para techs que NO son de transmisión)
+    # Las tecnologías de transmisión tendrán IDs secuenciales comenzando desde 1
     transmission_prefixes = ('RNWTRN', 'RNWRPO', 'RNWNLI', 'TRNRPO', 'TRNNLI', 'PWRTRN')
     if enable_dsptrn:
         transmission_prefixes = transmission_prefixes + ('DSPTRN',)
@@ -449,23 +449,23 @@ def process_parametrization(path, pairs, yaml_data, enable_dsptrn=False):
         if tech and not any(tech.startswith(p) for p in transmission_prefixes):
             existing_ids[tech] = tech_id
 
-    new_rows_fhp   = []          # new (or missing) rows for FHP
-    new_rows_dtech = []          # all rows to be added to Demand Techs
+    new_rows_fhp   = []          # filas nuevas (o faltantes) para FHP
+    new_rows_dtech = []          # todas las filas a agregar a Demand Techs
 
-    # Tech.ID counter for transmission technologies (starting from 1)
+    # Contador de Tech.ID para tecnologías de transmisión (comenzando desde 1)
     tx_tech_id = 0
 
-    # ───── 2. Generate / update technologies ─────────────────────────────
+    # ───── 2. Generar / actualizar tecnologías ─────────────────────────────
     for country, region in pairs:
         for tech_prefix in transmission_prefixes:
             tech_code = f"{tech_prefix}{country}{region}"
             countryname = iso_country_map.get(country, f"Unknown ({country})")
-            # 2.1 Tech.ID: assign sequential ID for transmission technologies
+            # 2.1 Tech.ID: asignar ID secuencial para tecnologías de transmisión
             tx_tech_id += 1
             tech_id = tx_tech_id
             existing_ids[tech_code] = tech_id
 
-            # 2.2 Descriptive name
+            # 2.2 Nombre descriptivo
             if tech_prefix == 'DSPTRN':
                 tech_name = f"Dispatch technology, {countryname}, Region {region}"
             else:
@@ -478,13 +478,13 @@ def process_parametrization(path, pairs, yaml_data, enable_dsptrn=False):
                      ' transmission technology from NO renewable power plants, ') \
                   + f"{countryname}, Region {region}"
 
-            # 2.3 YAML configuration
+            # 2.3 Configuración YAML
             cfg = yaml_data.get(tech_prefix, {})
             cap_to_act       = cfg.get('CapacityToActivityUnit', '')
             operational_life = cfg.get('OperationalLife', '')
 
-            # ── A) FIXED HORIZON PARAMETERS ────────────────────────────────
-            # Update (or create if missing) CapacityToActivityUnit and OperationalLife
+            # ── A) PARÁMETROS DE HORIZONTE FIJO ────────────────────────────────
+            # Actualizar (o crear si falta) CapacityToActivityUnit y OperationalLife
             for par_id, (par_name, par_val) in enumerate(
                     [('CapacityToActivityUnit', cap_to_act),
                      ('OperationalLife',       operational_life)], start=1):
@@ -504,10 +504,10 @@ def process_parametrization(path, pairs, yaml_data, enable_dsptrn=False):
                     })
 
             # ── B) DEMAND TECHS ────────────────────────────────────────────
-            # 1) Remove any previous rows (to avoid duplicates)
+            # 1) Eliminar filas previas (para evitar duplicados)
             dtech = dtech[dtech['Tech'] != tech_code]
 
-            # 2) Add the block of 12 parameters with the correct Tech.ID
+            # 2) Agregar el bloque de 12 parámetros con el Tech.ID correcto
             years = [c for c in dtech.columns if str(c).isdigit()]
             base_row = {
                 'Tech.ID'            : tech_id,
@@ -523,15 +523,15 @@ def process_parametrization(path, pairs, yaml_data, enable_dsptrn=False):
                 row['Parameter']    = param
                 value_cfg = cfg.get(param, None)
 
-                if isinstance(value_cfg, dict):                 # year-by-year values
+                if isinstance(value_cfg, dict):                 # valores año por año
                     row['Projection.Mode'] = 'User defined'
                     for yr in years:
                         row[yr] = value_cfg.get(yr, '')
-                elif value_cfg is not None:                     # constant value
+                elif value_cfg is not None:                     # valor constante
                     row['Projection.Mode'] = 'User defined'
                     for yr in years:
                         row[yr] = value_cfg
-                else:                                           # no data
+                else:                                           # sin datos
                     row['Projection.Mode'] = 'EMPTY'
                     for yr in years:
                         row[yr] = ''
@@ -543,7 +543,7 @@ def process_parametrization(path, pairs, yaml_data, enable_dsptrn=False):
         fhp = pd.concat([fhp, pd.DataFrame(new_rows_fhp)],
                         ignore_index=True)
 
-    # Concatenate all rows (new or recreated) of Demand Techs
+    # Concatenar todas las filas (nuevas o recreadas) de Demand Techs
     dtech = pd.concat([dtech, pd.DataFrame(new_rows_dtech)],
                       ignore_index=True)
 
@@ -552,29 +552,29 @@ def process_parametrization(path, pairs, yaml_data, enable_dsptrn=False):
         fhp.to_excel  (writer, sheet_name='Fixed Horizon Parameters', index=False)
         dtech.to_excel(writer, sheet_name='Demand Techs',            index=False)
 
-    print("✔ Parametrization file updated.")
+    print("✔ Archivo de parametrización actualizado.")
 
 # ---------------------------------------------------------------------------
-# 4. Process A-O_Demand.xlsx
+# 4. Procesar A-O_Demand.xlsx
 # ---------------------------------------------------------------------------
 def process_demand(path, enable_dsptrn=False):
-    """Rewrite ELC…02 → ELC…03 in the Demand file when DSPTRN dispatch is enabled.
+    """Reescribe ELC…02 → ELC…03 en el archivo Demand cuando el despacho DSPTRN está habilitado.
 
-    With the dispatch layer active the demand point moves from ELC…02
-    (transmission-line output) to ELC…03 (dispatch-ready electricity).
-    Both sheets (Demand_Projection and Profiles) are updated in-place.
+    Con la capa de despacho activa, el punto de demanda se mueve de ELC…02
+    (salida de línea de transmisión) a ELC…03 (electricidad lista para despacho).
+    Ambas hojas (Demand_Projection y Profiles) se actualizan in-place.
     """
     if not enable_dsptrn:
         return
 
-    print(f"Processing '{path}' (Demand – ELC02→ELC03) …")
+    print(f"Procesando '{path}' (Demand – ELC02→ELC03) …")
 
     elc02 = re.compile(r'^(ELC[A-Z]{5})02$')
 
     with pd.ExcelWriter(path, engine='openpyxl', mode='a',
                          if_sheet_exists='overlay') as writer:
 
-        # --- Demand_Projection sheet (Fuel/Tech in col B) ---
+        # --- Hoja Demand_Projection (Fuel/Tech en col B) ---
         dp = pd.read_excel(path, sheet_name='Demand_Projection', engine='openpyxl')
         fuel_col = 'Fuel/Tech'
         name_col = 'Name'
@@ -592,9 +592,9 @@ def process_demand(path, enable_dsptrn=False):
                     )
                 updated += 1
         dp.to_excel(writer, sheet_name='Demand_Projection', index=False)
-        print(f"  Demand_Projection: {updated} fuel codes updated.")
+        print(f"  Demand_Projection: {updated} códigos de combustible actualizados.")
 
-        # --- Profiles sheet (Fuel/Tech in col C) ---
+        # --- Hoja Profiles (Fuel/Tech en col C) ---
         pf = pd.read_excel(path, sheet_name='Profiles', engine='openpyxl')
         updated = 0
         for idx in pf.index:
@@ -610,13 +610,13 @@ def process_demand(path, enable_dsptrn=False):
                     )
                 updated += 1
         pf.to_excel(writer, sheet_name='Profiles', index=False)
-        print(f"  Profiles: {updated} fuel codes updated.")
+        print(f"  Profiles: {updated} códigos de combustible actualizados.")
 
-    print("✔ Demand file updated.")
+    print("✔ Archivo de demanda actualizado.")
 
 
 def list_scenario_suffixes(base_dir: Path) -> List[str]:
-    """Return list like ['BAU_NoRPO','NDC','NDC+ELC'] from folders 'A1_Outputs_*'."""
+    """Retorna lista como ['BAU_NoRPO','NDC','NDC+ELC'] desde carpetas 'A1_Outputs_*'."""
     suffixes: List[str] = []
     for item in sorted(base_dir.iterdir()):
         if item.is_dir() and item.name.startswith("A1_Outputs_"):
@@ -626,7 +626,7 @@ def list_scenario_suffixes(base_dir: Path) -> List[str]:
     return suffixes
 
 # ---------------------------------------------------------------------------
-# CLI glue
+# Interfaz CLI
 # ---------------------------------------------------------------------------
 def main():
 
@@ -643,7 +643,7 @@ def main():
             "param": str(script_dir / f"A1_Outputs/A1_Outputs_{scen}/A-O_Parametrization.xlsx"),
             "demand": str(script_dir / f"A1_Outputs/A1_Outputs_{scen}/A-O_Demand.xlsx"),
         }
-        ap = argparse.ArgumentParser(description='Process CLG model spreadsheets.')
+        ap = argparse.ArgumentParser(description='Procesar hojas de cálculo del modelo CLG.')
         ap.add_argument('--yaml', help='Config_country_codes.yaml')
         ap.add_argument('--base', help='A-O_AR_Model_Base_Year.xlsx')
         ap.add_argument('--proj', help='A-O_AR_Projections.xlsx')
@@ -654,9 +654,9 @@ def main():
 
         pairs = load_country_region_pairs(args.yaml)
         if not pairs:
-            sys.exit('No valid country/region codes found in YAML.')
+            sys.exit('No se encontraron códigos de país/región válidos en el YAML.')
 
-        # Optional detailed YAML per-tech/parameter values
+        # Valores opcionales detallados del YAML por tech/parámetro
         with open(args.yaml,'r',encoding='utf-8') as fh:
             yaml_data = yaml.safe_load(fh)
             if not isinstance(yaml_data, dict):
@@ -668,7 +668,7 @@ def main():
         process_parametrization(args.param, pairs, yaml_data, enable_dsptrn=enable_dsptrn)
         process_demand(args.demand, enable_dsptrn=enable_dsptrn)
 
-    print("\n  All done!")
+    print("\n  ¡Todo listo!")
 
 if __name__ == '__main__':
     main()
