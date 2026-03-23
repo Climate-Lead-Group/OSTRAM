@@ -44,18 +44,18 @@ stages:
       - t1_confection/OSTRAM_Inputs.csv:
           cache: false
           persist: true
-      - t1_confection/OSTRAM_Inputs_fecha.csv:
+      - t1_confection/OSTRAM_Inputs_DATEPLACEHOLDER.csv:
           cache: false
           persist: true
       - t1_confection/OSTRAM_Outputs.csv:
           cache: false
           persist: true
-      - t1_confection/OSTRAM_Outputs_fecha.csv:
+      - t1_confection/OSTRAM_Outputs_DATEPLACEHOLDER.csv:
           cache: false
           persist: true
       - t1_confection/OSTRAM_Combined_Inputs_Outputs.csv:
           cache: false
           persist: true
-      - t1_confection/OSTRAM_Combined_Inputs_Outputs_fecha.csv:
+      - t1_confection/OSTRAM_Combined_Inputs_Outputs_DATEPLACEHOLDER.csv:
           cache: false
           persist: true

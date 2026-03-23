@@ -26,7 +26,7 @@ OSTRAM uses a Conda environment defined in `environment.yaml`. The `run.py` laun
 
 ```bash
 conda env create -f environment.yaml
-conda activate OG-MOMF-env
+conda activate OSTRAM-env
 ```
 
 ### Environment Dependencies
@@ -52,7 +52,7 @@ The environment installs the following packages:
 GLPK can be installed directly via conda:
 
 ```bash
-conda activate OG-MOMF-env
+conda activate OSTRAM-env
 conda install -c conda-forge glpk
 ```
 
@@ -61,7 +61,7 @@ conda install -c conda-forge glpk
 CBC can also be installed via conda:
 
 ```bash
-conda activate OG-MOMF-env
+conda activate OSTRAM-env
 conda install -c conda-forge coin-or-cbc
 ```
 
@@ -83,7 +83,7 @@ conda install -c conda-forge coin-or-cbc
 After setup, verify that the environment works:
 
 ```bash
-conda activate OG-MOMF-env
+conda activate OSTRAM-env
 python -c "import pandas; import numpy; import openpyxl; import yaml; print('All dependencies OK')"
 ```
 
@@ -108,7 +108,7 @@ gurobi_cl --version
 OSTRAM uses [DVC](https://dvc.org/) (Data Version Control) to manage the pipeline. The `run.py` script handles DVC commands automatically, but if you want to run stages manually:
 
 ```bash
-conda activate OG-MOMF-env
+conda activate OSTRAM-env
 dvc repro
 ```
 

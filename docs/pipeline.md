@@ -53,7 +53,7 @@ Generates `Tech_Country_Matrix.xlsx`, which controls which technology-country co
 
 ### Usage
 
-From an **Anaconda Prompt** (with the `OG-MOMF-env` environment activated):
+From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
 
 ```bash
 python t1_confection/A0_generate_tech_country_matrix.py
@@ -113,7 +113,7 @@ The largest processing step. Reads raw OSeMOSYS CSV files and produces structure
 
 ### Usage
 
-From an **Anaconda Prompt** (with the `OG-MOMF-env` environment activated):
+From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
 
 ```bash
 python t1_confection/A1_Pre_processing_OG_csvs.py
@@ -164,7 +164,7 @@ Adds transmission (TRN) and dispatch (DSPTRN) technology entries to the Excel mo
 
 ### Usage
 
-From an **Anaconda Prompt** (with the `OG-MOMF-env` environment activated):
+From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
 
 ```bash
 python t1_confection/A2_AddTx.py
@@ -220,7 +220,7 @@ Migrates data from an older input format (`Old_Inputs/` directory) into the curr
 
 ### Usage
 
-From an **Anaconda Prompt** (with the `OG-MOMF-env` environment activated):
+From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
 
 ```bash
 python t1_confection/A3_migrate_old_inputs_CLG.py
@@ -261,7 +261,7 @@ Creates the `Secondary_Techs_Editor.xlsx` workbook, which provides a user-friend
 
 ### Usage
 
-From an **Anaconda Prompt** (with the `OG-MOMF-env` environment activated):
+From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
 
 ```bash
 python t1_confection/D1_generate_editor_template.py
@@ -296,7 +296,7 @@ Reads the filled `Secondary_Techs_Editor.xlsx` and applies all changes to the mo
 
 ### Usage
 
-From an **Anaconda Prompt** (with the `OG-MOMF-env` environment activated):
+From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
 
 ```bash
 python t1_confection/D2_update_secondary_techs.py
@@ -363,7 +363,7 @@ Reads the Excel model files and compiles them into OSeMOSYS-format CSV parameter
 
 ### Usage
 
-This stage runs automatically via the DVC pipeline. From an **Anaconda Prompt** (with the `OG-MOMF-env` environment activated):
+This stage runs automatically via the DVC pipeline. From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
 
 ```bash
 python -u t1_confection/B1_Run_Compiler.py
@@ -400,7 +400,7 @@ Runs the OSeMOSYS optimization model using the configured solver.
 
 ### Usage
 
-This stage runs automatically via the DVC pipeline. From an **Anaconda Prompt** (with the `OG-MOMF-env` environment activated):
+This stage runs automatically via the DVC pipeline. From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
 
 ```bash
 python -u t1_confection/B2_Executing_OG_Model.py

@@ -1,4 +1,4 @@
-name: OG-MOMF-env
+name: OSTRAM-env
 channels:
   - conda-forge
 dependencies:

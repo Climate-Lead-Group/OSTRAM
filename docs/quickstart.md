@@ -13,7 +13,7 @@ python run.py
 
 The `run.py` launcher automatically:
 
-1. Creates the Conda environment (`OG-MOMF-env`) if it does not exist.
+1. Creates the Conda environment (`OSTRAM-env`) if it does not exist.
 2. Installs any missing dependencies.
 3. Injects today's date into the DVC pipeline for date-stamped output files.
 4. Runs `dvc repro` to execute all pipeline stages.
@@ -106,7 +106,7 @@ OSTRAM/
 
 ## 5. Typical Workflow
 
-A typical modeling workflow follows these steps. All terminal commands must be run from an **Anaconda Prompt** (or any terminal with conda available) with the `OG-MOMF-env` environment activated.
+A typical modeling workflow follows these steps. All terminal commands must be run from an **Anaconda Prompt** (or any terminal with conda available) with the `OSTRAM-env` environment activated.
 
 1. **Configure countries and technologies** in `Config_country_codes.yaml`.
 2. **Generate the Tech-Country Matrix** (`A0`).

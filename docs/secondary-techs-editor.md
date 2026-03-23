@@ -15,7 +15,7 @@ The editor workflow has two steps:
 
 **Script:** `t1_confection/D1_generate_editor_template.py`
 
-From an **Anaconda Prompt** (with the `OG-MOMF-env` environment activated):
+From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
 
 ```bash
 python t1_confection/D1_generate_editor_template.py
@@ -113,7 +113,7 @@ Customize how activity limits are distributed among technologies:
 
 **Script:** `t1_confection/D2_update_secondary_techs.py`
 
-From an **Anaconda Prompt** (with the `OG-MOMF-env` environment activated):
+From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
 
 ```bash
 python t1_confection/D2_update_secondary_techs.py

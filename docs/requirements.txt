@@ -1,3 +1,9 @@
 sphinx
 sphinx-rtd-theme
 myst-parser
+
+# Install GLPK (required)
+# conda install -c conda-forge glpk
+
+# Install CBC (required)
+# conda install -c conda-forge coincbc

@@ -212,7 +212,7 @@ template_generation:
       - IND
 ```
 
-The script also accepts command-line overrides (which take precedence over YAML values). From an **Anaconda Prompt** (with the `OG-MOMF-env` environment activated):
+The script also accepts command-line overrides (which take precedence over YAML values). From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
 
 ```bash
 # Read all entries from YAML
