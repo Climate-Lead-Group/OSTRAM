@@ -7,9 +7,6 @@ Modify values as needed to reflect the actual data for MDV.
 Usage:
     cd t1_confection
     python templates/MDV/merge_into_inputs.py
-
-Author: Climate Lead Group, Andrey Salazar-Vargas
-Date: 2025
 """
 
 import pandas as pd
