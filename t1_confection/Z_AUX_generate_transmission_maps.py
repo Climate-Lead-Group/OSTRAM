@@ -92,6 +92,22 @@ def extract_from_to(tech):
     return tech[3:8], tech[8:13]
 
 
+def classify_flow_direction(fuel, tech_from, tech_to):
+    """Classify flow direction from FUEL code suffix '04'.
+
+    For TRN{A}{B}, output fuel ELC{B}04 means flow A→B,
+    and ELC{A}04 means flow B→A.
+    """
+    if not isinstance(fuel, str) or not fuel.endswith('04'):
+        return None
+    fuel_region = fuel[3:-2]  # 'ELCINDEA04' -> 'INDEA'
+    if fuel_region == tech_to:
+        return 'a_to_b'
+    elif fuel_region == tech_from:
+        return 'b_to_a'
+    return None
+
+
 def prepare_json_data(df, centerpoints, year_split):
     """Prepare all data as nested dicts for JSON embedding in HTML.
 
@@ -156,21 +172,50 @@ def prepare_json_data(df, centerpoints, year_split):
                 for _, row in cap_agg.iterrows()
             ]
 
-            # --- Flow ---
-            flw = ydf[ydf[FLOW_COL].notna() & (ydf[FLOW_COL] != 0)]
-            flw_agg = (
-                flw.groupby(['FROM', 'TO', 'from_lat', 'from_lon', 'to_lat', 'to_lon'])
-                [FLOW_COL].sum().reset_index()
+            # --- Flow (directional) ---
+            flw = ydf[ydf[FLOW_COL].notna() & (ydf[FLOW_COL] != 0)].copy()
+            flw['DIRECTION'] = flw.apply(
+                lambda r: classify_flow_direction(
+                    str(r.get('FUEL', '')), r['FROM'], r['TO']
+                ), axis=1
             )
-            flow_data[scenario][str(year)] = [
-                {
-                    'from': row['FROM'], 'to': row['TO'],
-                    'from_lat': row['from_lat'], 'from_lon': row['from_lon'],
-                    'to_lat': row['to_lat'], 'to_lon': row['to_lon'],
-                    'value': round(float(row[FLOW_COL]), 4)
-                }
-                for _, row in flw_agg.iterrows()
-            ]
+            flw = flw[flw['DIRECTION'].notna()]
+
+            if not flw.empty:
+                flw_agg = (
+                    flw.groupby(['FROM', 'TO', 'from_lat', 'from_lon', 'to_lat', 'to_lon', 'DIRECTION'])
+                    [FLOW_COL].sum().reset_index()
+                )
+                pivot = flw_agg.pivot_table(
+                    index=['FROM', 'TO', 'from_lat', 'from_lon', 'to_lat', 'to_lon'],
+                    columns='DIRECTION', values=FLOW_COL, fill_value=0
+                ).reset_index()
+                # Flatten MultiIndex columns if present
+                if hasattr(pivot.columns, 'levels'):
+                    pivot.columns = [
+                        col[1] if col[1] else col[0]
+                        for col in pivot.columns
+                    ]
+                else:
+                    pivot.columns.name = None
+                if 'a_to_b' not in pivot.columns:
+                    pivot['a_to_b'] = 0
+                if 'b_to_a' not in pivot.columns:
+                    pivot['b_to_a'] = 0
+                flow_data[scenario][str(year)] = [
+                    {
+                        'from': row['FROM'], 'to': row['TO'],
+                        'from_lat': row['from_lat'],
+                        'from_lon': row['from_lon'],
+                        'to_lat': row['to_lat'],
+                        'to_lon': row['to_lon'],
+                        'value_a_to_b': round(float(row['a_to_b']), 4),
+                        'value_b_to_a': round(float(row['b_to_a']), 4),
+                    }
+                    for _, row in pivot.iterrows()
+                ]
+            else:
+                flow_data[scenario][str(year)] = []
 
             # --- Load-Capacity Ratio ---
             pbt = ydf[
@@ -416,6 +461,30 @@ function updateAll() {{
   updateMap();
 }}
 
+// ─── Geometry helpers ────────────────────────────────────────────
+function offsetLine(fromLat, fromLon, toLat, toLon, offsetDeg) {{
+  const dx = toLon - fromLon;
+  const dy = toLat - fromLat;
+  const len = Math.sqrt(dx * dx + dy * dy) || 1;
+  const nx = -dy / len * offsetDeg;
+  const ny =  dx / len * offsetDeg;
+  return {{
+    fromLat: fromLat + ny, fromLon: fromLon + nx,
+    toLat:   toLat + ny,   toLon:   toLon + nx
+  }};
+}}
+
+function pointAlong(lat1, lon1, lat2, lon2, t) {{
+  return {{ lat: lat1 + (lat2 - lat1) * t, lon: lon1 + (lon2 - lon1) * t }};
+}}
+
+function bearingDeg(lat1, lon1, lat2, lon2) {{
+  // Returns clockwise degrees from north (for Plotly marker.angle)
+  const dx = lon2 - lon1;
+  const dy = lat2 - lat1;
+  return (90 - Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360;
+}}
+
 // ─── Map rendering ──────────────────────────────────────────────
 function updateMap() {{
   const dataMap = {{ capacity: capacityData, flow: flowData, ratio: ratioData }};
@@ -425,50 +494,165 @@ function updateMap() {{
   const labelMap = {{ capacity: 'Capacity', flow: 'Flow', ratio: 'Load-Capacity Ratio' }};
   const baseLabel = labelMap[currentTab];
 
-  // Compute max value for line width scaling
-  const values = links.map(l => l.value * unitDef.factor);
-  const maxVal = Math.max(...values, 0.001);
-
   const traces = [];
 
-  // Draw lines
-  links.forEach((link, idx) => {{
-    const val = link.value * unitDef.factor;
-    const width = Math.max(0.8, (val / maxVal) * 6);
+  if (currentTab === 'flow') {{
+    // ── Directional flow rendering ──
+    const allVals = [];
+    links.forEach(l => {{
+      allVals.push(l.value_a_to_b * unitDef.factor);
+      allVals.push(l.value_b_to_a * unitDef.factor);
+    }});
+    const maxVal = Math.max(...allVals, 0.001);
 
-    // Color: green→red for ratio tab, fixed red for others
-    let lineColor = '#b71c1c';
-    if (currentTab === 'ratio') {{
-      const normalized = Math.min(Math.max(link.value, 0), 1);
-      const r = Math.round(220 * normalized + 30);
-      const g = Math.round(200 * (1 - normalized) + 30);
-      lineColor = `rgb(${{r}}, ${{g}}, 30)`;
-    }}
+    // Dynamic offset based on map extent
+    const lons = nodes.map(n => n.lon);
+    const lonSpan = Math.max(...lons) - Math.min(...lons);
+    const OFFSET = Math.max(0.2, lonSpan * 0.006);
 
-    traces.push({{
-      type: 'scattergeo',
-      lon: [link.from_lon, link.to_lon],
-      lat: [link.from_lat, link.to_lat],
-      mode: 'lines',
-      line: {{ width: width, color: lineColor }},
-      hoverinfo: 'text',
-      text: `${{link.from}} → ${{link.to}}: ${{val.toFixed(2)}} ${{unitDef.label}}`,
-      showlegend: false
+    links.forEach(link => {{
+      // Direction A → B (offset to the left of the line)
+      const ab = offsetLine(link.from_lat, link.from_lon, link.to_lat, link.to_lon, OFFSET);
+      const valAB = link.value_a_to_b * unitDef.factor;
+      const wAB = Math.max(0.5, (valAB / maxVal) * 6);
+      const dashAB = valAB === 0 ? 'dot' : 'solid';
+
+      traces.push({{
+        type: 'scattergeo',
+        lon: [ab.fromLon, ab.toLon], lat: [ab.fromLat, ab.toLat],
+        mode: 'lines',
+        line: {{ width: wAB, color: '#1565C0', dash: dashAB }},
+        hoverinfo: 'text',
+        text: `${{link.from}} → ${{link.to}}: ${{valAB.toFixed(2)}} ${{unitDef.label}}`,
+        showlegend: false
+      }});
+
+      // Arrowhead A→B at 85% along offset line
+      const tipAB = pointAlong(ab.fromLat, ab.fromLon, ab.toLat, ab.toLon, 0.85);
+      const angleAB = bearingDeg(ab.fromLat, ab.fromLon, ab.toLat, ab.toLon);
+      traces.push({{
+        type: 'scattergeo',
+        lon: [tipAB.lon], lat: [tipAB.lat],
+        mode: 'markers',
+        marker: {{
+          symbol: 'triangle-up', size: Math.max(6, wAB * 2.5),
+          color: '#1565C0', angle: angleAB,
+          line: {{ width: 0 }}
+        }},
+        hoverinfo: 'text',
+        text: [`${{link.from}} → ${{link.to}}: ${{valAB.toFixed(2)}} ${{unitDef.label}}`],
+        showlegend: false
+      }});
+
+      // Label A→B at 50%
+      const midAB = pointAlong(ab.fromLat, ab.fromLon, ab.toLat, ab.toLon, 0.5);
+      traces.push({{
+        type: 'scattergeo',
+        lon: [midAB.lon], lat: [midAB.lat],
+        mode: 'text',
+        text: [`${{valAB.toFixed(1)}}`],
+        textfont: {{ size: 9, color: '#0D47A1', family: 'Arial Black' }},
+        hoverinfo: 'none', showlegend: false
+      }});
+
+      // Direction B → A (offset to the right of the line)
+      const ba = offsetLine(link.from_lat, link.from_lon, link.to_lat, link.to_lon, -OFFSET);
+      const valBA = link.value_b_to_a * unitDef.factor;
+      const wBA = Math.max(0.5, (valBA / maxVal) * 6);
+      const dashBA = valBA === 0 ? 'dot' : 'solid';
+
+      // Draw B→A line reversed (from TO coords to FROM coords on the offset)
+      traces.push({{
+        type: 'scattergeo',
+        lon: [ba.toLon, ba.fromLon], lat: [ba.toLat, ba.fromLat],
+        mode: 'lines',
+        line: {{ width: wBA, color: '#C62828', dash: dashBA }},
+        hoverinfo: 'text',
+        text: `${{link.to}} → ${{link.from}}: ${{valBA.toFixed(2)}} ${{unitDef.label}}`,
+        showlegend: false
+      }});
+
+      // Arrowhead B→A at 85% along (from to_offset to from_offset)
+      const tipBA = pointAlong(ba.toLat, ba.toLon, ba.fromLat, ba.fromLon, 0.85);
+      const angleBA = bearingDeg(ba.toLat, ba.toLon, ba.fromLat, ba.fromLon);
+      traces.push({{
+        type: 'scattergeo',
+        lon: [tipBA.lon], lat: [tipBA.lat],
+        mode: 'markers',
+        marker: {{
+          symbol: 'triangle-up', size: Math.max(6, wBA * 2.5),
+          color: '#C62828', angle: angleBA,
+          line: {{ width: 0 }}
+        }},
+        hoverinfo: 'text',
+        text: [`${{link.to}} → ${{link.from}}: ${{valBA.toFixed(2)}} ${{unitDef.label}}`],
+        showlegend: false
+      }});
+
+      // Label B→A at 50%
+      const midBA = pointAlong(ba.toLat, ba.toLon, ba.fromLat, ba.fromLon, 0.5);
+      traces.push({{
+        type: 'scattergeo',
+        lon: [midBA.lon], lat: [midBA.lat],
+        mode: 'text',
+        text: [`${{valBA.toFixed(1)}}`],
+        textfont: {{ size: 9, color: '#8E0000', family: 'Arial Black' }},
+        hoverinfo: 'none', showlegend: false
+      }});
     }});
 
-    // Midpoint label
-    const midLat = (link.from_lat + link.to_lat) / 2;
-    const midLon = (link.from_lon + link.to_lon) / 2;
+    // Legend entries for flow directions
     traces.push({{
-      type: 'scattergeo',
-      lon: [midLon], lat: [midLat],
-      mode: 'text',
-      text: [`${{val.toFixed(1)}}`],
-      textfont: {{ size: 10, color: '#333', family: 'Arial Black' }},
-      hoverinfo: 'none',
-      showlegend: false
+      type: 'scattergeo', lon: [null], lat: [null],
+      mode: 'lines', line: {{ color: '#1565C0', width: 3 }},
+      name: 'A → B', showlegend: true
     }});
-  }});
+    traces.push({{
+      type: 'scattergeo', lon: [null], lat: [null],
+      mode: 'lines', line: {{ color: '#C62828', width: 3 }},
+      name: 'B → A', showlegend: true
+    }});
+
+  }} else {{
+    // ── Non-directional rendering (capacity / ratio) ──
+    const values = links.map(l => l.value * unitDef.factor);
+    const maxVal = Math.max(...values, 0.001);
+
+    links.forEach(link => {{
+      const val = link.value * unitDef.factor;
+      const width = Math.max(0.8, (val / maxVal) * 6);
+
+      let lineColor = '#b71c1c';
+      if (currentTab === 'ratio') {{
+        const normalized = Math.min(Math.max(link.value, 0), 1);
+        const r = Math.round(220 * normalized + 30);
+        const g = Math.round(200 * (1 - normalized) + 30);
+        lineColor = `rgb(${{r}}, ${{g}}, 30)`;
+      }}
+
+      traces.push({{
+        type: 'scattergeo',
+        lon: [link.from_lon, link.to_lon],
+        lat: [link.from_lat, link.to_lat],
+        mode: 'lines',
+        line: {{ width: width, color: lineColor }},
+        hoverinfo: 'text',
+        text: `${{link.from}} → ${{link.to}}: ${{val.toFixed(2)}} ${{unitDef.label}}`,
+        showlegend: false
+      }});
+
+      const midLat = (link.from_lat + link.to_lat) / 2;
+      const midLon = (link.from_lon + link.to_lon) / 2;
+      traces.push({{
+        type: 'scattergeo',
+        lon: [midLon], lat: [midLat],
+        mode: 'text',
+        text: [`${{val.toFixed(1)}}`],
+        textfont: {{ size: 10, color: '#333', family: 'Arial Black' }},
+        hoverinfo: 'none', showlegend: false
+      }});
+    }});
+  }}
 
   // Draw nodes
   const nodeLons = nodes.map(n => n.lon);
@@ -511,14 +695,18 @@ function updateMap() {{
       resolution: 50
     }},
     margin: {{ l: 0, r: 0, t: 50, b: 0 }},
-    height: window.innerHeight * 0.72
+    height: window.innerHeight * 0.72,
+    showlegend: currentTab === 'flow',
+    legend: {{ x: 1, y: 1, bgcolor: 'rgba(255,255,255,0.8)', bordercolor: '#ccc', borderwidth: 1 }}
   }};
 
   Plotly.react('map', traces, layout, {{ responsive: true }});
 
   // Info bar
+  const linkCount = currentTab === 'flow' ? links.length * 2 : links.length;
+  const dirLabel = currentTab === 'flow' ? ' (bidirectional)' : '';
   document.getElementById('infoBar').textContent =
-    `${{links.length}} interconnections | Scenario: ${{currentScenario}} | Year: ${{currentYear}} | Unit: ${{unitDef.label}}`;
+    `${{linkCount}} interconnections${{dirLabel}} | Scenario: ${{currentScenario}} | Year: ${{currentYear}} | Unit: ${{unitDef.label}}`;
 }}
 
 function downloadPNG() {{
@@ -546,6 +734,411 @@ window.addEventListener('resize', () => {{
 
 
 # ---------------------------------------------------------------------------
+# Dispatch Chart Constants
+# ---------------------------------------------------------------------------
+DISPATCH_FUEL_PATTERN = re.compile(r'^ELC.{5}0[012]$')
+
+TECH_STACK_ORDER = [
+    'GEO', 'URN', 'BIO', 'WAS', 'COA', 'COG', 'CCS', 'OIL', 'PET',
+    'NGS', 'HYD', 'LDS', 'SDS', 'SPV', 'CSP', 'WON', 'WOF', 'OTH', 'BCK', 'CRT',
+]
+
+TECH_COLORS = {
+    'GEO': '#CDDC39', 'URN': '#9C27B0', 'BIO': '#2E7D32', 'WAS': '#795548',
+    'COA': '#424242', 'COG': '#6D4C41', 'CCS': '#00897B', 'OIL': '#212121',
+    'PET': '#B71C1C', 'NGS': '#689F38', 'HYD': '#4FC3F7', 'LDS': '#78909C',
+    'SDS': '#BDBDBD', 'SPV': '#FDD835', 'CSP': '#FF9800', 'WON': '#1E88E5',
+    'WOF': '#0D47A1', 'OTH': '#7B1FA2', 'BCK': '#F44336', 'CRT': '#E0E0E0',
+}
+
+TECH_LABELS = {
+    'GEO': 'Geothermal', 'URN': 'Nuclear', 'BIO': 'Biomass', 'WAS': 'Waste',
+    'COA': 'Coal', 'COG': 'Coal+Gas', 'CCS': 'CCS', 'OIL': 'Oil',
+    'PET': 'Petroleum', 'NGS': 'Natural Gas', 'HYD': 'Hydro', 'LDS': 'Long Storage',
+    'SDS': 'Short Storage', 'SPV': 'Solar PV', 'CSP': 'CSP', 'WON': 'Wind Onshore',
+    'WOF': 'Wind Offshore', 'OTH': 'Other', 'BCK': 'Backstop', 'CRT': 'Curtailment',
+}
+
+TIMESLICE_ORDER = [
+    'S1D1', 'S1D2', 'S1D3',
+    'S2D1', 'S2D2', 'S2D3',
+    'S3D1', 'S3D2', 'S3D3',
+    'S4D1', 'S4D2', 'S4D3',
+]
+
+
+def load_dispatch_data(csv_path):
+    """Load combined CSV and extract dispatch data for PWR* technologies.
+
+    Returns (dispatch_df, year_split_dict).
+    """
+    print(f"  Loading dispatch data from {csv_path} ...")
+    df = pd.read_csv(csv_path, low_memory=False)
+
+    # Extract YearSplit lookup
+    ys_rows = df[df[YEAR_SPLIT_COL].notna()][['TIMESLICE', YEAR_SPLIT_COL]].drop_duplicates()
+    year_split = dict(zip(ys_rows['TIMESLICE'], ys_rows[YEAR_SPLIT_COL]))
+
+    # Filter: PWR* technologies, ELC*00 or ELC*01 fuels, non-null production
+    mask = (
+        df['TECHNOLOGY'].astype(str).str.startswith('PWR')
+        & df['FUEL'].astype(str).apply(lambda f: bool(DISPATCH_FUEL_PATTERN.match(f)))
+        & df[PRODUCTION_BY_TIMESLICE_COL].notna()
+        & (df[PRODUCTION_BY_TIMESLICE_COL] != 0)
+        & df['TIMESLICE'].notna()
+    )
+    ddf = df[mask].copy()
+
+    # Extract region from fuel: ELCBGDXX00 -> BGDXX
+    ddf['REGION'] = ddf['FUEL'].str[3:-2]
+    # Extract tech code: PWRSPVBGDXX01 -> SPV
+    ddf['TECH_CODE'] = ddf['TECHNOLOGY'].str[3:6]
+    # Extract fuel suffix: 00, 01, 02
+    ddf['FUEL_SUFFIX'] = ddf['FUEL'].str[-2:]
+
+    print(f"  Found {len(ddf):,} dispatch rows")
+    print(f"  Regions: {sorted(ddf['REGION'].unique().tolist())}")
+    print(f"  Tech codes: {sorted(ddf['TECH_CODE'].unique().tolist())}")
+
+    return ddf, year_split
+
+
+def prepare_dispatch_json(ddf, year_split):
+    """Prepare dispatch data as nested dict for JSON embedding.
+
+    Converts ProductionByTechnology to GW:
+      rate_PJ_per_yr = ProductionByTechnology / YearSplit
+      power_GW = rate_PJ_per_yr / 31.536
+
+    Returns dict: { scenario: { year: { region: { timeslice: { tech: GW } } } } }
+    """
+    ddf = ddf.copy()
+    ddf['YEAR'] = pd.to_numeric(ddf['YEAR'], errors='coerce')
+    ddf = ddf.dropna(subset=['YEAR'])
+    ddf['YEAR'] = ddf['YEAR'].astype(int)
+
+    # Separate generation (ELC*00/01) from demand-side (ELC*02)
+    gen_df = ddf[ddf['FUEL_SUFFIX'].isin(['00', '01'])].copy()
+    dem_df = ddf[ddf['FUEL_SUFFIX'] == '02'].copy()
+
+    # Aggregate generation: sum PJ by scenario, year, region, timeslice, tech_code
+    agg = gen_df.groupby(['Scenario', 'YEAR', 'REGION', 'TIMESLICE', 'TECH_CODE'])[PRODUCTION_BY_TIMESLICE_COL].sum().reset_index()
+    agg.rename(columns={PRODUCTION_BY_TIMESLICE_COL: 'PJ'}, inplace=True)
+
+    # Compute curtailment per scenario/year/region/timeslice
+    gen_total = gen_df.groupby(['Scenario', 'YEAR', 'REGION', 'TIMESLICE'])[PRODUCTION_BY_TIMESLICE_COL].sum().reset_index()
+    gen_total.rename(columns={PRODUCTION_BY_TIMESLICE_COL: 'GEN_PJ'}, inplace=True)
+
+    dem_total = dem_df.groupby(['Scenario', 'YEAR', 'REGION', 'TIMESLICE'])[PRODUCTION_BY_TIMESLICE_COL].sum().reset_index()
+    dem_total.rename(columns={PRODUCTION_BY_TIMESLICE_COL: 'DEM_PJ'}, inplace=True)
+
+    curt = gen_total.merge(dem_total, on=['Scenario', 'YEAR', 'REGION', 'TIMESLICE'], how='left')
+    curt['DEM_PJ'] = curt['DEM_PJ'].fillna(0)
+    curt['CRT_PJ'] = curt['GEN_PJ'] - curt['DEM_PJ']
+    curt = curt[curt['CRT_PJ'] > 0]
+
+    # Add curtailment rows to aggregation
+    if not curt.empty:
+        crt_rows = curt[['Scenario', 'YEAR', 'REGION', 'TIMESLICE', 'CRT_PJ']].copy()
+        crt_rows['TECH_CODE'] = 'CRT'
+        crt_rows.rename(columns={'CRT_PJ': 'PJ'}, inplace=True)
+        agg = pd.concat([agg, crt_rows], ignore_index=True)
+
+    dispatch_data = {}
+    for _, row in agg.iterrows():
+        sc = row['Scenario']
+        yr = str(row['YEAR'])
+        reg = row['REGION']
+        ts = row['TIMESLICE']
+        tc = row['TECH_CODE']
+        val = round(float(row['PJ']), 6)
+
+        dispatch_data.setdefault(sc, {}).setdefault(yr, {}).setdefault(reg, {}).setdefault(ts, {})[tc] = val
+
+    return dispatch_data
+
+
+def generate_dispatch_html(dispatch_data, output_path):
+    """Generate standalone HTML with interactive stacked area dispatch chart."""
+
+    data_json = json.dumps(dispatch_data)
+    stack_order_json = json.dumps(TECH_STACK_ORDER)
+    colors_json = json.dumps(TECH_COLORS)
+    labels_json = json.dumps(TECH_LABELS)
+    ts_order_json = json.dumps(TIMESLICE_ORDER)
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSTRAM - Dispatch Chart</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+  * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+  body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; }}
+  .header {{ background: linear-gradient(135deg, #1a237e, #0d47a1); color: white; padding: 20px 30px; }}
+  .header h1 {{ font-size: 1.6em; font-weight: 600; }}
+  .header p {{ font-size: 0.9em; opacity: 0.85; margin-top: 4px; }}
+  .controls {{ display: flex; flex-wrap: wrap; gap: 16px; align-items: center;
+               padding: 16px 30px; background: #fff; border-bottom: 1px solid #ddd; }}
+  .control-group {{ display: flex; flex-direction: column; gap: 4px; }}
+  .control-group label {{ font-size: 0.75em; font-weight: 600; text-transform: uppercase;
+                          color: #666; letter-spacing: 0.5px; }}
+  select {{ font-size: 0.9em; padding: 6px 12px; border: 1px solid #ccc;
+            border-radius: 6px; background: #fff; }}
+  .toggle-group {{ display: inline-flex; gap: 0; padding: 0; overflow: hidden;
+                   border: 1px solid #ccc; border-radius: 6px; }}
+  .toggle-btn {{ padding: 6px 14px; border: none; background: #f5f5f5; cursor: pointer;
+                 font-size: 0.85em; font-weight: 500; transition: all 0.2s; }}
+  .toggle-btn.active {{ background: #0d47a1; color: white; }}
+  .toggle-btn:not(:last-child) {{ border-right: 1px solid #ddd; }}
+  .download-btn {{ padding: 8px 18px; background: #2e7d32; color: white; border: none;
+                   border-radius: 6px; cursor: pointer; font-size: 0.85em; font-weight: 500;
+                   transition: background 0.2s; margin-left: auto; }}
+  .download-btn:hover {{ background: #1b5e20; }}
+  #chart-container {{ padding: 20px 30px; }}
+  #chart {{ width: 100%; height: 75vh; border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: #fff; }}
+  .info {{ padding: 8px 30px; font-size: 0.8em; color: #888; text-align: center; }}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>OSTRAM Dispatch Chart</h1>
+  <p>Generation mix by technology and timeslice (stacked area)</p>
+</div>
+
+<div class="controls">
+  <div class="control-group">
+    <label>Scenario</label>
+    <select id="scenarioSelect"></select>
+  </div>
+  <div class="control-group">
+    <label>Year</label>
+    <select id="yearSelect"></select>
+  </div>
+  <div class="control-group">
+    <label>Region</label>
+    <select id="regionSelect"></select>
+  </div>
+  <div class="control-group">
+    <label>Unit</label>
+    <div class="toggle-group" id="unitToggle">
+      <button class="toggle-btn active" onclick="setUnit(0)">PJ</button>
+      <button class="toggle-btn" onclick="setUnit(1)">GWh</button>
+      <button class="toggle-btn" onclick="setUnit(2)">MWh</button>
+    </div>
+  </div>
+  <button class="download-btn" onclick="downloadPNG()">&#11015; Download PNG</button>
+</div>
+
+<div id="chart-container">
+  <div id="chart"></div>
+</div>
+<div class="info" id="infoBar"></div>
+
+<script>
+// ─── Embedded data ───────────────────────────────────────────────
+const dispatchData = {data_json};
+const STACK_ORDER = {stack_order_json};
+const TECH_COLORS = {colors_json};
+const TECH_LABELS = {labels_json};
+const TS_ORDER = {ts_order_json};
+
+const UNITS = [
+  {{ label: 'PJ', factor: 1 }},
+  {{ label: 'GWh', factor: 277.778 }},
+  {{ label: 'MWh', factor: 277778 }}
+];
+
+// Season labels for x-axis annotation
+const SEASON_LABELS = {{
+  'S1D1': 'Season 1', 'S2D1': 'Season 2', 'S3D1': 'Season 3', 'S4D1': 'Season 4'
+}};
+
+// ─── State ───────────────────────────────────────────────────────
+let currentScenario = '';
+let currentYear = '';
+let currentRegion = '';
+let currentUnitIdx = 0;
+
+// ─── Initialize ─────────────────────────────────────────────────
+function init() {{
+  const scenarios = Object.keys(dispatchData).sort();
+  const scenarioSel = document.getElementById('scenarioSelect');
+  scenarios.forEach(s => {{
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    scenarioSel.appendChild(opt);
+  }});
+  currentScenario = scenarios[0] || '';
+  scenarioSel.onchange = () => {{ currentScenario = scenarioSel.value; populateYears(); populateRegions(); updateChart(); }};
+
+  populateYears();
+  populateRegions();
+  updateChart();
+}}
+
+function populateYears() {{
+  const yearSel = document.getElementById('yearSelect');
+  yearSel.innerHTML = '';
+  const years = Object.keys(dispatchData[currentScenario] || {{}}).sort((a, b) => Number(a) - Number(b));
+  years.forEach(y => {{
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y;
+    yearSel.appendChild(opt);
+  }});
+  if (years.includes(currentYear)) {{
+    yearSel.value = currentYear;
+  }} else {{
+    currentYear = years[years.length - 1] || '';
+    yearSel.value = currentYear;
+  }}
+  yearSel.onchange = () => {{ currentYear = yearSel.value; populateRegions(); updateChart(); }};
+}}
+
+function populateRegions() {{
+  const regionSel = document.getElementById('regionSelect');
+  regionSel.innerHTML = '';
+  const yearData = (dispatchData[currentScenario] || {{}})[currentYear] || {{}};
+  const regions = Object.keys(yearData).sort();
+  regions.forEach(r => {{
+    const opt = document.createElement('option');
+    opt.value = r; opt.textContent = r;
+    regionSel.appendChild(opt);
+  }});
+  if (regions.includes(currentRegion)) {{
+    regionSel.value = currentRegion;
+  }} else {{
+    currentRegion = regions[0] || '';
+    regionSel.value = currentRegion;
+  }}
+  regionSel.onchange = () => {{ currentRegion = regionSel.value; updateChart(); }};
+}}
+
+function setUnit(idx) {{
+  currentUnitIdx = idx;
+  document.querySelectorAll('.toggle-btn').forEach((btn, i) => {{
+    btn.className = 'toggle-btn' + (i === idx ? ' active' : '');
+  }});
+  updateChart();
+}}
+
+// ─── Chart rendering ────────────────────────────────────────────
+function updateChart() {{
+  const yearData = (dispatchData[currentScenario] || {{}})[currentYear] || {{}};
+  const regionData = yearData[currentRegion] || {{}};
+  const unitDef = UNITS[currentUnitIdx];
+
+  // Build traces in stack order
+  const traces = [];
+  const presentTechs = new Set();
+  TS_ORDER.forEach(ts => {{
+    const tsData = regionData[ts] || {{}};
+    Object.keys(tsData).forEach(tc => presentTechs.add(tc));
+  }});
+
+  const orderedTechs = STACK_ORDER.filter(tc => presentTechs.has(tc));
+
+  orderedTechs.forEach(tc => {{
+    const yValues = TS_ORDER.map(ts => {{
+      const val = (regionData[ts] || {{}})[tc] || 0;
+      return val * unitDef.factor;
+    }});
+    traces.push({{
+      x: TS_ORDER,
+      y: yValues,
+      name: TECH_LABELS[tc] || tc,
+      type: 'scatter',
+      mode: 'lines',
+      fill: 'tonexty',
+      stackgroup: 'one',
+      line: {{ width: 0.5, color: TECH_COLORS[tc] || '#999' }},
+      fillcolor: TECH_COLORS[tc] || '#999',
+      hovertemplate: `%{{x}}<br>${{TECH_LABELS[tc] || tc}}: %{{y:.2f}} ${{unitDef.label}}<extra></extra>`
+    }});
+  }});
+
+  // Season separator annotations
+  const annotations = [];
+  const shapes = [];
+  Object.entries(SEASON_LABELS).forEach(([ts, label]) => {{
+    const idx = TS_ORDER.indexOf(ts);
+    if (idx >= 0) {{
+      annotations.push({{
+        x: ts, y: 1.06, xref: 'x', yref: 'paper',
+        text: `<b>${{label}}</b>`, showarrow: false,
+        font: {{ size: 12, color: '#555' }}
+      }});
+      if (idx > 0) {{
+        shapes.push({{
+          type: 'line', x0: idx - 0.5, x1: idx - 0.5,
+          y0: 0, y1: 1, xref: 'x', yref: 'paper',
+          line: {{ color: '#aaa', width: 1, dash: 'dot' }}
+        }});
+      }}
+    }}
+  }});
+
+  const layout = {{
+    title: {{
+      text: `Generation Mix — ${{currentScenario}} — ${{currentYear}} — ${{currentRegion}} (${{unitDef.label}})`,
+      font: {{ size: 16, family: 'Segoe UI', color: '#333' }}
+    }},
+    xaxis: {{
+      title: 'Timeslice',
+      tickangle: -45,
+      type: 'category',
+      categoryorder: 'array',
+      categoryarray: TS_ORDER
+    }},
+    yaxis: {{
+      title: unitDef.label,
+      rangemode: 'tozero'
+    }},
+    annotations: annotations,
+    shapes: shapes,
+    margin: {{ l: 70, r: 30, t: 80, b: 80 }},
+    height: window.innerHeight * 0.72,
+    legend: {{
+      orientation: 'h', y: -0.25, x: 0.5, xanchor: 'center',
+      font: {{ size: 11 }},
+      traceorder: 'normal'
+    }},
+    hovermode: 'x unified'
+  }};
+
+  Plotly.react('chart', traces, layout, {{ responsive: true }});
+
+  document.getElementById('infoBar').textContent =
+    `${{orderedTechs.length}} technologies | Region: ${{currentRegion}} | Scenario: ${{currentScenario}} | Year: ${{currentYear}}`;
+}}
+
+function downloadPNG() {{
+  const unitDef = UNITS[currentUnitIdx];
+  Plotly.downloadImage('chart', {{
+    format: 'png', width: 1600, height: 900,
+    filename: `DispatchChart_${{currentScenario}}_${{currentYear}}_${{currentRegion}}_${{unitDef.label}}`
+  }});
+}}
+
+// ─── Start ──────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', init);
+window.addEventListener('resize', () => {{
+  Plotly.relayout('chart', {{ height: window.innerHeight * 0.72 }});
+}});
+</script>
+</body>
+</html>"""
+
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(html)
+    print(f"  Dispatch HTML saved to {output_path}")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main():
@@ -554,6 +1147,7 @@ def main():
     centerpoints_path = script_dir / 'Miscellaneous' / 'centerpoints.csv'
     output_dir = script_dir / 'Figures'
     output_path = output_dir / 'TransmissionMaps.html'
+    dispatch_output_path = output_dir / 'DispatchChart.html'
 
     if not csv_path.exists():
         raise FileNotFoundError(f"Data file not found: {csv_path}")
@@ -562,6 +1156,7 @@ def main():
 
     output_dir.mkdir(exist_ok=True)
 
+    # --- Transmission Maps ---
     print("=" * 60)
     print("OSTRAM Transmission Maps Generator")
     print("=" * 60)
@@ -574,8 +1169,20 @@ def main():
 
     generate_html(capacity_data, flow_data, ratio_data, node_list, str(output_path))
 
+    print(f"  Done! Open {output_path}")
+
+    # --- Dispatch Chart ---
+    print()
     print("=" * 60)
-    print(f"Done! Open {output_path}")
+    print("OSTRAM Dispatch Chart Generator")
+    print("=" * 60)
+
+    ddf, ys = load_dispatch_data(str(csv_path))
+    dispatch_data = prepare_dispatch_json(ddf, ys)
+    generate_dispatch_html(dispatch_data, str(dispatch_output_path))
+
+    print("=" * 60)
+    print(f"Done! Open {dispatch_output_path}")
     print("=" * 60)
 
 
