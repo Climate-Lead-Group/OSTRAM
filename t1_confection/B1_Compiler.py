@@ -425,6 +425,9 @@ for s in range( len( param_sheets ) ):
         # Appending to df_SpecAnnualDemand and df_SpecDemandProfile
         if Demand_df['Demand/Share'].tolist()[m] == 'Demand' and param_sheets[s] == 'Demand_Projection':
             this_fuel = list_fuel_or_tech[m]
+            if this_fuel not in All_Fuel_list:
+                All_Fuel_list.append(this_fuel)
+                All_Fuel_list_names.append(this_fuel)
             for y in range(len(time_range_vector)):
                 # SpecifiedAnnualDemand
                 spec_annual_demand_row = {

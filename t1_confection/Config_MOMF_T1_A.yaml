@@ -146,6 +146,7 @@ xtra_scen:
   - 'LDSINDSO01'
   - 'LDSINDWE01'
   - 'LDSLKAXX01'
+  - 'LDSMDVXX01'
   - 'LDSNPLXX01'
   - 'SDSBGDXX01'
   - 'SDSBTNXX01'
@@ -155,6 +156,7 @@ xtra_scen:
   - 'SDSINDSO01'
   - 'SDSINDWE01'
   - 'SDSLKAXX01'
+  - 'SDSMDVXX01'
   - 'SDSNPLXX01'
 Conversionls:
 - 1
