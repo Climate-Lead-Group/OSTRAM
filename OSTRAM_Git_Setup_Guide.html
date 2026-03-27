@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSTRAM Git &amp; GitHub Setup Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --teal-dark:#00414D; --teal:#0A595F; --teal-mid:#23978E;
+    --emerald:#10B981; --amber:#F59E0B; --slate-900:#334155;
+    --slate-600:#475569; --slate-400:#94A3B8; --sage-light:#C5D8D8;
+    --mint-light:#D0EDEB; --cloud:#E0F0EF; --ice:#F0F5F5;
+    --white:#FFFFFF; --red:#EF4444;
+  }
+  body { font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; background:var(--ice); color:var(--slate-900); line-height:1.7; font-size:16px; }
+
+  /* Hero */
+  .hero { background:linear-gradient(135deg,var(--teal-dark) 0%,var(--teal) 50%,var(--teal-mid) 100%); color:var(--white); padding:60px 40px 50px; text-align:center; position:relative; overflow:hidden; }
+  .hero::before { content:''; position:absolute; top:-60px; right:-60px; width:250px; height:250px; border-radius:50%; background:rgba(16,185,129,.12); }
+  .hero::after  { content:''; position:absolute; bottom:-40px; left:-40px; width:180px; height:180px; border-radius:50%; background:rgba(245,158,11,.1); }
+  .hero h1 { font-size:2.6rem; font-weight:800; letter-spacing:-.5px; margin-bottom:10px; position:relative; }
+  .hero .subtitle { font-size:1.15rem; opacity:.88; max-width:600px; margin:0 auto; position:relative; }
+  .hero .badge { display:inline-block; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25); border-radius:20px; padding:4px 16px; font-size:.82rem; font-weight:500; margin-bottom:18px; position:relative; }
+
+  /* Layout */
+  .container { max-width:860px; margin:0 auto; padding:0 24px; }
+
+  /* TOC */
+  .toc { background:var(--white); border:1px solid var(--sage-light); border-radius:12px; padding:28px 32px; margin:-30px auto 40px; position:relative; z-index:2; box-shadow:0 4px 20px rgba(0,65,77,.08); }
+  .toc h2 { font-size:1.1rem; font-weight:700; color:var(--teal); margin-bottom:14px; text-transform:uppercase; letter-spacing:1px; }
+  .toc ol { list-style:none; counter-reset:toc; columns:2; column-gap:30px; }
+  .toc li { counter-increment:toc; margin-bottom:8px; break-inside:avoid; }
+  .toc li a { color:var(--slate-600); text-decoration:none; font-size:.95rem; font-weight:500; transition:color .2s; }
+  .toc li a:hover { color:var(--teal); }
+  .toc li a::before { content:counter(toc) ". "; color:var(--teal-mid); font-weight:700; }
+
+  /* Sections */
+  section { background:var(--white); border-radius:12px; padding:36px; margin-bottom:28px; border:1px solid var(--sage-light); box-shadow:0 2px 10px rgba(0,65,77,.04); }
+  section h2 { font-size:1.55rem; font-weight:800; color:var(--teal-dark); margin-bottom:6px; display:flex; align-items:center; gap:12px; }
+  section h2 .num { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; background:var(--teal); color:var(--white); font-size:.95rem; font-weight:700; flex-shrink:0; }
+  section h3 { font-size:1.15rem; font-weight:700; color:var(--teal); margin:26px 0 10px; }
+  section p { margin-bottom:14px; color:var(--slate-600); }
+
+  /* Analogy */
+  .analogy { background:linear-gradient(135deg,var(--cloud),var(--mint-light)); border-left:4px solid var(--teal-mid); border-radius:0 10px 10px 0; padding:18px 22px; margin:18px 0; }
+  .analogy .label { font-weight:700; color:var(--teal); font-size:.85rem; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+  .analogy p { margin:0; color:var(--slate-900); }
+
+  /* Code blocks with copy button */
+  .code-wrap { position:relative; margin:14px 0 18px; }
+  pre { background:var(--slate-900); color:#e2e8f0; border-radius:10px; padding:18px 22px; overflow-x:auto; font-family:'JetBrains Mono','Consolas',monospace; font-size:.88rem; line-height:1.7; margin:0; }
+  pre .comment { color:#64748b; }
+  pre .cmd { color:#34d399; }
+  pre .flag { color:#fbbf24; }
+  pre .string { color:#7dd3fc; }
+  pre .output { color:#94a3b8; font-style:italic; }
+  code { font-family:'JetBrains Mono','Consolas',monospace; background:var(--cloud); color:var(--teal-dark); padding:2px 7px; border-radius:4px; font-size:.88em; }
+  pre code { background:none; color:inherit; padding:0; }
+
+  .copy-btn {
+    position:absolute; top:10px; right:10px;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
+    color:#e2e8f0; border-radius:6px; padding:4px 10px;
+    font-size:.75rem; font-family:'Inter',sans-serif; font-weight:500;
+    cursor:pointer; transition:background .2s,color .2s;
+    display:flex; align-items:center; gap:5px;
+  }
+  .copy-btn:hover { background:rgba(255,255,255,.2); }
+  .copy-btn.copied { background:var(--emerald); color:#fff; border-color:var(--emerald); }
+  .copy-btn svg { width:13px; height:13px; fill:currentColor; }
+
+  /* Steps */
+  .step-list { list-style:none; counter-reset:step; padding:0; }
+  .step-list > li { counter-increment:step; padding:16px 18px 16px 56px; position:relative; margin-bottom:12px; background:var(--ice); border-radius:10px; border:1px solid var(--sage-light); }
+  .step-list > li::before { content:counter(step); position:absolute; left:16px; top:16px; width:28px; height:28px; border-radius:50%; background:var(--teal); color:var(--white); font-size:.82rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
+  .step-list > li strong { color:var(--slate-900); }
+
+  /* Callouts */
+  .callout { border-radius:10px; padding:16px 20px; margin:16px 0; font-size:.95rem; }
+  .callout.tip { background:#ecfdf5; border-left:4px solid var(--emerald); }
+  .callout.tip .tag { color:var(--emerald); }
+  .callout.warn { background:#fefce8; border-left:4px solid var(--amber); }
+  .callout.warn .tag { color:var(--amber); }
+  .callout.important { background:#fef2f2; border-left:4px solid var(--red); }
+  .callout.important .tag { color:var(--red); }
+  .callout .tag { font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+  .callout p { margin:0; color:var(--slate-900); }
+
+  /* Two-col */
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:16px 0; }
+  .two-col > div { background:var(--ice); border-radius:10px; padding:18px; border:1px solid var(--sage-light); }
+  .two-col h4 { font-size:.95rem; font-weight:700; color:var(--teal); margin-bottom:8px; }
+
+  /* Table */
+  table { width:100%; border-collapse:collapse; margin:16px 0; font-size:.92rem; }
+  thead th { background:var(--teal-dark); color:var(--white); padding:12px 16px; text-align:left; font-weight:600; }
+  thead th:first-child { border-radius:8px 0 0 0; }
+  thead th:last-child  { border-radius:0 8px 0 0; }
+  tbody td { padding:11px 16px; border-bottom:1px solid var(--sage-light); color:var(--slate-600); }
+  tbody tr:nth-child(even) { background:var(--ice); }
+  tbody tr:hover { background:var(--cloud); }
+
+  /* Footer */
+  footer { background:var(--teal-dark); color:rgba(255,255,255,.75); padding:40px 24px 30px; margin-top:10px; }
+  .footer-inner { max-width:860px; margin:0 auto; }
+  .footer-brand { display:flex; align-items:flex-start; gap:20px; margin-bottom:24px; padding-bottom:24px; border-bottom:1px solid rgba(255,255,255,.15); flex-wrap:wrap; }
+  .footer-logo-box { background:var(--white); border-radius:10px; padding:10px 16px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .footer-logo-svg { width:180px; height:auto; }
+  .footer-tagline { flex:1; min-width:220px; }
+  .footer-tagline strong { display:block; color:var(--white); font-size:1rem; font-weight:700; margin-bottom:4px; }
+  .footer-tagline p { font-size:.88rem; line-height:1.6; margin:0; color:rgba(255,255,255,.7); }
+  .footer-links { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; font-size:.88rem; }
+  .footer-links div strong { display:block; color:var(--white); font-size:.78rem; text-transform:uppercase; letter-spacing:.8px; margin-bottom:8px; }
+  .footer-links a { color:rgba(255,255,255,.65); text-decoration:none; display:block; margin-bottom:4px; transition:color .2s; }
+  .footer-links a:hover { color:var(--emerald); }
+  .footer-bottom { font-size:.8rem; color:rgba(255,255,255,.45); text-align:center; padding-top:20px; border-top:1px solid rgba(255,255,255,.1); }
+
+  /* Troubleshoot banner */
+  .troubleshoot { background:linear-gradient(135deg,rgba(16,185,129,.12),rgba(35,151,142,.1)); border:1px solid var(--emerald); border-radius:12px; padding:24px 28px; margin-bottom:28px; display:flex; align-items:flex-start; gap:18px; }
+  .troubleshoot-icon { font-size:2rem; flex-shrink:0; }
+  .troubleshoot h3 { color:var(--teal-dark); font-size:1.05rem; margin-bottom:6px; }
+  .troubleshoot p { color:var(--slate-600); margin:0 0 8px; font-size:.93rem; }
+  .troubleshoot a { color:var(--teal); font-weight:600; text-decoration:none; }
+  .troubleshoot a:hover { text-decoration:underline; }
+
+  @media (max-width:700px) {
+    .toc ol { columns:1; }
+    .two-col { grid-template-columns:1fr; }
+    .hero h1 { font-size:2rem; }
+    section { padding:24px 20px; }
+    .footer-links { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="badge">OSTRAM Team Guide</div>
+  <h1>Git &amp; GitHub Setup Guide</h1>
+  <p class="subtitle">A beginner-friendly, step-by-step guide to version control for the OSTRAM energy model &mdash; no prior experience required.</p>
+</div>
+
+<div class="container">
+  <nav class="toc">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#what-is-git">What Are Git &amp; GitHub?</a></li>
+      <li><a href="#why-use-it">Why We Need Version Control for OSTRAM</a></li>
+      <li><a href="#prerequisites">Prerequisites &amp; Downloads</a></li>
+      <li><a href="#create-account">Creating a GitHub Account</a></li>
+      <li><a href="#configure-git">First-Time Git Configuration</a></li>
+      <li><a href="#clone-repo">Getting the OSTRAM Repository</a></li>
+      <li><a href="#install-conda">Installing Miniconda</a></li>
+      <li><a href="#run-ostram">Running OSTRAM (python run.py)</a></li>
+      <li><a href="#install-solvers">Installing Optimization Solvers</a></li>
+      <li><a href="#setup-environment">Setting Up the OSTRAM Environment</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1. WHAT IS GIT -->
+  <section id="what-is-git">
+    <h2><span class="num">1</span> What Are Git &amp; GitHub?</h2>
+    <div class="analogy">
+      <div class="label">Think of it this way</div>
+      <p><strong>Git</strong> is like the &ldquo;Track Changes&rdquo; feature in Microsoft Word &mdash; but for <em>every file</em> in a project. It remembers every change anyone makes, when they made it, and why.</p>
+    </div>
+    <div class="two-col">
+      <div><h4>Git (the tool)</h4><p>A free program that runs on your computer. It watches your project folder and records a complete history of every change you save.</p></div>
+      <div><h4>GitHub (the website)</h4><p>A cloud service (like Google Drive, but for code) where the team stores a shared copy of the project so everyone can stay in sync.</p></div>
+    </div>
+    <h3>Key Vocabulary</h3>
+    <table>
+      <thead><tr><th>Term</th><th>What It Means</th><th>Everyday Analogy</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Repository (repo)</strong></td><td>Your project folder, tracked by Git</td><td>A shared Google Drive folder</td></tr>
+        <tr><td><strong>Commit</strong></td><td>A saved snapshot of your changes</td><td>Pressing &ldquo;Save&rdquo; with a description</td></tr>
+        <tr><td><strong>Push</strong></td><td>Uploading your commits to GitHub</td><td>Syncing your files to the cloud</td></tr>
+        <tr><td><strong>Pull</strong></td><td>Downloading the latest changes from GitHub</td><td>Refreshing to see teammates&rsquo; updates</td></tr>
+        <tr><td><strong>Clone</strong></td><td>Downloading the full project for the first time</td><td>Making a copy of the shared folder</td></tr>
+        <tr><td><strong>Branch</strong></td><td>A parallel copy of the project for experimenting</td><td>Making a draft copy before editing a report</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 2. WHY USE IT -->
+  <section id="why-use-it">
+    <h2><span class="num">2</span> Why We Need Version Control for OSTRAM</h2>
+    <p>OSTRAM is a complex energy model with configuration files, Python scripts, and data pipelines that multiple team members work on simultaneously. Here is why Git is essential:</p>
+    <h3>The Problem Without Git</h3>
+    <div class="two-col">
+      <div><h4>File Chaos</h4><p>Without Git, files end up named <code>Config_FINAL.yaml</code>, <code>Config_FINAL_v2.yaml</code>, <code>Config_FINAL_v2_REAL.yaml</code>. Nobody knows which version is current or who changed what.</p></div>
+      <div><h4>Collaboration Conflicts</h4><p>If two people edit <code>Config_MOMF_T1_AB.yaml</code> at the same time and email it around, someone&rsquo;s changes will get overwritten and lost forever.</p></div>
+    </div>
+    <h3>What Git Solves</h3>
+    <table>
+      <thead><tr><th>Benefit</th><th>How It Helps OSTRAM</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Complete History</strong></td><td>Every change to every file is recorded. You can see who modified <code>B2_Executing_OG_Model.py</code> last Tuesday and exactly what they changed.</td></tr>
+        <tr><td><strong>Safe Experimentation</strong></td><td>Want to try a new solver configuration? Create a <em>branch</em>, test it, and if it breaks things, just go back &mdash; the original is untouched.</td></tr>
+        <tr><td><strong>Team Synchronization</strong></td><td>Everyone always knows where the latest, working version lives. No more emailing files back and forth.</td></tr>
+        <tr><td><strong>Reproducibility</strong></td><td>OSTRAM uses DVC for data versioning. Git + DVC together mean you can reproduce <em>any</em> past model run exactly, which is critical for peer review and auditing.</td></tr>
+        <tr><td><strong>Disaster Recovery</strong></td><td>Accidentally deleted a file? Changed a config that broke the model? Git lets you restore any previous version in seconds.</td></tr>
+      </tbody>
+    </table>
+    <div class="callout tip"><div class="tag">Bottom Line</div><p>Git is not just for software developers. For a shared, evolving model like OSTRAM, it is the professional standard for keeping work safe, organized, and collaborative.</p></div>
+  </section>
+
+  <!-- 3. PREREQUISITES -->
+  <section id="prerequisites">
+    <h2><span class="num">3</span> Prerequisites &amp; Downloads</h2>
+    <p>Before you can work with OSTRAM, you need to install a few free programs. Here is everything you need:</p>
+    <table>
+      <thead><tr><th>Software</th><th>What It Does</th><th>Download Link</th><th>Size</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Git for Windows</strong></td><td>Version control tool</td><td><a href="https://git-scm.com/download/win" target="_blank">git-scm.com/download/win</a></td><td>~55 MB</td></tr>
+        <tr><td><strong>Miniconda</strong></td><td>Lightweight Python &amp; package manager. <em>You do not need to install Python separately.</em></td><td><a href="https://www.anaconda.com/docs/anaconda/miniconda/" target="_blank">Installing Miniconda - Anaconda</a></td><td>~80 MB</td></tr>
+        <tr><td><strong>Text Editor</strong> (optional)</td><td>For editing <code>.yaml</code> files. Notepad works; <a href="https://notepad-plus-plus.org/downloads/" target="_blank">Notepad++</a> is better.</td><td><a href="https://notepad-plus-plus.org/downloads/" target="_blank">notepad-plus-plus.org</a></td><td>~5 MB</td></tr>
+      </tbody>
+    </table>
+    <div class="callout tip"><div class="tag">System Requirements</div><p><strong>Windows 10 or higher</strong> is required. All software listed is free. You will also need an internet connection.</p></div>
+    <div class="callout tip"><div class="tag">Detailed Installation Instructions Below</div><p>This table is a quick reference. Step-by-step installation instructions for each component are provided in the dedicated sections that follow: <strong>Git</strong> is covered in the GitHub Account &amp; Configuration sections (4–5), <strong>Miniconda</strong> in Section 7, and <strong>solvers</strong> in Section 9.</p></div>
+    <h3>What Is the &ldquo;Command Line&rdquo;?</h3>
+    <div class="two-col">
+      <div><h4>Command Prompt (cmd)</h4><p>The basic Windows terminal. Open it via <strong>Start Menu</strong> → type <code>cmd</code> → press <strong>Enter</strong>. Use this for Git commands.</p></div>
+      <div><h4>Anaconda Prompt</h4><p>Comes with Miniconda/Anaconda. Pre-configured for Python and Conda. Open via <strong>Start Menu</strong> → search <strong>&ldquo;Anaconda Prompt&rdquo;</strong>. Use this for running OSTRAM.</p></div>
+    </div>
+    <div class="analogy"><div class="label">Think of it this way</div><p>The Command Prompt is like texting your computer instead of clicking buttons. Every command in this guide will appear in a dark box &mdash; type exactly what you see and press Enter.</p></div>
+  </section>
+
+  <!-- 4. CREATE ACCOUNT -->
+  <section id="create-account">
+    <h2><span class="num">4</span> Creating a GitHub Account</h2>
+    <ol class="step-list">
+      <li><strong>Go to GitHub</strong><br>Open your browser and visit: <a href="https://github.com" target="_blank">https://github.com</a></li>
+      <li><strong>Click &ldquo;Sign up&rdquo;</strong><br>Use your <strong>work email address</strong>. Choose a recognizable username (e.g. <code>firstname-lastname-CLG</code>).</li>
+      <li><strong>Verify your email</strong><br>GitHub will send a verification email. Click the link inside to activate your account.</li>
+      <li><strong>Ask to be added to the OSTRAM repository</strong><br>Send your GitHub username to the project administrator so they can grant access to <strong>Climate-Lead-Group/OSTRAM</strong>.
+        <div class="callout warn"><div class="tag">Important</div><p>You will not be able to push changes until the admin adds you as a collaborator. Accept the GitHub invitation email you receive.</p></div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- 5. CONFIGURE GIT -->
+  <section id="configure-git">
+    <h2><span class="num">5</span> First-Time Git Configuration</h2>
+    <p>You only need to do this <strong>once</strong> on your computer. Open <strong>Command Prompt</strong> and run these commands with your own information:</p>
+    <div class="code-wrap">
+      <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="comment"># Tell Git your name (appears in the history)</span>
+<span class="cmd">git</span> config <span class="flag">--global</span> user.name <span class="string">"Your Full Name"</span>
+
+<span class="comment"># Tell Git your email (must match your GitHub account)</span>
+<span class="cmd">git</span> config <span class="flag">--global</span> user.email <span class="string">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="01786e74732f646c60686d416479606c716d642f626e6c">[email&#160;protected]</a>"</span></code></pre>
+    </div>
+    <h3>Verify Your Configuration</h3>
+    <div class="code-wrap">
+      <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="cmd">git</span> config <span class="flag">--list</span>
+<span class="output"># Look for user.name and user.email in the output</span></code></pre>
+    </div>
+    <div class="callout tip"><div class="tag">Why does this matter?</div><p>Every commit in Git is stamped with your name and email — your digital signature on every change.</p></div>
+  </section>
+
+  <!-- 6. CLONE REPO -->
+  <section id="clone-repo">
+    <h2><span class="num">6</span> Getting the OSTRAM Repository</h2>
+    <p>This downloads the entire OSTRAM project to your computer. You only do this <strong>once</strong>.</p>
+    <ol class="step-list">
+      <li>
+        <strong>Choose where to put the project</strong><br>
+        Open Command Prompt and navigate to your target folder. For example, to place it on your Desktop:
+        <div class="code-wrap">
+          <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="cmd">cd</span> <span class="string">%USERPROFILE%\Desktop</span></code></pre>
+        </div>
+      </li>
+      <li>
+        <strong>Clone (download) the repository</strong>
+        <div class="code-wrap">
+          <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="cmd">git</span> clone <span class="string">https://github.com/Climate-Lead-Group/OSTRAM.git</span></code></pre>
+        </div>
+        <p>This creates a folder called <code>OSTRAM</code> with all project files inside.</p>
+      </li>
+      <li>
+        <strong>Enter the project folder</strong>
+        <div class="code-wrap">
+          <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="cmd">cd</span> OSTRAM</code></pre>
+        </div>
+      </li>
+      <li>
+        <strong>Confirm everything is working</strong>
+        <div class="code-wrap">
+          <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="cmd">git</span> status
+<span class="output"># Should show: On branch main — nothing to commit, working tree clean</span></code></pre>
+        </div>
+      </li>
+    </ol>
+    <div class="callout important"><div class="tag">⚠️ Avoid Cloud-Synced Folders</div><p>Do <strong>not</strong> clone the OSTRAM repository into a folder that is actively synced by OneDrive, Google Drive, Dropbox, or any similar service. Sync clients continuously lock and rewrite files in the background, which causes <strong>access denied / read-write errors</strong> when Git or the solver tries to access the same files simultaneously. Clone to a local path instead — your Desktop (<code>%USERPROFILE%\Desktop</code>) or a dedicated local folder such as <code>C:\Projects\OSTRAM</code> are both safe choices.</p></div>
+    <div class="callout warn"><div class="tag">First-Time Login</div><p>The first time you interact with GitHub from the terminal, a browser window will pop up asking you to log in. Sign in and authorize Git to access your account. You only need to do this once.</p></div>
+  </section>
+
+  <!-- 7. INSTALL CONDA -->
+  <section id="install-conda">
+    <h2><span class="num">7</span> Installing Miniconda</h2>
+    <p>Miniconda manages Python and all scientific libraries that OSTRAM needs. Think of it as an &ldquo;app store&rdquo; for Python tools.</p>
+    <ol class="step-list">
+      <li>
+        <strong>Download Miniconda</strong><br>
+        Go to: <a href="https://www.anaconda.com/docs/anaconda/miniconda/" target="_blank">Installing Miniconda &mdash; Anaconda Documentation</a><br>
+        Download the <strong>Windows 64-bit</strong> installer (<code>.exe</code> file).
+        <div class="callout tip"><div class="tag">Miniconda vs. Anaconda</div><p>If you already have <strong>Anaconda</strong> installed, skip this section — they serve the same purpose. Anaconda simply includes more pre-installed packages.</p></div>
+      </li>
+      <li>
+        <strong>Run the installer</strong><br>
+        Double-click the downloaded file. During installation:
+        <ul style="margin:8px 0 0 20px; color:var(--slate-600);">
+          <li>Accept the license agreement</li>
+          <li>Choose <strong>&ldquo;Just Me&rdquo;</strong> for the installation scope</li>
+          <li>Keep the default installation folder</li>
+          <li><strong>Check the box</strong>: <em>&ldquo;Add Miniconda3 to my PATH environment variable&rdquo;</em> (ignore the installer warning — this is fine)</li>
+        </ul>
+      </li>
+      <li>
+        <strong>Verify the installation</strong><br>
+        Close and reopen Command Prompt, then type:
+        <div class="code-wrap">
+          <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="cmd">conda</span> <span class="flag">--version</span>
+<span class="output"># You should see something like: conda 24.7.1</span></code></pre>
+        </div>
+      </li>
+    </ol>
+    <div class="callout warn"><div class="tag">Using the Anaconda Prompt</div><p>If <code>conda</code> does not work in regular Command Prompt, use <strong>Anaconda Prompt</strong> instead: Start Menu → search <strong>&ldquo;Anaconda Prompt&rdquo;</strong> → open it. All subsequent steps should be performed in Anaconda Prompt.</p></div>
+  </section>
+
+  <!-- 8. RUN OSTRAM -->
+  <section id="run-ostram">
+    <h2><span class="num">8</span> Running OSTRAM for the First Time</h2>
+    <p>With Miniconda installed and the repository cloned, you can launch OSTRAM directly. The <code>run.py</code> script handles environment creation and dependency installation <strong>automatically</strong> on first launch.</p>
+    <ol class="step-list">
+      <li>
+        <strong>Open Anaconda Prompt</strong><br>
+        Start Menu → search <strong>&ldquo;Anaconda Prompt&rdquo;</strong> → open it. <em>All OSTRAM commands should be run from Anaconda Prompt, not regular Command Prompt.</em>
+      </li>
+      <li>
+        <strong>Navigate to the OSTRAM folder</strong>
+        <div class="code-wrap">
+          <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="cmd">cd</span> <span class="string">path\to\OSTRAM</span>
+<span class="comment"># Example: cd %USERPROFILE%\Desktop\OSTRAM</span></code></pre>
+        </div>
+      </li>
+      <li>
+        <strong>Run OSTRAM</strong>
+        <div class="code-wrap">
+          <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="cmd">python</span> run.py
+<span class="output"># On first run, this automatically creates the Conda environment
+# and installs all required dependencies including GLPK and CBC.</span></code></pre>
+        </div>
+        <div class="callout tip"><div class="tag">What happens on first run?</div><p><code>run.py</code> reads <code>environment.yaml</code>, creates the <code>OSTRAM-env</code> Conda environment, and installs all required packages including the <strong>GLPK</strong> and <strong>CBC</strong> solvers. This may take several minutes on first launch.</p></div>
+      </li>
+    </ol>
+    <div class="callout warn"><div class="tag">Subsequent runs</div><p>Every time you open a new Anaconda Prompt to work with OSTRAM, activate the environment first: <code>conda activate OSTRAM_env</code>. Without this step you will see errors about missing packages.</p></div>
+  </section>
+
+  <!-- 9. INSTALL SOLVERS -->
+  <section id="install-solvers">
+    <h2><span class="num">9</span> Optimization Solvers</h2>
+    <p>OSTRAM uses the OSeMOSYS energy model, which requires a <strong>linear programming solver</strong> to find optimal solutions.</p>
+    <div class="analogy"><div class="label">Think of it this way</div><p>If OSTRAM is the recipe, the solver is the oven. You can prepare all the ingredients (data, configuration), but without the oven (solver) you cannot bake the result (run the optimization).</p></div>
+
+    <h3>Required vs. Optional Solvers</h3>
+    <table>
+      <thead><tr><th>Solver</th><th>Status</th><th>License</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><strong>GLPK</strong></td><td style="color:var(--emerald);font-weight:700;">Auto-installed</td><td>Free &amp; open source</td><td>Default solver. Installed automatically by <code>run.py</code> on first launch.</td></tr>
+        <tr><td><strong>CBC</strong></td><td style="color:var(--emerald);font-weight:700;">Auto-installed</td><td>Free &amp; open source</td><td>Faster alternative for larger runs. Also installed automatically.</td></tr>
+        <tr><td><strong>CPLEX</strong></td><td style="color:var(--amber);font-weight:600;">Optional</td><td>Commercial (free academic)</td><td>Significantly faster for large-scale models. Free for academics via <a href="https://www.ibm.com/academic" target="_blank">IBM Academic Initiative</a>.</td></tr>
+        <tr><td><strong>Gurobi</strong></td><td style="color:var(--amber);font-weight:600;">Optional</td><td>Commercial (free academic)</td><td>High-performance solver. Free academic licenses at <a href="https://www.gurobi.com/academia/academic-program-and-licenses/" target="_blank">gurobi.com/academia</a>.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip"><div class="tag">Which solver should I use?</div><p><strong>GLPK and CBC are installed automatically</strong> and are sufficient for most OSTRAM runs. If you are working with large multi-region scenarios and run times are excessive, consider requesting an academic license for CPLEX or Gurobi.</p></div>
+
+    <h3>Installing Optional Solvers (after activating env)</h3>
+    <p>Activate the OSTRAM environment first, then install the optional solver of your choice:</p>
+    <div class="code-wrap">
+      <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="comment"># Step 1 — activate the OSTRAM environment</span>
+<span class="cmd">conda</span> activate <span class="string">OSTRAM-env</span></code></pre>
+    </div>
+    <div class="two-col">
+      <div>
+        <h4>CPLEX (Optional)</h4>
+        <p>Download from <a href="https://www.ibm.com/academic" target="_blank">IBM Academic Initiative</a>. After installing the full CPLEX suite, add the Python bindings:</p>
+        <div class="code-wrap">
+          <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="cmd">pip</span> install <span class="string">cplex</span></code></pre>
+        </div>
+      </div>
+      <div>
+        <h4>Gurobi (Optional)</h4>
+        <p>Download from <a href="https://www.gurobi.com/academia/academic-program-and-licenses/" target="_blank">Gurobi Academia</a>. Then add the Python bindings:</p>
+        <div class="code-wrap">
+          <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="cmd">conda</span> install <span class="flag">-c</span> gurobi <span class="string">gurobi</span></code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. SETUP ENVIRONMENT -->
+  <section id="setup-environment">
+    <h2><span class="num">10</span> Setting Up the OSTRAM Environment (Manual)</h2>
+    <p>The <code>run.py</code> script handles environment setup automatically. This section describes the manual steps for reference or troubleshooting.</p>
+    <h3>Option A: Automatic Setup (Recommended)</h3>
+    <p>Open <strong>Anaconda Prompt</strong>, navigate to the OSTRAM folder, and run:</p>
+    <div class="code-wrap">
+      <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="cmd">cd</span> <span class="string">path\to\OSTRAM</span>
+<span class="cmd">python</span> run.py
+<span class="output"># Automatically creates the Conda environment and installs all dependencies.</span></code></pre>
+    </div>
+    <h3>Option B: Manual Setup</h3>
+    <div class="code-wrap">
+      <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="comment"># Create the environment from OSTRAM's configuration file</span>
+<span class="cmd">conda</span> env create <span class="flag">-f</span> <span class="string">environment.yaml</span>
+
+<span class="comment"># Activate the environment</span>
+<span class="cmd">conda</span> activate <span class="string">OSTRAM_env</span>
+
+<span class="comment"># Verify Python version</span>
+<span class="cmd">python</span> <span class="flag">--version</span>
+<span class="output"># Should show Python 3.10.x</span></code></pre>
+    </div>
+    <div class="callout tip"><div class="tag">What is a Conda environment?</div><p>A self-contained toolbox. OSTRAM needs specific versions of Python libraries. The environment ensures those exact versions are installed without conflicting with other programs on your computer.</p></div>
+    <div class="callout warn"><div class="tag">Remember</div><p>Every time you open a new Anaconda Prompt to work with OSTRAM, activate the environment first: <code>conda activate OSTRAM_env</code>. Without it, you will see errors about missing packages.</p></div>
+  </section>
+
+  <!-- TROUBLESHOOTING -->
+  <div class="troubleshoot">
+    <div class="troubleshoot-icon">🛠️</div>
+    <div>
+      <h3>Need Help? Reach Out to the Developers</h3>
+      <p>If you encounter errors not covered in this guide — unexpected solver failures, environment conflicts, or repository access issues — the OSTRAM development team is available to assist.</p>
+      <p>
+        📧 Contact: <a href="/cdn-cgi/l/email-protection#7213161f1b1c32111e155f11005c111d1f"><span class="__cf_email__" data-cfemail="ceafaaa3a7a08eada2a9e3adbce0ada1a3">[email&#160;protected]</span></a><br>
+        🐛 Report bugs &amp; issues: <a href="https://github.com/Climate-Lead-Group/OSTRAM/issues" target="_blank">github.com/Climate-Lead-Group/OSTRAM/issues</a><br>
+        📖 Full documentation: <a href="https://ostram.readthedocs.io" target="_blank">ostram.readthedocs.io</a>
+      </p>
+      <p style="font-size:.85rem; color:var(--slate-400); margin-top:6px;">When reporting an issue, please include your OS version, Conda version, and the full error message from the terminal.</p>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <!-- SVG logo composed from CLG palette -->
+      <div class="footer-logo-box">
+        <svg class="footer-logo-svg" viewBox="55 -5 560 310" xmlns="http://www.w3.org/2000/svg" aria-label="Climate Lead Group">
+<path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M8723.98 26126.6C8774.45 26126.6 8820.88 26136.3 8861.99 26155.4 8903.26 26174.6 8938.21 26202.2 8965.86 26237.4L8975.79 26250 8909.67 26300.1 8899.99 26288.9C8853.81 26235.1 8795.67 26207.9 8727.2 26207.9 8664.84 26207.9 8612.57 26228 8571.86 26267.7 8531.27 26307.3 8510.69 26357.5 8510.69 26416.9 8510.69 26456.3 8519.89 26492.1 8538.05 26523.5 8556.17 26554.8 8582.14 26580.2 8615.23 26598.8 8648.4 26617.5 8684.99 26627 8723.98 26627 8759.79 26627 8793.02 26619.7 8822.76 26605.5 8852.4 26591.3 8878.2 26570 8899.45 26542.3L8909.07 26529.8 8975.22 26580.6 8966.25 26593C8939.59 26630 8904.91 26659.1 8863.18 26679.6 8821.64 26700 8774.56 26710.4 8723.27 26710.4 8638.12 26710.4 8566.18 26682.3 8509.43 26627.1 8452.54 26571.7 8423.69 26502.6 8423.69 26421.5 8423.69 26344.8 8447.47 26278.3 8494.39 26223.9 8550.41 26159.3 8627.65 26126.6 8723.98 26126.6" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M9108.97 26710.4H9027.34V26139.8H9108.97V26710.4" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M9173.87 26139.8H9255.5V26560.3H9173.87V26139.8" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M9214.51 26606.2C9230.19 26606.2 9243.78 26611.9 9254.88 26623 9265.97 26634.2 9271.58 26647.7 9271.58 26663.1 9271.58 26678.8 9265.97 26692.4 9254.88 26703.6 9243.79 26714.7 9230.2 26720.4 9214.51 26720.4 9199.06 26720.4 9185.58 26714.7 9174.49 26703.6 9163.4 26692.4 9157.79 26678.8 9157.79 26663.1 9157.79 26647.6 9163.41 26634.1 9174.49 26623 9185.59 26611.9 9199.06 26606.2 9214.51 26606.2" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M9782.9 26490.1C9799.58 26490.1 9813.95 26486.2 9825.64 26478.4 9837.13 26470.8 9845.35 26460.6 9850.05 26448.3 9853.65 26438.8 9857.92 26417.2 9857.92 26367.9V26139.8H9940.64V26367.9C9940.64 26418.3 9935.2 26457.1 9924.48 26483.3 9913.32 26510.5 9895.91 26532 9872.76 26547.3 9849.68 26562.5 9822.81 26570.3 9792.91 26570.3 9761.23 26570.3 9731.27 26561.4 9703.84 26544 9684.64 26531.8 9667.52 26515.5 9652.83 26495.3 9647.08 26506.8 9640.74 26516.5 9633.9 26524.3 9621.68 26538.3 9605.84 26549.6 9586.84 26557.9 9567.97 26566.1 9547.78 26570.3 9526.84 26570.3 9496.16 26570.3 9466.54 26561.8 9438.7 26545 9428.74 26538.8 9418.86 26530.8 9409.18 26521.1V26560.3H9327.55V26139.8H9409.18V26320.4C9409.18 26366.7 9413.66 26401.1 9422.48 26422.7 9430.91 26443.3 9444.04 26459.9 9461.53 26472 9478.88 26484 9497.68 26490.1 9517.41 26490.1 9534.05 26490.1 9548.44 26485.9 9560.18 26477.7 9572.03 26469.5 9580.1 26458.8 9584.84 26445.1 9588.46 26434.8 9592.74 26410.7 9592.74 26354.7V26139.8H9674.38V26307.9C9674.38 26361.4 9678.7 26399.7 9687.19 26421.5 9695.27 26442.3 9708.19 26459.1 9725.61 26471.6 9742.87 26483.8 9762.15 26490.1 9782.9 26490.1" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M10079.3 26349.5C10079.3 26374.2 10085.6 26398.1 10098.1 26420.3 10110.6 26442.4 10127.6 26459.8 10148.6 26472.1 10169.6 26484.2 10192.8 26490.4 10217.7 26490.4 10256.4 26490.4 10289.4 26476.8 10315.9 26449.8 10342.4 26422.8 10355.8 26388.6 10355.8 26348.1 10355.8 26321.5 10349.8 26297.3 10338 26276.2 10326.3 26255.3 10309.3 26238.5 10287.5 26226.2 10243.2 26201.3 10191.5 26201.3 10149.2 26226.2 10128 26238.7 10110.9 26256.3 10098.3 26278.7 10085.7 26301.2 10079.3 26325 10079.3 26349.5ZM10212.2 26129.8C10245.5 26129.8 10276.6 26136.9 10304.8 26150.8 10321.6 26159.1 10337.6 26169.9 10352.6 26183.2V26139.8H10433.5V26560.3H10352.6V26515.4C10338.7 26528.7 10323.7 26539.7 10307.6 26548.1 10279.6 26562.8 10248 26570.3 10213.6 26570.3 10154.2 26570.3 10102.7 26548.6 10060.5 26505.9 10018.3 26463.2 9996.96 26411.1 9996.96 26351.1 9996.96 26289.9 10018.1 26237.2 10059.9 26194.4 10101.8 26151.6 10153 26129.8 10212.2 26129.8" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M10639.7 26139.8V26485.4H10719.1V26560.3H10639.7V26704.7H10558.1V26560.3H10489.8V26485.4H10558.1V26139.8H10639.7" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M11084.5 26405.2H10837.7C10846.6 26427.9 10858 26445.7 10871.8 26458 10896.2 26479.8 10925.7 26490.8 10959.7 26490.8 10980.4 26490.8 11000.4 26486.4 11019.2 26477.6 11037.9 26468.9 11053 26457.4 11064.2 26443.5 11072.2 26433.4 11079 26420.5 11084.5 26405.2ZM11092.1 26292.8C11077.8 26268.9 11064.6 26251.6 11052.7 26241.4 11041.1 26231.3 11026.7 26223 11009.9 26216.9 10993 26210.7 10975.4 26207.5 10957.5 26207.5 10920.7 26207.5 10890.5 26220.1 10865.5 26246 10843.9 26268.3 10831.2 26296.7 10827.6 26330.3H11176.7L11176.5 26346.3C11176 26402.8 11160.4 26450.7 11130.2 26488.8 11087.6 26542.9 11030 26570.3 10959 26570.3 10889.8 26570.3 10833.7 26543.5 10792.4 26490.6 10760 26449.4 10743.6 26401.7 10743.6 26349 10743.6 26292.9 10762.9 26242 10801.1 26197.7 10839.8 26152.6 10893.9 26129.8 10961.8 26129.8 10992.3 26129.8 11020 26134.6 11044.4 26143.9 11068.8 26153.3 11091.1 26167.1 11110.6 26185.1 11130.1 26203 11147.3 26226.6 11161.9 26255.3L11169 26269.2 11099.8 26305.6 11092.1 26292.8" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M8475.4 25977.6H8423.26V25618.5H8606.63V25669.4H8475.4V25977.6" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M8683.08 25788.1C8688.94 25803.9 8696.67 25816.1 8706.14 25824.6 8722.37 25839.1 8741.29 25846.1 8763.95 25846.1 8777.55 25846.1 8790.72 25843.2 8803.08 25837.5 8815.36 25831.8 8825.32 25824.2 8832.69 25815 8838.28 25808 8842.96 25799 8846.63 25788.1H8683.08ZM8903.4 25751.1C8903.06 25787.5 8893.04 25818.4 8873.61 25842.9 8846.25 25877.7 8809.2 25895.3 8763.48 25895.3 8718.99 25895.3 8682.94 25878 8656.36 25844.1 8635.53 25817.5 8624.97 25786.8 8624.97 25752.9 8624.97 25716.8 8637.42 25684.1 8661.97 25655.6 8686.85 25626.6 8721.63 25612 8765.34 25612 8784.93 25612 8802.81 25615 8818.47 25621 8834.16 25627.1 8848.48 25636 8861.05 25647.5 8873.54 25659 8884.65 25674.2 8894.06 25692.7L8898.11 25700.7 8855.32 25723.1 8850.93 25715.8C8841.56 25700.3 8832.88 25689 8825.12 25682.2 8817.46 25675.6 8807.98 25670.1 8796.94 25666.1 8785.85 25662 8774.27 25659.9 8762.56 25659.9 8738.27 25659.9 8718.45 25668.2 8701.96 25685.3 8687.26 25700.5 8679.03 25719.1 8676.92 25742H8903.48L8903.4 25751.1" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M9141.02 25819.2C9158.68 25801.2 9167.27 25779.3 9167.27 25752.3 9167.27 25734.9 9163.33 25719 9155.57 25705.1 9147.86 25691.4 9136.68 25680.3 9122.32 25672.2 9093.55 25656 9059.29 25655.8 9031.38 25672.2 9017.47 25680.4 9006.23 25692 8997.97 25706.7 8989.67 25721.5 8985.47 25737.2 8985.47 25753.3 8985.47 25769.5 8989.64 25785.2 8997.85 25799.8 9006.05 25814.3 9017.2 25825.8 9030.99 25833.8 9044.83 25841.8 9060.13 25845.9 9076.48 25845.9 9102.29 25845.9 9123.4 25837.2 9141.02 25819.2ZM9165.19 25858C9155.72 25867.5 9145.37 25875.2 9134.23 25881 9116.23 25890.5 9095.9 25895.3 9073.82 25895.3 9035.62 25895.3 9002.5 25881.3 8975.35 25853.9 8948.24 25826.4 8934.49 25792.9 8934.49 25754.3 8934.49 25714.9 8948.11 25681 8974.96 25653.5 9001.88 25626 9034.83 25612 9072.89 25612 9094.29 25612 9114.31 25616.5 9132.41 25625.4 9144.05 25631.2 9155.01 25638.8 9165.19 25648.1V25618.5H9215.23V25888.8H9165.19V25858" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M9465.83 25819.2C9483.52 25801.2 9492.1 25779.3 9492.1 25752.3 9492.1 25734.9 9488.15 25719 9480.38 25705.1 9472.69 25691.4 9461.5 25680.3 9447.13 25672.2 9418.39 25656 9384.13 25655.8 9356.21 25672.2 9342.31 25680.4 9331.07 25692 9322.8 25706.7 9314.5 25721.5 9310.29 25737.2 9310.29 25753.3 9310.29 25769.5 9314.46 25785.2 9322.69 25799.8 9330.87 25814.3 9342.02 25825.8 9355.82 25833.8 9369.65 25841.8 9384.94 25845.9 9401.3 25845.9 9427.12 25845.9 9448.22 25837.2 9465.83 25819.2ZM9490.01 25858C9480.54 25867.5 9470.19 25875.2 9459.06 25881 9441.04 25890.5 9420.72 25895.3 9398.64 25895.3 9360.44 25895.3 9327.32 25881.3 9300.17 25853.9 9273.06 25826.4 9259.32 25792.9 9259.32 25754.3 9259.32 25714.9 9272.94 25681 9299.79 25653.5 9326.7 25626 9359.64 25612 9397.71 25612 9419.11 25612 9439.14 25616.5 9457.23 25625.4 9468.87 25631.2 9479.83 25638.8 9490.01 25648.1V25618.5H9540.06V25986.1H9490.01V25858" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M9934.47 25749H10041.4C10035.8 25724.3 10023.3 25704.3 10003.4 25688.1 9980.9 25669.7 9952.86 25660.4 9920.09 25660.4 9892.83 25660.4 9867.44 25666.7 9844.64 25679.1 9821.92 25691.5 9803.88 25708.7 9791.04 25730.3 9778.19 25751.9 9771.67 25774.9 9771.67 25798.8 9771.67 25822.1 9777.96 25844.5 9790.37 25865.5 9802.77 25886.5 9820.5 25903.4 9843.11 25915.6 9884.14 25937.9 9929.77 25941 9977.86 25920.5 9999.37 25911.3 10019.5 25897.6 10037.6 25879.8L10043.8 25873.7 10083.4 25911.3 10076.5 25917.8C10051.5 25941.5 10025.5 25959 9999.07 25969.8 9972.63 25980.7 9944.01 25986.1 9914.06 25986.1 9876.98 25986.1 9843.2 25977.8 9813.7 25961.5 9784.1 25945.1 9760.49 25922 9743.49 25892.9 9726.53 25863.8 9717.93 25831.9 9717.93 25798.1 9717.93 25752.7 9732.93 25712.1 9762.52 25677.5 9800.92 25632.6 9853.62 25609.9 9919.15 25609.9 9973.33 25609.9 10017.3 25626.4 10049.9 25659 10082.5 25691.6 10099.2 25736 10099.5 25790.9L10099.6 25800H9934.47V25749" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M10269.7 25885.5C10243.2 25900.4 10219.3 25897.4 10197.3 25883 10191.4 25879.1 10185.6 25874.3 10180 25868.5V25888.8H10128.8V25618.5H10180V25712.8C10180 25755.5 10181.9 25784.1 10185.7 25797.6 10190.4 25814.5 10197.2 25826.9 10205.9 25834.6 10214.3 25842.1 10222.6 25845.7 10231.2 25845.7 10233.5 25845.7 10237.8 25845.1 10244.8 25842L10252 25838.9 10277.9 25880.9 10269.7 25885.5" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M10501.8 25752.2C10501.8 25735.7 10497.7 25720 10489.7 25705.6 10481.7 25691.4 10470.8 25680.3 10457.3 25672.5 10430.1 25657 10394.2 25657.1 10367.1 25672.6 10353.6 25680.3 10342.6 25691.4 10334.7 25705.6 10326.6 25720 10322.6 25735.6 10322.6 25752.2 10322.6 25778.3 10331.2 25799.9 10349.1 25818.3 10366.9 25836.6 10387.5 25845.4 10412.2 25845.4 10436.7 25845.4 10457.3 25836.6 10475.2 25818.3 10493.1 25799.9 10501.8 25778.3 10501.8 25752.2ZM10412.3 25895.3C10370.8 25895.3 10336 25880 10308.8 25849.9 10284.1 25822.6 10271.6 25790 10271.6 25752.9 10271.6 25715.5 10284.8 25682.3 10310.8 25654.4 10337 25626.2 10371.1 25612 10412.3 25612 10453.3 25612 10487.3 25626.2 10513.5 25654.4 10539.6 25682.3 10552.8 25715.5 10552.8 25752.9 10552.8 25790.2 10540.3 25822.9 10515.6 25850.1 10488.4 25880.1 10453.6 25895.3 10412.3 25895.3" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M10778.2 25762C10778.2 25724.1 10775.8 25708.9 10773.8 25702.9 10769.6 25690.5 10762.1 25680.7 10751.1 25673.1 10739.9 25665.3 10726.5 25661.6 10710.1 25661.6 10693.9 25661.6 10679.9 25665.6 10668.4 25673.4 10657 25681.3 10649.5 25691.6 10645.4 25705.1 10642.6 25715.1 10641.1 25734.2 10641.1 25762V25888.8H10590.6V25758.3C10590.6 25720.8 10594.9 25693.2 10603.6 25673.9 10612.4 25654.5 10626 25639.1 10644 25628.2 10661.8 25617.4 10684.1 25612 10710.2 25612 10736.4 25612 10758.6 25617.4 10776.3 25628.3 10794 25639.1 10807.5 25654.4 10816.4 25673.6 10825.1 25692.5 10829.4 25719.5 10829.4 25755.9V25888.8H10778.2V25762" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M11113.7 25753.3C11113.7 25737.2 11109.5 25721.5 11101.2 25706.7 11092.9 25692 11081.7 25680.4 11067.8 25672.2 11039.5 25655.6 11006 25656 10977.1 25672.2 10962.7 25680.3 10951.5 25691.4 10943.8 25705.1 10936 25719 10932.1 25734.9 10932.1 25752.3 10932.1 25779.3 10940.7 25801.2 10958.3 25819.2 10975.9 25837.2 10997 25845.9 11022.7 25845.9 11039.1 25845.9 11054.4 25841.8 11068.2 25833.8 11082 25825.8 11093.1 25814.3 11101.3 25799.8 11109.5 25785.2 11113.7 25769.5 11113.7 25753.3ZM11025.4 25895.3C11003.5 25895.3 10983.3 25890.5 10965.4 25881 10954.3 25875.1 10943.9 25867.4 10934.4 25857.9V25888.8H10883.9V25526.2H10934.4V25648.1C10944.5 25638.8 10955.4 25631.2 10967 25625.4 10985 25616.5 11005 25612 11026.4 25612 11064.4 25612 11097.3 25626 11124.2 25653.5 11151 25681 11164.6 25714.9 11164.6 25754.3 11164.6 25792.9 11150.9 25826.4 11123.8 25853.9 11096.7 25881.3 11063.6 25895.3 11025.4 25895.3" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M7378.75 27268.9C6927.57 27268.9 6560.52 26901.9 6560.52 26450.7 6560.52 26188.6 6687.55 25940.4 6900.34 25786.8 6915.47 25775.9 6936.67 25779.3 6947.6 25794.5 6958.52 25809.6 6955.09 25830.8 6939.97 25841.7 6744.76 25982.6 6628.22 26210.3 6628.22 26450.7 6628.22 26864.6 6964.91 27201.2 7378.75 27201.2 7792.6 27201.2 8129.29 26864.6 8129.29 26450.7 8129.29 26208.3 8011.16 25979.4 7813.29 25838.7 7805.92 25833.4 7801.04 25825.6 7799.53 25816.7 7798.03 25807.8 7800.08 25798.8 7805.33 25791.5 7811.67 25782.6 7821.99 25777.3 7832.94 25777.3 7839.99 25777.3 7846.77 25779.4 7852.54 25783.5 8068.22 25937 8196.99 26186.4 8196.99 26450.7 8196.99 26901.9 7829.92 27268.9 7378.75 27268.9" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M7867.2 25594.4H7475.95V26454.2C7475.95 26472.9 7460.76 26488.1 7442.1 26488.1 7423.43 26488.1 7408.25 26472.9 7408.25 26454.2V25560.5C7408.25 25541.9 7423.43 25526.7 7442.1 25526.7H7867.2C7885.86 25526.7 7901.05 25541.9 7901.05 25560.5 7901.05 25579.2 7885.86 25594.4 7867.2 25594.4" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M7369.68 26759.3C7544.84 26759.3 7687.36 26616.8 7687.36 26441.6 7687.36 26329.8 7627.48 26224.9 7531.1 26168 7523.32 26163.4 7517.79 26156 7515.54 26147.3 7513.29 26138.5 7514.59 26129.4 7519.19 26121.6 7528.66 26105.6 7549.45 26100.2 7565.55 26109.7 7682.45 26178.8 7755.06 26306 7755.06 26441.6 7755.06 26654.1 7582.18 26827 7369.68 26827 7157.18 26827 6984.3 26654.1 6984.3 26441.6 6984.3 26254.3 7117.99 26094.7 7302.17 26062.2 7304.13 26061.8 7306.12 26061.6 7308.08 26061.6 7316.02 26061.6 7323.75 26064.4 7329.84 26069.6 7337.53 26076 7341.93 26085.5 7341.93 26095.5V26454.2C7341.93 26472.8 7326.74 26488 7308.08 26488 7289.42 26488 7274.23 26472.8 7274.23 26454.2V26138.5C7142.94 26179.6 7052.01 26302.9 7052.01 26441.6 7052.01 26616.8 7194.51 26759.3 7369.68 26759.3" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M7267.19 25669.3C7121.88 25681.3 7027.67 25797.9 7019.46 25975.9 7214.19 25963.5 7262.16 25804.5 7267.19 25669.3ZM6994.04 26026.4C6980.35 26026.4 6969.22 26015.2 6969.22 26001.5 6969.22 25768.9 7096.11 25618.6 7292.49 25618.6 7306.18 25618.6 7317.31 25629.7 7317.31 25643.4 7317.31 25890.4 7202.51 26026.4 6994.04 26026.4" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M7050.2 25613C6976.66 25556 6879.28 25566.9 6792.87 25642.2 6833.32 25675.4 6876.56 25688.8 6921.53 25681.8 6963.22 25675.3 7006.48 25652.1 7050.2 25613ZM6929.17 25730.8C6860.48 25741.4 6796.4 25717.6 6738.73 25660 6729.05 25650.3 6729.05 25634.5 6738.73 25624.9 6801.71 25561.9 6875.59 25527.2 6946.75 25527.2 7005.68 25527.2 7060.22 25550.6 7104.46 25594.8 7109.15 25599.5 7111.73 25605.7 7111.73 25612.4 7111.73 25619 7109.15 25625.2 7104.46 25629.9 7046.6 25687.8 6987.62 25721.7 6929.17 25730.8" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M6732.01 25135.9H6657.73L6694.96 25214.5 6732.01 25135.9ZM6688.67 25287.2 6559.48 25013.8H6599.91L6640.95 25100.5H6748.13L6789.56 25013.8H6829L6701.48 25287.2H6688.67" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M7041.53 25074.2C7024.24 25052.4 7002.58 25041.9 6975.32 25041.9 6960.62 25041.9 6947.19 25045.1 6935.42 25051.6 6923.71 25058.1 6914.37 25067.3 6907.65 25078.9 6900.91 25090.6 6897.5 25103.2 6897.5 25116.5 6897.5 25137.1 6904.7 25154.1 6919.51 25168.5 6934.36 25183 6952.56 25190 6975.14 25190 7003.43 25190 7025.12 25179.5 7041.45 25157.8L7044.2 25154.1 7072.14 25171.5 7069.62 25175.7C7063.46 25186 7055.86 25194.6 7047.03 25201.3 7038.25 25208 7027.49 25213.4 7015.04 25217.5 7002.61 25221.6 6989.52 25223.6 6976.13 25223.6 6954.84 25223.6 6935.29 25218.9 6918.03 25209.4 6900.71 25199.9 6886.91 25186.6 6876.99 25169.7 6867.09 25152.8 6862.07 25134.3 6862.07 25114.6 6862.07 25085.3 6872.82 25060 6894.04 25039.5 6915.2 25019.1 6942.16 25008.8 6974.17 25008.8 6994.89 25008.8 7013.68 25012.8 7030.02 25020.9 7046.45 25029 7059.73 25040.5 7069.49 25055.2L7072.27 25059.4 7044.38 25077.8 7041.53 25074.2" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M7183.76 25291H7148.68V25218.6H7114.48V25187H7148.68V25013.8H7183.76V25187H7223.52V25218.6H7183.76V25291" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M7265.16 25291.3C7260.18 25286.3 7257.65 25280.2 7257.65 25273.1 7257.65 25266.1 7260.18 25260.1 7265.16 25255.1 7270.16 25250 7276.21 25247.5 7283.16 25247.5 7290.22 25247.5 7296.33 25250 7301.32 25255.1 7306.31 25260.1 7308.84 25266.1 7308.84 25273.1 7308.84 25280.2 7306.31 25286.3 7301.32 25291.3 7291.43 25301.3 7275.25 25301.4 7265.16 25291.3" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M7265.71 25013.8H7300.78V25218.6H7265.71V25013.8" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M7439.85 25083.6 7377.67 25218.6H7339.98L7434.31 25013.8H7445.37L7539.14 25218.6H7501.27L7439.85 25083.6" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M7733.03 25168.3C7747.06 25153.9 7753.87 25136.6 7753.87 25115.2 7753.87 25101.4 7750.75 25088.8 7744.59 25077.8 7738.45 25066.8 7729.55 25058 7718.14 25051.6 7695.33 25038.8 7668.1 25038.6 7645.94 25051.6 7634.9 25058.1 7625.98 25067.3 7619.41 25079 7612.83 25090.7 7609.5 25103.2 7609.5 25115.9 7609.5 25128.8 7612.8 25141.3 7619.32 25152.8 7625.82 25164.4 7634.67 25173.5 7645.65 25179.9 7656.64 25186.2 7668.79 25189.5 7681.77 25189.5 7702.26 25189.5 7719.03 25182.5 7733.03 25168.3ZM7752.26 25191.9C7744.21 25200.7 7735.23 25207.7 7725.47 25212.9 7711.86 25220 7696.47 25223.6 7679.72 25223.6 7650.76 25223.6 7625.65 25213.1 7605.06 25192.3 7584.49 25171.4 7574.07 25146 7574.07 25116.7 7574.07 25086.9 7584.4 25061.1 7604.77 25040.3 7625.17 25019.4 7650.14 25008.8 7679 25008.8 7695.23 25008.8 7710.4 25012.2 7724.1 25019 7734.19 25023.9 7743.62 25030.8 7752.26 25039.3V25013.8H7786.98V25218.6H7752.26V25191.9" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M7908.65 25291H7873.58V25218.6H7839.37V25187H7873.58V25013.8H7908.65V25187H7948.41V25218.6H7908.65V25291" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M7990.05 25291.3C7985.07 25286.3 7982.54 25280.2 7982.54 25273.1 7982.54 25266.1 7985.07 25260.1 7990.05 25255.1 7995.05 25250 8001.1 25247.5 8008.04 25247.5 8015.1 25247.5 8021.22 25250 8026.2 25255.1 8031.2 25260.1 8033.73 25266.1 8033.73 25273.1 8033.73 25280.2 8031.2 25286.3 8026.21 25291.3 8016.32 25301.3 8000.14 25301.4 7990.05 25291.3" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M7990.6 25013.8H8025.67V25218.6H7990.6V25013.8" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M8230.78 25211.7C8218.72 25219.6 8204.75 25223.6 8189.26 25223.6 8174.16 25223.6 8159.98 25220.1 8147.12 25213.1 8137.91 25208.1 8129.23 25201.2 8121.2 25192.5V25218.6H8086.12V25013.8H8121.2V25090.2C8121.2 25115.4 8122.36 25132.8 8124.62 25142 8128.16 25155.7 8135.59 25167.4 8146.72 25176.7 8157.9 25186 8170.18 25190.6 8184.26 25190.6 8196.3 25190.6 8206.1 25187.6 8213.4 25181.9 8220.68 25176.1 8225.71 25167.3 8228.37 25155.5 8230.12 25148.4 8231.01 25133.7 8231.01 25111.7V25013.8H8266.08V25119.1C8266.08 25146.5 8263.31 25166.3 8257.62 25179.6 8251.87 25193 8242.84 25203.8 8230.78 25211.7" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M8488.36 25154.7C8494.35 25144 8497.39 25131.6 8497.39 25117.8 8497.39 25096.7 8490.81 25079.6 8477.84 25066.8 8464.84 25053.9 8447.31 25047.4 8425.74 25047.4 8404.39 25047.4 8386.83 25054 8373.53 25067 8360.09 25080.1 8353.55 25096.2 8353.55 25116.4 8353.55 25129.5 8356.82 25141.9 8363.28 25153.2 8369.71 25164.5 8378.72 25173.4 8390.05 25179.8 8401.42 25186.2 8413.91 25189.5 8427.17 25189.5 8439.84 25189.5 8451.84 25186.3 8462.86 25180.1 8473.82 25173.9 8482.39 25165.3 8488.36 25154.7ZM8496.14 25192.6C8486.67 25202.1 8476.84 25209.3 8466.81 25214.1 8453.58 25220.4 8439.13 25223.6 8423.87 25223.6 8405.49 25223.6 8387.8 25218.8 8371.28 25209.4 8354.73 25199.9 8341.59 25186.8 8332.23 25170.6 8322.87 25154.3 8318.12 25136.5 8318.12 25117.6 8318.12 25098.8 8322.69 25081.3 8331.69 25065.6 8340.7 25049.8 8353.64 25037.1 8370.14 25027.8 8386.6 25018.5 8404.44 25013.8 8423.16 25013.8 8439.12 25013.8 8454.43 25017.2 8468.66 25023.8 8478.9 25028.6 8488.09 25035 8496.12 25042.8 8495.91 25023.8 8493.57 25009.9 8489.18 25001.5 8484.64 24992.8 8476.85 24985.4 8466.04 24979.5 8455.06 24973.6 8441.28 24970.6 8425.11 24970.6 8408.68 24970.6 8394.81 24973.5 8383.88 24979.3 8373.07 24985.1 8364.08 24994.1 8357.18 25006.1L8355.74 25008.6H8317.82L8321.09 25001.5C8328.37 24985.6 8336.51 24973.4 8345.28 24965 8354.09 24956.6 8365.63 24949.8 8379.56 24944.9 8393.35 24940 8409.07 24937.5 8426.28 24937.5 8449.88 24937.5 8470.45 24942.6 8487.4 24952.7 8504.57 24962.9 8516.8 24977.7 8523.73 24996.6 8528.77 25010 8531.21 25030.2 8531.21 25058.4V25218.6H8496.14V25192.6" fill="#00414c"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M8760.69 25190.2C8772.08 25190.2 8784.13 25184.1 8796.53 25172.1L8800.12 25168.6 8823.2 25192.4 8819.6 25195.9C8800.54 25214.3 8781.15 25223.6 8761.95 25223.6 8745.25 25223.6 8731.19 25218.2 8720.17 25207.6 8709.1 25196.8 8703.49 25183.2 8703.49 25167.1 8703.49 25154.7 8707 25143.6 8713.94 25133.9 8720.81 25124.3 8733.13 25115 8751.63 25105.5 8771.2 25095.5 8778.77 25089.3 8781.64 25086 8785.57 25081.2 8787.48 25076 8787.48 25070 8787.48 25062.7 8784.55 25056.5 8778.52 25050.9 8772.36 25045.3 8765.07 25042.6 8756.22 25042.6 8743.41 25042.6 8730.96 25049.3 8719.22 25062.6L8715.47 25066.8 8693.22 25041.6 8695.77 25038.3C8702.9 25029.1 8712.04 25021.8 8722.94 25016.6 8733.78 25011.4 8745.34 25008.8 8757.29 25008.8 8775.44 25008.8 8790.8 25014.9 8802.96 25026.9 8815.13 25038.9 8821.3 25053.8 8821.3 25071.1 8821.3 25083.4 8817.66 25094.7 8810.44 25104.7 8803.2 25114.4 8790.2 25124 8770.67 25134.1 8756.04 25141.6 8746.43 25148.1 8742.07 25153.4 8738.02 25158.3 8736.06 25163.2 8736.06 25168.3 8736.06 25174.1 8738.38 25179 8743.16 25183.5 8748.05 25188 8753.79 25190.2 8760.69 25190.2" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M9015.53 25122.7C9015.53 25093.1 9013.63 25081.2 9012.03 25076.4 9008.71 25066.6 9002.56 25058.4 8993.75 25052.4 8984.9 25046.2 8973.87 25043.1 8960.98 25043.1 8948.08 25043.1 8936.87 25046.3 8927.68 25052.6 8918.45 25059 8912.38 25067.3 8909.13 25078.2 8906.87 25086 8905.73 25101 8905.73 25122.7V25218.6H8870.66V25119.8C8870.66 25091.1 8873.88 25070.1 8880.51 25055.5 8887.16 25040.8 8897.39 25029.3 8910.93 25021 8924.4 25012.9 8941.28 25008.8 8961.08 25008.8 8980.91 25008.8 8997.71 25012.9 9011.05 25021.1 9024.45 25029.3 9034.63 25040.7 9041.29 25055.2 9047.84 25069.4 9051.16 25090.6 9051.16 25118V25218.6H9015.53V25122.7" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M9162.71 25190.2C9174.11 25190.2 9186.17 25184.1 9198.55 25172.1L9202.16 25168.6 9225.22 25192.4 9221.63 25195.9C9202.58 25214.3 9183.18 25223.6 9163.98 25223.6 9147.28 25223.6 9133.23 25218.2 9122.2 25207.6 9111.14 25196.8 9105.52 25183.2 9105.52 25167.1 9105.52 25154.7 9109.04 25143.5 9115.97 25133.9 9122.84 25124.3 9135.15 25115 9153.65 25105.5 9173.23 25095.5 9180.8 25089.3 9183.67 25086 9187.6 25081.2 9189.52 25076 9189.52 25070 9189.52 25062.7 9186.59 25056.5 9180.55 25050.9 9174.39 25045.3 9167.1 25042.6 9158.25 25042.6 9145.45 25042.6 9132.99 25049.3 9121.25 25062.6L9117.5 25066.8 9095.26 25041.6 9097.8 25038.3C9104.94 25029.1 9114.08 25021.8 9124.97 25016.6 9135.82 25011.4 9147.38 25008.8 9159.32 25008.8 9177.47 25008.8 9192.83 25014.9 9204.99 25026.9 9217.16 25038.9 9223.34 25053.8 9223.34 25071.1 9223.34 25083.4 9219.69 25094.7 9212.47 25104.7 9205.24 25114.4 9192.24 25124 9172.7 25134.1 9158.06 25141.6 9148.45 25148.1 9144.1 25153.4 9140.06 25158.3 9138.08 25163.2 9138.08 25168.3 9138.08 25174.1 9140.41 25179 9145.19 25183.5 9150.08 25188 9155.81 25190.2 9162.71 25190.2" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M9332.83 25291H9297.75V25218.6H9263.54V25187H9297.75V25013.8H9332.83V25187H9372.58V25218.6H9332.83V25291" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M9568.72 25168.3C9582.56 25154.1 9589.57 25136.3 9589.57 25115.2 9589.57 25101.4 9586.44 25088.8 9580.27 25077.8 9574.14 25066.8 9565.24 25058 9553.83 25051.6 9531.04 25038.8 9503.83 25038.6 9481.62 25051.6 9470.58 25058.1 9461.66 25067.3 9455.09 25079 9448.52 25090.8 9445.18 25103.2 9445.18 25115.9 9445.18 25128.8 9448.49 25141.3 9455.01 25152.8 9461.5 25164.4 9470.36 25173.5 9481.33 25179.9 9492.32 25186.2 9504.48 25189.5 9517.47 25189.5 9537.96 25189.5 9554.72 25182.5 9568.72 25168.3ZM9587.96 25191.9C9579.9 25200.7 9570.92 25207.7 9561.16 25212.9 9547.55 25220 9532.15 25223.6 9515.41 25223.6 9486.46 25223.6 9461.34 25213.1 9440.75 25192.3 9420.18 25171.4 9409.75 25146 9409.75 25116.7 9409.75 25086.9 9420.08 25061.1 9440.47 25040.3 9460.87 25019.4 9485.84 25008.8 9514.68 25008.8 9530.91 25008.8 9546.09 25012.2 9559.8 25019 9569.89 25023.9 9579.31 25030.8 9587.96 25039.3V25013.8H9622.66V25218.6H9587.96V25191.9" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M9683.11 25291.3C9678.13 25286.3 9675.6 25280.2 9675.6 25273.1 9675.6 25266.1 9678.13 25260.1 9683.11 25255.1 9688.11 25250 9694.16 25247.5 9701.1 25247.5 9708.16 25247.5 9714.27 25250 9719.27 25255.1 9724.25 25260.1 9726.78 25266.1 9726.78 25273.1 9726.78 25280.2 9724.25 25286.3 9719.27 25291.3 9709.36 25301.3 9693.21 25301.4 9683.11 25291.3" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M9683.66 25013.8H9718.73V25218.6H9683.66V25013.8" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M9923.84 25211.7C9911.78 25219.6 9897.82 25223.6 9882.33 25223.6 9867.22 25223.6 9853.04 25220.1 9840.17 25213.1 9830.97 25208.1 9822.29 25201.2 9814.25 25192.5V25218.6H9779.19V25013.8H9814.25V25090.2C9814.25 25115.4 9815.41 25132.8 9817.68 25142 9821.22 25155.7 9828.65 25167.4 9839.77 25176.7 9850.95 25186 9863.24 25190.6 9877.32 25190.6 9889.35 25190.6 9899.16 25187.6 9906.47 25181.9 9913.75 25176.1 9918.77 25167.3 9921.42 25155.5 9923.18 25148.4 9924.07 25133.7 9924.07 25111.7V25013.8H9959.15V25119.1C9959.15 25146.5 9956.37 25166.3 9950.68 25179.6 9944.94 25193 9935.91 25203.8 9923.84 25211.7" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M10171.4 25168.3C10185.2 25154.1 10192.3 25136.3 10192.3 25115.2 10192.3 25101.4 10189.1 25088.8 10183 25077.8 10176.8 25066.8 10167.9 25058 10156.5 25051.6 10133.7 25038.8 10106.5 25038.6 10084.3 25051.6 10073.3 25058.1 10064.3 25067.3 10057.8 25079 10051.2 25090.8 10047.9 25103.2 10047.9 25115.9 10047.9 25128.8 10051.2 25141.3 10057.7 25152.8 10064.2 25164.4 10073 25173.5 10084 25179.9 10095 25186.2 10107.2 25189.5 10120.2 25189.5 10140.6 25189.5 10157.4 25182.5 10171.4 25168.3ZM10190.6 25191.9C10182.6 25200.7 10173.6 25207.7 10163.8 25212.9 10150.2 25220 10134.8 25223.6 10118.1 25223.6 10089.1 25223.6 10064 25213.1 10043.4 25192.3 10022.9 25171.4 10012.4 25146 10012.4 25116.7 10012.4 25086.9 10022.8 25061.1 10043.2 25040.3 10063.6 25019.4 10088.5 25008.8 10117.4 25008.8 10133.6 25008.8 10148.8 25012.2 10162.5 25019 10172.6 25023.9 10182 25030.8 10190.6 25039.3V25013.8H10225.3V25218.6H10190.6V25191.9" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M10469.2 25116.6C10469.2 25103.6 10465.9 25091.2 10459.4 25079.6 10452.9 25068.1 10444.1 25058.9 10433.1 25052.6 10422.1 25046.2 10410 25042.9 10397 25042.9 10376.5 25042.9 10359.8 25049.9 10345.8 25064.2 10331.8 25078.5 10325 25095.9 10325 25117.3 10325 25131.2 10328.1 25143.8 10334.3 25154.8 10340.4 25165.7 10349.3 25174.6 10360.8 25181.1 10372.3 25187.6 10384.6 25190.9 10397.4 25190.9 10409.9 25190.9 10421.8 25187.6 10432.8 25181.1 10443.8 25174.6 10452.7 25165.4 10459.3 25153.7 10465.9 25142 10469.2 25129.5 10469.2 25116.6ZM10399.8 25223.6C10383.6 25223.6 10368.5 25220.3 10354.8 25213.6 10344.8 25208.6 10335.4 25201.8 10326.8 25193.2V25293.8H10291.7V25013.8H10326.8V25040.6C10334.9 25031.7 10343.9 25024.7 10353.6 25019.6 10367.2 25012.4 10382.5 25008.8 10399.1 25008.8 10428 25008.8 10453.1 25019.3 10473.7 25040.2 10494.2 25061 10504.6 25086.4 10504.6 25115.8 10504.6 25145.6 10494.3 25171.3 10474 25192.1 10453.6 25213.1 10428.6 25223.6 10399.8 25223.6" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M10554.3 25291.3C10549.3 25286.3 10546.8 25280.2 10546.8 25273.1 10546.8 25266.1 10549.3 25260.1 10554.3 25255.1 10559.3 25250 10565.4 25247.5 10572.3 25247.5 10579.4 25247.5 10585.5 25250 10590.5 25255.1 10595.5 25260.1 10598 25266.1 10598 25273.1 10598 25280.2 10595.5 25286.3 10590.5 25291.3 10580.6 25301.3 10564.4 25301.4 10554.3 25291.3" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M10554.9 25013.8H10589.9V25218.6H10554.9V25013.8" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M10646.6 25013.8H10681.7V25293.8H10646.6V25013.8" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M10737.9 25291.3C10732.9 25286.3 10730.3 25280.2 10730.3 25273.1 10730.3 25266.1 10732.9 25260.1 10737.9 25255.1 10742.9 25250 10748.9 25247.5 10755.8 25247.5 10762.9 25247.5 10769 25250 10774 25255.1 10779 25260.1 10781.5 25266.1 10781.5 25273.1 10781.5 25280.2 10779 25286.3 10774 25291.3 10764.1 25301.3 10747.9 25301.4 10737.9 25291.3" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M10738.4 25013.8H10773.5V25218.6H10738.4V25013.8" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M10890.9 25291H10855.8V25218.6H10821.6V25187H10855.8V25013.8H10890.9V25187H10930.6V25218.6H10890.9V25291" fill="#219a90"/><path transform="matrix(.1,0,0,-.1,-534,2794.64)" d="M11115.8 25218.6 11054 25076 10990.3 25218.6H10952.9L11035.1 25033.5 10995.4 24942.5H11032.8L11153.4 25218.6H11115.8" fill="#219a90"/>
+</svg>
+      </div>
+      <div class="footer-tagline">
+        <strong>Climate Lead Group</strong>
+        <p>We help identify sustainable development opportunities and implement solutions for local, national and international entities and countries. Based in Costa Rica, specializing in research, analysis, training, and project implementation across energy, decarbonization, and climate change challenges.</p>
+      </div>
+    </div>
+
+    <div class="footer-links">
+      <div>
+        <strong>OSTRAM Resources</strong>
+        <a href="https://github.com/Climate-Lead-Group/OSTRAM" target="_blank">GitHub Repository</a>
+        <a href="https://ostram.readthedocs.io" target="_blank">Documentation</a>
+        <a href="https://github.com/Climate-Lead-Group/OSTRAM/issues" target="_blank">Report an Issue</a>
+      </div>
+      <div>
+        <strong>Climate Lead Group</strong>
+        <a href="https://climateleadgroup.com" target="_blank">climateleadgroup.com</a>
+        <a href="/cdn-cgi/l/email-protection#f59491989c9bb5969992d89687db969a98"><span class="__cf_email__" data-cfemail="6d0c090004032d0e010a400e1f430e0200">[email&#160;protected]</span></a>
+        <a href="https://climateleadgroup.com/services/" target="_blank">Our Services</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      OSTRAM Git Setup Guide &mdash; &copy; Climate Lead Group &mdash; San José, Costa Rica<br>
+      Quality &bull; Integrity &bull; Transparency &bull; Responsibility &bull; Inclusion
+    </div>
+  </div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+function copyCode(btn) {
+  const pre = btn.nextElementSibling;
+  const text = pre.innerText || pre.textContent;
+  // Strip comment lines for cleaner copy
+  navigator.clipboard.wri
