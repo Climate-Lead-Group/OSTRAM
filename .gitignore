@@ -62,3 +62,45 @@ t1_confection/A1_Outputs/*/A-O_AR_Projections_backup_*.xlsx
 
 # OG csvs inputs - backup files
 t1_confection/OG_csvs_inputs/*backup*
+
+# ===== Additions =====
+
+# Python bytecode / caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Claude Code metadata (worktrees, plans, local memory)
+.claude/
+
+# DVC runtime state (keep .dvc/config tracked, ignore cache/tmp)
+.dvc/cache/
+.dvc/tmp/
+.dvc/tmp
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python environments
+.env
+.venv/
+venv/
+
+# Solver artifacts (generated during B2 runs)
+*.glp
+*.lp
+*.sol
+
+# V3 sandbox output (not for commits)
+t1_confection/test_a3_mod/dry_run/
