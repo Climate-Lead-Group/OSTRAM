@@ -21,6 +21,40 @@ from pathlib import Path
 import numpy as np
 
 ########################################################################################
+def ensure_env_tool_paths():
+    """Expose the active Python environment's executable folders to subprocesses."""
+    env_root = Path(sys.executable).resolve().parent
+    candidate_dirs = [
+        env_root / "Scripts",
+        env_root / "Library" / "bin",
+        env_root / "bin",
+    ]
+    current_path = os.environ.get("PATH", "")
+    path_entries = current_path.split(os.pathsep) if current_path else []
+    for candidate in candidate_dirs:
+        candidate_str = str(candidate)
+        if candidate.exists() and candidate_str not in path_entries:
+            os.environ["PATH"] = candidate_str + os.pathsep + os.environ.get("PATH", "")
+            path_entries.insert(0, candidate_str)
+
+
+def get_env_executable(executable_name):
+    """Return the full path to an executable inside the active environment when available."""
+    ensure_env_tool_paths()
+    env_root = Path(sys.executable).resolve().parent
+    suffix = ".exe" if platform.system() == "Windows" else ""
+    candidate_dirs = [
+        env_root / "Scripts",
+        env_root / "Library" / "bin",
+        env_root / "bin",
+    ]
+    for candidate_dir in candidate_dirs:
+        candidate = candidate_dir / f"{executable_name}{suffix}"
+        if candidate.exists():
+            return str(candidate)
+    return executable_name
+
+
 def sort_csv_files_in_folder(folder_path):
     if not os.path.isdir(folder_path):
         print(f"La ruta es inválida: {folder_path}")
@@ -144,8 +178,9 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
     os.makedirs(scenario_exec_dir, exist_ok=True)
 
     # Paso 3: Construir el comando
+    otoole_exe = get_env_executable('otoole')
     command = [
-        'otoole', 'convert', 'csv', 'datafile',
+        otoole_exe, 'convert', 'csv', 'datafile',
         input_folder,
         output_file,
         config_file
@@ -160,9 +195,11 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
     if result.returncode != 0:
         print(f"❌ Error al convertir escenario '{scenario_name}':\n{result.stderr}")
         print('#------------------------------------------------------------------------------#')
+        return False
     else:
         print(f"✅ Escenario '{scenario_name}' convertido exitosamente.\n{result.stdout}")
         print('#------------------------------------------------------------------------------#')
+        return True
 
 def run_preprocessing_script(params, scenario_name):
     """
@@ -195,6 +232,7 @@ def run_preprocessing_script(params, scenario_name):
         print('#------------------------------------------------------------------------------#')
 
 def check_enviro_variables(solver_command):
+    ensure_env_tool_paths()
     # Determinar el comando según el sistema operativo
     command = 'where' if platform.system() == 'Windows' else 'which'
 
@@ -314,13 +352,13 @@ def main_executer(params, scenario_name, HERE):
 
     # Convertir salidas de .sol a formato csv
     if solver == 'glpk' and params['glpk_option'] == 'new':
-        str_outputs = f'otoole results {solver} csv {output_file}.sol {file_path_outputs} datafile {data_file}.txt {file_path_conv_format} --glpk_model {output_file}.glp'
+        str_outputs = f'"{get_env_executable("otoole")}" results {solver} csv "{output_file}.sol" "{file_path_outputs}" datafile "{data_file}.txt" "{file_path_conv_format}" --glpk_model "{output_file}.glp"'
         if params['execute_model']:
             subprocess.run(str_outputs, shell=True, check=True)
 
     elif solver in ['cbc', 'cplex', 'gurobi']:
 
-        str_outputs = f'otoole results {solver} csv {output_file}.sol {file_path_outputs} csv {file_path_template} {file_path_conv_format} 2> {output_file}.log'
+        str_outputs = f'"{get_env_executable("otoole")}" results {solver} csv "{output_file}.sol" "{file_path_outputs}" csv "{file_path_template}" "{file_path_conv_format}" 2> "{output_file}.log"'
         if params['execute_model']:
             subprocess.run(str_outputs, shell=True, check=True)
 
@@ -328,7 +366,7 @@ def main_executer(params, scenario_name, HERE):
     if solver in ['glpk', 'cbc', 'cplex', 'gurobi']:
         file_conca_csvs = get_config_main_path(HERE, params['concatenate_folder'])
         script_concate_csv = os.path.join(file_conca_csvs, params['concat_csvs'])
-        str_otoole_concate_csv = f'python -u {script_concate_csv} {file_path_outputs} {output_file}'  # last int is the ID tier
+        str_otoole_concate_csv = f'"{sys.executable}" -u "{script_concate_csv}" "{file_path_outputs}" "{output_file}"'  # last int is the ID tier
         if params['concat_otoole_csv']:
             subprocess.run(str_otoole_concate_csv, shell=True, check=True)
         print(f'✅ Salidas concatenadas a {scenario_name}_0_Output.csv exitosamente.')
@@ -336,8 +374,9 @@ def main_executer(params, scenario_name, HERE):
 
 def delete_files(file, data_file, solver):
     # Eliminar archivos
-    if file:
+    if file and os.path.exists(file):
         shutil.os.remove(file)
+    if data_file and os.path.exists(data_file):
         shutil.os.remove(data_file)
     
     # Verificar si el archivo .sol existe y está vacío
@@ -347,9 +386,13 @@ def delete_files(file, data_file, solver):
             os.remove(log_file)
     
     if solver == 'glpk':
-        shutil.os.remove(file.replace('sol', 'glp'))        
+        glp_file = file.replace('sol', 'glp')
+        if os.path.exists(glp_file):
+            shutil.os.remove(glp_file)
     else:
-        shutil.os.remove(file.replace('sol', 'lp'))
+        lp_file = file.replace('sol', 'lp')
+        if os.path.exists(lp_file):
+            shutil.os.remove(lp_file)
     
     # Eliminar archivos log cuando el solver es 'cplex' y del_files es True
     if solver == 'cplex':
@@ -418,6 +461,30 @@ def generate_combined_input_file(input_folder, output_folder, scenario_name):
     print('\n#------------------------------------------------------------------------------#')
 
     return output_path, inputs_data.head()
+
+
+def export_root_datafile(here, params, scenario_name, export_name='OSTRAM_data.txt'):
+    """
+    Copy the preprocessed main-scenario datafile to the repository root so the
+    user has a single easy-to-find model datafile next to `t1_confection/`.
+    """
+    repo_root = Path(here).parent
+    source_path = (
+        Path(here)
+        / params['executables']
+        / f"{scenario_name}_0"
+        / f"{params['preprocess_data_name']}{scenario_name}_0.txt"
+    )
+    target_path = repo_root / export_name
+
+    if not source_path.exists():
+        print(f"[WARN] Root datafile export skipped because source was not found: {source_path}")
+        return None
+
+    shutil.copy2(source_path, target_path)
+    print(f"✅ Datafile exported to repository root: {target_path}")
+    print('#------------------------------------------------------------------------------#')
+    return target_path
 
 
 
@@ -660,6 +727,8 @@ if __name__ == "__main__":
     if params['only_main_scenario']:
         scenarios = []
         scenarios.append(params_A2['xtra_scen']['Main_Scenario'])
+
+    main_scenario_name = params_A2['xtra_scen']['Main_Scenario']
     
     ###############################################################################################
     # Escribir modelo txt
@@ -673,13 +742,18 @@ if __name__ == "__main__":
                 scenario_name=scenario_name
             )
         if params['write_txt_model']:
-            run_otoole_conversion(
+            conversion_ok = run_otoole_conversion(
                 base_output_path=base_output_path,
                 scenario_name=scenario_name,
                 params=params
             )
-            
-            run_preprocessing_script(params, scenario_name)
+
+            if conversion_ok:
+                run_preprocessing_script(params, scenario_name)
+            else:
+                print(f"❌ Se omite el preprocesamiento para '{scenario_name}' porque falló la conversión con otoole.")
+                print('#------------------------------------------------------------------------------#')
+                continue
 
 
         input_folder = os.path.join(HERE, base_output_path, scenario_name)
@@ -694,6 +768,9 @@ if __name__ == "__main__":
 
         #
     ###############################################################################################
+
+    if params['write_txt_model'] and main_scenario_name in scenarios:
+        export_root_datafile(HERE, params, main_scenario_name)
         
         
         
