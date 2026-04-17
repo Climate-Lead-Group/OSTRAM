@@ -1,0 +1,117 @@
+# =============================================================================
+# Config_datapackage_v3.yaml
+# Configuration for A3_update_from_datapackage_v3.py
+# Single-file DataPackage V3 workflow
+# =============================================================================
+
+# Path to the single DataPackage V3 Excel file (relative to t1_confection/)
+datapackage_v3_path: "SOASIA_DataPackage_V3.xlsx"
+
+# Scenario
+scenario: "BAU"
+cost_scenario: "Moderate"
+
+# Model horizon
+first_year: 2023
+final_year: 2050
+
+# Output directory (where B1 reads A-O files from)
+a1_outputs_subdir: "A1_Outputs/A1_Outputs_BAU"
+
+# Whether to also update blue sheets inside the DataPackage V3 xlsx
+update_blue_sheets_in_template: true
+
+# Backup existing A-O files before overwriting
+backup: true
+
+# ---------------------------------------------------------------------------
+# Compute vs Passthrough per parameter
+# true  = compute from green inventory sheets
+# false = use blue A-O sheet as-is (passthrough)
+# ---------------------------------------------------------------------------
+compute:
+  costs: true                # Technology_Costs + Country_Multipliers → CapitalCost / FixedCost
+  residual_capacity: true    # Existing_Generation → ResidualCapacity
+  planned_capacity: true     # Planned_Generation → TotalAnnualMinCapacity
+  variable_cost: true        # Fuel_Costs + Technology_Costs VOM → VariableCost
+  operational_life: true     # Technology_Costs → OperationalLife
+  demand: true               # Demand_Assumptions → Demand_Projection
+  demand_profiles: false     # false = use Demand_Profiles blue sheet as-is
+  capacity_factors: false    # false = use Capacities_CF blue sheet as-is
+  yearsplit: false           # false = use Yearsplit_Template blue sheet as-is
+  emissions: true            # true = build A-Xtra_Emissions.xlsx GHGs sheet from Emissions blue sheet
+  interconnectors: false     # false = use Interconnector_Params blue sheet as-is
+
+# ---------------------------------------------------------------------------
+# Per-parameter clear-on-replace flag
+# true  = Source of Truth is authoritative: output contains ONLY rows the SoT
+#         provides for this parameter; stale leftovers are discarded.
+# false = preserve-merge (legacy): non-overlapping existing rows are kept.
+# Keys match what merge call sites pass in run_compute_mode().
+# ---------------------------------------------------------------------------
+clear_on_replace:
+  Primary_Techs: true
+  Secondary_Techs: true
+  OperationalLife: true
+  VariableCost: true
+  Demand_Projection: true
+  EmissionActivityRatio: true
+
+# ---------------------------------------------------------------------------
+# Technology aggregation (N:1 mappings in Cost DB)
+# Multiple Cost DB codes map to a single OSTRAM tech code
+# ---------------------------------------------------------------------------
+aggregated_techs:
+  SPV: [PWRSPV, PWRSPR, PWRFPV]
+  HYD: [PWRHDR, PWRHRO, PWRHPS]
+  COA: [PWRCOASCPC, PWRCOAUSC]
+  NGS: [PWRCCG, PWROCG]
+
+aggregation_rules:
+  AVG: [CapitalCost, FixedCost, VariableCost, CapacityFactor, OperationalLife]
+  SUM: [ResidualCapacity, TotalAnnualMaxCapacity]
+
+# ---------------------------------------------------------------------------
+# Fuel → MIN/RNW tech code mapping (for VariableCost)
+# ---------------------------------------------------------------------------
+fuel_to_tech:
+  "Imported coal (FOB Aus)": COA
+  "India domestic coal": COA
+  "Bangladesh piped gas": GAS
+  "LNG (Asia/JKM)": GAS
+  "Diesel / HFO": OIL
+  "Diesel (Maldives)": PET
+  "Uranium": URN
+  "Biomass": BIO
+  "Waste / MSW": WAS
+
+# Renewable fuel codes (use RNW prefix instead of MIN)
+rnw_tech_codes: [BIO, CSP, GEO, HYD, SPV, WAS, WAV, WOF, WON]
+
+# ---------------------------------------------------------------------------
+# Power plant fuel type → OSTRAM tech code (for Existing_Generation)
+# ---------------------------------------------------------------------------
+power_fuel_type_to_tech:
+  Gas: NGS
+  Coal: COA
+  HFO: OIL
+  HSD: PET
+  Hydro: HYD
+  Solar: SPV
+  Wind: WON
+  "Dual Fuel": NGS
+  "Bio Power": BIO
+  "Oil & Gas": NGS
+  Nuclear: URN
+  "Small Hydro": HYD
+  "Oil (HFO/Diesel)": OIL
+  "Mini Hydro": HYD
+  Biomass: BIO
+  "Solar PV": SPV
+  Diesel: PET
+
+# Milestone years in Technology_Costs
+milestone_years: [2023, 2025, 2030, 2035, 2040, 2045, 2050]
+
+# Timeslices
+timeslices: [S1D1, S1D2, S1D3, S2D1, S2D2, S2D3, S3D1, S3D2, S3D3, S4D1, S4D2, S4D3]
