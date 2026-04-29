@@ -1,0 +1,3 @@
+# Ignorar __pycache__ y bytecode SOLO dentro de t1_confection/Executables
+t1_confection/Executables/**/__pycache__/
+t1_confection/Executables/**/*.py[cod]

@@ -1,0 +1,647 @@
+# Technology Equivalences Dictionary
+# Maps OLD model technology codes to NEW model technology codes
+#
+# This file documents the changes between model versions and is used by
+# the migration script to import data from Old_Inputs/ to current files.
+#
+# Created: 2024-12-12
+# ============================================================================
+
+# Model version info
+model_versions:
+  old: "RELAC v1.x (with CCG/OCG separation and XX00/XX01 suffixes)"
+  new: "RELAC v2.x (unified NGS, simplified suffixes)"
+
+# Countries in the model (19 countries)
+countries:
+  - ARG  # Argentina
+  - BOL  # Bolivia
+  - BRA  # Brasil
+  - CHL  # Chile
+  - COL  # Colombia
+  - CRI  # Costa Rica
+  - DOM  # Republica Dominicana
+  - ECU  # Ecuador
+  - GTM  # Guatemala
+  - HND  # Honduras
+  - HTI  # Haiti
+  - BRB  # Barbados
+  - MEX  # Mexico
+  - NIC  # Nicaragua
+  - PAN  # Panama
+  - PER  # Peru
+  - PRY  # Paraguay
+  - SLV  # El Salvador
+  - URY  # Uruguay
+
+# =============================================================================
+# TRANSFORMATION RULES
+# =============================================================================
+
+# Rule 1: Suffix transformation
+# OLD format: PWR{TECH}{COUNTRY}XX{SUFFIX} where SUFFIX = 00 or 01
+# NEW format: PWR{TECH}{COUNTRY}XX (no suffix)
+suffix_rules:
+  # Remove XX00 and XX01 suffixes, keep only XX
+  pattern: "^(PWR[A-Z]{3}[A-Z]{3}XX)(0[01])$"
+  replacement: "\\1"
+  description: "Remove 00/01 suffix from technology codes"
+
+# Rule 2: Gas Natural Unification (CCG + OCG -> NGS)
+# This is the most important transformation
+gas_unification:
+  description: |
+    In the old model, natural gas technologies were split into:
+    - CCG (Combined Cycle Gas) with XX00 and XX01 variants
+    - OCG (Open Cycle Gas) with XX00 and XX01 variants
+
+    In the new model, these are unified into:
+    - NGS (Natural Gas Simple) with no suffix variants
+
+    When migrating data:
+    - Values from CCG and OCG should be SUMMED for capacity-related parameters
+    - For cost parameters, use weighted average or CCG values (dominant technology)
+
+  old_codes:
+    - CCG  # Combined Cycle Gas
+    - OCG  # Open Cycle Gas
+
+  new_code: NGS  # Natural Gas (unified)
+
+  # Specific mappings per country (all countries have this transformation)
+  mappings:
+    # Argentina
+    - old: ["PWRCCGARGXX00", "PWRCCGARGXX01", "PWROCGARGXX00", "PWROCGARGXX01"]
+      new: "PWRNGSARGXX"
+    # Bolivia
+    - old: ["PWRCCGBOLXX00", "PWRCCGBOLXX01", "PWROCGBOLXX00", "PWROCGBOLXX01"]
+      new: "PWRNGSBOLXX"
+    # Brasil
+    - old: ["PWRCCGBRAXX00", "PWRCCGBRAXX01", "PWROCGBRAXX00", "PWROCGBRAXX01"]
+      new: "PWRNGSBRAXX"
+    # Chile
+    - old: ["PWRCCGCHLXX00", "PWRCCGCHLXX01", "PWROCGCHLXX00", "PWROCGCHLXX01"]
+      new: "PWRNGSCHLXX"
+    # Colombia
+    - old: ["PWRCCGCOLXX00", "PWRCCGCOLXX01", "PWROCGCOLXX00", "PWROCGCOLXX01"]
+      new: "PWRNGSCOLXX"
+    # Costa Rica (note: NGS doesn't exist in new model for CRI)
+    - old: ["PWRCCGCRIXX00", "PWRCCGCRIXX01", "PWROCGCRIXX00", "PWROCGCRIXX01"]
+      new: null  # Technology removed for this country
+    # Dominican Republic
+    - old: ["PWRCCGDOMXX00", "PWRCCGDOMXX01", "PWROCGDOMXX00", "PWROCGDOMXX01"]
+      new: "PWRNGSDOMXX"
+    # Ecuador
+    - old: ["PWRCCGECUXX00", "PWRCCGECUXX01", "PWROCGECUXX00", "PWROCGECUXX01"]
+      new: "PWRNGSECUXX"
+    # Guatemala
+    - old: ["PWRCCGGTMXX00", "PWRCCGGTMXX01", "PWROCGGTMXX00", "PWROCGGTMXX01"]
+      new: "PWRNGSGTMXX"
+    # Honduras (note: NGS doesn't exist in new model for HND)
+    - old: ["PWRCCGHNDXX00", "PWRCCGHNDXX01", "PWROCGHNDXX00", "PWROCGHNDXX01"]
+      new: null  # Technology removed for this country
+    # Haiti (note: NGS doesn't exist in new model for HTI)
+    - old: ["PWRCCGHTIXX00", "PWRCCGHTIXX01", "PWROCGHTIXX00", "PWROCGHTIXX01"]
+      new: null  # Technology removed for this country
+    # Barbados (note: NGS doesn't exist in new model for BRB)
+    - old: ["PWRCCGBRBXX00", "PWRCCGBRBXX01", "PWROCGBRBXX00", "PWROCGBRBXX01"]
+      new: null  # Technology removed for this country
+    # Mexico
+    - old: ["PWRCCGMEXXX00", "PWRCCGMEXXX01", "PWROCGMEXXX00", "PWROCGMEXXX01"]
+      new: "PWRNGSMEXXX"
+    # Nicaragua (note: NGS doesn't exist in new model for NIC)
+    - old: ["PWRCCGNICXX00", "PWRCCGNICXX01", "PWROCGNICXX00", "PWROCGNICXX01"]
+      new: null  # Technology removed for this country
+    # Panama
+    - old: ["PWRCCGPANXX00", "PWRCCGPANXX01", "PWROCGPANXX00", "PWROCGPANXX01"]
+      new: "PWRNGSPANXX"
+    # Peru
+    - old: ["PWRCCGPERXX00", "PWRCCGPERXX01", "PWROCGPERXX00", "PWROCGPERXX01"]
+      new: "PWRNGSPERXX"
+    # Paraguay (note: NGS doesn't exist in new model for PRY)
+    - old: ["PWRCCGPRYXX00", "PWRCCGPRYXX01", "PWROCGPRYXX00", "PWROCGPRYXX01"]
+      new: null  # Technology removed for this country
+    # El Salvador
+    - old: ["PWRCCGSLVXX00", "PWRCCGSLVXX01", "PWROCGSLVXX00", "PWROCGSLVXX01"]
+      new: "PWRNGSSLVXX"
+    # Uruguay (note: NGS doesn't exist in new model for URY)
+    - old: ["PWRCCGURYXX00", "PWRCCGURYXX01", "PWROCGURYXX00", "PWROCGURYXX01"]
+      new: null  # Technology removed for this country
+
+# =============================================================================
+# DIRECT TECHNOLOGY MAPPINGS (simple suffix removal)
+# =============================================================================
+
+# These technologies only need suffix removal (XX01 -> XX)
+# Format: OLD -> NEW
+direct_mappings:
+  # Biomass (BIO) - some countries removed
+  PWRBIOARGXX01: PWRBIOARGXX
+  PWRBIOBOLXX01: PWRBIOBOLXX
+  PWRBIOBRAXX01: PWRBIOBRAXX
+  PWRBIOCHLXX01: PWRBIOCHLXX
+  PWRBIOCOLXX01: PWRBIOCOLXX
+  PWRBIOCRIXX01: PWRBIOCRIXX
+  PWRBIODOMXX01: PWRBIODOMXX
+  PWRBIOECUXX01: PWRBIOECUXX
+  PWRBIOGTMXX01: PWRBIOGTMXX
+  PWRBIOHNDXX01: PWRBIOHNDXX
+  PWRBIOHTIXX01: null  # Removed in new model
+  PWRBIOBRBXX01: null  # Removed in new model
+  PWRBIOMEXXX01: PWRBIOMEXXX
+  PWRBIONICXX01: PWRBIONICXX
+  PWRBIOPANXX01: PWRBIOPANXX
+  PWRBIOPERXX01: PWRBIOPERXX
+  PWRBIOPRYXX01: PWRBIOPRYXX
+  PWRBIOSLVXX01: PWRBIOSLVXX
+  PWRBIOURYXX01: PWRBIOURYXX
+
+  # Carbon Capture Storage (CCS)
+  PWRCCSARGXX01: PWRCCSARGXX
+  PWRCCSBOLXX01: PWRCCSBOLXX
+  PWRCCSBRAXX01: PWRCCSBRAXX
+  PWRCCSCHLXX01: PWRCCSCHLXX
+  PWRCCSCOLXX01: PWRCCSCOLXX
+  PWRCCSCRIXX01: PWRCCSCRIXX
+  PWRCCSDOMXX01: PWRCCSDOMXX
+  PWRCCSECUXX01: PWRCCSECUXX
+  PWRCCSGTMXX01: PWRCCSGTMXX
+  PWRCCSHNDXX01: PWRCCSHNDXX
+  PWRCCSHTIXX01: PWRCCSHTIXX
+  PWRCCSBRBXX01: PWRCCSBRBXX
+  PWRCCSMEXXX01: PWRCCSMEXXX
+  PWRCCSNICXX01: PWRCCSNICXX
+  PWRCCSPANXX01: PWRCCSPANXX
+  PWRCCSPERXX01: PWRCCSPERXX
+  PWRCCSPRYXX01: PWRCCSPRYXX
+  PWRCCSSLVXX01: PWRCCSSLVXX
+  PWRCCSURYXX01: PWRCCSURYXX
+
+  # Coal (COA) - many countries removed
+  PWRCOAARGXX01: PWRCOAARGXX
+  PWRCOABOLXX01: null  # Removed
+  PWRCOABRAXX01: PWRCOABRAXX
+  PWRCOACHLXX01: PWRCOACHLXX
+  PWRCOACOLXX01: PWRCOACOLXX
+  PWRCOACRIXX01: null  # Removed
+  PWRCOADOMXX01: PWRCOADOMXX
+  PWRCOAECUXX01: null  # Removed
+  PWRCOAGTMXX01: PWRCOAGTMXX
+  PWRCOAHNDXX01: null  # Removed
+  PWRCOAHTIXX01: null  # Removed
+  PWRCOABRBXX01: null  # Removed
+  PWRCOAMEXXX01: PWRCOAMEXXX
+  PWRCOANICXX01: null  # Removed
+  PWRCOAPANXX01: PWRCOAPANXX
+  PWRCOAPERXX01: PWRCOAPERXX
+  PWRCOAPRYXX01: null  # Removed
+  PWRCOASLVXX01: null  # Removed
+  PWRCOAURYXX01: null  # Removed
+
+  # Cogeneration (COG)
+  PWRCOGARGXX01: PWRCOGARGXX
+  PWRCOGBOLXX01: PWRCOGBOLXX
+  PWRCOGBRAXX01: PWRCOGBRAXX
+  PWRCOGCHLXX01: PWRCOGCHLXX
+  PWRCOGCOLXX01: PWRCOGCOLXX
+  PWRCOGCRIXX01: PWRCOGCRIXX
+  PWRCOGDOMXX01: PWRCOGDOMXX
+  PWRCOGECUXX01: PWRCOGECUXX
+  PWRCOGGTMXX01: PWRCOGGTMXX
+  PWRCOGHNDXX01: PWRCOGHNDXX
+  PWRCOGHTIXX01: PWRCOGHTIXX
+  PWRCOGBRBXX01: PWRCOGBRBXX
+  PWRCOGMEXXX01: PWRCOGMEXXX
+  PWRCOGNICXX01: PWRCOGNICXX
+  PWRCOGPANXX01: PWRCOGPANXX
+  PWRCOGPERXX01: PWRCOGPERXX
+  PWRCOGPRYXX01: PWRCOGPRYXX
+  PWRCOGSLVXX01: PWRCOGSLVXX
+  PWRCOGURYXX01: PWRCOGURYXX
+
+  # Concentrated Solar Power (CSP)
+  PWRCSPARGXX01: PWRCSPARGXX
+  PWRCSPBOLXX01: PWRCSPBOLXX
+  PWRCSPBRAXX01: PWRCSPBRAXX
+  PWRCSPCHLXX01: PWRCSPCHLXX
+  PWRCSPCOLXX01: PWRCSPCOLXX
+  PWRCSPCRIXX01: PWRCSPCRIXX
+  PWRCSPDOMXX01: PWRCSPDOMXX
+  PWRCSPECUXX01: PWRCSPECUXX
+  PWRCSPGTMXX01: PWRCSPGTMXX
+  PWRCSPHNDXX01: PWRCSPHNDXX
+  PWRCSPHTIXX01: PWRCSPHTIXX
+  PWRCSPBRBXX01: PWRCSPBRBXX
+  PWRCSPMEXXX01: PWRCSPMEXXX
+  PWRCSPNICXX01: PWRCSPNICXX
+  PWRCSPPANXX01: PWRCSPPANXX
+  PWRCSPPERXX01: PWRCSPPERXX
+  PWRCSPPRYXX01: PWRCSPPRYXX
+  PWRCSPSLVXX01: PWRCSPSLVXX
+  PWRCSPURYXX01: PWRCSPURYXX
+
+  # Geothermal (GEO) - only some countries
+  PWRGEOARGXX01: null  # Removed
+  PWRGEOBOLXX01: null  # Removed
+  PWRGEOBRAXX01: null  # Removed
+  PWRGEOCHLXX01: PWRGEOCHLXX
+  PWRGEOCOLXX01: null  # Removed
+  PWRGEOCRIXX01: PWRGEOCRIXX
+  PWRGEODOMXX01: null  # Removed
+  PWRGEOECUXX01: null  # Removed
+  PWRGEOGTMXX01: PWRGEOGTMXX
+  PWRGEOHNDXX01: PWRGEOHNDXX
+  PWRGEOHTIXX01: null  # Removed
+  PWRGEOBRBXX01: null  # Removed
+  PWRGEOMEXXX01: PWRGEOMEXXX
+  PWRGEONICXX01: PWRGEONICXX
+  PWRGEOPANXX01: null  # Removed
+  PWRGEOPERXX01: null  # Removed
+  PWRGEOPRYXX01: null  # Removed
+  PWRGEOSLVXX01: PWRGEOSLVXX
+  PWRGEOURYXX01: null  # Removed
+
+  # Hydroelectric (HYD) - BRB removed
+  PWRHYDARGXX01: PWRHYDARGXX
+  PWRHYDBOLXX01: PWRHYDBOLXX
+  PWRHYDBRAXX01: PWRHYDBRAXX
+  PWRHYDCHLXX01: PWRHYDCHLXX
+  PWRHYDCOLXX01: PWRHYDCOLXX
+  PWRHYDCRIXX01: PWRHYDCRIXX
+  PWRHYDDOMXX01: PWRHYDDOMXX
+  PWRHYDECUXX01: PWRHYDECUXX
+  PWRHYDGTMXX01: PWRHYDGTMXX
+  PWRHYDHNDXX01: PWRHYDHNDXX
+  PWRHYDHTIXX01: PWRHYDHTIXX
+  PWRHYDBRBXX01: null  # Removed
+  PWRHYDMEXXX01: PWRHYDMEXXX
+  PWRHYDNICXX01: PWRHYDNICXX
+  PWRHYDPANXX01: PWRHYDPANXX
+  PWRHYDPERXX01: PWRHYDPERXX
+  PWRHYDPRYXX01: PWRHYDPRYXX
+  PWRHYDSLVXX01: PWRHYDSLVXX
+  PWRHYDURYXX01: PWRHYDURYXX
+
+  # Long Duration Storage (LDS)
+  PWRLDSARGXX01: PWRLDSARGXX
+  PWRLDSBOLXX01: PWRLDSBOLXX
+  PWRLDSBRAXX01: PWRLDSBRAXX
+  PWRLDSCHLXX01: PWRLDSCHLXX
+  PWRLDSCOLXX01: PWRLDSCOLXX
+  PWRLDSCRIXX01: PWRLDSCRIXX
+  PWRLDSDOMXX01: PWRLDSDOMXX
+  PWRLDSECUXX01: PWRLDSECUXX
+  PWRLDSGTMXX01: PWRLDSGTMXX
+  PWRLDSHNDXX01: PWRLDSHNDXX
+  PWRLDSHTIXX01: PWRLDSHTIXX
+  PWRLDSBRBXX01: PWRLDSBRBXX
+  PWRLDSMEXXX01: PWRLDSMEXXX
+  PWRLDSNICXX01: PWRLDSNICXX
+  PWRLDSPANXX01: PWRLDSPANXX
+  PWRLDSPERXX01: PWRLDSPERXX
+  PWRLDSPRYXX01: PWRLDSPRYXX
+  PWRLDSSLVXX01: PWRLDSSLVXX
+  PWRLDSURYXX01: PWRLDSURYXX
+
+  # Oil/Fuel Oil (OIL)
+  PWROILARGXX01: PWROILARGXX
+  PWROILBOLXX01: PWROILBOLXX
+  PWROILBRAXX01: PWROILBRAXX
+  PWROILCHLXX01: PWROILCHLXX
+  PWROILCOLXX01: PWROILCOLXX
+  PWROILCRIXX01: PWROILCRIXX
+  PWROILDOMXX01: PWROILDOMXX
+  PWROILECUXX01: PWROILECUXX
+  PWROILGTMXX01: PWROILGTMXX
+  PWROILHNDXX01: PWROILHNDXX
+  PWROILHTIXX01: PWROILHTIXX
+  PWROILBRBXX01: PWROILBRBXX
+  PWROILMEXXX01: PWROILMEXXX
+  PWROILNICXX01: PWROILNICXX
+  PWROILPANXX01: PWROILPANXX
+  PWROILPERXX01: PWROILPERXX
+  PWROILPRYXX01: PWROILPRYXX
+  PWROILSLVXX01: PWROILSLVXX
+  PWROILURYXX01: PWROILURYXX
+
+  # Other (OTH)
+  PWROTHARGXX01: PWROTHARGXX
+  PWROTHBOLXX01: PWROTHBOLXX
+  PWROTHBRAXX01: PWROTHBRAXX
+  PWROTHCHLXX01: PWROTHCHLXX
+  PWROTHCOLXX01: PWROTHCOLXX
+  PWROTHCRIXX01: PWROTHCRIXX
+  PWROTHDOMXX01: PWROTHDOMXX
+  PWROTHECUXX01: PWROTHECUXX
+  PWROTHGTMXX01: PWROTHGTMXX
+  PWROTHHNDXX01: PWROTHHNDXX
+  PWROTHHTIXX01: PWROTHHTIXX
+  PWROTHBRBXX01: PWROTHBRBXX
+  PWROTHMEXXX01: PWROTHMEXXX
+  PWROTHNICXX01: PWROTHNICXX
+  PWROTHPANXX01: PWROTHPANXX
+  PWROTHPERXX01: PWROTHPERXX
+  PWROTHPRYXX01: PWROTHPRYXX
+  PWROTHSLVXX01: PWROTHSLVXX
+  PWROTHURYXX01: PWROTHURYXX
+
+  # Petroleum/Diesel (PET)
+  PWRPETARGXX01: PWRPETARGXX
+  PWRPETBOLXX01: PWRPETBOLXX
+  PWRPETBRAXX01: PWRPETBRAXX
+  PWRPETCHLXX01: PWRPETCHLXX
+  PWRPETCOLXX01: PWRPETCOLXX
+  PWRPETCRIXX01: PWRPETCRIXX
+  PWRPETDOMXX01: PWRPETDOMXX
+  PWRPETECUXX01: PWRPETECUXX
+  PWRPETGTMXX01: PWRPETGTMXX
+  PWRPETHNDXX01: PWRPETHNDXX
+  PWRPETHTIXX01: PWRPETHTIXX
+  PWRPETBRBXX01: PWRPETBRBXX
+  PWRPETMEXXX01: PWRPETMEXXX
+  PWRPETNICXX01: PWRPETNICXX
+  PWRPETPANXX01: PWRPETPANXX
+  PWRPETPERXX01: PWRPETPERXX
+  PWRPETPRYXX01: PWRPETPRYXX
+  PWRPETSLVXX01: PWRPETSLVXX
+  PWRPETURYXX01: PWRPETURYXX
+
+  # Short Duration Storage (SDS)
+  PWRSDSARGXX01: PWRSDSARGXX
+  PWRSDSBOLXX01: PWRSDSBOLXX
+  PWRSDSBRAXX01: PWRSDSBRAXX
+  PWRSDSCHLXX01: PWRSDSCHLXX
+  PWRSDSCOLXX01: PWRSDSCOLXX
+  PWRSDSCRIXX01: PWRSDSCRIXX
+  PWRSDSDOMXX01: PWRSDSDOMXX
+  PWRSDSECUXX01: PWRSDSECUXX
+  PWRSDSGTMXX01: PWRSDSGTMXX
+  PWRSDSHNDXX01: PWRSDSHNDXX
+  PWRSDSHTIXX01: PWRSDSHTIXX
+  PWRSDSBRBXX01: PWRSDSBRBXX
+  PWRSDSMEXXX01: PWRSDSMEXXX
+  PWRSDSNICXX01: PWRSDSNICXX
+  PWRSDSPANXX01: PWRSDSPANXX
+  PWRSDSPERXX01: PWRSDSPERXX
+  PWRSDSPRYXX01: PWRSDSPRYXX
+  PWRSDSSLVXX01: PWRSDSSLVXX
+  PWRSDSURYXX01: PWRSDSURYXX
+
+  # Solar PV (SPV)
+  PWRSPVARGXX01: PWRSPVARGXX
+  PWRSPVBOLXX01: PWRSPVBOLXX
+  PWRSPVBRAXX01: PWRSPVBRAXX
+  PWRSPVCHLXX01: PWRSPVCHLXX
+  PWRSPVCOLXX01: PWRSPVCOLXX
+  PWRSPVCRIXX01: PWRSPVCRIXX
+  PWRSPVDOMXX01: PWRSPVDOMXX
+  PWRSPVECUXX01: PWRSPVECUXX
+  PWRSPVGTMXX01: PWRSPVGTMXX
+  PWRSPVHNDXX01: PWRSPVHNDXX
+  PWRSPVHTIXX01: PWRSPVHTIXX
+  PWRSPVBRBXX01: PWRSPVBRBXX
+  PWRSPVMEXXX01: PWRSPVMEXXX
+  PWRSPVNICXX01: PWRSPVNICXX
+  PWRSPVPANXX01: PWRSPVPANXX
+  PWRSPVPERXX01: PWRSPVPERXX
+  PWRSPVPRYXX01: PWRSPVPRYXX
+  PWRSPVSLVXX01: PWRSPVSLVXX
+  PWRSPVURYXX01: PWRSPVURYXX
+
+  # Nuclear (URN) - only ARG, BRA, MEX
+  PWRURNARGXX01: PWRURNARGXX
+  PWRURNBOLXX01: null  # Removed
+  PWRURNBRAXX01: PWRURNBRAXX
+  PWRURNCHLXX01: null  # Removed
+  PWRURNCOLXX01: null  # Removed
+  PWRURNCRIXX01: null  # Removed
+  PWRURNDOMXX01: null  # Removed
+  PWRURNECUXX01: null  # Removed
+  PWRURNGTMXX01: null  # Removed
+  PWRURNHNDXX01: null  # Removed
+  PWRURNHTIXX01: null  # Removed
+  PWRURNBRBXX01: null  # Removed
+  PWRURNMEXXX01: PWRURNMEXXX
+  PWRURNNICXX01: null  # Removed
+  PWRURNPANXX01: null  # Removed
+  PWRURNPERXX01: null  # Removed
+  PWRURNPRYXX01: null  # Removed
+  PWRURNSLVXX01: null  # Removed
+  PWRURNURYXX01: null  # Removed
+
+  # Waste (WAS)
+  PWRWASARGXX01: PWRWASARGXX
+  PWRWASBOLXX01: PWRWASBOLXX
+  PWRWASBRAXX01: PWRWASBRAXX
+  PWRWASCHLXX01: PWRWASCHLXX
+  PWRWASCOLXX01: PWRWASCOLXX
+  PWRWASCRIXX01: PWRWASCRIXX
+  PWRWASDOMXX01: PWRWASDOMXX
+  PWRWASECUXX01: PWRWASECUXX
+  PWRWASGTMXX01: PWRWASGTMXX
+  PWRWASHNDXX01: PWRWASHNDXX
+  PWRWASHTIXX01: PWRWASHTIXX
+  PWRWASBRBXX01: PWRWASBRBXX
+  PWRWASMEXXX01: PWRWASMEXXX
+  PWRWASNICXX01: PWRWASNICXX
+  PWRWASPANXX01: PWRWASPANXX
+  PWRWASPERXX01: PWRWASPERXX
+  PWRWASPRYXX01: PWRWASPRYXX
+  PWRWASSLVXX01: PWRWASSLVXX
+  PWRWASURYXX01: PWRWASURYXX
+
+  # Wave (WAV)
+  PWRWAVARGXX01: PWRWAVARGXX
+  PWRWAVBOLXX01: PWRWAVBOLXX
+  PWRWAVBRAXX01: PWRWAVBRAXX
+  PWRWAVCHLXX01: PWRWAVCHLXX
+  PWRWAVCOLXX01: PWRWAVCOLXX
+  PWRWAVCRIXX01: PWRWAVCRIXX
+  PWRWAVDOMXX01: PWRWAVDOMXX
+  PWRWAVECUXX01: PWRWAVECUXX
+  PWRWAVGTMXX01: PWRWAVGTMXX
+  PWRWAVHNDXX01: PWRWAVHNDXX
+  PWRWAVHTIXX01: PWRWAVHTIXX
+  PWRWAVBRBXX01: PWRWAVBRBXX
+  PWRWAVMEXXX01: PWRWAVMEXXX
+  PWRWAVNICXX01: PWRWAVNICXX
+  PWRWAVPANXX01: PWRWAVPANXX
+  PWRWAVPERXX01: PWRWAVPERXX
+  PWRWAVPRYXX01: PWRWAVPRYXX
+  PWRWAVSLVXX01: PWRWAVSLVXX
+  PWRWAVURYXX01: PWRWAVURYXX
+
+  # Offshore Wind (WOF)
+  PWRWOFARGXX01: PWRWOFARGXX
+  PWRWOFBOLXX01: PWRWOFBOLXX
+  PWRWOFBRAXX01: PWRWOFBRAXX
+  PWRWOFCHLXX01: PWRWOFCHLXX
+  PWRWOFCOLXX01: PWRWOFCOLXX
+  PWRWOFCRIXX01: PWRWOFCRIXX
+  PWRWOFDOMXX01: PWRWOFDOMXX
+  PWRWOFECUXX01: PWRWOFECUXX
+  PWRWOFGTMXX01: PWRWOFGTMXX
+  PWRWOFHNDXX01: PWRWOFHNDXX
+  PWRWOFHTIXX01: PWRWOFHTIXX
+  PWRWOFBRBXX01: PWRWOFBRBXX
+  PWRWOFMEXXX01: PWRWOFMEXXX
+  PWRWOFNICXX01: PWRWOFNICXX
+  PWRWOFPANXX01: PWRWOFPANXX
+  PWRWOFPERXX01: PWRWOFPERXX
+  PWRWOFPRYXX01: PWRWOFPRYXX
+  PWRWOFSLVXX01: PWRWOFSLVXX
+  PWRWOFURYXX01: PWRWOFURYXX
+
+  # Onshore Wind (WON) - BRB removed
+  PWRWONARGXX01: PWRWONARGXX
+  PWRWONBOLXX01: PWRWONBOLXX
+  PWRWONBRAXX01: PWRWONBRAXX
+  PWRWONCHLXX01: PWRWONCHLXX
+  PWRWONCOLXX01: PWRWONCOLXX
+  PWRWONCRIXX01: PWRWONCRIXX
+  PWRWONDOMXX01: PWRWONDOMXX
+  PWRWONECUXX01: PWRWONECUXX
+  PWRWONGTMXX01: PWRWONGTMXX
+  PWRWONHNDXX01: PWRWONHNDXX
+  PWRWONHTIXX01: PWRWONHTIXX
+  PWRWONBRBXX01: null  # Removed
+  PWRWONMEXXX01: PWRWONMEXXX
+  PWRWONNICXX01: PWRWONNICXX
+  PWRWONPANXX01: PWRWONPANXX
+  PWRWONPERXX01: PWRWONPERXX
+  PWRWONPRYXX01: PWRWONPRYXX
+  PWRWONSLVXX01: PWRWONSLVXX
+  PWRWONURYXX01: PWRWONURYXX
+
+# =============================================================================
+# TECHNOLOGIES REMOVED FROM NEW MODEL (Demand Techs)
+# =============================================================================
+
+removed_demand_techs:
+  description: "These technology types were completely removed from the new model"
+  types:
+    - prefix: "PWRTRN"
+      description: "Power Transmission"
+    - prefix: "RNWNLI"
+      description: "Renewable NLI"
+    - prefix: "RNWRPO"
+      description: "Renewable RPO"
+    - prefix: "RNWTRN"
+      description: "Renewable Transmission"
+    - prefix: "TRNNLI"
+      description: "Transmission NLI"
+    - prefix: "TRNRPO"
+      description: "Transmission RPO"
+
+# =============================================================================
+# TECHNOLOGIES UNCHANGED (no suffix in both versions)
+# =============================================================================
+
+unchanged_techs:
+  description: "These technologies have the same code in both versions"
+  types:
+    - prefix: "PWRBCK"
+      description: "Backup technologies (no suffix in both)"
+    - prefix: "ELC"
+      description: "Electricity commodities"
+    - prefix: "TRN"
+      suffix: "XX"
+      description: "Transmission between countries (e.g., TRNARGXXBOLXX)"
+
+# =============================================================================
+# TECHNOLOGY AVAILABILITY BY COUNTRY
+# =============================================================================
+# Source of truth: Tech_Country_Matrix.xlsx (read dynamically at runtime)
+# The matrix defines which technologies are available in each country.
+# This section documents the reasoning but the script reads the matrix directly.
+
+tech_availability:
+  source_file: "Tech_Country_Matrix.xlsx"
+  description: |
+    Technology availability is determined by reading Tech_Country_Matrix.xlsx
+    at runtime. This ensures the migration script always uses the current
+    matrix without needing to update this YAML file.
+
+    The matrix uses YES/NO values to indicate if a technology is available
+    for a given country. Technologies marked as NO will be skipped during
+    migration (old data won't be imported for non-existent tech/country pairs).
+
+  # Documentation of WHY certain technologies are restricted (for reference)
+  tech_restrictions_rationale:
+    NGS: "Natural Gas - requires gas infrastructure"
+    GEO: "Geothermal - requires geothermal potential (volcanic/tectonic zones)"
+    URN: "Nuclear - only countries with existing nuclear reactors"
+    COA: "Coal - based on existing plants and decarbonization policies"
+    BIO: "Biomass - requires biomass feedstock availability"
+    HYD: "Hydroelectric - requires hydro potential"
+    WON: "Onshore Wind - based on wind resource assessment"
+
+# =============================================================================
+# AGGREGATION RULES (for ALL parameters when merging CCG+OCG -> NGS)
+# =============================================================================
+
+aggregation_rules:
+  # Capacity-related parameters: SUM all CCG and OCG values
+  ResidualCapacity:
+    method: "sum"
+    description: "Sum CCG and OCG capacities to get NGS capacity"
+
+  TotalAnnualMaxCapacity:
+    method: "sum"
+    description: "Sum of maximum capacities"
+
+  TotalAnnualMaxCapacityInvestment:
+    method: "sum"
+    description: "Sum of maximum investment capacities"
+
+  TotalAnnualMinCapacityInvestment:
+    method: "sum"
+    description: "Sum of minimum investment capacities"
+
+  # Activity limits: SUM
+  TotalTechnologyAnnualActivityUpperLimit:
+    method: "sum"
+    description: "Sum of activity upper limits"
+
+  TotalTechnologyAnnualActivityLowerLimit:
+    method: "sum"
+    description: "Sum of activity lower limits"
+
+  # Cost parameters: Use weighted average by capacity, fallback to CCG
+  CapitalCost:
+    method: "weighted_average_by_capacity"
+    fallback: "use_ccg"
+    description: "Weighted average by capacity, or use CCG if no capacity data"
+
+  FixedCost:
+    method: "weighted_average_by_capacity"
+    fallback: "use_ccg"
+    description: "Weighted average by capacity, or use CCG if no capacity data"
+
+  # Factor parameters: Use weighted average by capacity
+  AvailabilityFactor:
+    method: "weighted_average_by_capacity"
+    fallback: "use_ccg"
+    description: "Weighted average by capacity"
+
+  # Reserve margin tags: Use maximum (if any has tag=1, result=1)
+  ReserveMarginTagTechnology:
+    method: "max"
+    description: "If any CCG/OCG has tag=1, NGS gets tag=1"
+
+  ReserveMarginTagFuel:
+    method: "max"
+    description: "If any CCG/OCG has tag=1, NGS gets tag=1"
+
+# =============================================================================
+# PARAMETER HANDLING FOR DIRECT MAPPINGS (XX01 -> XX, no aggregation)
+# =============================================================================
+
+direct_mapping_rules:
+  description: |
+    For technologies that are simply renamed (suffix removal),
+    all parameter values are copied directly without aggregation.
+
+    Example: PWRBIOARGXX01 -> PWRBIOARGXX
+    All parameters (CapitalCost, FixedCost, ResidualCapacity, etc.)
+    are copied as-is from old to new.

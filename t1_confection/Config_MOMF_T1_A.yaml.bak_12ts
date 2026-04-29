@@ -1,0 +1,585 @@
+A1_inputs: ./A1_Inputs
+A1_outputs: ./A1_Outputs
+A2_extra_inputs: ./A2_Extra_Inputs
+A2_output: ./A2_Output_Params/
+A2_output_main_scen: ./A2_Output_Params/
+A2_output_NDP: ./A2_Output_Params/NDC/
+Modes_Demand: /A-I_Classifier_Modes_Demand.xlsx
+Sectors: Sectors
+Fuel_per_Sectors: Fuel_per_Sectors
+Fuel_Code: Fuel_to_Code
+sector: Sector
+plain_eng: Plain English
+plain_spa: Plain Spanish
+address: Address_Method
+fuel_slash_sector: Fuel/Sector
+fuel: Fuel
+code: Code
+Modes_Supply: /A-I_Classifier_Modes_Supply.xlsx
+Pri_eng: PrimaryEnergy
+Sec_eng: SecondaryEnergy
+final: Final in Chain
+pri_commodity: Primary_Commodity
+sec_commodity: Secondary_Commodity
+ter_commodity: Tertiary_Commodity
+tech_code: Tech - Code
+tech_plain_eng: Tech - Plain English
+tech_plain_spa: Tech - Plain Spanish
+fuel_code_in: Fuel - Code (Input)
+fuel_plain_eng_in: Fuel - Plain English (Input)
+fuel_plain_spa_in: Fuel - Plain Spanish (Input)
+fuel_code_out: Fuel - Code (Output)
+fuel_plain_eng_out: Fuel - Plain English (Output)
+fuel_plain_spa_out: Fuel - Plain Spanish (Output)
+Modes_Trans: /A-I_Classifier_Modes_Transport.xlsx
+Mode_Broad: Mode_Broad
+Mode_per_Vehfuel: Mode_per_VehFuel
+Fuel_per_Vehfuel: Fuel_per_VehFuel
+Vehfuel_Code: VehFuel_to_Code
+Tech_Code: Tech_to_Code
+Dem_Code: Dem_to_Code
+vehfuel: VehFuel
+dem_codes: Demand_Codes
+techs_slash_dem: Techs/Demand
+vehfuel_slash_tech: VehFuel/Tech
+Print_Base_Year: /A-O_AR_Model_Base_Year.xlsx
+Print_Proj: /A-O_AR_Projections.xlsx
+Print_Demand: /A-O_Demand.xlsx
+Dem_Proj: Demand_Projection
+Print_Paramet: /A-O_Parametrization.xlsx
+Print_Fleet: /A-O_Fleet.xlsx
+Cali_Fleet: Calibration_Fleet
+Pickle_Fleet_Groups: /A-O_Fleet_Groups.pickle
+log_file_A1: /Log.txt
+Xtra_Proj: /A-Xtra_Projections.xlsx
+variable: Variable
+dem_slash_share: Demand/Share
+fuel_slash_tech: Fuel/Tech
+proj_mode: Projection.Mode
+proj_param: Projection.Parameter
+Xtra_Battery: /A-Xtra_Battery_Replacement.xlsx
+parameter: Parameter
+Xtra_Emi: /A-Xtra_Emissions.xlsx
+GHGs: GHGs
+Externalities: Externalities
+emi: Emissions
+external_cost: External Cost
+tech: Tech
+emi_acti_ratio: EmissionActivityRatio
+emi_penal: EmissionPenalty
+Xtra_Storage: /A-Xtra_Storage.xlsx
+xs_1: Fixed Horizon Parameters
+xs_2: CapitalCostStorage
+xs_3: TechnologyStorage
+Print_Dem_Completed: /A-O_Demand_COMPLETED.xlsx
+A_O_Dem: A-O_Demand
+Print_Paramet_Completed: /A-O_Parametrization_COMPLETED.xlsx
+Print_Paramet_Natural_Completed: /A-O_Parametrization_Natural_COMPLETED.xlsx
+Print_Proj_Completed: /A-O_AR_Projections_COMPLETED.xlsx
+Print_A2_Struct_List: A2_Structure_Lists.xlsx
+lists: Lists
+Pickle_Fleet_Groups_Dist: /A-O_Fleet_Groups_Distance.pickle
+Pickle_Fleet_Groups_OR: /A-O_Fleet_Groups_OR.pickle
+Pickle_Fleet_Groups_T2D: /A-O_Fleet_Groups_T2D.pickle
+base_year: '2023'
+initial_year: '2023'
+final_year: '2050'
+Use_Transport: false
+Use_OG_module: true
+test_tertiary_fuels:
+- Electricity
+- Hydrogen
+- Gases
+- Natural_Gas
+- Diesel_Blend
+- Gasoline_Blend
+dict_dist_fam_to_name_eng:
+  PUB: Public
+  PRI: Private
+  HEA: Heavy Freight
+  LIG: Light Freight
+  NONMOT: Non motorized
+dict_dist_fam_to_name_spa:
+  PUB: Público
+  PRI: Privado
+  HEA: Carga Pesada
+  LIG: Carga Liviana
+  NONMOT: No motorizada
+xtra_scen:
+  Main_Scenario: BAU
+  Other_Scenarios: []
+  Region: GLOBAL
+  Mode_of_Operation:
+  - 1
+  - 2
+  Season:
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  DayType:
+  - '1'
+  DailyTimeBracket:
+  - '1'
+  - '2'
+  - '3'
+  Timeslice: Some
+  Timeslices:
+  - 'S1D1'
+  - 'S1D2'
+  - 'S1D3'
+  - 'S2D1'
+  - 'S2D2'
+  - 'S2D3'
+  - 'S3D1'
+  - 'S3D2'
+  - 'S3D3'
+  - 'S4D1'
+  - 'S4D2'
+  - 'S4D3'
+  Storage:
+  - 'LDSBGDXX01'
+  - 'LDSBTNXX01'
+  - 'LDSINDEA01'
+  - 'LDSINDNE01'
+  - 'LDSINDNO01'
+  - 'LDSINDSO01'
+  - 'LDSINDWE01'
+  - 'LDSLKAXX01'
+  - 'LDSMDVXX01'
+  - 'LDSNPLXX01'
+  - 'SDSBGDXX01'
+  - 'SDSBTNXX01'
+  - 'SDSINDEA01'
+  - 'SDSINDNE01'
+  - 'SDSINDNO01'
+  - 'SDSINDSO01'
+  - 'SDSINDWE01'
+  - 'SDSLKAXX01'
+  - 'SDSMDVXX01'
+  - 'SDSNPLXX01'
+Conversionls:
+- 1
+- 0
+- 0
+- 0
+- 1
+- 0
+- 0
+- 0
+- 1
+- 0
+- 0
+- 0
+- 0
+- 1
+- 0
+- 0
+- 0
+- 1
+- 0
+- 0
+- 0
+- 1
+- 0
+- 0
+- 0
+- 0
+- 1
+- 0
+- 0
+- 0
+- 1
+- 0
+- 0
+- 0
+- 1
+- 0
+- 0
+- 0
+- 0
+- 1
+- 0
+- 0
+- 0
+- 1
+- 0
+- 0
+- 0
+- 1
+Conversionld:
+- 1
+- 1
+- 1
+- 1
+- 1
+- 1
+- 1
+- 1
+- 1
+- 1
+- 1
+- 1
+Conversionlh:
+- 1
+- 0
+- 0
+- 0
+- 1
+- 0
+- 0
+- 0
+- 1
+- 1
+- 0
+- 0
+- 0
+- 1
+- 0
+- 0
+- 0
+- 1
+- 1
+- 0
+- 0
+- 0
+- 1
+- 0
+- 0
+- 0
+- 1
+- 1
+- 0
+- 0
+- 0
+- 1
+- 0
+- 0
+- 0
+- 1
+sheets_exceptions_to_fuel:
+- ReserveMarginTagFuel
+codes_primary_secondary_demands_df_headers:
+- Primary.Tech
+- Primary.Fuel.O
+- Secondary.Fuel.I
+- Secondary.Tech
+- Secondary.Fuel.O
+- Demands.Fuel.I
+- Demands.Tech
+- Demands.Fuel.O
+codes_transport_df_headers:
+- DISTTRN.Fuel.I
+- DISTTRN.Tech
+- DISTTRN.Fuel.O
+- TRN.Fuel.I
+- TRN.Tech
+- TRN.Fuel.O
+- TRNGROUP.Fuel.I
+- TRNGROUP.Tech
+- TRNGROUP.Fuel.O
+tech_param_list_all_notyearly:
+- CapacityToActivityUnit
+- OperationalLife
+tech_param_list_primary:
+- CapitalCost
+- FixedCost
+- ResidualCapacity
+- TotalAnnualMaxCapacity
+- TotalTechnologyAnnualActivityUpperLimit
+- TotalTechnologyAnnualActivityLowerLimit
+- TotalAnnualMinCapacityInvestment
+- AvailabilityFactor
+tech_param_list_secondary:
+- CapitalCost
+- FixedCost
+- ResidualCapacity
+- TotalAnnualMaxCapacity
+- TotalTechnologyAnnualActivityUpperLimit
+- TotalTechnologyAnnualActivityLowerLimit
+- TotalAnnualMinCapacityInvestment
+- AvailabilityFactor
+tech_param_list_demands:
+- CapitalCost
+- FixedCost
+- ResidualCapacity
+tech_param_list_disttrn:
+- CapitalCost
+- FixedCost
+- ResidualCapacity
+tech_param_list_trn:
+- CapitalCost
+- FixedCost
+- ResidualCapacity
+- TotalAnnualMaxCapacity
+- TotalTechnologyAnnualActivityLowerLimit
+tech_param_list_trngroups:
+- TotalAnnualMaxCapacity
+- TotalTechnologyAnnualActivityLowerLimit
+tech_param_list_all_notyearly_df_headers:
+- Tech.Type
+- Tech.ID
+- Tech
+- Tech.Name
+- Parameter.ID
+- Parameter
+- Unit
+- Value
+tech_param_list_all_yearly_df_headers:
+- Tech.ID
+- Tech
+- Tech.Name
+- Parameter.ID
+- Parameter
+- Unit
+- Projection.Mode
+- Projection.Parameter
+df_demands_all_header:
+- Demand/Share
+- Fuel/Tech
+- Name
+- Ref.Cap.BY
+- Ref.OAR.BY
+- Ref.km.BY
+- Projection.Mode
+- Projection.Parameter
+df_techs_primary_base_year_HEADER:
+- Mode.Operation
+- Tech
+- Tech.Name
+- Fuel.O
+- Fuel.O.Name
+- Value.Fuel.O
+- Unit.Fuel.O
+df_techs_primary_projection_HEADER:
+- Mode.Operation
+- Tech
+- Tech.Name
+- Fuel
+- Fuel.Name
+- Direction
+- Projection.Mode
+- Projection.Parameter
+df_techs_secondary_base_year_HEADER:
+- Mode.Operation
+- Fuel.I
+- Fuel.I.Name
+- Value.Fuel.I
+- Unit.Fuel.I
+- Tech
+- Tech.Name
+- Fuel.O
+- Fuel.O.Name
+- Value.Fuel.O
+- Unit.Fuel.O
+df_techs_secondary_projection_HEADER:
+- Mode.Operation
+- Tech
+- Tech.Name
+- Fuel
+- Fuel.Name
+- Direction
+- Projection.Mode
+- Projection.Parameter
+df_techs_demand_base_year_HEADER:
+- Mode.Operation
+- Fuel.I
+- Fuel.I.Name
+- Value.Fuel.I
+- Unit.Fuel.I
+- Tech
+- Tech.Name
+- Fuel.O
+- Fuel.O.Name
+- Value.Fuel.O
+- Unit.Fuel.O
+df_techs_demand_projection_HEADER:
+- Mode.Operation
+- Tech
+- Tech.Name
+- Fuel
+- Fuel.Name
+- Direction
+- Projection.Mode
+- Projection.Parameter
+df_techs_DISTTRN_base_year_HEADER:
+- Mode.Operation
+- Fuel.I
+- Fuel.I.Name
+- Value.Fuel.I
+- Unit.Fuel.I
+- Tech
+- Tech.Name
+- Fuel.O
+- Fuel.O.Name
+- Value.Fuel.O
+- Unit.Fuel.O
+df_techs_DISTTRN_projection_HEADER:
+- Mode.Operation
+- Tech
+- Tech.Name
+- Fuel
+- Fuel.Name
+- Direction
+- Projection.Mode
+- Projection.Parameter
+df_techs_TRN_base_year_HEADER:
+- Mode.Operation
+- Fuel.I.1
+- Fuel.I.1.Name
+- Value.Fuel.I.1
+- Unit.Fuel.I.1
+- Fuel.I.2
+- Fuel.I.2.Name
+- Value.Fuel.I.2
+- Unit.Fuel.I.2
+- Tech
+- Tech.Name
+- Fuel.O
+- Fuel.O.Name
+- Value.Fuel.O
+- Unit.Fuel.O
+df_techs_TRN_projection_HEADER:
+- Mode.Operation
+- Tech
+- Tech.Name
+- Fuel
+- Fuel.Name
+- Direction
+- Projection.Mode
+- Projection.Parameter
+df_techs_TRNGROUP_base_year_HEADER:
+- Mode.Operation
+- Fuel.I
+- Fuel.I.Name
+- Value.Fuel.I
+- Unit.Fuel.I
+- Tech
+- Tech.Name
+- Fuel.O
+- Fuel.O.Name
+- Value.Fuel.O
+- Unit.Fuel.O
+df_techs_TRNGROUP_projection_HEADER:
+- Mode.Operation
+- Tech
+- Tech.Name
+- Fuel
+- Fuel.Name
+- Direction
+- Projection.Mode
+- Projection.Parameter
+tech_param_list_dfs_names:
+- Fixed Horizon Parameters
+- Primary Techs
+- Secondary Techs
+- Capacities
+- Yearsplit
+- DaySplit
+- VariableCost
+- Demand Techs
+- Transport Fuel Distribution
+- Vehicle Techs
+- Vehicle Groups
+df_base_year_names:
+- Primary
+- Secondary
+- Demand Techs
+- Distribution Transport
+- Transport
+- Transport Groups
+df_projection_names:
+- Primary
+- Secondary
+- Demand Techs
+- Distribution Transport
+- Transport
+- Transport Groups
+df_techs_fleet_HEADER:
+- Group.ID
+- Group/Vehicle
+- Techs
+- Description
+- Fleet Unit
+- Base Year
+- Base Year Value
+sets:
+- PARAMETER
+- Scenario
+- REGION
+- TECHNOLOGY
+- FUEL
+- EMISSION
+- MODE_OF_OPERATION
+- YEAR
+- TIMESLICE
+- SEASON
+- DAYTYPE
+- DAILYTIMEBRACKET
+- STORAGE
+- Value
+AR_Osemosys_Parameters:
+- InputActivityRatio
+- OutputActivityRatio
+demand_headers:
+- Demand/Share
+- Fuel/Tech
+- Ref.Cap.BY
+- Ref.OAR.BY
+- Ref.km.BY
+- Projection.Mode
+- Projection.Parameter
+- Introduced.Unit
+- Target.Unit
+cap_params:
+- TotalAnnualMaxCapacity
+- TotalTechnologyAnnualActivityLowerLimit
+cap_params_Rail:
+- TotalAnnualMaxCapacity
+- TotalTechnologyAnnualActivityLowerLimit
+primary: Primary
+transport: Transport
+flat: Flat
+relative: Relative
+user_rel_BY: User defined trajectory relative to BY
+freight: TRNFRE
+yearly_per_change: Yearly percent change
+user_defined: User defined
+inter_final_value: Interpolate to final value
+flat_aft_last_year: Flat after final year
+E6: DEMTRN
+techs: TRN
+gdp: GDP
+joint: joint
+passenger: passenger
+freight_column: TRNFRE
+demand: Demand
+fuel__tech: Fuel/Tech
+not_considered: not considered
+perce_grow_incom_years: Percent growth of incomplete years
+inter_Stated_value_proj_param: Interpolate to stated end value from projection parameter
+zero: Zero
+veh_techs: Vehicle Techs
+veh: vehicle
+vehs: Vehicles
+Gvkm: Gvkm
+target_type: Target Type
+hard: Hard
+lower: Lower
+continuos: Continuous
+empty: EMPTY
+other_techs: Other_Techs
+accor_dem: According to demand
+ref_km_by: Ref.km.BY
+columns4:
+- YEAR
+- TECHNOLOGY
+- TIMESLICE
+- FUEL
+- EMISSION
+- MODE_OF_OPERATION
+- REGION
+- DAYTYPE
+- DAILYTIMEBRACKET
+- SEASON
+- STORAGE

@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OSTRAM_AO_Extensions — Tab 1 column reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700;9..144,900&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* CLG palette */
+    --green-dark:  #00414D;
+    --green-mid:   #0A595F;
+    --teal:        #23978E;
+    --green-light: #E0F0EF;
+    --teal-light:  #D0EDEB;
+    --gray-light:  #F0F5F5;
+    --gray-mid:    #C5D8D8;
+    --ink:         #1a1f22;
+    --muted:       #5a6a72;
+
+    /* Decision-bucket accents */
+    --bucket-readonly: #94a4ab;
+    --bucket-suggest:  var(--teal);
+    --bucket-decide:   var(--green-mid);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: #fbfaf7;
+    color: var(--ink);
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.62;
+    font-feature-settings: "kern", "liga", "onum";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 64px 32px 96px;
+  }
+
+  /* ──────── Masthead ──────── */
+  .masthead {
+    border-top: 4px solid var(--green-dark);
+    border-bottom: 1px solid var(--gray-mid);
+    padding: 32px 0 24px;
+    margin-bottom: 56px;
+  }
+  .masthead .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--green-mid);
+    margin-bottom: 18px;
+  }
+  .masthead h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 700;
+    font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 0;
+    font-size: 44px;
+    line-height: 1.05;
+    margin: 0 0 14px;
+    letter-spacing: -0.02em;
+    color: var(--green-dark);
+  }
+  .masthead .subtitle {
+    font-style: italic;
+    font-size: 19px;
+    color: var(--muted);
+    margin: 0;
+    max-width: 56ch;
+  }
+
+  /* ──────── Section structure ──────── */
+  h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: "opsz" 60, "SOFT" 0;
+    font-weight: 600;
+    font-size: 28px;
+    line-height: 1.2;
+    margin: 64px 0 8px;
+    color: var(--green-dark);
+    letter-spacing: -0.01em;
+  }
+  h2 .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--teal);
+    margin-right: 14px;
+    font-weight: 500;
+    letter-spacing: 0;
+    vertical-align: 0.15em;
+  }
+  h2 + .section-rule {
+    width: 48px;
+    height: 2px;
+    background: var(--teal);
+    margin: 0 0 28px;
+  }
+
+  h3 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: "opsz" 24;
+    font-weight: 700;
+    font-size: 21px;
+    margin: 36px 0 10px;
+    color: var(--ink);
+  }
+
+  p { margin: 0 0 16px; }
+
+  strong { color: var(--green-dark); font-weight: 600; }
+
+  em { color: var(--green-mid); }
+
+  code, .code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88em;
+    background: var(--gray-light);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--green-dark);
+    border: 1px solid var(--gray-mid);
+  }
+
+  /* ──────── Three-bucket intro ──────── */
+  .buckets {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin: 28px 0 12px;
+  }
+  .bucket {
+    border-left: 4px solid var(--bucket-readonly);
+    padding: 14px 20px;
+    background: #fff;
+    border-radius: 0 4px 4px 0;
+    box-shadow: 0 1px 0 var(--gray-mid);
+  }
+  .bucket.suggest { border-left-color: var(--bucket-suggest); }
+  .bucket.decide  { border-left-color: var(--bucket-decide); }
+  .bucket .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--bucket-readonly);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .bucket.suggest .label { color: var(--bucket-suggest); }
+  .bucket.decide  .label { color: var(--bucket-decide); }
+  .bucket .name {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--green-dark);
+    margin-bottom: 2px;
+  }
+  .bucket .desc {
+    font-size: 14.5px;
+    color: var(--muted);
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  /* ──────── Column entries ──────── */
+  .col-entry {
+    margin: 32px 0 0;
+    padding: 22px 26px 22px 30px;
+    background: #fff;
+    border-left: 4px solid var(--bucket-readonly);
+    border-radius: 0 4px 4px 0;
+    box-shadow: 0 1px 0 var(--gray-mid);
+  }
+  .col-entry.suggest { border-left-color: var(--bucket-suggest); }
+  .col-entry.decide  { border-left-color: var(--bucket-decide); }
+
+  .col-entry .col-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--green-dark);
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+    word-break: break-word;
+  }
+  .col-entry .field-row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 14px;
+    margin: 8px 0;
+    font-size: 15.5px;
+  }
+  .col-entry .field-row .field-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    padding-top: 4px;
+    font-weight: 500;
+  }
+  .col-entry .field-row .field-val {
+    line-height: 1.55;
+  }
+
+  .col-entry .example {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: var(--green-light);
+    border-radius: 3px;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .col-entry .example::before {
+    content: "Example";
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--green-mid);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  /* group multi-column entries (the four Add_To_*) */
+  .col-group {
+    margin: 32px 0 0;
+    padding: 22px 26px 22px 30px;
+    background: #fff;
+    border-left: 4px solid var(--bucket-suggest);
+    border-radius: 0 4px 4px 0;
+    box-shadow: 0 1px 0 var(--gray-mid);
+  }
+  .col-group .col-names {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 14.5px;
+    color: var(--green-dark);
+    margin: 0 0 4px;
+    line-height: 1.55;
+  }
+  .col-group .col-names .slash { color: var(--gray-mid); margin: 0 4px; }
+
+  /* ──────── Worked-example table ──────── */
+  .example-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0 8px;
+    font-size: 14.5px;
+    background: #fff;
+    border-top: 2px solid var(--green-dark);
+    border-bottom: 2px solid var(--green-dark);
+  }
+  .example-table th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    text-align: left;
+    padding: 10px 12px 8px;
+    color: var(--green-mid);
+    border-bottom: 1px solid var(--gray-mid);
+    font-weight: 700;
+    background: var(--gray-light);
+  }
+  .example-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--gray-light);
+    vertical-align: top;
+  }
+  .example-table tr:last-child td { border-bottom: none; }
+  .example-table td:first-child {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--green-dark);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .example-table td:nth-child(2) {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink);
+  }
+  .example-table td:nth-child(3) {
+    font-style: italic;
+    color: var(--muted);
+    font-size: 13.5px;
+  }
+  .example-table .you {
+    background: var(--teal-light);
+  }
+  .example-table .you td:nth-child(3) {
+    color: var(--green-dark);
+    font-style: normal;
+    font-weight: 500;
+  }
+  .example-table .you td:first-child::after {
+    content: " ←";
+    color: var(--teal);
+  }
+
+  /* ──────── Stage 3 callout ──────── */
+  .stage3 {
+    margin: 56px 0 0;
+    padding: 28px 32px;
+    background: var(--green-dark);
+    color: #f7f3ea;
+    border-radius: 4px;
+    position: relative;
+  }
+  .stage3 .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--teal-light);
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  .stage3 h3 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: "opsz" 36;
+    color: #fff;
+    margin: 0 0 12px;
+    font-size: 22px;
+    font-weight: 600;
+  }
+  .stage3 p {
+    color: #e0eae6;
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0 0 10px;
+  }
+  .stage3 code {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.15);
+    color: #d8efeb;
+  }
+
+  /* ──────── Footer ──────── */
+  .colophon {
+    margin: 96px 0 0;
+    padding: 24px 0 0;
+    border-top: 1px solid var(--gray-mid);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  @media (max-width: 640px) {
+    .page { padding: 40px 20px 64px; }
+    .masthead h1 { font-size: 32px; }
+    .col-entry .field-row { grid-template-columns: 1fr; gap: 2px; }
+    .col-entry .field-row .field-key { padding-top: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <div class="meta">OSTRAM · Pipeline stage 2 · Reference document</div>
+    <h1>The Tab&nbsp;1 column reference</h1>
+    <p class="subtitle">A walkthrough of every column in <code>OSTRAM_AO_Extensions.xlsx → 1_Extensions_To_Add</code> — what each cell means, who fills it, and what stage&nbsp;3 will do with it.</p>
+  </header>
+
+  <section>
+    <h2><span class="num">§1</span>The three buckets</h2>
+    <div class="section-rule"></div>
+    <p>Every column belongs to one of three buckets, distinguishable by the coloured rail on the left of each entry below.</p>
+
+    <div class="buckets">
+      <div class="bucket">
+        <div class="label">Bucket A · Read-only</div>
+        <div class="name">Script-filled context</div>
+        <div class="desc">Information about the missing code. Don't edit these — they're observation, not instruction.</div>
+      </div>
+      <div class="bucket suggest">
+        <div class="label">Bucket B · Suggested defaults</div>
+        <div class="name">Auto-suggested, editable</div>
+        <div class="desc">The script's best guess. Override only when you have a reason.</div>
+      </div>
+      <div class="bucket decide">
+        <div class="label">Bucket C · Your decisions</div>
+        <div class="name">Decision columns</div>
+        <div class="desc">These drive stage&nbsp;3. The values you enter determine what gets written into A-O.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">§2</span>Bucket B — Auto-suggested defaults</h2>
+    <div class="section-rule"></div>
+
+    <div class="col-entry suggest">
+      <div class="col-name">Suggested_Template_AO</div>
+      <div class="field-row"><div class="field-key">Means</div><div class="field-val">An existing A-O Parametrization code that the script believes is the right pattern to copy. Stage&nbsp;3 clones this code's parameter rows when adding the new code.</div></div>
+      <div class="field-row"><div class="field-key">Values</div><div class="field-val">An A-O code (e.g. <code>PWRNGSINDEA</code>) <em>or</em> blank.</div></div>
+      <div class="field-row"><div class="field-key">Blank means</div><div class="field-val">No same-category code exists in A-O Parametrization → you must fill <code>Override_Template_AO</code> instead.</div></div>
+      <div class="example">
+        For <code>PWRNGSBGDXX</code>, the script wrote <code>PWRNGSINDEA</code> here because that code already exists in A-O and shares the same prefix+category (<code>PWRNGS</code>).
+      </div>
+    </div>
+
+    <div class="col-entry suggest">
+      <div class="col-name">Suggested_Tech.Name_AO</div>
+      <div class="field-row"><div class="field-key">Means</div><div class="field-val">The Tech.Name attached to the suggested template, in A-O house style. Stage&nbsp;3 will use a region-substituted version of this name when writing the new code.</div></div>
+      <div class="field-row"><div class="field-key">Values</div><div class="field-val">A Tech.Name string <em>or</em> blank.</div></div>
+      <div class="field-row"><div class="field-key">Blank means</div><div class="field-val">Either no template was suggested, or the template had no Tech.Name in A-O.</div></div>
+      <div class="example">
+        For <code>PWRNGSBGDXX</code>, this would be the Tech.Name from <code>PWRNGSINDEA</code> ("Natural Gas (Power generator) India, region EA"). Stage&nbsp;3 substitutes the region to produce the Bangladesh version.
+      </div>
+    </div>
+
+    <div class="col-group">
+      <div class="col-names">
+        Add_To_Param <span class="slash">·</span> Add_To_AR_Base <span class="slash">·</span> Add_To_AR_Proj <span class="slash">·</span> Add_To_Demand
+      </div>
+      <div class="field-row"><div class="field-key">Means</div><div class="field-val">The four propagation flags. <code>Y</code> = "add the new code to this workbook." <code>N</code> = "don't."</div></div>
+      <div class="field-row"><div class="field-key">Values</div><div class="field-val"><code>Y</code>, <code>N</code>, or blank.</div></div>
+      <div class="field-row"><div class="field-key">Default</div><div class="field-val">The script checks where <code>Suggested_Template_AO</code> currently lives across the four A-O workbooks and copies that footprint. So if <code>PWRNGSINDEA</code> is in <code>Param + AR_Base + AR_Proj</code> but not in <code>Demand</code>, the row gets <code>Y/Y/Y/N</code>.</div></div>
+      <div class="field-row"><div class="field-key">Blank means</div><div class="field-val">No template was suggested → script left these blank for you to decide manually.</div></div>
+      <div class="field-row"><div class="field-key">When to edit</div><div class="field-val">Only when you have a reason to deviate from the template's footprint (e.g., you decide a new code goes in <code>AR_Base</code> but not <code>AR_Proj</code> for a country-specific reason).</div></div>
+      <div class="example">
+        <code>PWRNGSBGDXX</code> → <code>Y/Y/Y/N</code> is correct as-is. You wouldn't touch these unless there's a special reason.
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">§3</span>Bucket C — Your decision columns</h2>
+    <div class="section-rule"></div>
+
+    <div class="col-entry decide">
+      <div class="col-name">Include</div>
+      <div class="field-row"><div class="field-key">Means</div><div class="field-val">The master on/off switch for this row. <strong>Stage&nbsp;3 only processes rows where <code>Include = Y</code>.</strong></div></div>
+      <div class="field-row"><div class="field-key">Values</div><div class="field-val"><code>Y</code> or blank.</div></div>
+      <div class="field-row"><div class="field-key">Default</div><div class="field-val"><code>Y</code> for the 5 PWRSHP codes (v17-driven, definite). Blank for everything else.</div></div>
+      <div class="field-row"><div class="field-key">What you do</div><div class="field-val">Leave <code>Y</code> for rows you've reviewed and want to keep. Set <code>Y</code> for any blank-default rows you decide to add. Leave blank to skip a row entirely (stage&nbsp;3 ignores it).</div></div>
+      <div class="example">
+        After consulting Andrey, if you decide <code>PWRGEOINDNO</code> doesn't belong in A-O yet, leave <code>Include</code> blank and that row is skipped.
+      </div>
+    </div>
+
+    <div class="col-entry decide">
+      <div class="col-name">Override_Template_AO</div>
+      <div class="field-row"><div class="field-key">Means</div><div class="field-val">An A-O code you choose manually as the template, <em>overriding</em> whatever's in <code>Suggested_Template_AO</code> (or filling in when suggested is blank).</div></div>
+      <div class="field-row"><div class="field-key">Values</div><div class="field-val">An A-O code that exists in A-O Parametrization, or blank.</div></div>
+      <div class="field-row"><div class="field-key">Blank means</div><div class="field-val">Use whatever <code>Suggested_Template_AO</code> says.</div></div>
+      <div class="field-row"><div class="field-key">Stage&nbsp;3 logic</div><div class="field-val">If <code>Override_Template_AO</code> is non-blank, stage&nbsp;3 uses <em>it</em> instead of the suggested one.</div></div>
+      <div class="field-row"><div class="field-key">When to edit</div><div class="field-val">Always when <code>Suggested_Template_AO</code> is blank and you've decided what to use. Or when you disagree with the suggestion (rare — same-category match is usually right).</div></div>
+      <div class="example">
+        For <code>PWRSHPINDEA</code>, you'd type <code>PWRHYDINDEA</code> here. For <code>PWRGEOINDNO</code>, you might type <code>PWRBIOINDNO</code> — or whatever baseload analogue you choose with the team.
+      </div>
+    </div>
+
+    <div class="col-entry decide">
+      <div class="col-name">Override_Tech.Name_AO</div>
+      <div class="field-row"><div class="field-key">Means</div><div class="field-val">The Tech.Name string you want stage&nbsp;3 to write for the new code, <em>overriding</em> the auto-generated name.</div></div>
+      <div class="field-row"><div class="field-key">Values</div><div class="field-val">Any string, or blank.</div></div>
+      <div class="field-row"><div class="field-key">Blank means</div><div class="field-val">Stage&nbsp;3 generates a Tech.Name automatically by taking the template's name and substituting the region.</div></div>
+      <div class="field-row"><div class="field-key">When to edit</div><div class="field-val">When you want exact A-O house-style wording the auto-substitution wouldn't produce. Especially when the template's name pattern doesn't map cleanly — e.g., for PWRSHP using PWRHYD as template, the auto-generated name would say "Hydroelectric"; you'd want "Small Hydropower".</div></div>
+      <div class="example">
+        For <code>PWRSHPINDEA</code> with <code>Override_Template_AO = PWRHYDINDEA</code>, you'd type <code>Small Hydropower (Power generator) India, region EA</code> here so stage&nbsp;3 writes that exact string.
+      </div>
+    </div>
+
+    <div class="col-entry decide">
+      <div class="col-name">Notes</div>
+      <div class="field-row"><div class="field-key">Means</div><div class="field-val">Free-text justification or context for the decisions you made on this row. Not used by stage&nbsp;3 — purely for human readers (you, Andrey, Javier, future-you).</div></div>
+      <div class="field-row"><div class="field-key">Values</div><div class="field-val">Anything.</div></div>
+      <div class="field-row"><div class="field-key">Default</div><div class="field-val"><code>[NEEDS_REVIEW: ...]</code> for rows where the script left a template suggestion blank.</div></div>
+      <div class="field-row"><div class="field-key">What you do</div><div class="field-val">Replace <code>[NEEDS_REVIEW]</code> with the actual decision and reasoning when you settle the row. Or leave blank if no commentary needed.</div></div>
+      <div class="example">
+        <em>"Override template = PWRHYDINDEA. Discussed with Andrey 2026-04-28 — small hydro inherits large hydro's parameters; tech.name swapped to A-O small-hydro convention."</em>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">§4</span>A worked example, end to end</h2>
+    <div class="section-rule"></div>
+    <p>Here's how the row for <code>PWRSHPINDNO</code> should look after your manual review. Highlighted rows are the ones <em>you</em> fill in.</p>
+
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Column</th>
+          <th>Value</th>
+          <th>Why</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>AO_Code_To_Add</td><td>PWRSHPINDNO</td><td>script-filled — don't touch</td></tr>
+        <tr><td>Tech_Name_WV</td><td>Small Hydropower, India – North…</td><td>script-filled — don't touch</td></tr>
+        <tr><td>Sheets_in_WV</td><td>Secondary_Techs, Capacities_CF, Fixed_Horizon_Parameters</td><td>script-filled</td></tr>
+        <tr><td>Orange_Flagged</td><td>N</td><td>script-filled — informational</td></tr>
+        <tr><td>In_Param / AR_Base / AR_Proj / Demand</td><td>N / N / N / N</td><td>confirms it's missing everywhere</td></tr>
+        <tr><td>Suggested_Template_AO</td><td><em>(blank)</em></td><td>script couldn't find PWRSHP in A-O</td></tr>
+        <tr><td>Suggested_Tech.Name_AO</td><td><em>(blank)</em></td><td>no template = no name to suggest</td></tr>
+        <tr class="you"><td>Add_To_Param</td><td>Y</td><td>YOU set this</td></tr>
+        <tr class="you"><td>Add_To_AR_Base</td><td>Y</td><td>YOU set this</td></tr>
+        <tr class="you"><td>Add_To_AR_Proj</td><td>Y</td><td>YOU set this</td></tr>
+        <tr class="you"><td>Add_To_Demand</td><td>N</td><td>YOU set this — Demand is fuel-only</td></tr>
+        <tr><td>Include</td><td>Y</td><td>script default — confirms it should be added</td></tr>
+        <tr class="you"><td>Override_Template_AO</td><td>PWRHYDINDNO</td><td>YOU set this</td></tr>
+        <tr class="you"><td>Override_Tech.Name_AO</td><td>Small Hydropower (Power generator) India, region NO</td><td>YOU set this</td></tr>
+        <tr class="you"><td>Notes</td><td>Override = PWRHYDINDNO. Small hydro inherits large hydro params. Confirmed with Andrey.</td><td>YOU set this</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="stage3">
+    <div class="label">What stage 3 does with this row</div>
+    <h3>Take, swap, write.</h3>
+    <p>Stage&nbsp;3 reads this row and does: <em>Take all parameter rows for <code>PWRHYDINDNO</code> from A-O Parametrization → duplicate them with <code>Tech</code> swapped to <code>PWRSHPINDNO</code> and <code>Tech.Name</code> swapped to your override string → write the new rows into Param + AR_Base + AR_Proj (skip Demand). Done.</em></p>
+  </div>
+
+  <footer class="colophon">
+    <span>OSTRAM · CLG · 2026</span>
+    <span>Stage 2 reference</span>
+  </footer>
+
+</div>
+</body>
+</html>

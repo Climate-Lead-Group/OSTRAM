@@ -1,0 +1,97 @@
+schema: '2.0'
+stages:
+  executing:
+    cmd: python -u t1_confection/B2_Executing_OG_Model.py
+    deps:
+    - path: concatenate_files/concatenate_ostram.py
+      hash: md5
+      md5: 30d33ad85535f8ecbe7f850ee3a17e3e
+      size: 5071
+    - path: t1_confection/A2_Output_Params/
+      hash: md5
+      md5: 1acdd00faacd0c623ef8e80e0447dda2.dir
+      size: 4449705
+      nfiles: 43
+    - path: t1_confection/Config_MOMF_T1_AB.yaml
+      hash: md5
+      md5: fd127f6b658225ca9d14ed25468acc1f
+      size: 1884
+    - path: t1_confection/Miscellaneous/
+      hash: md5
+      md5: 44a1dc71b0b93747c4dfba7c47821b61.dir
+      size: 278811
+      nfiles: 74
+    - path: t1_confection/Z_AUX_capital_annualization_script.py
+      hash: md5
+      md5: addef99a3da925b631a6e00d68abaf44
+      size: 27122
+    - path: t1_confection/osemosys_fast_preprocessed.txt
+      hash: md5
+      md5: 35277c7325a26e424661d9b86d95e4b2
+      size: 94156
+    outs:
+    - path: t1_confection/A2_Outputs_Params_otoole/
+      hash: md5
+      md5: 04093b58149eb85888e0fa8c1dc57dc3.dir
+      size: 2455962
+      nfiles: 64
+    - path: t1_confection/Executables/
+      hash: md5
+      md5: 024454c2817613665f598f98ce95b0e4.dir
+      size: 27136311
+      nfiles: 3
+    - path: t1_confection/OSTRAM_Combined_Inputs_Outputs.csv
+      hash: md5
+      md5: 0533c824b2fd3f660b5c6c1021e55504
+      size: 34839840
+    - path: t1_confection/OSTRAM_Combined_Inputs_Outputs_2026-03-23.csv
+      hash: md5
+      md5: 0533c824b2fd3f660b5c6c1021e55504
+      size: 34839840
+    - path: t1_confection/OSTRAM_Inputs.csv
+      hash: md5
+      md5: 8c9945773cacfcc73d754335724d9926
+      size: 5446242
+    - path: t1_confection/OSTRAM_Inputs_2026-03-23.csv
+      hash: md5
+      md5: 8c9945773cacfcc73d754335724d9926
+      size: 5446242
+    - path: t1_confection/OSTRAM_Outputs.csv
+      hash: md5
+      md5: 91979afbcd3b8c9f4f148dc5ac43ab6d
+      size: 20781440
+    - path: t1_confection/OSTRAM_Outputs_2026-03-23.csv
+      hash: md5
+      md5: 91979afbcd3b8c9f4f148dc5ac43ab6d
+      size: 20781440
+  preprocess:
+    cmd: python -u t1_confection/B1_Run_Compiler.py
+    deps:
+    - path: t1_confection/A1_Outputs/
+      hash: md5
+      md5: 8529292d91f3aac60513068b8fd90413.dir
+      size: 7627903
+      nfiles: 59
+    - path: t1_confection/A2_Extra_Inputs/
+      hash: md5
+      md5: d8e09140aaca93f676f213c1c2ec7902.dir
+      size: 70799
+      nfiles: 5
+    - path: t1_confection/B1_Compiler.py
+      hash: md5
+      md5: 3013a1ee03282f460ec6cb0caa5a81e9
+      size: 96115
+    - path: t1_confection/Config_MOMF_T1_A.yaml
+      hash: md5
+      md5: 85195e4f90cec1763ad75f01c7985ccb
+      size: 10570
+    outs:
+    - path: t1_confection/A2_Output_Params/
+      hash: md5
+      md5: 1acdd00faacd0c623ef8e80e0447dda2.dir
+      size: 4449705
+      nfiles: 43
+    - path: t1_confection/A2_Structure_Lists.xlsx
+      hash: md5
+      md5: c1e4bb79e7d52d8f7a03b0c1078711c9
+      size: 12913
