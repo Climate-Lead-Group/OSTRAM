@@ -18,13 +18,27 @@ For each technology in the target sheet(s), check if it has either of:
   - TotalAnnualMinCapacityInvestment > 0 in any year
 
 If yes ("ALLOWED"):
-    For TotalAnnualMaxCapacityInvestment, fill empty/zero cells with 9999.
-    Existing positive values are PRESERVED (they encode meaningful annual
-    ramp-up caps, e.g. hydro 0.166/yr).
+    For TotalAnnualMaxCapacityInvestment, fill EMPTY (None/blank) cells with
+    9999. Existing explicit values are PRESERVED — including explicit zeros,
+    which encode real modeling decisions (e.g. "no investment in 2023 base
+    year because residual covers it", "transmission interconnect not online
+    until 2030"). Only blank cells mean "no upper bound was set."
 
 If no ("ZEROED"):
     For TotalAnnualMaxCapacity AND TotalAnnualMaxCapacityInvestment, set every
     year cell to 0 (overwriting whatever was there). The tech is locked out.
+
+PROJECTION MODE
+---------------
+For every row we touch (above), if Projection.Mode is "EMPTY", flip it to
+"User defined" so the values get picked up downstream. Rows whose Projection
+Mode is already something else (e.g. linear projection, growth rate) are left
+alone — those are deliberate.
+
+Additionally, MinCapacityInvestment rows whose year cells are non-null but
+mode is "EMPTY" also get flipped to "User defined". This activates planned-
+build values (e.g. hydro 1.138 GW commissioned in 2026) that the upstream
+pipeline left with mode=EMPTY, where downstream would silently ignore them.
 
 SCOPE
 -----
@@ -79,6 +93,10 @@ RES_PARAM = "ResidualCapacity"
 MIN_INV_PARAM = "TotalAnnualMinCapacityInvestment"
 MAX_CAP_PARAM = "TotalAnnualMaxCapacity"
 MAX_INV_PARAM = "TotalAnnualMaxCapacityInvestment"
+
+PROJ_MODE_COL = "Projection.Mode"
+PROJ_MODE_EMPTY = "EMPTY"
+PROJ_MODE_USER = "User defined"
 
 
 # ---------------------------------------------------------------------------
@@ -153,7 +171,7 @@ def apply_rule_to_sheet(
     Edit a worksheet in place, applying the rule. Returns a sheet-level log.
     """
     year_cols = find_year_columns(ws)
-    headers = find_named_columns(ws, ["Tech", "Parameter"])
+    headers = find_named_columns(ws, ["Tech", "Parameter", PROJ_MODE_COL])
     if "Tech" not in headers or "Parameter" not in headers:
         raise ValueError(
             f"Sheet '{ws.title}' missing required columns: "
@@ -161,6 +179,7 @@ def apply_rule_to_sheet(
         )
     tech_col = headers["Tech"]
     param_col = headers["Parameter"]
+    proj_mode_col = headers.get(PROJ_MODE_COL)  # may be absent in some sheets
 
     log = {
         "sheet": ws.title,
@@ -170,6 +189,7 @@ def apply_rule_to_sheet(
         "changes_zeroed_techs": [],
         "changes_allowed_techs": [],
         "preserved_existing_values": [],
+        "projection_mode_flips": [],
     }
 
     for row_idx in range(2, ws.max_row + 1):
@@ -178,8 +198,15 @@ def apply_rule_to_sheet(
         if tech is None:
             continue
 
+        # Whether this row needs its Projection.Mode flipped at the end of
+        # the iteration. True for any row where (a) we wrote at least one
+        # cell, or (b) MinCapInvestment with any pre-existing non-null cell
+        # (downstream ignores rows with mode=EMPTY, even if they have data).
+        row_needs_mode_flip = False
+
         # ZEROED techs: blanket-zero MaxCap and MaxInv rows
         if tech in zeroed and param in (MAX_CAP_PARAM, MAX_INV_PARAM):
+            row_needs_mode_flip = True
             for year, col in year_cols.items():
                 cell = ws.cell(row=row_idx, column=col)
                 old = cell.value
@@ -196,12 +223,17 @@ def apply_rule_to_sheet(
                         }
                     )
 
-        # ALLOWED techs: fill empty/zero MaxInv cells with 9999, preserve others
+        # ALLOWED techs: fill EMPTY MaxInv cells with 9999. Preserve every
+        # explicit value, including explicit 0s — those encode real modeling
+        # decisions (e.g. "no investment in 2023 base year", "transmission
+        # interconnect can't come online until 2030"). Only None/blank means
+        # "no upper bound was set," which is what 9999 stands in for.
         elif tech in allowed and param == MAX_INV_PARAM:
+            row_needs_mode_flip = True
             for year, col in year_cols.items():
                 cell = ws.cell(row=row_idx, column=col)
                 old = cell.value
-                if old is None or (isinstance(old, (int, float)) and old == 0):
+                if old is None:
                     cell.value = allowed_fill
                     log["changes_allowed_techs"].append(
                         {
@@ -221,6 +253,34 @@ def apply_rule_to_sheet(
                             "value": old,
                         }
                     )
+
+        # MinCapInvestment rows: don't write any cells, but if the row has
+        # any non-null data, flag for the mode flip below. This activates
+        # planned-build values (e.g. hydro 1.138 in 2026) that the upstream
+        # pipeline left with mode=EMPTY, where they'd be silently ignored.
+        elif param == MIN_INV_PARAM:
+            has_any_data = any(
+                ws.cell(row=row_idx, column=col).value is not None
+                for col in year_cols.values()
+            )
+            if has_any_data:
+                row_needs_mode_flip = True
+
+        # If this row needs it, flip Projection.Mode from "EMPTY" to
+        # "User defined" so the values get picked up downstream. Existing
+        # non-EMPTY modes are left alone.
+        if row_needs_mode_flip and proj_mode_col is not None:
+            mode_cell = ws.cell(row=row_idx, column=proj_mode_col)
+            if mode_cell.value == PROJ_MODE_EMPTY:
+                mode_cell.value = PROJ_MODE_USER
+                log["projection_mode_flips"].append(
+                    {
+                        "tech": tech,
+                        "parameter": param,
+                        "old": PROJ_MODE_EMPTY,
+                        "new": PROJ_MODE_USER,
+                    }
+                )
 
     return log
 
@@ -304,16 +364,18 @@ def print_summary(log: dict) -> None:
         years = s["years_found"]
         print(f"Sheet: '{s['sheet']}'")
         print(f"  Years        : {years[0]}..{years[-1]} ({len(years)} years)")
-        print(f"  ALLOWED techs (fill empty MaxInv with {ALLOWED_FILL_VALUE}): "
+        print(f"  ALLOWED techs (fill EMPTY MaxInv with {ALLOWED_FILL_VALUE}): "
               f"{s['allowed_count']}")
         print(f"  ZEROED  techs (MaxCap=0 and MaxInv=0)               : "
               f"{s['zeroed_count']}")
-        print(f"  Cells changed in ALLOWED techs : "
+        print(f"  Empty cells filled in ALLOWED techs : "
               f"{len(s['changes_allowed_techs'])}")
-        print(f"  Cells changed in ZEROED  techs : "
+        print(f"  Cells changed in ZEROED  techs      : "
               f"{len(s['changes_zeroed_techs'])}")
-        print(f"  Existing nonzero values preserved : "
+        print(f"  Existing values preserved (incl. explicit 0s) : "
               f"{len(s['preserved_existing_values'])}")
+        print(f"  Projection.Mode flips (EMPTY -> User defined) : "
+              f"{len(s['projection_mode_flips'])}")
         if s["preserved_existing_values"]:
             preserved_techs = sorted(
                 {p["tech"] for p in s["preserved_existing_values"]}

@@ -34,7 +34,7 @@ iteration_time: 20000
 cbc_random_seed: 12345        # Random seed for reproducibility
 
 # For CPLEX use
-cplex_threads: 4
+cplex_threads: 12
 cplex_random_seed: 12345      # Random seed for reproducibility
 
 # For Gurobi use
