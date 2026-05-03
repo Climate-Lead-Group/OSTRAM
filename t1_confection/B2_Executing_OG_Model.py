@@ -201,6 +201,140 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
         print('#------------------------------------------------------------------------------#')
         return True
 
+def run_days_in_day_type_patcher(params, scenario_name):
+    """
+    Runs inject_DaysInDayType.py against the preprocessed datafile to fix
+    the empty DaysInDayType block (which would otherwise default to 7,
+    breaking storage cycling vs energy balance scaling).
+    Must run AFTER run_preprocessing_script, BEFORE the solve.
+    """
+    # Anchor to B2's own directory so it works regardless of how B2 is invoked
+    script_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        'inject_DaysInDayType.py',
+    )
+    target_file = os.path.join(
+        params['executables'],
+        scenario_name + '_0',
+        f"{params['preprocess_data_name']}{scenario_name}_0.txt",
+    )
+    command = [sys.executable, script_path, target_file]
+    print(f"Patching DaysInDayType for '{scenario_name}_0':")
+    print(' '.join(command))
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"❌ DaysInDayType patcher failed for '{scenario_name}':\n{result.stderr}")
+    else:
+        print(result.stdout)
+    print('#------------------------------------------------------------------------------#')
+
+def run_strip_storage_patcher(params, scenario_name):
+    """
+    OPTIONAL diagnostic step: strips selected storage facilities (and their
+    feeding PWR techs) from the preprocessed datafile, writing a SIBLING file
+    (e.g. Pre_processed_BAU_0_NoStorage.txt). Original .txt is never modified.
+
+    Controlled by params['strip_storage_active'] (default False = no-op).
+
+    YAML keys consumed:
+        strip_storage_active:  bool   -- master switch (default False)
+        strip_storage_mode:    str    -- "tech" | "class" | "all"  (default "all")
+        strip_storage_targets: list   -- facility names (tech) or prefixes (class)
+        strip_storage_suffix:  str    -- filename suffix (default "NoStorage")
+
+    When active, main_executer redirects data_file/output_file to use the
+    suffixed sibling, so the solver builds and solves the patched LP and
+    writes outputs alongside the originals.
+    """
+    if not params.get('strip_storage_active', False):
+        return  # No-op when disabled
+
+    mode = params.get('strip_storage_mode', 'all')
+    targets = params.get('strip_storage_targets') or []
+    suffix = params.get('strip_storage_suffix', 'NoStorage')
+
+    # Anchor strip_storage.py to B2's own directory (same pattern as DaysInDayType).
+    script_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        'strip_storage.py',
+    )
+
+    base = f"{params['preprocess_data_name']}{scenario_name}_0"
+    in_file = os.path.join(params['executables'], scenario_name + '_0', f"{base}.txt")
+    out_file = os.path.join(params['executables'], scenario_name + '_0', f"{base}_{suffix}.txt")
+
+    command = [sys.executable, script_path, in_file, '-o', out_file, '--mode', mode]
+    if mode != 'all' and targets:
+        command += ['--targets'] + list(targets)
+
+    print(f"Stripping storage for '{scenario_name}_0' (mode={mode}, suffix={suffix}):")
+    print(' '.join(command))
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"❌ strip_storage patcher failed for '{scenario_name}':\n{result.stderr}")
+    else:
+        print(result.stdout)
+    print('#------------------------------------------------------------------------------#')
+
+def run_open_pwrbck_patcher(params, scenario_name):
+    """
+    OPTIONAL diagnostic step: opens PWRBCK* (backstop) caps in
+    TotalAnnualMaxCapacity and TotalAnnualMaxCapacityInvestment by rewriting
+    any 0-value cells to params['open_pwrbck_value'] (default 9999). Reads
+    from the strip_storage output if that step is active, otherwise from the
+    vanilla preprocessed datafile. Writes a sibling file with the OpenBCK
+    suffix chained on; original is never modified.
+
+    Controlled by params['open_pwrbck_active'] (default False = no-op).
+
+    YAML keys consumed:
+        open_pwrbck_active:  bool  -- master switch (default False)
+        open_pwrbck_value:   int   -- replacement for 0 cells (default 9999)
+        open_pwrbck_pattern: str   -- tech-name substring (default "PWRBCK")
+        open_pwrbck_suffix:  str   -- filename suffix to chain (default "OpenBCK")
+
+    When active, main_executer chains OpenBCK on top of any active strip
+    suffix, so the solver builds and solves the patched LP and writes outputs
+    alongside the originals.
+    """
+    if not params.get('open_pwrbck_active', False):
+        return  # No-op when disabled
+
+    value   = params.get('open_pwrbck_value',   9999)
+    pattern = params.get('open_pwrbck_pattern', 'PWRBCK')
+    suffix  = params.get('open_pwrbck_suffix',  'OpenBCK')
+
+    # Anchor open_pwrbck_caps.py to B2's own directory (same pattern as the
+    # strip and DaysInDayType patchers).
+    script_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        'open_pwrbck_caps.py',
+    )
+
+    base = f"{params['preprocess_data_name']}{scenario_name}_0"
+    # Input is the strip output if strip is active; otherwise the vanilla file.
+    if params.get('strip_storage_active', False):
+        strip_suffix = params.get('strip_storage_suffix', 'NoStorage')
+        in_base  = f"{base}_{strip_suffix}"
+    else:
+        in_base  = base
+    out_base = f"{in_base}_{suffix}"
+
+    in_file  = os.path.join(params['executables'], scenario_name + '_0', f"{in_base}.txt")
+    out_file = os.path.join(params['executables'], scenario_name + '_0', f"{out_base}.txt")
+
+    command = [sys.executable, script_path, in_file, '-o', out_file,
+               '--pattern', pattern, '--value', str(value)]
+
+    print(f"Opening PWRBCK caps for '{scenario_name}_0' (pattern={pattern}, value={value}):")
+    print(' '.join(command))
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"❌ open_pwrbck patcher failed for '{scenario_name}':\n{result.stderr}")
+    else:
+        print(result.stdout)
+    print('#------------------------------------------------------------------------------#')
+
 def run_preprocessing_script(params, scenario_name):
     """
     Ejecuta el script de preprocesamiento Python especificado en el archivo YAML de parámetros para un escenario dado.
@@ -266,6 +400,30 @@ def main_executer(params, scenario_name, HERE):
     output_file = os.path.join(folder_scenario, params['preprocess_data_name'] + scenario_name + '_0' + params['output_files'])
     this_case = scenario_name + '_0.txt'
 
+    # Strip-storage diagnostic redirect: when active, point solver at the patched sibling file.
+    # Produces e.g. Pre_processed_BAU_0_NoStorage.txt and Pre_processed_BAU_0_NoStorage_output.{lp,sol,cplex.log}
+    if params.get('strip_storage_active', False):
+        _strip_suffix = params.get('strip_storage_suffix', 'NoStorage')
+        _base = params['preprocess_data_name'] + scenario_name + '_0'
+        data_file = os.path.join(folder_scenario, f"{_base}_{_strip_suffix}")
+        output_file = os.path.join(folder_scenario, f"{_base}_{_strip_suffix}{params['output_files']}")
+        print(f"[strip_storage] redirecting solver to: {data_file}.txt")
+
+    # PWRBCK-cap-opening diagnostic redirect: chains OpenBCK suffix on top of
+    # any active strip suffix. Produces e.g. Pre_processed_BAU_0_NoStorage_OpenBCK.txt
+    # (or Pre_processed_BAU_0_OpenBCK.txt if strip is inactive).
+    if params.get('open_pwrbck_active', False):
+        _bck_suffix = params.get('open_pwrbck_suffix', 'OpenBCK')
+        _base = params['preprocess_data_name'] + scenario_name + '_0'
+        if params.get('strip_storage_active', False):
+            _strip_suffix = params.get('strip_storage_suffix', 'NoStorage')
+            _chain = f"{_strip_suffix}_{_bck_suffix}"
+        else:
+            _chain = _bck_suffix
+        data_file = os.path.join(folder_scenario, f"{_base}_{_chain}")
+        output_file = os.path.join(folder_scenario, f"{_base}_{_chain}{params['output_files']}")
+        print(f"[open_pwrbck] redirecting solver to: {data_file}.txt")
+
     # Determinar el solver según los parámetros
     solver = params['solver']
     commands = []
@@ -316,7 +474,19 @@ def main_executer(params, scenario_name, HERE):
                 check_enviro_variables('cplex')
 
                 # Componer el comando para solver CPLEX con semilla aleatoria para comportamiento determinístico
-                str_solve = f'cplex -c "read {output_file}.lp" "set threads {cplex_threads}" "set randomseed {cplex_random_seed}" "set parallel 1" "optimize" "write {output_file}.sol"'
+                # str_solve = f'cplex -c "read {output_file}.lp" "set threads {cplex_threads}" "set randomseed {cplex_random_seed}" "set parallel 1" "optimize" "write {output_file}.sol"'
+                str_solve = (
+                    f'cplex -c '
+                    f'"set logfile {output_file}.cplex.log" '
+                    f'"read {output_file}.lp" '
+                    f'"set threads {cplex_threads}" '
+                    f'"set randomseed {cplex_random_seed}" '
+                    f'"set parallel 1" '
+                    f'"optimize" '
+                    f'"feasopt all" '
+                    f'"write {output_file}.feasopt.sol" '
+                    f'"write {output_file}.sol"'
+                )
                 commands.append(str_solve)
 
         elif solver == 'gurobi':
@@ -750,6 +920,9 @@ if __name__ == "__main__":
 
             if conversion_ok:
                 run_preprocessing_script(params, scenario_name)
+                run_days_in_day_type_patcher(params, scenario_name)
+                run_strip_storage_patcher(params, scenario_name)
+                run_open_pwrbck_patcher(params, scenario_name)
             else:
                 print(f"❌ Se omite el preprocesamiento para '{scenario_name}' porque falló la conversión con otoole.")
                 print('#------------------------------------------------------------------------------#')

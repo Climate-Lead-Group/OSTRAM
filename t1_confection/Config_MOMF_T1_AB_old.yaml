@@ -95,53 +95,14 @@ strip_storage_suffix: "NoStorage"
 
 ########################################################################################
 # === PWRBCK cap-opening diagnostic ===
-# Opens TotalAnnualMaxCapacity and TotalAnnualMaxCapacityInvestment for PWRBCK*
-# backstop techs. Runs after strip_storage and before the careful XLSX repair.
+# Master switch. When True, opens TotalAnnualMaxCapacity and
+# TotalAnnualMaxCapacityInvestment for PWRBCK* (backstop) techs that A-O
+# currently hardcaps at 0. Runs AFTER strip_storage in the chain; the
+# OpenBCK suffix chains on top, producing e.g.
+#   Pre_processed_BAU_0_NoStorage_OpenBCK.txt
+# (or Pre_processed_BAU_0_OpenBCK.txt if strip is inactive). False (or
+# absent) = pipeline runs unchanged (no cap-opening).
 open_pwrbck_active: True
 open_pwrbck_value: 9999
 open_pwrbck_pattern: "PWRBCK"
 open_pwrbck_suffix: "OpenBCK"
-
-########################################################################################
-# === Older blunt reserve-margin repair ===
-# Keep this disabled for the XLSX careful path. It is preserved in the B2 copy
-# for compatibility, but the XLSX patcher below is the one intended for this config.
-reserve_margin_repair_active: False
-
-########################################################################################
-# === Careful XLSX reserve-margin repair ===
-# This calls patch_reserve_margin_repair_careful_xlsx.py.
-# It produces e.g.:
-#   Pre_processed_BAU_0_NoStorage_OpenBCK_RMCarefulXLSX.txt
-reserve_margin_xlsx_active: True
-reserve_margin_xlsx_suffix: "RMCarefulXLSX"
-reserve_margin_xlsx_workbook: "firm_capacity_fallbacks_by_cr.xlsx"
-reserve_margin_xlsx_sheet: "fallbacks"
-
-# Reserve tag repairs.
-# 1.0 means PWRBCK capacity gets full reserve capacity credit.
-reserve_margin_xlsx_backstop_credit: 1.0
-
-# 0.9 means 90% of PWRCCS installed capacity counts for reserve.
-reserve_margin_xlsx_ccs_credit: 0.9
-
-# Target firm fossil technologies whose stock/flow cap sentinel values may be replaced.
-reserve_margin_xlsx_target_prefixes:
-  - PWRPET
-  - PWROIL
-  - PWRNGS
-
-# Only these current values are replaced in TotalAnnualMaxCapacity and
-# TotalAnnualMaxCapacityInvestment. Other values are left untouched.
-reserve_margin_xlsx_sentinel_values:
-  - 0
-  - 9999
-
-# Optional stricter final-style alternatives:
-# Use ONE of these after the diagnostic case solves.
-#
-# Alternative A: leave PWRBCK at default/no reserve credit.
-# reserve_margin_xlsx_patch_backstop: False
-#
-# Alternative B: explicitly set PWRBCK reserve credit to zero.
-# reserve_margin_xlsx_backstop_credit: 0
