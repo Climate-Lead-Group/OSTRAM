@@ -206,7 +206,7 @@ RESTRICT_TO_GENERATION = True
 #                    times the year-over-year growth in scaled_pool, times
 #                    a slack factor. Use this when the BAU narrative is
 #                    "fleet evolves proportionally to current composition."
-LID_RULE_MODE = "uniform"
+LID_RULE_MODE = "proportional"
 
 # --- Uniform mode parameters --------------------------------------------------
 # Per-year base percentage. Encodes "tight near-term, loose late-horizon."
@@ -221,12 +221,12 @@ LID_RULE_MODE = "uniform"
 # Years not in this dict fall back to LID_PERCENTAGE_DEFAULT.
 LID_PERCENTAGE_DEFAULT = 0.5
 LID_PERCENTAGE_BY_YEAR: dict = {
-    2023: 0.5, 2024: 0.5, 2025: 0.5, 2026: 0.5, 2027: 0.5,
-    2028: 0.5, 2029: 0.5, 2030: 0.5,
-    2031: 0.5,  2032: 0.5,  2033: 0.5,  2034: 0.5,  2035: 0.5,
-    2036: 0.5,  2037: 0.5,  2038: 0.5,  2039: 0.5,  2040: 0.5,
-    2041: 0.50,  2042: 0.50,  2043: 0.50,  2044: 0.50,  2045: 0.50,
-    2046: 0.50,  2047: 0.50,  2048: 0.50,  2049: 0.50,  2050: 0.50,
+    2023: 0.05, 2024: 0.05, 2025: 0.05, 2026: 0.05, 2027: 0.05,
+    2028: 0.05, 2029: 0.05, 2030: 0.1,
+    2031: 0.1,  2032: 0.1,  2033: 0.1,  2034: 0.1,  2035: 0.1,
+    2036: 0.1,  2037: 0.1,  2038: 0.1,  2039: 0.1,  2040: 0.2,
+    2041: 0.20,  2042: 0.20,  2043: 0.20,  2044: 0.20,  2045: 0.20,
+    2046: 0.20,  2047: 0.20,  2048: 0.20,  2049: 0.20,  2050: 0.20,
 }
 
 # --- Proportional mode parameters --------------------------------------------

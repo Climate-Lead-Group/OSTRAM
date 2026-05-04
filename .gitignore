@@ -1,6 +1,7 @@
 # folders
-t1_confection/A2_Output_Params
-t1_confection/Executables
+# Track branch snapshot outputs.
+# t1_confection/A2_Output_Params
+# t1_confection/Executables
 
 # Excel files
 t1_confection/_GDP_Ref.xlsx
@@ -8,12 +9,13 @@ t1_confection/A2_Structure_Lists.xlsx
 t1_confection/requirements
 t1_confection/COSTS_ENERGY_BE_Anualized.csv
 t1_confection/Discounted_Rate.xlsx
-t1_confection/OSTRAM_Combined_Inputs_Outputs.csv
-t1_confection/OSTRAM_Inputs.csv
-t1_confection/OSTRAM_Outputs.csv
-t1_confection/OSTRAM_Combined_Inputs_Outputs_*.csv
-t1_confection/OSTRAM_Inputs_*.csv
-t1_confection/OSTRAM_Outputs_*.csv
+# Track generated branch snapshot CSVs.
+# t1_confection/OSTRAM_Combined_Inputs_Outputs.csv
+# t1_confection/OSTRAM_Inputs.csv
+# t1_confection/OSTRAM_Outputs.csv
+# t1_confection/OSTRAM_Combined_Inputs_Outputs_*.csv
+# t1_confection/OSTRAM_Inputs_*.csv
+# t1_confection/OSTRAM_Outputs_*.csv
 
 # Python scripts
 t1_confection/setup_utils.py
@@ -39,9 +41,11 @@ t1_confection/secondary_techs_update_log_*.txt
 t1_confection/A1_Outputs/secondary_techs_update_log_*.txt
 
 # Log files (by extension only, to avoid matching "Technology" etc.)
-*.log
-*.Log
-*.LOG
+# Keep specific noisy root logs ignored above, but allow run logs in
+# t1_confection/Executables to be tracked in branch snapshots.
+# *.log
+# *.Log
+# *.LOG
 *debug*
 *Debug*
 *DEBUG*
@@ -98,9 +102,12 @@ desktop.ini
 venv/
 
 # Solver artifacts (generated during B2 runs)
-*.glp
-*.lp
-*.sol
+# Track solver artifacts in branch snapshots.
+# *.glp
+# *.lp
+# *.sol
 
 # V3 sandbox output (not for commits)
 t1_confection/test_a3_mod/dry_run/
+*.lp
+*.sol
