@@ -48,8 +48,34 @@ from pathlib import Path
 
 T1_CONFECTION = Path(__file__).resolve().parent
 A3_MOD_DIR = T1_CONFECTION / "A3_mod"
-DEFAULT_IO = T1_CONFECTION / "A1_Outputs" / "A1_Outputs_BAU"
 LUIS_REFERENCE = T1_CONFECTION / "A1_Outputs_Luis" / "A1_Outputs_BAU"
+
+# =============================================================================
+# USER CONFIGURATION (Spyder F5 — edit these and press F5; CLI args override)
+# =============================================================================
+# Folder with the 4 fresh A-O_*.xlsx (inputs).
+# Path is relative to this script's folder (t1_confection/), or absolute.
+INPUT_DIR = "A1_Outputs/A1_Outputs_BAU"
+
+# Folder to write the 4 final files. None = same as INPUT_DIR (in-place overwrite).
+OUTPUT_DIR = None  # or e.g. "A1_Outputs/A1_Outputs_BAU_post_A3"
+
+# Compare final 4 files against A1_Outputs_Luis/A1_Outputs_BAU after the run.
+VERIFY = True
+
+# Don't auto-clean the runtime workdir (A3_mod/_run_<ts>/) — useful for debugging.
+KEEP_WORKDIR = False
+# =============================================================================
+
+
+def _resolve(p):
+    """Resolve a config path: absolute as-is, relative to T1_CONFECTION."""
+    p = Path(p)
+    return p if p.is_absolute() else (T1_CONFECTION / p)
+
+
+DEFAULT_IO = _resolve(INPUT_DIR)
+DEFAULT_OUTPUT = _resolve(OUTPUT_DIR) if OUTPUT_DIR else None
 
 INPUT_FILES = (
     "A-O_AR_Model_Base_Year.xlsx",
@@ -357,17 +383,23 @@ def main() -> int:
         epilog=__doc__,
     )
     p.add_argument("--input-dir", type=Path, default=DEFAULT_IO,
-                   help=f"Folder with the 4 fresh A-O_*.xlsx (default: {DEFAULT_IO})")
-    p.add_argument("--output-dir", type=Path, default=None,
-                   help="Where to write the 4 final files (default: same as --input-dir)")
-    p.add_argument("--keep-workdir", action="store_true",
+                   help=f"Folder with the 4 fresh A-O_*.xlsx "
+                        f"(default from USER CONFIG: {DEFAULT_IO})")
+    p.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT,
+                   help="Where to write the 4 final files "
+                        "(default from USER CONFIG: same as --input-dir)")
+    p.add_argument("--keep-workdir", action="store_true", default=KEEP_WORKDIR,
                    help="Don't delete the runtime workdir on success "
                         "(useful for inspecting intermediates)")
     p.add_argument("--workdir-base", type=Path, default=A3_MOD_DIR,
                    help=f"Where to create the runtime workdir (default: {A3_MOD_DIR})")
-    p.add_argument("--verify", action="store_true",
+    p.add_argument("--verify", action="store_true", default=VERIFY,
                    help="Compare final 4 files against A1_Outputs_Luis after the run")
-    args = p.parse_args()
+    p.add_argument("--no-verify", dest="verify", action="store_false",
+                   help="Skip the post-run verification (override VERIFY=True)")
+    # parse_known_args ignores unknown CLI args (e.g. those Spyder may inject
+    # into __main__) so F5 always works regardless of Spyder's run config.
+    args, _ = p.parse_known_args()
 
     if not A3_MOD_DIR.is_dir():
         sys.exit(f"ERROR: A3_mod folder missing: {A3_MOD_DIR}")
