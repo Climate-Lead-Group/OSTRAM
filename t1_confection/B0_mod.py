@@ -1,12 +1,13 @@
-"""A3_mod.py
+"""B0_mod.py
 ==============
-Orchestrator for the A3 modification workflow.
+Orchestrator for the B0 modification workflow.
 
 Transforms the 4 fresh A1 outputs in `A1_Outputs/A1_Outputs_BAU/`
 (or any --input-dir) into the final form by chaining 17 sequential
-operations bundled in `t1_confection/A3_mod/`.
+operations bundled in `t1_confection/B0_mod/`.
 
 Pipeline:
+  Stage 0    A3_update_csvs_from_datapackage  injects MIN/RNW data from DATA_PACKAGE_V2
   Stage 0.5  fix_rnwbio_restore             input fix (RNWBIO rows)
   Stage 1    scripts 1-5                    test_a3_mod_v2 pipeline
   Stage 1b   A0_insert_reserve_margin       adds System Parameters sheet
@@ -25,16 +26,16 @@ Reproduces `A1_Outputs_Luis/A1_Outputs_BAU/` exactly.
 
 Usage:
     # Default: in-place on A1_Outputs/A1_Outputs_BAU/
-    python A3_mod.py
+    python B0_mod.py
 
     # Or specify input/output dirs explicitly
-    python A3_mod.py --input-dir <dir> --output-dir <dir>
+    python B0_mod.py --input-dir <dir> --output-dir <dir>
 
     # Keep the runtime workdir for inspection
-    python A3_mod.py --keep-workdir
+    python B0_mod.py --keep-workdir
 
     # Verify against A1_Outputs_Luis after running (if it exists)
-    python A3_mod.py --verify
+    python B0_mod.py --verify
 """
 from __future__ import annotations
 
@@ -47,7 +48,7 @@ from datetime import datetime
 from pathlib import Path
 
 T1_CONFECTION = Path(__file__).resolve().parent
-A3_MOD_DIR = T1_CONFECTION / "A3_mod"
+B0_MOD_DIR = T1_CONFECTION / "B0_mod"
 LUIS_REFERENCE = T1_CONFECTION / "A1_Outputs_Luis" / "A1_Outputs_BAU"
 
 # =============================================================================
@@ -63,7 +64,7 @@ OUTPUT_DIR = None  # or e.g. "A1_Outputs/A1_Outputs_BAU_post_A3"
 # Compare final 4 files against A1_Outputs_Luis/A1_Outputs_BAU after the run.
 VERIFY = True
 
-# Don't auto-clean the runtime workdir (A3_mod/_run_<ts>/) — useful for debugging.
+# Don't auto-clean the runtime workdir (B0_mod/_run_<ts>/) — useful for debugging.
 KEEP_WORKDIR = False
 # =============================================================================
 
@@ -149,16 +150,16 @@ def build_workdir(parent: Path, ts: str) -> dict:
               "SOASIA_OSeMOSYS_Template_v17.xlsx",
               "OSTRAM_Timeslice_Outputs.xlsx",
               "OSTRAM_AO_Extensions_FILLED.xlsx"):
-        shutil.copy(A3_MOD_DIR / f, s1 / f)
+        shutil.copy(B0_MOD_DIR / f, s1 / f)
 
     # Stage 2: patch_ao_c2a + TECH_TYPES
-    shutil.copy(A3_MOD_DIR / "patch_ao_c2a.py", s2)
-    shutil.copy(A3_MOD_DIR / "TECH_TYPES.csv", s2)
+    shutil.copy(B0_MOD_DIR / "patch_ao_c2a.py", s2)
+    shutil.copy(B0_MOD_DIR / "TECH_TYPES.csv", s2)
 
     # Stage 3: FIX_2 scripts + NATY reference
     for f in ("fix_trn_residuals.py", "clear_stale_unbinding_caps.py",
               "cap_trn_to_residual.py", "A-O_Parametrization_NATY.xlsx"):
-        shutil.copy(A3_MOD_DIR / f, s3)
+        shutil.copy(B0_MOD_DIR / f, s3)
 
     # Workdir-level scripts (run from `wd`, operate on subdirs via --input args)
     for f in (
@@ -172,7 +173,7 @@ def build_workdir(parent: Path, ts: str) -> dict:
         "compare_xlsx.py",
         "A-O_Parametrization_REFERENCE_with_RNWBIO.xlsx",
     ):
-        shutil.copy(A3_MOD_DIR / f, wd / f)
+        shutil.copy(B0_MOD_DIR / f, wd / f)
 
     return {
         "wd": wd, "s1": s1, "s1b": s1b, "s2": s2, "s3": s3, "s5": s5,
@@ -182,6 +183,20 @@ def build_workdir(parent: Path, ts: str) -> dict:
 # ---------------------------------------------------------------------------
 # Pipeline stages
 # ---------------------------------------------------------------------------
+def stage_0_a3(input_dir: Path) -> None:
+    """Run A3 in-place on A1_Outputs to inject MIN/RNW data from DATA_PACKAGE_V2.
+
+    A3 reads its own Config_datapackage.yaml (a1_outputs_subdir entry) and
+    patches the four A-O_*.xlsx files directly. For coherence, B0_mod's
+    --input-dir should match A3's a1_outputs_subdir.
+    """
+    banner("Stage 0 — A3_update_csvs_from_datapackage")
+    print(f"    (patches xlsx in {input_dir} via A3's own config)")
+    run_subproc([
+        PYTHON, T1_CONFECTION / "A3_update_csvs_from_datapackage.py",
+    ], cwd=T1_CONFECTION, label="A3_update_csvs_from_datapackage.py")
+
+
 def stage_0_5_rnwbio(wd: Path, s1: Path) -> None:
     banner("Stage 0.5 — fix_rnwbio_restore")
     run_subproc([
@@ -378,7 +393,7 @@ def verify(output_dir: Path, reference_dir: Path, compare_script: Path) -> bool:
 # ---------------------------------------------------------------------------
 def main() -> int:
     p = argparse.ArgumentParser(
-        description="A3 modification workflow orchestrator",
+        description="B0 modification workflow orchestrator",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
@@ -391,8 +406,8 @@ def main() -> int:
     p.add_argument("--keep-workdir", action="store_true", default=KEEP_WORKDIR,
                    help="Don't delete the runtime workdir on success "
                         "(useful for inspecting intermediates)")
-    p.add_argument("--workdir-base", type=Path, default=A3_MOD_DIR,
-                   help=f"Where to create the runtime workdir (default: {A3_MOD_DIR})")
+    p.add_argument("--workdir-base", type=Path, default=B0_MOD_DIR,
+                   help=f"Where to create the runtime workdir (default: {B0_MOD_DIR})")
     p.add_argument("--verify", action="store_true", default=VERIFY,
                    help="Compare final 4 files against A1_Outputs_Luis after the run")
     p.add_argument("--no-verify", dest="verify", action="store_false",
@@ -401,8 +416,8 @@ def main() -> int:
     # into __main__) so F5 always works regardless of Spyder's run config.
     args, _ = p.parse_known_args()
 
-    if not A3_MOD_DIR.is_dir():
-        sys.exit(f"ERROR: A3_mod folder missing: {A3_MOD_DIR}")
+    if not B0_MOD_DIR.is_dir():
+        sys.exit(f"ERROR: B0_mod folder missing: {B0_MOD_DIR}")
     if not args.input_dir.is_dir():
         sys.exit(f"ERROR: input dir missing: {args.input_dir}")
 
@@ -410,7 +425,7 @@ def main() -> int:
 
     t_start = time.time()
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    banner(f"A3 workflow run @ {ts}")
+    banner(f"B0 workflow run @ {ts}")
     print(f"  input-dir : {args.input_dir}")
     print(f"  output-dir: {output_dir}")
 
@@ -420,14 +435,17 @@ def main() -> int:
     s1 = paths["s1"]; s1b = paths["s1b"]; s2 = paths["s2"]; s3 = paths["s3"]; s5 = paths["s5"]
     print(f"  workdir   : {wd}")
 
-    # 2. Copy inputs into stage1
+    # 2. Run A3 first (patches input_dir in-place before we copy to workdir)
+    stage_0_a3(args.input_dir)
+
+    # 3. Copy inputs into stage1
     for f in INPUT_FILES:
         src = args.input_dir / f
         if not src.exists():
             sys.exit(f"ERROR: input file missing: {src}")
         shutil.copy(src, s1 / f)
 
-    # 3. Run pipeline
+    # 4. Run pipeline
     stage_0_5_rnwbio(wd, s1)
     stage_1_scripts_1_to_5(s1)
     stage_1b(wd, s1, s1b)

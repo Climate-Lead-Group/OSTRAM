@@ -1847,11 +1847,18 @@ def update_parametrization(excel_path, cost_db):
         cap_cols = [c for c in cap_cols if c in merged_capacities.columns]
         merged_capacities = merged_capacities[cap_cols]
 
-    # VariableCost column order
+    # VariableCost column order: preserve existing order from the input file
+    # so we don't override whatever convention A1 produced.
     if not merged_varcost.empty:
-        vc_fixed = ["Mode.Operation", "Tech.ID", "Tech", "Tech.Name", "Parameter.ID",
-                     "Parameter", "Unit", "Projection.Mode", "Projection.Parameter"]
-        vc_cols = [c for c in vc_fixed if c in merged_varcost.columns] + yearly_cols
+        if not exist_varcost.empty:
+            vc_cols = list(exist_varcost.columns)
+            for c in merged_varcost.columns:
+                if c not in vc_cols:
+                    vc_cols.append(c)
+        else:
+            vc_fixed = ["Mode.Operation", "Tech.ID", "Tech", "Tech.Name", "Parameter.ID",
+                         "Parameter", "Unit", "Projection.Mode", "Projection.Parameter"]
+            vc_cols = vc_fixed + yearly_cols
         vc_cols = [c for c in vc_cols if c in merged_varcost.columns]
         merged_varcost = merged_varcost[vc_cols]
 
