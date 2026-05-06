@@ -121,11 +121,10 @@ def load_wv_daysplit():
 def build_yearsplit_rows(wv_df, ao_header):
     """
     Build a list of row tuples shaped to A-O's Yearsplit header.
-    A-O conventions:
-        Unit column stays NaN (preserve A-O blank convention).
-        Year columns are int -> int values straight through.
+    A-O quirk (same as DaySplit): year column headers may be STRING ('2023')
+    when A-O comes from A1's openpyxl writes, but WV columns are INT. Resolve
+    by trying both forms when reading the source row.
     """
-    # Map A-O column name -> source value source
     rows = []
     for _, r in wv_df.iterrows():
         out = []
@@ -142,11 +141,19 @@ def build_yearsplit_rows(wv_df, ao_header):
                 out.append(r["Projection.Mode"])  # 'User defined'
             elif col == "Projection.Parameter":
                 out.append(int(r["Projection.Parameter"]))
-            elif isinstance(col, int) and 2000 <= col <= 2100:
-                out.append(float(r[col]))
             else:
-                # Unknown column -> blank (preserve schema)
-                out.append(None)
+                # Year column -- try int(col) first, then col as-is.
+                try:
+                    yc = int(col)
+                    if 2000 <= yc <= 2100 and yc in r.index:
+                        out.append(float(r[yc]))
+                        continue
+                except (TypeError, ValueError):
+                    pass
+                if col in r.index:
+                    out.append(float(r[col]))
+                else:
+                    out.append(None)
         rows.append(tuple(out))
     return rows
 
