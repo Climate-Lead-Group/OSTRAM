@@ -600,7 +600,19 @@ else:
         for _, r in wv_pf.iterrows():
             row_vals = []
             for h in hdrs:
-                v = r.get(h) if h in r.index else None
+                # A-O quirk (same as Yearsplit/DaySplit): year column headers
+                # may be STRING ('2023') in A-O while WV columns are INT.
+                # Try both forms before giving up.
+                v = None
+                if h in r.index:
+                    v = r.get(h)
+                else:
+                    try:
+                        h_int = int(h)
+                        if h_int in r.index:
+                            v = r.get(h_int)
+                    except (TypeError, ValueError):
+                        pass
                 if pd.isna(v):
                     v = None
                 row_vals.append(v)
