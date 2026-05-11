@@ -779,10 +779,12 @@ def load_dispatch_data(csv_path):
     ys_rows = df[df[YEAR_SPLIT_COL].notna()][['TIMESLICE', YEAR_SPLIT_COL]].drop_duplicates()
     year_split = dict(zip(ys_rows['TIMESLICE'], ys_rows[YEAR_SPLIT_COL]))
 
-    # Filter: PWR* technologies, ELC*00 or ELC*01 fuels, non-null production
+    # Filter: ELC*00/01/02 fuels, non-null production, timeslice present.
+    # No prefix filter: FUEL_SUFFIX alone partitions generation (00/01) from
+    # bus-02 delivery (02). Real PWR generators only emit 00/01; PWRTRN/RNW*/TRN*
+    # only emit 02, so the partition is clean by construction.
     mask = (
-        df['TECHNOLOGY'].astype(str).str.startswith('PWR')
-        & df['FUEL'].astype(str).apply(lambda f: bool(DISPATCH_FUEL_PATTERN.match(f)))
+        df['FUEL'].astype(str).apply(lambda f: bool(DISPATCH_FUEL_PATTERN.match(f)))
         & df[PRODUCTION_BY_TIMESLICE_COL].notna()
         & (df[PRODUCTION_BY_TIMESLICE_COL] != 0)
         & df['TIMESLICE'].notna()
