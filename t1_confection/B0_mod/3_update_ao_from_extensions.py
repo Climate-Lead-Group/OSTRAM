@@ -982,9 +982,60 @@ for ao_sheet, wv_sheet, key_cols, kind, scalar_col in STEP_2D_PLAN:
 
     n_wv_only = len(set(wv_lookup.keys()) - matched)
 
+    # -------------------------------------------------------------------------
+    # Append WV-only rows for VariableCost.
+    # -------------------------------------------------------------------------
+    # Step 3's additive pass only appends rows for techs listed in
+    # OSTRAM_AO_Extensions_FILLED with Include=Y. Pure WV-only fuel-supply
+    # techs (e.g. the RNWBIO* biomass-supply techs that A1 drops because
+    # OG_csvs_inputs/VariableCost.csv has no rows for them) are absent from
+    # both AO and Extensions, so without this pass their WV.VariableCost
+    # values never reach the AO workbook. A3 used to patch them in directly,
+    # which is why this gap only surfaces with --skip-a3. AO and WV share
+    # identical column layout for VariableCost, so we can append WV rows
+    # verbatim by header-name alignment.
+    n_wv_only_appended = 0
+    if ao_sheet == "VariableCost" and n_wv_only > 0:
+        ws_hdrs_now = [c.value for c in ws[1]]
+        wv_only_keys_set = set(wv_lookup.keys()) - matched
+        appended_df_rows = []
+        for _, wv_r in wv_df.iterrows():
+            wv_key = tuple(
+                _norm_key_part(wv_r[c]) if c in wv_r.index else None
+                for c in key_cols
+            )
+            if any(p is None for p in wv_key) or wv_key not in wv_only_keys_set:
+                continue
+            row_vals = []
+            for h in ws_hdrs_now:
+                if is_year_col(h):
+                    yint = col_as_year_int(h)
+                    v = wv_r.get(yint) if yint in wv_r.index else None
+                else:
+                    v = wv_r.get(h) if h in wv_r.index else None
+                if pd.isna(v):
+                    v = None
+                elif is_year_col(h):
+                    try:
+                        v = float(v)
+                    except (TypeError, ValueError):
+                        pass
+                row_vals.append(v)
+            ws.append(row_vals)
+            color_row(ws, ws.max_row, PARAM_REFRESH_COLOR)
+            appended_df_rows.append({h: row_vals[i] for i, h in enumerate(ws_hdrs_now)})
+            n_wv_only_appended += 1
+        if appended_df_rows:
+            new_ao_df = pd.concat(
+                [new_ao_df, pd.DataFrame(appended_df_rows, columns=new_ao_df.columns)],
+                ignore_index=True
+            )
+            ao_data["Param"][ao_sheet] = new_ao_df
+
     print(f"  {ao_sheet:30s}  refreshed {n_refreshed:5d} rows / "
           f"{n_cells:5d} cells   AO-only={len(ao_only_keys)}  "
-          f"WV-only(for Step 3)={n_wv_only}")
+          f"WV-only(for Step 3)={n_wv_only}"
+          + (f"  appended={n_wv_only_appended}" if n_wv_only_appended else ""))
 
     log_lines.append("")
     log_lines.append(f"  {ao_sheet} <- WV.{wv_sheet}  key={tuple(key_cols)}  kind={kind}")
@@ -999,6 +1050,10 @@ for ao_sheet, wv_sheet, key_cols, kind, scalar_col in STEP_2D_PLAN:
                      f"(no WV counterpart)")
     log_lines.append(f"    WV-only keys:         {n_wv_only}  "
                      f"(Step 3 additive pass will append)")
+    if n_wv_only_appended:
+        log_lines.append(f"    WV-only rows appended here: {n_wv_only_appended}  "
+                         f"(VariableCost only; closes gap for fuel-supply techs "
+                         f"absent from Extensions)")
 
     if ao_only_keys:
         log_lines.append(f"    Untouched AO keys (sample, up to 20):")
