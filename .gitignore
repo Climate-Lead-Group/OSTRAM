@@ -9,13 +9,14 @@ t1_confection/A2_Structure_Lists.xlsx
 t1_confection/requirements
 t1_confection/COSTS_ENERGY_BE_Anualized.csv
 t1_confection/Discounted_Rate.xlsx
-# Track generated branch snapshot CSVs.
-# t1_confection/OSTRAM_Combined_Inputs_Outputs.csv
-# t1_confection/OSTRAM_Inputs.csv
-# t1_confection/OSTRAM_Outputs.csv
-# t1_confection/OSTRAM_Combined_Inputs_Outputs_*.csv
-# t1_confection/OSTRAM_Inputs_*.csv
-# t1_confection/OSTRAM_Outputs_*.csv
+# Generated branch snapshot CSVs (regenerable, not for commits)
+# Patterns cover both the timestamped (..._YYYY-MM-DD.csv) and untimestamped forms.
+t1_confection/OSTRAM_Combined_Inputs_Outputs*.csv
+t1_confection/OSTRAM_Inputs*.csv
+t1_confection/OSTRAM_Outputs*.csv
+
+# Per-scenario solver output (any chain of suffixes), regenerable
+t1_confection/Executables/*/Pre_processed_*_output.csv
 
 # Python scripts
 t1_confection/setup_utils.py
