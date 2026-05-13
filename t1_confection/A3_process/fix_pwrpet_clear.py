@@ -47,10 +47,10 @@ def clear_pwrpet(input_path: Path, output_path: Path | None = None) -> int:
 
     year_cols = [headers[y] for y in range(YEAR_MIN, YEAR_MAX + 1) if y in headers]
     if len(year_cols) != (YEAR_MAX - YEAR_MIN + 1):
-        # Defensive skip: when running on a non-canonical A1 base (e.g.
-        # --skip-a3 against an input where Capacities doesn't yet have the
-        # full year header), we can't safely target the right cells.
-        # No-op rather than aborting the pipeline.
+        # Defensive skip: when running on a non-canonical A1 base whose
+        # Capacities sheet doesn't yet have the full year header, we can't
+        # safely target the right cells. No-op rather than aborting the
+        # pipeline.
         print(f"  SKIP — expected {YEAR_MAX-YEAR_MIN+1} year columns in "
               f"'{TARGET_SHEET}' header, found {len(year_cols)}. "
               f"No cells cleared.")

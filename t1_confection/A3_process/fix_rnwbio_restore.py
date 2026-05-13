@@ -82,8 +82,7 @@ def restore_rnwbio(input_path: Path, source_path: Path,
         anchor_row = find_first_row(ws_in, tech_col, anchor)
         if anchor_row is None:
             # Defensive skip: anchor missing means the input is a non-canonical
-            # A1 base (e.g. older snapshot without RNW* techs, or running with
-            # --skip-a3 against an A1 that A3 hasn't seeded yet). Don't abort —
+            # A1 base (e.g. older snapshot without RNW* techs). Don't abort —
             # the row insertion just isn't applicable here.
             print(f"  {tech}: SKIP — anchor tech '{anchor}' not found in input "
                   f"(cannot determine insertion position)")
@@ -107,7 +106,7 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     p.add_argument("--input", type=Path, required=True)
     p.add_argument("--source", type=Path, required=True,
-                   help="workbook to copy RNWBIO rows from (e.g., test_a3_mod_v2/A-O_Parametrization.xlsx)")
+                   help="workbook to copy RNWBIO rows from (e.g., A-O_Parametrization_REFERENCE_with_RNWBIO.xlsx)")
     p.add_argument("--output", type=Path, default=None)
     args = p.parse_args()
     if not args.input.is_file():

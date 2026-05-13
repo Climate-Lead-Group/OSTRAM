@@ -426,8 +426,8 @@ def build_demand_multiplier_map(demand_path: Path,
         return {}
     if DEMAND_TYPE_COL not in dp.columns or DEMAND_FUEL_COL not in dp.columns:
         return {}
-    # A1_Pre_processing writes year headers as strings ("2024"), A3 writes them
-    # as ints (2024). Accept either; map back to int for the output keys.
+    # Year headers may arrive as strings ("2024") or ints (2024) depending on
+    # upstream writers. Accept either; map back to int for the output keys.
     year_to_col: dict = {}
     for c in dp.columns:
         if isinstance(c, int) and 1900 <= c <= 2200:

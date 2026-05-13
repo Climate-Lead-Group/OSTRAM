@@ -990,10 +990,9 @@ for ao_sheet, wv_sheet, key_cols, kind, scalar_col in STEP_2D_PLAN:
     # techs (e.g. the RNWBIO* biomass-supply techs that A1 drops because
     # OG_csvs_inputs/VariableCost.csv has no rows for them) are absent from
     # both AO and Extensions, so without this pass their WV.VariableCost
-    # values never reach the AO workbook. A3 used to patch them in directly,
-    # which is why this gap only surfaces with --skip-a3. AO and WV share
-    # identical column layout for VariableCost, so we can append WV rows
-    # verbatim by header-name alignment.
+    # values never reach the AO workbook. AO and WV share identical column
+    # layout for VariableCost, so we can append WV rows verbatim by
+    # header-name alignment.
     n_wv_only_appended = 0
     if ao_sheet == "VariableCost" and n_wv_only > 0:
         ws_hdrs_now = [c.value for c in ws[1]]

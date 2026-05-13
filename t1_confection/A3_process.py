@@ -1,15 +1,14 @@
-"""B0_mod.py
+"""A3_process.py
 ==============
-Orchestrator for the B0 modification workflow.
+Orchestrator for the A3 modification workflow.
 
 Transforms the 4 fresh A1 outputs in `A1_Outputs/A1_Outputs_BAU/`
-(or any --input-dir) into the final form by chaining 17 sequential
-operations bundled in `t1_confection/B0_mod/`.
+(or any --input-dir) into the final form by chaining the sequential
+operations bundled in `t1_confection/A3_process/`.
 
 Pipeline:
-  Stage 0    A3_update_csvs_from_datapackage  injects MIN/RNW data from DATA_PACKAGE_V2
   Stage 0.5  fix_rnwbio_restore             input fix (RNWBIO rows)
-  Stage 1    scripts 1-5                    test_a3_mod_v2 pipeline
+  Stage 1    scripts 1-5                    AO/WV alignment pipeline
   Stage 1b   A0_insert_reserve_margin       adds System Parameters sheet
              add_max OLD (8ee8056)          fills 9999 / zeroes
              add_max NEW (2be1616)          flips Projection.Mode
@@ -22,20 +21,15 @@ Pipeline:
   Stage 4    consolidate                    move 4 files to stage5/
   Stage 5    add_max_cap_investment_lid_rule  applies lid + untie
 
-Reproduces `A1_Outputs_Luis/A1_Outputs_BAU/` exactly.
-
 Usage:
     # Default: in-place on A1_Outputs/A1_Outputs_BAU/
-    python B0_mod.py
+    python A3_process.py
 
     # Or specify input/output dirs explicitly
-    python B0_mod.py --input-dir <dir> --output-dir <dir>
+    python A3_process.py --input-dir <dir> --output-dir <dir>
 
     # Keep the runtime workdir for inspection
-    python B0_mod.py --keep-workdir
-
-    # Verify against A1_Outputs_Luis after running (if it exists)
-    python B0_mod.py --verify
+    python A3_process.py --keep-workdir
 """
 from __future__ import annotations
 
@@ -48,8 +42,7 @@ from datetime import datetime
 from pathlib import Path
 
 T1_CONFECTION = Path(__file__).resolve().parent
-B0_MOD_DIR = T1_CONFECTION / "B0_mod"
-LUIS_REFERENCE = T1_CONFECTION / "A1_Outputs_Luis" / "A1_Outputs_BAU"
+A3_PROCESS_DIR = T1_CONFECTION / "A3_process"
 
 # =============================================================================
 # USER CONFIGURATION (Spyder F5 — edit these and press F5; CLI args override)
@@ -61,10 +54,7 @@ INPUT_DIR = "A1_Outputs/A1_Outputs_BAU"
 # Folder to write the 4 final files. None = same as INPUT_DIR (in-place overwrite).
 OUTPUT_DIR = None  # or e.g. "A1_Outputs/A1_Outputs_BAU_post_A3"
 
-# Compare final 4 files against A1_Outputs_Luis/A1_Outputs_BAU after the run.
-VERIFY = True
-
-# Don't auto-clean the runtime workdir (B0_mod/_run_<ts>/) — useful for debugging.
+# Don't auto-clean the runtime workdir (A3_process/_run_<ts>/) — useful for debugging.
 KEEP_WORKDIR = False
 # =============================================================================
 
@@ -150,16 +140,16 @@ def build_workdir(parent: Path, ts: str) -> dict:
               "SOASIA_OSeMOSYS_Template_v17.xlsx",
               "OSTRAM_Timeslice_Outputs.xlsx",
               "OSTRAM_AO_Extensions_FILLED.xlsx"):
-        shutil.copy(B0_MOD_DIR / f, s1 / f)
+        shutil.copy(A3_PROCESS_DIR / f, s1 / f)
 
     # Stage 2: patch_ao_c2a + TECH_TYPES
-    shutil.copy(B0_MOD_DIR / "patch_ao_c2a.py", s2)
-    shutil.copy(B0_MOD_DIR / "TECH_TYPES.csv", s2)
+    shutil.copy(A3_PROCESS_DIR / "patch_ao_c2a.py", s2)
+    shutil.copy(A3_PROCESS_DIR / "TECH_TYPES.csv", s2)
 
     # Stage 3: FIX_2 scripts + NATY reference
     for f in ("fix_trn_residuals.py", "clear_stale_unbinding_caps.py",
               "cap_trn_to_residual.py", "A-O_Parametrization_NATY.xlsx"):
-        shutil.copy(B0_MOD_DIR / f, s3)
+        shutil.copy(A3_PROCESS_DIR / f, s3)
 
     # Workdir-level scripts (run from `wd`, operate on subdirs via --input args)
     for f in (
@@ -170,11 +160,10 @@ def build_workdir(parent: Path, ts: str) -> dict:
         "B1b_Pre_solver_validation.py", "_xlsx_validation_core.py",
         "Config_MOMF_T1_A.yaml", "TECH_TYPES.csv",
         "fix_rnwbio_restore.py", "fix_pwrpet_clear.py", "fix_elc_pmode_revert.py",
-        "compare_xlsx.py",
         "6_sync_og_to_ts20.py",
         "A-O_Parametrization_REFERENCE_with_RNWBIO.xlsx",
     ):
-        shutil.copy(B0_MOD_DIR / f, wd / f)
+        shutil.copy(A3_PROCESS_DIR / f, wd / f)
 
     return {
         "wd": wd, "s1": s1, "s1b": s1b, "s2": s2, "s3": s3, "s5": s5,
@@ -184,20 +173,6 @@ def build_workdir(parent: Path, ts: str) -> dict:
 # ---------------------------------------------------------------------------
 # Pipeline stages
 # ---------------------------------------------------------------------------
-def stage_0_a3(input_dir: Path) -> None:
-    """Run A3 in-place on A1_Outputs to inject MIN/RNW data from DATA_PACKAGE_V2.
-
-    A3 reads its own Config_datapackage.yaml (a1_outputs_subdir entry) and
-    patches the four A-O_*.xlsx files directly. For coherence, B0_mod's
-    --input-dir should match A3's a1_outputs_subdir.
-    """
-    banner("Stage 0 — A3_update_csvs_from_datapackage")
-    print(f"    (patches xlsx in {input_dir} via A3's own config)")
-    run_subproc([
-        PYTHON, T1_CONFECTION / "A3_update_csvs_from_datapackage.py",
-    ], cwd=T1_CONFECTION, label="A3_update_csvs_from_datapackage.py")
-
-
 def stage_0_5_rnwbio(wd: Path, s1: Path) -> None:
     banner("Stage 0.5 — fix_rnwbio_restore")
     run_subproc([
@@ -208,7 +183,7 @@ def stage_0_5_rnwbio(wd: Path, s1: Path) -> None:
 
 
 def stage_1_scripts_1_to_5(s1: Path) -> None:
-    banner("Stage 1 — scripts 1-5 (test_a3_mod_v2 pipeline)")
+    banner("Stage 1 — scripts 1-5 (AO/WV alignment pipeline)")
     run_subproc([PYTHON, s1 / "1_merge_timeslices_into_WV.py"], cwd=s1, label="1_merge_timeslices_into_WV.py")
     run_subproc([PYTHON, s1 / "2_extract_ao_extensions.py"], cwd=s1, label="2_extract_ao_extensions.py")
     # Script 3 reads OSTRAM_AO_Extensions.xlsx — we have to overwrite it with the FILLED version
@@ -280,9 +255,9 @@ def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
         "--out", "A-O_Parametrization_c2a_patched.xlsx",
     ], cwd=s2, label="patch_ao_c2a.py")
 
-    # Fallback: when there's nothing to patch (e.g. running --skip-a3, target
-    # techs aren't present), patch_ao_c2a doesn't write the output file. Copy
-    # the original so downstream stages have something to consume.
+    # Fallback: when there's nothing to patch (target techs aren't present),
+    # patch_ao_c2a doesn't write the output file. Copy the original so
+    # downstream stages have something to consume.
     patched_xlsx = s2 / "A-O_Parametrization_c2a_patched.xlsx"
     if not patched_xlsx.exists():
         shutil.copy(s2 / "A-O_Parametrization_ORIGINAL.xlsx", patched_xlsx)
@@ -392,37 +367,12 @@ def deliver_outputs(s5: Path, output_dir: Path) -> None:
         print(f"    {f}")
 
 
-def verify(output_dir: Path, reference_dir: Path, compare_script: Path) -> bool:
-    if not reference_dir.is_dir():
-        print(f"\n[verify] Reference {reference_dir} not found; skipping.")
-        return True
-    banner(f"Verifying {output_dir.name} vs {reference_dir.parent.name}/{reference_dir.name}")
-    all_match = True
-    for f in INPUT_FILES:
-        a = output_dir / f
-        b = reference_dir / f
-        if not b.exists():
-            print(f"    [SKIP] {f} (missing in reference)")
-            continue
-        res = subprocess.run(
-            [PYTHON, str(compare_script), str(a), str(b)],
-            capture_output=True, text=True,
-        )
-        last = (res.stdout or "").strip().splitlines()[-1] if res.stdout else "(no output)"
-        ok = res.returncode == 0
-        marker = "OK  " if ok else "DIFF"
-        print(f"    [{marker}] {f}: {last}")
-        if not ok:
-            all_match = False
-    return all_match
-
-
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main() -> int:
     p = argparse.ArgumentParser(
-        description="B0 modification workflow orchestrator",
+        description="A3 modification workflow orchestrator",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
@@ -435,25 +385,14 @@ def main() -> int:
     p.add_argument("--keep-workdir", action="store_true", default=KEEP_WORKDIR,
                    help="Don't delete the runtime workdir on success "
                         "(useful for inspecting intermediates)")
-    p.add_argument("--workdir-base", type=Path, default=B0_MOD_DIR,
-                   help=f"Where to create the runtime workdir (default: {B0_MOD_DIR})")
-    p.add_argument("--verify", action="store_true", default=VERIFY,
-                   help="Compare final 4 files against A1_Outputs_Luis after the run")
-    p.add_argument("--no-verify", dest="verify", action="store_false",
-                   help="Skip the post-run verification (override VERIFY=True)")
-    p.add_argument("--skip-a3", action="store_true", default=False,
-                   help="Skip ONLY Stage 0 (A3 data injection from "
-                        "DATA_PACKAGE_V2). Post-processing stages (0.5, 2, "
-                        "2.5, 3) still run on the A1_Outputs base data. "
-                        "Useful for measuring what A3 contributes to the "
-                        "output, while keeping the structural fixes that "
-                        "are part of the canonical pipeline.")
+    p.add_argument("--workdir-base", type=Path, default=A3_PROCESS_DIR,
+                   help=f"Where to create the runtime workdir (default: {A3_PROCESS_DIR})")
     # parse_known_args ignores unknown CLI args (e.g. those Spyder may inject
     # into __main__) so F5 always works regardless of Spyder's run config.
     args, _ = p.parse_known_args()
 
-    if not B0_MOD_DIR.is_dir():
-        sys.exit(f"ERROR: B0_mod folder missing: {B0_MOD_DIR}")
+    if not A3_PROCESS_DIR.is_dir():
+        sys.exit(f"ERROR: A3_process folder missing: {A3_PROCESS_DIR}")
     if not args.input_dir.is_dir():
         sys.exit(f"ERROR: input dir missing: {args.input_dir}")
 
@@ -461,7 +400,7 @@ def main() -> int:
 
     t_start = time.time()
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    banner(f"B0 workflow run @ {ts}")
+    banner(f"A3 workflow run @ {ts}")
     print(f"  input-dir : {args.input_dir}")
     print(f"  output-dir: {output_dir}")
 
@@ -471,24 +410,14 @@ def main() -> int:
     s1 = paths["s1"]; s1b = paths["s1b"]; s2 = paths["s2"]; s3 = paths["s3"]; s5 = paths["s5"]
     print(f"  workdir   : {wd}")
 
-    # 2. Run A3 first (patches input_dir in-place before we copy to workdir)
-    if args.skip_a3:
-        banner("Stage 0 — A3 SKIPPED (--skip-a3)")
-    else:
-        stage_0_a3(args.input_dir)
-
-    # 3. Copy inputs into stage1
+    # 2. Copy inputs into stage1
     for f in INPUT_FILES:
         src = args.input_dir / f
         if not src.exists():
             sys.exit(f"ERROR: input file missing: {src}")
         shutil.copy(src, s1 / f)
 
-    # 4. Run pipeline
-    # Post-processing stages (0.5, 2, 2.5, 3) run unconditionally. They were
-    # verified to be no-op-safe (idempotent or defensive) when A3 hasn't run,
-    # since they operate on PWR*/TRN*/RNW* techs that already exist in the
-    # A1_Outputs base data.
+    # 3. Run pipeline
     stage_0_5_rnwbio(wd, s1)
     stage_1_scripts_1_to_5(s1)
     stage_1b(wd, s1, s1b)
@@ -500,15 +429,7 @@ def main() -> int:
     # 4. Deliver
     deliver_outputs(s5, output_dir)
 
-    # 5. Verify
-    if args.verify:
-        ok = verify(output_dir, LUIS_REFERENCE, wd / "compare_xlsx.py")
-        if not ok:
-            print("\n[verify] DIFFS DETECTED — see lines above.")
-        else:
-            print("\n[verify] All 4 files match the reference.")
-
-    # 6. Cleanup workdir
+    # 5. Cleanup workdir
     if not args.keep_workdir:
         shutil.rmtree(wd, ignore_errors=True)
         print(f"\n  Cleaned up workdir: {wd.name}")

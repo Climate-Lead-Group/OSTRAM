@@ -1,17 +1,16 @@
-# B0_mod — Self-contained B0 modification workflow
+# A3_process — Self-contained A3 modification workflow
 
-This folder bundles every script and asset needed to reproduce Luis's A3
+This folder bundles every script and asset needed to reproduce Luis's
 modification workflow that transforms 4 fresh A1 outputs into their final
-form. The orchestrator at `t1_confection/B0_mod.py` runs the full pipeline.
+form. The orchestrator at `t1_confection/A3_process.py` runs the full pipeline.
 
 ## Quick start
 
 ```bash
 # From t1_confection/
-python B0_mod.py                              # in-place on A1_Outputs/A1_Outputs_BAU/
-python B0_mod.py --verify                     # also compare against A1_Outputs_Luis/
-python B0_mod.py --keep-workdir               # keep intermediates for inspection
-python B0_mod.py --input-dir <dir> --output-dir <dir>
+python A3_process.py                              # in-place on A1_Outputs/A1_Outputs_BAU/
+python A3_process.py --keep-workdir               # keep intermediates for inspection
+python A3_process.py --input-dir <dir> --output-dir <dir>
 ```
 
 ## What gets transformed
@@ -30,7 +29,7 @@ The pipeline reads 4 files from `--input-dir`:
 | Stage | Action | Script(s) |
 |---|---|---|
 | 0.5 | Restore 2 RNWBIO rows in VariableCost (lost in `f1aad25` pull) | `fix_rnwbio_restore.py` + `A-O_Parametrization_REFERENCE_with_RNWBIO.xlsx` |
-| 1 | `test_a3_mod_v2` pipeline (timeslice merge, AO extensions, manual fixes, ts20 fabric) | `1_*.py` … `5_*.py` |
+| 1 | AO/WV alignment pipeline (timeslice merge, AO extensions, manual fixes, ts20 fabric) | `1_*.py` … `5_*.py` |
 | 1b | Add `System Parameters` sheet (ReserveMargin=1.15) | `A0_insert_reserve_margin.py` |
 | 1b | Fill EMPTY/0 with 9999 in MaxCapInv (commit `8ee8056` behavior) | `add_max_capacity_investment_rule_OLD_8ee8056.py` |
 | 1b | Flip Projection.Mode EMPTY → User defined (commit `2be1616` behavior) | `add_max_capacity_investment_rule_NEW_2be1616.py` |
@@ -59,7 +58,6 @@ The pipeline reads 4 files from `--input-dir`:
 - `B1b_Pre_solver_validation.py` + `_xlsx_validation_core.py`
 - `A0_insert_reserve_margin.py`
 - `fix_rnwbio_restore.py`, `fix_pwrpet_clear.py`, `fix_elc_pmode_revert.py`
-- `compare_xlsx.py` (utility)
 
 ### Asset templates / fixtures
 - `SOASIA_OSeMOSYS_Template_v17.xlsx` (script 1 input)
@@ -91,11 +89,3 @@ Commit `f1aad25` ("Rename A1_Outputs to A1_Outputs_Luis and pull A1_Outputs from
 Both are explicit Luis manual edits that we automated:
 - **PWRPETBGDXX clear**: Luis blanked the 12×28 = 336 CapacityFactor cells in the `Capacities` sheet between `patch_ao_c2a` output and the FIX_2 input. The auto-generated CFs (≈0.01–0.22) likely seemed unrealistically low for petroleum power generation in Bangladesh; clearing them makes OSeMOSYS use `AvailabilityFactor=0.8` instead.
 - **ELC*01 PM revert**: After `add_max_capacity_investment_rule.py NEW` flipped Projection.Mode for ZEROED ELC*01 rows to "User defined", Luis reverted them to "EMPTY" (since the year cells are 0 — the rows are functionally lockout placeholders, "User defined" is misleading).
-
-## Verifying reproducibility
-
-`python B0_mod.py --verify` compares the 4 final files against
-`A1_Outputs_Luis/A1_Outputs_BAU/` cell-by-cell.
-
-Two independent runs in fresh workdirs produce identical outputs (verified
-2026-05-05).
