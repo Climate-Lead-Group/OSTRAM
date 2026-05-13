@@ -6,6 +6,7 @@ Created on 2025
 """
 
 import argparse
+import shutil
 import sys
 import os
 import re
@@ -667,6 +668,14 @@ def main():
         process_projections(args.proj, pairs, enable_dsptrn=enable_dsptrn)
         process_parametrization(args.param, pairs, yaml_data, enable_dsptrn=enable_dsptrn)
         process_demand(args.demand, enable_dsptrn=enable_dsptrn)
+
+        # Snapshot post-A2: estado canónico que A3 restaura al inicio (idempotencia).
+        scenario_dir = OUTPUT_FOLDER / f"A1_Outputs_{scen}"
+        snapshot_dir = OUTPUT_FOLDER / f"_post_a2_snapshot_{scen}"
+        if snapshot_dir.exists():
+            shutil.rmtree(snapshot_dir)
+        shutil.copytree(scenario_dir, snapshot_dir)
+        print(f"✔ Snapshot post-A2 creado: {snapshot_dir.name}")
 
     print("\n  ¡Todo listo!")
 

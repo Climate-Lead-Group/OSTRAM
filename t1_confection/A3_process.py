@@ -371,14 +371,34 @@ def main() -> int:
 
     if not A3_PROCESS_DIR.is_dir():
         sys.exit(f"ERROR: A3_process folder missing: {A3_PROCESS_DIR}")
-    if not input_dir.is_dir():
-        sys.exit(f"ERROR: input dir missing: {input_dir}")
+
+    # Restaurar input_dir desde el snapshot post-A2 antes de procesar.
+    # Hace A3 idempotente: cualquier estado previo en input_dir se descarta
+    # y se reemplaza por el estado canónico dejado por A2.
+    suffix = (
+        input_dir.name.split("A1_Outputs_", 1)[1]
+        if input_dir.name.startswith("A1_Outputs_")
+        else input_dir.name
+    )
+    snapshot_dir = input_dir.parent / f"_post_a2_snapshot_{suffix}"
+    if not snapshot_dir.is_dir():
+        sys.exit(
+            f"ERROR: snapshot post-A2 no encontrado: {snapshot_dir}\n"
+            f"       Ejecutá A1 y A2 primero (A2 crea el snapshot al finalizar)."
+        )
 
     t_start = time.time()
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     banner(f"A3 workflow run @ {ts}")
     print(f"  input-dir : {input_dir}")
     print(f"  output-dir: {output_dir}")
+    print(f"  snapshot  : {snapshot_dir}")
+
+    # 0. Restore input_dir from snapshot (clean canonical post-A2 state)
+    if input_dir.exists():
+        shutil.rmtree(input_dir)
+    shutil.copytree(snapshot_dir, input_dir)
+    print(f"  ✔ {input_dir.name} restaurado desde {snapshot_dir.name}")
 
     # 1. Build workdir
     paths = build_workdir(workdir_base, ts)

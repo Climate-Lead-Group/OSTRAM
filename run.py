@@ -10,7 +10,9 @@ Features:
 - Installs missing dependencies into the existing environment.
 - Initializes the DVC repository if it does not exist.
 - Runs `dvc pull` only when a remote is configured.
-- Executes A3 (pre-process A1 outputs), B1, and B2 explicitly from this top-level launcher.
+- If no post-A2 snapshot exists in `t1_confection/A1_Outputs/`, runs A1 + A2 as a
+  combo first (A2 creates the snapshot on success). Then always runs A3 (which
+  restores the snapshot before processing), B1, and B2.
 """
 
 import argparse
@@ -26,9 +28,13 @@ ENV_NAME_DEFAULT = "OSTRAM-env"
 ENV_FILE_DEFAULT = "environment.yaml"
 DVC_FILE_DEFAULT = "dvc.yaml"
 T1_DIR = Path("t1_confection")
+A1_SCRIPT_DEFAULT = T1_DIR / "A1_Pre_processing_OG_csvs.py"
+A2_SCRIPT_DEFAULT = T1_DIR / "A2_AddTx.py"
 A3_SCRIPT_DEFAULT = T1_DIR / "A3_process.py"
 B1_SCRIPT_DEFAULT = T1_DIR / "B1_Run_Compiler.py"
 B2_SCRIPT_DEFAULT = T1_DIR / "B2_Executing_OG_Model.py"
+A1_OUTPUTS_DIR = T1_DIR / "A1_Outputs"
+SNAPSHOT_PREFIX = "_post_a2_snapshot_"
 
 # Dependencies to check/install
 CONDA_DEPS = {
@@ -211,6 +217,16 @@ def run_pipeline_script(env_name: str, script_path: Path) -> None:
     run(f'conda run -n {env_name} python -u "{script_path}"')
 
 
+def post_a2_snapshot_exists(a1_outputs_dir: Path) -> bool:
+    """True if at least one `_post_a2_snapshot_*` folder exists in A1_Outputs/."""
+    if not a1_outputs_dir.is_dir():
+        return False
+    return any(
+        p.is_dir() and p.name.startswith(SNAPSHOT_PREFIX)
+        for p in a1_outputs_dir.iterdir()
+    )
+
+
 def format_duration(start_time: dt.datetime, end_time: dt.datetime) -> str:
     duration = end_time - start_time
     total_seconds = int(duration.total_seconds())
@@ -268,6 +284,21 @@ def main() -> None:
         print("No DVC remote configured. Skipping `dvc pull`.")
 
     start_time = dt.datetime.now()
+
+    # A1 + A2 are a combo: only run them when no post-A2 snapshot exists.
+    # A2 creates the snapshot at the end; A3 restores from it on every run.
+    if post_a2_snapshot_exists(A1_OUTPUTS_DIR.resolve()):
+        print(
+            f"Post-A2 snapshot detected in {A1_OUTPUTS_DIR}/. "
+            "Skipping A1 + A2 (A3 will restore from snapshot)."
+        )
+    else:
+        print(
+            f"No post-A2 snapshot found in {A1_OUTPUTS_DIR}/. "
+            "Running A1 + A2 combo (A2 will create the snapshot)."
+        )
+        run_pipeline_script(env_name, A1_SCRIPT_DEFAULT.resolve())
+        run_pipeline_script(env_name, A2_SCRIPT_DEFAULT.resolve())
 
     if args.skip_a3:
         print("Skipping A3 pre-process stage by request.")

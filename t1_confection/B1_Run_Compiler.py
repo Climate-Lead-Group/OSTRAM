@@ -49,7 +49,7 @@ def list_scenario_suffixes(base_dir: Path) -> List[str]:
     """Return list like ['BAU_NoRPO','NDC','NDC+ELC'] from folders 'A1_Outputs_*'.
 
     Skips folders whose suffix:
-      - contains 'backup' or 'pre_experiment' (case-insensitive), or
+      - contains 'backup', 'snapshot' or 'pre_experiment' (case-insensitive), or
       - includes an 8-digit datestamp like '_20260513'.
     """
     suffixes: List[str] = []
@@ -61,6 +61,8 @@ def list_scenario_suffixes(base_dir: Path) -> List[str]:
             continue
         suffix_lower = suffix.lower()
         if "backup" in suffix_lower:
+            continue
+        if "snapshot" in suffix_lower:
             continue
         if "pre_experiment" in suffix_lower:
             continue
