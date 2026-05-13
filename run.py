@@ -10,7 +10,7 @@ Features:
 - Installs missing dependencies into the existing environment.
 - Initializes the DVC repository if it does not exist.
 - Runs `dvc pull` only when a remote is configured.
-- Executes B1 and B2 explicitly from this top-level launcher.
+- Executes A3 (pre-process A1 outputs), B1, and B2 explicitly from this top-level launcher.
 """
 
 import argparse
@@ -26,6 +26,7 @@ ENV_NAME_DEFAULT = "OSTRAM-env"
 ENV_FILE_DEFAULT = "environment.yaml"
 DVC_FILE_DEFAULT = "dvc.yaml"
 T1_DIR = Path("t1_confection")
+A3_SCRIPT_DEFAULT = T1_DIR / "A3_process.py"
 B1_SCRIPT_DEFAULT = T1_DIR / "B1_Run_Compiler.py"
 B2_SCRIPT_DEFAULT = T1_DIR / "B2_Executing_OG_Model.py"
 
@@ -35,6 +36,7 @@ CONDA_DEPS = {
     "numpy": "numpy",
     "openpyxl": "openpyxl",
     "yaml": "pyyaml",
+    "ruamel.yaml": "ruamel.yaml",
     "xlsxwriter": "xlsxwriter",
 }
 PIP_DEPS = {
@@ -226,7 +228,7 @@ def format_duration(start_time: dt.datetime, end_time: dt.datetime) -> str:
 
 # ---------- Main ----------
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Top-level runner for OSTRAM B1/B2 execution")
+    parser = argparse.ArgumentParser(description="Top-level runner for OSTRAM A3/B1/B2 execution")
     parser.add_argument(
         "--env-name",
         default=None,
@@ -239,6 +241,7 @@ def main() -> None:
         help="Path to dvc.yaml used for optional DVC pull checks.",
     )
     parser.add_argument("--skip-pull", action="store_true", help="Skip `dvc pull` even if a DVC remote is configured.")
+    parser.add_argument("--skip-a3", action="store_true", help="Skip `t1_confection/A3_process.py` (pre-process A1 outputs).")
     parser.add_argument("--skip-b1", action="store_true", help="Skip `t1_confection/B1_Run_Compiler.py`.")
     parser.add_argument("--skip-b2", action="store_true", help="Skip `t1_confection/B2_Executing_OG_Model.py`.")
     args = parser.parse_args()
@@ -265,6 +268,11 @@ def main() -> None:
         print("No DVC remote configured. Skipping `dvc pull`.")
 
     start_time = dt.datetime.now()
+
+    if args.skip_a3:
+        print("Skipping A3 pre-process stage by request.")
+    else:
+        run_pipeline_script(env_name, A3_SCRIPT_DEFAULT.resolve())
 
     if args.skip_b1:
         print("Skipping B1 compiler stage by request.")

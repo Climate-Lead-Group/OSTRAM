@@ -3,8 +3,8 @@
 Orchestrator for the A3 modification workflow.
 
 Transforms the 4 fresh A1 outputs in `A1_Outputs/A1_Outputs_BAU/`
-(or any --input-dir) into the final form by chaining the sequential
-operations bundled in `t1_confection/A3_process/`.
+into the final form by chaining the sequential operations bundled in
+`t1_confection/A3_process/`.
 
 Pipeline:
   Stage 0.5  fix_rnwbio_restore             input fix (RNWBIO rows)
@@ -22,18 +22,12 @@ Pipeline:
   Stage 5    add_max_cap_investment_lid_rule  applies lid + untie
 
 Usage:
-    # Default: in-place on A1_Outputs/A1_Outputs_BAU/
     python A3_process.py
 
-    # Or specify input/output dirs explicitly
-    python A3_process.py --input-dir <dir> --output-dir <dir>
-
-    # Keep the runtime workdir for inspection
-    python A3_process.py --keep-workdir
+All behavior is controlled by the USER CONFIGURATION block below.
 """
 from __future__ import annotations
 
-import argparse
 import shutil
 import subprocess
 import sys
@@ -45,7 +39,7 @@ T1_CONFECTION = Path(__file__).resolve().parent
 A3_PROCESS_DIR = T1_CONFECTION / "A3_process"
 
 # =============================================================================
-# USER CONFIGURATION (Spyder F5 — edit these and press F5; CLI args override)
+# USER CONFIGURATION — edit these to control the run
 # =============================================================================
 # Folder with the 4 fresh A-O_*.xlsx (inputs).
 # Path is relative to this script's folder (t1_confection/), or absolute.
@@ -371,48 +365,30 @@ def deliver_outputs(s5: Path, output_dir: Path) -> None:
 # Main
 # ---------------------------------------------------------------------------
 def main() -> int:
-    p = argparse.ArgumentParser(
-        description="A3 modification workflow orchestrator",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__,
-    )
-    p.add_argument("--input-dir", type=Path, default=DEFAULT_IO,
-                   help=f"Folder with the 4 fresh A-O_*.xlsx "
-                        f"(default from USER CONFIG: {DEFAULT_IO})")
-    p.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT,
-                   help="Where to write the 4 final files "
-                        "(default from USER CONFIG: same as --input-dir)")
-    p.add_argument("--keep-workdir", action="store_true", default=KEEP_WORKDIR,
-                   help="Don't delete the runtime workdir on success "
-                        "(useful for inspecting intermediates)")
-    p.add_argument("--workdir-base", type=Path, default=A3_PROCESS_DIR,
-                   help=f"Where to create the runtime workdir (default: {A3_PROCESS_DIR})")
-    # parse_known_args ignores unknown CLI args (e.g. those Spyder may inject
-    # into __main__) so F5 always works regardless of Spyder's run config.
-    args, _ = p.parse_known_args()
+    input_dir = DEFAULT_IO
+    output_dir = DEFAULT_OUTPUT or input_dir
+    workdir_base = A3_PROCESS_DIR
 
     if not A3_PROCESS_DIR.is_dir():
         sys.exit(f"ERROR: A3_process folder missing: {A3_PROCESS_DIR}")
-    if not args.input_dir.is_dir():
-        sys.exit(f"ERROR: input dir missing: {args.input_dir}")
-
-    output_dir = args.output_dir or args.input_dir
+    if not input_dir.is_dir():
+        sys.exit(f"ERROR: input dir missing: {input_dir}")
 
     t_start = time.time()
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     banner(f"A3 workflow run @ {ts}")
-    print(f"  input-dir : {args.input_dir}")
+    print(f"  input-dir : {input_dir}")
     print(f"  output-dir: {output_dir}")
 
     # 1. Build workdir
-    paths = build_workdir(args.workdir_base, ts)
+    paths = build_workdir(workdir_base, ts)
     wd = paths["wd"]
     s1 = paths["s1"]; s1b = paths["s1b"]; s2 = paths["s2"]; s3 = paths["s3"]; s5 = paths["s5"]
     print(f"  workdir   : {wd}")
 
     # 2. Copy inputs into stage1
     for f in INPUT_FILES:
-        src = args.input_dir / f
+        src = input_dir / f
         if not src.exists():
             sys.exit(f"ERROR: input file missing: {src}")
         shutil.copy(src, s1 / f)
@@ -430,7 +406,7 @@ def main() -> int:
     deliver_outputs(s5, output_dir)
 
     # 5. Cleanup workdir
-    if not args.keep_workdir:
+    if not KEEP_WORKDIR:
         shutil.rmtree(wd, ignore_errors=True)
         print(f"\n  Cleaned up workdir: {wd.name}")
     else:
