@@ -42,17 +42,31 @@ def try_import_yaml_handlers():
     return ruamel_yaml, pyyaml
 
 
+_TIMESTAMP_RE = re.compile(r"_\d{8}")
+
+
 def list_scenario_suffixes(base_dir: Path) -> List[str]:
     """Return list like ['BAU_NoRPO','NDC','NDC+ELC'] from folders 'A1_Outputs_*'.
 
-    Skips folders whose suffix contains 'backup' (case-insensitive).
+    Skips folders whose suffix:
+      - contains 'backup' or 'pre_experiment' (case-insensitive), or
+      - includes an 8-digit datestamp like '_20260513'.
     """
     suffixes: List[str] = []
     for item in sorted(base_dir.iterdir()):
-        if item.is_dir() and item.name.startswith("A1_Outputs_"):
-            suffix = item.name.split("A1_Outputs_", 1)[1]
-            if suffix and "backup" not in suffix.lower():
-                suffixes.append(suffix)
+        if not (item.is_dir() and item.name.startswith("A1_Outputs_")):
+            continue
+        suffix = item.name.split("A1_Outputs_", 1)[1]
+        if not suffix:
+            continue
+        suffix_lower = suffix.lower()
+        if "backup" in suffix_lower:
+            continue
+        if "pre_experiment" in suffix_lower:
+            continue
+        if _TIMESTAMP_RE.search(suffix):
+            continue
+        suffixes.append(suffix)
     return suffixes
 
 
