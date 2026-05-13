@@ -43,12 +43,15 @@ def try_import_yaml_handlers():
 
 
 def list_scenario_suffixes(base_dir: Path) -> List[str]:
-    """Return list like ['BAU_NoRPO','NDC','NDC+ELC'] from folders 'A1_Outputs_*'."""
+    """Return list like ['BAU_NoRPO','NDC','NDC+ELC'] from folders 'A1_Outputs_*'.
+
+    Skips folders whose suffix contains 'backup' (case-insensitive).
+    """
     suffixes: List[str] = []
     for item in sorted(base_dir.iterdir()):
         if item.is_dir() and item.name.startswith("A1_Outputs_"):
             suffix = item.name.split("A1_Outputs_", 1)[1]
-            if suffix:  # Ensure non-empty
+            if suffix and "backup" not in suffix.lower():
                 suffixes.append(suffix)
     return suffixes
 
