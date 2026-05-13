@@ -335,6 +335,178 @@ def run_open_pwrbck_patcher(params, scenario_name):
         print(result.stdout)
     print('#------------------------------------------------------------------------------#')
 
+def run_reserve_margin_repair_patcher(params, scenario_name):
+    """
+    OPTIONAL diagnostic/final-ish step: patches ReserveMarginTagTechnology and
+    opens selected firm capacity caps in the preprocessed datafile.
+
+    Controlled by params['reserve_margin_repair_active'] (default False = no-op).
+
+    YAML keys consumed:
+        reserve_margin_repair_active: bool  -- master switch (default False)
+        reserve_margin_repair_suffix: str   -- chained filename suffix (default "RMRepair")
+        reserve_margin_backstop_credit: num -- PWRBCK reserve credit (default 1.0)
+        reserve_margin_ccs_credit: num      -- PWRCCS reserve credit (default 0.9)
+        reserve_margin_open_capacity_value: num -- cap value for selected techs (default 9999)
+        reserve_margin_open_capacity_prefixes: list -- default ["PWRPET", "PWROIL", "PWRNGS"]
+        reserve_margin_patch_backstop: bool -- set PWRBCK tags (default True)
+        reserve_margin_patch_ccs: bool      -- set PWRCCS tags (default True)
+        reserve_margin_open_capacity: bool  -- open selected caps (default True)
+
+    This chains after strip_storage/open_pwrbck when those patchers are active.
+    """
+    if not params.get('reserve_margin_repair_active', False):
+        return  # No-op when disabled
+
+    suffix = params.get('reserve_margin_repair_suffix', 'RMRepair')
+    script_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        'patch_reserve_margin_repair.py',
+    )
+
+    base = f"{params['preprocess_data_name']}{scenario_name}_0"
+    chain_parts = []
+    if params.get('strip_storage_active', False):
+        chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
+    if params.get('open_pwrbck_active', False):
+        chain_parts.append(params.get('open_pwrbck_suffix', 'OpenBCK'))
+
+    in_base = f"{base}_{'_'.join(chain_parts)}" if chain_parts else base
+    out_base = f"{in_base}_{suffix}"
+
+    in_file = os.path.join(params['executables'], scenario_name + '_0', f"{in_base}.txt")
+    out_file = os.path.join(params['executables'], scenario_name + '_0', f"{out_base}.txt")
+
+    command = [
+        sys.executable,
+        script_path,
+        in_file,
+        '-o',
+        out_file,
+        '--backstop-credit',
+        str(params.get('reserve_margin_backstop_credit', 1.0)),
+        '--ccs-credit',
+        str(params.get('reserve_margin_ccs_credit', 0.9)),
+        '--open-capacity-value',
+        str(params.get('reserve_margin_open_capacity_value', 9999)),
+    ]
+
+    open_prefixes = params.get(
+        'reserve_margin_open_capacity_prefixes',
+        ['PWRPET', 'PWROIL', 'PWRNGS'],
+    )
+    command += ['--open-capacity-prefixes'] + list(open_prefixes)
+
+    if not params.get('reserve_margin_patch_backstop', True):
+        command.append('--skip-backstop-credit')
+    if not params.get('reserve_margin_patch_ccs', True):
+        command.append('--skip-ccs-credit')
+    if not params.get('reserve_margin_open_capacity', True):
+        command.append('--skip-capacity-opening')
+
+    print(f"Repairing reserve margin data for '{scenario_name}_0' (suffix={suffix}):")
+    print(' '.join(command))
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"[ERROR] reserve_margin_repair patcher failed for '{scenario_name}':\n{result.stderr}")
+    else:
+        print(result.stdout)
+    print('#------------------------------------------------------------------------------#')
+
+def run_reserve_margin_xlsx_patcher(params, scenario_name):
+    """
+    OPTIONAL careful reserve-margin repair step using an XLSX fallback workbook.
+
+    Controlled by params['reserve_margin_xlsx_active'] (default False = no-op).
+
+    YAML keys consumed:
+        reserve_margin_xlsx_active: bool  -- master switch (default False)
+        reserve_margin_xlsx_suffix: str   -- chained suffix (default "RMCarefulXLSX")
+        reserve_margin_xlsx_workbook: str -- workbook path, relative to this B2 file if not absolute
+        reserve_margin_xlsx_sheet: str    -- optional worksheet name
+        reserve_margin_xlsx_backstop_credit: num -- PWRBCK reserve credit (default 1.0)
+        reserve_margin_xlsx_ccs_credit: num      -- PWRCCS reserve credit (default 0.9)
+        reserve_margin_xlsx_target_prefixes: list -- default ["PWRPET", "PWROIL", "PWRNGS"]
+        reserve_margin_xlsx_sentinel_values: list -- default [0, 9999]
+
+    This chains after strip_storage/open_pwrbck and also after the older
+    reserve_margin_repair patch if that older patch is active.
+    """
+    if not params.get('reserve_margin_xlsx_active', False):
+        return
+
+    suffix = params.get('reserve_margin_xlsx_suffix', 'RMCarefulXLSX')
+    here = os.path.dirname(os.path.abspath(__file__))
+    script_path = os.path.join(here, 'patch_reserve_margin_repair_careful_xlsx.py')
+
+    workbook = params.get(
+        'reserve_margin_xlsx_workbook',
+        'firm_capacity_fallbacks_by_cr_0p5.xlsx',
+    )
+    if not os.path.isabs(workbook):
+        workbook = os.path.join(here, workbook)
+
+    base = f"{params['preprocess_data_name']}{scenario_name}_0"
+    chain_parts = []
+    if params.get('strip_storage_active', False):
+        chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
+    if params.get('open_pwrbck_active', False):
+        chain_parts.append(params.get('open_pwrbck_suffix', 'OpenBCK'))
+    if params.get('reserve_margin_repair_active', False):
+        chain_parts.append(params.get('reserve_margin_repair_suffix', 'RMRepair'))
+
+    in_base = f"{base}_{'_'.join(chain_parts)}" if chain_parts else base
+    out_base = f"{in_base}_{suffix}"
+
+    in_file = os.path.join(params['executables'], scenario_name + '_0', f"{in_base}.txt")
+    out_file = os.path.join(params['executables'], scenario_name + '_0', f"{out_base}.txt")
+    warnings_file = os.path.join(params['executables'], scenario_name + '_0', f"{out_base}.warnings.txt")
+
+    command = [
+        sys.executable,
+        script_path,
+        in_file,
+        '-o',
+        out_file,
+        '--fallback-xlsx',
+        workbook,
+        '--backstop-credit',
+        str(params.get('reserve_margin_xlsx_backstop_credit', 1.0)),
+        '--ccs-credit',
+        str(params.get('reserve_margin_xlsx_ccs_credit', 0.9)),
+        '--warnings-file',
+        warnings_file,
+    ]
+
+    xlsx_sheet = params.get('reserve_margin_xlsx_sheet')
+    if xlsx_sheet:
+        command += ['--xlsx-sheet', str(xlsx_sheet)]
+
+    target_prefixes = params.get(
+        'reserve_margin_xlsx_target_prefixes',
+        ['PWRPET', 'PWROIL', 'PWRNGS'],
+    )
+    command += ['--target-prefixes'] + list(target_prefixes)
+
+    sentinel_values = params.get('reserve_margin_xlsx_sentinel_values', [0, 9999])
+    command += ['--sentinel-values'] + [str(value) for value in sentinel_values]
+
+    if not params.get('reserve_margin_xlsx_patch_backstop', True):
+        command.append('--skip-backstop-credit')
+    if not params.get('reserve_margin_xlsx_patch_ccs', True):
+        command.append('--skip-ccs-credit')
+
+    print(f"Repairing reserve margin data from XLSX for '{scenario_name}_0' (suffix={suffix}):")
+    print(' '.join(command))
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"[ERROR] reserve_margin_xlsx patcher failed for '{scenario_name}':\n{result.stderr}")
+    else:
+        print(result.stdout)
+        if result.stderr:
+            print(result.stderr)
+    print('#------------------------------------------------------------------------------#')
+
 def run_preprocessing_script(params, scenario_name):
     """
     Ejecuta el script de preprocesamiento Python especificado en el archivo YAML de parámetros para un escenario dado.
@@ -424,6 +596,40 @@ def main_executer(params, scenario_name, HERE):
         output_file = os.path.join(folder_scenario, f"{_base}_{_chain}{params['output_files']}")
         print(f"[open_pwrbck] redirecting solver to: {data_file}.txt")
 
+    # Reserve-margin repair redirect: chains after strip/open-BCK when active.
+    # Produces e.g. Pre_processed_BAU_0_NoStorage_OpenBCK_RMRepair.txt.
+    if params.get('reserve_margin_repair_active', False):
+        _rm_suffix = params.get('reserve_margin_repair_suffix', 'RMRepair')
+        _base = params['preprocess_data_name'] + scenario_name + '_0'
+        _chain_parts = []
+        if params.get('strip_storage_active', False):
+            _chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
+        if params.get('open_pwrbck_active', False):
+            _chain_parts.append(params.get('open_pwrbck_suffix', 'OpenBCK'))
+        _chain_parts.append(_rm_suffix)
+        _chain = '_'.join(_chain_parts)
+        data_file = os.path.join(folder_scenario, f"{_base}_{_chain}")
+        output_file = os.path.join(folder_scenario, f"{_base}_{_chain}{params['output_files']}")
+        print(f"[reserve_margin_repair] redirecting solver to: {data_file}.txt")
+
+    # Careful XLSX reserve-margin repair redirect.
+    # Produces e.g. Pre_processed_BAU_0_NoStorage_OpenBCK_RMCarefulXLSX.txt.
+    if params.get('reserve_margin_xlsx_active', False):
+        _xlsx_suffix = params.get('reserve_margin_xlsx_suffix', 'RMCarefulXLSX')
+        _base = params['preprocess_data_name'] + scenario_name + '_0'
+        _chain_parts = []
+        if params.get('strip_storage_active', False):
+            _chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
+        if params.get('open_pwrbck_active', False):
+            _chain_parts.append(params.get('open_pwrbck_suffix', 'OpenBCK'))
+        if params.get('reserve_margin_repair_active', False):
+            _chain_parts.append(params.get('reserve_margin_repair_suffix', 'RMRepair'))
+        _chain_parts.append(_xlsx_suffix)
+        _chain = '_'.join(_chain_parts)
+        data_file = os.path.join(folder_scenario, f"{_base}_{_chain}")
+        output_file = os.path.join(folder_scenario, f"{_base}_{_chain}{params['output_files']}")
+        print(f"[reserve_margin_xlsx] redirecting solver to: {data_file}.txt")
+
     # Determinar el solver según los parámetros
     solver = params['solver']
     commands = []
@@ -462,8 +668,9 @@ def main_executer(params, scenario_name, HERE):
         elif solver == 'cplex':
             # Usando solver CPLEX
             if params['execute_model']:
-                if os.path.exists(output_file + '.sol'):
-                    os.remove(output_file + '.sol')
+                for solution_file in (output_file + '.sol', output_file + '.feasopt.sol'):
+                    if os.path.exists(solution_file):
+                        os.remove(solution_file)
 
                 # Número de hilos que usa cplex
                 cplex_threads = params['cplex_threads']
@@ -510,6 +717,11 @@ def main_executer(params, scenario_name, HERE):
     if params['execute_model'] or params['create_matrix']:
         for cmd in commands:
             subprocess.run(cmd, shell=True, check=True)
+
+    if params['execute_model'] and solver in ['cbc', 'cplex', 'gurobi'] and not os.path.exists(output_file + '.sol'):
+        raise FileNotFoundError(
+            f"Solver finished but did not create the expected solution file: {output_file}.sol"
+        )
         
     print(f'✅ Escenario {scenario_name}_0 resuelto exitosamente.')
     print('\n#------------------------------------------------------------------------------#')
@@ -657,6 +869,42 @@ def export_root_datafile(here, params, scenario_name, export_name='OSTRAM_data.t
     return target_path
 
 
+def active_output_csv_candidates(params, scenario_future_name):
+    """
+    Return output CSV names in the same suffix order used by main_executer.
+
+    The solver/otoole path can become, for example:
+      Pre_processed_BAU_0_NoStorage_OpenBCK_RMCarefulXLSX_output.csv
+
+    The final scenario concatenator used to look only for:
+      Pre_processed_BAU_0_Output.csv
+
+    Keep the active chained name first, with legacy fallbacks after it.
+    """
+    base = f"{params['preprocess_data_name']}{scenario_future_name}"
+    chain_parts = []
+
+    if params.get('strip_storage_active', False):
+        chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
+    if params.get('open_pwrbck_active', False):
+        chain_parts.append(params.get('open_pwrbck_suffix', 'OpenBCK'))
+    if params.get('reserve_margin_repair_active', False):
+        chain_parts.append(params.get('reserve_margin_repair_suffix', 'RMRepair'))
+    if params.get('reserve_margin_xlsx_active', False):
+        chain_parts.append(params.get('reserve_margin_xlsx_suffix', 'RMCarefulXLSX'))
+
+    candidates = []
+    if chain_parts:
+        candidates.append(f"{base}_{'_'.join(chain_parts)}{params['output_files']}.csv")
+
+    candidates.extend([
+        f"{base}{params['output_files']}.csv",
+        f"{base}_Output.csv",
+    ])
+
+    return candidates
+
+
 
 def concatenate_all_scenarios(HERE, params):
     """
@@ -695,7 +943,12 @@ def concatenate_all_scenarios(HERE, params):
         future = parts[1]
 
         input_file = os.path.join(scenario_path, f"{scenario_future_name}_Input.csv")
-        output_file = os.path.join(scenario_path, f"Pre_processed_{scenario_future_name}_Output.csv")
+        output_file = None
+        for output_name in active_output_csv_candidates(params, scenario_future_name):
+            candidate = os.path.join(scenario_path, output_name)
+            if os.path.exists(candidate):
+                output_file = candidate
+                break
 
         if os.path.exists(input_file):
             df_in = pd.read_csv(input_file, low_memory=False)
@@ -704,7 +957,7 @@ def concatenate_all_scenarios(HERE, params):
             combined_inputs.append(df_in)
             combined_inputs_outputs.append(df_in)
 
-        if os.path.exists(output_file):
+        if output_file and os.path.exists(output_file):
             df_out = pd.read_csv(output_file, low_memory=False)
             df_out.insert(0, "Future", future)
             df_out.insert(1, "Scenario", scenario)
@@ -923,6 +1176,8 @@ if __name__ == "__main__":
                 run_days_in_day_type_patcher(params, scenario_name)
                 run_strip_storage_patcher(params, scenario_name)
                 run_open_pwrbck_patcher(params, scenario_name)
+                run_reserve_margin_repair_patcher(params, scenario_name)
+                run_reserve_margin_xlsx_patcher(params, scenario_name)
             else:
                 print(f"❌ Se omite el preprocesamiento para '{scenario_name}' porque falló la conversión con otoole.")
                 print('#------------------------------------------------------------------------------#')
