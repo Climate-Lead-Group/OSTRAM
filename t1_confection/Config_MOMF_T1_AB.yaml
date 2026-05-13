@@ -42,7 +42,7 @@ gurobi_threads: 3
 gurobi_seed: 12345            # Random seed for reproducibility
 
 # For delete intermediate files
-del_files: False
+del_files: True
 
 # For run only the main scenarios
 only_main_scenario: False
