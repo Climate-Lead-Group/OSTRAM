@@ -65,7 +65,7 @@ create_matrix: True
 execute_model: True
 
 # Concatenate otoole csv
-concat_otoole_csv: True
+concat_otoole_csv: False
 
 # Concatenate scenarios csv
 concat_scenarios_csv: True

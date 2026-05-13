@@ -171,6 +171,7 @@ def build_workdir(parent: Path, ts: str) -> dict:
         "Config_MOMF_T1_A.yaml", "TECH_TYPES.csv",
         "fix_rnwbio_restore.py", "fix_pwrpet_clear.py", "fix_elc_pmode_revert.py",
         "compare_xlsx.py",
+        "6_sync_og_to_ts20.py",
         "A-O_Parametrization_REFERENCE_with_RNWBIO.xlsx",
     ):
         shutil.copy(B0_MOD_DIR / f, wd / f)
@@ -279,6 +280,15 @@ def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
         "--out", "A-O_Parametrization_c2a_patched.xlsx",
     ], cwd=s2, label="patch_ao_c2a.py")
 
+    # Fallback: when there's nothing to patch (e.g. running --skip-a3, target
+    # techs aren't present), patch_ao_c2a doesn't write the output file. Copy
+    # the original so downstream stages have something to consume.
+    patched_xlsx = s2 / "A-O_Parametrization_c2a_patched.xlsx"
+    if not patched_xlsx.exists():
+        shutil.copy(s2 / "A-O_Parametrization_ORIGINAL.xlsx", patched_xlsx)
+        print("    [FALLBACK] patch_ao_c2a produced no output; copied ORIGINAL "
+              "to *_c2a_patched.xlsx so pipeline can continue.")
+
     # fix_pwrpet_clear — the manual edit Luis did
     run_subproc([
         PYTHON, wd / "fix_pwrpet_clear.py",
@@ -353,6 +363,25 @@ def stage_4_and_5(wd: Path, s1: Path, s3: Path, s5: Path, post_trn_cap: Path) ->
     ], cwd=wd, label="add_max_cap_investment_lid_rule.py")
 
 
+def stage_6_sync_og_to_ts20(wd: Path, s1: Path) -> None:
+    """Propagate the 20-ts fabric from WV down to OG_csvs_inputs and the YAML,
+    so the next A1 run produces consistent 20-ts CSVs and B1_Compiler stops
+    aborting on the YAML-vs-xlsx timeslice mismatch."""
+    banner("Stage 6 — sync OG_csvs_inputs + YAML to 20-ts fabric")
+    wv_file = s1 / "SOASIA_OSeMOSYS_WV.xlsx"
+    og_csvs_dir = T1_CONFECTION / "OG_csvs_inputs"
+    yaml_file = T1_CONFECTION / "Config_MOMF_T1_A.yaml"
+    if not wv_file.is_file():
+        print(f"    [SKIP] WV file not found at {wv_file}; sync stage skipped.")
+        return
+    run_subproc([
+        PYTHON, wd / "6_sync_og_to_ts20.py",
+        "--wv", wv_file,
+        "--og-csvs-dir", og_csvs_dir,
+        "--yaml", yaml_file,
+    ], cwd=wd, label="6_sync_og_to_ts20.py")
+
+
 def deliver_outputs(s5: Path, output_dir: Path) -> None:
     banner(f"Delivering 4 final files to {output_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -412,6 +441,13 @@ def main() -> int:
                    help="Compare final 4 files against A1_Outputs_Luis after the run")
     p.add_argument("--no-verify", dest="verify", action="store_false",
                    help="Skip the post-run verification (override VERIFY=True)")
+    p.add_argument("--skip-a3", action="store_true", default=False,
+                   help="Skip ONLY Stage 0 (A3 data injection from "
+                        "DATA_PACKAGE_V2). Post-processing stages (0.5, 2, "
+                        "2.5, 3) still run on the A1_Outputs base data. "
+                        "Useful for measuring what A3 contributes to the "
+                        "output, while keeping the structural fixes that "
+                        "are part of the canonical pipeline.")
     # parse_known_args ignores unknown CLI args (e.g. those Spyder may inject
     # into __main__) so F5 always works regardless of Spyder's run config.
     args, _ = p.parse_known_args()
@@ -436,7 +472,10 @@ def main() -> int:
     print(f"  workdir   : {wd}")
 
     # 2. Run A3 first (patches input_dir in-place before we copy to workdir)
-    stage_0_a3(args.input_dir)
+    if args.skip_a3:
+        banner("Stage 0 — A3 SKIPPED (--skip-a3)")
+    else:
+        stage_0_a3(args.input_dir)
 
     # 3. Copy inputs into stage1
     for f in INPUT_FILES:
@@ -446,12 +485,17 @@ def main() -> int:
         shutil.copy(src, s1 / f)
 
     # 4. Run pipeline
+    # Post-processing stages (0.5, 2, 2.5, 3) run unconditionally. They were
+    # verified to be no-op-safe (idempotent or defensive) when A3 hasn't run,
+    # since they operate on PWR*/TRN*/RNW* techs that already exist in the
+    # A1_Outputs base data.
     stage_0_5_rnwbio(wd, s1)
     stage_1_scripts_1_to_5(s1)
     stage_1b(wd, s1, s1b)
     stage_2_and_2_5(wd, s1b, s2)
-    post_trn_cap = stage_3_fix_2(s2, s3)
-    stage_4_and_5(wd, s1, s3, s5, post_trn_cap)
+    param_for_stage4 = stage_3_fix_2(s2, s3)
+    stage_4_and_5(wd, s1, s3, s5, param_for_stage4)
+    stage_6_sync_og_to_ts20(wd, s1)
 
     # 4. Deliver
     deliver_outputs(s5, output_dir)

@@ -1,17 +1,17 @@
-# A3_mod — Self-contained A3 modification workflow
+# B0_mod — Self-contained B0 modification workflow
 
 This folder bundles every script and asset needed to reproduce Luis's A3
 modification workflow that transforms 4 fresh A1 outputs into their final
-form. The orchestrator at `t1_confection/A3_mod.py` runs the full pipeline.
+form. The orchestrator at `t1_confection/B0_mod.py` runs the full pipeline.
 
 ## Quick start
 
 ```bash
 # From t1_confection/
-python A3_mod.py                              # in-place on A1_Outputs/A1_Outputs_BAU/
-python A3_mod.py --verify                     # also compare against A1_Outputs_Luis/
-python A3_mod.py --keep-workdir               # keep intermediates for inspection
-python A3_mod.py --input-dir <dir> --output-dir <dir>
+python B0_mod.py                              # in-place on A1_Outputs/A1_Outputs_BAU/
+python B0_mod.py --verify                     # also compare against A1_Outputs_Luis/
+python B0_mod.py --keep-workdir               # keep intermediates for inspection
+python B0_mod.py --input-dir <dir> --output-dir <dir>
 ```
 
 ## What gets transformed
@@ -94,7 +94,7 @@ Both are explicit Luis manual edits that we automated:
 
 ## Verifying reproducibility
 
-`python A3_mod.py --verify` compares the 4 final files against
+`python B0_mod.py --verify` compares the 4 final files against
 `A1_Outputs_Luis/A1_Outputs_BAU/` cell-by-cell.
 
 Two independent runs in fresh workdirs produce identical outputs (verified

@@ -81,7 +81,13 @@ def restore_rnwbio(input_path: Path, source_path: Path,
         # Find anchor in input
         anchor_row = find_first_row(ws_in, tech_col, anchor)
         if anchor_row is None:
-            sys.exit(f"ERROR: anchor tech '{anchor}' not found in input")
+            # Defensive skip: anchor missing means the input is a non-canonical
+            # A1 base (e.g. older snapshot without RNW* techs, or running with
+            # --skip-a3 against an A1 that A3 hasn't seeded yet). Don't abort —
+            # the row insertion just isn't applicable here.
+            print(f"  {tech}: SKIP — anchor tech '{anchor}' not found in input "
+                  f"(cannot determine insertion position)")
+            continue
         # Compute insertion position
         insert_at = anchor_row if position == "before" else anchor_row + 1
         ws_in.insert_rows(insert_at)

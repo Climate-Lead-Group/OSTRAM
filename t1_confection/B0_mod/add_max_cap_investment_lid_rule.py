@@ -426,23 +426,32 @@ def build_demand_multiplier_map(demand_path: Path,
         return {}
     if DEMAND_TYPE_COL not in dp.columns or DEMAND_FUEL_COL not in dp.columns:
         return {}
-    year_cols = [c for c in dp.columns if isinstance(c, int)]
-    if ref_year not in year_cols:
+    # A1_Pre_processing writes year headers as strings ("2024"), A3 writes them
+    # as ints (2024). Accept either; map back to int for the output keys.
+    year_to_col: dict = {}
+    for c in dp.columns:
+        if isinstance(c, int) and 1900 <= c <= 2200:
+            year_to_col[c] = c
+        elif isinstance(c, str) and c.isdigit() and 1900 <= int(c) <= 2200:
+            year_to_col[int(c)] = c
+    if ref_year not in year_to_col:
         return {}
 
     rows = dp[dp[DEMAND_TYPE_COL] == DEMAND_TYPE_FILTER].copy()
     if rows.empty:
         return {}
     rows["cr"] = rows[DEMAND_FUEL_COL].astype(str).str[DEMAND_CR_SLICE]
-    by_cr = rows.groupby("cr")[year_cols].sum()
+    orig_cols = [year_to_col[y] for y in sorted(year_to_col)]
+    by_cr = rows.groupby("cr")[orig_cols].sum()
 
+    ref_col = year_to_col[ref_year]
     out: dict = {}
     for cr, series in by_cr.iterrows():
-        ref = float(series[ref_year])
+        ref = float(series[ref_col])
         if ref <= 0:
             continue
-        for y in year_cols:
-            out[(cr, y)] = float(series[y]) / ref
+        for y, col in year_to_col.items():
+            out[(cr, y)] = float(series[col]) / ref
     return out
 
 
