@@ -1,6 +1,7 @@
 # folders
-t1_confection/A2_Output_Params
-t1_confection/Executables
+# Track branch snapshot outputs.
+# t1_confection/A2_Output_Params
+# t1_confection/Executables
 
 # Excel files
 t1_confection/_GDP_Ref.xlsx
@@ -8,12 +9,24 @@ t1_confection/A2_Structure_Lists.xlsx
 t1_confection/requirements
 t1_confection/COSTS_ENERGY_BE_Anualized.csv
 t1_confection/Discounted_Rate.xlsx
-t1_confection/OSTRAM_Combined_Inputs_Outputs.csv
-t1_confection/OSTRAM_Inputs.csv
-t1_confection/OSTRAM_Outputs.csv
-t1_confection/OSTRAM_Combined_Inputs_Outputs_*.csv
-t1_confection/OSTRAM_Inputs_*.csv
-t1_confection/OSTRAM_Outputs_*.csv
+# Generated branch snapshot CSVs (regenerable, not for commits)
+# Patterns cover both the timestamped (..._YYYY-MM-DD.csv) and untimestamped forms.
+t1_confection/OSTRAM_Combined_Inputs_Outputs*.csv
+t1_confection/OSTRAM_Inputs*.csv
+t1_confection/OSTRAM_Outputs*.csv
+
+# Per-scenario solver output (any chain of suffixes), regenerable
+t1_confection/Executables/*/Pre_processed_*_output.csv
+
+# storage_delay artifacts (regenerable when storage_delay_active: True).
+# Covers both CamelCase ("StorageDelay") and snake_case ("storage_delay")
+# variants used across patched datafiles, patched OSeMOSYS model, root
+# datafile export, and OSTRAM_StorageDelay_* combined inputs/outputs.
+*StorageDelay*
+*storage_delay*
+# Keep the source patcher tracked (gitignore does not affect already-tracked
+# files, but this is defensive in case someone re-adds it).
+!t1_confection/patch_storage_delay.py
 
 # Python scripts
 t1_confection/setup_utils.py
@@ -39,9 +52,11 @@ t1_confection/secondary_techs_update_log_*.txt
 t1_confection/A1_Outputs/secondary_techs_update_log_*.txt
 
 # Log files (by extension only, to avoid matching "Technology" etc.)
-*.log
-*.Log
-*.LOG
+# Keep specific noisy root logs ignored above, but allow run logs in
+# t1_confection/Executables to be tracked in branch snapshots.
+# *.log
+# *.Log
+# *.LOG
 *debug*
 *Debug*
 *DEBUG*
@@ -62,3 +77,48 @@ t1_confection/A1_Outputs/*/A-O_AR_Projections_backup_*.xlsx
 
 # OG csvs inputs - backup files
 t1_confection/OG_csvs_inputs/*backup*
+
+# ===== Additions =====
+
+# Python bytecode / caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Claude Code metadata (worktrees, plans, local memory)
+.claude/
+
+# DVC runtime state (keep .dvc/config tracked, ignore cache/tmp)
+.dvc/cache/
+.dvc/tmp/
+.dvc/tmp
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python environments
+.env
+.venv/
+venv/
+
+# Solver artifacts (generated during B2 runs)
+# Track solver artifacts in branch snapshots.
+# *.glp
+# *.lp
+# *.sol
+
+# V3 sandbox output (not for commits)
+t1_confection/test_a3_mod/dry_run/
+*.lp
+*.sol
