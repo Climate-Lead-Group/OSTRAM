@@ -954,7 +954,10 @@ def export_root_datafile(here, params, scenario_name, export_name=None):
     file — so the root datafile matches what the solver actually consumed.
     """
     if export_name is None:
-        export_name = params.get('storage_delay_root_datafile', 'OSTRAM_data.txt')
+        if params.get('storage_delay_active', False):
+            export_name = params.get('storage_delay_root_datafile', 'OSTRAM_data_storage_delay.txt')
+        else:
+            export_name = 'OSTRAM_data.txt'
 
     repo_root = Path(here).parent
     base = f"{params['preprocess_data_name']}{scenario_name}_0"
