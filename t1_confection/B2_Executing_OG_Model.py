@@ -276,6 +276,87 @@ def run_strip_storage_patcher(params, scenario_name):
         print(result.stdout)
     print('#------------------------------------------------------------------------------#')
 
+def run_storage_delay_patcher(params, scenario_name):
+    """
+    OPTIONAL storage-delay step: keeps storage in the model but blocks storage
+    builds for the first N model years, then reopens the linked PWRLDS*/PWRSDS*
+    caps in later years. Writes SIBLING files (datafile + patched OSeMOSYS
+    model); originals are never modified.
+
+    Controlled by params['storage_delay_active'] (default False = no-op).
+
+    YAML keys consumed:
+        storage_delay_active:           bool  -- master switch (default False)
+        storage_delay_first_n_years:    int   -- years to block (default 5)
+        storage_delay_storage_prefixes: list  -- e.g. ["SDS", "LDS"]
+        storage_delay_storages:         list  -- exact storage names (optional, overrides prefixes)
+        storage_delay_allowed_value:    str   -- PWR cap value in open years (default "-1")
+        storage_delay_suffix:           str   -- chained filename suffix (default "StorageDelayN5")
+        storage_delay_model_input:      str   -- source OSeMOSYS model file (default params['osemosys_model'])
+        storage_delay_model_output:     str   -- patched model file written next to B2 (default "osemosys_fast_preprocessed_storage_delay.txt")
+
+    Mutually exclusive with strip_storage. When storage_delay_active is True,
+    main_executer's __main__ already disables strip_storage and switches the
+    solver model to the patched output produced here.
+    """
+    if not params.get('storage_delay_active', False):
+        return  # No-op when disabled
+
+    suffix = params.get('storage_delay_suffix', 'StorageDelayN5')
+    first_n_years = params.get('storage_delay_first_n_years', 5)
+    allowed_value = params.get('storage_delay_allowed_value', '-1')
+    storage_prefixes = params.get('storage_delay_storage_prefixes', ['SDS', 'LDS'])
+    exact_storages = params.get('storage_delay_storages', [])
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    script_path = os.path.join(here, 'patch_storage_delay.py')
+
+    base = f"{params['preprocess_data_name']}{scenario_name}_0"
+    in_file = os.path.join(params['executables'], scenario_name + '_0', f"{base}.txt")
+    out_file = os.path.join(params['executables'], scenario_name + '_0', f"{base}_{suffix}.txt")
+
+    def _b2_local_path(value):
+        path = Path(value)
+        return str(path if path.is_absolute() else Path(here) / path)
+
+    model_input = _b2_local_path(
+        params.get('storage_delay_model_input', params['osemosys_model'])
+    )
+    model_output = _b2_local_path(
+        params.get('storage_delay_model_output', 'osemosys_fast_preprocessed_storage_delay.txt')
+    )
+
+    command = [
+        sys.executable,
+        script_path,
+        in_file,
+        '-o',
+        out_file,
+        '--model-input',
+        model_input,
+        '--model-output',
+        model_output,
+        '--first-n-years',
+        str(first_n_years),
+        '--allowed-value',
+        str(allowed_value),
+    ]
+    if exact_storages:
+        command += ['--storages'] + list(exact_storages)
+    elif storage_prefixes:
+        command += ['--storage-prefixes'] + list(storage_prefixes)
+
+    print(f"Applying storage-delay patch for '{scenario_name}_0' (N={first_n_years}, suffix={suffix}):")
+    print(' '.join(command))
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"[ERROR] storage_delay patcher failed for '{scenario_name}':\n{result.stderr}")
+        raise RuntimeError(f"storage_delay patcher failed for '{scenario_name}'")
+    print(result.stdout)
+    if result.stderr:
+        print(result.stderr)
+    print('#------------------------------------------------------------------------------#')
+
 def run_open_pwrbck_patcher(params, scenario_name):
     """
     OPTIONAL diagnostic step: opens PWRBCK* (backstop) caps in
@@ -312,12 +393,14 @@ def run_open_pwrbck_patcher(params, scenario_name):
     )
 
     base = f"{params['preprocess_data_name']}{scenario_name}_0"
-    # Input is the strip output if strip is active; otherwise the vanilla file.
+    # Input is the previous patcher's output (storage_delay or strip) if active;
+    # otherwise the vanilla file.
+    _chain = []
+    if params.get('storage_delay_active', False):
+        _chain.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
     if params.get('strip_storage_active', False):
-        strip_suffix = params.get('strip_storage_suffix', 'NoStorage')
-        in_base  = f"{base}_{strip_suffix}"
-    else:
-        in_base  = base
+        _chain.append(params.get('strip_storage_suffix', 'NoStorage'))
+    in_base = f"{base}_{'_'.join(_chain)}" if _chain else base
     out_base = f"{in_base}_{suffix}"
 
     in_file  = os.path.join(params['executables'], scenario_name + '_0', f"{in_base}.txt")
@@ -366,6 +449,8 @@ def run_reserve_margin_repair_patcher(params, scenario_name):
 
     base = f"{params['preprocess_data_name']}{scenario_name}_0"
     chain_parts = []
+    if params.get('storage_delay_active', False):
+        chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
     if params.get('strip_storage_active', False):
         chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
     if params.get('open_pwrbck_active', False):
@@ -448,6 +533,8 @@ def run_reserve_margin_xlsx_patcher(params, scenario_name):
 
     base = f"{params['preprocess_data_name']}{scenario_name}_0"
     chain_parts = []
+    if params.get('storage_delay_active', False):
+        chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
     if params.get('strip_storage_active', False):
         chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
     if params.get('open_pwrbck_active', False):
@@ -572,6 +659,15 @@ def main_executer(params, scenario_name, HERE):
     output_file = os.path.join(folder_scenario, params['preprocess_data_name'] + scenario_name + '_0' + params['output_files'])
     this_case = scenario_name + '_0.txt'
 
+    # storage_delay redirect: when active, point solver at the patched sibling file.
+    # Produces e.g. Pre_processed_BAU_0_StorageDelayN5.txt
+    if params.get('storage_delay_active', False):
+        _sd_suffix = params.get('storage_delay_suffix', 'StorageDelayN5')
+        _base = params['preprocess_data_name'] + scenario_name + '_0'
+        data_file = os.path.join(folder_scenario, f"{_base}_{_sd_suffix}")
+        output_file = os.path.join(folder_scenario, f"{_base}_{_sd_suffix}{params['output_files']}")
+        print(f"[storage_delay] redirecting solver to: {data_file}.txt")
+
     # Strip-storage diagnostic redirect: when active, point solver at the patched sibling file.
     # Produces e.g. Pre_processed_BAU_0_NoStorage.txt and Pre_processed_BAU_0_NoStorage_output.{lp,sol,cplex.log}
     if params.get('strip_storage_active', False):
@@ -582,26 +678,28 @@ def main_executer(params, scenario_name, HERE):
         print(f"[strip_storage] redirecting solver to: {data_file}.txt")
 
     # PWRBCK-cap-opening diagnostic redirect: chains OpenBCK suffix on top of
-    # any active strip suffix. Produces e.g. Pre_processed_BAU_0_NoStorage_OpenBCK.txt
-    # (or Pre_processed_BAU_0_OpenBCK.txt if strip is inactive).
+    # any active storage_delay/strip suffix.
     if params.get('open_pwrbck_active', False):
         _bck_suffix = params.get('open_pwrbck_suffix', 'OpenBCK')
         _base = params['preprocess_data_name'] + scenario_name + '_0'
+        _chain_parts = []
+        if params.get('storage_delay_active', False):
+            _chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
         if params.get('strip_storage_active', False):
-            _strip_suffix = params.get('strip_storage_suffix', 'NoStorage')
-            _chain = f"{_strip_suffix}_{_bck_suffix}"
-        else:
-            _chain = _bck_suffix
+            _chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
+        _chain_parts.append(_bck_suffix)
+        _chain = '_'.join(_chain_parts)
         data_file = os.path.join(folder_scenario, f"{_base}_{_chain}")
         output_file = os.path.join(folder_scenario, f"{_base}_{_chain}{params['output_files']}")
         print(f"[open_pwrbck] redirecting solver to: {data_file}.txt")
 
-    # Reserve-margin repair redirect: chains after strip/open-BCK when active.
-    # Produces e.g. Pre_processed_BAU_0_NoStorage_OpenBCK_RMRepair.txt.
+    # Reserve-margin repair redirect: chains after storage_delay/strip/open-BCK when active.
     if params.get('reserve_margin_repair_active', False):
         _rm_suffix = params.get('reserve_margin_repair_suffix', 'RMRepair')
         _base = params['preprocess_data_name'] + scenario_name + '_0'
         _chain_parts = []
+        if params.get('storage_delay_active', False):
+            _chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
         if params.get('strip_storage_active', False):
             _chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
         if params.get('open_pwrbck_active', False):
@@ -613,11 +711,12 @@ def main_executer(params, scenario_name, HERE):
         print(f"[reserve_margin_repair] redirecting solver to: {data_file}.txt")
 
     # Careful XLSX reserve-margin repair redirect.
-    # Produces e.g. Pre_processed_BAU_0_NoStorage_OpenBCK_RMCarefulXLSX.txt.
     if params.get('reserve_margin_xlsx_active', False):
         _xlsx_suffix = params.get('reserve_margin_xlsx_suffix', 'RMCarefulXLSX')
         _base = params['preprocess_data_name'] + scenario_name + '_0'
         _chain_parts = []
+        if params.get('storage_delay_active', False):
+            _chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
         if params.get('strip_storage_active', False):
             _chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
         if params.get('open_pwrbck_active', False):
@@ -845,17 +944,38 @@ def generate_combined_input_file(input_folder, output_folder, scenario_name):
     return output_path, inputs_data.head()
 
 
-def export_root_datafile(here, params, scenario_name, export_name='OSTRAM_data.txt'):
+def export_root_datafile(here, params, scenario_name, export_name=None):
     """
     Copy the preprocessed main-scenario datafile to the repository root so the
     user has a single easy-to-find model datafile next to `t1_confection/`.
+
+    When patchers (storage_delay, strip_storage, open_pwrbck, reserve_margin_*)
+    are active, exports the final patched sibling — not the vanilla preprocessed
+    file — so the root datafile matches what the solver actually consumed.
     """
+    if export_name is None:
+        export_name = params.get('storage_delay_root_datafile', 'OSTRAM_data.txt')
+
     repo_root = Path(here).parent
+    base = f"{params['preprocess_data_name']}{scenario_name}_0"
+    chain_parts = []
+    if params.get('storage_delay_active', False):
+        chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
+    if params.get('strip_storage_active', False):
+        chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
+    if params.get('open_pwrbck_active', False):
+        chain_parts.append(params.get('open_pwrbck_suffix', 'OpenBCK'))
+    if params.get('reserve_margin_repair_active', False):
+        chain_parts.append(params.get('reserve_margin_repair_suffix', 'RMRepair'))
+    if params.get('reserve_margin_xlsx_active', False):
+        chain_parts.append(params.get('reserve_margin_xlsx_suffix', 'RMCarefulXLSX'))
+
+    source_name = f"{base}_{'_'.join(chain_parts)}.txt" if chain_parts else f"{base}.txt"
     source_path = (
         Path(here)
         / params['executables']
         / f"{scenario_name}_0"
-        / f"{params['preprocess_data_name']}{scenario_name}_0.txt"
+        / source_name
     )
     target_path = repo_root / export_name
 
@@ -884,6 +1004,8 @@ def active_output_csv_candidates(params, scenario_future_name):
     base = f"{params['preprocess_data_name']}{scenario_future_name}"
     chain_parts = []
 
+    if params.get('storage_delay_active', False):
+        chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
     if params.get('strip_storage_active', False):
         chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
     if params.get('open_pwrbck_active', False):
@@ -1131,7 +1253,23 @@ if __name__ == "__main__":
     # Cargar parámetros desde YAML
     with open('Config_MOMF_T1_AB.yaml', 'r') as f:
         params = yaml.safe_load(f)
-        
+
+    # storage_delay precedence: when this patcher is active it is mutually
+    # exclusive with strip_storage, switches the solver to the patched model
+    # written by patch_storage_delay.py, and uses its own prefix so the run's
+    # combined inputs/outputs do not overwrite the baseline OSTRAM_* artifacts.
+    if params.get('storage_delay_active', False):
+        if params.get('strip_storage_active', False):
+            print("[storage_delay] strip_storage_active forced to False (mutually exclusive)")
+            params['strip_storage_active'] = False
+        params.setdefault('storage_delay_model_input', params['osemosys_model'])
+        params.setdefault('storage_delay_model_output', 'osemosys_fast_preprocessed_storage_delay.txt')
+        params['osemosys_model'] = params['storage_delay_model_output']
+        if params.get('storage_delay_prefix_final_files'):
+            params['prefix_final_files'] = params['storage_delay_prefix_final_files']
+        print(f"[storage_delay] osemosys_model -> {params['osemosys_model']}")
+        print(f"[storage_delay] prefix_final_files -> {params['prefix_final_files']}")
+
     # Cargar parámetros desde YAML
     with open('Config_MOMF_T1_A.yaml', 'r') as f:
         params_A2 = yaml.safe_load(f)
@@ -1174,6 +1312,7 @@ if __name__ == "__main__":
             if conversion_ok:
                 run_preprocessing_script(params, scenario_name)
                 run_days_in_day_type_patcher(params, scenario_name)
+                run_storage_delay_patcher(params, scenario_name)
                 run_strip_storage_patcher(params, scenario_name)
                 run_open_pwrbck_patcher(params, scenario_name)
                 run_reserve_margin_repair_patcher(params, scenario_name)

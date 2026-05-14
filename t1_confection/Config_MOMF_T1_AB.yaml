@@ -74,6 +74,26 @@ concat_scenarios_csv: True
 annualize_capital: False
 
 ########################################################################################
+# === Storage delay (block storage builds for first N years, then release) ===
+# Master switch. False (or absent) = pipeline runs unchanged.
+# When True: mutually exclusive with strip_storage_active (strip is silently
+# turned off). The solver is redirected to the patched OSeMOSYS model file
+# produced by patch_storage_delay.py, and combined inputs/outputs are written
+# with `storage_delay_prefix_final_files` so baseline OSTRAM_* artifacts are
+# not overwritten.
+storage_delay_active: False
+storage_delay_first_n_years: 5
+storage_delay_storage_prefixes:
+  - SDS
+  - LDS
+# storage_delay_storages: []          # exact storage names (overrides prefixes if set)
+storage_delay_allowed_value: "-1"     # PWR cap value applied in open years (-1 = unconstrained)
+storage_delay_suffix: "StorageDelayN5"
+storage_delay_model_output: "osemosys_fast_preprocessed_storage_delay.txt"
+storage_delay_prefix_final_files: "OSTRAM_StorageDelay_"
+storage_delay_root_datafile: "OSTRAM_data_storage_delay.txt"
+
+########################################################################################
 # === Storage stripping diagnostic ===
 # Master switch. False (or absent) = pipeline runs unchanged (no strip).
 strip_storage_active: True
