@@ -217,6 +217,46 @@ def run_pipeline_script(env_name: str, script_path: Path) -> None:
     run(f'conda run -n {env_name} python -u "{script_path}"')
 
 
+def enumerate_active_scenarios(env_name: str) -> list[str]:
+    """Ask t1_confection/A3_process/_scenarios.py for the list of active
+    scenarios in topological order (one per line on stdout).
+
+    Falls back to ['BAU'] if SOASIA v18 is absent (legacy single-scenario mode)
+    — the helper itself prints 'BAU' in that case.
+    """
+    helper = (T1_DIR / "A3_process" / "_scenarios.py").resolve()
+    if not helper.is_file():
+        return ["BAU"]
+    try:
+        out = subprocess.check_output(
+            f'conda run -n {env_name} python -u "{helper}" list-active',
+            shell=True, text=True,
+        )
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(
+            f"Failed to enumerate scenarios from {helper.name}: {e}"
+        ) from e
+    names = [line.strip() for line in out.splitlines() if line.strip()]
+    # conda run sometimes prepends activation noise; keep only valid identifier-like lines.
+    names = [n for n in names if not n.startswith(("Loading", "## "))]
+    if not names:
+        raise RuntimeError(
+            f"{helper.name} list-active returned no scenarios. Output was:\n{out}"
+        )
+    return names
+
+
+def run_a3_for_scenario(env_name: str, script_path: Path, scenario: str) -> None:
+    """Invoke A3_process.py for a specific scenario."""
+    if not script_path.is_file():
+        raise FileNotFoundError(f"A3 script not found: {script_path}")
+    print(f"Running A3 for scenario '{scenario}'...")
+    run(
+        f'conda run -n {env_name} python -u "{script_path}" '
+        f'--scenario "{scenario}"'
+    )
+
+
 def post_a2_snapshot_exists(a1_outputs_dir: Path) -> bool:
     """True if at least one `_post_a2_snapshot_*` folder exists in A1_Outputs/."""
     if not a1_outputs_dir.is_dir():
@@ -303,7 +343,10 @@ def main() -> None:
     if args.skip_a3:
         print("Skipping A3 pre-process stage by request.")
     else:
-        run_pipeline_script(env_name, A3_SCRIPT_DEFAULT.resolve())
+        scenarios = enumerate_active_scenarios(env_name)
+        print(f"\nActive scenarios (topo order): {scenarios}")
+        for scen in scenarios:
+            run_a3_for_scenario(env_name, A3_SCRIPT_DEFAULT.resolve(), scen)
 
     if args.skip_b1:
         print("Skipping B1 compiler stage by request.")

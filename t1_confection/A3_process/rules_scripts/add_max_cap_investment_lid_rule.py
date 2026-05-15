@@ -880,12 +880,14 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False) -> dict:
     if not paramfile.exists():
         raise FileNotFoundError(f"{paramfile} not found")
 
-    # Load the GENERATION tech list (next to this script).
+    # Load the GENERATION tech list. TECH_TYPES.csv is shared by other A3
+    # stages (e.g. patch_ao_c2a.py), so it lives in A3_process/, one level
+    # above this script (which now lives in A3_process/rules_scripts/).
     generation_techs = None
     tech_types_path = None
     if RESTRICT_TO_GENERATION:
         script_dir = Path(__file__).resolve().parent
-        tech_types_path = script_dir / TECH_TYPES_FILE
+        tech_types_path = script_dir.parent / TECH_TYPES_FILE
         generation_techs = load_generation_techs(tech_types_path)
 
     # Load the per-cr demand multipliers (from the input dir).
