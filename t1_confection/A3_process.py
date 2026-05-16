@@ -459,20 +459,33 @@ def stage_6_persist_restrictions(
 ) -> None:
     """Stage 6: persist the rules_script's CHANGES.json into v18.Restrictions.
 
-    Reads the *_PRE_LID_*_CHANGES.json sibling backup left by the rules_script
-    in stage5/ and translates its changes into Restrictions rows for `scenario`.
-    Existing rows for that scenario are replaced (clear-and-write).
+    The rules_script writes its change log as `<input-dir>_PRE_LID_<ts>_CHANGES.json`
+    next to (sibling of) the input dir, not inside it. So we look in s5.parent
+    for `<s5.name>_PRE_*_CHANGES.json`, falling back to any *_CHANGES.json in
+    that folder if the naming convention changes. Existing rows for `scenario`
+    are replaced (clear-and-write).
     """
     if not rules_script:
         return
     if not soasia.is_file():
         return
     banner("Stage 6 — persist run restrictions to SOASIA v18 Restrictions sheet")
-    changes = sorted(s5.glob("*_CHANGES.json"),
-                     key=lambda p: p.stat().st_mtime, reverse=True)
-    if not changes:
-        print(f"    [WARN] no *_CHANGES.json found in {s5}; nothing persisted")
+    search_dir = s5.parent
+    candidates = sorted(
+        search_dir.glob(f"{s5.name}_PRE_*_CHANGES.json"),
+        key=lambda p: p.stat().st_mtime, reverse=True,
+    )
+    if not candidates:
+        # Fallback: any *_CHANGES.json in the same dir (in case future
+        # rules_scripts adopt a different naming convention).
+        candidates = sorted(
+            search_dir.glob("*_CHANGES.json"),
+            key=lambda p: p.stat().st_mtime, reverse=True,
+        )
+    if not candidates:
+        print(f"    [WARN] no *_CHANGES.json found in {search_dir}; nothing persisted")
         return
+    changes = candidates
     changes_json = changes[0]
     sys.path.insert(0, str(A3_PROCESS_DIR))
     try:
