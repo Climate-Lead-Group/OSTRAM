@@ -1,8 +1,16 @@
 # A3_process — Self-contained A3 modification workflow
 
+> **End users:** see [`USER_GUIDE.md`](USER_GUIDE.md) or
+> [`docs/USER_GUIDE.html`](docs/USER_GUIDE.html) for how to configure scenarios
+> from `SOASIA_OSeMOSYS_Template_v18.xlsx` and run the pipeline via
+> `python run.py`. This README is the technical reference for developers
+> maintaining the pipeline.
+
 This folder bundles every script and asset needed to reproduce Luis's
 modification workflow that transforms 4 fresh A1 outputs into their final
-form. The orchestrator at `t1_confection/A3_process.py` runs the full pipeline.
+form. The orchestrator at `t1_confection/A3_process.py` runs the full pipeline,
+now multi-scenario aware via the `Control` sheet in SOASIA v18 (see
+[`USER_GUIDE.md`](USER_GUIDE.md)).
 
 ## Quick start
 

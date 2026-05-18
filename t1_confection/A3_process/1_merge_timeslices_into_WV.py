@@ -41,7 +41,14 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 WORK_DIR = str(Path(__file__).resolve().parent)  # auto-detect (was hardcoded for Spyder)
 
 # Filenames carry no version suffix in-script; rename externally on version bumps.
-V17_TEMPLATE   = WORK_DIR + "/SOASIA_OSeMOSYS_Template_v17.xlsx"
+# OSTRAM_TEMPLATE_PATH overrides V17_TEMPLATE when the A3 orchestrator wants
+# this script to read a scenario-materialized template (produced by
+# _scenarios.materialize_scenario_template) instead of the raw v17 file.
+# Leaving the env var unset preserves standalone Spyder usage on v17.
+V17_TEMPLATE   = os.environ.get(
+    "OSTRAM_TEMPLATE_PATH",
+    WORK_DIR + "/SOASIA_OSeMOSYS_Template_v17.xlsx",
+)
 TIMESLICE_FILE = WORK_DIR + "/OSTRAM_Timeslice_Outputs.xlsx"
 WV_FILE        = WORK_DIR + "/SOASIA_OSeMOSYS_WV.xlsx"
 
