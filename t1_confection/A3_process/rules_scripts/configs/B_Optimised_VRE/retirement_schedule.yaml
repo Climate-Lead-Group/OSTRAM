@@ -1,0 +1,20 @@
+## B_Optimised_VRE — same physical retirements as A (plants retire on the same
+## schedule regardless of policy framing).
+
+base_year: 2023
+
+age_based:
+  COA:
+    lifetime_years: 35
+    retirement_profile: linear
+  NGS:
+    lifetime_years: 30
+    retirement_profile: linear
+
+exempt:
+  - 'PWRHYD*'
+  - 'PWRSPV*'
+  - 'PWRWON*'
+  - 'PWRBCK*'
+
+scheduled: []

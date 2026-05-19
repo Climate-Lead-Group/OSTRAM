@@ -161,11 +161,57 @@ def run_subproc(cmd: list, cwd: Path | None = None, label: str | None = None) ->
 # ---------------------------------------------------------------------------
 # Workdir setup
 # ---------------------------------------------------------------------------
-def build_workdir(parent: Path, ts: str, rules_script: str | None) -> dict:
+def _read_script_yaml_name(script_path: Path) -> str | None:
+    """Inspect a rules_script source for its `YAML_FILE_NAME` constant.
+
+    Returns the YAML filename if declared at module level, else None
+    (scripts like the lid_rule use in-script config and have no YAML).
+    """
+    import re
+    try:
+        text = script_path.read_text(encoding="utf-8")
+    except Exception:
+        return None
+    m = re.search(r'^YAML_FILE_NAME\s*=\s*["\']([^"\']+)["\']', text, re.MULTILINE)
+    return m.group(1) if m else None
+
+
+def _resolve_script_yaml(script_name: str, scenario: str) -> Path | None:
+    """Locate the YAML config to use for `script_name` under `scenario`.
+
+    Resolution order:
+      1. rules_scripts/configs/<scenario>/<YAML_FILE_NAME>   (per-scenario override)
+      2. rules_scripts/<YAML_FILE_NAME>                       (default next-to-script)
+      3. None — script has no YAML or no file present.
+    """
+    src = RULES_SCRIPTS_DIR / script_name
+    yaml_name = _read_script_yaml_name(src)
+    if not yaml_name:
+        return None
+    scenario_yaml = RULES_SCRIPTS_DIR / "configs" / scenario / yaml_name
+    if scenario_yaml.is_file():
+        return scenario_yaml
+    default_yaml = RULES_SCRIPTS_DIR / yaml_name
+    if default_yaml.is_file():
+        return default_yaml
+    return None
+
+
+def build_workdir(
+    parent: Path,
+    ts: str,
+    rules_scripts: list[str],
+    scenario: str,
+) -> dict:
     """Create runtime workdir with stage subfolders + copies of all scripts/assets.
 
-    If rules_script is given, copy it from rules_scripts/ into wd so stage 5 can
-    run it. None or empty -> stage 5 is skipped.
+    Each name in `rules_scripts` is copied from `rules_scripts/` into
+    `wd/rules_scripts/` so stage 5 can invoke it. Each script's YAML config
+    (when declared via `YAML_FILE_NAME` at module level) is also staged into
+    `wd/rules_scripts/`, resolved from `configs/<scenario>/` when present,
+    otherwise from the default location next to the script.
+
+    Empty list -> stage 5 is skipped.
 
     Returns a dict of {label: Path} for downstream use.
     """
@@ -213,22 +259,28 @@ def build_workdir(parent: Path, ts: str, rules_script: str | None) -> dict:
     ):
         shutil.copy(A3_PROCESS_DIR / f, wd / f)
 
-    # Per-scenario rules_script (lives under rules_scripts/). Copied to wd so
-    # stage 5 can invoke it directly. TECH_TYPES.csv is already copied above
-    # and the script resolves it via ../TECH_TYPES.csv -> wd/TECH_TYPES.csv.
-    # We replicate the rules_scripts/ folder relationship by placing the
-    # script inside wd/rules_scripts/, so its `script_dir.parent` lookup
-    # finds wd/TECH_TYPES.csv just like in the real layout.
-    if rules_script:
-        src = RULES_SCRIPTS_DIR / rules_script
-        if not src.is_file():
-            raise FileNotFoundError(
-                f"rules_script '{rules_script}' not found at {src}. "
-                f"Available: {[p.name for p in RULES_SCRIPTS_DIR.glob('*.py')]}"
-            )
+    # Per-scenario rules_scripts chain (each lives under rules_scripts/).
+    # Each script + its YAML are copied into wd/rules_scripts/ so stage 5 can
+    # invoke them with cwd=wd. TECH_TYPES.csv is already copied above and the
+    # scripts resolve it via ../TECH_TYPES.csv -> wd/TECH_TYPES.csv. YAML is
+    # resolved from rules_scripts/configs/<scenario>/ when present, otherwise
+    # from the default next to the source script.
+    if rules_scripts:
         rs_wd = wd / "rules_scripts"
         rs_wd.mkdir()
-        shutil.copy(src, rs_wd / rules_script)
+        available = {p.name for p in RULES_SCRIPTS_DIR.glob("*.py")}
+        for script in rules_scripts:
+            src = RULES_SCRIPTS_DIR / script
+            if not src.is_file():
+                raise FileNotFoundError(
+                    f"rules_script '{script}' not found at {src}. "
+                    f"Available: {sorted(available)}"
+                )
+            shutil.copy(src, rs_wd / script)
+            yaml_path = _resolve_script_yaml(script, scenario)
+            if yaml_path is not None:
+                yaml_name = yaml_path.name
+                shutil.copy(yaml_path, rs_wd / yaml_name)
 
     return {
         "wd": wd, "s1": s1, "s1b": s1b, "s2": s2, "s3": s3, "s5": s5,
@@ -430,42 +482,48 @@ def stage_4_5_apply_inherited_restrictions(
     print(f"    Wrote {written} inherited restriction cell(s) into {target.name}")
 
 
-def stage_5_rules_script(
+def stage_5_rules_scripts(
     wd: Path,
     s5: Path,
-    rules_script: str | None,
+    rules_scripts: list[str],
 ) -> None:
-    """Stage 5: invoke the scenario's rules_script against stage5/. Skipped if
-    rules_script is None or empty (allowed: a scenario can choose to only
-    inherit restrictions and apply no rule of its own)."""
-    if not rules_script:
-        banner("Stage 5 — SKIPPED (no rules_script for this scenario)")
+    """Stage 5: invoke each rules_script in the scenario's chain against stage5/.
+
+    The chain order is whatever the Control sheet declares (left-to-right CSV).
+    Each script edits A-O_Parametrization.xlsx in place; subsequent scripts see
+    prior edits. Skipped when the chain is empty (a scenario can choose to only
+    inherit restrictions and apply no rule of its own).
+    """
+    if not rules_scripts:
+        banner("Stage 5 — SKIPPED (no rules_scripts for this scenario)")
         return
-    banner(f"Stage 5 — {rules_script}")
-    rs_path = wd / "rules_scripts" / rules_script
-    if not rs_path.is_file():
-        sys.exit(f"ERROR: rules_script not staged at {rs_path}")
-    run_subproc(
-        [PYTHON, rs_path, "--input-dir", s5],
-        cwd=wd, label=rules_script,
-    )
+    banner(f"Stage 5 — rules_scripts chain ({len(rules_scripts)} script(s))")
+    for i, script in enumerate(rules_scripts, start=1):
+        rs_path = wd / "rules_scripts" / script
+        if not rs_path.is_file():
+            sys.exit(f"ERROR: rules_script not staged at {rs_path}")
+        step(f"[{i}/{len(rules_scripts)}] {script}")
+        run_subproc(
+            [PYTHON, rs_path, "--input-dir", s5],
+            cwd=wd, label=script,
+        )
 
 
 def stage_6_persist_restrictions(
     s5: Path,
     soasia: Path,
     scenario: str,
-    rules_script: str | None,
+    rules_scripts: list[str],
 ) -> None:
-    """Stage 6: persist the rules_script's CHANGES.json into v18.Restrictions.
+    """Stage 6: persist all rules_scripts CHANGES.json into v18.Restrictions.
 
-    The rules_script writes its change log as `<input-dir>_PRE_LID_<ts>_CHANGES.json`
-    next to (sibling of) the input dir, not inside it. So we look in s5.parent
-    for `<s5.name>_PRE_*_CHANGES.json`, falling back to any *_CHANGES.json in
-    that folder if the naming convention changes. Existing rows for `scenario`
-    are replaced (clear-and-write).
+    Each script in the chain writes its change log as a sibling of the input
+    dir (e.g. `<s5.name>_PRE_<TAG>_<ts>_CHANGES.json` in s5.parent). We collect
+    ALL of them and persist as a single clear-and-write so the Restrictions
+    rows for this scenario reflect the full chain output. Rows belonging to
+    other scenarios stay untouched.
     """
-    if not rules_script:
+    if not rules_scripts:
         return
     if not soasia.is_file():
         return
@@ -473,26 +531,30 @@ def stage_6_persist_restrictions(
     search_dir = s5.parent
     candidates = sorted(
         search_dir.glob(f"{s5.name}_PRE_*_CHANGES.json"),
-        key=lambda p: p.stat().st_mtime, reverse=True,
+        key=lambda p: p.stat().st_mtime,
     )
     if not candidates:
-        # Fallback: any *_CHANGES.json in the same dir (in case future
-        # rules_scripts adopt a different naming convention).
+        # Fallback: any *_CHANGES.json in the same dir (in case scripts adopt
+        # a different naming convention).
         candidates = sorted(
             search_dir.glob("*_CHANGES.json"),
-            key=lambda p: p.stat().st_mtime, reverse=True,
+            key=lambda p: p.stat().st_mtime,
         )
     if not candidates:
         print(f"    [WARN] no *_CHANGES.json found in {search_dir}; nothing persisted")
         return
-    changes = candidates
-    changes_json = changes[0]
+    # When the chain has N scripts, we expect ~N CHANGES.json files (one per
+    # script that touched cells). They're sorted by mtime ascending so the
+    # chain order is preserved in the Restrictions audit trail.
+    print(f"    Found {len(candidates)} change-log file(s):")
+    for p in candidates:
+        print(f"      - {p.name}")
     sys.path.insert(0, str(A3_PROCESS_DIR))
     try:
         import _scenarios
     finally:
         sys.path.pop(0)
-    n = _scenarios.persist_run_restrictions(soasia, scenario, changes_json)
+    n = _scenarios.persist_run_restrictions(soasia, scenario, candidates)
     print(f"    Persisted {n} restriction row(s) to {soasia.name}::Restrictions"
           f" (scenario={scenario})")
 
@@ -532,13 +594,21 @@ def deliver_outputs(s5: Path, output_dir: Path) -> None:
 def _resolve_scenario_config(
     args: argparse.Namespace,
     soasia: Path,
-) -> tuple[str, str | None, list[str]]:
-    """Resolve (scenario, rules_script, inherit_from) from CLI + Control.
+) -> tuple[str, list[str], list[str]]:
+    """Resolve (scenario, rules_scripts, inherit_from) from CLI + Control.
 
-    CLI flags take precedence. When SOASIA v18 is absent, fall back to legacy
-    BAU-only behavior with LEGACY_RULES_SCRIPT and no inheritance.
+    CLI flags take precedence. The `--rules-script` arg is parsed as a CSV
+    list so a chain can be passed from the command line too (e.g.
+    `--rules-script "set_retirement_schedule.py, set_min_capacity_floors.py"`).
+    An explicit empty string means "skip stage 5".
+
+    When SOASIA v18 is absent, fall back to legacy BAU-only behavior with
+    LEGACY_RULES_SCRIPT (singleton chain) and no inheritance.
     """
     scenario = args.scenario
+
+    def _parse_csv(val: str) -> list[str]:
+        return [s.strip() for s in val.replace("\n", ",").split(",") if s.strip()]
 
     if not soasia.is_file():
         if scenario != DEFAULT_SCENARIO:
@@ -547,11 +617,11 @@ def _resolve_scenario_config(
                 f"'{scenario}' != '{DEFAULT_SCENARIO}'. Build v18 first via "
                 f"_build_v18_from_v17.py."
             )
-        rules_script = (
-            args.rules_script if args.rules_script is not None
-            else LEGACY_RULES_SCRIPT
-        )
-        return scenario, rules_script or None, []
+        if args.rules_script is not None:
+            rules_scripts = _parse_csv(args.rules_script)
+        else:
+            rules_scripts = [LEGACY_RULES_SCRIPT] if LEGACY_RULES_SCRIPT else []
+        return scenario, rules_scripts, []
 
     sys.path.insert(0, str(A3_PROCESS_DIR))
     try:
@@ -566,18 +636,15 @@ def _resolve_scenario_config(
             f"ERROR: scenario '{scenario}' not in Control sheet of "
             f"{soasia.name}. Available: {names}"
         )
-    rules_script = (
-        args.rules_script if args.rules_script is not None
-        else (cfg.rules_script or None)
-    )
-    # Empty string explicitly means "skip rules_script"; treat "" -> None
-    if rules_script == "":
-        rules_script = None
+    if args.rules_script is not None:
+        rules_scripts = _parse_csv(args.rules_script)
+    else:
+        rules_scripts = list(cfg.rules_scripts)
     if args.inherit_from is not None:
         inherit_from = [s.strip() for s in args.inherit_from.split(",") if s.strip()]
     else:
         inherit_from = list(cfg.inherit_restrictions_from)
-    return scenario, rules_script, inherit_from
+    return scenario, rules_scripts, inherit_from
 
 
 def main() -> int:
@@ -587,7 +654,7 @@ def main() -> int:
         sys.exit(f"ERROR: A3_process folder missing: {A3_PROCESS_DIR}")
 
     soasia = args.soasia if args.soasia is not None else SOASIA_V18
-    scenario, rules_script, inherit_from = _resolve_scenario_config(args, soasia)
+    scenario, rules_scripts, inherit_from = _resolve_scenario_config(args, soasia)
 
     # Resolve input/output dirs. Default: A1_Outputs/A1_Outputs_<scenario>.
     if args.input_dir is not None:
@@ -614,7 +681,7 @@ def main() -> int:
     print(f"  output-dir        : {output_dir}")
     print(f"  snapshot (source) : {snapshot_dir}")
     print(f"  SOASIA v18        : {soasia if soasia.is_file() else '(legacy mode, v18 absent)'}")
-    print(f"  rules_script      : {rules_script or '(none)'}")
+    print(f"  rules_scripts     : {rules_scripts or '(none)'}")
     print(f"  inherit_from      : {inherit_from or '(none)'}")
 
     # 0. Restore input_dir from snapshot (clean canonical post-A2 state)
@@ -623,8 +690,8 @@ def main() -> int:
     shutil.copytree(snapshot_dir, input_dir)
     print(f"  -> {input_dir.name} restored from {snapshot_dir.name}")
 
-    # 1. Build workdir (stages incl. the chosen rules_script staged into wd/rules_scripts/)
-    paths = build_workdir(workdir_base, ts, rules_script)
+    # 1. Build workdir (stages incl. the rules_scripts chain staged into wd/rules_scripts/)
+    paths = build_workdir(workdir_base, ts, rules_scripts, scenario)
     wd = paths["wd"]
     s1 = paths["s1"]; s1b = paths["s1b"]; s2 = paths["s2"]; s3 = paths["s3"]; s5 = paths["s5"]
     print(f"  workdir           : {wd}")
@@ -660,9 +727,9 @@ def main() -> int:
     param_for_stage4 = stage_3_fix_2(s2, s3)
     stage_4_consolidate(s1, s3, s5, param_for_stage4)
     stage_4_5_apply_inherited_restrictions(s5, soasia, inherit_from)
-    stage_5_rules_script(wd, s5, rules_script)
+    stage_5_rules_scripts(wd, s5, rules_scripts)
     stage_6_sync_og_to_ts20(wd, s1)
-    stage_6_persist_restrictions(s5, soasia, scenario, rules_script)
+    stage_6_persist_restrictions(s5, soasia, scenario, rules_scripts)
 
     # 5. Deliver
     deliver_outputs(s5, output_dir)

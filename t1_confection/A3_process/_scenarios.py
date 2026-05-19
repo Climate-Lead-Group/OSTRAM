@@ -168,9 +168,14 @@ DEFAULT_RESTRICTION_SOURCE_SHEET = "Secondary Techs"
 class ScenarioConfig:
     scenario: str
     active: bool
-    rules_script: str | None
+    rules_scripts: list[str] = field(default_factory=list)
     inherit_restrictions_from: list[str] = field(default_factory=list)
     notes: str | None = None
+
+    @property
+    def rules_script(self) -> str | None:
+        """Back-compat: first script in the chain (None if empty)."""
+        return self.rules_scripts[0] if self.rules_scripts else None
 
 
 # =============================================================================
@@ -192,6 +197,19 @@ def _parse_inherit_list(value: Any) -> list[str]:
     if value is None:
         return []
     parts = [p.strip() for p in str(value).split(",")]
+    return [p for p in parts if p]
+
+
+def _parse_rules_scripts(value: Any) -> list[str]:
+    """Parse a comma-separated rules_script cell into an ordered list.
+
+    Accepts newline separators too (Excel users often add line breaks inside
+    a cell to keep long lists readable). Empty / None -> [].
+    """
+    if value is None:
+        return []
+    raw = str(value).replace("\n", ",")
+    parts = [p.strip() for p in raw.split(",")]
     return [p for p in parts if p]
 
 
@@ -259,11 +277,7 @@ def read_control_sheet(
             ScenarioConfig(
                 scenario=scenario,
                 active=_to_bool(row[col_idx["active"]]),
-                rules_script=(
-                    str(row[col_idx["rules_script"]]).strip()
-                    if row[col_idx["rules_script"]] not in (None, "")
-                    else None
-                ),
+                rules_scripts=_parse_rules_scripts(row[col_idx["rules_script"]]),
                 inherit_restrictions_from=_parse_inherit_list(
                     row[col_idx["inherit_restrictions_from"]]
                 ),
@@ -291,17 +305,18 @@ def read_control_sheet(
                     f"scenario '{src}'. Defined scenarios: {sorted(seen)}"
                 )
 
-    # Validate rules_script (only if rules_scripts dir exists)
+    # Validate every name in rules_scripts (only if rules_scripts dir exists)
     if RULES_SCRIPTS_DIR.is_dir():
         available = {p.name for p in RULES_SCRIPTS_DIR.glob("*.py")
                      if not p.name.startswith("_")}
         for cfg in configs:
-            if cfg.rules_script and cfg.rules_script not in available:
-                raise ValueError(
-                    f"Scenario '{cfg.scenario}' references rules_script "
-                    f"'{cfg.rules_script}' which is not present in "
-                    f"{RULES_SCRIPTS_DIR}. Available: {sorted(available)}"
-                )
+            for script in cfg.rules_scripts:
+                if script not in available:
+                    raise ValueError(
+                        f"Scenario '{cfg.scenario}' references rules_script "
+                        f"'{script}' which is not present in "
+                        f"{RULES_SCRIPTS_DIR}. Available: {sorted(available)}"
+                    )
 
     return configs
 
@@ -574,44 +589,67 @@ def apply_restrictions(
 def persist_run_restrictions(
     soasia_path: Path | str,
     scenario: str,
-    changes_json_path: Path | str,
+    changes_json_path: Path | str | list[Path | str],
     *,
     parameter: str = DEFAULT_RESTRICTION_PARAMETER,
     source_sheet: str = DEFAULT_RESTRICTION_SOURCE_SHEET,
 ) -> int:
     """After a rules_script run, rewrite the Restrictions rows for `scenario`.
 
-    Reads the *_CHANGES.json produced by the rules_script and translates its
-    'changes' entries into Restrictions rows. ALL pre-existing rows for this
-    scenario are removed first (clear-and-write). Rows belonging to other
-    scenarios are untouched.
+    `changes_json_path` may be a single path or a list of paths (the latter
+    is used when a scenario runs a chain of rules_scripts — all their change
+    logs are aggregated into a single clear-and-write).
+
+    Translates each 'changes' entry into a Restrictions row. The `parameter`
+    column is taken from the change entry's own `parameter` field when present
+    (scripts that touch multiple parameters declare it per-row); the legacy
+    `parameter` kwarg is used as a fallback when the entry is silent (lid_rule
+    pre-multi-param scripts).
+
+    ALL pre-existing rows for this scenario are removed first (clear-and-write).
+    Rows belonging to other scenarios are untouched.
 
     Returns the number of Restrictions rows written.
     """
     soasia = Path(soasia_path)
-    log_path = Path(changes_json_path)
-    if not log_path.exists():
-        raise FileNotFoundError(f"Rules-script change log not found: {log_path}")
+    if isinstance(changes_json_path, (str, Path)):
+        log_paths = [Path(changes_json_path)]
+    else:
+        log_paths = [Path(p) for p in changes_json_path]
 
-    log = json.loads(log_path.read_text())
-    timestamp = log.get("timestamp") or datetime.now().isoformat()
-
-    # Flatten all change entries across sheets.
     new_rows: list[list[Any]] = []
-    for sheet_entry in log.get("sheets", []):
-        for change in sheet_entry.get("changes", []):
-            new_rows.append(
-                [
-                    scenario,                          # scenario
-                    source_sheet,                      # source_sheet
-                    change.get("tech"),                # tech
-                    parameter,                         # parameter
-                    change.get("year"),                # year
-                    change.get("new"),                 # value
-                    change.get("reason"),              # rule_applied
-                    timestamp,                         # source_run_timestamp
-                ]
-            )
+    latest_timestamp: str | None = None
+    for log_path in log_paths:
+        if not log_path.exists():
+            raise FileNotFoundError(f"Rules-script change log not found: {log_path}")
+        log = json.loads(log_path.read_text())
+        timestamp = log.get("timestamp") or datetime.now().isoformat()
+        latest_timestamp = timestamp  # last wins is fine for the column
+
+        # Flatten all change entries across sheets.
+        for sheet_entry in log.get("sheets", []):
+            for change in sheet_entry.get("changes", []):
+                # Scripts may declare the parameter as "parameter" or the
+                # shorter "param" key; either works. Fall back to the kwarg
+                # default for legacy logs (pre-multi-param lid_rule).
+                row_param = (
+                    change.get("parameter")
+                    or change.get("param")
+                    or parameter
+                )
+                new_rows.append(
+                    [
+                        scenario,                          # scenario
+                        source_sheet,                      # source_sheet
+                        change.get("tech"),                # tech
+                        row_param,                         # parameter (per-change)
+                        change.get("year"),                # year
+                        change.get("new"),                 # value
+                        change.get("reason"),              # rule_applied
+                        timestamp,                         # source_run_timestamp
+                    ]
+                )
+    timestamp = latest_timestamp or datetime.now().isoformat()
 
     wb = load_workbook(soasia)
     if RESTRICTIONS_SHEET not in wb.sheetnames:

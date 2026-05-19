@@ -1,0 +1,12 @@
+## B_Optimised_VRE — open cross-border transmission caps.
+##
+## Modeling choice: multiplicative factor 3x lets the optimizer expand TRN*
+## capacity up to 3x the existing ResidualCapacity. Switch to mode=unconstrained
+## to let the LP decide freely.
+
+mode: multiplicative
+headroom_factor: 3.0
+
+overrides: {}
+  # Per-link overrides go here, e.g.:
+  # TRNINDEAINDNE: {2025: 5.0, 2035: 10.0}
