@@ -1,0 +1,13 @@
+## C_Target_VRE — interconnector configuration.
+##
+## The architecture allows C to run with either frozen or relaxed TRN caps.
+## Default here is 2x multiplicative (less aggressive than B which uses 3x);
+## the rationale is that targets are already binding the system, so a moderate
+## TRN headroom is enough to let the LP find a feasible solution.
+##
+## Switch to mode=unconstrained for the "C + free trade" variant.
+
+mode: multiplicative
+headroom_factor: 2.0
+
+overrides: {}

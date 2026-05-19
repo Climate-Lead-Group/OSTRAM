@@ -1,0 +1,24 @@
+## C_Target_VRE — NDC-driven renewable generation floors.
+##
+## HARD DEPENDENCY: this scenario requires a completed BAU solve. The script
+## reads ProductionByTechnology.csv from the BAU outputs to translate the
+## percentage targets below into absolute PJ floors.
+##
+## TODO: replace `bau_results_path` with the actual path to BAU outputs once
+## B1+B2 have produced them (typically under Outputs/BAU_0/ after a solve).
+## TODO: replace the placeholder targets with NDC-derived percentages from
+## Natalia's research.
+
+bau_results_path: 'C:/Users/ClimateLeadGroup/Desktop/CLG_repositories/OSTRAM/t1_confection/Outputs/BAU_0'
+
+constraint_type: activity   # 'activity' | 'capacity' | 'both'
+max_floor_share: 0.80       # cap target percentages at 80% to avoid infeasibility
+
+targets: []
+  # Example shape (uncomment + populate with NDC values):
+  # - cr: INDEA
+  #   tech: 'PWRSPV*'
+  #   schedule: {2030: 0.30, 2035: 0.40}
+  # - cr: BGDXX
+  #   tech: 'PWRSPV*'
+  #   schedule: {2030: 0.15, 2035: 0.25}
