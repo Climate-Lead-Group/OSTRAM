@@ -4,21 +4,28 @@
 ## reads ProductionByTechnology.csv from the BAU outputs to translate the
 ## percentage targets below into absolute PJ floors.
 ##
-## TODO: replace `bau_results_path` with the actual path to BAU outputs once
-## B1+B2 have produced them (typically under Outputs/BAU_0/ after a solve).
-## TODO: replace the placeholder targets with NDC-derived percentages from
-## Natalia's research.
+## The current path points to t1_confection/Executables/BAU_0/ where the
+## ProductionByTechnology.csv was extracted from the cplex wide-output CSV.
+## Update if the BAU solve is regenerated elsewhere.
+##
+## TODO: replace the demo targets below with NDC-derived percentages once
+## Natalia's research lands.
 
-bau_results_path: 'C:/Users/ClimateLeadGroup/Desktop/CLG_repositories/OSTRAM/t1_confection/Outputs/BAU_0'
+bau_results_path: 'C:/Users/ClimateLeadGroup/Desktop/CLG_repositories/OSTRAM/t1_confection/Executables/BAU_0'
 
 constraint_type: activity   # 'activity' | 'capacity' | 'both'
 max_floor_share: 0.80       # cap target percentages at 80% to avoid infeasibility
 
-targets: []
-  # Example shape (uncomment + populate with NDC values):
-  # - cr: INDEA
-  #   tech: 'PWRSPV*'
-  #   schedule: {2030: 0.30, 2035: 0.40}
-  # - cr: BGDXX
-  #   tech: 'PWRSPV*'
-  #   schedule: {2030: 0.15, 2035: 0.25}
+## Demo targets (placeholder until NDC values land). These force a minimum
+## solar share in three representative country-regions so the chain produces
+## non-trivial Restrictions rows for testing.
+targets:
+  - cr: INDEA
+    tech: 'PWRSPV*'
+    schedule: {2030: 0.10, 2035: 0.15}
+  - cr: BGDXX
+    tech: 'PWRSPV*'
+    schedule: {2030: 0.05, 2035: 0.10}
+  - cr: NPLXX
+    tech: 'PWRSPV*'
+    schedule: {2030: 0.05, 2035: 0.10}
