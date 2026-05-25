@@ -151,11 +151,29 @@ from pathlib import Path
 import pandas as pd
 from openpyxl import load_workbook
 
+try:
+    import yaml as _yaml
+    def _load_yaml(path: Path) -> dict:
+        with open(path, "r", encoding="utf-8") as f:
+            return _yaml.safe_load(f)
+except ImportError:
+    _yaml = None
+    def _load_yaml(path: Path) -> dict:
+        raise ImportError("PyYAML is required. Install with: pip install pyyaml")
+
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 DEFAULT_TARGET_SHEETS = ["Secondary Techs"]
 PARAM_FILE_NAME = "A-O_Parametrization.xlsx"
+
+# Optional YAML override. The orchestrator (A3_process.py) detects this
+# constant and stages the matching YAML from rules_scripts/configs/<scenario>/
+# alongside this script when the scenario provides one. When present, its
+# values override the module-level constants below for the lifetime of this
+# process. Absent YAML = current module defaults remain in effect (so BAU and
+# scenarios without a YAML override behave exactly as before).
+YAML_FILE_NAME = "lid_rule.yaml"
 
 RES_PARAM = "ResidualCapacity"
 MIN_INV_PARAM = "TotalAnnualMinCapacityInvestment"
@@ -338,6 +356,84 @@ def make_backup(input_dir: Path) -> Path:
         raise FileExistsError(f"Backup folder already exists: {backup}")
     shutil.copytree(input_dir, backup)
     return backup
+
+
+# ---------------------------------------------------------------------------
+# YAML config loading
+# ---------------------------------------------------------------------------
+def _parse_year_key(key) -> list[int]:
+    """Accept '2030', 2030, or '2031-2040' and return the list of years it covers."""
+    if isinstance(key, int):
+        return [key]
+    s = str(key).strip()
+    if "-" in s:
+        lo, hi = s.split("-", 1)
+        return list(range(int(lo), int(hi) + 1))
+    return [int(s)]
+
+
+def load_config(yaml_path: Path) -> dict:
+    """Load and validate the YAML configuration.
+
+    All keys are optional; missing keys fall through to the module-level
+    defaults. The schedule accepts both single-year keys (2030) and ranges
+    (2031-2040), the latter expanded year-by-year.
+    """
+    cfg = _load_yaml(yaml_path)
+    if cfg is None:
+        cfg = {}
+
+    out: dict = {}
+
+    rule_mode = cfg.get("rule_mode")
+    if rule_mode is not None:
+        rule_mode = str(rule_mode).strip()
+        if rule_mode not in ("uniform", "proportional"):
+            raise ValueError(
+                f"rule_mode={rule_mode!r} is not recognized in {yaml_path}. "
+                f"Expected 'uniform' or 'proportional'."
+            )
+        out["rule_mode"] = rule_mode
+
+    if "percentage_default" in cfg:
+        out["percentage_default"] = float(cfg["percentage_default"])
+
+    if "percentage_by_year" in cfg:
+        expanded: dict = {}
+        for raw_key, raw_val in (cfg["percentage_by_year"] or {}).items():
+            value = float(raw_val)
+            for y in _parse_year_key(raw_key):
+                expanded[y] = value
+        out["percentage_by_year"] = expanded
+
+    if "security_factor" in cfg:
+        out["security_factor"] = float(cfg["security_factor"])
+
+    if "ramp_from_demand" in cfg:
+        out["ramp_from_demand"] = bool(cfg["ramp_from_demand"])
+
+    return out
+
+
+def apply_config(cfg: dict) -> None:
+    """Mutate the module-level lid constants in place.
+
+    The script's helper functions reference these constants directly, so
+    overriding them here propagates to every downstream call without touching
+    any function signatures.
+    """
+    global LID_RULE_MODE, LID_PERCENTAGE_DEFAULT, LID_PERCENTAGE_BY_YEAR
+    global LID_SECURITY_FACTOR, LID_RAMP_FROM_DEMAND
+    if "rule_mode" in cfg:
+        LID_RULE_MODE = cfg["rule_mode"]
+    if "percentage_default" in cfg:
+        LID_PERCENTAGE_DEFAULT = cfg["percentage_default"]
+    if "percentage_by_year" in cfg:
+        LID_PERCENTAGE_BY_YEAR = cfg["percentage_by_year"]
+    if "security_factor" in cfg:
+        LID_SECURITY_FACTOR = cfg["security_factor"]
+    if "ramp_from_demand" in cfg:
+        LID_RAMP_FROM_DEMAND = cfg["ramp_from_demand"]
 
 
 # ---------------------------------------------------------------------------
@@ -869,10 +965,25 @@ def edit_parametrization(filepath: Path, sheets: list,
 # ---------------------------------------------------------------------------
 # Orchestration
 # ---------------------------------------------------------------------------
-def run(input_dir, sheets: list = None, skip_backup: bool = False) -> dict:
-    """End-to-end: backup, edit, write log. Returns the log dict."""
+def run(input_dir, sheets: list = None, skip_backup: bool = False,
+        yaml_path: Path | None = None) -> dict:
+    """End-to-end: backup, edit, write log. Returns the log dict.
+
+    When `yaml_path` is None, the script looks for YAML_FILE_NAME next to
+    itself (where the orchestrator stages the per-scenario override). If
+    found, its values replace the module-level defaults for this process.
+    """
     input_dir = Path(input_dir)
     sheets = sheets or DEFAULT_TARGET_SHEETS
+
+    # Optional YAML override (per-scenario). Located next to this script —
+    # the orchestrator stages it there from rules_scripts/configs/<scenario>/.
+    if yaml_path is None:
+        yaml_path = Path(__file__).resolve().parent / YAML_FILE_NAME
+    yaml_loaded = False
+    if yaml_path.is_file():
+        apply_config(load_config(yaml_path))
+        yaml_loaded = True
 
     backup_dir = None if skip_backup else make_backup(input_dir)
 
@@ -922,6 +1033,7 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False) -> dict:
         DEMAND_REFERENCE_YEAR if LID_RAMP_FROM_DEMAND else None
     )
     log["demand_mult_loaded"] = bool(demand_mult_map)
+    log["yaml_config_path"] = str(yaml_path) if yaml_loaded else None
 
     if backup_dir is not None:
         log_path = backup_dir.parent / f"{backup_dir.name}_CHANGES.json"
@@ -1046,6 +1158,12 @@ def main() -> int:
         default=None,
         help="Restore input dir from this specific backup folder, then exit.",
     )
+    parser.add_argument(
+        "--yaml",
+        type=Path,
+        default=None,
+        help=f"Override YAML config path (default: {YAML_FILE_NAME} next to this script).",
+    )
     args = parser.parse_args()
 
     # Restore-only paths: do nothing else.
@@ -1059,7 +1177,7 @@ def main() -> int:
         return 0
 
     try:
-        log = run(args.input_dir, args.sheets, args.skip_backup)
+        log = run(args.input_dir, args.sheets, args.skip_backup, args.yaml)
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1

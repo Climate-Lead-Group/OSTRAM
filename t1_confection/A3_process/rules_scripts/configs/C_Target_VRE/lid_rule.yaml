@@ -1,0 +1,36 @@
+# C_Target_VRE — LID rule override.
+#
+# The default LID rule (proportional mode, tech_share * pool_delta) is the
+# BAU narrative: "fleet evolves proportionally to its 2024 composition."
+# That narrative actively forbids the structural mix change required by an
+# NDC-driven scenario — solar in BGDXX held 2.77% of the 2024 fleet, so the
+# proportional rule kept its annual ramp at ~3% of pool_delta forever,
+# making the 5-10% VRE generation floors set by set_vre_targets infeasible.
+#
+# Switching to uniform mode with a permissive near-term schedule restores
+# the headroom needed for the NDC ramp without abandoning the lid altogether
+# (non-VRE techs still get the same per-tech cap, so coal/gas can't grow
+# pathologically either).
+#
+# Schedule choice (10% / 10% / 50%) is empirically calibrated:
+#   - INDEA 2030 floor (10% × BAU electricity gen = 140.13 PJ) requires
+#     ~26.9 GW installed PWRSPVINDEA by 2030.
+#   - Uniform lid at base_pct=10% with INDEA pool=44.9 GW and demand mult
+#     ~1.2 (avg 2024-2030) yields Σlid_2024-2030 ≈ 42.4 GW, leaving 1.6x
+#     headroom over the 26.9 GW requirement.
+#   - Smaller schedules (5%) leave INDEA 2030 1.21x short, so 10% is the
+#     minimum that resolves all six target cells (BGDXX/INDEA/NPLXX × 2030/2035).
+#
+# After 2030 the default decade-ramp (10% / 50%) is sufficient for the 2035
+# milestone targets.
+
+rule_mode: uniform
+
+percentage_by_year:
+  2023-2030: 0.10
+  2031-2040: 0.10
+  2041-2050: 0.50
+
+# security_factor and ramp_from_demand left at module defaults (1.1 and True);
+# they only affect proportional mode and the demand-scaling layer, which still
+# apply meaningfully in uniform mode.

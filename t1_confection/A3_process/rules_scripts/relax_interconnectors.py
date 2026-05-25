@@ -87,6 +87,7 @@ YAML_FILE_NAME = "relax_interconnectors.yaml"
 
 RES_PARAM = "ResidualCapacity"
 MAX_INV_PARAM = "TotalAnnualMaxCapacityInvestment"
+MIN_INV_PARAM = "TotalAnnualMinCapacityInvestment"
 
 PROJ_MODE_COL = "Projection.Mode"
 PROJ_MODE_EMPTY = "EMPTY"
@@ -324,12 +325,34 @@ def build_rescap_map(ws, trn_techs: set, year_cols: dict) -> dict:
     return rescap_map
 
 
+def build_min_inv_row_map(ws, trn_techs: set) -> dict:
+    """Return {tech: row_idx} for TRN MinCapacityInvestment rows."""
+    headers = find_named_columns(ws, ["Tech", "Parameter"])
+    tech_col = headers.get("Tech")
+    param_col = headers.get("Parameter")
+    if tech_col is None or param_col is None:
+        return {}
+
+    min_row_map: dict = {}
+    for row_idx in range(2, ws.max_row + 1):
+        tech = ws.cell(row=row_idx, column=tech_col).value
+        param = ws.cell(row=row_idx, column=param_col).value
+        if tech in trn_techs and param == MIN_INV_PARAM:
+            min_row_map[tech] = row_idx
+    return min_row_map
+
+
 # ---------------------------------------------------------------------------
 # Core logic
 # ---------------------------------------------------------------------------
 def apply_trn_relax(ws, trn_techs: set, config: dict,
                     rescap_map: dict, year_cols: dict) -> dict:
     """Edit MaxCapInv rows for TRN techs in the worksheet.
+
+    Also clears legacy MinCapInv cells that would exceed the computed MaxCapInv
+    (the source-of-truth ResidualCapacity / MaxCapInv data comes from the
+    intermediary; legacy Min entries inherited from the OG dataset that violate
+    Min <= Max are zeroed to avoid OSeMOSYS preprocessor infeasibilities).
 
     Returns a log dict.
     """
@@ -355,6 +378,9 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
     for tech, schedule in overrides.items():
         interp_overrides[tech] = interpolate_schedule(schedule, sorted_years)
 
+    # Locate Min rows so we can clear stale Min > Max cells in lockstep
+    min_inv_row_map = build_min_inv_row_map(ws, trn_techs)
+
     log = {
         "sheet": ws.title,
         "years": sorted_years,
@@ -367,6 +393,7 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
         "preserved": [],
         "projection_mode_flips": [],
         "skipped_techs": [],
+        "min_inv_cleared": [],
     }
 
     for row_idx in range(2, ws.max_row + 1):
@@ -426,6 +453,27 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
                     "year": year,
                     "value": old,
                 })
+
+            # Clear legacy MinCapInv cells that would violate Min <= Max
+            min_row_idx = min_inv_row_map.get(tech)
+            if min_row_idx is not None:
+                min_cell = ws.cell(row=min_row_idx, column=col)
+                min_old = min_cell.value
+                try:
+                    min_val = float(min_old) if min_old is not None and not pd.isna(min_old) else 0.0
+                except (TypeError, ValueError):
+                    min_val = 0.0
+                if min_val > float(proposed) + 1e-12:
+                    min_cell.value = 0.0
+                    log["min_inv_cleared"].append({
+                        "tech": tech,
+                        "year": year,
+                        "param": MIN_INV_PARAM,
+                        "old": min_old,
+                        "new": 0.0,
+                        "max_inv": proposed,
+                        "reason": "min_exceeds_computed_max",
+                    })
 
         # Flip Projection.Mode if modified
         if row_was_modified and proj_mode_col_idx is not None:
@@ -568,6 +616,13 @@ def print_summary(log: dict) -> None:
             print(f"    - {reason:30s} : {count}")
         print(f"  Cells preserved    : {len(preserved)}")
         print(f"  Projection.Mode flips : {len(s.get('projection_mode_flips', []))}")
+
+        min_cleared = s.get("min_inv_cleared", [])
+        print(f"  Legacy Min cleared : {len(min_cleared)} (Min > computed Max)")
+        if min_cleared:
+            for m in min_cleared[:5]:
+                print(f"    {m['tech']}  {m['year']}  "
+                      f"Min={m['old']} → 0.0  (Max={m['max_inv']:.3f})")
 
         # Sample a few changes
         if changes:

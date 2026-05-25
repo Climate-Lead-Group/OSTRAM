@@ -209,12 +209,14 @@ def dvc_command(env_name: str, args: str) -> None:
     run(f"conda run -n {env_name} dvc {args}")
 
 
-def run_pipeline_script(env_name: str, script_path: Path) -> None:
+def run_pipeline_script(env_name: str, script_path: Path,
+                        extra_args: str = "") -> None:
     if not script_path.is_file():
         raise FileNotFoundError(f"Pipeline script not found: {script_path}")
 
     print(f"Running {script_path.relative_to(Path.cwd())}...")
-    run(f'conda run -n {env_name} python -u "{script_path}"')
+    suffix = f" {extra_args}" if extra_args else ""
+    run(f'conda run -n {env_name} python -u "{script_path}"{suffix}')
 
 
 def enumerate_active_scenarios(env_name: str) -> list[str]:
@@ -300,6 +302,13 @@ def main() -> None:
     parser.add_argument("--skip-a3", action="store_true", help="Skip `t1_confection/A3_process.py` (pre-process A1 outputs).")
     parser.add_argument("--skip-b1", action="store_true", help="Skip `t1_confection/B1_Run_Compiler.py`.")
     parser.add_argument("--skip-b2", action="store_true", help="Skip `t1_confection/B2_Executing_OG_Model.py`.")
+    parser.add_argument(
+        "--scenarios",
+        default=None,
+        help="Comma-separated list of scenarios to run (e.g. "
+             "'B_Optimised_VRE,C_Target_VRE'). When omitted, runs all active "
+             "scenarios. Filter is propagated to A3, B1 and B2.",
+    )
     args = parser.parse_args()
 
     env_name = args.env_name or guess_env_name_from_yaml(args.env_file) or ENV_NAME_DEFAULT
@@ -340,23 +349,41 @@ def main() -> None:
         run_pipeline_script(env_name, A1_SCRIPT_DEFAULT.resolve())
         run_pipeline_script(env_name, A2_SCRIPT_DEFAULT.resolve())
 
+    scenarios_filter: list[str] | None = None
+    if args.scenarios:
+        scenarios_filter = [s.strip() for s in args.scenarios.split(",") if s.strip()]
+
     if args.skip_a3:
         print("Skipping A3 pre-process stage by request.")
     else:
         scenarios = enumerate_active_scenarios(env_name)
         print(f"\nActive scenarios (topo order): {scenarios}")
+        if scenarios_filter is not None:
+            unknown = [s for s in scenarios_filter if s not in scenarios]
+            if unknown:
+                raise RuntimeError(
+                    f"--scenarios contains names not in active scenarios: "
+                    f"{unknown}. Active: {scenarios}"
+                )
+            scenarios = [s for s in scenarios if s in scenarios_filter]
+            print(f"Scenario filter active: {scenarios}")
         for scen in scenarios:
             run_a3_for_scenario(env_name, A3_SCRIPT_DEFAULT.resolve(), scen)
+
+    scenarios_arg = (
+        f'--scenarios "{",".join(scenarios_filter)}"'
+        if scenarios_filter else ""
+    )
 
     if args.skip_b1:
         print("Skipping B1 compiler stage by request.")
     else:
-        run_pipeline_script(env_name, B1_SCRIPT_DEFAULT.resolve())
+        run_pipeline_script(env_name, B1_SCRIPT_DEFAULT.resolve(), scenarios_arg)
 
     if args.skip_b2:
         print("Skipping B2 execution stage by request.")
     else:
-        run_pipeline_script(env_name, B2_SCRIPT_DEFAULT.resolve())
+        run_pipeline_script(env_name, B2_SCRIPT_DEFAULT.resolve(), scenarios_arg)
 
     end_time = dt.datetime.now()
     print(f"Pipeline completed in {format_duration(start_time, end_time)}.")

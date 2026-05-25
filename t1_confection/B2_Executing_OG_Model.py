@@ -5,12 +5,13 @@ Created on 2025
 @author: Climate Lead Group, Andrey Salazar-Vargas
 """
 
+import argparse
 import os
 import pandas as pd
 import yaml
 import subprocess
 import sys
-import platform  
+import platform
 import shutil
 import time
 from datetime import date, datetime
@@ -733,25 +734,41 @@ def main_executer(params, scenario_name, HERE):
     solver = params['solver']
     commands = []
 
+    # reuse_existing_sol: when active and the .sol file is already present at the
+    # path the solver would write to, skip LP creation, solver invocation and
+    # cleanup of the existing .sol. Everything downstream (otoole sol->csv,
+    # per-scenario concat, cross-scenario concat) still runs.
+    _reuse_sol = (
+        params.get('reuse_existing_sol', False)
+        and os.path.exists(output_file + '.sol')
+    )
+    if params.get('reuse_existing_sol', False) and not _reuse_sol:
+        print(
+            f"[reuse_existing_sol] Requested but {output_file}.sol not found; "
+            f"falling back to a normal solve."
+        )
+    if _reuse_sol:
+        print(f"[reuse_existing_sol] Reusing existing solution: {output_file}.sol")
+
     if solver == 'glpk':
-        if params['execute_model']:
+        if params['execute_model'] and not _reuse_sol:
             # Usando opciones más nuevas de GLPK
-                                       
+
             check_enviro_variables('glpsol')
-            
+
             # Componer el comando para resolver el modelo con las nuevas opciones
             str_solve = f'glpsol -m {params["osemosys_model"]} -d {data_file}.txt --wglp {output_file}.glp --write {output_file}.sol'
             commands.append(str_solve)
-        
+
     else:
-        if params['create_matrix']:
+        if params['create_matrix'] and not _reuse_sol:
             # Para modelos LP
             str_solve = f'glpsol -m {params["osemosys_model"]} -d {data_file}.txt --wlp {output_file}.lp --check'
             commands.append(str_solve)
-        
+
         if solver == 'cbc':
             # Usando solver CBC
-            if params['execute_model']:
+            if params['execute_model'] and not _reuse_sol:
                 if os.path.exists(output_file + '.sol'):
                     os.remove(output_file + '.sol')
 
@@ -763,10 +780,10 @@ def main_executer(params, scenario_name, HERE):
                 # Componer el comando para solver CBC con semillas aleatorias para comportamiento determinístico
                 str_solve = f'cbc {output_file}.lp randomSeed {cbc_random_seed} randomCbcSeed {cbc_random_seed} -seconds {params["iteration_time"]} solve -solu {output_file}.sol'
                 commands.append(str_solve)
-            
+
         elif solver == 'cplex':
             # Usando solver CPLEX
-            if params['execute_model']:
+            if params['execute_model'] and not _reuse_sol:
                 for solution_file in (output_file + '.sol', output_file + '.feasopt.sol'):
                     if os.path.exists(solution_file):
                         os.remove(solution_file)
@@ -797,7 +814,7 @@ def main_executer(params, scenario_name, HERE):
 
         elif solver == 'gurobi':
             # Usando solver Gurobi
-            if params['execute_model']:
+            if params['execute_model'] and not _reuse_sol:
                 if os.path.exists(output_file + '.sol'):
                     os.remove(output_file + '.sol')
 
@@ -1231,7 +1248,18 @@ def chunk_scenarios(
 if __name__ == "__main__":
     # Iniciar temporizador
     start1 = time.time()
-    
+
+    # CLI args (optional scenario filter)
+    _cli_parser = argparse.ArgumentParser(description="Execute OSeMOSYS model across scenarios")
+    _cli_parser.add_argument(
+        "--scenarios",
+        default=None,
+        help="Comma-separated list of scenario names to run (e.g. "
+             "'B_Optimised_VRE,C_Target_VRE'). When omitted, runs all "
+             "scenarios found in the A2 output directory.",
+    )
+    _cli_args = _cli_parser.parse_args()
+
     # Carpeta donde vive este script: .../OSTRAM/t1_confection
     global HERE
     def get_here() -> Path:
@@ -1244,7 +1272,7 @@ if __name__ == "__main__":
             return Path(main.__file__).resolve().parent
         # 3) Ejecución en consola/interactiva: directorio de trabajo actual
         return Path.cwd().resolve()
-    
+
     HERE = get_here()
     
     
@@ -1287,10 +1315,23 @@ if __name__ == "__main__":
         scenarios.remove('Default')
     except ValueError:
         pass
-    
+
     if params['only_main_scenario']:
         scenarios = []
         scenarios.append(params_A2['xtra_scen']['Main_Scenario'])
+
+    if _cli_args.scenarios:
+        requested = [s.strip() for s in _cli_args.scenarios.split(",") if s.strip()]
+        discovered = set(scenarios)
+        unknown = [s for s in requested if s not in discovered]
+        if unknown:
+            print(
+                f"[ERROR] --scenarios contains names not found in {base_input_path}: "
+                f"{unknown}. Discovered: {scenarios}"
+            )
+            sys.exit(1)
+        scenarios = [s for s in scenarios if s in requested]
+        print(f"[INFO] Scenario filter active: {scenarios}")
 
     main_scenario_name = params_A2['xtra_scen']['Main_Scenario']
     

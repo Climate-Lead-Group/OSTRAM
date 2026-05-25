@@ -148,15 +148,16 @@ def load_config(yaml_path: Path) -> dict:
 # ---------------------------------------------------------------------------
 # BAU results loader
 # ---------------------------------------------------------------------------
-def load_bau_total_production(bau_results_path: Path) -> dict:
+def load_bau_total_production(bau_results_path: Path, gen_techs: set) -> dict:
     """Read ProductionByTechnology.csv and return {(cr, year): total_pj}.
 
-    Aggregates production across all technologies and timeslices per
-    country-region per year. Country-region is extracted from the
-    TECHNOLOGY column (chars 6..11 for 11-char PWR* codes).
+    Aggregates production across electricity GENERATION technologies (per
+    TECH_TYPES.csv) per country-region per year. Country-region is extracted
+    from the TECHNOLOGY column (chars 6..11 for 11-char PWR* codes).
 
-    TRN techs (13-char) are excluded — they represent inter-regional
-    flows, not local production.
+    Non-generation flows (DSPTRN fuel distribution, TRN* fuel transport,
+    RNW* renewable accounting) are excluded so the denominator reflects only
+    electricity generated, not all sector activity.
     """
     csv_path = Path(bau_results_path) / PROD_CSV_NAME
     if not csv_path.is_file():
@@ -174,13 +175,15 @@ def load_bau_total_production(bau_results_path: Path) -> dict:
             f"Found: {list(df.columns)}"
         )
 
-    # Extract cr from technology name (PWR* length-11 only)
+    # Keep only electricity generation techs (length-11 PWR* in the
+    # GENERATION category from TECH_TYPES.csv).
     df = df.copy()
     df["_tech_len"] = df[PROD_COL_TECH].astype(str).str.len()
     df = df[df["_tech_len"] == PWR_TECH_LENGTH]
+    df = df[df[PROD_COL_TECH].isin(gen_techs)]
     df["_cr"] = df[PROD_COL_TECH].astype(str).str[COUNTRY_REGION_SLICE]
 
-    # Aggregate: total production per (cr, year)
+    # Aggregate: total generation per (cr, year)
     agg = df.groupby(["_cr", PROD_COL_YEAR])[PROD_COL_VALUE].sum()
     result: dict = {}
     for (cr, year), val in agg.items():
@@ -632,17 +635,18 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
         )
     config = load_config(yaml_path)
 
+    # Load TECH_TYPES.csv — needed both to gate target tech matching and to
+    # filter the BAU production aggregate to electricity generation only.
+    script_dir = Path(__file__).resolve().parent
+    tech_types_path = script_dir.parent / TECH_TYPES_FILE
+    gen_techs = load_generation_techs(tech_types_path)
+
     # Load BAU total production (HARD DEPENDENCY)
     bau_path = Path(config["bau_results_path"])
     if not bau_path.is_absolute():
         # Resolve relative to input_dir's parent (project root)
         bau_path = input_dir.parent.parent / bau_path
-    total_prod = load_bau_total_production(bau_path)
-
-    # Load TECH_TYPES.csv
-    script_dir = Path(__file__).resolve().parent
-    tech_types_path = script_dir.parent / TECH_TYPES_FILE
-    gen_techs = load_generation_techs(tech_types_path)
+    total_prod = load_bau_total_production(bau_path, gen_techs)
 
     # Backup
     backup_dir = None if skip_backup else make_backup(input_dir)
@@ -887,8 +891,8 @@ def run_self_test() -> int:
 
         config = load_config(yaml_path)
         config["bau_results_path"] = str(bau_dir)
-        total_prod = load_bau_total_production(bau_dir)
         gen_techs = load_generation_techs(tt_path)
+        total_prod = load_bau_total_production(bau_dir, gen_techs)
         edit_parametrization(wb_path, DEFAULT_TARGET_SHEETS, config, total_prod, gen_techs)
 
         result = _read_param_values(wb_path, ACTIVITY_LOWER_PARAM)
@@ -946,8 +950,8 @@ def run_self_test() -> int:
 
         config = load_config(yaml_path)
         config["bau_results_path"] = str(bau_dir)
-        total_prod = load_bau_total_production(bau_dir)
         gen_techs = load_generation_techs(tt_path)
+        total_prod = load_bau_total_production(bau_dir, gen_techs)
         edit_parametrization(wb_path, DEFAULT_TARGET_SHEETS, config, total_prod, gen_techs)
 
         result = _read_param_values(wb_path, ACTIVITY_LOWER_PARAM)
@@ -1010,8 +1014,8 @@ def run_self_test() -> int:
 
         config = load_config(yaml_path)
         config["bau_results_path"] = str(bau_dir)
-        total_prod = load_bau_total_production(bau_dir)
         gen_techs = load_generation_techs(tt_path)
+        total_prod = load_bau_total_production(bau_dir, gen_techs)
         log = edit_parametrization(wb_path, DEFAULT_TARGET_SHEETS, config, total_prod, gen_techs)
 
         result = _read_param_values(wb_path, ACTIVITY_LOWER_PARAM)
@@ -1045,7 +1049,7 @@ def run_self_test() -> int:
     print("\nTest 4 — Missing BAU results (hard fail)")
     test_ok = True
     try:
-        load_bau_total_production(Path("/nonexistent/path/to/bau"))
+        load_bau_total_production(Path("/nonexistent/path/to/bau"), set())
         print("  FAIL: should have raised FileNotFoundError")
         test_ok = False
     except FileNotFoundError as e:
@@ -1097,8 +1101,8 @@ def run_self_test() -> int:
 
         config = load_config(yaml_path)
         config["bau_results_path"] = str(bau_dir)
-        total_prod = load_bau_total_production(bau_dir)
         gen_techs = load_generation_techs(tt_path)
+        total_prod = load_bau_total_production(bau_dir, gen_techs)
         edit_parametrization(wb_path2, DEFAULT_TARGET_SHEETS, config, total_prod, gen_techs)
 
         # floor_pj = 100 * 0.50 = 50 PJ

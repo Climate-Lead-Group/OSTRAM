@@ -64,8 +64,16 @@ create_matrix: True
 # Execute OSeMOSYS model
 execute_model: True
 
+# Reuse existing .sol file (skip solver and LP creation if .sol already exists
+# at the expected path). otoole .sol -> CSV and the per-scenario / cross-scenario
+# concatenation still run, so this lets you regenerate outputs from a previous
+# solve without re-solving. If the .sol is missing, B2 falls back to a normal
+# solve. Requires execute_model: True and concat_otoole_csv: True for the full
+# downstream chain to produce *_output.csv.
+reuse_existing_sol: False
+
 # Concatenate otoole csv
-concat_otoole_csv: False
+concat_otoole_csv: True
 
 # Concatenate scenarios csv
 concat_scenarios_csv: True
