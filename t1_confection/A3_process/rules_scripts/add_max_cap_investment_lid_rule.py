@@ -178,6 +178,7 @@ YAML_FILE_NAME = "lid_rule.yaml"
 RES_PARAM = "ResidualCapacity"
 MIN_INV_PARAM = "TotalAnnualMinCapacityInvestment"
 MAX_INV_PARAM = "TotalAnnualMaxCapacityInvestment"
+MAX_CAP_PARAM = "TotalAnnualMaxCapacity"  # total installed cap ceiling
 
 PROJ_MODE_COL = "Projection.Mode"
 PROJ_MODE_EMPTY = "EMPTY"
@@ -256,6 +257,40 @@ LID_PERCENTAGE_BY_YEAR: dict = {
 # for unblocking solver edge cases; values much above 1.5 dilute the
 # proportional-allocation narrative.
 LID_SECURITY_FACTOR = 1.1
+
+# --- Relaxation schedule (used by both modes) --------------------------------
+# Year-keyed multiplier on the computed lid.  Default {}: multiplier = 1.0 for
+# every year (BAU behaviour, identical to the old script).
+#
+# For optimisation scenarios, set anchor points in the YAML, e.g.:
+#   relaxation_schedule:
+#     2023: 1.0
+#     2030: 1.5
+#     2040: 3.0
+#     2050: 5.0
+#
+# Years between anchors are linearly interpolated. Years before the first
+# anchor get its value; years after the last anchor get the last value.
+# The final lid is  min(relaxation(year) * lid_base, 9999).
+#
+# This lets the optimizer gradually diverge from the BAU fleet-share trajectory
+# without a spike (near-term ≈ BAU) and without single-tech dominance (the
+# proportional structure is preserved — all families get the same multiplier).
+LID_RELAXATION_SCHEDULE: dict = {}
+
+# --- Exempt prefixes (used by both modes) ------------------------------------
+# When non-empty, any tech whose code starts with one of these prefixes gets
+# MaxCapInv = 9999 (uncapped) instead of the computed lid.
+# Kept for backward compatibility; relaxation_schedule is the preferred
+# mechanism.  Default: empty list (all techs get the lid).
+LID_EXEMPT_PREFIXES: list = []
+
+# --- Lid floor (used by both modes) ------------------------------------------
+# Minimum MaxCapInv (GW) per tech per year.  When the computed lid (after
+# relaxation) falls below this value, the floor is used instead.  This
+# prevents the lid from collapsing to zero when retirement drives pool_delta
+# negative.  Default 0.0 = no floor (BAU behaviour unchanged).
+LID_FLOOR_GW: float = 0.0
 
 # --- Demand ramp (used by both modes) ----------------------------------------
 # When LID_RAMP_FROM_DEMAND is True, mult(cr, y) is computed and applied:
@@ -412,6 +447,20 @@ def load_config(yaml_path: Path) -> dict:
     if "ramp_from_demand" in cfg:
         out["ramp_from_demand"] = bool(cfg["ramp_from_demand"])
 
+    if "exempt_prefixes" in cfg:
+        out["exempt_prefixes"] = [str(p).strip() for p in (cfg["exempt_prefixes"] or [])]
+
+    if "relaxation_schedule" in cfg:
+        raw = cfg["relaxation_schedule"] or {}
+        expanded_rs: dict = {}
+        for raw_key, raw_val in raw.items():
+            for y in _parse_year_key(raw_key):
+                expanded_rs[y] = float(raw_val)
+        out["relaxation_schedule"] = expanded_rs
+
+    if "lid_floor_gw" in cfg:
+        out["lid_floor_gw"] = float(cfg["lid_floor_gw"])
+
     return out
 
 
@@ -424,6 +473,8 @@ def apply_config(cfg: dict) -> None:
     """
     global LID_RULE_MODE, LID_PERCENTAGE_DEFAULT, LID_PERCENTAGE_BY_YEAR
     global LID_SECURITY_FACTOR, LID_RAMP_FROM_DEMAND
+    global LID_EXEMPT_PREFIXES, LID_RELAXATION_SCHEDULE
+    global LID_FLOOR_GW
     if "rule_mode" in cfg:
         LID_RULE_MODE = cfg["rule_mode"]
     if "percentage_default" in cfg:
@@ -434,6 +485,39 @@ def apply_config(cfg: dict) -> None:
         LID_SECURITY_FACTOR = cfg["security_factor"]
     if "ramp_from_demand" in cfg:
         LID_RAMP_FROM_DEMAND = cfg["ramp_from_demand"]
+    if "exempt_prefixes" in cfg:
+        LID_EXEMPT_PREFIXES = list(cfg["exempt_prefixes"])
+    if "relaxation_schedule" in cfg:
+        LID_RELAXATION_SCHEDULE = {
+            int(k): float(v) for k, v in cfg["relaxation_schedule"].items()
+        }
+    if "lid_floor_gw" in cfg:
+        LID_FLOOR_GW = float(cfg["lid_floor_gw"])
+
+
+def relaxation_multiplier_for_year(year: int) -> float:
+    """Return the relaxation multiplier for *year* by linearly interpolating
+    LID_RELAXATION_SCHEDULE.
+
+    If the schedule is empty, returns 1.0 (BAU behaviour).
+    Years before the first anchor get the first anchor's value.
+    Years after the last anchor get the last anchor's value.
+    """
+    if not LID_RELAXATION_SCHEDULE:
+        return 1.0
+    anchors = sorted(LID_RELAXATION_SCHEDULE.items())  # [(y, mult), ...]
+    if year <= anchors[0][0]:
+        return anchors[0][1]
+    if year >= anchors[-1][0]:
+        return anchors[-1][1]
+    # Find the bounding pair and interpolate.
+    for i in range(len(anchors) - 1):
+        y0, m0 = anchors[i]
+        y1, m1 = anchors[i + 1]
+        if y0 <= year <= y1:
+            frac = (year - y0) / (y1 - y0)
+            return m0 + frac * (m1 - m0)
+    return 1.0  # should not reach here
 
 
 # ---------------------------------------------------------------------------
@@ -828,7 +912,19 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
     for row_idx in range(2, ws.max_row + 1):
         tech = ws.cell(row=row_idx, column=tech_col).value
         param = ws.cell(row=row_idx, column=param_col).value
-        if tech is None or tech not in allowed or param != MAX_INV_PARAM:
+        # Allow exempt-prefix techs through even if not in the GENERATION set.
+        _is_exempt_prefix = (
+            LID_EXEMPT_PREFIXES
+            and any(tech.startswith(p) for p in LID_EXEMPT_PREFIXES)
+        ) if tech else False
+        # Normal rows: must be allowed (or exempt) AND MaxCapInv param.
+        # Exempt techs also get TotalAnnualMaxCapacity uncapped (the total
+        # installed-cap ceiling, not the per-year investment lid).
+        _is_target_param = (
+            param == MAX_INV_PARAM
+            or (_is_exempt_prefix and param == MAX_CAP_PARAM)
+        )
+        if tech is None or (tech not in allowed and not _is_exempt_prefix) or not _is_target_param:
             continue
 
         cr = country_region_for(tech)
@@ -843,11 +939,32 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
         for year, col in year_cols.items():
             cell = ws.cell(row=row_idx, column=col)
             old = cell.value
+
+            # --- Short-circuit: TotalAnnualMaxCapacity for exempt techs.
+            #     Just force 9999 and skip the lid/relaxation/untie machinery.
+            if param == MAX_CAP_PARAM:
+                proposed = float(PLACEHOLDER_VALUE)
+                if values_differ(old, proposed):
+                    cell.value = proposed
+                    row_was_modified = True
+                    log["changes"].append({
+                        "tech": tech, "country_region": cr, "year": year,
+                        "old": old, "new": proposed,
+                        "reason": "exempt_maxcap_uncapped",
+                        "pool": 0.0, "min_inv": 0.0,
+                        "lid": proposed, "relax_mult": 1.0,
+                    })
+                continue
+
             pool = pool_map.get((cr, year), 0.0)
             min_inv = mininv_map.get((tech, year), 0.0)
 
             # Compute lid per the active mode.
-            if LID_RULE_MODE == "uniform":
+            # --- Exempt prefixes: uncap techs matching any prefix in the list.
+            is_exempt = any(tech.startswith(p) for p in LID_EXEMPT_PREFIXES)
+            if is_exempt:
+                lid = float(PLACEHOLDER_VALUE)
+            elif LID_RULE_MODE == "uniform":
                 pct = lid_pct_for_cr_year(cr, year, demand_mult_map)
                 # Layer the demand multiplier onto pct * pool. Note that
                 # lid_pct_for_cr_year already applies mult once, so the
@@ -857,6 +974,20 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                 lid = proportional_lid_for_tech_year(
                     tech, year, tech_share_map, pool_delta_map
                 )
+
+            # --- Relaxation schedule: multiply the base lid by a year-varying
+            # factor.  Has no effect when the schedule is empty (mult = 1.0)
+            # or when the tech is already exempt (lid = 9999).
+            relax_mult = relaxation_multiplier_for_year(year)
+            if not is_exempt and relax_mult != 1.0:
+                lid = min(lid * relax_mult, float(PLACEHOLDER_VALUE))
+
+            # --- Lid floor: prevent lid from collapsing to zero when
+            # pool_delta goes negative due to retirement.
+            floored = False
+            if not is_exempt and LID_FLOOR_GW > 0 and lid < LID_FLOOR_GW:
+                lid = LID_FLOOR_GW
+                floored = True
 
             # Decide the proposed value (before untie):
             #   placeholder cell -> lid; manual value -> preserve.
@@ -868,7 +999,19 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             )
             if is_placeholder:
                 proposed = lid
-                reason = "lid_fill"
+                if is_exempt:
+                    reason = "exempt_uncapped"
+                elif floored:
+                    reason = "lid_floor"
+                elif relax_mult != 1.0:
+                    reason = "lid_relaxed"
+                else:
+                    reason = "lid_fill"
+            elif is_exempt:
+                # Exempt techs ALWAYS get 9999, even if the cell had a
+                # manual value (e.g. 0 set by upstream add_max scripts).
+                proposed = lid  # lid is already 9999 for exempt techs
+                reason = "exempt_uncapped"
             else:
                 proposed = float(old) if isinstance(old, (int, float)) else old
                 reason = "preserved_manual"
@@ -892,6 +1035,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                         "pool": pool,
                         "min_inv": min_inv,
                         "lid": lid,
+                        "relax_mult": relax_mult,
                     }
                 )
             else:
@@ -1024,6 +1168,9 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
         LID_SECURITY_FACTOR if LID_RULE_MODE == "proportional" else None
     )
     log["restrict_to_generation"] = RESTRICT_TO_GENERATION
+    log["exempt_prefixes"] = list(LID_EXEMPT_PREFIXES)
+    log["relaxation_schedule"] = dict(LID_RELAXATION_SCHEDULE)
+    log["lid_floor_gw"] = LID_FLOOR_GW
     log["generation_techs_count"] = (
         len(generation_techs) if generation_techs is not None else None
     )
@@ -1058,6 +1205,14 @@ def print_summary(log: dict) -> None:
           f"(anchored at {DEMAND_REFERENCE_YEAR})")
     print(f"Demand ramp   : {'ON' if log.get('lid_ramp_from_demand') else 'OFF'}"
           f"{' (per country+region)' if log.get('demand_mult_loaded') else ''}")
+    if LID_EXEMPT_PREFIXES:
+        print(f"Exempt (9999) : {', '.join(LID_EXEMPT_PREFIXES)}")
+    if LID_RELAXATION_SCHEDULE:
+        anchors = sorted(LID_RELAXATION_SCHEDULE.items())
+        sched = ", ".join(f"{y}:{m:.2f}×" for y, m in anchors)
+        print(f"Relaxation    : {sched}")
+    if LID_FLOOR_GW > 0:
+        print(f"Lid floor     : {LID_FLOOR_GW} GW")
     print(f"GEN-only      : {'ON' if log.get('restrict_to_generation') else 'OFF'}"
           f" ({log.get('generation_techs_count')} GENERATION techs"
           f" loaded from {log.get('tech_types_file')})"
@@ -1110,10 +1265,16 @@ def print_summary(log: dict) -> None:
         from collections import Counter
         reason_counts = Counter(c.get("reason", "?") for c in s["changes"])
         n_lid = reason_counts.get("lid_fill", 0)
+        n_relaxed = reason_counts.get("lid_relaxed", 0)
+        n_floor = reason_counts.get("lid_floor", 0)
         n_untie = reason_counts.get("untie_min_inv", 0)
-        n_other = sum(reason_counts.values()) - n_lid - n_untie
+        n_other = sum(reason_counts.values()) - n_lid - n_relaxed - n_floor - n_untie
         print(f"  MaxInv cells written:")
         print(f"    - filled with lid (pct * pool)    : {n_lid}")
+        if n_relaxed:
+            print(f"    - filled with relaxed lid          : {n_relaxed}")
+        if n_floor:
+            print(f"    - filled with floor ({LID_FLOOR_GW} GW)       : {n_floor}")
         print(f"    - bumped by untie rule (>= MinInv) : {n_untie}")
         if n_other:
             print(f"    - other                            : {n_other}")
