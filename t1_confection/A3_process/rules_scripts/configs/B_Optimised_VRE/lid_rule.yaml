@@ -42,3 +42,21 @@ family_relaxation_ceilings:
 exempt_prefixes:
   - PWRSDS     # Short-duration storage
   - PWRLDS     # Long-duration storage
+
+## Adequacy floor — ensures the sum of gen MaxCapInv in each (cr, year)
+## is at least this fraction of scaled_pool (ResidualCapacity × demand_mult).
+## When the proportional lid produces a total below this floor, ALL per-tech
+## lids are scaled up by the same factor (preserving tech-share structure
+## and family ceilings).
+##
+## Zero through 2040 preserves near-term BAU calibration.  Ramps from 2041
+## to provide enough system headroom at end of horizon where pool_delta
+## collapses due to retirements.  Without this, backstop fires in large
+## Indian regions at 2048-2050.
+##
+## Anchor points are linearly interpolated (same as relaxation_schedule).
+## 0.0 = no floor for that year.
+adequacy_floor_schedule:
+  2040: 0.0        # no floor through 2040
+  2045: 0.08       # 8% by 2045
+  2050: 0.20       # 20% by 2050 — covers INDWE 19.4% gap

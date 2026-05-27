@@ -306,6 +306,24 @@ LID_EXEMPT_PREFIXES: list = []
 # negative.  Default 0.0 = no floor (BAU behaviour unchanged).
 LID_FLOOR_GW: float = 0.0
 
+# --- Adequacy floor (used by both modes) ------------------------------------
+# Year-keyed schedule: minimum total gen MaxCapInv in each (cr, year) as a
+# fraction of scaled_pool.  When the sum of per-tech lids in a cr is below
+# this threshold, ALL lids in that cr are scaled up by the same factor so the
+# total meets the floor.  The proportional tech-share structure and family
+# ceilings are preserved — the floor only sets a system-level minimum.
+#
+# Years between anchors are linearly interpolated (same logic as
+# relaxation_schedule).  Default {} = no adequacy floor (BAU behaviour).
+#
+# Typical usage: zero through the planning horizon, ramping up in later years
+# to prevent backstop activation when pool_delta shrinks due to retirements:
+#   adequacy_floor_schedule:
+#     2040: 0.0       # no floor through 2040 — preserve BAU calibration
+#     2045: 0.08      # 8% by 2045
+#     2050: 0.20      # 20% by 2050
+LID_ADEQUACY_FLOOR_SCHEDULE: dict = {}
+
 # --- Demand ramp (used by both modes) ----------------------------------------
 # When LID_RAMP_FROM_DEMAND is True, mult(cr, y) is computed and applied:
 #   uniform mode      -> pct(cr, y) = base_pct(y) * mult(cr, y)
@@ -481,6 +499,14 @@ def load_config(yaml_path: Path) -> dict:
             str(k).strip().upper(): float(v) for k, v in raw_frc.items()
         }
 
+    if "adequacy_floor_schedule" in cfg:
+        raw_afs = cfg["adequacy_floor_schedule"] or {}
+        expanded_afs: dict = {}
+        for raw_key, raw_val in raw_afs.items():
+            for y in _parse_year_key(raw_key):
+                expanded_afs[y] = float(raw_val)
+        out["adequacy_floor_schedule"] = expanded_afs
+
     return out
 
 
@@ -495,6 +521,7 @@ def apply_config(cfg: dict) -> None:
     global LID_SECURITY_FACTOR, LID_RAMP_FROM_DEMAND
     global LID_EXEMPT_PREFIXES, LID_RELAXATION_SCHEDULE
     global LID_FLOOR_GW, LID_FAMILY_RELAXATION_CEILINGS
+    global LID_ADEQUACY_FLOOR_SCHEDULE
     if "rule_mode" in cfg:
         LID_RULE_MODE = cfg["rule_mode"]
     if "percentage_default" in cfg:
@@ -515,6 +542,10 @@ def apply_config(cfg: dict) -> None:
         LID_FLOOR_GW = float(cfg["lid_floor_gw"])
     if "family_relaxation_ceilings" in cfg:
         LID_FAMILY_RELAXATION_CEILINGS = dict(cfg["family_relaxation_ceilings"])
+    if "adequacy_floor_schedule" in cfg:
+        LID_ADEQUACY_FLOOR_SCHEDULE = {
+            int(k): float(v) for k, v in cfg["adequacy_floor_schedule"].items()
+        }
 
 
 def relaxation_multiplier_for_year(year: int) -> float:
@@ -540,6 +571,31 @@ def relaxation_multiplier_for_year(year: int) -> float:
             frac = (year - y0) / (y1 - y0)
             return m0 + frac * (m1 - m0)
     return 1.0  # should not reach here
+
+
+def adequacy_floor_pct_for_year(year: int) -> float:
+    """Return the adequacy floor percentage for *year* by linearly
+    interpolating LID_ADEQUACY_FLOOR_SCHEDULE.
+
+    Same interpolation logic as relaxation_multiplier_for_year.
+    If the schedule is empty, returns 0.0 (no adequacy floor).
+    Years before the first anchor get the first anchor's value.
+    Years after the last anchor get the last anchor's value.
+    """
+    if not LID_ADEQUACY_FLOOR_SCHEDULE:
+        return 0.0
+    anchors = sorted(LID_ADEQUACY_FLOOR_SCHEDULE.items())
+    if year <= anchors[0][0]:
+        return anchors[0][1]
+    if year >= anchors[-1][0]:
+        return anchors[-1][1]
+    for i in range(len(anchors) - 1):
+        y0, v0 = anchors[i]
+        y1, v1 = anchors[i + 1]
+        if y0 <= year <= y1:
+            frac = (year - y0) / (y1 - y0)
+            return v0 + frac * (v1 - v0)
+    return 0.0  # should not reach here
 
 
 # ---------------------------------------------------------------------------
@@ -843,6 +899,102 @@ def proportional_lid_for_tech_year(tech: str, year: int,
     return LID_SECURITY_FACTOR * share * delta
 
 
+def compute_adequacy_scale_factors(
+    allowed: set,
+    pool_map: dict,
+    scaled_pool_map: dict,
+    pool_delta_map: dict,
+    tech_share_map: dict,
+    demand_mult_map: dict | None,
+    year_cols: list,
+) -> dict:
+    """Pre-compute {(cr, year): scale_factor} for the adequacy floor.
+
+    For each (cr, year) where the adequacy floor schedule is active:
+      1. Compute the per-tech lid (same formula as the main loop, including
+         relaxation, family ceiling, and per-tech floor — but NOT the untie
+         rule, which is a downstream correction).
+      2. Sum across all gen techs in that cr to get total_lid.
+      3. Compare total_lid against adequacy_floor_pct(y) × scaled_pool(cr, y).
+      4. If total_lid < floor, the scale factor is floor / total_lid (≥ 1.0).
+
+    Returns an empty dict when the adequacy floor schedule is not set or
+    when the floor never binds (all scale factors would be 1.0).
+    """
+    if not LID_ADEQUACY_FLOOR_SCHEDULE:
+        return {}
+
+    # Group allowed techs by country_region.
+    techs_by_cr: dict = {}
+    for tech in allowed:
+        cr = country_region_for(tech)
+        if cr is not None:
+            techs_by_cr.setdefault(cr, []).append(tech)
+
+    scale_factors: dict = {}
+
+    for cr, techs in techs_by_cr.items():
+        for year in year_cols:
+            floor_pct = adequacy_floor_pct_for_year(year)
+            if floor_pct <= 0:
+                continue
+
+            sp = scaled_pool_map.get((cr, year), 0.0)
+            if sp <= 0:
+                continue
+
+            # Replicate the lid computation for each tech (same as main loop).
+            total_lid = 0.0
+            for tech in techs:
+                # Exempt techs are uncapped (9999) — not part of the gen lid.
+                if LID_EXEMPT_PREFIXES and any(
+                    tech.startswith(p) for p in LID_EXEMPT_PREFIXES
+                ):
+                    continue
+
+                if LID_RULE_MODE == "proportional":
+                    lid = proportional_lid_for_tech_year(
+                        tech, year, tech_share_map, pool_delta_map
+                    )
+                else:  # uniform
+                    pct = lid_pct_for_cr_year(cr, year, demand_mult_map)
+                    pool = pool_map.get((cr, year), 0.0)
+                    lid = pct * pool
+
+                # Relaxation + family ceiling.
+                relax_mult = relaxation_multiplier_for_year(year)
+                family_code = tech[3:6]
+                family_ceiling = LID_FAMILY_RELAXATION_CEILINGS.get(
+                    family_code
+                )
+                if family_ceiling is not None and relax_mult > family_ceiling:
+                    relax_mult = family_ceiling
+                family_locked = (
+                    family_ceiling is not None and family_ceiling <= 1.0
+                )
+                if relax_mult != 1.0:
+                    lid = min(lid * relax_mult, float(PLACEHOLDER_VALUE))
+
+                # Per-tech floor (locked families skip it).
+                if (
+                    not family_locked
+                    and LID_FLOOR_GW > 0
+                    and lid < LID_FLOOR_GW
+                ):
+                    lid = LID_FLOOR_GW
+
+                total_lid += lid
+
+            if total_lid <= 0:
+                continue
+
+            floor_gw = floor_pct * sp
+            if total_lid < floor_gw:
+                scale_factors[(cr, year)] = floor_gw / total_lid
+
+    return scale_factors
+
+
 # ---------------------------------------------------------------------------
 # Core logic
 # ---------------------------------------------------------------------------
@@ -850,7 +1002,8 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                        mininv_map: dict,
                        demand_mult_map: dict | None = None,
                        tech_share_map: dict | None = None,
-                       pool_delta_map: dict | None = None) -> dict:
+                       pool_delta_map: dict | None = None,
+                       adequacy_scale_factors: dict | None = None) -> dict:
     """
     Edit a worksheet in place, applying the lid + untie rule to the
     TotalAnnualMaxCapacityInvestment row of every PWR* tech in `allowed`.
@@ -1017,9 +1170,12 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             # proportions).  Locked families do NOT receive the lid_floor_gw
             # rescue — otherwise families with near-zero BAU share (e.g. BIO,
             # WAS) accumulate 0.5 GW/yr of spurious build from the floor alone.
+            # NOTE: do NOT gate on family_capped here — when relax_mult ==
+            # family_ceiling (both 1.0, as in A_CalBAU), family_capped is False
+            # but the family is still locked.  Matches the logic in
+            # compute_adequacy_scale_factors().
             family_locked = (
-                family_capped
-                and family_ceiling is not None
+                family_ceiling is not None
                 and family_ceiling <= 1.0
             )
             if not is_exempt and relax_mult != 1.0:
@@ -1036,6 +1192,21 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                 lid = LID_FLOOR_GW
                 floored = True
 
+            # --- Adequacy floor: scale up the lid when the system-level
+            # total across all gen techs in this (cr, year) falls below
+            # adequacy_floor_pct(y) × scaled_pool(cr, y).  The scale
+            # factor is pre-computed by compute_adequacy_scale_factors()
+            # and is the same for every tech in the cr, preserving the
+            # proportional structure and family ceilings.
+            adequacy_scaled = False
+            adequacy_sf = 1.0
+            if not is_exempt and adequacy_scale_factors:
+                sf = adequacy_scale_factors.get((cr, year))
+                if sf is not None and sf > 1.0:
+                    lid = min(lid * sf, float(PLACEHOLDER_VALUE))
+                    adequacy_scaled = True
+                    adequacy_sf = sf
+
             # Decide the proposed value (before untie):
             #   placeholder cell -> lid; manual value -> preserve.
             is_placeholder = (
@@ -1048,6 +1219,8 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                 proposed = lid
                 if is_exempt:
                     reason = "exempt_uncapped"
+                elif adequacy_scaled:
+                    reason = "lid_adequacy_scaled"
                 elif floored:
                     reason = "lid_floor"
                 elif family_locked and LID_FLOOR_GW > 0 and lid < LID_FLOOR_GW:
@@ -1088,6 +1261,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                         "lid": lid,
                         "relax_mult": relax_mult,
                         "family_ceiling": family_ceiling,
+                        "adequacy_sf": adequacy_sf,
                     }
                 )
             else:
@@ -1140,11 +1314,18 @@ def edit_parametrization(filepath: Path, sheets: list,
             scaled_pool_map = build_scaled_pool_map(pool_map, demand_mult_map)
             pool_delta_map = build_pool_delta_map(scaled_pool_map, year_cols)
 
+            # Adequacy floor: pre-compute per-(cr, year) scale factors.
+            adequacy_sf_map = compute_adequacy_scale_factors(
+                allowed, pool_map, scaled_pool_map, pool_delta_map,
+                tech_share_map, demand_mult_map, year_cols,
+            )
+
             ws = wb[sheet]
             sheet_log = apply_lid_to_sheet(
                 ws, allowed, pool_map, mininv_map, demand_mult_map,
                 tech_share_map=tech_share_map,
                 pool_delta_map=pool_delta_map,
+                adequacy_scale_factors=adequacy_sf_map,
             )
             sheet_log["allowed_techs"] = sorted(allowed)
             file_log["sheets"].append(sheet_log)
@@ -1224,6 +1405,7 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
     log["relaxation_schedule"] = dict(LID_RELAXATION_SCHEDULE)
     log["lid_floor_gw"] = LID_FLOOR_GW
     log["family_relaxation_ceilings"] = dict(LID_FAMILY_RELAXATION_CEILINGS)
+    log["adequacy_floor_schedule"] = dict(LID_ADEQUACY_FLOOR_SCHEDULE)
     log["generation_techs_count"] = (
         len(generation_techs) if generation_techs is not None else None
     )
@@ -1270,6 +1452,10 @@ def print_summary(log: dict) -> None:
         print(f"Family caps   : {caps}  (others: full schedule)")
     if LID_FLOOR_GW > 0:
         print(f"Lid floor     : {LID_FLOOR_GW} GW")
+    if LID_ADEQUACY_FLOOR_SCHEDULE:
+        anchors = sorted(LID_ADEQUACY_FLOOR_SCHEDULE.items())
+        sched = ", ".join(f"{y}:{v*100:.0f}%" for y, v in anchors)
+        print(f"Adequacy floor: {sched}  (% of scaled_pool, interpolated)")
     print(f"GEN-only      : {'ON' if log.get('restrict_to_generation') else 'OFF'}"
           f" ({log.get('generation_techs_count')} GENERATION techs"
           f" loaded from {log.get('tech_types_file')})"
@@ -1326,10 +1512,11 @@ def print_summary(log: dict) -> None:
         n_family_capped = reason_counts.get("lid_family_capped", 0)
         n_floor = reason_counts.get("lid_floor", 0)
         n_floor_suppressed = reason_counts.get("lid_floor_suppressed", 0)
+        n_adequacy = reason_counts.get("lid_adequacy_scaled", 0)
         n_untie = reason_counts.get("untie_min_inv", 0)
         n_other = (sum(reason_counts.values())
                    - n_lid - n_relaxed - n_family_capped - n_floor
-                   - n_floor_suppressed - n_untie)
+                   - n_floor_suppressed - n_adequacy - n_untie)
         print(f"  MaxInv cells written:")
         print(f"    - filled with lid (pct * pool)    : {n_lid}")
         if n_relaxed:
@@ -1340,6 +1527,8 @@ def print_summary(log: dict) -> None:
             print(f"    - filled with floor ({LID_FLOOR_GW} GW)       : {n_floor}")
         if n_floor_suppressed:
             print(f"    - floor suppressed (locked family)  : {n_floor_suppressed}")
+        if n_adequacy:
+            print(f"    - adequacy-floor scaled up          : {n_adequacy}")
         print(f"    - bumped by untie rule (>= MinInv) : {n_untie}")
         if n_other:
             print(f"    - other                            : {n_other}")
