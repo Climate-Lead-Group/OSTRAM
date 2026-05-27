@@ -1,0 +1,561 @@
+========================================================================
+3_update_ao_from_extensions.py -- Run log
+Run timestamp: 2026-05-26 16:55:29
+========================================================================
+
+INPUT
+  Extensions:  OSTRAM_AO_Extensions.xlsx  (16 rows, 16 Include=Y)
+  WV file:     SOASIA_OSeMOSYS_WV.xlsx
+  Param       A-O_Parametrization.xlsx  md5=81af542792c8a1d2f5c364ff287fc99f
+  AR_Base     A-O_AR_Model_Base_Year.xlsx  md5=20eb31f70ebdea35ea3ff12f62782107
+  AR_Proj     A-O_AR_Projections.xlsx  md5=eeef390824ccec32ced01a8128041e16
+  Demand      A-O_Demand.xlsx  md5=d2c7b1a268735c6fcca94137d70cfe75
+
+
+STEP 2B -- Demand_Projection refresh from WV
+  Rows refreshed: 10
+    ELCBGDXX03      28 year cells updated
+    ELCBTNXX03      28 year cells updated
+    ELCINDEA03      28 year cells updated
+    ELCINDNE03      28 year cells updated
+    ELCINDNO03      28 year cells updated
+    ELCINDSO03      28 year cells updated
+    ELCINDWE03      28 year cells updated
+    ELCLKAXX03      28 year cells updated
+    ELCMDVXX03      28 year cells updated
+    ELCNPLXX03      28 year cells updated
+STEP 2C: column header difference -- WV-only [2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050], A-O-only ['2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038', '2039', '2040', '2041', '2042', '2043', '2044', '2045', '2046', '2047', '2048', '2049', '2050']; aligning by name
+
+STEP 2C -- Profiles wholesale replace from WV Demand_Profiles
+  Old rows deleted: 200
+  New rows from WV: 200
+  Timeslices in WV: ['S1D1', 'S1D2', 'S1D3', 'S1D4', 'S1D5', 'S2D1', 'S2D2', 'S2D3', 'S2D4', 'S2D5', 'S3D1', 'S3D2', 'S3D3', 'S3D4', 'S3D5', 'S4D1', 'S4D2', 'S4D3', 'S4D4', 'S4D5']
+  Fuels in WV: ['ELCBGDXX03', 'ELCBTNXX03', 'ELCINDEA03', 'ELCINDNE03', 'ELCINDNO03', 'ELCINDSO03', 'ELCINDWE03', 'ELCLKAXX03', 'ELCMDVXX03', 'ELCNPLXX03']
+
+========================================================================
+STEP 2D -- WV->AO refresh on Parametrization sheets
+========================================================================
+
+  Primary Techs <- WV.Primary_Techs  key=('Tech', 'Parameter')  kind=years
+    Year columns synced: 28 (2023..2050)
+    AO rows total:        462
+    AO rows refreshed:    0  (0 cells changed)
+    AO rows untouched:    342  (no WV counterpart)
+    WV-only keys:         50  (Step 3 additive pass will append)
+    Untouched AO keys (sample, up to 20):
+      ('MINOTHMDV', 'CapitalCost')
+      ('MINOTHMDV', 'FixedCost')
+      ('MINOTHMDV', 'ResidualCapacity')
+      ('MINOTHMDV', 'TotalAnnualMaxCapacity')
+      ('MINOTHMDV', 'TotalTechnologyAnnualActivityUpperLimit')
+      ('MINOTHMDV', 'TotalTechnologyAnnualActivityLowerLimit')
+      ('MINOTHMDV', 'TotalAnnualMinCapacityInvestment')
+      ('MINOTHMDV', 'AvailabilityFactor')
+      ('MINOTHMDV', 'ReserveMarginTagFuel')
+      ('MINOTHMDV', 'ReserveMarginTagTechnology')
+      ('MINOTHMDV', 'TotalAnnualMaxCapacityInvestment')
+      ('MINOILBTN', 'TotalTechnologyAnnualActivityLowerLimit')
+      ('MINOILBTN', 'TotalAnnualMinCapacityInvestment')
+      ('MINOILBTN', 'AvailabilityFactor')
+      ('MINOILBTN', 'ReserveMarginTagFuel')
+      ('MINOILBTN', 'ReserveMarginTagTechnology')
+      ('MINOILBTN', 'TotalAnnualMaxCapacityInvestment')
+      ('MINPETIND', 'CapitalCost')
+      ('MINPETIND', 'FixedCost')
+      ('MINPETIND', 'ResidualCapacity')
+      ... and 322 more
+
+  Secondary Techs <- WV.Secondary_Techs  key=('Tech', 'Parameter')  kind=years
+    Year columns synced: 28 (2023..2050)
+    AO rows total:        1859
+    AO rows refreshed:    434  (12070 cells changed)
+    AO rows untouched:    1208  (no WV counterpart)
+    WV-only keys:         294  (Step 3 additive pass will append)
+    Untouched AO keys (sample, up to 20):
+      ('PWRLDSBTNXX', 'TotalTechnologyAnnualActivityLowerLimit')
+      ('PWRLDSBTNXX', 'ReserveMarginTagFuel')
+      ('PWRLDSBTNXX', 'ReserveMarginTagTechnology')
+      ('PWRLDSBTNXX', 'TotalAnnualMaxCapacityInvestment')
+      ('PWRWONINDWE', 'TotalTechnologyAnnualActivityLowerLimit')
+      ('PWRWONINDWE', 'ReserveMarginTagFuel')
+      ('PWRWONINDWE', 'ReserveMarginTagTechnology')
+      ('PWRWONINDWE', 'TotalAnnualMaxCapacityInvestment')
+      ('PWROTHBGDXX', 'CapitalCost')
+      ('PWROTHBGDXX', 'FixedCost')
+      ('PWROTHBGDXX', 'ResidualCapacity')
+      ('PWROTHBGDXX', 'TotalAnnualMaxCapacity')
+      ('PWROTHBGDXX', 'TotalTechnologyAnnualActivityUpperLimit')
+      ('PWROTHBGDXX', 'TotalTechnologyAnnualActivityLowerLimit')
+      ('PWROTHBGDXX', 'TotalAnnualMinCapacityInvestment')
+      ('PWROTHBGDXX', 'AvailabilityFactor')
+      ('PWROTHBGDXX', 'ReserveMarginTagFuel')
+      ('PWROTHBGDXX', 'ReserveMarginTagTechnology')
+      ('PWROTHBGDXX', 'TotalAnnualMaxCapacityInvestment')
+      ('PWRHYDINDNO', 'TotalTechnologyAnnualActivityLowerLimit')
+      ... and 1188 more
+
+  Fixed Horizon Parameters <- WV.Fixed_Horizon_Parameters  key=('Tech', 'Parameter')  kind=value_scalar
+    AO rows total:        458
+    AO rows refreshed:    122  (122 cells changed)
+    AO rows untouched:    182  (no WV counterpart)
+    WV-only keys:         488  (Step 3 additive pass will append)
+    Untouched AO keys (sample, up to 20):
+      ('PWRBCKBGDXX', 'CapacityToActivityUnit')
+      ('PWRBCKBGDXX', 'OperationalLife')
+      ('PWRBCKBTNXX', 'CapacityToActivityUnit')
+      ('PWRBCKBTNXX', 'OperationalLife')
+      ('PWRBCKINDEA', 'CapacityToActivityUnit')
+      ('PWRBCKINDEA', 'OperationalLife')
+      ('PWRBCKINDNE', 'CapacityToActivityUnit')
+      ('PWRBCKINDNE', 'OperationalLife')
+      ('PWRBCKINDNO', 'CapacityToActivityUnit')
+      ('PWRBCKINDNO', 'OperationalLife')
+      ('PWRBCKINDSO', 'CapacityToActivityUnit')
+      ('PWRBCKINDSO', 'OperationalLife')
+      ('PWRBCKINDWE', 'CapacityToActivityUnit')
+      ('PWRBCKINDWE', 'OperationalLife')
+      ('PWRBCKLKAXX', 'CapacityToActivityUnit')
+      ('PWRBCKLKAXX', 'OperationalLife')
+      ('PWRBCKMDVXX', 'CapacityToActivityUnit')
+      ('PWRBCKMDVXX', 'OperationalLife')
+      ('PWRBCKNPLXX', 'CapacityToActivityUnit')
+      ('PWRBCKNPLXX', 'OperationalLife')
+      ... and 162 more
+
+  VariableCost <- WV.VariableCost  key=('Tech', 'Mode.Operation')  kind=years
+    Year columns synced: 28 (2023..2050)
+    AO rows total:        117
+    AO rows refreshed:    24  (672 cells changed)
+    AO rows untouched:    83  (no WV counterpart)
+    WV-only keys:         10  (Step 3 additive pass will append)
+    WV-only rows appended here: 10  (VariableCost only; closes gap for fuel-supply techs absent from Extensions)
+    Untouched AO keys (sample, up to 20):
+      ('MINCOAINT', '1')
+      ('MINCOGBGD', '1')
+      ('MINCOGBTN', '1')
+      ('MINCOGIND', '1')
+      ('MINCOGINT', '1')
+      ('MINCOGLKA', '1')
+      ('MINCOGMDV', '1')
+      ('MINCOGNPL', '1')
+      ('MINGASINT', '1')
+      ('MINOILINT', '1')
+      ('MINOTHBGD', '1')
+      ('MINOTHBTN', '1')
+      ('MINOTHIND', '1')
+      ('MINOTHINT', '1')
+      ('MINOTHLKA', '1')
+      ('MINOTHMDV', '1')
+      ('MINOTHNPL', '1')
+      ('MINPETBGD', '1')
+      ('MINPETBTN', '1')
+      ('MINPETIND', '1')
+      ... and 63 more
+
+  Capacities <- WV.Capacities_CF  key=(Tech)  kind=block_replace_20ts
+    Techs in BOTH (refreshed):    32
+    AO rows deleted (was 12 ea):  384
+    WV rows appended (20 ea):     640
+    Tech.IDs preserved from AO:   32
+    AO-only techs (untouched):    5  -> ['PWRCSPINDEA', 'PWRCSPINDNE', 'PWRCSPINDNO', 'PWRCSPINDSO', 'PWRCSPINDWE']
+    WV-only techs (Step 3 to add): 73
+------------------------------------------------------------------------
+PROCESSING ROW 1/16: PWRGEOINDNO
+  Template: PWRHYDINDNO  (Override_Template_AO)
+  Tech.Name: Geothermal (Power generator) India, region NO  (Override_Tech.Name_AO)
+  Add_To_Param=Y: template lives in 3 sheet(s)
+    Fixed Horizon Parameters        +2 rows  (strict=2, cross=0, tmpl=0)
+    Secondary Techs                 +11 rows  (strict=7, cross=0, tmpl=4)
+    Capacities                      +20 rows  (strict=20, cross=0, tmpl=0)
+  Add_To_AR_Base=Y: template lives in 1 sheet(s)
+    Secondary                       +1 rows  (strict=0, cross=0, tmpl=1)
+  Add_To_AR_Proj=Y: template lives in 1 sheet(s)
+    Secondary                       +2 rows  (strict=0, cross=2, tmpl=0)
+------------------------------------------------------------------------
+PROCESSING ROW 2/16: PWRNGSBGDXX
+  Template: PWRNGSINDEA  (Suggested_Template_AO)
+  Tech.Name: Natural Gas (Power generator) India, region EA  (Suggested_Tech.Name_AO)
+  Add_To_Param=Y: template lives in 2 sheet(s)
+    Fixed Horizon Parameters        +2 rows  (strict=2, cross=0, tmpl=0)
+    Secondary Techs                 +11 rows  (strict=7, cross=0, tmpl=4)
+  Add_To_AR_Base=Y: template lives in 1 sheet(s)
+    Secondary                       +2 rows  (strict=0, cross=0, tmpl=2)
+  Add_To_AR_Proj=Y: template lives in 1 sheet(s)
+    Secondary                       +4 rows  (strict=0, cross=4, tmpl=0)
+------------------------------------------------------------------------
+PROCESSING ROW 3/16: PWRNGSMDVXX
+  Template: PWRNGSINDEA  (Suggested_Template_AO)
+  Tech.Name: Natural Gas (Power generator) India, region EA  (Suggested_Tech.Name_AO)
+  Add_To_Param=Y: template lives in 2 sheet(s)
+    Fixed Horizon Parameters        +2 rows  (strict=2, cross=0, tmpl=0)
+    Secondary Techs                 +11 rows  (strict=7, cross=0, tmpl=4)
+  Add_To_AR_Base=Y: template lives in 1 sheet(s)
+    Secondary                       +2 rows  (strict=0, cross=0, tmpl=2)
+  Add_To_AR_Proj=Y: template lives in 1 sheet(s)
+    Secondary                       +4 rows  (strict=0, cross=4, tmpl=0)
+------------------------------------------------------------------------
+PROCESSING ROW 4/16: PWROILMDVXX
+  Template: PWROILBGDXX  (Suggested_Template_AO)
+  Tech.Name: Oil (Power generator) Bangladesh, region XX  (Suggested_Tech.Name_AO)
+  Add_To_Param=Y: template lives in 2 sheet(s)
+    Fixed Horizon Parameters        +2 rows  (strict=2, cross=0, tmpl=0)
+    Secondary Techs                 +11 rows  (strict=7, cross=0, tmpl=4)
+  Add_To_AR_Base=Y: template lives in 1 sheet(s)
+    Secondary                       +2 rows  (strict=0, cross=0, tmpl=2)
+  Add_To_AR_Proj=Y: template lives in 1 sheet(s)
+    Secondary                       +4 rows  (strict=0, cross=4, tmpl=0)
+------------------------------------------------------------------------
+PROCESSING ROW 5/16: PWROILNPLXX
+  Template: PWROILBGDXX  (Suggested_Template_AO)
+  Tech.Name: Oil (Power generator) Bangladesh, region XX  (Suggested_Tech.Name_AO)
+  Add_To_Param=Y: template lives in 2 sheet(s)
+    Fixed Horizon Parameters        +2 rows  (strict=0, cross=0, tmpl=2)
+    Secondary Techs                 +11 rows  (strict=7, cross=0, tmpl=4)
+  Add_To_AR_Base=Y: template lives in 1 sheet(s)
+    Secondary                       +2 rows  (strict=0, cross=0, tmpl=2)
+  Add_To_AR_Proj=Y: template lives in 1 sheet(s)
+    Secondary                       +4 rows  (strict=0, cross=0, tmpl=4)
+------------------------------------------------------------------------
+PROCESSING ROW 6/16: PWRSHPINDEA
+  Template: PWRHYDINDEA  (Suggested_Template_AO)
+  Tech.Name: Large Hydropower, India – East, region XX (investable)  (auto-derived (region substitution from template))
+  Add_To_Param=Y: template lives in 3 sheet(s)
+    Fixed Horizon Parameters        +2 rows  (strict=2, cross=0, tmpl=0)
+    Secondary Techs                 +11 rows  (strict=7, cross=0, tmpl=4)
+    Capacities                      +20 rows  (strict=20, cross=0, tmpl=0)
+  Add_To_AR_Base=Y: template lives in 1 sheet(s)
+    Secondary                       +1 rows  (strict=0, cross=0, tmpl=1)
+  Add_To_AR_Proj=Y: template lives in 1 sheet(s)
+    Secondary                       +2 rows  (strict=0, cross=2, tmpl=0)
+------------------------------------------------------------------------
+PROCESSING ROW 7/16: PWRSHPINDNE
+  Template: PWRHYDINDNE  (Suggested_Template_AO)
+  Tech.Name: Large Hydropower, India – Northeast, region XX (investable)  (auto-derived (region substitution from template))
+  Add_To_Param=Y: template lives in 3 sheet(s)
+    Fixed Horizon Parameters        +2 rows  (strict=2, cross=0, tmpl=0)
+    Secondary Techs                 +11 rows  (strict=7, cross=0, tmpl=4)
+    Capacities                      +20 rows  (strict=20, cross=0, tmpl=0)
+  Add_To_AR_Base=Y: template lives in 1 sheet(s)
+    Secondary                       +1 rows  (strict=0, cross=0, tmpl=1)
+  Add_To_AR_Proj=Y: template lives in 1 sheet(s)
+    Secondary                       +2 rows  (strict=0, cross=2, tmpl=0)
+------------------------------------------------------------------------
+PROCESSING ROW 8/16: PWRSHPINDNO
+  Template: PWRHYDINDNO  (Suggested_Template_AO)
+  Tech.Name: Large Hydropower, India – North, region XX (investable)  (auto-derived (region substitution from template))
+  Add_To_Param=Y: template lives in 3 sheet(s)
+    Fixed Horizon Parameters        +2 rows  (strict=2, cross=0, tmpl=0)
+    Secondary Techs                 +11 rows  (strict=7, cross=0, tmpl=4)
+    Capacities                      +20 rows  (strict=20, cross=0, tmpl=0)
+  Add_To_AR_Base=Y: template lives in 1 sheet(s)
+    Secondary                       +1 rows  (strict=0, cross=0, tmpl=1)
+  Add_To_AR_Proj=Y: template lives in 1 sheet(s)
+    Secondary                       +2 rows  (strict=0, cross=2, tmpl=0)
+------------------------------------------------------------------------
+PROCESSING ROW 9/16: PWRSHPINDSO
+  Template: PWRHYDINDSO  (Suggested_Template_AO)
+  Tech.Name: Large Hydropower, India – South, region XX (investable)  (auto-derived (region substitution from template))
+  Add_To_Param=Y: template lives in 3 sheet(s)
+    Fixed Horizon Parameters        +2 rows  (strict=2, cross=0, tmpl=0)
+    Secondary Techs                 +11 rows  (strict=7, cross=0, tmpl=4)
+    Capacities                      +20 rows  (strict=20, cross=0, tmpl=0)
+  Add_To_AR_Base=Y: template lives in 1 sheet(s)
+    Secondary                       +1 rows  (strict=0, cross=0, tmpl=1)
+  Add_To_AR_Proj=Y: template lives in 1 sheet(s)
+    Secondary                       +2 rows  (strict=0, cross=2, tmpl=0)
+------------------------------------------------------------------------
+PROCESSING ROW 10/16: PWRSHPINDWE
+  Template: PWRHYDINDWE  (Suggested_Template_AO)
+  Tech.Name: Large Hydropower, India – West, region XX (investable)  (auto-derived (region substitution from template))
+  Add_To_Param=Y: template lives in 3 sheet(s)
+    Fixed Horizon Parameters        +2 rows  (strict=2, cross=0, tmpl=0)
+    Secondary Techs                 +11 rows  (strict=7, cross=0, tmpl=4)
+    Capacities                      +20 rows  (strict=20, cross=0, tmpl=0)
+  Add_To_AR_Base=Y: template lives in 1 sheet(s)
+    Secondary                       +1 rows  (strict=0, cross=0, tmpl=1)
+  Add_To_AR_Proj=Y: template lives in 1 sheet(s)
+    Secondary                       +2 rows  (strict=0, cross=2, tmpl=0)
+------------------------------------------------------------------------
+PROCESSING ROW 11/16: PWRWOFMDVXX
+  Template: PWRWOFBGDXX  (Suggested_Template_AO)
+  Tech.Name: Offshore Wind (Power generator) Bangladesh, region XX  (Suggested_Tech.Name_AO)
+  Add_To_Param=Y: template lives in 2 sheet(s)
+    Fixed Horizon Parameters        +2 rows  (strict=2, cross=0, tmpl=0)
+    Secondary Techs                 +11 rows  (strict=7, cross=0, tmpl=4)
+  Add_To_AR_Base=Y: template lives in 1 sheet(s)
+    Secondary                       +1 rows  (strict=0, cross=0, tmpl=1)
+  Add_To_AR_Proj=Y: template lives in 1 sheet(s)
+    Secondary                       +2 rows  (strict=0, cross=2, tmpl=0)
+------------------------------------------------------------------------
+PROCESSING ROW 12/16: PWRWONMDVXX
+  Template: PWRWONBGDXX  (Suggested_Template_AO)
+  Tech.Name: Onshore Wind (Power generator) Bangladesh, region XX  (Suggested_Tech.Name_AO)
+  Add_To_Param=Y: template lives in 3 sheet(s)
+    Fixed Horizon Parameters        +2 rows  (strict=2, cross=0, tmpl=0)
+    Secondary Techs                 +11 rows  (strict=7, cross=0, tmpl=4)
+    Capacities                      +20 rows  (strict=20, cross=0, tmpl=0)
+  Add_To_AR_Base=Y: template lives in 1 sheet(s)
+    Secondary                       +1 rows  (strict=0, cross=0, tmpl=1)
+  Add_To_AR_Proj=Y: template lives in 1 sheet(s)
+    Secondary                       +2 rows  (strict=0, cross=2, tmpl=0)
+------------------------------------------------------------------------
+PROCESSING ROW 13/16: TRNBTNXXBGDXX
+  Template: TRNBTNXXINDEA  (Suggested_Template_AO)
+  Tech.Name: Transmission interconnection from Bhutan, region XX to India, region EA  (Suggested_Tech.Name_AO)
+  Add_To_Param=Y: template lives in 3 sheet(s)
+    Fixed Horizon Parameters        +2 rows  (strict=0, cross=1, tmpl=1)
+    Secondary Techs                 +11 rows  (strict=0, cross=3, tmpl=8)
+    VariableCost                    +2 rows  (strict=0, cross=0, tmpl=2)
+  Add_To_AR_Base=Y: template lives in 1 sheet(s)
+    Secondary                       +2 rows  (strict=0, cross=0, tmpl=2)
+  Add_To_AR_Proj=Y: template lives in 1 sheet(s)
+    Secondary                       +4 rows  (strict=0, cross=0, tmpl=4)
+------------------------------------------------------------------------
+PROCESSING ROW 14/16: TRNBTNXXINDNE
+  Template: TRNBTNXXINDEA  (Suggested_Template_AO)
+  Tech.Name: Transmission interconnection from Bhutan, region XX to India, region EA  (Suggested_Tech.Name_AO)
+  Add_To_Param=Y: template lives in 3 sheet(s)
+    Fixed Horizon Parameters        +2 rows  (strict=2, cross=0, tmpl=0)
+    Secondary Techs                 +11 rows  (strict=0, cross=4, tmpl=7)
+    VariableCost                    +2 rows  (strict=0, cross=0, tmpl=2)
+  Add_To_AR_Base=Y: template lives in 1 sheet(s)
+    Secondary                       +2 rows  (strict=0, cross=0, tmpl=2)
+  Add_To_AR_Proj=Y: template lives in 1 sheet(s)
+    Secondary                       +4 rows  (strict=0, cross=4, tmpl=0)
+------------------------------------------------------------------------
+PROCESSING ROW 15/16: TRNMDVXXINDSO
+  Template: TRNINDSOINDWE  (Suggested_Template_AO)
+  Tech.Name: Transmission interconnection from Maldives, region XX to India, region SO  (auto-derived (region substitution from template))
+  Add_To_Param=Y: template lives in 3 sheet(s)
+    Fixed Horizon Parameters        +2 rows  (strict=2, cross=0, tmpl=0)
+    Secondary Techs                 +11 rows  (strict=0, cross=4, tmpl=7)
+    VariableCost                    +2 rows  (strict=0, cross=0, tmpl=2)
+  Add_To_AR_Base=Y: template lives in 1 sheet(s)
+    Secondary                       +2 rows  (strict=0, cross=0, tmpl=2)
+  Add_To_AR_Proj=Y: template lives in 1 sheet(s)
+    Secondary                       +4 rows  (strict=0, cross=4, tmpl=0)
+------------------------------------------------------------------------
+PROCESSING ROW 16/16: TRNNPLXXBGDXX
+  Template: TRNBGDXXINDEA  (Suggested_Template_AO)
+  Tech.Name: Transmission interconnection from Nepal, region XX to Bangladesh, region XX  (auto-derived (region substitution from template))
+  Add_To_Param=Y: template lives in 3 sheet(s)
+    Fixed Horizon Parameters        +2 rows  (strict=0, cross=1, tmpl=1)
+    Secondary Techs                 +11 rows  (strict=0, cross=3, tmpl=8)
+    VariableCost                    +2 rows  (strict=0, cross=0, tmpl=2)
+  Add_To_AR_Base=Y: template lives in 1 sheet(s)
+    Secondary                       +2 rows  (strict=0, cross=0, tmpl=2)
+  Add_To_AR_Proj=Y: template lives in 1 sheet(s)
+    Secondary                       +4 rows  (strict=0, cross=0, tmpl=4)
+
+========================================================================
+STEP 3B -- TAB2_ONLY second pass
+========================================================================
+  [TAB2_ONLY] PWRNGSBGDXX     Param/Capacities  +20 rows  (passthrough 20 ts rows)
+  [TAB2_ONLY] PWRNGSMDVXX     Param/Capacities  +20 rows  (passthrough 20 ts rows)
+  [TAB2_ONLY] PWROILMDVXX     Param/Capacities  +20 rows  (passthrough 20 ts rows)
+  [TAB2_ONLY] PWROILNPLXX     Param/Capacities  +20 rows  (passthrough 20 ts rows)
+  [TAB2_ONLY] PWRWOFMDVXX     Param/Capacities  +20 rows  (passthrough 20 ts rows)
+
+========================================================================
+SUMMARY
+========================================================================
+  Codes processed: 16 (skipped: 0)
+  Rows added per workbook:
+    Param       456
+    AR_Base      24
+    AR_Proj      48
+    Demand        0
+  Tier counts (one tag per appended row):
+    STRICT       (green):     250
+    CROSS_SHEET  (yellow):     52
+    TEMPLATE     (orange):    126
+    TAB2_ONLY    (blue-vi):   100
+
+  Auto-derived Tech.Names (review for category accuracy):
+    PWRSHPINDEA     Large Hydropower, India – East, region XX (investable)
+    PWRSHPINDNE     Large Hydropower, India – Northeast, region XX (investable)
+    PWRSHPINDNO     Large Hydropower, India – North, region XX (investable)
+    PWRSHPINDSO     Large Hydropower, India – South, region XX (investable)
+    PWRSHPINDWE     Large Hydropower, India – West, region XX (investable)
+    TRNMDVXXINDSO   Transmission interconnection from Maldives, region XX to India, region SO
+    TRNNPLXXBGDXX   Transmission interconnection from Nepal, region XX to Bangladesh, region XX
+
+  Non-strict rows (CROSS_SHEET + TEMPLATE) -- review:
+    [TEMPLATE   ] PWRGEOINDNO    TotalTechnologyAnnualActivityLowerLimit  Param/Secondary Techs
+    [TEMPLATE   ] PWRGEOINDNO    ReserveMarginTagFuel            Param/Secondary Techs
+    [TEMPLATE   ] PWRGEOINDNO    ReserveMarginTagTechnology      Param/Secondary Techs
+    [TEMPLATE   ] PWRGEOINDNO    TotalAnnualMaxCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] PWRGEOINDNO    (no-param)                      AR_Base/Secondary
+    [CROSS_SHEET] PWRGEOINDNO    InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] PWRGEOINDNO    OutputActivityRatio             AR_Proj/Secondary
+    [TEMPLATE   ] PWRNGSBGDXX    TotalTechnologyAnnualActivityLowerLimit  Param/Secondary Techs
+    [TEMPLATE   ] PWRNGSBGDXX    ReserveMarginTagFuel            Param/Secondary Techs
+    [TEMPLATE   ] PWRNGSBGDXX    ReserveMarginTagTechnology      Param/Secondary Techs
+    [TEMPLATE   ] PWRNGSBGDXX    TotalAnnualMaxCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] PWRNGSBGDXX    (no-param)                      AR_Base/Secondary
+    [TEMPLATE   ] PWRNGSBGDXX    (no-param)                      AR_Base/Secondary
+    [CROSS_SHEET] PWRNGSBGDXX    InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] PWRNGSBGDXX    InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] PWRNGSBGDXX    OutputActivityRatio             AR_Proj/Secondary
+    [CROSS_SHEET] PWRNGSBGDXX    OutputActivityRatio             AR_Proj/Secondary
+    [TEMPLATE   ] PWRNGSMDVXX    TotalTechnologyAnnualActivityLowerLimit  Param/Secondary Techs
+    [TEMPLATE   ] PWRNGSMDVXX    ReserveMarginTagFuel            Param/Secondary Techs
+    [TEMPLATE   ] PWRNGSMDVXX    ReserveMarginTagTechnology      Param/Secondary Techs
+    [TEMPLATE   ] PWRNGSMDVXX    TotalAnnualMaxCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] PWRNGSMDVXX    (no-param)                      AR_Base/Secondary
+    [TEMPLATE   ] PWRNGSMDVXX    (no-param)                      AR_Base/Secondary
+    [CROSS_SHEET] PWRNGSMDVXX    InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] PWRNGSMDVXX    InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] PWRNGSMDVXX    OutputActivityRatio             AR_Proj/Secondary
+    [CROSS_SHEET] PWRNGSMDVXX    OutputActivityRatio             AR_Proj/Secondary
+    [TEMPLATE   ] PWROILMDVXX    TotalTechnologyAnnualActivityLowerLimit  Param/Secondary Techs
+    [TEMPLATE   ] PWROILMDVXX    ReserveMarginTagFuel            Param/Secondary Techs
+    [TEMPLATE   ] PWROILMDVXX    ReserveMarginTagTechnology      Param/Secondary Techs
+    [TEMPLATE   ] PWROILMDVXX    TotalAnnualMaxCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] PWROILMDVXX    (no-param)                      AR_Base/Secondary
+    [TEMPLATE   ] PWROILMDVXX    (no-param)                      AR_Base/Secondary
+    [CROSS_SHEET] PWROILMDVXX    InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] PWROILMDVXX    InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] PWROILMDVXX    OutputActivityRatio             AR_Proj/Secondary
+    [CROSS_SHEET] PWROILMDVXX    OutputActivityRatio             AR_Proj/Secondary
+    [TEMPLATE   ] PWROILNPLXX    CapacityToActivityUnit          Param/Fixed Horizon Parameters
+    [TEMPLATE   ] PWROILNPLXX    OperationalLife                 Param/Fixed Horizon Parameters
+    [TEMPLATE   ] PWROILNPLXX    TotalTechnologyAnnualActivityLowerLimit  Param/Secondary Techs
+    [TEMPLATE   ] PWROILNPLXX    ReserveMarginTagFuel            Param/Secondary Techs
+    [TEMPLATE   ] PWROILNPLXX    ReserveMarginTagTechnology      Param/Secondary Techs
+    [TEMPLATE   ] PWROILNPLXX    TotalAnnualMaxCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] PWROILNPLXX    (no-param)                      AR_Base/Secondary
+    [TEMPLATE   ] PWROILNPLXX    (no-param)                      AR_Base/Secondary
+    [TEMPLATE   ] PWROILNPLXX    InputActivityRatio              AR_Proj/Secondary
+    [TEMPLATE   ] PWROILNPLXX    InputActivityRatio              AR_Proj/Secondary
+    [TEMPLATE   ] PWROILNPLXX    OutputActivityRatio             AR_Proj/Secondary
+    [TEMPLATE   ] PWROILNPLXX    OutputActivityRatio             AR_Proj/Secondary
+    [TEMPLATE   ] PWRSHPINDEA    TotalTechnologyAnnualActivityLowerLimit  Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDEA    ReserveMarginTagFuel            Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDEA    ReserveMarginTagTechnology      Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDEA    TotalAnnualMaxCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDEA    (no-param)                      AR_Base/Secondary
+    [CROSS_SHEET] PWRSHPINDEA    InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] PWRSHPINDEA    OutputActivityRatio             AR_Proj/Secondary
+    [TEMPLATE   ] PWRSHPINDNE    TotalTechnologyAnnualActivityLowerLimit  Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDNE    ReserveMarginTagFuel            Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDNE    ReserveMarginTagTechnology      Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDNE    TotalAnnualMaxCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDNE    (no-param)                      AR_Base/Secondary
+    [CROSS_SHEET] PWRSHPINDNE    InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] PWRSHPINDNE    OutputActivityRatio             AR_Proj/Secondary
+    [TEMPLATE   ] PWRSHPINDNO    TotalTechnologyAnnualActivityLowerLimit  Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDNO    ReserveMarginTagFuel            Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDNO    ReserveMarginTagTechnology      Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDNO    TotalAnnualMaxCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDNO    (no-param)                      AR_Base/Secondary
+    [CROSS_SHEET] PWRSHPINDNO    InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] PWRSHPINDNO    OutputActivityRatio             AR_Proj/Secondary
+    [TEMPLATE   ] PWRSHPINDSO    TotalTechnologyAnnualActivityLowerLimit  Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDSO    ReserveMarginTagFuel            Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDSO    ReserveMarginTagTechnology      Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDSO    TotalAnnualMaxCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDSO    (no-param)                      AR_Base/Secondary
+    [CROSS_SHEET] PWRSHPINDSO    InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] PWRSHPINDSO    OutputActivityRatio             AR_Proj/Secondary
+    [TEMPLATE   ] PWRSHPINDWE    TotalTechnologyAnnualActivityLowerLimit  Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDWE    ReserveMarginTagFuel            Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDWE    ReserveMarginTagTechnology      Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDWE    TotalAnnualMaxCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] PWRSHPINDWE    (no-param)                      AR_Base/Secondary
+    [CROSS_SHEET] PWRSHPINDWE    InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] PWRSHPINDWE    OutputActivityRatio             AR_Proj/Secondary
+    [TEMPLATE   ] PWRWOFMDVXX    TotalTechnologyAnnualActivityLowerLimit  Param/Secondary Techs
+    [TEMPLATE   ] PWRWOFMDVXX    ReserveMarginTagFuel            Param/Secondary Techs
+    [TEMPLATE   ] PWRWOFMDVXX    ReserveMarginTagTechnology      Param/Secondary Techs
+    [TEMPLATE   ] PWRWOFMDVXX    TotalAnnualMaxCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] PWRWOFMDVXX    (no-param)                      AR_Base/Secondary
+    [CROSS_SHEET] PWRWOFMDVXX    InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] PWRWOFMDVXX    OutputActivityRatio             AR_Proj/Secondary
+    [TEMPLATE   ] PWRWONMDVXX    TotalTechnologyAnnualActivityLowerLimit  Param/Secondary Techs
+    [TEMPLATE   ] PWRWONMDVXX    ReserveMarginTagFuel            Param/Secondary Techs
+    [TEMPLATE   ] PWRWONMDVXX    ReserveMarginTagTechnology      Param/Secondary Techs
+    [TEMPLATE   ] PWRWONMDVXX    TotalAnnualMaxCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] PWRWONMDVXX    (no-param)                      AR_Base/Secondary
+    [CROSS_SHEET] PWRWONMDVXX    InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] PWRWONMDVXX    OutputActivityRatio             AR_Proj/Secondary
+    [TEMPLATE   ] TRNBTNXXBGDXX  CapacityToActivityUnit          Param/Fixed Horizon Parameters
+    [CROSS_SHEET] TRNBTNXXBGDXX  OperationalLife                 Param/Fixed Horizon Parameters
+    [CROSS_SHEET] TRNBTNXXBGDXX  CapitalCost                     Param/Secondary Techs
+    [CROSS_SHEET] TRNBTNXXBGDXX  FixedCost                       Param/Secondary Techs
+    [CROSS_SHEET] TRNBTNXXBGDXX  ResidualCapacity                Param/Secondary Techs
+    [TEMPLATE   ] TRNBTNXXBGDXX  TotalAnnualMaxCapacity          Param/Secondary Techs
+    [TEMPLATE   ] TRNBTNXXBGDXX  TotalTechnologyAnnualActivityUpperLimit  Param/Secondary Techs
+    [TEMPLATE   ] TRNBTNXXBGDXX  TotalTechnologyAnnualActivityLowerLimit  Param/Secondary Techs
+    [TEMPLATE   ] TRNBTNXXBGDXX  TotalAnnualMinCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] TRNBTNXXBGDXX  AvailabilityFactor              Param/Secondary Techs
+    [TEMPLATE   ] TRNBTNXXBGDXX  ReserveMarginTagFuel            Param/Secondary Techs
+    [TEMPLATE   ] TRNBTNXXBGDXX  ReserveMarginTagTechnology      Param/Secondary Techs
+    [TEMPLATE   ] TRNBTNXXBGDXX  TotalAnnualMaxCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] TRNBTNXXBGDXX  VariableCost                    Param/VariableCost
+    [TEMPLATE   ] TRNBTNXXBGDXX  VariableCost                    Param/VariableCost
+    [TEMPLATE   ] TRNBTNXXBGDXX  (no-param)                      AR_Base/Secondary
+    [TEMPLATE   ] TRNBTNXXBGDXX  (no-param)                      AR_Base/Secondary
+    [TEMPLATE   ] TRNBTNXXBGDXX  InputActivityRatio              AR_Proj/Secondary
+    [TEMPLATE   ] TRNBTNXXBGDXX  InputActivityRatio              AR_Proj/Secondary
+    [TEMPLATE   ] TRNBTNXXBGDXX  OutputActivityRatio             AR_Proj/Secondary
+    [TEMPLATE   ] TRNBTNXXBGDXX  OutputActivityRatio             AR_Proj/Secondary
+    [CROSS_SHEET] TRNBTNXXINDNE  CapitalCost                     Param/Secondary Techs
+    [CROSS_SHEET] TRNBTNXXINDNE  FixedCost                       Param/Secondary Techs
+    [CROSS_SHEET] TRNBTNXXINDNE  ResidualCapacity                Param/Secondary Techs
+    [CROSS_SHEET] TRNBTNXXINDNE  TotalAnnualMaxCapacity          Param/Secondary Techs
+    [TEMPLATE   ] TRNBTNXXINDNE  TotalTechnologyAnnualActivityUpperLimit  Param/Secondary Techs
+    [TEMPLATE   ] TRNBTNXXINDNE  TotalTechnologyAnnualActivityLowerLimit  Param/Secondary Techs
+    [TEMPLATE   ] TRNBTNXXINDNE  TotalAnnualMinCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] TRNBTNXXINDNE  AvailabilityFactor              Param/Secondary Techs
+    [TEMPLATE   ] TRNBTNXXINDNE  ReserveMarginTagFuel            Param/Secondary Techs
+    [TEMPLATE   ] TRNBTNXXINDNE  ReserveMarginTagTechnology      Param/Secondary Techs
+    [TEMPLATE   ] TRNBTNXXINDNE  TotalAnnualMaxCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] TRNBTNXXINDNE  VariableCost                    Param/VariableCost
+    [TEMPLATE   ] TRNBTNXXINDNE  VariableCost                    Param/VariableCost
+    [TEMPLATE   ] TRNBTNXXINDNE  (no-param)                      AR_Base/Secondary
+    [TEMPLATE   ] TRNBTNXXINDNE  (no-param)                      AR_Base/Secondary
+    [CROSS_SHEET] TRNBTNXXINDNE  InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] TRNBTNXXINDNE  InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] TRNBTNXXINDNE  OutputActivityRatio             AR_Proj/Secondary
+    [CROSS_SHEET] TRNBTNXXINDNE  OutputActivityRatio             AR_Proj/Secondary
+    [CROSS_SHEET] TRNMDVXXINDSO  CapitalCost                     Param/Secondary Techs
+    [CROSS_SHEET] TRNMDVXXINDSO  FixedCost                       Param/Secondary Techs
+    [CROSS_SHEET] TRNMDVXXINDSO  ResidualCapacity                Param/Secondary Techs
+    [CROSS_SHEET] TRNMDVXXINDSO  TotalAnnualMaxCapacity          Param/Secondary Techs
+    [TEMPLATE   ] TRNMDVXXINDSO  TotalTechnologyAnnualActivityUpperLimit  Param/Secondary Techs
+    [TEMPLATE   ] TRNMDVXXINDSO  TotalTechnologyAnnualActivityLowerLimit  Param/Secondary Techs
+    [TEMPLATE   ] TRNMDVXXINDSO  TotalAnnualMinCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] TRNMDVXXINDSO  AvailabilityFactor              Param/Secondary Techs
+    [TEMPLATE   ] TRNMDVXXINDSO  ReserveMarginTagFuel            Param/Secondary Techs
+    [TEMPLATE   ] TRNMDVXXINDSO  ReserveMarginTagTechnology      Param/Secondary Techs
+    [TEMPLATE   ] TRNMDVXXINDSO  TotalAnnualMaxCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] TRNMDVXXINDSO  VariableCost                    Param/VariableCost
+    [TEMPLATE   ] TRNMDVXXINDSO  VariableCost                    Param/VariableCost
+    [TEMPLATE   ] TRNMDVXXINDSO  (no-param)                      AR_Base/Secondary
+    [TEMPLATE   ] TRNMDVXXINDSO  (no-param)                      AR_Base/Secondary
+    [CROSS_SHEET] TRNMDVXXINDSO  InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] TRNMDVXXINDSO  InputActivityRatio              AR_Proj/Secondary
+    [CROSS_SHEET] TRNMDVXXINDSO  OutputActivityRatio             AR_Proj/Secondary
+    [CROSS_SHEET] TRNMDVXXINDSO  OutputActivityRatio             AR_Proj/Secondary
+    [TEMPLATE   ] TRNNPLXXBGDXX  CapacityToActivityUnit          Param/Fixed Horizon Parameters
+    [CROSS_SHEET] TRNNPLXXBGDXX  OperationalLife                 Param/Fixed Horizon Parameters
+    [CROSS_SHEET] TRNNPLXXBGDXX  CapitalCost                     Param/Secondary Techs
+    [CROSS_SHEET] TRNNPLXXBGDXX  FixedCost                       Param/Secondary Techs
+    [CROSS_SHEET] TRNNPLXXBGDXX  ResidualCapacity                Param/Secondary Techs
+    [TEMPLATE   ] TRNNPLXXBGDXX  TotalAnnualMaxCapacity          Param/Secondary Techs
+    [TEMPLATE   ] TRNNPLXXBGDXX  TotalTechnologyAnnualActivityUpperLimit  Param/Secondary Techs
+    [TEMPLATE   ] TRNNPLXXBGDXX  TotalTechnologyAnnualActivityLowerLimit  Param/Secondary Techs
+    [TEMPLATE   ] TRNNPLXXBGDXX  TotalAnnualMinCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] TRNNPLXXBGDXX  AvailabilityFactor              Param/Secondary Techs
+    [TEMPLATE   ] TRNNPLXXBGDXX  ReserveMarginTagFuel            Param/Secondary Techs
+    [TEMPLATE   ] TRNNPLXXBGDXX  ReserveMarginTagTechnology      Param/Secondary Techs
+    [TEMPLATE   ] TRNNPLXXBGDXX  TotalAnnualMaxCapacityInvestment  Param/Secondary Techs
+    [TEMPLATE   ] TRNNPLXXBGDXX  VariableCost                    Param/VariableCost
+    [TEMPLATE   ] TRNNPLXXBGDXX  VariableCost                    Param/VariableCost
+    [TEMPLATE   ] TRNNPLXXBGDXX  (no-param)                      AR_Base/Secondary
+    [TEMPLATE   ] TRNNPLXXBGDXX  (no-param)                      AR_Base/Secondary
+    [TEMPLATE   ] TRNNPLXXBGDXX  InputActivityRatio              AR_Proj/Secondary
+    [TEMPLATE   ] TRNNPLXXBGDXX  InputActivityRatio              AR_Proj/Secondary
+    [TEMPLATE   ] TRNNPLXXBGDXX  OutputActivityRatio             AR_Proj/Secondary
+    [TEMPLATE   ] TRNNPLXXBGDXX  OutputActivityRatio             AR_Proj/Secondary

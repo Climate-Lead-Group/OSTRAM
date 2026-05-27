@@ -16,6 +16,17 @@ relaxation_schedule:
 ## collapsing to zero when retirement drives pool_delta negative.
 lid_floor_gw: 0.5
 
+## Family-specific relaxation ceilings.  Caps the relaxation multiplier
+## for techs whose family code (chars 3..6 of tech code) matches a key.
+## Families not listed get the full relaxation_schedule value.
+## A ceiling of 1.0 = locked to BAU proportions (no relaxation).
+family_relaxation_ceilings:
+  COA: 1.0    # coal locked to BAU proportions
+  PET: 1.0    # petroleum locked
+  OIL: 1.0    # oil locked
+  NGA: 1.2    # gas gets slight room
+  NUC: 1.5    # nuclear moderate
+
 ## Uncap storage — upstream scripts set storage MaxCapInv to 0,
 ## and the lid script's preserve-manual rule keeps them there.
 ## Exempting them forces MaxCapInv = 9999 (uncapped).

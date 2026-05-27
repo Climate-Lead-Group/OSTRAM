@@ -1,0 +1,6909 @@
+{
+  "file": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_latest\\t1_confection\\A3_process\\_run_20260526_165441\\stage5\\A-O_Parametrization.xlsx",
+  "sheets": [
+    {
+      "sheet": "Secondary Techs",
+      "years": [
+        2023,
+        2024,
+        2025,
+        2026,
+        2027,
+        2028,
+        2029,
+        2030,
+        2031,
+        2032,
+        2033,
+        2034,
+        2035,
+        2036,
+        2037,
+        2038,
+        2039,
+        2040,
+        2041,
+        2042,
+        2043,
+        2044,
+        2045,
+        2046,
+        2047,
+        2048,
+        2049,
+        2050
+      ],
+      "mode": "multiplicative",
+      "headroom_factor": 1.5,
+      "headroom_gw": null,
+      "trn_techs_in_scope": [
+        "TRNBGDXXINDEA",
+        "TRNBGDXXINDNE",
+        "TRNBTNXXBGDXX",
+        "TRNBTNXXINDEA",
+        "TRNBTNXXINDNE",
+        "TRNINDEAINDNE",
+        "TRNINDEAINDNO",
+        "TRNINDEAINDSO",
+        "TRNINDEAINDWE",
+        "TRNINDEANPLXX",
+        "TRNINDNEINDNO",
+        "TRNINDNOINDWE",
+        "TRNINDNONPLXX",
+        "TRNINDSOINDWE",
+        "TRNINDSOLKAXX",
+        "TRNLKAXXMDVXX",
+        "TRNMDVXXINDSO",
+        "TRNNPLXXBGDXX"
+      ],
+      "overrides_applied": [
+        "TRNBGDXXINDEA",
+        "TRNBGDXXINDNE",
+        "TRNBTNXXBGDXX",
+        "TRNBTNXXINDEA",
+        "TRNBTNXXINDNE",
+        "TRNINDEAINDNE",
+        "TRNINDEAINDNO",
+        "TRNINDEAINDSO",
+        "TRNINDEANPLXX",
+        "TRNINDNONPLXX",
+        "TRNINDSOINDWE",
+        "TRNINDSOLKAXX",
+        "TRNLKAXXMDVXX",
+        "TRNMDVXXINDSO",
+        "TRNNPLXXBGDXX"
+      ],
+      "changes": [
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.664000000000001,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.798,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.932,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 6.066,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 6.2,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 7.4,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.6,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 9.932,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 11.264,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 12.596,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.928,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 15.26,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 15.26,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 15.26,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 15.26,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 15.26,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 15.26,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 15.26,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 15.26,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 15.26,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 15.26,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 15.26,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 15.26,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 15.26,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 15.26,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 15.26,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 15.26,
+          "rescap": 5.526,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.25,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.5,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 7.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 9.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 10.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 11.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 12.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 13.83,
+          "rescap": 7.83,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNOINDWE",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 55.08,
+          "rescap": 36.72,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.16,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.36,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.5599999999999999,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.7599999999999999,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.96,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.16,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.3475,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.535,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.7225,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.91,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.16,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.41,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.66,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.66,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.66,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.66,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.66,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.66,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.66,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.66,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.66,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.66,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.66,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.66,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.66,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.66,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.66,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.66,
+          "rescap": 0.16,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.6,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.85,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.1,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 3.0166666666666666,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 3.683333333333333,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.35,
+          "rescap": 1.3,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.2,
+          "rescap": 1.2,
+          "reason": "override_clamped_to_rescap"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.2,
+          "rescap": 1.2,
+          "reason": "override_clamped_to_rescap"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.5,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.8833333333333333,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.2666666666666666,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.65,
+          "rescap": 1.2,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 18.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 19.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 20.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 21.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 22.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.12,
+          "rescap": 18.12,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 22.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.03,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 23.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 24.03,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 24.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.03,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 25.53,
+          "rescap": 22.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 3.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.03,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.03,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.53,
+          "rescap": 3.53,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDEAINDWE",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 31.785000000000004,
+          "rescap": 21.19,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNINDNEINDNO",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.5,
+          "rescap": 3.0,
+          "reason": "multiplicative"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 3.3,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.1,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 4.9,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 5.7,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 6.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 7.0,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 7.75,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.0,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.25,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 8.5,
+          "rescap": 2.5,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.375,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.75,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.75,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.75,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.75,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.75,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.75,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.75,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.75,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.75,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.75,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.75,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.75,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.75,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.75,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.75,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.75,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.17,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.32,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.47,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.62,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.77,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.02,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.27,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 2.4,
+          "rescap": 0.11,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNMDVXXINDSO",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.0,
+          "rescap": 0.0,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2023,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2024,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.06,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2025,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.08,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2026,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.2,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2027,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.32,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2028,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.44000000000000006,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2029,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.56,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2030,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.68,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2031,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.8,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2032,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 0.92,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2033,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2034,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2035,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2036,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2037,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2038,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2039,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2040,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2041,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2042,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2043,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2044,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2045,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2046,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2047,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2048,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2049,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2050,
+          "param": "TotalAnnualMaxCapacityInvestment",
+          "old": 9999,
+          "new": 1.04,
+          "rescap": 0.04,
+          "reason": "override"
+        }
+      ],
+      "preserved": [],
+      "projection_mode_flips": [],
+      "skipped_techs": [],
+      "min_inv_cleared": [
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2030,
+          "param": "TotalAnnualMinCapacityInvestment",
+          "old": 0.5,
+          "new": 0.0,
+          "max_inv": 0.0,
+          "reason": "min_exceeds_computed_max"
+        },
+        {
+          "tech": "TRNLKAXXMDVXX",
+          "year": 2030,
+          "param": "TotalAnnualMinCapacityInvestment",
+          "old": 0.5,
+          "new": 0.0,
+          "max_inv": 0.0,
+          "reason": "min_exceeds_computed_max"
+        }
+      ],
+      "maxcap_opened": [
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2023,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2024,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2025,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2026,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2027,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2028,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2029,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2030,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2031,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2032,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2033,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2034,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2035,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2036,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2037,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2038,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2039,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2040,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2041,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2042,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2043,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2044,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2045,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2046,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2047,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2048,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2049,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDEA",
+          "year": 2050,
+          "old": 5.526,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2023,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2024,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2025,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2026,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2027,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2028,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2029,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2030,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2031,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2032,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2033,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2034,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2035,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2036,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2037,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2038,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2039,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2040,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2041,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2042,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2043,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2044,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2045,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2046,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2047,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2048,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2049,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOLKAXX",
+          "year": 2050,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2023,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2024,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2025,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2026,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2027,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2028,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2029,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2030,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2031,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2032,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2033,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2034,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2035,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2036,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2037,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2038,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2039,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2040,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2041,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2042,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2043,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2044,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2045,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2046,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2047,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2048,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2049,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDSO",
+          "year": 2050,
+          "old": 7.83,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2023,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2024,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2025,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2026,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2027,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2028,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2029,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2030,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2031,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2032,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2033,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2034,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2035,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2036,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2037,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2038,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2039,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2040,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2041,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2042,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2043,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2044,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2045,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2046,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2047,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2048,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2049,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDNE",
+          "year": 2050,
+          "old": 0.16,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2023,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2024,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2025,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2026,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2027,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2028,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2029,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2030,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2031,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2032,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2033,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2034,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2035,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2036,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2037,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2038,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2039,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2040,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2041,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2042,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2043,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2044,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2045,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2046,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2047,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2048,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2049,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEANPLXX",
+          "year": 2050,
+          "old": 1.3,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2023,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2024,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2025,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2026,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2027,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2028,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2029,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2030,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2031,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2032,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2033,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2034,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2035,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2036,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2037,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2038,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2039,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2040,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2041,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2042,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2043,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2044,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2045,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2046,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2047,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2048,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2049,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDNONPLXX",
+          "year": 2050,
+          "old": 1.2,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2023,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2024,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2025,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2026,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2027,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2028,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2029,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2030,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2031,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2032,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2033,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2034,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2035,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2036,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2037,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2038,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2039,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2040,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2041,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2042,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2043,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2044,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2045,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2046,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2047,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2048,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2049,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDSOINDWE",
+          "year": 2050,
+          "old": 18.12,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2023,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2024,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2025,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2026,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2027,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2028,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2029,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2030,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2031,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2032,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2033,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2034,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2035,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2036,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2037,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2038,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2039,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2040,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2041,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2042,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2043,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2044,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2045,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2046,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2047,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2048,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2049,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNO",
+          "year": 2050,
+          "old": 22.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2023,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2024,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2025,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2026,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2027,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2028,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2029,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2030,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2031,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2032,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2033,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2034,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2035,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2036,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2037,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2038,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2039,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2040,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2041,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2042,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2043,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2044,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2045,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2046,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2047,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2048,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2049,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNINDEAINDNE",
+          "year": 2050,
+          "old": 3.53,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2023,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2024,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2025,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2026,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2027,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2028,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2029,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2030,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2031,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2032,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2033,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2034,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2035,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2036,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2037,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2038,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2039,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2040,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2041,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2042,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2043,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2044,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2045,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2046,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2047,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2048,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2049,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBGDXXINDEA",
+          "year": 2050,
+          "old": 2.5,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2023,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2024,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2025,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2026,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2027,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2028,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2029,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2030,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2031,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2032,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2033,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2034,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2035,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2036,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2037,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2038,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2039,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2040,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2041,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2042,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2043,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2044,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2045,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2046,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2047,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2048,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2049,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXBGDXX",
+          "year": 2050,
+          "old": 0,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2023,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2024,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2025,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2026,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2027,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2028,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2029,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2030,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2031,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2032,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2033,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2034,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2035,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2036,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2037,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2038,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2039,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2040,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2041,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2042,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2043,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2044,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2045,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2046,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2047,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2048,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2049,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNBTNXXINDNE",
+          "year": 2050,
+          "old": 0.11,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2023,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2024,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2025,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2026,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2027,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2028,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2029,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2030,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2031,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2032,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2033,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2034,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2035,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2036,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2037,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2038,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2039,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2040,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2041,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2042,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2043,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2044,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2045,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2046,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2047,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2048,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2049,
+          "old": 0.04,
+          "new": 9999
+        },
+        {
+          "tech": "TRNNPLXXBGDXX",
+          "year": 2050,
+          "old": 0.04,
+          "new": 9999
+        }
+      ]
+    }
+  ],
+  "backup_dir": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_latest\\t1_confection\\A3_process\\_run_20260526_165441\\stage5_PRE_TRN_RELAX_20260526_165701",
+  "timestamp": "2026-05-26T16:57:04.722297",
+  "config": {
+    "mode": "multiplicative",
+    "headroom_factor": 1.5,
+    "headroom_gw": 1.0,
+    "overrides": {
+      "TRNBTNXXBGDXX": {
+        "2023": 0.0,
+        "2033": 0.0,
+        "2035": 0.75
+      },
+      "TRNINDSOLKAXX": {
+        "2023": 0.0,
+        "2037": 0.0,
+        "2039": 0.5,
+        "2040": 1.0
+      },
+      "TRNLKAXXMDVXX": {
+        "2023": 0.0
+      },
+      "TRNMDVXXINDSO": {
+        "2023": 0.0
+      },
+      "TRNBGDXXINDNE": {
+        "2023": 0.16,
+        "2028": 1.16,
+        "2032": 1.91,
+        "2035": 2.66
+      },
+      "TRNBTNXXINDNE": {
+        "2023": 0.17,
+        "2027": 0.77,
+        "2029": 1.27,
+        "2030": 2.4
+      },
+      "TRNNPLXXBGDXX": {
+        "2023": 0.04,
+        "2025": 0.08,
+        "2033": 1.04
+      },
+      "TRNINDEANPLXX": {
+        "2023": 1.35,
+        "2027": 2.35,
+        "2030": 4.35
+      },
+      "TRNINDNONPLXX": {
+        "2023": 0.5,
+        "2025": 1.5,
+        "2028": 2.65
+      },
+      "TRNINDEAINDNO": {
+        "2023": 22.53,
+        "2029": 25.53
+      },
+      "TRNINDEAINDSO": {
+        "2023": 7.83,
+        "2029": 13.83
+      },
+      "TRNINDSOINDWE": {
+        "2023": 18.12,
+        "2028": 23.12
+      },
+      "TRNINDEAINDNE": {
+        "2023": 3.53,
+        "2027": 5.53
+      },
+      "TRNBGDXXINDEA": {
+        "2023": 2.5,
+        "2028": 6.5,
+        "2029": 7.0,
+        "2030": 7.75,
+        "2033": 8.5
+      },
+      "TRNBTNXXINDEA": {
+        "2023": 5.53,
+        "2028": 6.2,
+        "2030": 8.6,
+        "2035": 15.26
+      }
+    }
+  },
+  "tech_types_file": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_latest\\t1_confection\\A3_process\\_run_20260526_165441\\TECH_TYPES.csv",
+  "trn_techs_count": 18
+}

@@ -1,0 +1,36 @@
+## relax_interconnectors.yaml — A_Calibrated_BAU
+## Updated: 2026-05-26
+##
+## Same evidence-based corridor overrides as B_Optimised_VRE (these
+## represent the actual project pipeline from Interconnectors.xlsx),
+## but with headroom_factor: 1.0 (no slack beyond the pipeline data).
+##
+## B_Opt uses 1.5× on the 3 India-internal corridors without project
+## data; A_CalBAU uses 1.0× (strict pipeline only).
+
+mode: multiplicative
+headroom_factor: 1.0      # pipeline only, no extra slack
+
+overrides:
+  # ── New corridors (currently zero capacity) ──
+  TRNBTNXXBGDXX: {2023: 0, 2033: 0, 2035: 0.75}          # BTN→BGD dedicated hydro line
+  TRNINDSOLKAXX: {2023: 0, 2037: 0, 2039: 0.5, 2040: 1.0} # India-South ↔ Sri Lanka Phase 1+2
+  TRNLKAXXMDVXX: {2023: 0}                                 # no projects
+  TRNMDVXXINDSO: {2023: 0}                                 # no projects
+
+  # ── Existing corridors with expansion pipeline ──
+  TRNBGDXXINDNE: {2023: 0.16, 2028: 1.16, 2032: 1.91, 2035: 2.66}
+  TRNBTNXXINDNE: {2023: 0.17, 2027: 0.77, 2029: 1.27, 2030: 2.40}
+  TRNNPLXXBGDXX: {2023: 0.04, 2025: 0.08, 2033: 1.04}
+  TRNINDEANPLXX: {2023: 1.35, 2027: 2.35, 2030: 4.35}
+  TRNINDNONPLXX: {2023: 0.50, 2025: 1.50, 2028: 2.65}
+
+  # ── India-internal (large trunk corridors) ──
+  TRNINDEAINDNO: {2023: 22.53, 2029: 25.53}
+  TRNINDEAINDSO: {2023: 7.83, 2029: 13.83}
+  TRNINDSOINDWE: {2023: 18.12, 2028: 23.12}
+  TRNINDEAINDNE: {2023: 3.53, 2027: 5.53}
+
+  # ── Bangladesh/Bhutan ↔ India-East ──
+  TRNBGDXXINDEA: {2023: 2.50, 2028: 6.50, 2029: 7.00, 2030: 7.75, 2033: 8.50}
+  TRNBTNXXINDEA: {2023: 5.53, 2028: 6.20, 2030: 8.60, 2035: 15.26}

@@ -278,6 +278,20 @@ LID_SECURITY_FACTOR = 1.1
 # proportional structure is preserved — all families get the same multiplier).
 LID_RELAXATION_SCHEDULE: dict = {}
 
+# --- Family-specific relaxation ceilings (used by both modes) ----------------
+# When non-empty, caps the relaxation multiplier for techs belonging to a
+# given family (chars 3..6 of the tech code, e.g. COA, SPV, WON, NGA).
+# A family ceiling of 1.0 means the tech family stays at BAU proportions
+# regardless of the relaxation schedule.  Families not listed get the full
+# relaxation_schedule value.  Default {} = no family caps (all families get
+# the same multiplier, backward-compatible).
+# Example YAML:
+#   family_relaxation_ceilings:
+#     COA: 1.0    # coal locked to BAU proportions
+#     PET: 1.0    # petroleum locked
+#     NGA: 1.2    # gas gets slight room
+LID_FAMILY_RELAXATION_CEILINGS: dict = {}
+
 # --- Exempt prefixes (used by both modes) ------------------------------------
 # When non-empty, any tech whose code starts with one of these prefixes gets
 # MaxCapInv = 9999 (uncapped) instead of the computed lid.
@@ -461,6 +475,12 @@ def load_config(yaml_path: Path) -> dict:
     if "lid_floor_gw" in cfg:
         out["lid_floor_gw"] = float(cfg["lid_floor_gw"])
 
+    if "family_relaxation_ceilings" in cfg:
+        raw_frc = cfg["family_relaxation_ceilings"] or {}
+        out["family_relaxation_ceilings"] = {
+            str(k).strip().upper(): float(v) for k, v in raw_frc.items()
+        }
+
     return out
 
 
@@ -474,7 +494,7 @@ def apply_config(cfg: dict) -> None:
     global LID_RULE_MODE, LID_PERCENTAGE_DEFAULT, LID_PERCENTAGE_BY_YEAR
     global LID_SECURITY_FACTOR, LID_RAMP_FROM_DEMAND
     global LID_EXEMPT_PREFIXES, LID_RELAXATION_SCHEDULE
-    global LID_FLOOR_GW
+    global LID_FLOOR_GW, LID_FAMILY_RELAXATION_CEILINGS
     if "rule_mode" in cfg:
         LID_RULE_MODE = cfg["rule_mode"]
     if "percentage_default" in cfg:
@@ -493,6 +513,8 @@ def apply_config(cfg: dict) -> None:
         }
     if "lid_floor_gw" in cfg:
         LID_FLOOR_GW = float(cfg["lid_floor_gw"])
+    if "family_relaxation_ceilings" in cfg:
+        LID_FAMILY_RELAXATION_CEILINGS = dict(cfg["family_relaxation_ceilings"])
 
 
 def relaxation_multiplier_for_year(year: int) -> float:
@@ -979,13 +1001,38 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             # factor.  Has no effect when the schedule is empty (mult = 1.0)
             # or when the tech is already exempt (lid = 9999).
             relax_mult = relaxation_multiplier_for_year(year)
+            # --- Family-specific ceiling: cap the relaxation multiplier for
+            # techs whose family (chars 3..6) has a ceiling defined.  E.g.
+            # COA: 1.0 locks coal to BAU proportions; families not listed
+            # get the full relaxation_schedule value.
+            family_ceiling = None
+            family_capped = False
+            if LID_FAMILY_RELAXATION_CEILINGS and not is_exempt:
+                family_code = tech[3:6]
+                family_ceiling = LID_FAMILY_RELAXATION_CEILINGS.get(family_code)
+                if family_ceiling is not None and relax_mult > family_ceiling:
+                    relax_mult = family_ceiling
+                    family_capped = True
+            # A "locked" family has ceiling <= 1.0 (i.e. stays at or below BAU
+            # proportions).  Locked families do NOT receive the lid_floor_gw
+            # rescue — otherwise families with near-zero BAU share (e.g. BIO,
+            # WAS) accumulate 0.5 GW/yr of spurious build from the floor alone.
+            family_locked = (
+                family_capped
+                and family_ceiling is not None
+                and family_ceiling <= 1.0
+            )
             if not is_exempt and relax_mult != 1.0:
                 lid = min(lid * relax_mult, float(PLACEHOLDER_VALUE))
 
             # --- Lid floor: prevent lid from collapsing to zero when
             # pool_delta goes negative due to retirement.
+            # EXCEPTION: locked families (ceiling <= 1.0) skip the floor.
+            # Without this, families with near-zero BAU share get a guaranteed
+            # 0.5 GW/yr from the floor, accumulating ~14 GW per tech over the
+            # horizon (the BIO/WAS accumulation bug).
             floored = False
-            if not is_exempt and LID_FLOOR_GW > 0 and lid < LID_FLOOR_GW:
+            if not is_exempt and not family_locked and LID_FLOOR_GW > 0 and lid < LID_FLOOR_GW:
                 lid = LID_FLOOR_GW
                 floored = True
 
@@ -995,7 +1042,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                 old is None
                 or (isinstance(old, (int, float))
                     and not pd.isna(old)
-                    and float(old) == float(PLACEHOLDER_VALUE))
+                    and float(old) in (0.0, float(PLACEHOLDER_VALUE)))
             )
             if is_placeholder:
                 proposed = lid
@@ -1003,6 +1050,10 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                     reason = "exempt_uncapped"
                 elif floored:
                     reason = "lid_floor"
+                elif family_locked and LID_FLOOR_GW > 0 and lid < LID_FLOOR_GW:
+                    reason = "lid_floor_suppressed"
+                elif family_capped:
+                    reason = "lid_family_capped"
                 elif relax_mult != 1.0:
                     reason = "lid_relaxed"
                 else:
@@ -1036,6 +1087,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                         "min_inv": min_inv,
                         "lid": lid,
                         "relax_mult": relax_mult,
+                        "family_ceiling": family_ceiling,
                     }
                 )
             else:
@@ -1171,6 +1223,7 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
     log["exempt_prefixes"] = list(LID_EXEMPT_PREFIXES)
     log["relaxation_schedule"] = dict(LID_RELAXATION_SCHEDULE)
     log["lid_floor_gw"] = LID_FLOOR_GW
+    log["family_relaxation_ceilings"] = dict(LID_FAMILY_RELAXATION_CEILINGS)
     log["generation_techs_count"] = (
         len(generation_techs) if generation_techs is not None else None
     )
@@ -1211,6 +1264,10 @@ def print_summary(log: dict) -> None:
         anchors = sorted(LID_RELAXATION_SCHEDULE.items())
         sched = ", ".join(f"{y}:{m:.2f}×" for y, m in anchors)
         print(f"Relaxation    : {sched}")
+    if LID_FAMILY_RELAXATION_CEILINGS:
+        caps = ", ".join(f"{f}:{c:.2f}×" for f, c in
+                         sorted(LID_FAMILY_RELAXATION_CEILINGS.items()))
+        print(f"Family caps   : {caps}  (others: full schedule)")
     if LID_FLOOR_GW > 0:
         print(f"Lid floor     : {LID_FLOOR_GW} GW")
     print(f"GEN-only      : {'ON' if log.get('restrict_to_generation') else 'OFF'}"
@@ -1266,15 +1323,23 @@ def print_summary(log: dict) -> None:
         reason_counts = Counter(c.get("reason", "?") for c in s["changes"])
         n_lid = reason_counts.get("lid_fill", 0)
         n_relaxed = reason_counts.get("lid_relaxed", 0)
+        n_family_capped = reason_counts.get("lid_family_capped", 0)
         n_floor = reason_counts.get("lid_floor", 0)
+        n_floor_suppressed = reason_counts.get("lid_floor_suppressed", 0)
         n_untie = reason_counts.get("untie_min_inv", 0)
-        n_other = sum(reason_counts.values()) - n_lid - n_relaxed - n_floor - n_untie
+        n_other = (sum(reason_counts.values())
+                   - n_lid - n_relaxed - n_family_capped - n_floor
+                   - n_floor_suppressed - n_untie)
         print(f"  MaxInv cells written:")
         print(f"    - filled with lid (pct * pool)    : {n_lid}")
         if n_relaxed:
             print(f"    - filled with relaxed lid          : {n_relaxed}")
+        if n_family_capped:
+            print(f"    - relaxed but family-capped        : {n_family_capped}")
         if n_floor:
             print(f"    - filled with floor ({LID_FLOOR_GW} GW)       : {n_floor}")
+        if n_floor_suppressed:
+            print(f"    - floor suppressed (locked family)  : {n_floor_suppressed}")
         print(f"    - bumped by untie rule (>= MinInv) : {n_untie}")
         if n_other:
             print(f"    - other                            : {n_other}")

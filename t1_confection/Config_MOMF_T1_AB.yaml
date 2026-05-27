@@ -42,7 +42,7 @@ gurobi_threads: 3
 gurobi_seed: 12345            # Random seed for reproducibility
 
 # For delete intermediate files
-del_files: True
+del_files: False
 
 # For run only the main scenarios
 only_main_scenario: False
@@ -89,7 +89,7 @@ annualize_capital: False
 # produced by patch_storage_delay.py, and combined inputs/outputs are written
 # with `storage_delay_prefix_final_files` so baseline OSTRAM_* artifacts are
 # not overwritten.
-storage_delay_active: False
+storage_delay_active: True
 storage_delay_first_n_years: 5
 storage_delay_storage_prefixes:
   - SDS

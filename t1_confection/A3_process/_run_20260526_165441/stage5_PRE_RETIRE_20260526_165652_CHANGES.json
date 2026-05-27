@@ -1,0 +1,2782 @@
+{
+  "file": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_latest\\t1_confection\\A3_process\\_run_20260526_165441\\stage5\\A-O_Parametrization.xlsx",
+  "sheets": [
+    {
+      "sheet": "Secondary Techs",
+      "years": [
+        2023,
+        2024,
+        2025,
+        2026,
+        2027,
+        2028,
+        2029,
+        2030,
+        2031,
+        2032,
+        2033,
+        2034,
+        2035,
+        2036,
+        2037,
+        2038,
+        2039,
+        2040,
+        2041,
+        2042,
+        2043,
+        2044,
+        2045,
+        2046,
+        2047,
+        2048,
+        2049,
+        2050
+      ],
+      "base_year": 2028,
+      "age_based_rules": {
+        "COA": {
+          "lifetime_years": 35,
+          "retirement_profile": "linear"
+        },
+        "NGS": {
+          "lifetime_years": 30,
+          "retirement_profile": "linear"
+        },
+        "PET": {
+          "lifetime_years": 25,
+          "retirement_profile": "linear"
+        },
+        "NUC": {
+          "lifetime_years": 50,
+          "retirement_profile": "linear"
+        }
+      },
+      "scheduled_count": 0,
+      "exempt_patterns": [
+        "PWRHYD*",
+        "PWRSPV*",
+        "PWRWON*",
+        "PWRBCK*"
+      ],
+      "changes": [
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2029,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 5.520629,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0286
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2030,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 5.358257,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0571
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2031,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 5.195886,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0857
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2032,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 5.033514,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1143
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2033,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 4.871143,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1429
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2034,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 4.708771,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1714
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2035,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 4.5464,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2036,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 4.384029,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2286
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2037,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 4.221657,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2571
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2038,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 4.059286,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2857
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2039,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 3.896914,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3143
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2040,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 3.734543,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3429
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2041,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 3.572171,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3714
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2042,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 3.4098,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2043,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 3.247429,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4286
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2044,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 3.085057,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4571
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2045,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 2.922686,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4857
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2046,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 2.760314,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5143
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2047,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 2.597943,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5429
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2048,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 2.435571,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5714
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2049,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 2.2732,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6
+        },
+        {
+          "tech": "PWRCOABGDXX",
+          "year": 2050,
+          "param": "ResidualCapacity",
+          "old": 5.683,
+          "new": 2.110829,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6286
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2029,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 83.334971,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0286
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2030,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 80.883943,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0571
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2031,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 78.432914,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0857
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2032,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 75.981886,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1143
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2033,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 73.530857,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1429
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2034,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 71.079829,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1714
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2035,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 68.6288,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2036,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 66.177771,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2286
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2037,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 63.726743,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2571
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2038,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 61.275714,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2857
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2039,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 58.824686,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3143
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2040,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 56.373657,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3429
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2041,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 53.922629,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3714
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2042,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 51.4716,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2043,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 49.020571,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4286
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2044,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 46.569543,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4571
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2045,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 44.118514,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4857
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2046,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 41.667486,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5143
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2047,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 39.216457,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5429
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2048,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 36.765429,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5714
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2049,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 34.3144,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6
+        },
+        {
+          "tech": "PWRCOAINDWE",
+          "year": 2050,
+          "param": "ResidualCapacity",
+          "old": 85.786,
+          "new": 31.863371,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6286
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2029,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.077333,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0333
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2030,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.074667,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0667
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2031,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.072,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2032,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.069333,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1333
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2033,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.066667,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1667
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2034,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.064,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2035,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.061333,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2333
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2036,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.058667,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2667
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2037,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.056,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2038,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.053333,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3333
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2039,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.050667,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3667
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2040,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.048,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2041,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.045333,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4333
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2042,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.042667,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4667
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2043,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.04,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2044,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.037333,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5333
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2045,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.034667,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5667
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2046,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.032,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2047,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.029333,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6333
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2048,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.026667,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6667
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2049,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.024,
+          "mechanism": "age_based",
+          "retired_fraction": 0.7
+        },
+        {
+          "tech": "PWRNGSINDEA",
+          "year": 2050,
+          "param": "ResidualCapacity",
+          "old": 0.08,
+          "new": 0.021333,
+          "mechanism": "age_based",
+          "retired_fraction": 0.7333
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2029,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 5.795167,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0333
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2030,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 5.595333,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0667
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2031,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 5.3955,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2032,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 5.195667,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1333
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2033,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 4.995833,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1667
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2034,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 4.796,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2035,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 4.596167,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2333
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2036,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 4.396333,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2667
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2037,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 4.1965,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2038,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 3.996667,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3333
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2039,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 3.796833,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3667
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2040,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 3.597,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2041,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 3.397167,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4333
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2042,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 3.197333,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4667
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2043,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 2.9975,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2044,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 2.797667,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5333
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2045,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 2.597833,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5667
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2046,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 2.398,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2047,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 2.198167,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6333
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2048,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 1.998333,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6667
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2049,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 1.7985,
+          "mechanism": "age_based",
+          "retired_fraction": 0.7
+        },
+        {
+          "tech": "PWRNGSINDNO",
+          "year": 2050,
+          "param": "ResidualCapacity",
+          "old": 5.995,
+          "new": 1.598667,
+          "mechanism": "age_based",
+          "retired_fraction": 0.7333
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2029,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.786857,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0286
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2030,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.763714,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0571
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2031,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.740571,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0857
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2032,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.717429,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1143
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2033,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.694286,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1429
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2034,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.671143,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1714
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2035,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.648,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2036,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.624857,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2286
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2037,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.601714,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2571
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2038,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.578571,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2857
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2039,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.555429,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3143
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2040,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.532286,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3429
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2041,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.509143,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3714
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2042,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.486,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2043,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.462857,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4286
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2044,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.439714,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4571
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2045,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.416571,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4857
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2046,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.393429,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5143
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2047,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.370286,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5429
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2048,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.347143,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5714
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2049,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.324,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6
+        },
+        {
+          "tech": "PWRCOALKAXX",
+          "year": 2050,
+          "param": "ResidualCapacity",
+          "old": 0.81,
+          "new": 0.300857,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6286
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2029,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 44.554571,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0286
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2030,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 43.244143,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0571
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2031,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 41.933714,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0857
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2032,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 40.623286,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1143
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2033,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 39.312857,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1429
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2034,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 38.002429,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1714
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2035,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 36.692,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2036,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 35.381571,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2286
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2037,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 34.071143,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2571
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2038,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 32.760714,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2857
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2039,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 31.450286,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3143
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2040,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 30.139857,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3429
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2041,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 28.829429,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3714
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2042,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 27.519,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2043,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 26.208571,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4286
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2044,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 24.898143,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4571
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2045,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 23.587714,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4857
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2046,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 22.277286,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5143
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2047,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 20.966857,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5429
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2048,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 19.656429,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5714
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2049,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 18.346,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6
+        },
+        {
+          "tech": "PWRCOAINDNO",
+          "year": 2050,
+          "param": "ResidualCapacity",
+          "old": 45.865,
+          "new": 17.035571,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6286
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2029,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 35.939943,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0286
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2030,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 34.882886,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0571
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2031,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 33.825829,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0857
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2032,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 32.768771,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1143
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2033,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 31.711714,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1429
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2034,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 30.654657,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1714
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2035,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 29.5976,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2036,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 28.540543,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2286
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2037,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 27.483486,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2571
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2038,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 26.426429,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2857
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2039,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 25.369371,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3143
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2040,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 24.312314,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3429
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2041,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 23.255257,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3714
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2042,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 22.1982,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2043,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 21.141143,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4286
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2044,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 20.084086,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4571
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2045,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 19.027029,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4857
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2046,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 17.969971,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5143
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2047,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 16.912914,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5429
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2048,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 15.855857,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5714
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2049,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 14.7988,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6
+        },
+        {
+          "tech": "PWRCOAINDEA",
+          "year": 2050,
+          "param": "ResidualCapacity",
+          "old": 36.997,
+          "new": 13.741743,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6286
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2029,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 10.4458,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0333
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2030,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 10.0856,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0667
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2031,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 9.7254,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2032,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 9.3652,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1333
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2033,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 9.005,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1667
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2034,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 8.6448,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2035,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 8.2846,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2333
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2036,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 7.9244,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2667
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2037,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 7.5642,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2038,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 7.204,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3333
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2039,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 6.8438,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3667
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2040,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 6.4836,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2041,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 6.1234,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4333
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2042,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 5.7632,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4667
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2043,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 5.403,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2044,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 5.0428,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5333
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2045,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 4.6826,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5667
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2046,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 4.3224,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2047,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 3.9622,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6333
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2048,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 3.602,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6667
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2049,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 3.2418,
+          "mechanism": "age_based",
+          "retired_fraction": 0.7
+        },
+        {
+          "tech": "PWRNGSINDWE",
+          "year": 2050,
+          "param": "ResidualCapacity",
+          "old": 10.806,
+          "new": 2.8816,
+          "mechanism": "age_based",
+          "retired_fraction": 0.7333
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2029,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.728571,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0286
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2030,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.707143,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0571
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2031,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.685714,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0857
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2032,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.664286,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1143
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2033,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.642857,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1429
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2034,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.621429,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1714
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2035,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.6,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2036,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.578571,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2286
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2037,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.557143,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2571
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2038,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.535714,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2857
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2039,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.514286,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3143
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2040,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.492857,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3429
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2041,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.471429,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3714
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2042,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.45,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2043,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.428571,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4286
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2044,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.407143,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4571
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2045,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.385714,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4857
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2046,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.364286,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5143
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2047,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.342857,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5429
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2048,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.321429,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5714
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2049,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.3,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6
+        },
+        {
+          "tech": "PWRCOAINDNE",
+          "year": 2050,
+          "param": "ResidualCapacity",
+          "old": 0.75,
+          "new": 0.278571,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6286
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2029,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 6.2756,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0333
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2030,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 6.0592,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0667
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2031,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 5.8428,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2032,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 5.6264,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1333
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2033,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 5.41,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1667
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2034,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 5.1936,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2035,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 4.9772,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2333
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2036,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 4.7608,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2667
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2037,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 4.5444,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2038,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 4.328,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3333
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2039,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 4.1116,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3667
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2040,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 3.8952,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2041,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 3.6788,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4333
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2042,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 3.4624,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4667
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2043,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 3.246,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2044,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 3.0296,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5333
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2045,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 2.8132,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5667
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2046,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 2.5968,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2047,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 2.3804,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6333
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2048,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 2.164,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6667
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2049,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 1.9476,
+          "mechanism": "age_based",
+          "retired_fraction": 0.7
+        },
+        {
+          "tech": "PWRNGSINDSO",
+          "year": 2050,
+          "param": "ResidualCapacity",
+          "old": 6.492,
+          "new": 1.7312,
+          "mechanism": "age_based",
+          "retired_fraction": 0.7333
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2029,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 1.6095,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0333
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2030,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 1.554,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0667
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2031,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 1.4985,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2032,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 1.443,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1333
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2033,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 1.3875,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1667
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2034,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 1.332,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2035,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 1.2765,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2333
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2036,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 1.221,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2667
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2037,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 1.1655,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2038,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 1.11,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3333
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2039,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 1.0545,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3667
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2040,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 0.999,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2041,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 0.9435,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4333
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2042,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 0.888,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4667
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2043,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 0.8325,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2044,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 0.777,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5333
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2045,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 0.7215,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5667
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2046,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 0.666,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2047,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 0.6105,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6333
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2048,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 0.555,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6667
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2049,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 0.4995,
+          "mechanism": "age_based",
+          "retired_fraction": 0.7
+        },
+        {
+          "tech": "PWRNGSINDNE",
+          "year": 2050,
+          "param": "ResidualCapacity",
+          "old": 1.665,
+          "new": 0.444,
+          "mechanism": "age_based",
+          "retired_fraction": 0.7333
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2029,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 43.712343,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0286
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2030,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 42.426686,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0571
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2031,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 41.141029,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0857
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2032,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 39.855371,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1143
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2033,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 38.569714,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1429
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2034,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 37.284057,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1714
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2035,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 35.9984,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2036,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 34.712743,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2286
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2037,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 33.427086,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2571
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2038,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 32.141429,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2857
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2039,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 30.855771,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3143
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2040,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 29.570114,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3429
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2041,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 28.284457,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3714
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2042,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 26.9988,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2043,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 25.713143,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4286
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2044,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 24.427486,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4571
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2045,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 23.141829,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4857
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2046,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 21.856171,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5143
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2047,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 20.570514,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5429
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2048,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 19.284857,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5714
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2049,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 17.9992,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6
+        },
+        {
+          "tech": "PWRCOAINDSO",
+          "year": 2050,
+          "param": "ResidualCapacity",
+          "old": 44.998,
+          "new": 16.713543,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6286
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2029,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 12.6034,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0333
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2030,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 12.1688,
+          "mechanism": "age_based",
+          "retired_fraction": 0.0667
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2031,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 11.7342,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2032,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 11.2996,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1333
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2033,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 10.865,
+          "mechanism": "age_based",
+          "retired_fraction": 0.1667
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2034,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 10.4304,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2035,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 9.9958,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2333
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2036,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 9.5612,
+          "mechanism": "age_based",
+          "retired_fraction": 0.2667
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2037,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 9.1266,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2038,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 8.692,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3333
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2039,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 8.2574,
+          "mechanism": "age_based",
+          "retired_fraction": 0.3667
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2040,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 7.8228,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2041,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 7.3882,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4333
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2042,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 6.9536,
+          "mechanism": "age_based",
+          "retired_fraction": 0.4667
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2043,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 6.519,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2044,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 6.0844,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5333
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2045,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 5.6498,
+          "mechanism": "age_based",
+          "retired_fraction": 0.5667
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2046,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 5.2152,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2047,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 4.7806,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6333
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2048,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 4.346,
+          "mechanism": "age_based",
+          "retired_fraction": 0.6667
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2049,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 3.9114,
+          "mechanism": "age_based",
+          "retired_fraction": 0.7
+        },
+        {
+          "tech": "PWRNGSBGDXX",
+          "year": 2050,
+          "param": "ResidualCapacity",
+          "old": 13.038,
+          "new": 3.4768,
+          "mechanism": "age_based",
+          "retired_fraction": 0.7333
+        }
+      ],
+      "exempt_skipped": [
+        "PWRWONINDWE",
+        "PWRHYDINDNO",
+        "PWRHYDBTNXX",
+        "PWRBCKINDSO",
+        "PWRWONBTNXX",
+        "PWRHYDINDWE",
+        "PWRSPVBGDXX",
+        "PWRWONLKAXX",
+        "PWRWONBGDXX",
+        "PWRBCKBTNXX",
+        "PWRBCKINDEA",
+        "PWRBCKINDNE",
+        "PWRSPVNPLXX",
+        "PWRSPVINDWE",
+        "PWRSPVINDEA",
+        "PWRWONINDNE",
+        "PWRHYDNPLXX",
+        "PWRWONNPLXX",
+        "PWRSPVINDNE",
+        "PWRHYDINDNE",
+        "PWRWONINDEA",
+        "PWRSPVBTNXX",
+        "PWRBCKNPLXX",
+        "PWRHYDINDSO",
+        "PWRSPVINDSO",
+        "PWRSPVINDNO",
+        "PWRWONINDNO",
+        "PWRSPVLKAXX",
+        "PWRWONINDSO",
+        "PWRBCKINDNO",
+        "PWRBCKMDVXX",
+        "PWRHYDBGDXX",
+        "PWRBCKBGDXX",
+        "PWRBCKLKAXX",
+        "PWRHYDINDEA",
+        "PWRSPVMDVXX",
+        "PWRHYDLKAXX",
+        "PWRBCKINDWE",
+        "PWRWONMDVXX"
+      ],
+      "non_gen_skipped": [
+        "PWRLDSBTNXX",
+        "TRNBTNXXINDEA",
+        "ELCINDNO01",
+        "PWRLDSMDVXX",
+        "ELCBGDXX01",
+        "ELCINDNE01",
+        "TRNINDSOLKAXX",
+        "PWRLDSINDNE",
+        "PWRSDSINDNO",
+        "PWRLDSBGDXX",
+        "ELCBTNXX01",
+        "ELCINDEA01",
+        "ELCNPLXX01",
+        "PWRLDSINDNO",
+        "ELCINDWE01",
+        "ELCLKAXX01",
+        "PWRSDSINDWE",
+        "TRNINDEAINDSO",
+        "TRNINDNOINDWE",
+        "TRNBGDXXINDNE",
+        "ELCINDSO01",
+        "PWRSDSBGDXX",
+        "TRNINDEANPLXX",
+        "PWRLDSINDEA",
+        "TRNLKAXXMDVXX",
+        "PWRSDSBTNXX",
+        "PWRSDSINDSO",
+        "TRNINDNONPLXX",
+        "PWRSDSINDNE",
+        "PWRSDSLKAXX",
+        "PWRLDSLKAXX",
+        "PWRSDSINDEA",
+        "TRNINDSOINDWE",
+        "ELCMDVXX01",
+        "PWRLDSINDWE",
+        "PWRSDSMDVXX",
+        "PWRLDSINDSO",
+        "TRNINDEAINDNO",
+        "PWRSDSNPLXX",
+        "TRNINDEAINDNE",
+        "TRNINDEAINDWE",
+        "TRNINDNEINDNO",
+        "PWRLDSNPLXX",
+        "TRNBGDXXINDEA",
+        "TRNBTNXXBGDXX",
+        "TRNBTNXXINDNE",
+        "TRNMDVXXINDSO",
+        "TRNNPLXXBGDXX"
+      ],
+      "no_rule_skipped": [
+        "PWRBIOINDNO",
+        "PWROILINDSO",
+        "PWRURNINDSO",
+        "PWRWASINDNO",
+        "PWRURNINDWE",
+        "PWRBIOBGDXX",
+        "PWRCSPINDSO",
+        "PWRBIOINDSO",
+        "PWRWASINDEA",
+        "PWRWASLKAXX",
+        "PWRBIOLKAXX",
+        "PWRBIOINDWE",
+        "PWRBIOINDNE",
+        "PWROILBGDXX",
+        "PWRURNINDNO",
+        "PWRBIONPLXX",
+        "PWRWASINDSO",
+        "PWRWASINDWE",
+        "PWRCSPINDNO",
+        "PWROILINDNE",
+        "PWROILLKAXX",
+        "PWRBIOINDEA",
+        "PWROILMDVXX",
+        "PWROILNPLXX",
+        "PWRSHPINDEA",
+        "PWRSHPINDNE",
+        "PWRSHPINDNO",
+        "PWRSHPINDSO",
+        "PWRSHPINDWE"
+      ],
+      "projection_mode_flips": []
+    }
+  ],
+  "backup_dir": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_latest\\t1_confection\\A3_process\\_run_20260526_165441\\stage5_PRE_RETIRE_20260526_165652",
+  "timestamp": "2026-05-26T16:56:56.129025",
+  "config_summary": {
+    "base_year": 2028,
+    "age_based_fuels": [
+      "COA",
+      "NGS",
+      "PET",
+      "NUC"
+    ],
+    "scheduled_count": 0,
+    "exempt_patterns": [
+      "PWRHYD*",
+      "PWRSPV*",
+      "PWRWON*",
+      "PWRBCK*"
+    ]
+  },
+  "gen_techs_count": 137
+}

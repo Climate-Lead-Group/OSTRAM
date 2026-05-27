@@ -1,4 +1,5 @@
 ## lid_rule.yaml — B_Optimised_VRE scenario override
+## Updated: 2026-05-26  (added BIO/WAS family ceilings)
 
 rule_mode: proportional
 security_factor: 1.1
@@ -14,7 +15,26 @@ relaxation_schedule:
 
 ## Minimum MaxCapInv (GW) per tech per year.  Prevents the lid from
 ## collapsing to zero when retirement drives pool_delta negative.
-lid_floor_gw: 0.5
+lid_floor_gw: 0.1
+
+## Family-specific relaxation ceilings.  Caps the relaxation multiplier
+## for techs whose family code (chars 3..6 of tech code) matches a key.
+## Families not listed get the full relaxation_schedule value.
+## A ceiling of 1.0 = locked to BAU proportions (no relaxation).
+##
+## IMPORTANT: families with ceiling <= 1.0 are "locked" families.
+## The lid_floor_gw does NOT apply to locked families — their effective
+## lid is purely proportional (share × pool_delta × ceiling).  This
+## prevents the floor from acting as an implicit per-tech subsidy
+## for families with near-zero BAU share.
+family_relaxation_ceilings:
+  COA: 1.0    # coal locked to BAU proportions
+  PET: 1.01    # petroleum locked
+  OIL: 1.01    # oil locked
+  BIO: 1.0    # biomass locked — prevents floor accumulation
+  WAS: 1.0    # waste locked   — same rationale
+  NGS: 1.2    # gas gets slight room
+  URN: 1.5    # nuclear moderate
 
 ## Uncap storage — upstream scripts set storage MaxCapInv to 0,
 ## and the lid script's preserve-manual rule keeps them there.
