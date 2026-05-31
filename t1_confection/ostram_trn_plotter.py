@@ -102,6 +102,20 @@ def sc_label(sc):
     return SCENARIO_SHORT.get(sc, sc)
 
 
+def label_line_end(ax, x, y, color, fmt="{:.1f}", dx=5, fontsize=8):
+    """Annotate the final (rightmost) value at the end of a line.
+    Works with pandas Series, Index, or numpy arrays."""
+    if len(x) == 0:
+        return
+    xl = x.iloc[-1] if hasattr(x, "iloc") else x[-1]
+    yl = y.iloc[-1] if hasattr(y, "iloc") else y[-1]
+    if pd.isna(xl) or pd.isna(yl):
+        return
+    ax.annotate(fmt.format(yl), xy=(xl, yl),
+                xytext=(dx, 0), textcoords="offset points",
+                fontsize=fontsize, va="center", fontweight="bold", color=color)
+
+
 # ──────────────────────────────────────────────────────────────
 #  DATA LOADING
 # ──────────────────────────────────────────────────────────────
@@ -164,8 +178,9 @@ def plot_T1_category_overview(cap, outdir, scenarios):
         for cat in cats:
             c = agg[agg["category"]==cat].sort_values("YEAR")
             if not c.empty:
-                ax.plot(c["YEAR"], c["TotalCapacityAnnual"], label=cat,
-                        color=cat_colors[cat], linewidth=2)
+                line, = ax.plot(c["YEAR"], c["TotalCapacityAnnual"], label=cat,
+                                color=cat_colors[cat], linewidth=2)
+                label_line_end(ax, c["YEAR"], c["TotalCapacityAnnual"], line.get_color(), fmt="{:.0f}")
         ax.set_title(sc_label(sc), fontweight="bold")
         ax.set_xlabel("Year"); ax.xaxis.set_major_locator(mticker.MultipleLocator(5))
         ax.grid(alpha=0.2)
@@ -288,8 +303,9 @@ def plot_T6_key_corridors(cap, outdir, scenarios):
         for sc in scenarios:
             t = cap[(cap["Scenario"]==sc) & (cap["TECHNOLOGY"]==tech)].sort_values("YEAR")
             if not t.empty:
-                ax.plot(t["YEAR"], t["TotalCapacityAnnual"],
-                        label=sc_label(sc), color=SC_COLORS[sc], linewidth=1.8)
+                line, = ax.plot(t["YEAR"], t["TotalCapacityAnnual"],
+                                label=sc_label(sc), color=SC_COLORS[sc], linewidth=1.8)
+                label_line_end(ax, t["YEAR"], t["TotalCapacityAnnual"], line.get_color(), fmt="{:.1f}", fontsize=7)
         ax.set_title(f"{CORRIDOR_NAMES.get(tech,tech)}\n({cat})", fontsize=10, fontweight="bold")
         ax.xaxis.set_major_locator(mticker.MultipleLocator(5))
         ax.grid(alpha=0.2); ax.tick_params(labelsize=8)

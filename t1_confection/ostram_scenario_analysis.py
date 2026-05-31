@@ -179,6 +179,20 @@ def save_fig(fig, outdir, name):
     print(f"  ✓  {path}")
 
 
+def label_line_end(ax, x, y, color, fmt="{:.1f}", dx=5, fontsize=8):
+    """Annotate the final (rightmost) value at the end of a line.
+    Works with pandas Series, Index, or numpy arrays."""
+    if len(x) == 0:
+        return
+    xl = x.iloc[-1] if hasattr(x, "iloc") else x[-1]
+    yl = y.iloc[-1] if hasattr(y, "iloc") else y[-1]
+    if pd.isna(xl) or pd.isna(yl):
+        return
+    ax.annotate(fmt.format(yl), xy=(xl, yl),
+                xytext=(dx, 0), textcoords="offset points",
+                fontsize=fontsize, va="center", fontweight="bold", color=color)
+
+
 # ──────────────────────────────────────────────────────────────
 #  DATA LOADING
 # ──────────────────────────────────────────────────────────────
@@ -423,17 +437,28 @@ def plot_mincapinv_floor(constr_df: pd.DataFrame, outdir: str, scenarios: list):
 #  PLOT 5: Cross-scenario capacity delta vs BAU
 # ──────────────────────────────────────────────────────────────
 
-def plot_capacity_delta_vs_bau(cap_df: pd.DataFrame, outdir: str, scenarios: list):
-    """For each non-BAU scenario, show delta TotalCapacityAnnual by family vs BAU."""
-    bau_name = "BAU"
-    if bau_name not in cap_df["Scenario"].unique():
-        print("  ⚠  No BAU scenario found; skipping delta plot.")
-        return
+def plot_capacity_delta_vs_bau(cap_df: pd.DataFrame, outdir: str, scenarios: list,
+                               baseline: str = "A_Calibrated_BAU"):
+    """For each non-baseline scenario, show delta TotalCapacityAnnual by family
+    vs the chosen baseline (default A_Calibrated_BAU)."""
+    avail = set(cap_df["Scenario"].unique())
+    # fall back gracefully if the requested baseline isn't present
+    if baseline not in avail:
+        for cand in ("A_Calibrated_BAU", "BAU"):
+            if cand in avail:
+                print(f"  ⚠  Baseline '{baseline}' not found; using '{cand}' instead.")
+                baseline = cand
+                break
+        else:
+            print(f"  ⚠  Baseline '{baseline}' not found and no fallback available; skipping delta plot.")
+            return
+    bau_name = baseline
     bau = cap_df[cap_df["Scenario"] == bau_name].copy()
     bau_piv = bau.pivot_table(index="YEAR", columns="family",
                                values="TotalCapacityAnnual", aggfunc="sum").fillna(0)
     others = [s for s in scenarios if s != bau_name]
     if not others:
+        print(f"  ⚠  No scenarios to compare against baseline '{bau_name}'; skipping delta plot.")
         return
     fig, axes = plt.subplots(1, len(others), figsize=(6 * len(others), 5), sharey=True)
     if len(others) == 1:
@@ -456,12 +481,14 @@ def plot_capacity_delta_vs_bau(cap_df: pd.DataFrame, outdir: str, scenarios: lis
             if f in delta.columns and delta[f].abs().max() > 0.01:
                 ax.plot(years, delta[f], label=f, color=tech_color(f), linewidth=1.5)
         ax.axhline(0, color="grey", linewidth=0.5, linestyle="--")
-        ax.set_title(f"Δ vs BAU₀ — {SCENARIO_SHORT.get(sc, sc)}", fontweight="bold")
+        ax.set_title(f"Δ vs {SCENARIO_SHORT.get(bau_name, bau_name)} — {SCENARIO_SHORT.get(sc, sc)}",
+                     fontweight="bold")
         ax.set_xlabel("Year")
         ax.xaxis.set_major_locator(mticker.MultipleLocator(5))
     axes[0].set_ylabel("ΔCapacity (GW)")
     axes[-1].legend(fontsize=7, loc="upper left")
-    fig.suptitle("Capacity Delta vs BAU₀ by Family", fontsize=13, fontweight="bold", y=1.02)
+    fig.suptitle(f"Capacity Delta vs {SCENARIO_SHORT.get(bau_name, bau_name)} by Family",
+                 fontsize=13, fontweight="bold", y=1.02)
     fig.tight_layout()
     save_fig(fig, outdir, "05_capacity_delta_vs_bau")
 
@@ -578,7 +605,8 @@ def plot_backstop(cap_df_full: pd.DataFrame, prod_df: pd.DataFrame,
     for sc in scenarios:
         sub = bck_cap[bck_cap["Scenario"] == sc]
         agg = sub.groupby("YEAR")["TotalCapacityAnnual"].sum()
-        ax1.plot(agg.index, agg.values, label=SCENARIO_SHORT.get(sc, sc), linewidth=1.5)
+        line, = ax1.plot(agg.index, agg.values, label=SCENARIO_SHORT.get(sc, sc), linewidth=1.5)
+        label_line_end(ax1, agg.index, agg.values, line.get_color(), fmt="{:.1f}")
     ax1.set_title("Backstop Capacity (PWRBCK)", fontweight="bold")
     ax1.set_ylabel("GW")
     ax1.legend(fontsize=9)
@@ -588,7 +616,8 @@ def plot_backstop(cap_df_full: pd.DataFrame, prod_df: pd.DataFrame,
         sub = bck_prod[bck_prod["Scenario"] == sc]
         agg = sub.groupby("YEAR")["ProductionByTechnologyAnnual"].sum()
         if not agg.empty:
-            ax2.plot(agg.index, agg.values, label=SCENARIO_SHORT.get(sc, sc), linewidth=1.5)
+            line, = ax2.plot(agg.index, agg.values, label=SCENARIO_SHORT.get(sc, sc), linewidth=1.5)
+            label_line_end(ax2, agg.index, agg.values, line.get_color(), fmt="{:.0f}")
     ax2.set_title("Backstop Generation (PWRBCK)", fontweight="bold")
     ax2.set_ylabel("PJ")
     ax2.legend(fontsize=9)
@@ -683,7 +712,8 @@ def plot_txt_constraint_comparison(txt_files: dict, outdir: str):
         for label, df in all_data.items():
             sub = df[df["TECHNOLOGY"] == tech].sort_values("YEAR")
             if not sub.empty:
-                ax.plot(sub["YEAR"], sub["VALUE"], label=label, linewidth=1.2)
+                line, = ax.plot(sub["YEAR"], sub["VALUE"], label=label, linewidth=1.2)
+                label_line_end(ax, sub["YEAR"], sub["VALUE"], line.get_color(), fmt="{:.0f}", fontsize=6)
         ax.set_title(tech, fontsize=9, fontweight="bold")
         ax.xaxis.set_major_locator(mticker.MultipleLocator(5))
         ax.tick_params(labelsize=7)
@@ -746,7 +776,8 @@ def plot_new_capacity_timeseries(nc_df: pd.DataFrame, outdir: str, scenarios: li
         for sc in scenarios:
             s = sub[sub["Scenario"] == sc].groupby("YEAR")["NewCapacity"].sum()
             if not s.empty:
-                ax.plot(s.index, s.values, label=SCENARIO_SHORT.get(sc, sc), linewidth=1.2)
+                line, = ax.plot(s.index, s.values, label=SCENARIO_SHORT.get(sc, sc), linewidth=1.2)
+                label_line_end(ax, s.index, s.values, line.get_color(), fmt="{:.1f}", fontsize=6)
         ax.set_title(fam, fontsize=9, fontweight="bold", color=tech_color(fam))
         ax.xaxis.set_major_locator(mticker.MultipleLocator(5))
         ax.tick_params(labelsize=7)
@@ -815,6 +846,8 @@ def main():
                         help="Output directory for PNG plots (default: ostram_plots)")
     parser.add_argument("--scenarios", default=None,
                         help="Comma-separated scenario names to include")
+    parser.add_argument("--baseline", default="A_Calibrated_BAU",
+                        help="Reference scenario for the capacity-delta plot (default: A_Calibrated_BAU)")
     args = parser.parse_args()
 
     outdir = args.output_dir
@@ -869,7 +902,7 @@ def main():
     plot_mincapinv_floor(constr, outdir, scenarios)
 
     print("[5/14] Capacity delta vs BAU...")
-    plot_capacity_delta_vs_bau(cap_gen, outdir, scenarios)
+    plot_capacity_delta_vs_bau(cap_gen, outdir, scenarios, baseline=args.baseline)
 
     print("[6/14] Generation mix...")
     plot_generation_mix(prod, outdir, scenarios)
