@@ -1,36 +1,44 @@
-# C_Target_VRE — LID rule override.
-#
-# The default LID rule (proportional mode, tech_share * pool_delta) is the
-# BAU narrative: "fleet evolves proportionally to its 2024 composition."
-# That narrative actively forbids the structural mix change required by an
-# NDC-driven scenario — solar in BGDXX held 2.77% of the 2024 fleet, so the
-# proportional rule kept its annual ramp at ~3% of pool_delta forever,
-# making the 5-10% VRE generation floors set by set_vre_targets infeasible.
-#
-# Switching to uniform mode with a permissive near-term schedule restores
-# the headroom needed for the NDC ramp without abandoning the lid altogether
-# (non-VRE techs still get the same per-tech cap, so coal/gas can't grow
-# pathologically either).
-#
-# Schedule choice (10% / 10% / 50%) is empirically calibrated:
-#   - INDEA 2030 floor (10% × BAU electricity gen = 140.13 PJ) requires
-#     ~26.9 GW installed PWRSPVINDEA by 2030.
-#   - Uniform lid at base_pct=10% with INDEA pool=44.9 GW and demand mult
-#     ~1.2 (avg 2024-2030) yields Σlid_2024-2030 ≈ 42.4 GW, leaving 1.6x
-#     headroom over the 26.9 GW requirement.
-#   - Smaller schedules (5%) leave INDEA 2030 1.21x short, so 10% is the
-#     minimum that resolves all six target cells (BGDXX/INDEA/NPLXX × 2030/2035).
-#
-# After 2030 the default decade-ramp (10% / 50%) is sufficient for the 2035
-# milestone targets.
+## lid_rule.yaml — C_Target_VRE scenario override (v3)
+## IDENTICAL to B_Optimised_VRE. No solar/wind exemption.
+##
+## Solar is handled entirely by set_vre_targets.py via the cap_envelope
+## feature (bounded MaxCap/MaxCapInv following each region's NDC floor
+## trajectory). Wind sits on the normal proportional lid — its NDC floors
+## (<=19%) are within the 3.0x relaxation ceiling.
+##
+## v1 BUG (resolved): exempting PWRWON/PWRSPV uncapped them -> runaway wind
+## (1,782 GW) and solar front-loading. The cap_envelope approach replaces
+## exemption with a floor-derived capacity ceiling. This file no longer
+## differs from B at all.
 
-rule_mode: uniform
+rule_mode: proportional
+security_factor: 1.1
 
-percentage_by_year:
-  2023-2030: 0.10
-  2031-2040: 0.10
-  2041-2050: 0.50
+relaxation_schedule:
+  2023: 1.0
+  2027: 1.0
+  2030: 1.1
+  2035: 1.3
+  2040: 1.5
+  2045: 2.0
+  2050: 3.0
 
-# security_factor and ramp_from_demand left at module defaults (1.1 and True);
-# they only affect proportional mode and the demand-scaling layer, which still
-# apply meaningfully in uniform mode.
+lid_floor_gw: 0.1
+
+family_relaxation_ceilings:
+  COA: 1.0    # coal locked to BAU proportions
+  PET: 1.01   # petroleum locked
+  OIL: 1.01   # oil locked
+  BIO: 1.0    # biomass locked — prevents floor accumulation
+  WAS: 1.0    # waste locked
+  NGS: 1.2    # gas gets slight room
+  URN: 1.5    # nuclear moderate
+
+exempt_prefixes:
+  - PWRSDS     # Short-duration storage
+  - PWRLDS     # Long-duration storage
+
+adequacy_floor_schedule:
+  2040: 0.0
+  2045: 0.08
+  2050: 0.20

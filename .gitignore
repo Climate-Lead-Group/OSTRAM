@@ -127,3 +127,18 @@ t1_confection/test_a3_mod/dry_run/
 t1_confection/OSTRAM_Combined_Inputs.csv
 t1_confection/OSTRAM_Combined_Outputs.csv
 t1_confection/OSTRAM_slice_*.csv
+
+# Local/generated OSTRAM archives and combined datasets
+t1_confection/OSTRAM_Combined_*.csv
+t1_confection/OSTRAM_Combined_*.zip
+t1_confection/OSTRAM_slice_*.csv
+t1_confection/OSTRAM_Outputs*.csv
+t1_confection/OSTRAM_StorageDelay_*.csv
+
+# Large solver artifacts
+t1_confection/Executables/**/*.lp
+t1_confection/Executables/**/*.sol
+t1_confection/Executables/**/*.feasopt.sol
+
+# Local A3 run snapshots
+t1_confection/A3_process/_run_*/

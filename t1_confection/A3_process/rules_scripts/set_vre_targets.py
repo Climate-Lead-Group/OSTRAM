@@ -77,7 +77,13 @@ YAML_FILE_NAME = "set_vre_targets.yaml"
 RES_PARAM = "ResidualCapacity"
 MIN_INV_PARAM = "TotalAnnualMinCapacityInvestment"
 MAX_INV_PARAM = "TotalAnnualMaxCapacityInvestment"
+MAX_CAP_PARAM = "TotalAnnualMaxCapacity"
 ACTIVITY_LOWER_PARAM = "TotalTechnologyAnnualActivityLowerLimit"
+ACTIVITY_UPPER_PARAM = "TotalTechnologyAnnualActivityUpperLimit"
+
+# Capacity column in the combined B2 output (used to derive realized yield
+# PJ/GW for the cap_envelope feature).
+PROD_CAP_COL = "TotalCapacityAnnual"
 
 PROJ_MODE_COL = "Projection.Mode"
 PROJ_MODE_EMPTY = "EMPTY"
@@ -98,12 +104,29 @@ UNTIE_MULTIPLIER = 1.01
 BACKUP_TAG = "_PRE_VRE_TARGETS_"
 
 # ---------------------------------------------------------------------------
-# ProductionByTechnology.csv column names (otoole/OSeMOSYS standard)
+# BAU production source — column names and accepted file layouts
 # ---------------------------------------------------------------------------
+# Two layouts are supported transparently:
+#   1. otoole's separate-parameter file 'ProductionByTechnology.csv'
+#      (long format, production in the "VALUE" column).
+#   2. the combined B2 solver output 'Pre_processed_<scenario>_..._output.csv'
+#      (wide format, production in the "ProductionByTechnologyAnnual" column,
+#      or "ProductionByTechnology" at timeslice level).
 PROD_CSV_NAME = "ProductionByTechnology.csv"
 PROD_COL_TECH = "TECHNOLOGY"
 PROD_COL_YEAR = "YEAR"
 PROD_COL_VALUE = "VALUE"
+
+# Production-value columns, in priority order. The first one present wins.
+PROD_VALUE_CANDIDATES = (
+    "VALUE",                          # otoole separate ProductionByTechnology.csv
+    "ProductionByTechnologyAnnual",   # combined B2 output (annual)
+    "ProductionByTechnology",         # combined B2 output (timeslice-level)
+)
+
+# Glob patterns used to locate the combined B2 output inside a directory
+# when no otoole ProductionByTechnology.csv is present.
+COMBINED_OUTPUT_GLOBS = ("*output.csv", "Pre_processed*.csv")
 
 
 # ---------------------------------------------------------------------------
@@ -125,6 +148,30 @@ def load_config(yaml_path: Path) -> dict:
 
     max_floor_share = float(cfg.get("max_floor_share", 0.80))
 
+    # cap_envelope feature: when a target sets cap_envelope: true, write a
+    # bounded MaxCap/MaxCapInv envelope derived from the floor's capacity
+    # trajectory (instead of exempting the tech in the lid). headroom is the
+    # fractional slack above the floor-implied capacity; min_inv_gw is the
+    # minimum per-year build allowance so small/early adjustments stay feasible.
+    cap_envelope_headroom = float(cfg.get("cap_envelope_headroom", 0.20))
+    cap_envelope_min_inv_gw = float(cfg.get("cap_envelope_min_inv_gw", 2.0))
+    default_capacity_factor = float(cfg.get("default_capacity_factor", 0.10))
+
+    # pin_generation_to_target: when true, cap_envelope targets also get a
+    # TotalTechnologyAnnualActivityUpperLimit = max(target_gen, CalBAU_gen),
+    # which pins generation AT the NDC share (not above it) while leaving the
+    # capacity envelope generous — so the solver keeps its room (no degenerate
+    # narrow capacity band). The max() guard prevents force-curtailing planned
+    # capacity in regions whose baseline already exceeds the early floor.
+    pin_generation_to_target = bool(cfg.get("pin_generation_to_target", False))
+
+    # pin_slack: small fractional gap between the activity lower and upper
+    # limits so generation is pinned to a NARROW RANGE, not an exact equality.
+    # upper = max(target_gen * (1 + pin_slack), CalBAU_gen). An exact equality
+    # (slack 0) is a fixed variable / zero-width interval and can be a numeric
+    # knife-edge; ~1% gives the solver a real interval at negligible overshoot.
+    pin_slack = float(cfg.get("pin_slack", 0.01))
+
     # Parse targets
     raw_targets = cfg.get("targets", []) or []
     targets = []
@@ -135,12 +182,19 @@ def load_config(yaml_path: Path) -> dict:
         if not cr or not tech or not schedule:
             raise ValueError(f"Target entry missing cr/tech/schedule: {entry}")
         schedule = {int(y): float(v) for y, v in schedule.items()}
-        targets.append({"cr": cr, "tech": tech, "schedule": schedule})
+        cap_envelope = bool(entry.get("cap_envelope", False))
+        targets.append({"cr": cr, "tech": tech, "schedule": schedule,
+                        "cap_envelope": cap_envelope})
 
     return {
         "bau_results_path": bau_results_path,
         "constraint_type": constraint_type,
         "max_floor_share": max_floor_share,
+        "cap_envelope_headroom": cap_envelope_headroom,
+        "cap_envelope_min_inv_gw": cap_envelope_min_inv_gw,
+        "default_capacity_factor": default_capacity_factor,
+        "pin_generation_to_target": pin_generation_to_target,
+        "pin_slack": pin_slack,
         "targets": targets,
     }
 
@@ -148,47 +202,154 @@ def load_config(yaml_path: Path) -> dict:
 # ---------------------------------------------------------------------------
 # BAU results loader
 # ---------------------------------------------------------------------------
+def _resolve_bau_csv(bau_results_path: Path) -> Path:
+    """Resolve the BAU production CSV from a file OR directory path.
+
+    Accepts, in order of preference:
+      * a direct path to a .csv file              -> used as-is
+      * a directory holding 'ProductionByTechnology.csv' (otoole layout)
+      * a directory holding the combined B2 output ('*output.csv')
+
+    Raises a clear error (rather than silently guessing) if a directory
+    contains several candidate output CSVs.
+    """
+    p = Path(bau_results_path)
+
+    if p.is_file():
+        return p
+
+    if p.is_dir():
+        otoole = p / PROD_CSV_NAME
+        if otoole.is_file():
+            return otoole
+        candidates: list = []
+        for pattern in COMBINED_OUTPUT_GLOBS:
+            for hit in sorted(p.glob(pattern)):
+                if hit.is_file() and hit not in candidates:
+                    candidates.append(hit)
+        if len(candidates) == 1:
+            return candidates[0]
+        if len(candidates) > 1:
+            raise FileNotFoundError(
+                f"Multiple candidate output CSVs in {p}: "
+                f"{[c.name for c in candidates]}. "
+                f"Set bau_results_path to the exact file."
+            )
+
+    raise FileNotFoundError(
+        f"BAU results not found at {bau_results_path}. Expected a directory "
+        f"containing '{PROD_CSV_NAME}' or a combined '*output.csv', or a "
+        f"direct path to the CSV. Run the BAU/CalBAU scenario first."
+    )
+
+
 def load_bau_total_production(bau_results_path: Path, gen_techs: set) -> dict:
-    """Read ProductionByTechnology.csv and return {(cr, year): total_pj}.
+    """Read BAU production and return {(cr, year): total_pj}.
 
     Aggregates production across electricity GENERATION technologies (per
     TECH_TYPES.csv) per country-region per year. Country-region is extracted
     from the TECHNOLOGY column (chars 6..11 for 11-char PWR* codes).
 
-    Non-generation flows (DSPTRN fuel distribution, TRN* fuel transport,
-    RNW* renewable accounting) are excluded so the denominator reflects only
-    electricity generated, not all sector activity.
+    Reads either otoole's 'ProductionByTechnology.csv' or the combined B2
+    solver output transparently (see PROD_VALUE_CANDIDATES). Non-generation
+    flows (DSPTRN distribution, TRN* transport, RNW* accounting, storage) are
+    excluded so the denominator reflects only electricity generated.
     """
-    csv_path = Path(bau_results_path) / PROD_CSV_NAME
-    if not csv_path.is_file():
-        raise FileNotFoundError(
-            f"BAU results not found at {csv_path}. "
-            f"Run BAU scenario first."
-        )
+    csv_path = _resolve_bau_csv(bau_results_path)
 
     df = pd.read_csv(csv_path)
-    required_cols = [PROD_COL_TECH, PROD_COL_YEAR, PROD_COL_VALUE]
-    missing = [c for c in required_cols if c not in df.columns]
-    if missing:
+
+    # Locate the production-value column.
+    value_col = next((c for c in PROD_VALUE_CANDIDATES if c in df.columns), None)
+    if (PROD_COL_TECH not in df.columns or PROD_COL_YEAR not in df.columns
+            or value_col is None):
         raise ValueError(
-            f"{PROD_CSV_NAME} missing columns {missing}. "
+            f"{csv_path.name} missing required columns. Need '{PROD_COL_TECH}', "
+            f"'{PROD_COL_YEAR}', and one of {PROD_VALUE_CANDIDATES}. "
             f"Found: {list(df.columns)}"
         )
 
+    df = df.dropna(subset=[PROD_COL_TECH, PROD_COL_YEAR, value_col]).copy()
+    df[PROD_COL_TECH] = df[PROD_COL_TECH].astype(str)
+    df[PROD_COL_YEAR] = df[PROD_COL_YEAR].astype(float).astype(int)
+
+    # The combined output carries an annual value that may repeat across the
+    # wide file's timeslice rows. Collapse to one value per (tech, year) before
+    # summing so timeslices are never double-counted. The otoole long format
+    # ("VALUE") and the timeslice-level column are summed as-is.
+    if value_col == "ProductionByTechnologyAnnual":
+        df = df.groupby([PROD_COL_TECH, PROD_COL_YEAR],
+                        as_index=False)[value_col].max()
+
     # Keep only electricity generation techs (length-11 PWR* in the
     # GENERATION category from TECH_TYPES.csv).
-    df = df.copy()
-    df["_tech_len"] = df[PROD_COL_TECH].astype(str).str.len()
-    df = df[df["_tech_len"] == PWR_TECH_LENGTH]
+    df = df[df[PROD_COL_TECH].str.len() == PWR_TECH_LENGTH]
     df = df[df[PROD_COL_TECH].isin(gen_techs)]
-    df["_cr"] = df[PROD_COL_TECH].astype(str).str[COUNTRY_REGION_SLICE]
+    df["_cr"] = df[PROD_COL_TECH].str[COUNTRY_REGION_SLICE]
 
     # Aggregate: total generation per (cr, year)
-    agg = df.groupby(["_cr", PROD_COL_YEAR])[PROD_COL_VALUE].sum()
+    agg = df.groupby(["_cr", PROD_COL_YEAR])[value_col].sum()
     result: dict = {}
     for (cr, year), val in agg.items():
         result[(str(cr), int(year))] = float(val)
     return result
+
+
+def load_bau_tech_yield(bau_results_path: Path, techs: set,
+                        default_cf: float) -> tuple:
+    """Return (yields, cap_traj) from CalBAU output.
+
+    yields    : {tech: realized PJ/GW}  (CF * CapacityToActivityUnit)
+    cap_traj  : {tech: {year: TotalCapacityAnnual GW}}  (CalBAU's installed path)
+
+    The cap trajectory is used by the cap_envelope feature so the envelope is
+    never sized below what CalBAU actually built — which reflects planned
+    capacity (e.g. Bangladesh's planned solar) and the calibrated baseline.
+    Yield falls back to default_cf * C2AU for techs CalBAU never built.
+    Reads the same file as load_bau_total_production (otoole or combined B2).
+    """
+    fallback = default_cf * C2AU
+    if not techs:
+        return {}, {}
+    csv_path = _resolve_bau_csv(bau_results_path)
+    df = pd.read_csv(csv_path)
+
+    prod_col = next((c for c in PROD_VALUE_CANDIDATES if c in df.columns), None)
+    cap_col = PROD_CAP_COL if PROD_CAP_COL in df.columns else None
+    if prod_col is None or cap_col is None:
+        return {t: fallback for t in techs}, {}
+
+    df = df.dropna(subset=[PROD_COL_TECH, PROD_COL_YEAR]).copy()
+    df[PROD_COL_TECH] = df[PROD_COL_TECH].astype(str)
+    df[PROD_COL_YEAR] = df[PROD_COL_YEAR].astype(float).astype(int)
+
+    # Production and capacity sit on different rows in the wide format —
+    # aggregate each to one value per (tech, year), then merge.
+    p = (df.dropna(subset=[prod_col])
+           .groupby([PROD_COL_TECH, PROD_COL_YEAR], as_index=False)[prod_col].max())
+    c = (df.dropna(subset=[cap_col])
+           .groupby([PROD_COL_TECH, PROD_COL_YEAR], as_index=False)[cap_col].max())
+
+    # Capacity trajectory per tech (for the envelope baseline)
+    cap_traj: dict = {}
+    for t in techs:
+        sub = c[c[PROD_COL_TECH] == t]
+        cap_traj[t] = {int(r[PROD_COL_YEAR]): float(r[cap_col])
+                       for _, r in sub.iterrows() if r[cap_col] > 0}
+
+    # Realized yield = production / capacity (averaged over years with both)
+    m = p.merge(c, on=[PROD_COL_TECH, PROD_COL_YEAR], how="inner")
+    m = m[(m[cap_col] > 1e-6) & (m[prod_col] > 1e-9)]
+    m["_yield"] = m[prod_col] / m[cap_col]
+    by_tech = m.groupby(PROD_COL_TECH)["_yield"].mean()
+
+    yields: dict = {}
+    for t in techs:
+        if t in by_tech.index and by_tech[t] > 0:
+            yields[t] = float(by_tech[t])
+        else:
+            yields[t] = fallback
+    return yields, cap_traj
 
 
 # ---------------------------------------------------------------------------
@@ -389,11 +550,20 @@ def find_or_create_param_row(ws, tech: str, param: str, tech_col: int,
 # Core logic
 # ---------------------------------------------------------------------------
 def apply_vre_targets(ws, config: dict, total_prod: dict,
-                      gen_techs: set, year_cols: dict) -> dict:
+                      gen_techs: set, year_cols: dict,
+                      tech_yield: dict = None,
+                      tech_bau_cap: dict = None) -> dict:
     """Write VRE target floors into the worksheet. Returns a log dict."""
     constraint_type = config["constraint_type"]
     max_floor_share = config["max_floor_share"]
     targets = config["targets"]
+    tech_yield = tech_yield or {}
+    tech_bau_cap = tech_bau_cap or {}
+    env_headroom = config.get("cap_envelope_headroom", 0.20)
+    env_min_inv = config.get("cap_envelope_min_inv_gw", 2.0)
+    default_cf = config.get("default_capacity_factor", 0.10)
+    pin_gen = config.get("pin_generation_to_target", False)
+    pin_slack = config.get("pin_slack", 0.01)
 
     headers = find_named_columns(ws, ["Tech", "Parameter", PROJ_MODE_COL])
     tech_col = headers.get("Tech")
@@ -444,6 +614,26 @@ def apply_vre_targets(ws, config: dict, total_prod: dict,
                 if val is not None:
                     try:
                         cf_map[(t, year)] = float(val)
+                    except (TypeError, ValueError):
+                        pass
+
+    # Build MinCapInv lookup (needed to clamp the cap_envelope MaxCapInv so it
+    # never falls below pre-existing planned capacity, which would violate the
+    # MaxCapInv >= MinCapInv solver check). Built whenever any target uses the
+    # cap_envelope feature.
+    has_envelope = any(t.get("cap_envelope") for t in targets)
+    mincapinv_map: dict = {}
+    if has_envelope:
+        for row_idx in range(2, ws.max_row + 1):
+            t = ws.cell(row=row_idx, column=tech_col).value
+            p = ws.cell(row=row_idx, column=param_col).value
+            if p != MIN_INV_PARAM:
+                continue
+            for year, col in year_cols.items():
+                val = ws.cell(row=row_idx, column=col).value
+                if val is not None:
+                    try:
+                        mincapinv_map[(t, year)] = float(val)
                     except (TypeError, ValueError):
                         pass
 
@@ -521,6 +711,129 @@ def apply_vre_targets(ws, config: dict, total_prod: dict,
                             {"tech": tech, "param": ACTIVITY_LOWER_PARAM}
                         )
 
+            # --- Capacity envelope (bounded MaxCap + MaxCapInv) ---
+            # When a target opts in (cap_envelope: true), bound the tech from
+            # ABOVE so it follows the floor's capacity trajectory rather than
+            # being exempted/uncapped. The reference each year is the MAX of:
+            #   - cap_needed(y) = floor_pj(y) / yield   (the NDC requirement), and
+            #   - bau_cap(y)    = CalBAU's installed capacity (reflects planned
+            #     builds + the calibrated baseline)
+            # so the envelope never falls below what already exists / is planned
+            # (which would make the solve infeasible). MaxCapInv is additionally
+            # clamped above any pre-existing MinCapInv (MaxCapInv >= MinCapInv).
+            if target.get("cap_envelope"):
+                yld = tech_yield.get(tech, default_cf * C2AU)
+                if yld <= 0:
+                    yld = default_cf * C2AU
+                bau_cap = tech_bau_cap.get(tech, {})
+
+                # reference capacity = max(floor-needed, CalBAU installed)
+                ref_cap = {}
+                for year in sorted_years:
+                    pct = pct_by_year.get(year, 0.0)
+                    prod = prod_by_year.get(year, 0.0)
+                    fpj = prod * pct
+                    capm = prod * max_floor_share
+                    if fpj > capm and capm > 0:
+                        fpj = capm
+                    cap_needed = fpj / yld
+                    ref_cap[year] = max(cap_needed, bau_cap.get(year, 0.0))
+
+                maxcap_row = find_or_create_param_row(
+                    ws, tech, MAX_CAP_PARAM, tech_col, param_col, proj_mode_col
+                )
+                maxinv_row = find_or_create_param_row(
+                    ws, tech, MAX_INV_PARAM, tech_col, param_col, proj_mode_col
+                )
+                cap_mod = inv_mod = False
+                prev_rc = None
+                for year in sorted_years:
+                    rc = ref_cap[year]
+                    maxcap_val = rc * (1.0 + env_headroom)
+                    if prev_rc is None:
+                        increment = 0.0   # residual/baseline covers the first year
+                    else:
+                        increment = max(0.0, rc - prev_rc)
+                    maxinv_val = max(env_min_inv, increment) * (1.0 + env_headroom)
+                    prev_rc = rc
+
+                    # Clamp MaxCapInv above any pre-existing planned MinCapInv
+                    # (otherwise MaxCapInv < MinCapInv fails the solver check).
+                    existing_min = mincapinv_map.get((tech, year))
+                    if existing_min is not None and existing_min > 0:
+                        floor_inv = existing_min * UNTIE_MULTIPLIER
+                        if floor_inv > maxinv_val:
+                            maxinv_val = floor_inv
+
+                    ccell = ws.cell(row=maxcap_row, column=year_cols[year])
+                    if values_differ(ccell.value, maxcap_val):
+                        log["changes"].append({
+                            "tech": tech, "year": year, "param": MAX_CAP_PARAM,
+                            "old": ccell.value, "new": maxcap_val,
+                            "ref_cap": rc, "headroom": env_headroom,
+                            "reason": "cap_envelope_maxcap",
+                        })
+                        ccell.value = maxcap_val
+                        cap_mod = True
+
+                    icell = ws.cell(row=maxinv_row, column=year_cols[year])
+                    if values_differ(icell.value, maxinv_val):
+                        log["changes"].append({
+                            "tech": tech, "year": year, "param": MAX_INV_PARAM,
+                            "old": icell.value, "new": maxinv_val,
+                            "reason": "cap_envelope_maxinv",
+                        })
+                        icell.value = maxinv_val
+                        inv_mod = True
+
+                if proj_mode_col is not None:
+                    for r, mod in ((maxcap_row, cap_mod), (maxinv_row, inv_mod)):
+                        if mod:
+                            mc = ws.cell(row=r, column=proj_mode_col)
+                            if mc.value == PROJ_MODE_EMPTY:
+                                mc.value = PROJ_MODE_USER
+
+                # --- Pin generation at the target (activity upper limit) ---
+                # With a generous MaxCap (above), capacity has slack, so the
+                # solver stays well-conditioned. The upper limit pins generation
+                # to a NARROW RANGE at the NDC share:
+                #   upper = max(target_gen * (1 + pin_slack), CalBAU_gen).
+                # Where the floor binds (target > CalBAU), upper sits pin_slack
+                # above the floor -> generation ~ target, but as a real interval
+                # (not an exact lower==upper equality, which is a numeric
+                # knife-edge). Where CalBAU exceeds the early floor (e.g. planned
+                # solar), upper = CalBAU_gen so planned capacity is NOT curtailed.
+                if pin_gen:
+                    upper_row = find_or_create_param_row(
+                        ws, tech, ACTIVITY_UPPER_PARAM,
+                        tech_col, param_col, proj_mode_col
+                    )
+                    up_mod = False
+                    for year in sorted_years:
+                        pct = pct_by_year.get(year, 0.0)
+                        prod = prod_by_year.get(year, 0.0)
+                        floor_pj = prod * pct
+                        capm = prod * max_floor_share
+                        if floor_pj > capm and capm > 0:
+                            floor_pj = capm
+                        bau_gen = bau_cap.get(year, 0.0) * yld
+                        upper_val = max(floor_pj * (1.0 + pin_slack), bau_gen)
+                        ucell = ws.cell(row=upper_row, column=year_cols[year])
+                        if values_differ(ucell.value, upper_val):
+                            log["changes"].append({
+                                "tech": tech, "year": year,
+                                "param": ACTIVITY_UPPER_PARAM,
+                                "old": ucell.value, "new": upper_val,
+                                "floor_pj": floor_pj, "bau_gen": bau_gen,
+                                "reason": "pin_generation_upper",
+                            })
+                            ucell.value = upper_val
+                            up_mod = True
+                    if up_mod and proj_mode_col is not None:
+                        mc = ws.cell(row=upper_row, column=proj_mode_col)
+                        if mc.value == PROJ_MODE_EMPTY:
+                            mc.value = PROJ_MODE_USER
+
             # --- Capacity floor ---
             if constraint_type in ("capacity", "both"):
                 row = find_or_create_param_row(
@@ -588,7 +901,9 @@ def apply_vre_targets(ws, config: dict, total_prod: dict,
 
 
 def edit_parametrization(filepath: Path, sheets: list, config: dict,
-                         total_prod: dict, gen_techs: set) -> dict:
+                         total_prod: dict, gen_techs: set,
+                         tech_yield: dict = None,
+                         tech_bau_cap: dict = None) -> dict:
     """Apply VRE targets to the parametrization workbook."""
     wb = load_workbook(filepath)
     file_log = {"file": str(filepath), "sheets": []}
@@ -607,7 +922,8 @@ def edit_parametrization(filepath: Path, sheets: list, config: dict,
                     {"sheet": sheet, "skipped": "no integer year columns found"}
                 )
                 continue
-            sheet_log = apply_vre_targets(ws, config, total_prod, gen_techs, year_cols)
+            sheet_log = apply_vre_targets(ws, config, total_prod, gen_techs,
+                                          year_cols, tech_yield, tech_bau_cap)
             file_log["sheets"].append(sheet_log)
         wb.save(filepath)
     finally:
@@ -648,6 +964,17 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
         bau_path = input_dir.parent.parent / bau_path
     total_prod = load_bau_total_production(bau_path, gen_techs)
 
+    # Realized per-tech yield (PJ/GW) and CalBAU capacity path for cap_envelope.
+    envelope_techs: set = set()
+    for t in config["targets"]:
+        if t.get("cap_envelope"):
+            envelope_techs.update(expand_tech_pattern(t["tech"], t["cr"], gen_techs))
+    if envelope_techs:
+        tech_yield, tech_bau_cap = load_bau_tech_yield(
+            bau_path, envelope_techs, config.get("default_capacity_factor", 0.10))
+    else:
+        tech_yield, tech_bau_cap = {}, {}
+
     # Backup
     backup_dir = None if skip_backup else make_backup(input_dir)
 
@@ -656,7 +983,8 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
     if not paramfile.exists():
         raise FileNotFoundError(f"{paramfile} not found")
 
-    log = edit_parametrization(paramfile, sheets, config, total_prod, gen_techs)
+    log = edit_parametrization(paramfile, sheets, config, total_prod, gen_techs,
+                               tech_yield, tech_bau_cap)
     log["backup_dir"] = str(backup_dir) if backup_dir else None
     log["timestamp"] = datetime.now().isoformat()
     log["config"] = {

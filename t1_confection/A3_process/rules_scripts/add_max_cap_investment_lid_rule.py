@@ -299,6 +299,42 @@ LID_FAMILY_RELAXATION_CEILINGS: dict = {}
 # mechanism.  Default: empty list (all techs get the lid).
 LID_EXEMPT_PREFIXES: list = []
 
+# --- Exempt max capacity (optional, per-prefix) ----------------------------
+# When an exempt prefix has an entry here, TotalAnnualMaxCapacity is set to the
+# interpolated schedule value (GW) instead of 9999.  MaxCapInv stays uncapped
+# (9999) — the total-cap ceiling is the binding constraint.
+# Format: { "PWRSPV": {2023: 80, 2030: 200, 2050: 500}, ... }
+# Prefixes not listed get the default 9999 (fully uncapped, backward-compatible).
+# A single number (e.g. "PWRSPV": 200) is treated as a flat constant.
+EXEMPT_MAX_CAP: dict = {}
+
+
+def _exempt_max_cap_for(tech: str, year: int) -> float:
+    """Return the TotalAnnualMaxCapacity for an exempt tech at *year*.
+
+    Linearly interpolates the schedule in EXEMPT_MAX_CAP for the matching
+    prefix.  Returns PLACEHOLDER_VALUE (9999) if no entry exists.
+    """
+    if not EXEMPT_MAX_CAP:
+        return float(PLACEHOLDER_VALUE)
+    for prefix, schedule in EXEMPT_MAX_CAP.items():
+        if tech.startswith(prefix):
+            if not schedule:
+                return float(PLACEHOLDER_VALUE)
+            anchors = sorted(schedule.items())
+            if year <= anchors[0][0]:
+                return anchors[0][1]
+            if year >= anchors[-1][0]:
+                return anchors[-1][1]
+            for i in range(len(anchors) - 1):
+                y0, v0 = anchors[i]
+                y1, v1 = anchors[i + 1]
+                if y0 <= year <= y1:
+                    frac = (year - y0) / (y1 - y0)
+                    return v0 + frac * (v1 - v0)
+            return float(PLACEHOLDER_VALUE)
+    return float(PLACEHOLDER_VALUE)
+
 # --- Lid floor (used by both modes) ------------------------------------------
 # Minimum MaxCapInv (GW) per tech per year.  When the computed lid (after
 # relaxation) falls below this value, the floor is used instead.  This
@@ -482,6 +518,23 @@ def load_config(yaml_path: Path) -> dict:
     if "exempt_prefixes" in cfg:
         out["exempt_prefixes"] = [str(p).strip() for p in (cfg["exempt_prefixes"] or [])]
 
+    if "exempt_max_cap" in cfg:
+        raw_emc = cfg["exempt_max_cap"] or {}
+        parsed_emc: dict = {}
+        for prefix, spec in raw_emc.items():
+            prefix = str(prefix).strip()
+            if isinstance(spec, (int, float)):
+                # Single value → flat schedule (constant across all years)
+                parsed_emc[prefix] = {2020: float(spec), 2060: float(spec)}
+            elif isinstance(spec, dict):
+                parsed_emc[prefix] = {int(y): float(v) for y, v in spec.items()}
+            else:
+                raise ValueError(
+                    f"exempt_max_cap.{prefix}: expected a number or "
+                    f"year→GW dict, got {type(spec).__name__}"
+                )
+        out["exempt_max_cap"] = parsed_emc
+
     if "relaxation_schedule" in cfg:
         raw = cfg["relaxation_schedule"] or {}
         expanded_rs: dict = {}
@@ -519,7 +572,7 @@ def apply_config(cfg: dict) -> None:
     """
     global LID_RULE_MODE, LID_PERCENTAGE_DEFAULT, LID_PERCENTAGE_BY_YEAR
     global LID_SECURITY_FACTOR, LID_RAMP_FROM_DEMAND
-    global LID_EXEMPT_PREFIXES, LID_RELAXATION_SCHEDULE
+    global LID_EXEMPT_PREFIXES, LID_RELAXATION_SCHEDULE, EXEMPT_MAX_CAP
     global LID_FLOOR_GW, LID_FAMILY_RELAXATION_CEILINGS
     global LID_ADEQUACY_FLOOR_SCHEDULE
     if "rule_mode" in cfg:
@@ -534,6 +587,8 @@ def apply_config(cfg: dict) -> None:
         LID_RAMP_FROM_DEMAND = cfg["ramp_from_demand"]
     if "exempt_prefixes" in cfg:
         LID_EXEMPT_PREFIXES = list(cfg["exempt_prefixes"])
+    if "exempt_max_cap" in cfg:
+        EXEMPT_MAX_CAP = dict(cfg["exempt_max_cap"])
     if "relaxation_schedule" in cfg:
         LID_RELAXATION_SCHEDULE = {
             int(k): float(v) for k, v in cfg["relaxation_schedule"].items()
@@ -1116,16 +1171,19 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             old = cell.value
 
             # --- Short-circuit: TotalAnnualMaxCapacity for exempt techs.
-            #     Just force 9999 and skip the lid/relaxation/untie machinery.
+            #     Use exempt_max_cap schedule if defined for this prefix,
+            #     otherwise 9999 (fully uncapped, backward-compatible).
             if param == MAX_CAP_PARAM:
-                proposed = float(PLACEHOLDER_VALUE)
+                proposed = _exempt_max_cap_for(tech, year)
+                reason = ("exempt_maxcap_capped" if proposed < PLACEHOLDER_VALUE
+                          else "exempt_maxcap_uncapped")
                 if values_differ(old, proposed):
                     cell.value = proposed
                     row_was_modified = True
                     log["changes"].append({
                         "tech": tech, "country_region": cr, "year": year,
                         "old": old, "new": proposed,
-                        "reason": "exempt_maxcap_uncapped",
+                        "reason": reason,
                         "pool": 0.0, "min_inv": 0.0,
                         "lid": proposed, "relax_mult": 1.0,
                     })
