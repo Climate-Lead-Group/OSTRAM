@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OSTRAM Multi-Scenario User Guide</title>
+<style>
+:root {
+  --fg: #1f2933;
+  --muted: #5b6772;
+  --accent: #00477a;
+  --accent2: #005b8e;
+  --border: #d8dee5;
+  --code-bg: #f3f5f7;
+  --row-alt: #f0f5fa;
+  --link: #0c63a4;
+}
+
+html { box-sizing: border-box; }
+*, *:before, *:after { box-sizing: inherit; }
+
+body {
+  margin: 0;
+  padding: 32px 24px 80px;
+  background: #fafbfc;
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+main {
+  max-width: 880px;
+  margin: 0 auto;
+  background: #ffffff;
+  padding: 32px 40px 64px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+h1, h2, h3, h4 {
+  color: var(--accent);
+  line-height: 1.25;
+  margin-top: 1.6em;
+  margin-bottom: 0.4em;
+}
+h1 { font-size: 26px; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+h2 { font-size: 21px; color: var(--accent2); }
+h3 { font-size: 17px; }
+h4 { font-size: 15px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+p { margin: 0.6em 0; }
+
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+ul, ol { padding-left: 1.4em; }
+li { margin: 0.25em 0; }
+
+code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.92em;
+  background: var(--code-bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: #a23a3a;
+}
+
+pre {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 13px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  white-space: pre;
+  line-height: 1.4;
+}
+pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+  font-size: 0.95em;
+}
+th, td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 600;
+}
+tr:nth-child(even) td { background: var(--row-alt); }
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2em 0;
+}
+
+blockquote {
+  border-left: 4px solid var(--accent2);
+  background: #f4f8fc;
+  padding: 10px 16px;
+  margin: 1em 0;
+  color: var(--muted);
+}
+
+strong { color: var(--fg); }
+
+/* TOC anchors */
+.toc { background: #f4f8fc; border: 1px solid var(--border); padding: 12px 18px; border-radius: 4px; }
+.toc ul { padding-left: 1.2em; margin: 0.2em 0; }
+
+footer {
+  max-width: 880px;
+  margin: 24px auto 0;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+</style>
+</head>
+<body>
+<main>
+<h1 id="ostram-multi-scenario-user-guide">OSTRAM Multi-Scenario User Guide</h1>
+<p>This guide explains how to build, configure and run multiple energy
+scenarios in OSTRAM from a single Excel workbook. It targets the
+<strong>end user</strong> — modelers who configure runs via Excel and a single
+terminal command, without touching Python code.</p>
+<p>If you only ever want to run BAU exactly like before, you can keep
+doing that — multi-scenario support is additive, BAU still works
+identically.</p>
+<hr>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol>
+<li><a href="#what-multi-scenario-gives-you">What multi-scenario gives you</a></li>
+<li><a href="#the-big-picture">The big picture</a></li>
+<li><a href="#the-soasia-template-v18-workbook">The SOASIA Template v18 workbook</a>
+   - <a href="#sheet-control">Sheet <code>Control</code></a>
+   - <a href="#parametric-sheets-and-the-scenario-column">Parametric sheets and the <code>scenario</code> column</a>
+   - <a href="#sheet-restrictions">Sheet <code>Restrictions</code></a></li>
+<li><a href="#walkthrough-add-a-new-scenario">Walkthrough: add a new scenario</a></li>
+<li><a href="#running-the-pipeline">Running the pipeline</a></li>
+<li><a href="#common-errors-and-how-to-fix-them">Common errors and how to fix them</a></li>
+<li><a href="#reference-identity-keys-per-sheet">Reference: identity keys per sheet</a></li>
+<li><a href="#reference-rules-scripts">Reference: rules scripts</a></li>
+</ol>
+<hr>
+<h2 id="what-multi-scenario-gives-you">What multi-scenario gives you</h2>
+<p>Before: A3 only processed one scenario (BAU). Any "what if" required
+duplicating files and editing Python.</p>
+<p>Now: you can define many scenarios — <code>BAU</code>, <code>NDC</code>, <code>LMC</code>, etc. — from
+the <strong><code>Control</code></strong> sheet of <code>SOASIA_OSeMOSYS_Template_v18.xlsx</code>. For
+each scenario you choose:</p>
+<ul>
+<li>Whether it runs in the next pipeline pass (<code>active = TRUE</code>)</li>
+<li>Which rules script writes its restrictions (<code>rules_script</code>)</li>
+<li>Whether it inherits restrictions from other scenarios that already
+  ran (<code>inherit_restrictions_from</code>)</li>
+</ul>
+<p>You also tell SOASIA, sheet by sheet, which values to <strong>override</strong>
+relative to BAU. Anything you don't override stays equal to BAU, so a
+new scenario is cheap to set up.</p>
+<p>The pipeline (<code>python run.py</code>) then runs A3 once per active scenario
+in the correct dependency order, producing <code>A1_Outputs_&lt;scenario&gt;/</code>
+folders that B1 and B2 already know how to consume.</p>
+<hr>
+<h2 id="the-big-picture">The big picture</h2>
+<pre><code>                 SOASIA_OSeMOSYS_Template_v18.xlsx
+                 +--------------------------------+
+                 | [Control]   scenarios + rules  |
+                 | [README]                       |
+                 | [Restrictions]  persisted out  |
+                 | [Primary_Techs]    + overrides |
+                 | [Secondary_Techs]  + overrides |
+                 | ... (15 parametric sheets)     |
+                 +----------------+---------------+
+                                  |
+                                  v
+                    +------------------------------+
+                    | run.py                       |
+                    | 1. A1 + A2  (BAU only, once) |
+                    | 2. For each active scenario: |
+                    |     - materialize v18 for it |
+                    |     - run A3 stages 0..6     |
+                    |       (incl. inheritance and |
+                    |        rules_script)         |
+                    | 3. B1 + B2 over outputs      |
+                    +------------------------------+
+                                  |
+                                  v
+              A1_Outputs/A1_Outputs_BAU/
+              A1_Outputs/A1_Outputs_NDC/
+              A1_Outputs/A1_Outputs_LMC/
+                 ...
+</code></pre>
+<p>A2 creates a single snapshot, <code>_post_a2_snapshot_BAU/</code>, that ALL
+scenarios start from. Divergence between scenarios is expressed only
+through:</p>
+<ol>
+<li>SOASIA <code>Control</code> (which rules_script and which inheritances)</li>
+<li>SOASIA parametric sheets (override rows)</li>
+<li>SOASIA <code>Restrictions</code> (per-scenario restriction values)</li>
+</ol>
+<p>This keeps A1/A2 simple and BAU-only.</p>
+<hr>
+<h2 id="the-soasia-template-v18-workbook">The SOASIA Template v18 workbook</h2>
+<p>Path: <code>t1_confection/A3_process/SOASIA_OSeMOSYS_Template_v18.xlsx</code></p>
+<p>The first sheets are configuration:</p>
+<ul>
+<li><code>Control</code> — scenario list and per-scenario knobs</li>
+<li><code>README</code> — short in-workbook help</li>
+<li><code>Restrictions</code> — auto-written by the pipeline (you can also edit)</li>
+</ul>
+<p>All remaining sheets are data:</p>
+<ul>
+<li><code>Yearsplit_Template</code>, <code>DaySplit</code> — timeslice definitions, same for
+  every scenario (no <code>scenario</code> column)</li>
+<li>15 <strong>parametric sheets</strong> — each gains a <code>scenario</code> column as
+  column A</li>
+</ul>
+<h3 id="sheet-control">Sheet <code>Control</code></h3>
+<pre><code>| scenario | active | rules_script                          | inherit_restrictions_from | notes         |
+|----------|--------|---------------------------------------|---------------------------|---------------|
+| BAU      | TRUE   | add_max_cap_investment_lid_rule.py    |                           | Base scenario |
+| NDC      | TRUE   | add_max_cap_investment_lid_rule.py    | BAU                       | example       |
+| LMC      | FALSE  | add_max_cap_investment_lid_rule.py    | BAU, NDC                  | example       |
+</code></pre>
+<p>Columns:</p>
+<ul>
+<li><strong>scenario</strong> — any unique identifier without spaces, e.g. <code>BAU</code>,
+  <code>NDC</code>, <code>LMC</code>, <code>NetZero2050</code>.</li>
+<li><strong>active</strong> — <code>TRUE</code> or <code>FALSE</code>. Only <code>TRUE</code> scenarios run in the
+  next pass. A dropdown enforces the value.</li>
+<li><strong>rules_script</strong> — file name of a <code>.py</code> script under
+  <code>t1_confection/A3_process/rules_scripts/</code>. The script applies that
+  scenario's restrictions (today: a "lid" on
+  <code>TotalAnnualMaxCapacityInvestment</code>). Leaving the cell blank skips
+  that stage entirely.</li>
+<li><strong>inherit_restrictions_from</strong> — comma-separated list of OTHER
+  scenarios whose <code>Restrictions</code> rows should be loaded before the
+  scenario's own <code>rules_script</code> runs. Useful for "start from BAU's
+  lid, then tighten." Leave empty if the scenario writes its own
+  restrictions from scratch.</li>
+<li><strong>notes</strong> — free-form text, ignored by the pipeline.</li>
+</ul>
+<p><strong>Inheritance ordering.</strong> When <code>inherit_restrictions_from = BAU, NDC</code>
+and both bring values for the same cell, the source listed LAST wins
+(NDC overrides BAU here). When you list a scenario in
+<code>inherit_restrictions_from</code>, that scenario must have already produced
+rows in <code>Restrictions</code> — typically because it ran in a previous
+pass. The pipeline also topologically orders active scenarios per pass,
+so if NDC inherits from BAU and both are active, BAU runs first.</p>
+<h3 id="parametric-sheets-and-the-scenario-column">Parametric sheets and the <code>scenario</code> column</h3>
+<p>The 15 parametric sheets (<code>Primary_Techs</code>, <code>Secondary_Techs</code>,
+<code>Capacities_CF</code>, <code>VariableCost</code>, <code>Demand_Projection</code>,
+<code>Demand_Profiles</code>, <code>Demand_Techs</code>, <code>Emissions</code>, <code>Interconnectors</code>,
+<code>Interconnector_Params</code>, <code>Fixed_Horizon_Parameters</code>,
+<code>Existing_Generation</code>, <code>Planned_Generation</code>, <code>Technology_Costs</code>,
+<code>RE_Targets_Policies</code>) each have <code>scenario</code> as their <strong>first column</strong>.</p>
+<p>The override model: a row tagged <code>scenario = "BAU"</code> is the <strong>base</strong>.
+A row tagged with another scenario (say <code>NDC</code>) is an <strong>override</strong> —
+if it shares its identity key with a BAU row, it REPLACES that row
+when the NDC scenario runs. If the identity key is new, the row is
+ADDED to NDC.</p>
+<p>What counts as an "identity key" is sheet-specific — see
+<a href="#reference-identity-keys-per-sheet">Reference: identity keys per sheet</a>.</p>
+<p>You do <strong>not</strong> copy every BAU row when you create NDC. You only add
+the rows you want to change.</p>
+<p>The <code>scenario</code> column has a dropdown that lists scenario names
+sourced from <code>Control</code> (positions A2:A101), so you can't typo a
+scenario name as long as you've declared it in <code>Control</code> first.</p>
+<h3 id="sheet-restrictions">Sheet <code>Restrictions</code></h3>
+<p>Auto-managed by the pipeline. Each time A3 runs scenario X, the
+rules_script's per-cell changes (today: <code>TotalAnnualMaxCapacityInvestment</code>
+values for generation techs by year) are persisted as rows here:</p>
+<pre><code>| scenario | source_sheet     | tech         | parameter                            | year | value | rule_applied | source_run_timestamp |
+|----------|------------------|--------------|--------------------------------------|------|-------|--------------|-----------------------|
+| BAU      | Secondary Techs  | PWRHYDLKAXX  | TotalAnnualMaxCapacityInvestment     | 2024 | 25    | lid_fill     | 2026-05-15T14:30:00   |
+| BAU      | Secondary Techs  | PWRHYDLKAXX  | TotalAnnualMaxCapacityInvestment     | 2030 | 35    | lid_fill     | 2026-05-15T14:30:00   |
+| BAU      | Secondary Techs  | PWRSPVLKAXX  | TotalAnnualMaxCapacityInvestment     | 2050 | 8557  | lid_fill     | 2026-05-15T14:30:00   |
+</code></pre>
+<p>You can <strong>edit</strong> these rows manually — useful when you want to fix
+one value without re-running the rules script. Edits to a scenario X
+row survive until X is re-run, in which case ALL rows for scenario X
+get rewritten (other scenarios' rows are untouched).</p>
+<p>When another scenario lists X under <code>inherit_restrictions_from</code>, the
+pipeline reads these rows and writes the values into that scenario's
+<code>A-O_Parametrization.xlsx</code> before the scenario's own rules_script
+runs on top.</p>
+<hr>
+<h2 id="walkthrough-add-a-new-scenario">Walkthrough: add a new scenario</h2>
+<p>Goal: create an "NDC" scenario that starts from BAU, then tightens
+the lid using the same rules script.</p>
+<ol>
+<li>
+<p>Open <code>SOASIA_OSeMOSYS_Template_v18.xlsx</code>.</p>
+</li>
+<li>
+<p>Go to the <code>Control</code> sheet, add a new row:</p>
+</li>
+</ol>
+<p><code>| scenario | active | rules_script                          | inherit_restrictions_from | notes                       |
+   | NDC      | TRUE   | add_max_cap_investment_lid_rule.py    | BAU                       | Updated NDC commitments     |</code></p>
+<ol start="3">
+<li>
+<p>(Optional) On any parametric sheet, add override rows for NDC.
+   Example — push 2050 demand for Bangladesh up by 1.5x relative to
+   BAU. Go to <code>Demand_Projection</code>, find the BAU row with
+   <code>Fuel/Tech = ELCBGDXX03</code>, copy it, and in the new row set
+   <code>scenario = NDC</code> and change only the 2050 cell. The identity key
+   for this sheet is <code>Fuel/Tech</code>, so the rest of the year columns
+   inherit from BAU automatically (anything you put in the override
+   row replaces BAU for that cell).</p>
+</li>
+<li>
+<p>Save and close the file.</p>
+</li>
+<li>
+<p>From the repo root:</p>
+</li>
+</ol>
+<p><code>python run.py</code></p>
+<p>You'll see "Active scenarios (topo order): ['BAU', 'NDC']", A3
+   running twice, then B1 and B2.</p>
+<ol start="6">
+<li>After the run, open <code>Restrictions</code> in v18 — you'll see new rows
+   tagged <code>scenario = BAU</code> AND <code>scenario = NDC</code>.</li>
+</ol>
+<hr>
+<h2 id="running-the-pipeline">Running the pipeline</h2>
+<p>From the repo root:</p>
+<pre><code>python run.py
+</code></pre>
+<p>This is the only command end users normally need. It:</p>
+<ol>
+<li>Creates/updates the conda environment from <code>environment.yaml</code>.</li>
+<li>Runs A1 + A2 once for BAU if no <code>_post_a2_snapshot_BAU/</code> exists.</li>
+<li>Reads the <code>Control</code> sheet of SOASIA v18 to discover active
+   scenarios.</li>
+<li>Runs A3 once per active scenario, in topological order
+   (dependencies first).</li>
+<li>Runs B1 (compiler) and B2 (solver).</li>
+</ol>
+<p>Skip individual stages with <code>--skip-a3</code>, <code>--skip-b1</code>, <code>--skip-b2</code>.
+Force a fresh DVC pull is the default if a DVC remote is set.</p>
+<p>To run a single scenario without touching <code>Control</code>:</p>
+<pre><code>python t1_confection/A3_process.py --scenario NDC
+</code></pre>
+<p>This bypasses run.py's loop and runs A3 for just that scenario, as
+long as it's defined in <code>Control</code>.</p>
+<hr>
+<h2 id="common-errors-and-how-to-fix-them">Common errors and how to fix them</h2>
+<p><strong><code>ERROR: scenario 'X' not in Control sheet of SOASIA_OSeMOSYS_Template_v18.xlsx</code></strong>
+You passed a scenario name that's not declared in the workbook. Open
+v18, add the scenario to <code>Control</code>, save.</p>
+<p><strong><code>ERROR: SOASIA v18 not found at &lt;path&gt;</code></strong>
+The workbook is missing. If you have a v17 and just need to migrate,
+run <code>python t1_confection/A3_process/_build_v18_from_v17.py</code>.</p>
+<p><strong><code>ERROR: scenario 'NDC' inherits from unknown scenario 'XYZ'</code></strong>
+The <code>inherit_restrictions_from</code> cell lists a scenario that isn't in
+<code>Control</code>. Either add it, or remove it from the list.</p>
+<p><strong><code>Inheritance cycle detected at scenario 'A'</code></strong>
+You have A inheriting from B inheriting from A. Break the cycle in
+the <code>inherit_restrictions_from</code> columns.</p>
+<p><strong><code>No Restrictions rows found for scenario(s): ['BAU']</code></strong>
+You're trying to inherit from a scenario that has never run (so its
+restrictions were never persisted). Run that scenario first, or
+remove it from <code>inherit_restrictions_from</code> until it has run.</p>
+<p><strong><code>rules_script 'foo.py' not found at rules_scripts/foo.py</code></strong>
+You typed a script name that doesn't exist. Either drop the script
+into <code>t1_confection/A3_process/rules_scripts/</code> or change the cell
+to a script that does exist.</p>
+<p><strong><code>ERROR: snapshot post-A2 not found: A1_Outputs/_post_a2_snapshot_BAU</code></strong>
+A1 + A2 have not run yet. Run <code>python run.py</code> once without
+<code>--skip-a3</code> — it will run A1+A2 automatically the first time.</p>
+<hr>
+<h2 id="reference-identity-keys-per-sheet">Reference: identity keys per sheet</h2>
+<p>When a non-BAU row "overrides" a BAU row, the override is matched by
+the columns below. Choose the same values in those columns to override;
+choose different values to add.</p>
+<table>
+<thead>
+<tr>
+<th>Sheet</th>
+<th>Identity key columns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fixed_Horizon_Parameters</td>
+<td>Tech, Parameter</td>
+</tr>
+<tr>
+<td>Primary_Techs</td>
+<td>Tech, Parameter</td>
+</tr>
+<tr>
+<td>Secondary_Techs</td>
+<td>Tech, Parameter</td>
+</tr>
+<tr>
+<td>Capacities_CF</td>
+<td>Timeslices, Tech.ID, Parameter</td>
+</tr>
+<tr>
+<td>VariableCost</td>
+<td>Mode.Operation, Tech, Parameter</td>
+</tr>
+<tr>
+<td>Demand_Projection</td>
+<td>Fuel/Tech</td>
+</tr>
+<tr>
+<td>Demand_Profiles</td>
+<td>Timeslices, Fuel/Tech</td>
+</tr>
+<tr>
+<td>Demand_Techs</td>
+<td>Tech, Parameter</td>
+</tr>
+<tr>
+<td>Emissions</td>
+<td>Tech, Parameter</td>
+</tr>
+<tr>
+<td>Interconnectors</td>
+<td>NO</td>
+</tr>
+<tr>
+<td>Interconnector_Params</td>
+<td>Tech, Parameter</td>
+</tr>
+<tr>
+<td>Existing_Generation</td>
+<td>Country, Node, Plant_Name, Commissioning_Year, Capacity_MW</td>
+</tr>
+<tr>
+<td>Planned_Generation</td>
+<td>Country, Node, Project_Name, Expected_COD, Capacity_MW</td>
+</tr>
+<tr>
+<td>Technology_Costs</td>
+<td>Technology_Code, Parameter</td>
+</tr>
+<tr>
+<td>RE_Targets_Policies</td>
+<td>Country, Policy_Name</td>
+</tr>
+</tbody>
+</table>
+<p>A few non-obvious notes:</p>
+<ul>
+<li><code>Capacities_CF</code> uses <code>Tech.ID</code> (not just <code>Tech</code>) because a single
+  tech code like <code>PWRHYDNPLXX</code> covers 3 distinct units (Reservoir /
+  Run-of-River / Pumped Storage) with different CF profiles.</li>
+<li><code>Existing_Generation</code> / <code>Planned_Generation</code> keys include
+  <code>Commissioning_Year</code> / <code>Expected_COD</code> and <code>Capacity_MW</code> because
+  plant lists in v17 contain reused names for different units (e.g.
+  "Wind (various)" appears 10 times in Sri Lanka planned).</li>
+</ul>
+<hr>
+<h2 id="reference-rules-scripts">Reference: rules scripts</h2>
+<p>Path: <code>t1_confection/A3_process/rules_scripts/</code></p>
+<p>Each <code>.py</code> file in this folder is a "rules script" — it gets invoked
+in stage 5 of A3 against the scenario's working
+<code>A-O_Parametrization.xlsx</code> and writes restriction values into the
+<code>TotalAnnualMaxCapacityInvestment</code> cells.</p>
+<p>Today, the canonical script is <code>add_max_cap_investment_lid_rule.py</code>
+(documented in detail in <code>LID_RULE.md</code>). To create a variant for a
+different scenario:</p>
+<ol>
+<li>Copy the file in the same folder, rename it (e.g.
+   <code>add_max_cap_investment_lid_rule_v3.py</code>).</li>
+<li>Edit the constants near the top (<code>LID_RULE_MODE</code>,
+   <code>LID_PERCENTAGE_BY_YEAR</code>, <code>LID_SECURITY_FACTOR</code>, …) to match the
+   new scenario's narrative.</li>
+<li>In SOASIA <code>Control</code>, set the scenario's <code>rules_script</code> cell to
+   the new file name.</li>
+</ol>
+<p>Type the filename in the <code>rules_script</code> cell. Run-time validation
+(<code>_scenarios.py</code>) checks the file exists in <code>rules_scripts/</code> and
+raises a clear error listing available scripts if you mistype.</p>
+</main>
+<footer>OSTRAM &mdash; A3 Multi-Scenario User Guide</footer>
+</body>
+</html>

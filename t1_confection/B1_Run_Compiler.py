@@ -17,6 +17,7 @@ Notes:
 - The YAML file is backed up before modifications and restored at the end.
 """
 
+import argparse
 from pathlib import Path
 import shutil
 import subprocess
@@ -42,14 +43,33 @@ def try_import_yaml_handlers():
     return ruamel_yaml, pyyaml
 
 
+_TIMESTAMP_RE = re.compile(r"_\d{8}")
+
+
 def list_scenario_suffixes(base_dir: Path) -> List[str]:
-    """Return list like ['BAU_NoRPO','NDC','NDC+ELC'] from folders 'A1_Outputs_*'."""
+    """Return list like ['BAU_NoRPO','NDC','NDC+ELC'] from folders 'A1_Outputs_*'.
+
+    Skips folders whose suffix:
+      - contains 'backup', 'snapshot' or 'pre_experiment' (case-insensitive), or
+      - includes an 8-digit datestamp like '_20260513'.
+    """
     suffixes: List[str] = []
     for item in sorted(base_dir.iterdir()):
-        if item.is_dir() and item.name.startswith("A1_Outputs_"):
-            suffix = item.name.split("A1_Outputs_", 1)[1]
-            if suffix:  # Ensure non-empty
-                suffixes.append(suffix)
+        if not (item.is_dir() and item.name.startswith("A1_Outputs_")):
+            continue
+        suffix = item.name.split("A1_Outputs_", 1)[1]
+        if not suffix:
+            continue
+        suffix_lower = suffix.lower()
+        if "backup" in suffix_lower:
+            continue
+        if "snapshot" in suffix_lower:
+            continue
+        if "pre_experiment" in suffix_lower:
+            continue
+        if _TIMESTAMP_RE.search(suffix):
+            continue
+        suffixes.append(suffix)
     return suffixes
 
 
@@ -151,7 +171,21 @@ def run_compiler(script_dir: Path) -> int:
     return result.returncode
 
 
+def parse_cli_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run B1 compiler across scenarios")
+    parser.add_argument(
+        "--scenarios",
+        default=None,
+        help="Comma-separated list of scenario suffixes to run (e.g. "
+             "'B_Optimised_VRE,C_Target_VRE'). When omitted, runs all "
+             "scenarios discovered under A1_Outputs/.",
+    )
+    return parser.parse_args()
+
+
 def main():
+    cli_args = parse_cli_args()
+
     # Resolve base directory (same folder as this script)
     script_dir = Path(__file__).resolve().parent
 
@@ -173,6 +207,19 @@ def main():
     if not scenario_suffixes:
         print("[WARN] No 'A1_Outputs_*' folders found. Nothing to do.")
         sys.exit(0)
+
+    if cli_args.scenarios:
+        requested = [s.strip() for s in cli_args.scenarios.split(",") if s.strip()]
+        discovered = set(scenario_suffixes)
+        unknown = [s for s in requested if s not in discovered]
+        if unknown:
+            print(
+                f"[ERROR] --scenarios contains names not found under A1_Outputs/: "
+                f"{unknown}. Discovered: {scenario_suffixes}"
+            )
+            sys.exit(1)
+        scenario_suffixes = [s for s in scenario_suffixes if s in requested]
+        print(f"[INFO] Scenario filter active: {scenario_suffixes}")
 
     print(f"[INFO] Scenarios discovered: {scenario_suffixes}")
 

@@ -1,0 +1,104 @@
+## relax_interconnectors.yaml — B_Optimised_VRE
+##
+## Evidence-based interconnector expansion caps derived from the project
+## pipeline in Interconnectors.xlsx (Zixuan v3 + IEPMP 2023 + BPC PDB
+## 2024 + NEA Annual 2024/25 + NEP Vol.II + LTGEP 2025-2044).
+##
+## Default mode: multiplicative with a conservative 1.5× factor for
+## corridors without explicit project data.  Per-corridor overrides
+## use ABSOLUTE MaxCapInv values (GW) staged by COD year, linearly
+## interpolated between knots and clamped after the last knot.
+##
+## The script also opens TotalAnnualMaxCapacity = 9999 for any
+## overridden tech with non-zero investment, removing the MaxCap
+## ceiling from cap_trn_to_residual that would otherwise block
+## new-build corridors (ResCap = 0).
+
+mode: multiplicative
+headroom_factor: 1.5          # conservative default for corridors without overrides
+
+overrides:
+  # ==========================================================================
+  # FROZEN CORRIDORS (ResCap = 0) — evidence-based pipeline caps
+  # ==========================================================================
+  #
+  # BTN → BGD: 750 MW dedicated hydro line (IEPMP 2023, under study, COD ~2035)
+  TRNBTNXXBGDXX: {2023: 0, 2033: 0, 2035: 0.75}
+
+  # IND-S → LKA: India–Sri Lanka HVDC (Madurai ↔ Mannar)
+  #   Phase 1: 500 MW, COD 2039 (Proposed/Planning, Zixuan v3)
+  #   Phase 2: 500 MW expansion, COD 2040 (Conceptual, LTGEP 2025-2044)
+  TRNINDSOLKAXX: {2023: 0, 2037: 0, 2039: 0.5, 2040: 1.0}
+
+  # LKA → MDV: No projects in any pipeline — stays frozen
+  TRNLKAXXMDVXX: {2023: 0}
+
+  # MDV → IND-S: No projects in any pipeline — stays frozen
+  TRNMDVXXINDSO: {2023: 0}
+
+  # ==========================================================================
+  # CORRIDORS WHERE 3× UNDERSHOOTS THE PIPELINE
+  # ==========================================================================
+  # Values are ResidualCapacity + cumulative pipeline additions at each COD year
+  #
+  # BGD ↔ INDNE (ResCap 0.16 GW, pipeline 2.66 GW = 16.6× ResCap)
+  #   Bornagar-Parbotipur 1.0 GW COD 2028, Cumilla B2B 0.75 GW COD 2032,
+  #   Sylhet B2B 0.75 GW COD 2035
+  TRNBGDXXINDNE: {2023: 0.16, 2028: 1.16, 2032: 1.91, 2035: 2.66}
+
+  # BTN ↔ INDNE (ResCap 0.11 GW, pipeline 2.40 GW = 21.8× ResCap)
+  #   Kholongchhu 0.6 GW COD 2027, Dorjilung 1.12 GW COD 2030,
+  #   Gelephu Mindfulness City 0.5 GW COD 2029
+  TRNBTNXXINDNE: {2023: 0.17, 2027: 0.77, 2029: 1.27, 2030: 2.40}
+
+  # NPL → BGD (ResCap 0.04 GW, pipeline 1.04 GW = 26× ResCap)
+  #   Trial 40 MW COD 2025, Dedicated line 1.0 GW COD 2033
+  TRNNPLXXBGDXX: {2023: 0.04, 2025: 0.08, 2033: 1.04}
+
+  # INDEA ↔ NPL (ResCap 1.30 GW, pipeline 4.50 GW = 3.5× ResCap)
+  #   Inaruwa 1.0 GW COD 2027, Dhalkebar expansion 0.15 GW COD 2025,
+  #   Anarmani + Nijgadh 2.0 GW (proposed)
+  TRNINDEANPLXX: {2023: 1.35, 2027: 2.35, 2030: 4.35}
+
+  # INDNO ↔ NPL (ResCap 1.20 GW, pipeline 3.65 GW = 3.0× ResCap)
+  #   Butwal-Gorakhpur 1.0 GW COD 2025, Nepalgunj 0.15 GW COD 2026,
+  #   Dodhara-Bareli 1.0 GW COD 2028, Lamahi-Lucknow 1.0 GW (proposed)
+  TRNINDNONPLXX: {2023: 0.50, 2025: 1.50, 2028: 2.65}
+
+  # ==========================================================================
+  # INDIA-INTERNAL CORRIDORS (pipeline < 3× — tighten to evidence)
+  # ==========================================================================
+  #
+  # INDEA → INDNO (ResCap 22.53 GW): Sipat–Ranchi 765kV 3.0 GW COD 2029
+  TRNINDEAINDNO: {2023: 22.53, 2029: 25.53}
+
+  # INDEA → INDSO (ResCap 7.83 GW): Raipur–Pugalur 2nd HVDC 6.0 GW COD 2029
+  TRNINDEAINDSO: {2023: 7.83, 2029: 13.83}
+
+  # INDSO ↔ INDWE (ResCap 18.12 GW): Khargone–Pune 765kV 5.0 GW COD 2028
+  TRNINDSOINDWE: {2023: 18.12, 2028: 23.12}
+
+  # INDNE → INDEA (ResCap 3.53 GW): Bongaigaon–Siliguri 400kV 2.0 GW COD 2027
+  TRNINDEAINDNE: {2023: 3.53, 2027: 5.53}
+
+  # ==========================================================================
+  # MAJOR CROSS-BORDER CORRIDORS (1.5× too tight for pipeline)
+  # ==========================================================================
+  #
+  # BGD ↔ INDEA (ResCap 2.50 GW, pipeline 8.50 GW = 3.4× ResCap)
+  #   Katihar-Parbatipur 2.0 GW (2028), Parbatipur-Boronagar 2.0 GW (2028),
+  #   2nd Bheramara 0.5 GW (2029), Barapukuria 0.75 GW (2030), Jamalpur 0.75 GW (2033)
+  TRNBGDXXINDEA: {2023: 2.50, 2028: 6.50, 2029: 7.00, 2030: 7.75, 2033: 8.50}
+
+  # BTN ↔ INDEA (ResCap 5.53 GW, pipeline 15.26 GW = 2.8× ResCap)
+  #   Chamkharchhu 0.67 GW (2028), Bunakha 2.4 GW (2030), Adani 5.0 GW (~2035)
+  TRNBTNXXINDEA: {2023: 5.53, 2028: 6.20, 2030: 8.60, 2035: 15.26}
+
+  # ==========================================================================
+  # CORRIDORS WITH NO PROJECT DATA — use default headroom_factor (1.5×)
+  # ==========================================================================
+  # TRNINDEAINDWE  (ResCap 21.19 GW) → 1.5× = 31.79 GW
+  # TRNINDNEINDNO  (ResCap 3.00 GW)  → 1.5× =  4.50 GW
+  # TRNINDNOINDWE  (ResCap 36.72 GW) → 1.5× = 55.08 GW
+  #
+  # These can be refined with NEP corridor-specific targets when available.

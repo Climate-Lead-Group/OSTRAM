@@ -1,0 +1,44 @@
+## lid_rule.yaml — C_Target_VRE scenario override (v3)
+## IDENTICAL to B_Optimised_VRE. No solar/wind exemption.
+##
+## Solar is handled entirely by set_vre_targets.py via the cap_envelope
+## feature (bounded MaxCap/MaxCapInv following each region's NDC floor
+## trajectory). Wind sits on the normal proportional lid — its NDC floors
+## (<=19%) are within the 3.0x relaxation ceiling.
+##
+## v1 BUG (resolved): exempting PWRWON/PWRSPV uncapped them -> runaway wind
+## (1,782 GW) and solar front-loading. The cap_envelope approach replaces
+## exemption with a floor-derived capacity ceiling. This file no longer
+## differs from B at all.
+
+rule_mode: proportional
+security_factor: 1.1
+
+relaxation_schedule:
+  2023: 1.0
+  2027: 1.0
+  2030: 1.1
+  2035: 1.3
+  2040: 1.5
+  2045: 2.0
+  2050: 3.0
+
+lid_floor_gw: 0.1
+
+family_relaxation_ceilings:
+  COA: 1.0    # coal locked to BAU proportions
+  PET: 1.01   # petroleum locked
+  OIL: 1.01   # oil locked
+  BIO: 1.0    # biomass locked — prevents floor accumulation
+  WAS: 1.0    # waste locked
+  NGS: 1.2    # gas gets slight room
+  URN: 1.5    # nuclear moderate
+
+exempt_prefixes:
+  - PWRSDS     # Short-duration storage
+  - PWRLDS     # Long-duration storage
+
+adequacy_floor_schedule:
+  2040: 0.0
+  2045: 0.08
+  2050: 0.20

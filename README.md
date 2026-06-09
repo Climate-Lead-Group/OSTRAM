@@ -35,7 +35,9 @@ python run.py
 The `run.py` script automatically handles:
 - Conda environment creation
 - Dependency installation
-- Full pipeline execution
+- Optional `dvc pull`
+- Direct execution of `t1_confection/B1_Run_Compiler.py`
+- Direct execution of `t1_confection/B2_Executing_OG_Model.py`
 - Output file generation
 
 ## Documentation
@@ -49,6 +51,8 @@ Results are generated in `t1_confection/` with the following files:
 - `OSTRAM_Inputs.csv` / `OSTRAM_Inputs_YYYY-MM-DD.csv`
 - `OSTRAM_Outputs.csv` / `OSTRAM_Outputs_YYYY-MM-DD.csv`
 - `OSTRAM_Combined_Inputs_Outputs.csv` / `OSTRAM_Combined_Inputs_Outputs_YYYY-MM-DD.csv`
+
+The main preprocessed solver datafile is also exported at repository root as `OSTRAM_data.txt`.
 
 Date-stamped files maintain a complete execution history.
 

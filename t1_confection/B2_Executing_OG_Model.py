@@ -5,12 +5,13 @@ Created on 2025
 @author: Climate Lead Group, Andrey Salazar-Vargas
 """
 
+import argparse
 import os
 import pandas as pd
 import yaml
 import subprocess
 import sys
-import platform  
+import platform
 import shutil
 import time
 from datetime import date, datetime
@@ -21,6 +22,40 @@ from pathlib import Path
 import numpy as np
 
 ########################################################################################
+def ensure_env_tool_paths():
+    """Expose the active Python environment's executable folders to subprocesses."""
+    env_root = Path(sys.executable).resolve().parent
+    candidate_dirs = [
+        env_root / "Scripts",
+        env_root / "Library" / "bin",
+        env_root / "bin",
+    ]
+    current_path = os.environ.get("PATH", "")
+    path_entries = current_path.split(os.pathsep) if current_path else []
+    for candidate in candidate_dirs:
+        candidate_str = str(candidate)
+        if candidate.exists() and candidate_str not in path_entries:
+            os.environ["PATH"] = candidate_str + os.pathsep + os.environ.get("PATH", "")
+            path_entries.insert(0, candidate_str)
+
+
+def get_env_executable(executable_name):
+    """Return the full path to an executable inside the active environment when available."""
+    ensure_env_tool_paths()
+    env_root = Path(sys.executable).resolve().parent
+    suffix = ".exe" if platform.system() == "Windows" else ""
+    candidate_dirs = [
+        env_root / "Scripts",
+        env_root / "Library" / "bin",
+        env_root / "bin",
+    ]
+    for candidate_dir in candidate_dirs:
+        candidate = candidate_dir / f"{executable_name}{suffix}"
+        if candidate.exists():
+            return str(candidate)
+    return executable_name
+
+
 def sort_csv_files_in_folder(folder_path):
     if not os.path.isdir(folder_path):
         print(f"La ruta es inválida: {folder_path}")
@@ -144,8 +179,9 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
     os.makedirs(scenario_exec_dir, exist_ok=True)
 
     # Paso 3: Construir el comando
+    otoole_exe = get_env_executable('otoole')
     command = [
-        'otoole', 'convert', 'csv', 'datafile',
+        otoole_exe, 'convert', 'csv', 'datafile',
         input_folder,
         output_file,
         config_file
@@ -160,9 +196,404 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
     if result.returncode != 0:
         print(f"❌ Error al convertir escenario '{scenario_name}':\n{result.stderr}")
         print('#------------------------------------------------------------------------------#')
+        return False
     else:
         print(f"✅ Escenario '{scenario_name}' convertido exitosamente.\n{result.stdout}")
         print('#------------------------------------------------------------------------------#')
+        return True
+
+def run_days_in_day_type_patcher(params, scenario_name):
+    """
+    Runs inject_DaysInDayType.py against the preprocessed datafile to fix
+    the empty DaysInDayType block (which would otherwise default to 7,
+    breaking storage cycling vs energy balance scaling).
+    Must run AFTER run_preprocessing_script, BEFORE the solve.
+    """
+    # Anchor to B2's own directory so it works regardless of how B2 is invoked
+    script_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        'inject_DaysInDayType.py',
+    )
+    target_file = os.path.join(
+        params['executables'],
+        scenario_name + '_0',
+        f"{params['preprocess_data_name']}{scenario_name}_0.txt",
+    )
+    command = [sys.executable, script_path, target_file]
+    print(f"Patching DaysInDayType for '{scenario_name}_0':")
+    print(' '.join(command))
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"❌ DaysInDayType patcher failed for '{scenario_name}':\n{result.stderr}")
+    else:
+        print(result.stdout)
+    print('#------------------------------------------------------------------------------#')
+
+def run_strip_storage_patcher(params, scenario_name):
+    """
+    OPTIONAL diagnostic step: strips selected storage facilities (and their
+    feeding PWR techs) from the preprocessed datafile, writing a SIBLING file
+    (e.g. Pre_processed_BAU_0_NoStorage.txt). Original .txt is never modified.
+
+    Controlled by params['strip_storage_active'] (default False = no-op).
+
+    YAML keys consumed:
+        strip_storage_active:  bool   -- master switch (default False)
+        strip_storage_mode:    str    -- "tech" | "class" | "all"  (default "all")
+        strip_storage_targets: list   -- facility names (tech) or prefixes (class)
+        strip_storage_suffix:  str    -- filename suffix (default "NoStorage")
+
+    When active, main_executer redirects data_file/output_file to use the
+    suffixed sibling, so the solver builds and solves the patched LP and
+    writes outputs alongside the originals.
+    """
+    if not params.get('strip_storage_active', False):
+        return  # No-op when disabled
+
+    mode = params.get('strip_storage_mode', 'all')
+    targets = params.get('strip_storage_targets') or []
+    suffix = params.get('strip_storage_suffix', 'NoStorage')
+
+    # Anchor strip_storage.py to B2's own directory (same pattern as DaysInDayType).
+    script_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        'strip_storage.py',
+    )
+
+    base = f"{params['preprocess_data_name']}{scenario_name}_0"
+    in_file = os.path.join(params['executables'], scenario_name + '_0', f"{base}.txt")
+    out_file = os.path.join(params['executables'], scenario_name + '_0', f"{base}_{suffix}.txt")
+
+    command = [sys.executable, script_path, in_file, '-o', out_file, '--mode', mode]
+    if mode != 'all' and targets:
+        command += ['--targets'] + list(targets)
+
+    print(f"Stripping storage for '{scenario_name}_0' (mode={mode}, suffix={suffix}):")
+    print(' '.join(command))
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"❌ strip_storage patcher failed for '{scenario_name}':\n{result.stderr}")
+    else:
+        print(result.stdout)
+    print('#------------------------------------------------------------------------------#')
+
+def run_storage_delay_patcher(params, scenario_name):
+    """
+    OPTIONAL storage-delay step: keeps storage in the model but blocks storage
+    builds for the first N model years, then reopens the linked PWRLDS*/PWRSDS*
+    caps in later years. Writes SIBLING files (datafile + patched OSeMOSYS
+    model); originals are never modified.
+
+    Controlled by params['storage_delay_active'] (default False = no-op).
+
+    YAML keys consumed:
+        storage_delay_active:           bool  -- master switch (default False)
+        storage_delay_first_n_years:    int   -- years to block (default 5)
+        storage_delay_storage_prefixes: list  -- e.g. ["SDS", "LDS"]
+        storage_delay_storages:         list  -- exact storage names (optional, overrides prefixes)
+        storage_delay_allowed_value:    str   -- PWR cap value in open years (default "-1")
+        storage_delay_suffix:           str   -- chained filename suffix (default "StorageDelayN5")
+        storage_delay_model_input:      str   -- source OSeMOSYS model file (default params['osemosys_model'])
+        storage_delay_model_output:     str   -- patched model file written next to B2 (default "osemosys_fast_preprocessed_storage_delay.txt")
+
+    Mutually exclusive with strip_storage. When storage_delay_active is True,
+    main_executer's __main__ already disables strip_storage and switches the
+    solver model to the patched output produced here.
+    """
+    if not params.get('storage_delay_active', False):
+        return  # No-op when disabled
+
+    suffix = params.get('storage_delay_suffix', 'StorageDelayN5')
+    first_n_years = params.get('storage_delay_first_n_years', 5)
+    allowed_value = params.get('storage_delay_allowed_value', '-1')
+    storage_prefixes = params.get('storage_delay_storage_prefixes', ['SDS', 'LDS'])
+    exact_storages = params.get('storage_delay_storages', [])
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    script_path = os.path.join(here, 'patch_storage_delay.py')
+
+    base = f"{params['preprocess_data_name']}{scenario_name}_0"
+    in_file = os.path.join(params['executables'], scenario_name + '_0', f"{base}.txt")
+    out_file = os.path.join(params['executables'], scenario_name + '_0', f"{base}_{suffix}.txt")
+
+    def _b2_local_path(value):
+        path = Path(value)
+        return str(path if path.is_absolute() else Path(here) / path)
+
+    model_input = _b2_local_path(
+        params.get('storage_delay_model_input', params['osemosys_model'])
+    )
+    model_output = _b2_local_path(
+        params.get('storage_delay_model_output', 'osemosys_fast_preprocessed_storage_delay.txt')
+    )
+
+    command = [
+        sys.executable,
+        script_path,
+        in_file,
+        '-o',
+        out_file,
+        '--model-input',
+        model_input,
+        '--model-output',
+        model_output,
+        '--first-n-years',
+        str(first_n_years),
+        '--allowed-value',
+        str(allowed_value),
+    ]
+    if exact_storages:
+        command += ['--storages'] + list(exact_storages)
+    elif storage_prefixes:
+        command += ['--storage-prefixes'] + list(storage_prefixes)
+
+    print(f"Applying storage-delay patch for '{scenario_name}_0' (N={first_n_years}, suffix={suffix}):")
+    print(' '.join(command))
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"[ERROR] storage_delay patcher failed for '{scenario_name}':\n{result.stderr}")
+        raise RuntimeError(f"storage_delay patcher failed for '{scenario_name}'")
+    print(result.stdout)
+    if result.stderr:
+        print(result.stderr)
+    print('#------------------------------------------------------------------------------#')
+
+def run_open_pwrbck_patcher(params, scenario_name):
+    """
+    OPTIONAL diagnostic step: opens PWRBCK* (backstop) caps in
+    TotalAnnualMaxCapacity and TotalAnnualMaxCapacityInvestment by rewriting
+    any 0-value cells to params['open_pwrbck_value'] (default 9999). Reads
+    from the strip_storage output if that step is active, otherwise from the
+    vanilla preprocessed datafile. Writes a sibling file with the OpenBCK
+    suffix chained on; original is never modified.
+
+    Controlled by params['open_pwrbck_active'] (default False = no-op).
+
+    YAML keys consumed:
+        open_pwrbck_active:  bool  -- master switch (default False)
+        open_pwrbck_value:   int   -- replacement for 0 cells (default 9999)
+        open_pwrbck_pattern: str   -- tech-name substring (default "PWRBCK")
+        open_pwrbck_suffix:  str   -- filename suffix to chain (default "OpenBCK")
+
+    When active, main_executer chains OpenBCK on top of any active strip
+    suffix, so the solver builds and solves the patched LP and writes outputs
+    alongside the originals.
+    """
+    if not params.get('open_pwrbck_active', False):
+        return  # No-op when disabled
+
+    value   = params.get('open_pwrbck_value',   9999)
+    pattern = params.get('open_pwrbck_pattern', 'PWRBCK')
+    suffix  = params.get('open_pwrbck_suffix',  'OpenBCK')
+
+    # Anchor open_pwrbck_caps.py to B2's own directory (same pattern as the
+    # strip and DaysInDayType patchers).
+    script_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        'open_pwrbck_caps.py',
+    )
+
+    base = f"{params['preprocess_data_name']}{scenario_name}_0"
+    # Input is the previous patcher's output (storage_delay or strip) if active;
+    # otherwise the vanilla file.
+    _chain = []
+    if params.get('storage_delay_active', False):
+        _chain.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
+    if params.get('strip_storage_active', False):
+        _chain.append(params.get('strip_storage_suffix', 'NoStorage'))
+    in_base = f"{base}_{'_'.join(_chain)}" if _chain else base
+    out_base = f"{in_base}_{suffix}"
+
+    in_file  = os.path.join(params['executables'], scenario_name + '_0', f"{in_base}.txt")
+    out_file = os.path.join(params['executables'], scenario_name + '_0', f"{out_base}.txt")
+
+    command = [sys.executable, script_path, in_file, '-o', out_file,
+               '--pattern', pattern, '--value', str(value)]
+
+    print(f"Opening PWRBCK caps for '{scenario_name}_0' (pattern={pattern}, value={value}):")
+    print(' '.join(command))
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"❌ open_pwrbck patcher failed for '{scenario_name}':\n{result.stderr}")
+    else:
+        print(result.stdout)
+    print('#------------------------------------------------------------------------------#')
+
+def run_reserve_margin_repair_patcher(params, scenario_name):
+    """
+    OPTIONAL diagnostic/final-ish step: patches ReserveMarginTagTechnology and
+    opens selected firm capacity caps in the preprocessed datafile.
+
+    Controlled by params['reserve_margin_repair_active'] (default False = no-op).
+
+    YAML keys consumed:
+        reserve_margin_repair_active: bool  -- master switch (default False)
+        reserve_margin_repair_suffix: str   -- chained filename suffix (default "RMRepair")
+        reserve_margin_backstop_credit: num -- PWRBCK reserve credit (default 1.0)
+        reserve_margin_ccs_credit: num      -- PWRCCS reserve credit (default 0.9)
+        reserve_margin_open_capacity_value: num -- cap value for selected techs (default 9999)
+        reserve_margin_open_capacity_prefixes: list -- default ["PWRPET", "PWROIL", "PWRNGS"]
+        reserve_margin_patch_backstop: bool -- set PWRBCK tags (default True)
+        reserve_margin_patch_ccs: bool      -- set PWRCCS tags (default True)
+        reserve_margin_open_capacity: bool  -- open selected caps (default True)
+
+    This chains after strip_storage/open_pwrbck when those patchers are active.
+    """
+    if not params.get('reserve_margin_repair_active', False):
+        return  # No-op when disabled
+
+    suffix = params.get('reserve_margin_repair_suffix', 'RMRepair')
+    script_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        'patch_reserve_margin_repair.py',
+    )
+
+    base = f"{params['preprocess_data_name']}{scenario_name}_0"
+    chain_parts = []
+    if params.get('storage_delay_active', False):
+        chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
+    if params.get('strip_storage_active', False):
+        chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
+    if params.get('open_pwrbck_active', False):
+        chain_parts.append(params.get('open_pwrbck_suffix', 'OpenBCK'))
+
+    in_base = f"{base}_{'_'.join(chain_parts)}" if chain_parts else base
+    out_base = f"{in_base}_{suffix}"
+
+    in_file = os.path.join(params['executables'], scenario_name + '_0', f"{in_base}.txt")
+    out_file = os.path.join(params['executables'], scenario_name + '_0', f"{out_base}.txt")
+
+    command = [
+        sys.executable,
+        script_path,
+        in_file,
+        '-o',
+        out_file,
+        '--backstop-credit',
+        str(params.get('reserve_margin_backstop_credit', 1.0)),
+        '--ccs-credit',
+        str(params.get('reserve_margin_ccs_credit', 0.9)),
+        '--open-capacity-value',
+        str(params.get('reserve_margin_open_capacity_value', 9999)),
+    ]
+
+    open_prefixes = params.get(
+        'reserve_margin_open_capacity_prefixes',
+        ['PWRPET', 'PWROIL', 'PWRNGS'],
+    )
+    command += ['--open-capacity-prefixes'] + list(open_prefixes)
+
+    if not params.get('reserve_margin_patch_backstop', True):
+        command.append('--skip-backstop-credit')
+    if not params.get('reserve_margin_patch_ccs', True):
+        command.append('--skip-ccs-credit')
+    if not params.get('reserve_margin_open_capacity', True):
+        command.append('--skip-capacity-opening')
+
+    print(f"Repairing reserve margin data for '{scenario_name}_0' (suffix={suffix}):")
+    print(' '.join(command))
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"[ERROR] reserve_margin_repair patcher failed for '{scenario_name}':\n{result.stderr}")
+    else:
+        print(result.stdout)
+    print('#------------------------------------------------------------------------------#')
+
+def run_reserve_margin_xlsx_patcher(params, scenario_name):
+    """
+    OPTIONAL careful reserve-margin repair step using an XLSX fallback workbook.
+
+    Controlled by params['reserve_margin_xlsx_active'] (default False = no-op).
+
+    YAML keys consumed:
+        reserve_margin_xlsx_active: bool  -- master switch (default False)
+        reserve_margin_xlsx_suffix: str   -- chained suffix (default "RMCarefulXLSX")
+        reserve_margin_xlsx_workbook: str -- workbook path, relative to this B2 file if not absolute
+        reserve_margin_xlsx_sheet: str    -- optional worksheet name
+        reserve_margin_xlsx_backstop_credit: num -- PWRBCK reserve credit (default 1.0)
+        reserve_margin_xlsx_ccs_credit: num      -- PWRCCS reserve credit (default 0.9)
+        reserve_margin_xlsx_target_prefixes: list -- default ["PWRPET", "PWROIL", "PWRNGS"]
+        reserve_margin_xlsx_sentinel_values: list -- default [0, 9999]
+
+    This chains after strip_storage/open_pwrbck and also after the older
+    reserve_margin_repair patch if that older patch is active.
+    """
+    if not params.get('reserve_margin_xlsx_active', False):
+        return
+
+    suffix = params.get('reserve_margin_xlsx_suffix', 'RMCarefulXLSX')
+    here = os.path.dirname(os.path.abspath(__file__))
+    script_path = os.path.join(here, 'patch_reserve_margin_repair_careful_xlsx.py')
+
+    workbook = params.get(
+        'reserve_margin_xlsx_workbook',
+        'firm_capacity_fallbacks_by_cr_0p5.xlsx',
+    )
+    if not os.path.isabs(workbook):
+        workbook = os.path.join(here, workbook)
+
+    base = f"{params['preprocess_data_name']}{scenario_name}_0"
+    chain_parts = []
+    if params.get('storage_delay_active', False):
+        chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
+    if params.get('strip_storage_active', False):
+        chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
+    if params.get('open_pwrbck_active', False):
+        chain_parts.append(params.get('open_pwrbck_suffix', 'OpenBCK'))
+    if params.get('reserve_margin_repair_active', False):
+        chain_parts.append(params.get('reserve_margin_repair_suffix', 'RMRepair'))
+
+    in_base = f"{base}_{'_'.join(chain_parts)}" if chain_parts else base
+    out_base = f"{in_base}_{suffix}"
+
+    in_file = os.path.join(params['executables'], scenario_name + '_0', f"{in_base}.txt")
+    out_file = os.path.join(params['executables'], scenario_name + '_0', f"{out_base}.txt")
+    warnings_file = os.path.join(params['executables'], scenario_name + '_0', f"{out_base}.warnings.txt")
+
+    command = [
+        sys.executable,
+        script_path,
+        in_file,
+        '-o',
+        out_file,
+        '--fallback-xlsx',
+        workbook,
+        '--backstop-credit',
+        str(params.get('reserve_margin_xlsx_backstop_credit', 1.0)),
+        '--ccs-credit',
+        str(params.get('reserve_margin_xlsx_ccs_credit', 0.9)),
+        '--warnings-file',
+        warnings_file,
+    ]
+
+    xlsx_sheet = params.get('reserve_margin_xlsx_sheet')
+    if xlsx_sheet:
+        command += ['--xlsx-sheet', str(xlsx_sheet)]
+
+    target_prefixes = params.get(
+        'reserve_margin_xlsx_target_prefixes',
+        ['PWRPET', 'PWROIL', 'PWRNGS'],
+    )
+    command += ['--target-prefixes'] + list(target_prefixes)
+
+    sentinel_values = params.get('reserve_margin_xlsx_sentinel_values', [0, 9999])
+    command += ['--sentinel-values'] + [str(value) for value in sentinel_values]
+
+    if not params.get('reserve_margin_xlsx_patch_backstop', True):
+        command.append('--skip-backstop-credit')
+    if not params.get('reserve_margin_xlsx_patch_ccs', True):
+        command.append('--skip-ccs-credit')
+
+    print(f"Repairing reserve margin data from XLSX for '{scenario_name}_0' (suffix={suffix}):")
+    print(' '.join(command))
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"[ERROR] reserve_margin_xlsx patcher failed for '{scenario_name}':\n{result.stderr}")
+    else:
+        print(result.stdout)
+        if result.stderr:
+            print(result.stderr)
+    print('#------------------------------------------------------------------------------#')
 
 def run_preprocessing_script(params, scenario_name):
     """
@@ -195,6 +626,7 @@ def run_preprocessing_script(params, scenario_name):
         print('#------------------------------------------------------------------------------#')
 
 def check_enviro_variables(solver_command):
+    ensure_env_tool_paths()
     # Determinar el comando según el sistema operativo
     command = 'where' if platform.system() == 'Windows' else 'which'
 
@@ -228,29 +660,115 @@ def main_executer(params, scenario_name, HERE):
     output_file = os.path.join(folder_scenario, params['preprocess_data_name'] + scenario_name + '_0' + params['output_files'])
     this_case = scenario_name + '_0.txt'
 
+    # storage_delay redirect: when active, point solver at the patched sibling file.
+    # Produces e.g. Pre_processed_BAU_0_StorageDelayN5.txt
+    if params.get('storage_delay_active', False):
+        _sd_suffix = params.get('storage_delay_suffix', 'StorageDelayN5')
+        _base = params['preprocess_data_name'] + scenario_name + '_0'
+        data_file = os.path.join(folder_scenario, f"{_base}_{_sd_suffix}")
+        output_file = os.path.join(folder_scenario, f"{_base}_{_sd_suffix}{params['output_files']}")
+        print(f"[storage_delay] redirecting solver to: {data_file}.txt")
+
+    # Strip-storage diagnostic redirect: when active, point solver at the patched sibling file.
+    # Produces e.g. Pre_processed_BAU_0_NoStorage.txt and Pre_processed_BAU_0_NoStorage_output.{lp,sol,cplex.log}
+    if params.get('strip_storage_active', False):
+        _strip_suffix = params.get('strip_storage_suffix', 'NoStorage')
+        _base = params['preprocess_data_name'] + scenario_name + '_0'
+        data_file = os.path.join(folder_scenario, f"{_base}_{_strip_suffix}")
+        output_file = os.path.join(folder_scenario, f"{_base}_{_strip_suffix}{params['output_files']}")
+        print(f"[strip_storage] redirecting solver to: {data_file}.txt")
+
+    # PWRBCK-cap-opening diagnostic redirect: chains OpenBCK suffix on top of
+    # any active storage_delay/strip suffix.
+    if params.get('open_pwrbck_active', False):
+        _bck_suffix = params.get('open_pwrbck_suffix', 'OpenBCK')
+        _base = params['preprocess_data_name'] + scenario_name + '_0'
+        _chain_parts = []
+        if params.get('storage_delay_active', False):
+            _chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
+        if params.get('strip_storage_active', False):
+            _chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
+        _chain_parts.append(_bck_suffix)
+        _chain = '_'.join(_chain_parts)
+        data_file = os.path.join(folder_scenario, f"{_base}_{_chain}")
+        output_file = os.path.join(folder_scenario, f"{_base}_{_chain}{params['output_files']}")
+        print(f"[open_pwrbck] redirecting solver to: {data_file}.txt")
+
+    # Reserve-margin repair redirect: chains after storage_delay/strip/open-BCK when active.
+    if params.get('reserve_margin_repair_active', False):
+        _rm_suffix = params.get('reserve_margin_repair_suffix', 'RMRepair')
+        _base = params['preprocess_data_name'] + scenario_name + '_0'
+        _chain_parts = []
+        if params.get('storage_delay_active', False):
+            _chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
+        if params.get('strip_storage_active', False):
+            _chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
+        if params.get('open_pwrbck_active', False):
+            _chain_parts.append(params.get('open_pwrbck_suffix', 'OpenBCK'))
+        _chain_parts.append(_rm_suffix)
+        _chain = '_'.join(_chain_parts)
+        data_file = os.path.join(folder_scenario, f"{_base}_{_chain}")
+        output_file = os.path.join(folder_scenario, f"{_base}_{_chain}{params['output_files']}")
+        print(f"[reserve_margin_repair] redirecting solver to: {data_file}.txt")
+
+    # Careful XLSX reserve-margin repair redirect.
+    if params.get('reserve_margin_xlsx_active', False):
+        _xlsx_suffix = params.get('reserve_margin_xlsx_suffix', 'RMCarefulXLSX')
+        _base = params['preprocess_data_name'] + scenario_name + '_0'
+        _chain_parts = []
+        if params.get('storage_delay_active', False):
+            _chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
+        if params.get('strip_storage_active', False):
+            _chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
+        if params.get('open_pwrbck_active', False):
+            _chain_parts.append(params.get('open_pwrbck_suffix', 'OpenBCK'))
+        if params.get('reserve_margin_repair_active', False):
+            _chain_parts.append(params.get('reserve_margin_repair_suffix', 'RMRepair'))
+        _chain_parts.append(_xlsx_suffix)
+        _chain = '_'.join(_chain_parts)
+        data_file = os.path.join(folder_scenario, f"{_base}_{_chain}")
+        output_file = os.path.join(folder_scenario, f"{_base}_{_chain}{params['output_files']}")
+        print(f"[reserve_margin_xlsx] redirecting solver to: {data_file}.txt")
+
     # Determinar el solver según los parámetros
     solver = params['solver']
     commands = []
 
+    # reuse_existing_sol: when active and the .sol file is already present at the
+    # path the solver would write to, skip LP creation, solver invocation and
+    # cleanup of the existing .sol. Everything downstream (otoole sol->csv,
+    # per-scenario concat, cross-scenario concat) still runs.
+    _reuse_sol = (
+        params.get('reuse_existing_sol', False)
+        and os.path.exists(output_file + '.sol')
+    )
+    if params.get('reuse_existing_sol', False) and not _reuse_sol:
+        print(
+            f"[reuse_existing_sol] Requested but {output_file}.sol not found; "
+            f"falling back to a normal solve."
+        )
+    if _reuse_sol:
+        print(f"[reuse_existing_sol] Reusing existing solution: {output_file}.sol")
+
     if solver == 'glpk':
-        if params['execute_model']:
+        if params['execute_model'] and not _reuse_sol:
             # Usando opciones más nuevas de GLPK
-                                       
+
             check_enviro_variables('glpsol')
-            
+
             # Componer el comando para resolver el modelo con las nuevas opciones
             str_solve = f'glpsol -m {params["osemosys_model"]} -d {data_file}.txt --wglp {output_file}.glp --write {output_file}.sol'
             commands.append(str_solve)
-        
+
     else:
-        if params['create_matrix']:
+        if params['create_matrix'] and not _reuse_sol:
             # Para modelos LP
             str_solve = f'glpsol -m {params["osemosys_model"]} -d {data_file}.txt --wlp {output_file}.lp --check'
             commands.append(str_solve)
-        
+
         if solver == 'cbc':
             # Usando solver CBC
-            if params['execute_model']:
+            if params['execute_model'] and not _reuse_sol:
                 if os.path.exists(output_file + '.sol'):
                     os.remove(output_file + '.sol')
 
@@ -262,12 +780,13 @@ def main_executer(params, scenario_name, HERE):
                 # Componer el comando para solver CBC con semillas aleatorias para comportamiento determinístico
                 str_solve = f'cbc {output_file}.lp randomSeed {cbc_random_seed} randomCbcSeed {cbc_random_seed} -seconds {params["iteration_time"]} solve -solu {output_file}.sol'
                 commands.append(str_solve)
-            
+
         elif solver == 'cplex':
             # Usando solver CPLEX
-            if params['execute_model']:
-                if os.path.exists(output_file + '.sol'):
-                    os.remove(output_file + '.sol')
+            if params['execute_model'] and not _reuse_sol:
+                for solution_file in (output_file + '.sol', output_file + '.feasopt.sol'):
+                    if os.path.exists(solution_file):
+                        os.remove(solution_file)
 
                 # Número de hilos que usa cplex
                 cplex_threads = params['cplex_threads']
@@ -278,12 +797,24 @@ def main_executer(params, scenario_name, HERE):
                 check_enviro_variables('cplex')
 
                 # Componer el comando para solver CPLEX con semilla aleatoria para comportamiento determinístico
-                str_solve = f'cplex -c "read {output_file}.lp" "set threads {cplex_threads}" "set randomseed {cplex_random_seed}" "set parallel 1" "optimize" "write {output_file}.sol"'
+                # str_solve = f'cplex -c "read {output_file}.lp" "set threads {cplex_threads}" "set randomseed {cplex_random_seed}" "set parallel 1" "optimize" "write {output_file}.sol"'
+                str_solve = (
+                    f'cplex -c '
+                    f'"set logfile {output_file}.cplex.log" '
+                    f'"read {output_file}.lp" '
+                    f'"set threads {cplex_threads}" '
+                    f'"set randomseed {cplex_random_seed}" '
+                    f'"set parallel 1" '
+                    f'"optimize" '
+                    f'"feasopt all" '
+                    f'"write {output_file}.feasopt.sol" '
+                    f'"write {output_file}.sol"'
+                )
                 commands.append(str_solve)
 
         elif solver == 'gurobi':
             # Usando solver Gurobi
-            if params['execute_model']:
+            if params['execute_model'] and not _reuse_sol:
                 if os.path.exists(output_file + '.sol'):
                     os.remove(output_file + '.sol')
 
@@ -302,6 +833,11 @@ def main_executer(params, scenario_name, HERE):
     if params['execute_model'] or params['create_matrix']:
         for cmd in commands:
             subprocess.run(cmd, shell=True, check=True)
+
+    if params['execute_model'] and solver in ['cbc', 'cplex', 'gurobi'] and not os.path.exists(output_file + '.sol'):
+        raise FileNotFoundError(
+            f"Solver finished but did not create the expected solution file: {output_file}.sol"
+        )
         
     print(f'✅ Escenario {scenario_name}_0 resuelto exitosamente.')
     print('\n#------------------------------------------------------------------------------#')
@@ -314,13 +850,13 @@ def main_executer(params, scenario_name, HERE):
 
     # Convertir salidas de .sol a formato csv
     if solver == 'glpk' and params['glpk_option'] == 'new':
-        str_outputs = f'otoole results {solver} csv {output_file}.sol {file_path_outputs} datafile {data_file}.txt {file_path_conv_format} --glpk_model {output_file}.glp'
+        str_outputs = f'"{get_env_executable("otoole")}" results {solver} csv "{output_file}.sol" "{file_path_outputs}" datafile "{data_file}.txt" "{file_path_conv_format}" --glpk_model "{output_file}.glp"'
         if params['execute_model']:
             subprocess.run(str_outputs, shell=True, check=True)
 
     elif solver in ['cbc', 'cplex', 'gurobi']:
 
-        str_outputs = f'otoole results {solver} csv {output_file}.sol {file_path_outputs} csv {file_path_template} {file_path_conv_format} 2> {output_file}.log'
+        str_outputs = f'"{get_env_executable("otoole")}" results {solver} csv "{output_file}.sol" "{file_path_outputs}" csv "{file_path_template}" "{file_path_conv_format}" 2> "{output_file}.log"'
         if params['execute_model']:
             subprocess.run(str_outputs, shell=True, check=True)
 
@@ -328,7 +864,7 @@ def main_executer(params, scenario_name, HERE):
     if solver in ['glpk', 'cbc', 'cplex', 'gurobi']:
         file_conca_csvs = get_config_main_path(HERE, params['concatenate_folder'])
         script_concate_csv = os.path.join(file_conca_csvs, params['concat_csvs'])
-        str_otoole_concate_csv = f'python -u {script_concate_csv} {file_path_outputs} {output_file}'  # last int is the ID tier
+        str_otoole_concate_csv = f'"{sys.executable}" -u "{script_concate_csv}" "{file_path_outputs}" "{output_file}"'  # last int is the ID tier
         if params['concat_otoole_csv']:
             subprocess.run(str_otoole_concate_csv, shell=True, check=True)
         print(f'✅ Salidas concatenadas a {scenario_name}_0_Output.csv exitosamente.')
@@ -336,8 +872,9 @@ def main_executer(params, scenario_name, HERE):
 
 def delete_files(file, data_file, solver):
     # Eliminar archivos
-    if file:
+    if file and os.path.exists(file):
         shutil.os.remove(file)
+    if data_file and os.path.exists(data_file):
         shutil.os.remove(data_file)
     
     # Verificar si el archivo .sol existe y está vacío
@@ -347,9 +884,13 @@ def delete_files(file, data_file, solver):
             os.remove(log_file)
     
     if solver == 'glpk':
-        shutil.os.remove(file.replace('sol', 'glp'))        
+        glp_file = file.replace('sol', 'glp')
+        if os.path.exists(glp_file):
+            shutil.os.remove(glp_file)
     else:
-        shutil.os.remove(file.replace('sol', 'lp'))
+        lp_file = file.replace('sol', 'lp')
+        if os.path.exists(lp_file):
+            shutil.os.remove(lp_file)
     
     # Eliminar archivos log cuando el solver es 'cplex' y del_files es True
     if solver == 'cplex':
@@ -420,6 +961,92 @@ def generate_combined_input_file(input_folder, output_folder, scenario_name):
     return output_path, inputs_data.head()
 
 
+def export_root_datafile(here, params, scenario_name, export_name=None):
+    """
+    Copy the preprocessed main-scenario datafile to the repository root so the
+    user has a single easy-to-find model datafile next to `t1_confection/`.
+
+    When patchers (storage_delay, strip_storage, open_pwrbck, reserve_margin_*)
+    are active, exports the final patched sibling — not the vanilla preprocessed
+    file — so the root datafile matches what the solver actually consumed.
+    """
+    if export_name is None:
+        if params.get('storage_delay_active', False):
+            export_name = params.get('storage_delay_root_datafile', 'OSTRAM_data_storage_delay.txt')
+        else:
+            export_name = 'OSTRAM_data.txt'
+
+    repo_root = Path(here).parent
+    base = f"{params['preprocess_data_name']}{scenario_name}_0"
+    chain_parts = []
+    if params.get('storage_delay_active', False):
+        chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
+    if params.get('strip_storage_active', False):
+        chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
+    if params.get('open_pwrbck_active', False):
+        chain_parts.append(params.get('open_pwrbck_suffix', 'OpenBCK'))
+    if params.get('reserve_margin_repair_active', False):
+        chain_parts.append(params.get('reserve_margin_repair_suffix', 'RMRepair'))
+    if params.get('reserve_margin_xlsx_active', False):
+        chain_parts.append(params.get('reserve_margin_xlsx_suffix', 'RMCarefulXLSX'))
+
+    source_name = f"{base}_{'_'.join(chain_parts)}.txt" if chain_parts else f"{base}.txt"
+    source_path = (
+        Path(here)
+        / params['executables']
+        / f"{scenario_name}_0"
+        / source_name
+    )
+    target_path = repo_root / export_name
+
+    if not source_path.exists():
+        print(f"[WARN] Root datafile export skipped because source was not found: {source_path}")
+        return None
+
+    shutil.copy2(source_path, target_path)
+    print(f"✅ Datafile exported to repository root: {target_path}")
+    print('#------------------------------------------------------------------------------#')
+    return target_path
+
+
+def active_output_csv_candidates(params, scenario_future_name):
+    """
+    Return output CSV names in the same suffix order used by main_executer.
+
+    The solver/otoole path can become, for example:
+      Pre_processed_BAU_0_NoStorage_OpenBCK_RMCarefulXLSX_output.csv
+
+    The final scenario concatenator used to look only for:
+      Pre_processed_BAU_0_Output.csv
+
+    Keep the active chained name first, with legacy fallbacks after it.
+    """
+    base = f"{params['preprocess_data_name']}{scenario_future_name}"
+    chain_parts = []
+
+    if params.get('storage_delay_active', False):
+        chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
+    if params.get('strip_storage_active', False):
+        chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
+    if params.get('open_pwrbck_active', False):
+        chain_parts.append(params.get('open_pwrbck_suffix', 'OpenBCK'))
+    if params.get('reserve_margin_repair_active', False):
+        chain_parts.append(params.get('reserve_margin_repair_suffix', 'RMRepair'))
+    if params.get('reserve_margin_xlsx_active', False):
+        chain_parts.append(params.get('reserve_margin_xlsx_suffix', 'RMCarefulXLSX'))
+
+    candidates = []
+    if chain_parts:
+        candidates.append(f"{base}_{'_'.join(chain_parts)}{params['output_files']}.csv")
+
+    candidates.extend([
+        f"{base}{params['output_files']}.csv",
+        f"{base}_Output.csv",
+    ])
+
+    return candidates
+
+
 
 def concatenate_all_scenarios(HERE, params):
     """
@@ -458,7 +1085,12 @@ def concatenate_all_scenarios(HERE, params):
         future = parts[1]
 
         input_file = os.path.join(scenario_path, f"{scenario_future_name}_Input.csv")
-        output_file = os.path.join(scenario_path, f"Pre_processed_{scenario_future_name}_Output.csv")
+        output_file = None
+        for output_name in active_output_csv_candidates(params, scenario_future_name):
+            candidate = os.path.join(scenario_path, output_name)
+            if os.path.exists(candidate):
+                output_file = candidate
+                break
 
         if os.path.exists(input_file):
             df_in = pd.read_csv(input_file, low_memory=False)
@@ -467,7 +1099,7 @@ def concatenate_all_scenarios(HERE, params):
             combined_inputs.append(df_in)
             combined_inputs_outputs.append(df_in)
 
-        if os.path.exists(output_file):
+        if output_file and os.path.exists(output_file):
             df_out = pd.read_csv(output_file, low_memory=False)
             df_out.insert(0, "Future", future)
             df_out.insert(1, "Scenario", scenario)
@@ -616,7 +1248,18 @@ def chunk_scenarios(
 if __name__ == "__main__":
     # Iniciar temporizador
     start1 = time.time()
-    
+
+    # CLI args (optional scenario filter)
+    _cli_parser = argparse.ArgumentParser(description="Execute OSeMOSYS model across scenarios")
+    _cli_parser.add_argument(
+        "--scenarios",
+        default=None,
+        help="Comma-separated list of scenario names to run (e.g. "
+             "'B_Optimised_VRE,C_Target_VRE'). When omitted, runs all "
+             "scenarios found in the A2 output directory.",
+    )
+    _cli_args = _cli_parser.parse_args()
+
     # Carpeta donde vive este script: .../OSTRAM/t1_confection
     global HERE
     def get_here() -> Path:
@@ -629,7 +1272,7 @@ if __name__ == "__main__":
             return Path(main.__file__).resolve().parent
         # 3) Ejecución en consola/interactiva: directorio de trabajo actual
         return Path.cwd().resolve()
-    
+
     HERE = get_here()
     
     
@@ -641,7 +1284,23 @@ if __name__ == "__main__":
     # Cargar parámetros desde YAML
     with open('Config_MOMF_T1_AB.yaml', 'r') as f:
         params = yaml.safe_load(f)
-        
+
+    # storage_delay precedence: when this patcher is active it is mutually
+    # exclusive with strip_storage, switches the solver to the patched model
+    # written by patch_storage_delay.py, and uses its own prefix so the run's
+    # combined inputs/outputs do not overwrite the baseline OSTRAM_* artifacts.
+    if params.get('storage_delay_active', False):
+        if params.get('strip_storage_active', False):
+            print("[storage_delay] strip_storage_active forced to False (mutually exclusive)")
+            params['strip_storage_active'] = False
+        params.setdefault('storage_delay_model_input', params['osemosys_model'])
+        params.setdefault('storage_delay_model_output', 'osemosys_fast_preprocessed_storage_delay.txt')
+        params['osemosys_model'] = params['storage_delay_model_output']
+        if params.get('storage_delay_prefix_final_files'):
+            params['prefix_final_files'] = params['storage_delay_prefix_final_files']
+        print(f"[storage_delay] osemosys_model -> {params['osemosys_model']}")
+        print(f"[storage_delay] prefix_final_files -> {params['prefix_final_files']}")
+
     # Cargar parámetros desde YAML
     with open('Config_MOMF_T1_A.yaml', 'r') as f:
         params_A2 = yaml.safe_load(f)
@@ -656,10 +1315,25 @@ if __name__ == "__main__":
         scenarios.remove('Default')
     except ValueError:
         pass
-    
+
     if params['only_main_scenario']:
         scenarios = []
         scenarios.append(params_A2['xtra_scen']['Main_Scenario'])
+
+    if _cli_args.scenarios:
+        requested = [s.strip() for s in _cli_args.scenarios.split(",") if s.strip()]
+        discovered = set(scenarios)
+        unknown = [s for s in requested if s not in discovered]
+        if unknown:
+            print(
+                f"[ERROR] --scenarios contains names not found in {base_input_path}: "
+                f"{unknown}. Discovered: {scenarios}"
+            )
+            sys.exit(1)
+        scenarios = [s for s in scenarios if s in requested]
+        print(f"[INFO] Scenario filter active: {scenarios}")
+
+    main_scenario_name = params_A2['xtra_scen']['Main_Scenario']
     
     ###############################################################################################
     # Escribir modelo txt
@@ -673,13 +1347,24 @@ if __name__ == "__main__":
                 scenario_name=scenario_name
             )
         if params['write_txt_model']:
-            run_otoole_conversion(
+            conversion_ok = run_otoole_conversion(
                 base_output_path=base_output_path,
                 scenario_name=scenario_name,
                 params=params
             )
-            
-            run_preprocessing_script(params, scenario_name)
+
+            if conversion_ok:
+                run_preprocessing_script(params, scenario_name)
+                run_days_in_day_type_patcher(params, scenario_name)
+                run_storage_delay_patcher(params, scenario_name)
+                run_strip_storage_patcher(params, scenario_name)
+                run_open_pwrbck_patcher(params, scenario_name)
+                run_reserve_margin_repair_patcher(params, scenario_name)
+                run_reserve_margin_xlsx_patcher(params, scenario_name)
+            else:
+                print(f"❌ Se omite el preprocesamiento para '{scenario_name}' porque falló la conversión con otoole.")
+                print('#------------------------------------------------------------------------------#')
+                continue
 
 
         input_folder = os.path.join(HERE, base_output_path, scenario_name)
@@ -694,6 +1379,9 @@ if __name__ == "__main__":
 
         #
     ###############################################################################################
+
+    if params['write_txt_model'] and main_scenario_name in scenarios:
+        export_root_datafile(HERE, params, main_scenario_name)
         
         
         

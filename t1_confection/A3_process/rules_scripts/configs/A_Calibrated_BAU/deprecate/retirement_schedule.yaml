@@ -1,0 +1,22 @@
+## A_Calibrated_BAU — thermal retirement schedule
+##
+## Drawdown rates derived from observed plant lifetimes per fuel category.
+## TODO: replace with CCDR-validated values from Natalia before production use.
+
+base_year: 2023
+
+age_based:
+  COA:
+    lifetime_years: 35
+    retirement_profile: linear
+  NGS:
+    lifetime_years: 30
+    retirement_profile: linear
+
+exempt:
+  - 'PWRHYD*'
+  - 'PWRSPV*'
+  - 'PWRWON*'
+  - 'PWRBCK*'
+
+scheduled: []

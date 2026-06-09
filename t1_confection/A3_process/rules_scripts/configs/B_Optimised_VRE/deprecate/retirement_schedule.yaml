@@ -1,0 +1,37 @@
+## retirement_schedule.yaml — B_Optimised_VRE
+##
+## Less aggressive retirements than the original (COA 35/linear, NGS 30/linear).
+##
+## OPTION A (works today, no script changes):
+##   Increase lifetimes to match South Asian operational reality.
+##   COA 45 years and NGS 40 years are defensible for the region.
+##   "linear" still bleeds capacity year-over-year, but over a longer horizon
+##   the annual draw-down is gentler and the pool shrinks less abruptly.
+##
+## OPTION B (requires set_retirement_schedule.py patch):
+##   Add a "cliff" profile: full capacity until (lifetime - tail_years),
+##   then linear decline to zero.  This is physically more realistic — plants
+##   run at or near nameplate until late-life maintenance costs spike.
+##   Uncomment the cliff parameters below and patch the script to support them.
+
+base_year: 2023
+
+age_based:
+  COA:
+    lifetime_years: 45          # was 35 — see NREL 2020, IEA WEO 2023
+    retirement_profile: linear  # change to "cliff" once script supports it
+    # cliff_tail_years: 10      # OPTION B: full capacity for 35 yr, then
+                                # linear decline over last 10 yr to zero
+  NGS:
+    lifetime_years: 40          # was 30 — CCGT longevity in tropical climates
+    retirement_profile: linear
+    # cliff_tail_years: 8       # OPTION B: full capacity for 32 yr, then
+                                # 8-yr linear tail
+
+exempt:
+  - 'PWRHYD*'
+  - 'PWRSPV*'
+  - 'PWRWON*'
+  - 'PWRBCK*'
+
+scheduled: []

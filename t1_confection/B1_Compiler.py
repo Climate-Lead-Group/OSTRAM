@@ -17,6 +17,23 @@ import warnings
 import os
 #
 start1 = time.time()
+
+
+def normalize_year_like_columns(df):
+    """Normalize Excel year headers to plain string years like '2023'."""
+    rename_map = {}
+    for col in df.columns:
+        if isinstance(col, (int, np.integer)):
+            rename_map[col] = str(col)
+        elif isinstance(col, float) and col.is_integer():
+            rename_map[col] = str(int(col))
+        elif isinstance(col, str):
+            stripped = col.strip()
+            if stripped.isdigit():
+                rename_map[col] = str(int(stripped))
+    if rename_map:
+        df = df.rename(columns=rename_map)
+    return df
 #
 # Read yaml file with parameterization
 with open('Config_MOMF_T1_A.yaml', 'r') as file:
@@ -330,7 +347,7 @@ param_sheets = Demand.sheet_names # see all sheet names
 # Define variable to check how many Timeslices model has
 timeslices_dict = {}
 if params['xtra_scen']['Timeslice'] == 'Some':
-    timeslices_dict.update( { 'Profiles':Demand.parse( 'Profiles' ) } )
+    timeslices_dict.update( { 'Profiles':normalize_year_like_columns(Demand.parse( 'Profiles' )) } )
     timeslices_dict = timeslices_dict['Profiles']['Timeslices'].unique().tolist()
 else:
     timeslices_dict = []
@@ -344,8 +361,8 @@ df_SpecDemandProfile = pd.DataFrame( columns = Wide_Param_Header )
 
 
 Projections = pd.ExcelFile(params['A2_extra_inputs'] + params['Xtra_Proj'])
-Projections_sheet = Projections.parse( Projections.sheet_names[0] ) # see all sheet names
-Projections_control = Projections.parse( Projections.sheet_names[1] )
+Projections_sheet = normalize_year_like_columns(Projections.parse( Projections.sheet_names[0] )) # see all sheet names
+Projections_control = normalize_year_like_columns(Projections.parse( Projections.sheet_names[1] ))
 Projection_Driver_Vars = Projections_control[ 'Variable' ].tolist()
 Projection_Mode_per_Driver = Projections_control[ 'Projection Mode' ].tolist()
 for n in range( len( Projection_Driver_Vars ) ):
@@ -376,7 +393,7 @@ accumulated_rows_SpecAnnualDemand = []
 accumulated_rows_SpecDemandProfile = []
 #
 for s in range( len( param_sheets ) ):
-    Demand_df = Demand.parse( Demand.sheet_names[s] )
+    Demand_df = normalize_year_like_columns(Demand.parse( Demand.sheet_names[s] ))
     list_demand_or_share = Demand_df[ 'Demand/Share' ].tolist()
     #
     list_fuel_or_tech = Demand_df[ 'Fuel/Tech' ].tolist()
@@ -531,6 +548,8 @@ Parametrization = pd.ExcelFile(os.path.join(params['A1_outputs'],params['A1_outp
 param_sheets = Parametrization.sheet_names # see all sheet names]
 if 'growth_formula' in param_sheets:
     param_sheets.remove('growth_formula')
+if 'System Parameters' in param_sheets:
+    param_sheets.remove('System Parameters')
 #
 params_dict = {}
 params_dict_new = {}
@@ -540,7 +559,7 @@ params_columns_dict = {}
 # Let us quickly obtain the parameter list found in this excel file:
 overall_param_list = []
 for s in range( len( param_sheets ) ):
-    this_df = Parametrization.parse( param_sheets[s] )
+    this_df = normalize_year_like_columns(Parametrization.parse( param_sheets[s] ))
     this_df = this_df.replace('\xa0', np.nan)                                        
     overall_param_list_raw = this_df[ 'Parameter' ].tolist()
     for p in range( len( list( set( overall_param_list_raw ) ) ) ):
@@ -630,7 +649,7 @@ accumulated_data = {}
 # Define variable to check how many Timeslices model has
 timeslices_dict = {}
 if params['xtra_scen']['Timeslice'] == 'Some':
-    timeslices_dict.update( { 'Capacities':Parametrization.parse( 'Capacities' ) } )
+    timeslices_dict.update( { 'Capacities':normalize_year_like_columns(Parametrization.parse( 'Capacities' )) } )
     timeslices_dict = timeslices_dict['Capacities']['Timeslices'].unique().tolist()
 else:
     timeslices_dict = []
@@ -639,7 +658,7 @@ timeslices_list_check.sort()
 #
 print('5.b. - Remaining parameters.')
 for s in range( len( param_sheets ) ):
-    params_dict.update( { param_sheets[s]:Parametrization.parse( param_sheets[s] ) } )
+    params_dict.update( { param_sheets[s]:normalize_year_like_columns(Parametrization.parse( param_sheets[s] )) } )
     if param_sheets[s] != 'Yearsplit' and param_sheets[s] != 'DaySplit':
         this_df = params_dict[ param_sheets[s] ]
         #
@@ -1558,6 +1577,41 @@ if params['xtra_scen']['Timeslice'] == 'Some':
         #
     #
 # 
+#------------------------------------------------------------------------------
+print('10 - System-level parameters (ReserveMargin).')
+#
+# Read the 'System Parameters' sheet from the Parametrization file.
+# This sheet has rows like:  Parameter | Unit | 2023 | 2024 | ... | 2050
+# Currently only ReserveMargin is expected.
+#
+if 'System Parameters' in Parametrization.sheet_names:
+    sys_params_df = normalize_year_like_columns(Parametrization.parse('System Parameters'))
+    accumulated_rows_sys = []
+    for n in sys_params_df.index:
+        this_param = sys_params_df.loc[n, 'Parameter']
+        for y in range(len(time_range_vector)):
+            yr_key = str(time_range_vector[y])
+            this_value = sys_params_df.loc[n, yr_key]
+            if pd.notna(this_value):
+                accumulated_rows_sys.append({
+                    'PARAMETER': this_param,
+                    'Scenario': other_setup_params['Main_Scenario'],
+                    'REGION': other_setup_params['Region'],
+                    'YEAR': time_range_vector[y],
+                    'Value': round(float(this_value), 4)
+                })
+    if accumulated_rows_sys:
+        new_rows_sys_df = pd.DataFrame(accumulated_rows_sys)
+        for param_name in new_rows_sys_df['PARAMETER'].unique():
+            mask = new_rows_sys_df['PARAMETER'] == param_name
+            overall_param_df_dict[param_name] = new_rows_sys_df.loc[mask].copy()
+            overall_param_df_dict_ndp[param_name] = new_rows_sys_df.loc[mask].copy()
+        print(f'   Loaded system parameters: {list(new_rows_sys_df["PARAMETER"].unique())}')
+    else:
+        print('   WARNING: System Parameters sheet found but no valid rows.')
+else:
+    print('   NOTE: No System Parameters sheet found — ReserveMargin not included.')
+#
 end_1 = time.time()   
 time_elapsed_1 = -start1 + end_1
 print( str( time_elapsed_1 ) + ' seconds /', str( time_elapsed_1/60 ) + ' minutes' )

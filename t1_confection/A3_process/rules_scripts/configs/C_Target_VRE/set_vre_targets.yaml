@@ -1,0 +1,117 @@
+## set_vre_targets.yaml — C_Target_VRE scenario
+## Generated: 2026-06-07
+##
+## NDC-derived renewable generation floors, expressed as a % of CalBAU
+## total generation per country-region. set_vre_targets reads the
+## A_Calibrated_BAU ProductionByTechnology.csv, multiplies each target %
+## by that region's total GENERATION (TECH_TYPES.csv GENERATION category;
+## TRN/storage excluded), and writes TotalTechnologyAnnualActivityLowerLimit.
+##
+## ---------------------------------------------------------------------------
+## SMOOTH START (mirrors B_Optimised_VRE)
+## ---------------------------------------------------------------------------
+## Every schedule is anchored at the region's CURRENT (2023) CalBAU share and
+## held flat through 2027, so the floor early on == CalBAU production and is
+## therefore NON-BINDING (C reproduces the calibrated baseline at the start).
+## It then ramps to the NDC milestone. This is the direct analog of B's
+## lid relaxation_schedule sitting at 1.0 through 2027 — differentiation from
+## BAU starts smooth, not abrupt. (Source-share = current; floor only bites
+## as the ramp rises above the calibrated trajectory.)
+##
+## ---------------------------------------------------------------------------
+## DESIGN DECISIONS (see chat 2026-06-07)
+## ---------------------------------------------------------------------------
+## 1. CalBAU already meets most non-solar NDC components, so the binding lever
+##    is overwhelmingly SOLAR. India nuclear/hydro/wind are already >= target
+##    in CalBAU and are therefore NOT floored (a floor there would be a no-op).
+## 2. Aggregate "all-RE %" targets (Sri Lanka, Bangladesh) are translated by
+##    flooring the GROWABLE VRE techs (solar, + wind for LKA) and leaving
+##    resource-limited hydro / lumpy nuclear at their calibrated natural level.
+##    Decomposing by current mix instead would force infeasible hydro growth
+##    (LKA 17->31%) or unrealistic nuclear (BD ->48%).
+## 3. India per-region solar targets are WEIGHTED (each region's current share
+##    x a common factor k=2.07) so the India TOTAL hits the 22.7% NDC share
+##    while the distribution follows where solar actually builds. INDEA (coal
+##    east) stays near-zero instead of being force-built to 22.7%.
+##
+## KNOBS you may want to turn:
+##  - Maldives: 0.33 = President's 2028 RE pledge. Paradigm-shift = 0.44.
+##  - Bangladesh / Maldives floors are on DOMESTIC generation only (imports in
+##    TRN are excluded). Raising these to the full NDC clean share requires
+##    counting imports or the OSeMOSYS REMinProductionTarget mechanism.
+##  - Nepal/Bhutan hydro floors are activity (generation) locks. If you want
+##    the capacity-MW NDC targets (NPL 15 GW, BTN 5 GW solar) enforce those
+##    via set_min_capacity_floors.py added to C's chain.
+
+bau_results_path: ../Executables/A_Calibrated_BAU_0   # dir holding CalBAU output; script auto-finds the *output.csv
+constraint_type: activity
+max_floor_share: 0.95     # safety cap; high enough for the NPL/BTN hydro locks
+
+## cap_envelope: for targets flagged cap_envelope: true (the solar floors),
+## set_vre_targets writes a bounded MaxCap/MaxCapInv that follows the floor's
+## capacity trajectory (cap_needed = floor_gen / realized_yield from CalBAU).
+## This replaces lid-exemption: solar is pinned near residual early and rises
+## only as the NDC floor rises — no front-loading, no 9999. headroom is the
+## slack above the floor-implied capacity (raise it if a solar floor goes
+## infeasible due to curtailment at high penetration).
+cap_envelope_headroom: 0.20      # generous capacity band -> solver stays well-conditioned
+cap_envelope_min_inv_gw: 2.0     # minimum per-year build allowance (GW)
+default_capacity_factor: 0.10    # fallback yield (× c2a) if CalBAU never built the tech
+
+## pin_generation_to_target: pins VRE generation AT the NDC share via an
+## activity UPPER limit = max(target_gen, CalBAU_gen), while the capacity
+## envelope above stays generous. Result: solar/wind land exactly on target
+## (no 20% overshoot) WITHOUT the degenerate narrow-capacity-band that stalls
+## the solver. The max() guard keeps planned capacity (e.g. BGD solar) from
+## being force-curtailed in early years.
+pin_generation_to_target: true
+pin_slack: 0.01                  # upper limit sits 1% above the floor (a narrow range, not an exact lower==upper equality)
+
+targets:
+
+  # =========================================================================
+  # INDIA — solar is the binding NDC lever (CEA Optimal Mix Exhibit 8.4, 2030)
+  # Weighted so India-wide solar = 22.7%. Wind/hydro/nuclear already >= target.
+  # =========================================================================
+  - {cr: INDEA, tech: "PWRSPV*", schedule: {2023: 0.006, 2027: 0.006, 2030: 0.015, 2050: 0.015}, cap_envelope: true}
+  - {cr: INDNE, tech: "PWRSPV*", schedule: {2023: 0.024, 2027: 0.024, 2030: 0.056, 2050: 0.056}, cap_envelope: true}
+  - {cr: INDNO, tech: "PWRSPV*", schedule: {2023: 0.076, 2027: 0.076, 2030: 0.364, 2050: 0.364}, cap_envelope: true}
+  - {cr: INDSO, tech: "PWRSPV*", schedule: {2023: 0.106, 2027: 0.106, 2030: 0.223, 2050: 0.223}, cap_envelope: true}
+  - {cr: INDWE, tech: "PWRSPV*", schedule: {2023: 0.059, 2027: 0.059, 2030: 0.213, 2050: 0.213}, cap_envelope: true}
+
+  # India wind — gentle nudge to the 8.5% national target (wind exists in NO/SO/WE only)
+  - {cr: INDNO, tech: "PWRWON*", schedule: {2023: 0.024, 2027: 0.024, 2030: 0.027, 2050: 0.027}, cap_envelope: true}
+  - {cr: INDSO, tech: "PWRWON*", schedule: {2023: 0.170, 2027: 0.170, 2030: 0.190, 2050: 0.190}, cap_envelope: true}
+  - {cr: INDWE, tech: "PWRWON*", schedule: {2023: 0.097, 2027: 0.097, 2030: 0.103, 2050: 0.103}, cap_envelope: true}
+
+  # =========================================================================
+  # SRI LANKA — 70% RE@2030 already met (CalBAU ~80%); push VRE for 100%@2050.
+  # Hydro/biomass left at natural level (resource-limited). Updated NDC 2023.
+  # =========================================================================
+  - {cr: LKAXX, tech: "PWRSPV*", schedule: {2023: 0.087, 2027: 0.087, 2030: 0.235, 2050: 0.350}, cap_envelope: true}
+  - {cr: LKAXX, tech: "PWRWON*", schedule: {2023: 0.057, 2027: 0.057, 2030: 0.282, 2050: 0.400}, cap_envelope: true}
+
+  # =========================================================================
+  # MALDIVES — solar-only system. 0.33 = President's 2028 RE pledge.
+  # Floor is on domestic generation (imports excluded). Paradigm shift = 0.44.
+  # =========================================================================
+  - {cr: MDVXX, tech: "PWRSPV*", schedule: {2023: 0.028, 2027: 0.028, 2030: 0.330, 2050: 0.330}, cap_envelope: true}
+
+  # =========================================================================
+  # BANGLADESH — clean target met early via nuclear; solar is the growable
+  # domestic lever. Full 66% clean@2050 needs imports/nuclear treatment (note).
+  # IEPMP In-Between / COP26.
+  # =========================================================================
+  - {cr: BGDXX, tech: "PWRSPV*", schedule: {2023: 0.011, 2027: 0.011, 2030: 0.064, 2050: 0.200}, cap_envelope: true}
+
+  # =========================================================================
+  # NEPAL — lock hydro dominance (~100% clean NDC) + light solar (IPSDP ~15%).
+  # =========================================================================
+  - {cr: NPLXX, tech: "PWRHYD*", schedule: {2023: 0.85, 2050: 0.85}}
+  - {cr: NPLXX, tech: "PWRSPV*", schedule: {2023: 0.009, 2027: 0.009, 2030: 0.077, 2050: 0.120}, cap_envelope: true}
+
+  # =========================================================================
+  # BHUTAN — lock hydro (carbon-neutral NDC; CalBAU ~100% hydro).
+  # 5 GW solar target is capacity -> set_min_capacity_floors.py if wanted.
+  # =========================================================================
+  - {cr: BTNXX, tech: "PWRHYD*", schedule: {2023: 0.90, 2050: 0.90}}
