@@ -622,9 +622,11 @@ def read_ostram_generation_data(generation_file_path):
 
 def read_trade_balance_data(trade_balance_file_path):
     """
-    Read per-country electricity import/export data from the 'Imp-Exp por País' sheet.
+    Read per-country electricity import/export data from the import/export sheet
+    ('Imp-Exp por País' in Spanish, 'Imp-Exp by Country' in English).
 
-    Uses accent-normalized country names to match against OSTRAM_COUNTRY_MAPPING.
+    Uses accent-normalized country names to match against OSTRAM_COUNTRY_MAPPING
+    (which recognizes both Spanish and English country names).
 
     Args:
         trade_balance_file_path: Path to flujos_energia_estimados_optimizacion.xlsx
@@ -644,17 +646,18 @@ def read_trade_balance_data(trade_balance_file_path):
 
     wb = openpyxl.load_workbook(trade_balance_file_path, data_only=True)
 
-    # Find the 'Imp-Exp por País' sheet (accent-insensitive match, OSTRAM Spanish name)
+    # Find the import/export sheet (accent-insensitive; accepts the OSTRAM Spanish
+    # name 'Imp-Exp por País' or the English 'Imp-Exp by Country')
     target_sheet = None
     for name in wb.sheetnames:
-        if strip_accents(name) == 'Imp-Exp por Pais':
+        if strip_accents(name) in ('Imp-Exp por Pais', 'Imp-Exp by Country'):
             target_sheet = name
             break
 
     if not target_sheet:
         wb.close()
         raise ValueError(
-            f"Sheet 'Imp-Exp por País' not found in {trade_balance_file_path}. "
+            f"Sheet 'Imp-Exp por País' / 'Imp-Exp by Country' not found in {trade_balance_file_path}. "
             f"Available sheets: {wb.sheetnames}"
         )
 
@@ -667,17 +670,19 @@ def read_trade_balance_data(trade_balance_file_path):
         if header:
             col_map[strip_accents(str(header).strip())] = col_idx
 
-    year_col = col_map.get('Ano')
-    country_col = col_map.get('Pais')
-    exp_col = col_map.get('Exportaciones (GWh)')
-    imp_col = col_map.get('Importaciones (GWh)')
+    # Accept Spanish or English headers (already accent-stripped above)
+    year_col = col_map.get('Ano') or col_map.get('Year')
+    country_col = col_map.get('Pais') or col_map.get('Country')
+    exp_col = col_map.get('Exportaciones (GWh)') or col_map.get('Exports (GWh)')
+    imp_col = col_map.get('Importaciones (GWh)') or col_map.get('Imports (GWh)')
 
     if not all([year_col, country_col, exp_col, imp_col]):
         wb.close()
         raise ValueError(
             f"Missing required columns in '{target_sheet}'. "
             f"Found headers: {list(col_map.keys())}. "
-            f"Required: Año, País, Exportaciones (GWh), Importaciones (GWh)"
+            f"Required (ES or EN): Año/Year, País/Country, "
+            f"Exportaciones (GWh)/Exports (GWh), Importaciones (GWh)/Imports (GWh)"
         )
 
     # Read data rows

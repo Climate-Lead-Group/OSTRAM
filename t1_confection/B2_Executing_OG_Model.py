@@ -58,71 +58,71 @@ def get_env_executable(executable_name):
 
 def sort_csv_files_in_folder(folder_path):
     if not os.path.isdir(folder_path):
-        print(f"La ruta es inválida: {folder_path}")
+        print(f"Invalid path: {folder_path}")
         return
     print('################################################################')
-    print('Ordenar archivos csv.')
+    print('Sort csv files.')
     for filename in sorted(os.listdir(folder_path)):
         if filename.endswith(".csv"):
             file_path = os.path.join(folder_path, filename)
-            print(f"Procesando: {filename}")
+            print(f"Processing: {filename}")
             try:
-                # Leer el CSV preservando el encabezado
+                # Read the CSV preserving the header
                 df = pd.read_csv(file_path)
 
-                # Ordenar usando todas las columnas
+                # Sort using all columns
                 df_sorted = df.sort_values(by=list(df.columns))
 
-                # Sobrescribir el archivo original
+                # Overwrite the original file
                 df_sorted.to_csv(file_path, index=False)
             except Exception as e:
-                print(f"Error procesando {filename}: {e}")
+                print(f"Error processing {filename}: {e}")
 
-    print("✅ Todos los archivos fueron ordenados.")
+    print("✅ All files were sorted.")
     print('################################################################\n')
 
 def process_scenario_folder(base_input_path, template_path, base_output_path, scenario_name):
     """
-    Procesa una carpeta de escenario: lee sus archivos CSV, los alinea con la estructura de plantilla,
-    mapea 'Value' a 'VALUE', excluye columnas específicas y guarda los resultados en la salida.
-    También asegura que VALUE sea int() para ciertos archivos de plantilla.
+    Process a scenario folder: read its CSV files, align them with the template structure,
+    map 'Value' to 'VALUE', exclude specific columns and save the results to the output.
+    Also ensures that VALUE is int() for certain template files.
     """
 
-    # Paso 1: Definir ruta de entrada del escenario
+    # Step 1: Define the scenario input path
     scenario_input_path = os.path.join(base_input_path, scenario_name)
 
-    # Paso 2: Omitir si no es directorio o es 'Default'
+    # Step 2: Skip if not a directory or is 'Default'
     if not os.path.isdir(scenario_input_path) or scenario_name == 'Default':
         return
 
-    # Paso 3: Leer y limpiar CSVs del escenario
+    # Step 3: Read and clean the scenario CSVs
     scenario_files = {}
     for f in sorted(os.listdir(scenario_input_path)):
         if f.endswith('.csv'):
             df = pd.read_csv(os.path.join(scenario_input_path, f))
 
-            # Eliminar columnas no deseadas
+            # Remove unwanted columns
             df = df.drop(columns=[col for col in ['PARAMETERT', 'Scenario'] if col in df.columns])
             df = df.dropna(axis=1, how='all')
 
-            # Renombrar 'Value' a 'VALUE'
+            # Rename 'Value' to 'VALUE'
             if 'Value' in df.columns:
                 df = df.rename(columns={'Value': 'VALUE'})
 
             scenario_files[f] = df
 
-    # Paso 4: Leer archivos de plantilla
+    # Step 4: Read template files
     template_files = {
         f: pd.read_csv(os.path.join(template_path, f))
         for f in sorted(os.listdir(template_path))
         if f.endswith('.csv')
     }
 
-    # Paso 5: Crear ruta de salida
+    # Step 5: Create the output path
     scenario_output_path = os.path.join(base_output_path, scenario_name)
     os.makedirs(scenario_output_path, exist_ok=True)
     
-    # Paso 6: Llenar plantillas con datos del escenario
+    # Step 6: Fill templates with scenario data
     for template_name, template_df in template_files.items():
         output_file_path = os.path.join(scenario_output_path, template_name)
         
@@ -132,7 +132,7 @@ def process_scenario_folder(base_input_path, template_path, base_output_path, sc
             filled_df = template_df.copy()
             filled_df[common_columns] = input_df[common_columns]
 
-            # Paso 7: Convertir VALUE a int si es necesario
+            # Step 7: Convert VALUE to int if necessary
             if template_name in [
                 'DAYTYPE.csv', 'DAILYTIMEBRACKET.csv', 'SEASON.csv',
                 'MODE_OF_OPERATION.csv', 'YEAR.csv', 'EMISSION.csv',
@@ -140,10 +140,10 @@ def process_scenario_folder(base_input_path, template_path, base_output_path, sc
                 'TIMESLICE.csv', 'Conversionls.csv'
             ]:
                 if 'VALUE' in filled_df.columns:
-                    # Eliminar filas con NaN o cadena vacía (incluyendo solo espacios)
+                    # Remove rows with NaN or empty string (including whitespace-only)
                     filled_df = filled_df[filled_df['VALUE'].notna() & (filled_df['VALUE'].astype(str).str.strip() != '')]
             
-                    # Convertir a int si es necesario
+                    # Convert to int if necessary
                     if template_name in [
                         'DAYTYPE.csv', 'DAILYTIMEBRACKET.csv', 'SEASON.csv',
                         'MODE_OF_OPERATION.csv', 'YEAR.csv'
@@ -157,28 +157,28 @@ def process_scenario_folder(base_input_path, template_path, base_output_path, sc
     folder_to_sort = os.path.join(base_output_path,scenario_name)
     sort_csv_files_in_folder(folder_to_sort)
 
-    print(f"✅ Escenario '{scenario_name}': plantillas completadas y guardadas exitosamente.\n")
+    print(f"✅ Scenario '{scenario_name}': templates completed and saved successfully.\n")
     print('#------------------------------------------------------------------------------#')
 
 def run_otoole_conversion(base_output_path, scenario_name, params):
     """
-    Ejecuta el comando corregido 'otoole convert csv datafile' para un escenario dado.
+    Run the corrected 'otoole convert csv datafile' command for a given scenario.
 
-    Parámetros:
-        base_output_path (str): Ruta donde se almacenan los archivos CSV del escenario.
-        scenario_name (str): El nombre del escenario.
-        params (dict): Diccionario cargado desde el archivo YAML con rutas requeridas.
+    Parameters:
+        base_output_path (str): Path where the scenario CSV files are stored.
+        scenario_name (str): The scenario name.
+        params (dict): Dictionary loaded from the YAML file with the required paths.
     """
-    # Paso 1: Definir rutas
+    # Step 1: Define paths
     input_folder = os.path.join(base_output_path, scenario_name)
     scenario_exec_dir = os.path.join(HERE, params['executables'], scenario_name + '_0')
     output_file = os.path.join(scenario_exec_dir, f"{scenario_name}_0.txt")
     config_file = os.path.join(HERE, params['Miscellaneous'], params['otoole_config'])
 
-    # Paso 2: Asegurar que la carpeta ejecutable del escenario exista
+    # Step 2: Ensure the scenario executable folder exists
     os.makedirs(scenario_exec_dir, exist_ok=True)
 
-    # Paso 3: Construir el comando
+    # Step 3: Build the command
     otoole_exe = get_env_executable('otoole')
     command = [
         otoole_exe, 'convert', 'csv', 'datafile',
@@ -187,18 +187,18 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
         config_file
     ]
 
-    print(f"Ejecutando comando: {' '.join(command)}")
+    print(f"Running command: {' '.join(command)}")
 
-    # Paso 4: Ejecutar el comando
+    # Step 4: Run the command
     result = subprocess.run(command, capture_output=True, text=True)
 
-    # Paso 5: Manejar salida
+    # Step 5: Handle output
     if result.returncode != 0:
-        print(f"❌ Error al convertir escenario '{scenario_name}':\n{result.stderr}")
+        print(f"❌ Error converting scenario '{scenario_name}':\n{result.stderr}")
         print('#------------------------------------------------------------------------------#')
         return False
     else:
-        print(f"✅ Escenario '{scenario_name}' convertido exitosamente.\n{result.stdout}")
+        print(f"✅ Scenario '{scenario_name}' converted successfully.\n{result.stdout}")
         print('#------------------------------------------------------------------------------#')
         return True
 
@@ -597,57 +597,57 @@ def run_reserve_margin_xlsx_patcher(params, scenario_name):
 
 def run_preprocessing_script(params, scenario_name):
     """
-    Ejecuta el script de preprocesamiento Python especificado en el archivo YAML de parámetros para un escenario dado.
+    Run the Python preprocessing script specified in the YAML parameters file for a given scenario.
 
-    Parámetros:
-        params (dict): Parámetros cargados desde el archivo YAML.
-        scenario_name (str): El nombre del escenario a preprocesar.
+    Parameters:
+        params (dict): Parameters loaded from the YAML file.
+        scenario_name (str): The name of the scenario to preprocess.
     """
-    # Paso 1: Definir rutas
+    # Step 1: Define paths
     script_path = os.path.join(params['Miscellaneous'], params['preprocess_data'])
     input_file = os.path.join(params['executables'], scenario_name + '_0', f"{scenario_name}_0.txt")
     output_file = os.path.join(params['executables'], scenario_name + '_0', f"{params['preprocess_data_name']}{scenario_name}_0.txt")
 
-    # Paso 2: Construir comando
+    # Step 2: Build command
     command = [sys.executable, script_path, input_file, output_file]
 
-    print(f"Ejecutando script de preprocesamiento para escenario '{scenario_name}_0':")
+    print(f"Running preprocessing script for scenario '{scenario_name}_0':")
     print(' '.join(command))
 
-    # Paso 3: Ejecutar el script
+    # Step 3: Run the script
     result = subprocess.run(command, capture_output=True, text=True)
 
-    # Paso 4: Resultado de salida
+    # Step 4: Output result
     if result.returncode != 0:
-        print(f"❌ Error durante preprocesamiento del escenario '{scenario_name}':\n{result.stderr}")
+        print(f"❌ Error during preprocessing of scenario '{scenario_name}':\n{result.stderr}")
         print('#------------------------------------------------------------------------------#')
     else:
-        print(f"✅ Preprocesamiento completado para escenario '{scenario_name}':\n{result.stdout}")
+        print(f"✅ Preprocessing completed for scenario '{scenario_name}':\n{result.stdout}")
         print('#------------------------------------------------------------------------------#')
 
 def check_enviro_variables(solver_command):
     ensure_env_tool_paths()
-    # Determinar el comando según el sistema operativo
+    # Determine the command according to the operating system
     command = 'where' if platform.system() == 'Windows' else 'which'
 
-    # Ejecutar el comando apropiado
+    # Run the appropriate command
     where_solver = subprocess.run([command, solver_command], capture_output=True, text=True)
     paths = where_solver.stdout.splitlines()
-    
-    if paths:  # Asegurar que al menos una ruta fue encontrada
+
+    if paths:  # Ensure at least one path was found
         path_solver = paths[0]
-        
-        # Verificar si la ruta ya está en la variable de entorno PATH
+
+        # Check whether the path is already in the PATH environment variable
         if path_solver not in os.environ["PATH"]:
-            # Si no está en PATH, agregarla
+            # If it is not in PATH, add it
             os.environ["PATH"] += os.pathsep + path_solver
-            print("Ruta agregada:", path_solver)
+            print("Path added:", path_solver)
     else:
-        print(f"No se encontró '{solver_command}' en el sistema.")
+        print(f"'{solver_command}' was not found on the system.")
     #
 
 def get_config_main_path(here, base_folder):
-    # Navegar a la raíz del repositorio (padre de t1_confection)
+    # Navigate to the repository root (parent of t1_confection)
     repo_root = Path(here).parent
     return str(repo_root / base_folder)
 
@@ -655,7 +655,7 @@ def main_executer(params, scenario_name, HERE):
     
     folder_scenario = os.path.join(HERE, params['executables'], scenario_name + '_0')                             
     
-    # Construir rutas para el archivo de datos y el archivo de salida, adaptando a diferencias del sistema de archivos
+    # Build paths for the data file and the output file, adapting to filesystem differences
     data_file = os.path.join(folder_scenario, params['preprocess_data_name'] + scenario_name + '_0')
     output_file = os.path.join(folder_scenario, params['preprocess_data_name'] + scenario_name + '_0' + params['output_files'])
     this_case = scenario_name + '_0.txt'
@@ -730,7 +730,7 @@ def main_executer(params, scenario_name, HERE):
         output_file = os.path.join(folder_scenario, f"{_base}_{_chain}{params['output_files']}")
         print(f"[reserve_margin_xlsx] redirecting solver to: {data_file}.txt")
 
-    # Determinar el solver según los parámetros
+    # Determine the solver according to the parameters
     solver = params['solver']
     commands = []
 
@@ -752,51 +752,51 @@ def main_executer(params, scenario_name, HERE):
 
     if solver == 'glpk':
         if params['execute_model'] and not _reuse_sol:
-            # Usando opciones más nuevas de GLPK
+            # Using newer GLPK options
 
             check_enviro_variables('glpsol')
 
-            # Componer el comando para resolver el modelo con las nuevas opciones
+            # Compose the command to solve the model with the new options
             str_solve = f'glpsol -m {params["osemosys_model"]} -d {data_file}.txt --wglp {output_file}.glp --write {output_file}.sol'
             commands.append(str_solve)
 
     else:
         if params['create_matrix'] and not _reuse_sol:
-            # Para modelos LP
+            # For LP models
             str_solve = f'glpsol -m {params["osemosys_model"]} -d {data_file}.txt --wlp {output_file}.lp --check'
             commands.append(str_solve)
 
         if solver == 'cbc':
-            # Usando solver CBC
+            # Using CBC solver
             if params['execute_model'] and not _reuse_sol:
                 if os.path.exists(output_file + '.sol'):
                     os.remove(output_file + '.sol')
 
                 check_enviro_variables('cbc')
 
-                # Obtener semilla aleatoria para reproducibilidad
+                # Get random seed for reproducibility
                 cbc_random_seed = params.get('cbc_random_seed', 12345)
 
-                # Componer el comando para solver CBC con semillas aleatorias para comportamiento determinístico
+                # Compose the command for the CBC solver with random seeds for deterministic behavior
                 str_solve = f'cbc {output_file}.lp randomSeed {cbc_random_seed} randomCbcSeed {cbc_random_seed} -seconds {params["iteration_time"]} solve -solu {output_file}.sol'
                 commands.append(str_solve)
 
         elif solver == 'cplex':
-            # Usando solver CPLEX
+            # Using CPLEX solver
             if params['execute_model'] and not _reuse_sol:
                 for solution_file in (output_file + '.sol', output_file + '.feasopt.sol'):
                     if os.path.exists(solution_file):
                         os.remove(solution_file)
 
-                # Número de hilos que usa cplex
+                # Number of threads cplex uses
                 cplex_threads = params['cplex_threads']
 
-                # Obtener semilla aleatoria para reproducibilidad
+                # Get random seed for reproducibility
                 cplex_random_seed = params.get('cplex_random_seed', 12345)
 
                 check_enviro_variables('cplex')
 
-                # Componer el comando para solver CPLEX con semilla aleatoria para comportamiento determinístico
+                # Compose the command for the CPLEX solver with a random seed for deterministic behavior
                 # str_solve = f'cplex -c "read {output_file}.lp" "set threads {cplex_threads}" "set randomseed {cplex_random_seed}" "set parallel 1" "optimize" "write {output_file}.sol"'
                 str_solve = (
                     f'cplex -c '
@@ -813,20 +813,20 @@ def main_executer(params, scenario_name, HERE):
                 commands.append(str_solve)
 
         elif solver == 'gurobi':
-            # Usando solver Gurobi
+            # Using Gurobi solver
             if params['execute_model'] and not _reuse_sol:
                 if os.path.exists(output_file + '.sol'):
                     os.remove(output_file + '.sol')
 
-                # Número de hilos que usa gurobi
+                # Number of threads gurobi uses
                 gurobi_threads = params['gurobi_threads']
 
-                # Obtener semilla aleatoria para reproducibilidad
+                # Get random seed for reproducibility
                 gurobi_seed = params.get('gurobi_seed', 12345)
 
                 check_enviro_variables('gurobi_cl')
 
-                # Componer el comando para solver Gurobi con semilla para comportamiento determinístico
+                # Compose the command for the Gurobi solver with a seed for deterministic behavior
                 str_solve = f'gurobi_cl Threads={gurobi_threads} Seed={gurobi_seed} ResultFile={output_file}.sol {output_file}.lp'
                 commands.append(str_solve)
 
@@ -839,16 +839,16 @@ def main_executer(params, scenario_name, HERE):
             f"Solver finished but did not create the expected solution file: {output_file}.sol"
         )
         
-    print(f'✅ Escenario {scenario_name}_0 resuelto exitosamente.')
+    print(f'✅ Scenario {scenario_name}_0 solved successfully.')
     print('\n#------------------------------------------------------------------------------#')
 
-    # Rutas para convertir salidas
+    # Paths to convert outputs
     file_path_conv_format = os.path.join(HERE, params['Miscellaneous'], params['conv_format'])
     # file_path_template = os.path.join(params['Miscellaneous'], params['templates'])
     file_path_template = os.path.join(HERE, params['A2_output_otoole'], scenario_name)
     file_path_outputs = os.path.join(folder_scenario, params['outputs'])
 
-    # Convertir salidas de .sol a formato csv
+    # Convert .sol outputs to csv format
     if solver == 'glpk' and params['glpk_option'] == 'new':
         str_outputs = f'"{get_env_executable("otoole")}" results {solver} csv "{output_file}.sol" "{file_path_outputs}" datafile "{data_file}.txt" "{file_path_conv_format}" --glpk_model "{output_file}.glp"'
         if params['execute_model']:
@@ -860,24 +860,24 @@ def main_executer(params, scenario_name, HERE):
         if params['execute_model']:
             subprocess.run(str_outputs, shell=True, check=True)
 
-    # Módulo para concatenar salidas csv de otoole
+    # Module to concatenate otoole csv outputs
     if solver in ['glpk', 'cbc', 'cplex', 'gurobi']:
         file_conca_csvs = get_config_main_path(HERE, params['concatenate_folder'])
         script_concate_csv = os.path.join(file_conca_csvs, params['concat_csvs'])
         str_otoole_concate_csv = f'"{sys.executable}" -u "{script_concate_csv}" "{file_path_outputs}" "{output_file}"'  # last int is the ID tier
         if params['concat_otoole_csv']:
             subprocess.run(str_otoole_concate_csv, shell=True, check=True)
-        print(f'✅ Salidas concatenadas a {scenario_name}_0_Output.csv exitosamente.')
+        print(f'✅ Outputs concatenated to {scenario_name}_0_Output.csv successfully.')
         print('\n#------------------------------------------------------------------------------#')
 
 def delete_files(file, data_file, solver):
-    # Eliminar archivos
+    # Delete files
     if file and os.path.exists(file):
         shutil.os.remove(file)
     if data_file and os.path.exists(data_file):
         shutil.os.remove(data_file)
     
-    # Verificar si el archivo .sol existe y está vacío
+    # Check whether the .sol file exists and is empty
     log_file = file.replace('.sol', '.log')
     if os.path.exists(log_file) and os.path.getsize(log_file) == 0:
         if os.path.exists(log_file):
@@ -892,19 +892,19 @@ def delete_files(file, data_file, solver):
         if os.path.exists(lp_file):
             shutil.os.remove(lp_file)
     
-    # Eliminar archivos log cuando el solver es 'cplex' y del_files es True
+    # Delete log files when the solver is 'cplex' and del_files is True
     if solver == 'cplex':
         for filename in ['cplex.log', 'clone1.log', 'clone2.log']:
             if os.path.exists(filename):
                 os.remove(filename)
 
-    # Eliminar archivos log cuando el solver es 'gurobi' y del_files es True
+    # Delete log files when the solver is 'gurobi' and del_files is True
     if solver == 'gurobi':
         if os.path.exists('gurobi.log'):
             os.remove('gurobi.log')
 
 def read_csv_files(input_dir):
-    """Lee todos los archivos CSV en el directorio dado y retorna un diccionario de DataFrames."""
+    """Read all CSV files in the given directory and return a dictionary of DataFrames."""
     data_dict = {}
     for filename in sorted(os.listdir(input_dir)):
         if filename.endswith(".csv"):
@@ -916,8 +916,8 @@ def read_csv_files(input_dir):
 
 def generate_combined_input_file(input_folder, output_folder, scenario_name):
     """
-    Lee CSVs desde input_folder, filtra claves de metadatos, renombra columnas VALUE por clave,
-    concatena todos los DataFrames no vacíos, ordena columnas y guarda el resultado en un archivo CSV.
+    Read CSVs from input_folder, filter metadata keys, rename VALUE columns by key,
+    concatenate all non-empty DataFrames, sort columns and save the result to a CSV file.
     """
     keys_sets_delete = ['REGION', 'YEAR', 'TECHNOLOGY', 'FUEL', 'EMISSION', 'MODE_OF_OPERATION',
                         'TIMESLICE', 'STORAGE', 'SEASON', 'DAYTYPE', 'DAILYTIMEBRACKET']
@@ -939,23 +939,23 @@ def generate_combined_input_file(input_folder, output_folder, scenario_name):
         inputs_dataframes.append(df)
 
     if not inputs_dataframes:
-        print("[Advertencia] No se encontraron dataframes válidos para concatenar.")
+        print("[Warning] No valid dataframes found to concatenate.")
         return None, None
 
-    # Concatenar todos los dataframes no vacíos
-    inputs_data = pd.concat(inputs_dataframes, ignore_index=True, sort=True)  # Ordenar para orden de columnas determinístico
+    # Concatenate all non-empty dataframes
+    inputs_data = pd.concat(inputs_dataframes, ignore_index=True, sort=True)  # Sort for deterministic column order
 
-    # Reordenar columnas
+    # Reorder columns
     present_keys = [col for col in keys_sets_delete if col in inputs_data.columns]
     other_columns = sorted([col for col in inputs_data.columns if col not in present_keys])
     inputs_data = inputs_data[present_keys + other_columns]
 
-    # Guardar a CSV
+    # Save to CSV
     os.makedirs(output_folder, exist_ok=True)
     output_path = os.path.join(output_folder, f"{scenario_name}_Input.csv")
     inputs_data.to_csv(output_path, index=False)
 
-    print(f'✅ Inputs concatenados a {scenario_name}_Input.csv exitosamente.')
+    print(f'✅ Inputs concatenated to {scenario_name}_Input.csv successfully.')
     print('\n#------------------------------------------------------------------------------#')
 
     return output_path, inputs_data.head()
@@ -1050,21 +1050,21 @@ def active_output_csv_candidates(params, scenario_future_name):
 
 def concatenate_all_scenarios(HERE, params):
     """
-    Itera sobre todas las carpetas de escenarios en `base_input_path` (excluyendo 'Default'),
-    lee archivos *_Input.csv y *_Output.csv, agrega columnas de metadatos de escenario, los concatena
-    en archivos CSV únicos para inputs, outputs y combinado, y devuelve sus rutas.
+    Iterate over all scenario folders in `base_input_path` (excluding 'Default'),
+    read *_Input.csv and *_Output.csv files, add scenario metadata columns, concatenate them
+    into single CSV files for inputs, outputs and combined, and return their paths.
 
     Args:
         params (dict):
-          - executables (str): Ruta al directorio base que contiene las carpetas de escenarios.
-          - prefix_final_files (str): Carpeta/ruta donde guardar los resultados.
-          - inputs_file (str): Nombre base para el CSV de inputs.
-          - outputs_file (str): Nombre base para el CSV de outputs.
-          - combined_file (str, opcional): Nombre base para el CSV combinado inputs+outputs.
+          - executables (str): Path to the base directory containing the scenario folders.
+          - prefix_final_files (str): Folder/path where to save the results.
+          - inputs_file (str): Base name for the inputs CSV.
+          - outputs_file (str): Base name for the outputs CSV.
+          - combined_file (str, optional): Base name for the combined inputs+outputs CSV.
     Returns:
         tuple: (input_csv_path, output_csv_path, combined_csv_path)
     """
-    # Columnas de metadatos que movemos al frente
+    # Metadata columns that we move to the front
     keys_sets_delete = [
         'REGION','YEAR','TECHNOLOGY','FUEL','EMISSION','MODE_OF_OPERATION',
         'TIMESLICE','STORAGE','SEASON','DAYTYPE','DAILYTIMEBRACKET'
@@ -1106,7 +1106,7 @@ def concatenate_all_scenarios(HERE, params):
             combined_outputs.append(df_out)
             combined_inputs_outputs.append(df_out)
 
-    # Concatenar inputs y outputs por separado
+    # Concatenate inputs and outputs separately
     df_inputs_all = pd.concat(combined_inputs, ignore_index=True) if combined_inputs else pd.DataFrame()
     df_outputs_all = pd.concat(combined_outputs, ignore_index=True) if combined_outputs else pd.DataFrame()
     # df_inputs_outputs_all = pd.concat(combined_inputs_outputs, ignore_index=True) if combined_inputs_outputs else pd.DataFrame()
@@ -1116,7 +1116,7 @@ def concatenate_all_scenarios(HERE, params):
     df_inputs_outputs_all = pd.concat([df_inputs_all,df_outputs_all], ignore_index=True, sort=True)  # Sort for deterministic column order
     
 
-    # Función para reordenar columnas: metadatos primero, luego alfabético
+    # Function to reorder columns: metadata first, then alphabetical
     def reorder_columns(df):
         front = ['Future','Scenario'] + [c for c in keys_sets_delete if c in df.columns]
         rest = sorted([c for c in df.columns if c not in front])
@@ -1124,10 +1124,10 @@ def concatenate_all_scenarios(HERE, params):
 
     today = date.today().isoformat()  # 'YYYY-MM-DD'
 
-    # 1) Guardar inputs
+    # 1) Save inputs
     if not df_inputs_all.empty:
         df_inputs_all = reorder_columns(df_inputs_all)
-        # Ordenar filas para salida determinística
+        # Sort rows for deterministic output
         sort_cols = [c for c in ['Future', 'Scenario', 'REGION', 'TECHNOLOGY', 'YEAR'] if c in df_inputs_all.columns]
         if sort_cols:
             df_inputs_all = df_inputs_all.sort_values(by=sort_cols).reset_index(drop=True)
@@ -1138,10 +1138,10 @@ def concatenate_all_scenarios(HERE, params):
     else:
         path_in = None
 
-    # 2) Guardar outputs
+    # 2) Save outputs
     if not df_outputs_all.empty:
         df_outputs_all = reorder_columns(df_outputs_all)
-        # Ordenar filas para salida determinística
+        # Sort rows for deterministic output
         sort_cols = [c for c in ['Future', 'Scenario', 'REGION', 'TECHNOLOGY', 'YEAR'] if c in df_outputs_all.columns]
         if sort_cols:
             df_outputs_all = df_outputs_all.sort_values(by=sort_cols).reset_index(drop=True)
@@ -1152,38 +1152,38 @@ def concatenate_all_scenarios(HERE, params):
     else:
         path_out = None
 
-    # 3) Nuevamente, combinar ambos DataFrames en uno solo y guardarlo
+    # 3) Again, combine both DataFrames into a single one and save it
     combined_name = params.get('combined_file', 'Combined_Inputs_Outputs.csv')
     if not df_inputs_outputs_all.empty and not df_outputs_all.empty:
         # df_combined = pd.concat([df_inputs_all, df_outputs_all],
         #                         ignore_index=True, sort=False)
         df_combined = reorder_columns(df_inputs_outputs_all)
-        # Ordenar filas para salida determinística
+        # Sort rows for deterministic output
         sort_cols = [c for c in ['Future', 'Scenario', 'REGION', 'TECHNOLOGY', 'YEAR'] if c in df_combined.columns]
         if sort_cols:
             df_combined = df_combined.sort_values(by=sort_cols).reset_index(drop=True)
         
         
         #########################################################################################
-        # Calcular AccumulatedTotalAnnualMinCapacityInvestment
-        # Debe agrupar por (Future, Scenario, TECHNOLOGY) y acumular dentro de cada grupo
+        # Calculate AccumulatedTotalAnnualMinCapacityInvestment
+        # Must group by (Future, Scenario, TECHNOLOGY) and accumulate within each group
         if "TotalAnnualMinCapacityInvestment" in df_combined.columns:
             df = df_combined.copy()
 
-            # Inicializar la columna acumulada con NaN
+            # Initialize the accumulated column with NaN
             df['AccumulatedTotalAnnualMinCapacityInvestment'] = np.nan
 
-            # Definir columnas de agrupación (excluir YEAR ya que acumulamos sobre años)
+            # Define grouping columns (exclude YEAR since we accumulate over years)
             group_cols = ['Future', 'Scenario', 'TECHNOLOGY']
             group_cols = [c for c in group_cols if c in df.columns]
 
             if group_cols:
-                # Ordenar por columnas de grupo + YEAR para asegurar orden correcto para cumsum
+                # Sort by group columns + YEAR to ensure correct order for cumsum
                 sort_cols = group_cols + ['YEAR']
                 df = df.sort_values(by=sort_cols).reset_index(drop=True)
 
-                # Calcular suma acumulativa dentro de cada grupo
-                # Solo para filas que tengan un valor en TotalAnnualMinCapacityInvestment
+                # Calculate cumulative sum within each group
+                # Only for rows that have a value in TotalAnnualMinCapacityInvestment
                 mask = df['TotalAnnualMinCapacityInvestment'].notna()
                 df.loc[mask, 'AccumulatedTotalAnnualMinCapacityInvestment'] = (
                     df.loc[mask]
@@ -1191,7 +1191,7 @@ def concatenate_all_scenarios(HERE, params):
                     .cumsum()
                 )
             else:
-                # Respaldo: si no hay columnas de grupo, hacer un cumsum simple
+                # Fallback: if there are no group columns, do a simple cumsum
                 mask = df['TotalAnnualMinCapacityInvestment'].notna()
                 df.loc[mask, 'AccumulatedTotalAnnualMinCapacityInvestment'] = (
                     df.loc[mask, 'TotalAnnualMinCapacityInvestment'].cumsum()
@@ -1203,7 +1203,7 @@ def concatenate_all_scenarios(HERE, params):
         
         path_comb = os.path.join(HERE,params['prefix_final_files'] + combined_name)
         df_combined.to_csv(path_comb, index=False)
-        # Nota: la copia con fecha con datos anualizados se creará después de la anualización (si está habilitada)
+        # Note: the dated copy with annualized data will be created after annualization (if enabled)
     else:
         path_comb = None
 
@@ -1219,25 +1219,25 @@ def chunk_scenarios(
     max_x_per_iter: int,
 ) -> List[List[Any]]:
     """
-    Divide la lista de entrada ``scenarios`` en bloques de tamaño ``max_x_per_iter``.
+    Split the input list ``scenarios`` into chunks of size ``max_x_per_iter``.
 
-    Parámetros
+    Parameters
     ----------
     scenarios : List[Any]
-        La lista que contiene todos los valores de escenarios.
+        The list containing all scenario values.
     max_x_per_iter : int
-        Número máximo de elementos permitidos en cada bloque.
+        Maximum number of elements allowed in each chunk.
 
-    Retorna
+    Returns
     -------
     List[List[Any]]
-        Una lista donde cada elemento es una sub-lista de ``scenarios`` con longitud
-        de hasta ``max_x_per_iter``.
+        A list where each element is a sub-list of ``scenarios`` with length
+        up to ``max_x_per_iter``.
     """
     if max_x_per_iter <= 0:
         raise ValueError("max_x_per_iter must be a positive integer")
 
-    # Construir los bloques usando slicing en una comprensión
+    # Build the chunks using slicing in a comprehension
     scenarios_list_max_per_iter: List[List[Any]] = [
         scenarios[i : i + max_x_per_iter]  # noqa: E203 (spacing around :)
         for i in range(0, len(scenarios), max_x_per_iter)
@@ -1246,7 +1246,7 @@ def chunk_scenarios(
 
 ########################################################################################
 if __name__ == "__main__":
-    # Iniciar temporizador
+    # Start timer
     start1 = time.time()
 
     # CLI args (optional scenario filter)
@@ -1260,28 +1260,28 @@ if __name__ == "__main__":
     )
     _cli_args = _cli_parser.parse_args()
 
-    # Carpeta donde vive este script: .../OSTRAM/t1_confection
+    # Folder where this script lives: .../OSTRAM/t1_confection
     global HERE
     def get_here() -> Path:
-        # 1) Script normal (ejecución directa)
+        # 1) Normal script (direct execution)
         if '__file__' in globals():
             return Path(__file__).resolve().parent
-        # 2) Algunos IDEs exponen __main__.__file__
+        # 2) Some IDEs expose __main__.__file__
         main = sys.modules.get('__main__')
         if hasattr(main, '__file__'):
             return Path(main.__file__).resolve().parent
-        # 3) Ejecución en consola/interactiva: directorio de trabajo actual
+        # 3) Console/interactive execution: current working directory
         return Path.cwd().resolve()
 
     HERE = get_here()
     
     
-    # (Opcional) Cambiar CWD a la carpeta del script
+    # (Optional) Change CWD to the script's folder
     if Path.cwd() != HERE:
         os.chdir(HERE)
         print(f"[INFO] Working dir -> {HERE}")
         
-    # Cargar parámetros desde YAML
+    # Load parameters from YAML
     with open('Config_MOMF_T1_AB.yaml', 'r') as f:
         params = yaml.safe_load(f)
 
@@ -1301,11 +1301,11 @@ if __name__ == "__main__":
         print(f"[storage_delay] osemosys_model -> {params['osemosys_model']}")
         print(f"[storage_delay] prefix_final_files -> {params['prefix_final_files']}")
 
-    # Cargar parámetros desde YAML
+    # Load parameters from YAML
     with open('Config_MOMF_T1_A.yaml', 'r') as f:
         params_A2 = yaml.safe_load(f)
     
-    # Definir rutas base de origen y destino
+    # Define base source and destination paths
     base_input_path = os.path.join(HERE, params['A2_output'])
     template_path = os.path.join(HERE, params['Miscellaneous'], params['templates'])
     base_output_path = os.path.join(HERE, params['A2_output_otoole'])
@@ -1336,7 +1336,7 @@ if __name__ == "__main__":
     main_scenario_name = params_A2['xtra_scen']['Main_Scenario']
     
     ###############################################################################################
-    # Escribir modelo txt
+    # Write txt model
     for scenario_name in scenarios:
          
         if params['A2_otoole_outputs']:
@@ -1362,7 +1362,7 @@ if __name__ == "__main__":
                 run_reserve_margin_repair_patcher(params, scenario_name)
                 run_reserve_margin_xlsx_patcher(params, scenario_name)
             else:
-                print(f"❌ Se omite el preprocesamiento para '{scenario_name}' porque falló la conversión con otoole.")
+                print(f"❌ Skipping preprocessing for '{scenario_name}' because the otoole conversion failed.")
                 print('#------------------------------------------------------------------------------#')
                 continue
 
@@ -1370,11 +1370,11 @@ if __name__ == "__main__":
         input_folder = os.path.join(HERE, base_output_path, scenario_name)
         output_folder = os.path.join(HERE, params['executables'], scenario_name + '_0')
         
-        # Listar archivos disponibles para vista previa (solo para verificar configuración)
+        # List available files for preview (just to verify configuration)
         os.makedirs(input_folder, exist_ok=True)
         os.makedirs(output_folder, exist_ok=True)
         
-        # Concatenar inputs
+        # Concatenate inputs
         generate_combined_input_file(input_folder, output_folder, scenario_name + '_0')
 
         #
@@ -1386,10 +1386,10 @@ if __name__ == "__main__":
         
         
     ###############################################################################################
-    # Ejecutar modelo txt
+    # Execute txt model
     if params['execute_model'] or params['create_matrix']:
         if params['parallel']:
-            print('Iniciada paralelización de ejecución del modelo')
+            print('Started parallelization of model execution')
             max_x_per_iter = params['max_x_per_iter'] # FLAG: This is an input
             scenarios_list_max_per_iter = chunk_scenarios(scenarios, max_x_per_iter)
             #
@@ -1403,18 +1403,18 @@ if __name__ == "__main__":
                 for process in processes:
                     process.join()
             
-        # Esto es para la versión lineal
+        # This is for the linear version
         else:
-            print('Iniciadas ejecuciones lineales')
+            print('Started linear executions')
             for scenario_num in scenarios:
                 main_executer(params, scenario_num, HERE)
     
     ###############################################################################################
-    # Eliminar archivos
+    # Delete files
     for scenario_name in scenarios:
-        # Eliminar carpeta Outputs con archivos csvs de otoole
+        # Delete Outputs folder with otoole csv files
         if params['del_files']:
-            # Eliminar carpeta Outputs con archivos csvs de otoole
+            # Delete Outputs folder with otoole csv files
             folder_scenario = os.path.join(HERE, params['executables'], scenario_name + '_0') 
             outputs_otoole_csvs = os.path.join(HERE, folder_scenario, params['outputs'])
             data_file = os.path.join(HERE, folder_scenario, scenario_name + '_0' + '.txt')
@@ -1422,111 +1422,111 @@ if __name__ == "__main__":
             if os.path.exists(outputs_otoole_csvs):
                 shutil.rmtree(outputs_otoole_csvs)
         
-            # Eliminar archivos glp, lp, txt y sol
+            # Delete glp, lp, txt and sol files
             if params['solver'] in ['glpk', 'cbc', 'cplex']:
                 delete_files(sol_file, data_file, params['solver'])
-            
-            print(f'✅ Archivos intermedios del escenario {scenario_name}_0 eliminados exitosamente.')
+
+            print(f'✅ Intermediate files for scenario {scenario_name}_0 deleted successfully.')
             print('\n#------------------------------------------------------------------------------#')
 
     ###############################################################################################
 
     end_1 = time.time()   
     time_elapsed_1 = -start1 + end_1
-    print( str( time_elapsed_1 ) + ' segundos /', str( time_elapsed_1/60 ) + ' minutos' )
+    print( str( time_elapsed_1 ) + ' seconds /', str( time_elapsed_1/60 ) + ' minutes' )
 
     start2 = time.time()
     
     ###############################################################################################
-    # Concatenar inputs y outputs
+    # Concatenate inputs and outputs
     if params['concat_scenarios_csv']:
         input_output_path, output_output_path, combined_output_path = concatenate_all_scenarios(HERE,params)
-        print(f'✅ Inputs y outputs concatenados para todos los escenarios exitosamente.')
-        print(f'Los archivos son: ({input_output_path}), ({output_output_path}) y ({combined_output_path})')
+        print(f'✅ Inputs and outputs concatenated for all scenarios successfully.')
+        print(f'The files are: ({input_output_path}), ({output_output_path}) and ({combined_output_path})')
     ###############################################################################################
 
     ###############################################################################################
-    # Anualizar inversión de capital
+    # Annualize capital investment
     if params.get('annualize_capital', False):
         try:
             print('\n')
             print('#'*80)
-            print('# ANUALIZACIÓN DE INVERSIÓN DE CAPITAL')
+            print('# CAPITAL INVESTMENT ANNUALIZATION')
             print('#'*80)
 
-            # Importar la función de anualización
+            # Import the annualization function
             from Z_AUX_capital_annualization_script import annualize_capital_investment
 
-            # Definir la ruta al archivo combinado
+            # Define the path to the combined file
             combined_file_path = os.path.join(HERE, params['prefix_final_files'] + 'Combined_Inputs_Outputs.csv')
 
-            # Verificar si el archivo existe
+            # Check whether the file exists
             if os.path.exists(combined_file_path):
-                print(f'Iniciando anualización para: {combined_file_path}')
+                print(f'Starting annualization for: {combined_file_path}')
 
-                # Llamar a la función de anualización
+                # Call the annualization function
                 annualize_capital_investment(
                     input_file_path=combined_file_path,
                     verbose=True
                 )
 
-                print(f'✅ Anualización de inversión de capital completada exitosamente.')
+                print(f'✅ Capital investment annualization completed successfully.')
 
-                # Crear copia con fecha con datos anualizados
+                # Create a dated copy with annualized data
                 today = date.today().isoformat()  # 'YYYY-MM-DD'
                 dated_combined = combined_file_path.replace('.csv', f'_{today}.csv')
                 shutil.copy2(combined_file_path, dated_combined)
-                print(f'✅ Archivo anualizado copiado a: {dated_combined}')
+                print(f'✅ Annualized file copied to: {dated_combined}')
                 print('#'*80)
             else:
-                print(f'⚠️  ADVERTENCIA: Archivo combinado no encontrado en {combined_file_path}')
-                print('Omitiendo anualización de inversión de capital.')
+                print(f'⚠️  WARNING: Combined file not found at {combined_file_path}')
+                print('Skipping capital investment annualization.')
                 print('#'*80)
 
         except Exception as e:
-            print(f'❌ ERROR durante anualización de inversión de capital: {e}')
-            print('Continuando sin anualización...')
+            print(f'❌ ERROR during capital investment annualization: {e}')
+            print('Continuing without annualization...')
             import traceback
             traceback.print_exc()
             print('#'*80)
     else:
-        # Si la anualización está deshabilitada, aún crear copia con fecha del archivo combinado
+        # If annualization is disabled, still create a dated copy of the combined file
         combined_file_path = os.path.join(HERE, params['prefix_final_files'] + 'Combined_Inputs_Outputs.csv')
         if os.path.exists(combined_file_path):
             today = date.today().isoformat()  # 'YYYY-MM-DD'
             dated_combined = combined_file_path.replace('.csv', f'_{today}.csv')
             shutil.copy2(combined_file_path, dated_combined)
-            print(f'✅ Archivo combinado copiado a: {dated_combined}')
+            print(f'✅ Combined file copied to: {dated_combined}')
     ###############################################################################################
 
 
 
 
-    # # 1. Carga los dataframes desde los CSV
+    # # 1. Load the dataframes from the CSVs
     # df_inputs_all = pd.read_csv('REALC_TX_Inputs.csv', low_memory=False)
     # df_outputs_all = pd.read_csv('REALC_TX_Outputs.csv', low_memory=False)
-    
-    # # 2. Concatenarlos verticalmente (uno debajo del otro)
+
+    # # 2. Concatenate them vertically (one below the other)
     # df_combined = pd.concat([df_inputs_all, df_outputs_all], ignore_index=True, sort=False)
-    
-    # # 3. (Opcional) Reordenar columnas si se desea,
-    # #    por ejemplo, poniendo 'Scenario' y 'Future' al frente
+
+    # # 3. (Optional) Reorder columns if desired,
+    # #    for example, putting 'Scenario' and 'Future' at the front
     # cols_front = ['Scenario', 'Future']
     # other_cols = [c for c in df_combined.columns if c not in cols_front]
     # df_combined = df_combined[cols_front + other_cols]
-    
-    # # 4. Guarda el CSV combinado
+
+    # # 4. Save the combined CSV
     # today = date.today().isoformat()  # e.g. '2025-07-14'
     # combined_filename = f"{params['prefix_final_files']}Combined_Inputs_Outputs_{today}.csv"
     # df_combined.to_csv(combined_filename, index=False)
-    
-    # print(f"Archivo combinado guardado en: {combined_filename}")
+
+    # print(f"Combined file saved at: {combined_filename}")
     ###############################################################################################
     
     
     end_2 = time.time()   
     time_elapsed_2 = -start2 + end_2
-    print( str( time_elapsed_2 ) + ' segundos /', str( time_elapsed_2/60 ) + ' minutos' )
+    print( str( time_elapsed_2 ) + ' seconds /', str( time_elapsed_2/60 ) + ' minutes' )
     print('\n#------------------------------------------------------------------------------#')
     
     time_elapsed_3 = -start1 + end_2

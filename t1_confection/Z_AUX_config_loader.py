@@ -60,8 +60,18 @@ def get_ostram_country_mapping():
 
 
 def get_ostram_country_mapping_normalized():
-    """Returns accent-stripped {name: iso3} dict for fuzzy matching."""
-    return {strip_accents(name): iso3 for name, iso3 in get_ostram_country_mapping().items()}
+    """Returns accent-stripped {name: iso3} dict for fuzzy matching.
+
+    Includes BOTH the OSTRAM Spanish name and the English name of each country,
+    so input files in either language (e.g. 'Brasil' or 'Brazil') resolve to the
+    same ISO-3 code.
+    """
+    result = {}
+    for iso3, d in get_country_data().items():
+        for name in (d.get("ostram_name"), d.get("english_name")):
+            if name:
+                result[strip_accents(name)] = iso3
+    return result
 
 
 def get_shares_country_mapping():

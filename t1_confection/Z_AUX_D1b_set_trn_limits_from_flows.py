@@ -31,8 +31,10 @@ FLAT_PROJECTION_BASE_YEAR = 2025
 EDITOR_FIRST_YEAR = 2023
 EDITOR_LAST_YEAR = 2050
 
-# Country name mapping (Spanish names with accents → 3-letter model codes)
-# Same as D2_update_secondary_techs.py lines 19-40
+# Country name mapping (accent-stripped names → 3-letter model codes).
+# Accepts both the Spanish and the English country name so the source file can be
+# in either language. Most names are identical after accent stripping; only the
+# ones that genuinely differ need an explicit English synonym (see bottom block).
 COUNTRY_NAME_TO_CODE = {
     'Argentina': 'ARG',
     'Bolivia': 'BOL',
@@ -52,6 +54,10 @@ COUNTRY_NAME_TO_CODE = {
     'Peru': 'PER',
     'Republica Dominicana': 'DOM',
     'Uruguay': 'URY',
+    # English-name synonyms (only those that differ from Spanish after accent
+    # stripping); all other names match in both languages.
+    'Brazil': 'BRA',
+    'Dominican Republic': 'DOM',
 }
 
 
@@ -76,16 +82,19 @@ def read_flow_data(flow_file_path):
 
     wb = openpyxl.load_workbook(flow_file_path, data_only=True)
 
-    # Find the sheet (handle accent in name)
+    # Find the sheet (accent-insensitive; accepts Spanish or English name)
     target_sheet = None
     for name in wb.sheetnames:
-        if strip_accents(name) == 'Flujos por Interconexion':
+        if strip_accents(name) in ('Flujos por Interconexion', 'Flows by Interconnection'):
             target_sheet = name
             break
 
     if not target_sheet:
         wb.close()
-        raise ValueError(f"Sheet 'Flujos por Interconexión' not found. Available: {wb.sheetnames}")
+        raise ValueError(
+            f"Sheet 'Flujos por Interconexión' / 'Flows by Interconnection' not found. "
+            f"Available: {wb.sheetnames}"
+        )
 
     ws = wb[target_sheet]
 
@@ -96,10 +105,11 @@ def read_flow_data(flow_file_path):
         if header:
             headers[strip_accents(str(header).strip())] = col_idx
 
-    year_col = headers.get('Ano')
-    pais_a_col = headers.get('Pais A')
-    pais_b_col = headers.get('Pais B')
-    flujo_total_col = headers.get('Flujo Total (GWh)')
+    # Accept Spanish or English headers (already accent-stripped above)
+    year_col = headers.get('Ano') or headers.get('Year')
+    pais_a_col = headers.get('Pais A') or headers.get('Country A')
+    pais_b_col = headers.get('Pais B') or headers.get('Country B')
+    flujo_total_col = headers.get('Flujo Total (GWh)') or headers.get('Total Flow (GWh)')
 
     if not all([year_col, pais_a_col, pais_b_col, flujo_total_col]):
         wb.close()

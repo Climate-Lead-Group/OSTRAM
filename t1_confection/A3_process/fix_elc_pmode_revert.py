@@ -1,33 +1,33 @@
 """fix_elc_pmode_revert.py
 =============================
-Reproduce la edicion manual que Luis hizo entre la corrida 2 de
-add_max_capacity_investment_rule.py (10:55) y B1b_Pre_solver_validation.py
-(12:01) el 30-abril-2026.
+Reproduces the manual edit that Luis made between run 2 of
+add_max_capacity_investment_rule.py (10:55) and B1b_Pre_solver_validation.py
+(12:01) on 2026-04-30.
 
-QUE HACE
---------
-En la hoja 'Secondary Techs', revierte la columna 'Projection.Mode' de
-"User defined" a "EMPTY" para 10 techs electricos x 2 parametros = 20 cells:
+WHAT IT DOES
+------------
+In the 'Secondary Techs' sheet, reverts the 'Projection.Mode' column from
+"User defined" to "EMPTY" for 10 electricity techs x 2 parameters = 20 cells:
 
   Techs (10):
     ELCBGDXX01, ELCBTNXX01, ELCINDEA01, ELCINDNE01, ELCINDNO01,
     ELCINDSO01, ELCINDWE01, ELCLKAXX01, ELCMDVXX01, ELCNPLXX01
-  Parametros (2):
+  Parameters (2):
     TotalAnnualMaxCapacity, TotalAnnualMaxCapacityInvestment
 
-POR QUE
--------
-El segundo run de add_max_capacity_investment_rule.py (commit 2be1616)
-flippea Projection.Mode EMPTY -> User defined para todos los techs ZEROED
-en MaxCap/MaxCapInv. Los ELC*01 son ZEROED (lockout: el modelo no debe
-invertir en una "tech de electricidad placeholder", solo usar los PWR*).
-Luis decidio que el 'User defined' era engañoso para esos lockout rows
-(las celdas de año son 0, sin valor real configurable) y los volvio a
-"EMPTY" a mano. Los rows estan funcionalmente desactivados igual.
+WHY
+---
+The second run of add_max_capacity_investment_rule.py (commit 2be1616)
+flips Projection.Mode EMPTY -> User defined for all techs ZEROED
+in MaxCap/MaxCapInv. The ELC*01 techs are ZEROED (lockout: the model must not
+invest in a "placeholder electricity tech", only use the PWR* ones).
+Luis decided that 'User defined' was misleading for those lockout rows
+(the year cells are 0, with no real configurable value) and reverted them to
+"EMPTY" by hand. The rows are functionally disabled either way.
 
-Idempotente: re-correr es no-op (ya estan en EMPTY).
+Idempotent: re-running is a no-op (they are already EMPTY).
 
-Uso:
+Usage:
     python fix_elc_pmode_revert.py --input <A-O_Parametrization.xlsx>
     python fix_elc_pmode_revert.py --input <in> --output <out>  # write a copy
 """

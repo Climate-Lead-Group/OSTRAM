@@ -263,7 +263,7 @@ def plot_T4_rpo(cap, outdir, scenarios):
     axes[0].set_ylabel("RPO capacity (GW)")
     h, l = axes[0].get_legend_handles_labels()
     fig.legend(h[::-1], l[::-1], loc="center left", bbox_to_anchor=(1.0, 0.5), fontsize=8)
-    fig.suptitle("RPO (Repotenciación) Capacity by Country", fontsize=12, fontweight="bold", y=1.02)
+    fig.suptitle("RPO (Repowering) Capacity by Country", fontsize=12, fontweight="bold", y=1.02)
     fig.tight_layout()
     save_fig(fig, outdir, "T4_rpo_by_country")
 

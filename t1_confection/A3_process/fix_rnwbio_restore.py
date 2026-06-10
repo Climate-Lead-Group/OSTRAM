@@ -1,17 +1,17 @@
 """fix_rnwbio_restore.py
 ==========================
-Restaura las 2 filas de VariableCost que se perdieron en el "pull from
+Restores the 2 VariableCost rows that were lost in the "pull from
 first_asia_model" (commit f1aad25):
   - RNWBIOBGDXX  (Biomass Bangladesh, mode 1)  -- inserted BEFORE row of RNWBIOINDEA
   - RNWBIONPLXX  (Biomass Nepal, mode 1)        -- inserted AFTER  row of RNWWASINDWE
 
-Las copia desde un archivo "fuente de verdad" preservando la posicion
-canonica del orden de techs (no las anexa al final). Usa openpyxl
-insert_rows() para insercion posicional.
+It copies them from a "source of truth" file, preserving the canonical
+position in the tech ordering (it does not append them at the end). Uses
+openpyxl insert_rows() for positional insertion.
 
-Idempotente: si la fila ya existe en el input, la salta.
+Idempotent: if the row already exists in the input, it is skipped.
 
-Uso:
+Usage:
     python fix_rnwbio_restore.py --input <patched.xlsx> --source <luis_or_old.xlsx>
 """
 from __future__ import annotations

@@ -1,18 +1,18 @@
 """fix_pwrpet_clear.py
 ========================
-Reproduce el clear manual que Luis hizo sobre la hoja Capacities:
-para cada fila donde Tech == 'PWRPETBGDXX', borra (None) el valor en
-TODAS las columnas de año (2023..2050). Esto es 12 timeslices x 28 años
-= 336 celdas.
+Reproduces the manual clear that Luis did on the Capacities sheet:
+for each row where Tech == 'PWRPETBGDXX', clears (None) the value in
+ALL year columns (2023..2050). That is 12 timeslices x 28 years
+= 336 cells.
 
-Justificacion: Luis decidio que los CapacityFactor auto-generados para
-PWRPETBGDXX (valores muy bajos como 0.0086, 0.0248) no eran realistas
-y los borro a mano. Sin valor, OSeMOSYS usa el AvailabilityFactor=0.8
-como cota.
+Rationale: Luis decided that the auto-generated CapacityFactor values for
+PWRPETBGDXX (very low values like 0.0086, 0.0248) were not realistic
+and cleared them by hand. With no value, OSeMOSYS uses AvailabilityFactor=0.8
+as the cap.
 
-Idempotente: re-correrlo es no-op (las celdas ya estan vacias).
+Idempotent: re-running is a no-op (the cells are already empty).
 
-Uso:
+Usage:
     python fix_pwrpet_clear.py --input A-O_Parametrization.xlsx
     python fix_pwrpet_clear.py --input <path> --output <path>  # write a copy
 """
