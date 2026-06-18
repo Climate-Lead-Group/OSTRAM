@@ -7,11 +7,11 @@ security_factor: 1.1
 relaxation_schedule:
   2023: 1.0
   2027: 1.0
-  2030: 1.1
-  2035: 1.3
-  2040: 1.5
-  2045: 2.0
-  2050: 3.0
+  2030: 3.0       # was 1.1
+  2035: 6.0       # was 1.3
+  2040: 10.0       # was 1.5
+  2045: 15.0       # was 2.0
+  2050: 25.0      # was 3.0
 
 ## Minimum MaxCapInv (GW) per tech per year.  Prevents the lid from
 ## collapsing to zero when retirement drives pool_delta negative.
@@ -28,13 +28,16 @@ lid_floor_gw: 0.1
 ## prevents the floor from acting as an implicit per-tech subsidy
 ## for families with near-zero BAU share.
 family_relaxation_ceilings:
-  COA: 1.0    # coal locked to BAU proportions
-  PET: 1.01    # petroleum locked
-  OIL: 1.01    # oil locked
-  BIO: 1.0    # biomass locked — prevents floor accumulation
-  WAS: 1.0    # waste locked   — same rationale
-  NGS: 1.2    # gas gets slight room
-  URN: 1.5    # nuclear moderate
+  COA: 1.0
+  PET: 1.01
+  OIL: 1.01
+  BIO: 1.0
+  WAS: 1.0
+  NGS: 1.2
+  URN: 1.5
+  HYD: 3.0        # NEW — stop hydro riding the 10×
+  SHP: 3.0        # NEW — same
+  # SPV/WON/CSP stay unlisted → they get the full 20×
 
 ## Uncap storage — upstream scripts set storage MaxCapInv to 0,
 ## and the lid script's preserve-manual rule keeps them there.
