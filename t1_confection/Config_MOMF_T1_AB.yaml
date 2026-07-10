@@ -34,6 +34,9 @@ iteration_time: 20000
 cbc_random_seed: 12345        # Random seed for reproducibility
 
 # For CPLEX use
+# NOTE: 4 = physical core count on this i7-1165G7 (4C/8T). Higher (6-8)
+# oversubscribes the concurrent optimizer (barrier steals cores from the
+# dual-simplex thread that wins these LPs) and SLOWS the solve on this laptop.
 cplex_threads: 4
 cplex_random_seed: 12345      # Random seed for reproducibility
 
@@ -104,7 +107,10 @@ storage_delay_root_datafile: "OSTRAM_data_storage_delay.txt"
 ########################################################################################
 # === Storage stripping diagnostic ===
 # Master switch. False (or absent) = pipeline runs unchanged (no strip).
-strip_storage_active: True
+# NOTE: ALL scenarios use delay:True / strip:False per Luis decision 2026-07-07
+# (OSTRAM_latest CalBAU was validated with storage-delay, not strip). Storage
+# kept across A/B/C + sensitivities for a consistent comparison.
+strip_storage_active: False
 
 # --- Tier 3: zero storage (baseline) --- ACTIVE
 strip_storage_mode: "all"

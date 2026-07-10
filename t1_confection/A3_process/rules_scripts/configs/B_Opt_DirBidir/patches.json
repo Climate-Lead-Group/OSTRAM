@@ -1,0 +1,7 @@
+{
+ "scenario": "B_Opt_DirBidir",
+ "base_scenario": "B_Optimised_VRE",
+ "description": "Interconnector-direction validation anchor: shared VRE ceiling layer + all cross-border corridors left bidirectional (set_interconnector_direction.py no-op). Must reproduce B_Opt_Clipped (2,113,984 -> clipped 2,115,082). Direction overlay applied post-apply_patches.",
+ "apply_vre_ceiling_layer": true,
+ "edits": []
+}

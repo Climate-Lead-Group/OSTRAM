@@ -1,0 +1,182 @@
+{
+  "timestamp": "2026-07-09T10:39:19.701397",
+  "backup_dir": "A1_Outputs\\A1_Outputs_B_Opt_DirContractual_PRE_IC_DIR_20260709_103918",
+  "config": {
+    "directions": {
+      "TRNBGDXXINDEA": "reverse",
+      "TRNBGDXXINDNE": "reverse",
+      "TRNBTNXXINDEA": "forward",
+      "TRNBTNXXINDNE": "forward",
+      "TRNBTNXXBGDXX": "forward",
+      "TRNNPLXXBGDXX": "forward",
+      "TRNINDSOLKAXX": "forward",
+      "TRNMDVXXINDSO": "reverse",
+      "TRNLKAXXMDVXX": "forward"
+    }
+  },
+  "projections": {
+    "file": "A1_Outputs\\A1_Outputs_B_Opt_DirContractual\\A-O_AR_Projections.xlsx",
+    "changes": [
+      {
+        "tech": "TRNBGDXXINDEA",
+        "direction": "reverse",
+        "kept": "INDEA -> BGDXX",
+        "forward_mode": 1,
+        "disabled_modes": [
+          1
+        ],
+        "rows_touched": 2,
+        "cells_zeroed": 56
+      },
+      {
+        "tech": "TRNBGDXXINDNE",
+        "direction": "reverse",
+        "kept": "INDNE -> BGDXX",
+        "forward_mode": 1,
+        "disabled_modes": [
+          1
+        ],
+        "rows_touched": 2,
+        "cells_zeroed": 56
+      },
+      {
+        "tech": "TRNBTNXXINDEA",
+        "direction": "forward",
+        "kept": "BTNXX -> INDEA",
+        "forward_mode": 1,
+        "disabled_modes": [
+          2
+        ],
+        "rows_touched": 2,
+        "cells_zeroed": 56
+      },
+      {
+        "tech": "TRNBTNXXINDNE",
+        "direction": "forward",
+        "kept": "BTNXX -> INDNE",
+        "forward_mode": 1,
+        "disabled_modes": [
+          2
+        ],
+        "rows_touched": 2,
+        "cells_zeroed": 56
+      },
+      {
+        "tech": "TRNBTNXXBGDXX",
+        "direction": "forward",
+        "kept": "BTNXX -> BGDXX",
+        "forward_mode": 1,
+        "disabled_modes": [
+          2
+        ],
+        "rows_touched": 2,
+        "cells_zeroed": 56
+      },
+      {
+        "tech": "TRNNPLXXBGDXX",
+        "direction": "forward",
+        "kept": "NPLXX -> BGDXX",
+        "forward_mode": 1,
+        "disabled_modes": [
+          2
+        ],
+        "rows_touched": 2,
+        "cells_zeroed": 56
+      },
+      {
+        "tech": "TRNINDSOLKAXX",
+        "direction": "forward",
+        "kept": "INDSO -> LKAXX",
+        "forward_mode": 1,
+        "disabled_modes": [
+          2
+        ],
+        "rows_touched": 2,
+        "cells_zeroed": 56
+      },
+      {
+        "tech": "TRNMDVXXINDSO",
+        "direction": "reverse",
+        "kept": "INDSO -> MDVXX",
+        "forward_mode": 1,
+        "disabled_modes": [
+          1
+        ],
+        "rows_touched": 2,
+        "cells_zeroed": 56
+      },
+      {
+        "tech": "TRNLKAXXMDVXX",
+        "direction": "forward",
+        "kept": "LKAXX -> MDVXX",
+        "forward_mode": 1,
+        "disabled_modes": [
+          2
+        ],
+        "rows_touched": 2,
+        "cells_zeroed": 56
+      }
+    ],
+    "warnings": []
+  },
+  "base_year": {
+    "file": "A1_Outputs\\A1_Outputs_B_Opt_DirContractual\\A-O_AR_Model_Base_Year.xlsx",
+    "changes": [
+      {
+        "tech": "TRNBGDXXINDEA",
+        "mode": 1,
+        "old_value_i": 1,
+        "old_value_o": 1
+      },
+      {
+        "tech": "TRNBGDXXINDNE",
+        "mode": 1,
+        "old_value_i": 1,
+        "old_value_o": 1
+      },
+      {
+        "tech": "TRNBTNXXINDEA",
+        "mode": 2,
+        "old_value_i": 1,
+        "old_value_o": 1
+      },
+      {
+        "tech": "TRNINDSOLKAXX",
+        "mode": 2,
+        "old_value_i": 1,
+        "old_value_o": 1
+      },
+      {
+        "tech": "TRNLKAXXMDVXX",
+        "mode": 2,
+        "old_value_i": 1,
+        "old_value_o": 1
+      },
+      {
+        "tech": "TRNBTNXXBGDXX",
+        "mode": 2,
+        "old_value_i": 1,
+        "old_value_o": 1
+      },
+      {
+        "tech": "TRNBTNXXINDNE",
+        "mode": 2,
+        "old_value_i": 1,
+        "old_value_o": 1
+      },
+      {
+        "tech": "TRNMDVXXINDSO",
+        "mode": 1,
+        "old_value_i": 1,
+        "old_value_o": 1
+      },
+      {
+        "tech": "TRNNPLXXBGDXX",
+        "mode": 2,
+        "old_value_i": 1,
+        "old_value_o": 1
+      }
+    ],
+    "warnings": []
+  }
+}

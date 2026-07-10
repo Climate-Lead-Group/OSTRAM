@@ -1,0 +1,20 @@
+## B_Opt_DirContractual -- interconnectors locked to real contractual/physical directions
+##
+## Justification + primary-source citations for every corridor:
+##   sensitivity_expansion/reference/interconnector_direction_references.md
+##
+## Convention: TRN<SRC><DST>; forward = SRC->DST, reverse = DST->SRC.
+## Corridors omitted below are bidirectional (Nepal<->India, genuinely seasonal).
+
+directions:
+  TRNBGDXXINDEA: reverse   # India (ER)  -> Bangladesh   [Adani Godda PPA 2017; Bheramara HVDC]
+  TRNBGDXXINDNE: reverse   # India (NER) -> Bangladesh   [Tripura-Comilla 160 MW since 2016]
+  TRNBTNXXINDEA: forward   # Bhutan -> India (ER)        [Tala/Chukha/Mangdechhu, ~70% exported]
+  TRNBTNXXINDNE: forward   # Bhutan -> India (NER)       [Kurichhu-Salakati]
+  TRNBTNXXBGDXX: forward   # Bhutan -> Bangladesh        [Dorjilung trilateral, planned]
+  TRNNPLXXBGDXX: forward   # Nepal  -> Bangladesh        [2024 tripartite deal, flow since 15 Nov 2024]
+  TRNINDSOLKAXX: forward   # India  -> Sri Lanka         [CEB LTGEP import link; reverse uncontracted]
+  TRNMDVXXINDSO: reverse   # India  -> Maldives          [conceptual; MDV deficit-only, blocks impossible export]
+  TRNLKAXXMDVXX: forward   # Sri Lanka -> Maldives       [conceptual; MDV deficit-only, blocks impossible export]
+  # TRNINDEANPLXX: bidirectional  (Nepal <-> India ER, seasonal -- omitted)
+  # TRNINDNONPLXX: bidirectional  (Nepal <-> India NR, seasonal -- omitted)

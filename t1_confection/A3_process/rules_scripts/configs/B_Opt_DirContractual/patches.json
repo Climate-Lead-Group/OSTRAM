@@ -1,0 +1,7 @@
+{
+ "scenario": "B_Opt_DirContractual",
+ "base_scenario": "B_Optimised_VRE",
+ "description": "Interconnector directions locked to real contractual/physical flows (9 corridors one-way, Nepal<->India pair bidirectional). Shared VRE ceiling layer via patches; direction overlay via set_interconnector_direction.py. Full per-corridor justification + citations in sensitivity_expansion/reference/interconnector_direction_references.md.",
+ "apply_vre_ceiling_layer": true,
+ "edits": []
+}

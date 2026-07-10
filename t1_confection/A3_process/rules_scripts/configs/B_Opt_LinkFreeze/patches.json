@@ -1,0 +1,54 @@
+{
+ "scenario": "B_Opt_LinkFreeze",
+ "base_scenario": "B_Optimised_VRE",
+ "frozen_corridors": [
+  "TRNBGDXXINDEA",
+  "TRNNPLXXBGDXX"
+ ],
+ "description": "Freeze interconnectors TRNBGDXXINDEA & TRNNPLXXBGDXX at 2023 residual (MaxCap=MaxCapInv=ResidualCapacity, all years). Relax YAML unchanged; freeze enforced via post-A3 patch because relax 2nd-pass sets MaxCap=9999. Over shared VRE-ceiling layer.",
+ "apply_vre_ceiling_layer": true,
+ "edits": [
+  {
+   "sheet": "Secondary Techs",
+   "tech": "TRNBGDXXINDEA",
+   "param": "TotalAnnualMaxCapacity",
+   "op": "set_to_residual",
+   "note": "freeze at residual 2.5 GW (relax 2nd-pass would set 9999; enforced post-A3)"
+  },
+  {
+   "sheet": "Secondary Techs",
+   "tech": "TRNBGDXXINDEA",
+   "param": "TotalAnnualMaxCapacityInvestment",
+   "op": "set_to_residual",
+   "note": "freeze at residual 2.5 GW (relax 2nd-pass would set 9999; enforced post-A3)"
+  },
+  {
+   "sheet": "Secondary Techs",
+   "tech": "TRNNPLXXBGDXX",
+   "param": "TotalAnnualMaxCapacity",
+   "op": "set_to_residual",
+   "note": "freeze at residual 0.04 GW (relax 2nd-pass would set 9999; enforced post-A3)"
+  },
+  {
+   "sheet": "Secondary Techs",
+   "tech": "TRNNPLXXBGDXX",
+   "param": "TotalAnnualMaxCapacityInvestment",
+   "op": "set_to_residual",
+   "note": "freeze at residual 0.04 GW (relax 2nd-pass would set 9999; enforced post-A3)"
+  },
+  {
+   "sheet": "Secondary Techs",
+   "tech": "TRNBGDXXINDEA",
+   "param": "TotalAnnualMinCapacityInvestment",
+   "op": "clamp_to_residual",
+   "note": "clamp legacy MinCapInv <= residual so Min<=Max after freeze"
+  },
+  {
+   "sheet": "Secondary Techs",
+   "tech": "TRNNPLXXBGDXX",
+   "param": "TotalAnnualMinCapacityInvestment",
+   "op": "clamp_to_residual",
+   "note": "clamp legacy MinCapInv <= residual so Min<=Max after freeze"
+  }
+ ]
+}

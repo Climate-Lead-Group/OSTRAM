@@ -142,3 +142,14 @@ t1_confection/Executables/**/*.feasopt.sol
 
 # Local A3 run snapshots
 t1_confection/A3_process/_run_*/
+
+# ===== Per-scenario solve I/O (regenerable; keep repo lean) =====
+# otoole result CSVs, per-scenario concatenations, compiled datafiles and logs.
+# (*.lp / *.sol / *StorageDelay* / OSTRAM_Combined_* already ignored above.)
+t1_confection/Executables/**/Outputs/
+t1_confection/Executables/**/*_Input.csv
+t1_confection/Executables/**/*_Output.csv
+t1_confection/Executables/**/*.warnings.txt
+t1_confection/Executables/**/*.cplex.log
+t1_confection/Executables/**/Pre_processed_*.txt
+t1_confection/Executables/*/*_0.txt

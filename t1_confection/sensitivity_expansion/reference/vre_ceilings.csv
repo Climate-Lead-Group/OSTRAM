@@ -1,0 +1,21 @@
+node,tech,ceiling_gw,atlas_gw,b_opt_maxcap_gw,b_opt_2050_buildout_gw,atlas_source,confidence,note
+INDEA,PWRSPVINDEA,150,150,496.2512,19.313,NISE-2025 wasteland-screened solar atlas,high,non-binding headroom guard
+INDNE,PWRSPVINDNE,25,25,100.1672,4.909,NISE-2025 wasteland-screened solar atlas,high,non-binding headroom guard
+INDNO,PWRSPVINDNO,600,600,1330.7072,319.014,NISE-2025 wasteland-screened solar atlas,high,non-binding headroom guard
+INDSO,PWRSPVINDSO,500,500,806.0962,317.612,NISE-2025 wasteland-screened solar atlas,high,non-binding headroom guard
+INDWE,PWRSPVINDWE,650,650,1281.7732,185.203,NISE-2025 wasteland-screened solar atlas,high,non-binding headroom guard
+BGDXX,PWRSPVBGDXX,40,40,365.6702,10.498,NISE-2025 wasteland-screened solar atlas,high,non-binding headroom guard
+LKAXX,PWRSPVLKAXX,16,16,248.4202,24.871,NISE-2025 wasteland-screened solar atlas,med,CLIPS baseline (buildout 24.87>ceiling 16) - atlas enforced per decision
+NPLXX,PWRSPVNPLXX,40,40,145.9322,3.031,NISE-2025 wasteland-screened solar atlas,high,non-binding headroom guard
+BTNXX,PWRSPVBTNXX,1.8102,5,1.8102,1.81,NISE-2025 wasteland-screened solar atlas,high,"pure-guard: atlas 5>B_Opt MaxCap 1.8102, ceiling set to MaxCap (no relax); near-binding (<=10%)"
+MDVXX,PWRSPVMDVXX,1,1,248.4202,0.345,NISE-2025 wasteland-screened solar atlas,high,non-binding headroom guard
+INDEA,PWRWONINDEA,0.0,8,0.0,0.0,NIWE 150m onshore wind atlas (India); national studies elsewhere,high,"pure-guard: atlas 8>B_Opt MaxCap 0.0, ceiling set to MaxCap (no relax); near-binding (<=10%)"
+INDNE,PWRWONINDNE,0.0,0.5,0.0,0.0,NIWE 150m onshore wind atlas (India); national studies elsewhere,high,"pure-guard: atlas 0.5>B_Opt MaxCap 0.0, ceiling set to MaxCap (no relax); near-binding (<=10%)"
+INDNO,PWRWONINDNO,285,285,1860.0442,64.87,NIWE 150m onshore wind atlas (India); national studies elsewhere,high,non-binding headroom guard
+INDSO,PWRWONINDSO,445,445,1278.4234,248.533,NIWE 150m onshore wind atlas (India); national studies elsewhere,high,non-binding headroom guard
+INDWE,PWRWONINDWE,410,410,2036.9868,172.532,NIWE 150m onshore wind atlas (India); national studies elsewhere,high,non-binding headroom guard
+BGDXX,PWRWONBGDXX,3,3,148.3002,9.163,NIWE 150m onshore wind atlas (India); national studies elsewhere,med,CLIPS baseline (buildout 9.16>ceiling 3) - atlas enforced per decision
+LKAXX,PWRWONLKAXX,15,15,57.1312,8.578,NIWE 150m onshore wind atlas (India); national studies elsewhere,high,non-binding headroom guard
+NPLXX,PWRWONNPLXX,0.0,2,0.0,0.0,NIWE 150m onshore wind atlas (India); national studies elsewhere,high,"pure-guard: atlas 2>B_Opt MaxCap 0.0, ceiling set to MaxCap (no relax); near-binding (<=10%)"
+BTNXX,PWRWONBTNXX,0.5,0.5,61.9702,0.4,NIWE 150m onshore wind atlas (India); national studies elsewhere,high,non-binding headroom guard
+MDVXX,PWRWONMDVXX,0,0,148.3002,2.467,NIWE 150m onshore wind atlas (India); national studies elsewhere,med,CLIPS baseline (buildout 2.47>ceiling 0) - atlas enforced per decision

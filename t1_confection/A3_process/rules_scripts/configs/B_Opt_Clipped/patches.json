@@ -1,0 +1,7 @@
+{
+ "scenario": "B_Opt_Clipped",
+ "base_scenario": "B_Optimised_VRE",
+ "description": "Ceiling-only reference scenario: applies ONLY the shared VRE physical-potential ceiling layer (min(atlas, B_Opt MaxCap)) with no run-specific lever. The four sensitivities are measured against B_Opt_Clipped (not validated B_Opt) so each lever's effect is isolated from the ceiling/clip effect. B_Opt_Clipped - B_Opt = the cost of physical VRE realism.",
+ "apply_vre_ceiling_layer": true,
+ "edits": []
+}

@@ -1,0 +1,7 @@
+{
+ "scenario": "A_Calibrated_BAU_Clipped",
+ "base_scenario": "A_Calibrated_BAU",
+ "description": "Ceiling-only scenario: applies the shared VRE physical-potential ceiling layer (min(atlas, B_Opt MaxCap)) to the validated A_Calibrated_BAU A-O. No run-specific lever. Measures the cost of physical VRE realism on the BAU pathway.",
+ "apply_vre_ceiling_layer": true,
+ "edits": []
+}
