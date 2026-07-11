@@ -23,8 +23,8 @@ Branch `ws3-phaseb-cleanredo` (local only — **not pushed**). Started 2026-07-1
 | Step | Status | Checks | Commit |
 |---|---|---|---|
 | 0 harness scaffold (hero_refs + cleanroom_check + runlog) | GREEN | files written | (this commit) |
-| 1 consolidate (rebase phaseB + overlay WS-3/WS-4) | rebase done; overlay pending Checkpoint A | | |
-| 2 Checkpoint A (pre-WS-3 byte-diff vs OSTRAM_latest) | PENDING | | |
+| 1 consolidate (rebase phaseB + overlay WS-3/WS-4) | rebase done; overlay pending | | e4597e4 |
+| 2 Checkpoint A (pre-WS-3 byte-diff vs OSTRAM_latest) | **GREEN** | A/B/C compiled .txt all 0-diff vs OSTRAM_latest | (this commit) |
 | 3 foundation (loss+pin+cliff) + Checkpoint B | PENDING | | |
 | 4 clips | PENDING | | |
 | 5 sensitivities (+2 new solar tiers) | PENDING | | |
@@ -32,4 +32,11 @@ Branch `ws3-phaseb-cleanredo` (local only — **not pushed**). Started 2026-07-1
 | 7 stage CPLEX batch + RUN_ORDER.md | PENDING | | |
 
 ## Log
-- 2026-07-11 — env audit green; branch rebased onto phaseB (e4597e4); harness scaffolded.
+- 2026-07-11 — env audit green; branch rebased onto phaseB (e4597e4); harness scaffolded (8c9b674).
+- 2026-07-11 — **Checkpoint A GREEN**. Ran A3->B1->B2 (no-solve: execute_model/create_matrix=False) for
+  BAU, A_Calibrated_BAU, B_Optimised_VRE, C_Target_VRE. All 3 baseline compiled
+  `Pre_processed_<s>_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt` byte-diff **0-diff** vs `OSTRAM_latest`.
+  Auto-fix applied (allowed): C's A3 `set_vre_targets.py` needs A's SOLVED combined `*_output.csv`
+  (gitignored, absent in fresh clone) -> seeded from OSTRAM_latest's A_Calibrated_BAU_0; C then rebuilt
+  clean and stayed 0-diff. Throwaway pre-WS-3 A1_Outputs xlsx churn discarded. Config left at no-solve for STEP 3.
+  Seed mechanism validated for STEP 3 (will seed the WS-4 A-with-loss solve instead).
