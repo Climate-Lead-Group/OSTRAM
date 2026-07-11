@@ -1,0 +1,15 @@
+"# WS-3 D5 internal-transmission ResidualCapacity (GW), per node.",,,
+"# Method: existing grid sized at peak x 1.2; RNWTRN = RE-avail-at-peak x 1.2,",,,
+#   PWRTRN = peak x 1.2 - RE x 1.2. NLI/RPO families = 0 (build mechanisms).,,,
+# Source: compute_internal_tx_residuals.py -> internal_tx_residuals_20260709_182259.csv (desk-checked).,,,
+node,RNWTRN,PWRTRN,status_flags
+BGDXX,0.2,18.992,ok
+BTNXX,1.261,0.0,RE_SATURATES(PWRTRN floored 0; RNWTRN capped); SMALL_GRID
+INDEA,1.319,33.581,ok
+INDNE,0.596,3.334,ok
+INDNO,15.133,66.406,ok
+INDSO,24.751,48.952,ok
+INDWE,19.552,68.075,ok
+LKAXX,1.104,1.557,ok
+MDVXX,0.001,0.295,SMALL_GRID
+NPLXX,2.446,0.33,ok

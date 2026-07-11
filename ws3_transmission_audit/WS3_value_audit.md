@@ -6,6 +6,8 @@
 **Scenarios audited:** A_Calibrated_BAU · B_Optimised_VRE · C_Target_VRE
 **Env:** OSTRAM-env (Python 3.10.20, openpyxl 3.1.5, pandas 2.3.3)
 
+> **UPDATE 2026-07-09 (post-gate):** this is the Phase-0/1 *gate* snapshot; its recommendations were subsequently approved and applied. Interconnector costs are now live (v18 → A3 → compiled); the two `[PENDING]` citations below (NP↔BD, BT↔BD) are **backfilled in `SOASIA_v18_REFS.xlsx`**; internal transmission (§7 / D5) is **calibrated + solved** (per-node residuals, RE 2× CapEx, `OperationalLife` 40). Current state → `WS3_calibration_report.md`. Work now in `OSTRAM_ws3_workcopy_D5`.
+
 ---
 
 ## 0. Bottom line up front (what you must decide at the gate)

@@ -101,13 +101,12 @@ GIANT_PATTERNS = ("OSTRAM_Combined", "OSTRAM_Inputs", "OSTRAM_Outputs", "Storage
                   "storage_delay", "_output.csv")
 BACKUP_MARKERS = ("_PREPATCH_", "_PRE_", "PREPATCH", "backup", "Backup", "BACKUP")
 SUPERSEDED = REFS["superseded"]
-def check_hygiene():
+def check_hygiene(allow_v18=False):
     staged = subprocess.run(["git", "-C", str(ROOT), "diff", "--cached", "--name-only"],
                             capture_output=True, text=True).stdout.splitlines()
     if not staged:
         info("nothing staged (hygiene of staged set trivially clean)"); return
     for f in staged:
-        low = f.lower()
         if f.endswith((".sol", ".lp", ".feasopt.sol")):
             bad(f"staged solver artifact: {f}")
         if any(p in f for p in GIANT_PATTERNS):
@@ -117,9 +116,12 @@ def check_hygiene():
         if any(sc in f for sc in SUPERSEDED):
             bad(f"staged superseded scenario: {f}")
         if "SOASIA_OSeMOSYS_Template_v18.xlsx" in f:
-            bad(f"staged v18 (stage-6 Restrictions churn is benign; do NOT commit): {f}")
+            if allow_v18:
+                info(f"staged v18 permitted (STEP 1 source overlay only): {f}")
+            else:
+                bad(f"staged v18 (stage-6 Restrictions churn is benign; do NOT commit): {f}")
     if _fails == 0:
-        ok(f"{len(staged)} staged path(s) clean (no giant/solver/backup/superseded/v18)")
+        ok(f"{len(staged)} staged path(s) clean (no giant/solver/backup/superseded/v18-churn)")
 
 # ------------------------------------------------ foundation (spec, exercised in STEP 3)
 def _read_param_csv(scen, name):
@@ -176,11 +178,12 @@ def main():
                                            "foundation", "clips", "sensitivities", "hygiene", "all"])
     ap.add_argument("--hero", default="final", choices=list(REFS["heroes"].keys()))
     ap.add_argument("--scenarios", nargs="*", default=None)
+    ap.add_argument("--allow-v18", action="store_true", help="permit staged v18 (STEP 1 source overlay only)")
     a = ap.parse_args()
     if a.subcommand == "reproduction": check_reproduction(a.hero, a.scenarios)
     elif a.subcommand == "anchors":    check_anchors(a.hero)
     elif a.subcommand == "consolidation": check_consolidation()
-    elif a.subcommand == "hygiene":    check_hygiene()
+    elif a.subcommand == "hygiene":    check_hygiene(a.allow_v18)
     elif a.subcommand == "foundation": check_foundation()
     elif a.subcommand == "clips":      check_clips()
     elif a.subcommand == "sensitivities": check_sensitivities()

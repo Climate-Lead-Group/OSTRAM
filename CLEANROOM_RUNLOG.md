@@ -23,7 +23,7 @@ Branch `ws3-phaseb-cleanredo` (local only — **not pushed**). Started 2026-07-1
 | Step | Status | Checks | Commit |
 |---|---|---|---|
 | 0 harness scaffold (hero_refs + cleanroom_check + runlog) | GREEN | files written | (this commit) |
-| 1 consolidate (rebase phaseB + overlay WS-3/WS-4) | rebase done; overlay pending | | e4597e4 |
+| 1 consolidate (rebase phaseB + overlay WS-3/WS-4) | **GREEN** | 8 WS files + ws3_transmission_audit overlaid from ws4_workcopy; A3 carries stages 809-811; consolidation all-green | (this commit) |
 | 2 Checkpoint A (pre-WS-3 byte-diff vs OSTRAM_latest) | **GREEN** | A/B/C compiled .txt all 0-diff vs OSTRAM_latest | (this commit) |
 | 3 foundation (loss+pin+cliff) + Checkpoint B | PENDING | | |
 | 4 clips | PENDING | | |

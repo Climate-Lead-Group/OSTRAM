@@ -257,11 +257,18 @@ implausible_combinations:
   WON: [MDV]
 
 # Technology parameters
+#
+# WARNING (WS-3, 2026-07-09) — DEAD KEY: `TotalAnnualMaxCapacityInvestment` in the six
+#   family blocks below is NOT compiled for transmission. A2_AddTx.process_parametrization
+#   reads PARAM_LIST = [CapitalCost, FixedCost, ResidualCapacity,
+#   TotalAnnualMinCapacityInvestment, TotalAnnualMaxCapacity] — which OMITS it. Do NOT
+#   rename it to a live key (e.g. TotalAnnualMaxCapacity): that would cap internal
+#   transmission at 5 GW/yr and cripple the 660-930 GW build-out the model needs. Leave as-is.
 # Renewable transmission technologies
 #Existing renewable transmission technologies
 RNWTRN:
   CapacityToActivityUnit: 31.536
-  OperationalLife: 20
+  OperationalLife: 40
   CapitalCost: 100
   FixedCost: 4
   ResidualCapacity: 5
@@ -269,7 +276,7 @@ RNWTRN:
 #Repowered renewable transmission technologies
 RNWRPO:
   CapacityToActivityUnit: 31.536
-  OperationalLife: 20
+  OperationalLife: 40
   CapitalCost: 100
   FixedCost: 4
   ResidualCapacity: 5
@@ -277,7 +284,7 @@ RNWRPO:
 #New lines of renewable transmission technologies
 RNWNLI:
   CapacityToActivityUnit: 31.536
-  OperationalLife: 20
+  OperationalLife: 40
   CapitalCost: 100
   FixedCost: 4
   ResidualCapacity: 5
@@ -287,7 +294,7 @@ RNWNLI:
 #Existing non-renewable transmission technologies
 PWRTRN:
   CapacityToActivityUnit: 31.536
-  OperationalLife: 20
+  OperationalLife: 40
   CapitalCost: 100
   FixedCost: 4
   ResidualCapacity: 5
@@ -295,7 +302,7 @@ PWRTRN:
 #Repowered non-renewable transmission technologies
 TRNRPO:
   CapacityToActivityUnit: 31.536
-  OperationalLife: 20
+  OperationalLife: 40
   CapitalCost: 100
   FixedCost: 4
   ResidualCapacity: 5
@@ -303,11 +310,35 @@ TRNRPO:
 #New lines of non-renewable transmission technologies
 TRNNLI:
   CapacityToActivityUnit: 31.536
-  OperationalLife: 20
+  OperationalLife: 40
   CapitalCost: 100
   FixedCost: 4
   ResidualCapacity: 5
   TotalAnnualMaxCapacityInvestment: 5
+
+# ============================================================
+# WS-3 D5 — INTERNAL (intra-node) transmission calibration
+# ============================================================
+# Applied by the late A3 stage `stage_ws3_internal_transmission`
+# (rules_scripts/apply_internal_transmission.py), which is authoritative for the
+# delivered model: it overrides the flat A2 placeholders and the Stage-1
+# OperationalLife (50/20) with the values below, on the six internal families
+# (RE: RNWTRN/RNWNLI/RNWRPO, non-RE: PWRTRN/TRNNLI/TRNRPO).
+#   * CapitalCost/FixedCost are UNIFORM across nodes (intra-node tx is just
+#     accounting; the study is about interties). non-RE = base; RE = base x
+#     re_capex_multiplier.
+#   * re_capex_multiplier is the WS-1 slider (per-kW RE tx premium ~1.5-2.3x,
+#     LBNL 2019; default 2.0). Set 1.5 / 1.8 / 2.0 / 3.0 to sensitise.
+#   * OperationalLife applies to all 6 families (fixes the 50/20 drift).
+#   * Per-node ResidualCapacity comes from rules_scripts/internal_tx_residuals.csv
+#     (compute_internal_tx_residuals.py, peak x residual_margin; NLI/RPO = 0).
+internal_transmission:
+  base_capital_cost: 100        # non-RE $/kW
+  base_fixed_cost: 4            # non-RE $/kW/yr (4% of CapEx)
+  re_capex_multiplier: 2.0      # WS-1 slider: 1.5 / 1.8 / 2.0 / 3.0
+  operational_life: 40          # years, all 6 internal families
+  residual_margin: 1.2          # peak x margin (documentation; residuals precomputed)
+  transmission_loss: 0.03       # WS-4: intra-node tx loss -> OutputActivityRatio = 1-loss = 0.97 (CEA ~3-4%, distribution excluded)
 
 # Enable DSPTRN dispatch technology (adds ELC03/ELC04 tier for interconnections)
 enable_dsptrn: true
