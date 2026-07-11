@@ -40,7 +40,10 @@ REPORTS = SCRIPT_DIR / "reports"
 PARAM_FILE = "A-O_Parametrization.xlsx"
 BOPT = "B_Optimised_VRE"
 
-SCEN = ["B_Opt_Clipped", "B_Opt_TradeCap30", "B_Opt_TradeCap15", "B_Opt_SolarCapexHi", "B_Opt_TxCap150", "B_Opt_IndiaCosts", "B_Opt_IndiaCostsFuel"]
+# B_Opt_TradeCap30 is superseded by TradeCap15 (STRICT) and is NOT built in the final
+# WS-4 set, so it is omitted here (validating its stale pre-WS-3 A-O against the WS-4
+# pinned B_Opt produces spurious "everything changed" diffs). TradeCap15 replaces it.
+SCEN = ["B_Opt_Clipped", "B_Opt_TradeCap15", "B_Opt_SolarCapexHi", "B_Opt_TxCap150", "B_Opt_IndiaCosts", "B_Opt_IndiaCostsFuel"]
 YAMLS = ["lid_rule.yaml", "relax_interconnectors.yaml", "retirement_schedule.yaml", "storage_floors.yaml"]
 REAL_CORR = ["TRNBGDXXINDEA", "TRNBGDXXINDNE", "TRNBTNXXBGDXX", "TRNNPLXXBGDXX"]
 BACKSTOPS = ["TRNNLIBGDXX", "TRNRPOBGDXX"]
@@ -171,11 +174,16 @@ def chk_diff(rep, scen, bopt_sheets, scen_sheets):
 
 def _expected(scen, sheet, tech, param):
     gen = tech.startswith("PWRSPV") or tech.startswith("PWRWON")
-    # shared VRE ceiling layer (all runs): sets MaxCap and clamps the
-    # investment lids/floors down to the ceiling for coherence.
+    # shared VRE ceiling layer (all runs): sets MaxCap, clamps the investment
+    # lids/floors down to the ceiling, and writes the coherent base-year VRE
+    # activity floor (scale_activity_to_ceiling). The activity-lower-limit term
+    # only became non-trivial once the WS-4 base-year pin made VRE lower-limits
+    # non-zero for 2023-2026 (validator originally predates the pin). All four
+    # are the shared ceiling's doing on VRE gen techs, expected for every run.
     if sheet == "Secondary Techs" and gen and param in (
             "TotalAnnualMaxCapacity", "TotalAnnualMaxCapacityInvestment",
-            "TotalAnnualMinCapacityInvestment"):
+            "TotalAnnualMinCapacityInvestment",
+            "TotalTechnologyAnnualActivityLowerLimit"):
         return True
     if scen == "B_Opt_Clipped":
         return False  # ceiling-only reference; no run-specific edits expected
@@ -288,7 +296,11 @@ def chk_run1(rep, scen, sheets, baseline):
     if not scen.startswith("B_Opt_TradeCap"):
         return
     try:
-        frac = float(json.loads((CONFIGS / scen / "patches.json").read_text(encoding="utf-8")).get("cap_fraction"))
+        _cfg = json.loads((CONFIGS / scen / "patches.json").read_text(encoding="utf-8"))
+        frac = float(_cfg.get("cap_fraction"))
+        # export allowance factor is a per-run knob: STRICT runs (TradeCap15) set 0.0
+        # (no export allowance); the old default was 1.5. Read it, don't hardcode.
+        efac = float(_cfg.get("export_factor", 1.5))
     except Exception:
         return
     st = sheets["Secondary Techs"]; dt = sheets.get("Demand Techs", {})
@@ -296,7 +308,7 @@ def chk_run1(rep, scen, sheets, baseline):
     ok = True; det = []
     for y in [2030, 2040, 2050]:
         aul_sum = sum((st.get((c, "TotalTechnologyAnnualActivityUpperLimit"), {}) or {}).get(y, 0.0) for c in REAL_CORR)
-        exp_alw = sum(exp[c][str(y)] * 1.5 for c in REAL_CORR)
+        exp_alw = sum(exp[c][str(y)] * efac for c in REAL_CORR)
         target = frac * dem[str(y)] + exp_alw
         if abs(aul_sum - target) > 0.5:
             ok = False; det.append(f"{y}: AUL sum {round(aul_sum,1)} != {frac:.2f}*dem+exp {round(target,1)}")

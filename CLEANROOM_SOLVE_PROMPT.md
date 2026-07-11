@@ -43,11 +43,11 @@ Compare each solved sensitivity to `OSTRAM_clean`'s Phase-B solve of the same sc
 magnitudes (WS-3/WS-4 shifted the foundation). `OSTRAM_clean` (read-only) is the behavioural oracle;
 `sensitivity_expansion/analyse_*` + `PHASE_B_METHODOLOGY_AND_RESULTS.md` describe the expected story.
 
-## STILL PENDING (do when convenient)
-- **Teach `validate_sensitivity_configs.py` about the WS-4 base-year pin**: its `3_DIFF_vs_BOPT` flags VRE
-  `TotalTechnologyAnnualActivityLowerLimit` as "unexpected" — that's the pin x ceiling interaction the
-  validator (pre-pin) doesn't know. FIRST verify the flagged cells are exactly A's base-year (2023-26)
-  pinned values, THEN add them to the check's expected-set (do NOT loosen any other check).
+## VALIDATORS — DONE (already green)
+`validate_sensitivity_configs.py` = 32 PASS / 0 FAIL (taught DIFF_vs_BOPT about the pin x ceiling VRE
+lower-limit; 6_RUN1_CAPS now reads export_factor; dropped superseded TradeCap30). glpsol --check = 15/15.
+OPTIONAL later: its SCEN sanity subset is 6 scenarios — SolarCapex130/Spike, the Dir scenarios, and the
+A/C clips are glpsol-covered but not in that subset; add them to SCEN + `_expected` if you want fuller config coverage.
 
 ## COMMIT (working branch; NO push)
 - Solve Outputs (`Executables/*/Outputs/`, `.sol`, `.txt`, combined CSVs) are GITIGNORED/regenerable — do
