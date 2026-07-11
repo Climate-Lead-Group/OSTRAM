@@ -25,7 +25,7 @@ Branch `ws3-phaseb-cleanredo` (local only — **not pushed**). Started 2026-07-1
 | 0 harness scaffold (hero_refs + cleanroom_check + runlog) | GREEN | files written | (this commit) |
 | 1 consolidate (rebase phaseB + overlay WS-3/WS-4) | **GREEN** | 8 WS files + ws3_transmission_audit overlaid from ws4_workcopy; A3 carries stages 809-811; consolidation all-green | (this commit) |
 | 2 Checkpoint A (pre-WS-3 byte-diff vs OSTRAM_latest) | **GREEN** | A/B/C compiled .txt all 0-diff vs OSTRAM_latest | (this commit) |
-| 3 foundation (loss+pin+cliff) + Checkpoint B | PENDING | | |
+| 3 foundation (loss+pin+cliff) + Checkpoint B | **DONE — byte-diff RED (ws4 stale), foundation VERIFIED** | 2027+ 100% byte-identical to ws4; base-year pin reproduces ws4's FINAL A solve exactly; ws4 committed .txt stale | (runlog commit) |
 | 4 clips | PENDING | | |
 | 5 sensitivities (+2 new solar tiers) | PENDING | | |
 | 6 compile + glpsol --check (all 15) | PENDING | | |
@@ -40,3 +40,12 @@ Branch `ws3-phaseb-cleanredo` (local only — **not pushed**). Started 2026-07-1
   (gitignored, absent in fresh clone) -> seeded from OSTRAM_latest's A_Calibrated_BAU_0; C then rebuilt
   clean and stayed 0-diff. Throwaway pre-WS-3 A1_Outputs xlsx churn discarded. Config left at no-solve for STEP 3.
   Seed mechanism validated for STEP 3 (will seed the WS-4 A-with-loss solve instead).
+- 2026-07-11 — **STEP 1 overlay** committed (987aee4): 8 WS-3/WS-4 files + ws3_transmission_audit from ws4_workcopy.
+- 2026-07-11 — **STEP 3 foundation built.** Seeded ws4 A-with-loss Outputs (anchor 2,314,332) into Executables/A_Calibrated_BAU_0/. Ran A3(WS-4: interconnector+internal-tx+3%loss stages) for A/B/C -> B1 -> cliff on C (PWRWONINDWE LowerLimit 2027 237.177->227.4139, 2028 260.635->255.0783; monotone, < UpperLimit) -> base-year pin A/B/C (exact-equality, 2023-2026, 198 interconnectors excluded, internal-tx pinned) -> B1 -> B2. All exits 0.
+- 2026-07-11 — **CHECKPOINT B: byte-diff vs ws4 RED, but foundation VERIFIED. Root cause = ws4 provenance, NOT our pipeline.**
+  - A/B/C differ from ws4 committed .txt ONLY at base years 2023-2026 (A: 1077 lines, distribution 196/280/298/303 across 2023/24/25/26; ZERO diffs at 2027+). Every foundation value at 2027+ (interconnector CapEx 380..2800, life 40, internal-tx OAR 0.97, cliff 227.4139/255.0783, VRE targets) is **byte-identical** to ws4.
+  - The base-year diff is the pin. **Our pin = ws4's CURRENT A Outputs exactly** (NewCapacity PWRCOAINDEA 2025=0.6587, 2026=2.2555 in BOTH). ws4's committed .txt has 0.6613/2.2645 = an OLDER A solve.
+  - **ws4 A Outputs mtime 17:31 > ws4 committed .txt mtime 17:19** -> ws4 re-solved A ~12 min AFTER compiling its baselines, and never re-pinned. So ws4's committed baseline .txt are pinned to a since-overwritten A solve.
+  - **Conclusion:** our baselines are self-consistent with ws4's FINAL A solve (the 2,314,332 anchor); ws4's committed baselines are internally stale. Exact byte-match of ws4's committed .txt is IMPOSSIBLE (pin-time A solve overwritten). This is a hero-provenance issue, not fixable by us and not a pipeline error.
+  - **DECISION FOR LUIS:** (a) accept our self-consistent baselines as canonical [recommended — they correctly pin ws4's final A solve], or (b) in ws4, re-pin+recompile baselines against its current A solve to get a consistent hero. Do NOT pin against a fabricated/older solve.
+  - **Verification going forward** (base-year byte-diff is confounded by ws4 staleness): use `glpsol --check` (structural validity) + foundation-region (2027+) byte-match + lever spot-checks. Continuing to STEP 4/5/6 on the correct foundation.
