@@ -31,6 +31,12 @@ Branch `ws3-phaseb-cleanredo` (local only — **not pushed**). Started 2026-07-1
 | 6 compile + glpsol --check (all 15) | **GREEN ✓ 15/15 + validators GREEN** | glpsol --check: 15/15 "Model has been successfully generated", 0 check-failures (structurally CPLEX-ready). validate_sensitivity_configs: **32 PASS / 0 FAIL** after 3 corrective edits (NOT loosening): (a) taught `3_DIFF_vs_BOPT` that the WS-4 base-year pin makes the shared ceiling write VRE `ActivityLowerLimit` (verified base-years/VRE-gen/ceiling-clipped only); (b) `6_RUN1_CAPS` now reads `export_factor` from config (honors STRICT TradeCap15 export=0) instead of hardcoding ×1.5; (c) dropped superseded `TradeCap30` from SCEN. Coverage: validator SCEN = 6 scenarios; SolarCapex130/Spike + Dir + A/C clips are glpsol-covered structurally, not in the SCEN sanity subset | |
 | 7 stage CPLEX batch + RUN_ORDER.md | **STAGED ✓** | RUN_ORDER.md + run_{baselines,sensitivities,directions}.bat; config restored to solve-mode (execute_model/create_matrix=True) | |
 
+## SOLVE (first CPLEX run — A,B,C, 2026-07-11 14:13-15:08)
+- **B_Optimised_VRE: OPTIMAL** — Sum TDC = **2,212,351** (expected ~2,215,073; 0.12% — foundation SOLVES correctly ✓).
+- **C_Target_VRE: OPTIMAL** — Sum TDC = **2,253,104** (expected ~2,257,995; 0.22% ✓).
+- **A_Calibrated_BAU: INFEASIBLE (KNOWN ISSUE — for fresh session).** CPLEX presolve: `Row TotalAnnualTechnologyActivityLowerLimit(PWRSPVINDNO,2023) infeasible` -> fell back to feasopt -> garbage Sum TDC 19.3e9. Cause: base-year pin sets PWRSPVINDNO 2023 activity Lower=Upper=**136.0577 PJ (EXACT equality)**, but 2023 capacity = residual 22.7646 + pinned build 0.1958 = 22.96 GW, which at solar CF maxes near ~136 PJ -> knife-edge infeasible. B has NO such pin (empty) so B/C are fine. NOTE: the recipe TEXT specified the pin as **"+/-0.2% BANDS"** but `apply_base_year_pin.py` does **exact equality** — a band (Lower = 0.998x solved) gives the sliver of slack and should fix it.
+  - **FIX (fresh session):** re-pin A (and A_Calibrated_BAU_Clipped, which inherits A's pin) with a small band / tolerance on the activity lower-limit (per the recipe's "+/-0.2% bands"), recompile, re-solve; expect A ~ 2,314,332. A's current Outputs are the infeasible feasopt (garbage) — discard on re-solve. B/C are correct and need no rework.
+
 ## Log
 - 2026-07-11 — env audit green; branch rebased onto phaseB (e4597e4); harness scaffolded (8c9b674).
 - 2026-07-11 — **Checkpoint A GREEN**. Ran A3->B1->B2 (no-solve: execute_model/create_matrix=False) for

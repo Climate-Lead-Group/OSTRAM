@@ -3,6 +3,18 @@
 **How to use:** open a NEW Claude Code session, cwd = `C:\Users\luisfernando\Desktop\OSeMOSYS\OSTRAM_mainredo`,
 and say *"Read and execute CLEANROOM_SOLVE_PROMPT.md."* Prep is DONE; this session only SOLVES + debugs.
 
+## ⛔ KNOWN ISSUE — FIX THIS FIRST: A_Calibrated_BAU is INFEASIBLE
+First CPLEX run (2026-07-11): **B_Optimised_VRE OPTIMAL (2,212,351 ✓), C_Target_VRE OPTIMAL (2,253,104 ✓)** —
+foundation solves. **A_Calibrated_BAU INFEASIBLE**: CPLEX presolve `Row TotalAnnualTechnologyActivityLowerLimit
+(PWRSPVINDNO,2023) infeasible` -> feasopt garbage (Sum TDC 19.3e9). Cause: base-year pin set that solar tech's
+2023 activity Lower=Upper=**136.0577 PJ EXACT**, but 2023 capacity (residual 22.76 + build 0.20 = 22.96 GW) at
+solar CF maxes ~136 PJ -> knife-edge. B/C have no such pin, so they're fine.
+**FIX:** the recipe TEXT said pin activity as **+/-0.2% BANDS**, but `apply_base_year_pin.py` does EXACT equality.
+Re-pin A (+ A_Calibrated_BAU_Clipped, which inherits A's pin) with a band/tolerance on the activity lower-limit
+(Lower = ~0.998x solved), recompile, re-solve; expect A ~ 2,314,332. If 0.2% is not enough or other VRE techs
+also go infeasible, widen the band or investigate the capacity pin. B/C need NO rework. A's current Outputs are
+the infeasible feasopt — discard on re-solve.
+
 ## STATE (already done — do NOT redo)
 - Branch `ws3-phaseb-cleanredo`. All **15 scenario datafiles are prepared, committed (`092dbb5`), and
   glpsol-`--check` clean (15/15)**. Foundation byte-exact vs `ws4_workcopy` at 2027+.
