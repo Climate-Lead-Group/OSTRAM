@@ -212,7 +212,13 @@ def apply_edit(ws, col_map, year_cols, edit, log):
                 v[str(y)] if str(y) in v else (v[y] if y in v else old))
         elif edit.get("op") == "multiply":
             f = float(edit["factor"])
-            def newfn(y, old, f=f):
+            # Optional per-year restriction: {"op":"multiply","factor":..,"years":[..]}
+            # multiplies only the listed years; all other years are left unchanged.
+            # Absent "years" -> multiply every year (backward compatible).
+            yrs = set(int(y) for y in edit["years"]) if edit.get("years") else None
+            def newfn(y, old, f=f, yrs=yrs):
+                if yrs is not None and y not in yrs:
+                    return old
                 if old is None or (isinstance(old, str) and not old.strip()):
                     return old
                 try:

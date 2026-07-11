@@ -18,7 +18,7 @@ import json
 from pathlib import Path
 import pandas as pd
 
-REPO = Path(r"C:/Users/luisfernando/Desktop/OSeMOSYS/OSTRAM_clean/t1_confection")
+REPO = Path(__file__).resolve().parent.parent  # portable: t1_confection of the containing repo
 AO = REPO / "A1_Outputs" / "A1_Outputs_B_Optimised_VRE" / "A-O_Parametrization.xlsx"
 CONFIGS = REPO / "A3_process" / "rules_scripts" / "configs"
 BASE = json.loads((REPO / "sensitivity_expansion" / "reference" / "b_opt_baseline.json").read_text())
