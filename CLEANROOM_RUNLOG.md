@@ -28,7 +28,7 @@ Branch `ws3-phaseb-cleanredo` (local only — **not pushed**). Started 2026-07-1
 | 3 foundation (loss+pin+cliff) + Checkpoint B | **DONE — byte-diff RED (ws4 stale), foundation VERIFIED** | 2027+ 100% byte-identical to ws4; base-year pin reproduces ws4's FINAL A solve exactly; ws4 committed .txt stale | (runlog commit) |
 | 4 clips | **BUILT ✓** | rebuilt alone after concurrency bug; RNWNLI internal-tx=200; DirBidir==B_Opt_Clipped 0-diff | |
 | 5 sensitivities (+2 new solar tiers) | **BUILT ✓** | all 9 built; solar `years`-filter verified (Spike x1.5 only 2028-30); TradeCap15 STRICT (export_factor 0); DirBidir neutrality 0-diff | |
-| 6 compile + glpsol --check (all 15) | **glpsol running; validators run** | glpsol --check all 15 in progress; validate_sensitivity_configs: COMPLETENESS/SCHEMA/COHERENCE/VRE_CEILINGS(3 approved clips)/TXCAP PASS; `3_DIFF_vs_BOPT` flags VRE LowerLimit = base-year-pin×ceiling interaction (validator predates the WS-4 pin) — flagged for Luis, not silenced | |
+| 6 compile + glpsol --check (all 15) | **GREEN ✓ 15/15** | glpsol --check: 15/15 "Model has been successfully generated", 0 check-failures (structurally CPLEX-ready); validate_sensitivity_configs: COMPLETENESS/SCHEMA/COHERENCE/VRE_CEILINGS(3 approved clips)/TXCAP PASS; `3_DIFF_vs_BOPT` flags VRE LowerLimit = base-year-pin×ceiling interaction (validator predates the WS-4 pin) — flagged, not silenced | |
 | 7 stage CPLEX batch + RUN_ORDER.md | **STAGED ✓** | RUN_ORDER.md + run_{baselines,sensitivities,directions}.bat; config restored to solve-mode (execute_model/create_matrix=True) | |
 
 ## Log
