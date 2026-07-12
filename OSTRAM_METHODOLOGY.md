@@ -356,3 +356,17 @@ backstop 0).
 *Prepared as report-feeding methodology documentation. Foundation anchors are validated; the §4–§7 sensitivity
 magnitudes are pre-WS-3, and the WS-3/WS-4 re-solve (15/15 optimal), the base-year-pin infeasibility fix, and the
 WACC test are confirmed in §8-C.*
+
+## 10. Provenance & citations update (2026-07-12 research pass)
+
+A verification pass sourced the study's previously-uncited, load-bearing assumptions. **No ceiling or model
+value was changed** — this records provenance and corrects labels/wording only. Full reference list + per-node
+support table: `sensitivity_expansion/reference/vre_ceiling_provenance.md`. Key items:
+
+- **VRE ceilings — label fix:** `vre_ceilings.csv` tags all solar "NISE-2025" / all wind "NIWE 150 m", but NISE/NIWE are **India-only** (MNRE). India stands (solar → NISE 2025, 3,343 GWp; wind → NIWE 150 m, 1,163.9 GW — our India totals reconcile). The **five non-India nodes** need their own sources — cleanest is a **Global Solar/Wind Atlas** (World Bank/ESMAP·DTU) baseline + a national study on each clip.
+- **Clip caveats (state in the report; none changes a result):** LKA solar 16 GW is a 2050 *scenario-build* figure (ADB/UNDP), not pure technical potential (~6 GW); **BGD onshore wind 3 GW is a modeler's conservative screen — a cite-gap** (only a gross ">30 GW, unrealistic" figure exists); **MDV onshore wind ≈0** is defensible but not literally zero (~80 MW niche, Greater Malé).
+- **Transmission loss:** recast "~3%" → "**~3–4%**" per Grid-India ISTS notices (3.96% recent), and **drop "single largest driver of system cost"** (over-claim — generation capital+fuel dominate). §2.1's model result "+4.1% on A, dwarfs the interconnector/D5 effects" is correctly scoped and stands.
+- **WACC 10%:** defensible via IRENA "10% rest-of-world" (RPGC 2018); conservative/high end of the ~4–9% (OECD/IEA) to 6% (World Bank) range; no South-Asia-specific single source.
+- **D4 refs:** [27] (Koirala & Rahut 2022) is an **ADBI blog, not peer-reviewed** — re-tag as grey literature; [25]/[26] are the journal + working-paper versions of one study (add middle initials to [26]).
+
+See `reference/vre_ceiling_provenance.md` for full citations, URLs, and the per-node support table.
