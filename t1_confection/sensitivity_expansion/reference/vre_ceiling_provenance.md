@@ -116,3 +116,7 @@ Lead with the **Global Solar/Wind Atlas** as the uniform baseline for the 5 non-
 7. All cross-study comparisons are **directional only** (different horizons, discount rates, resolutions). CBET → lower cost / higher RE share is robustly corroborated in *direction*.
 
 *Provenance pass 2026-07-12. No ceiling or model value changed. Companion to `OSTRAM_METHODOLOGY.md` §3 and the gaps in §8.*
+
+---
+
+**NISE vintage note (added 2026-07-12).** The India solar ceilings (150 / 25 / 600 / 500 / 650 GW) are deliberately-round **non-binding headroom guards** — set well above B_Opt's actual buildout (e.g. INDNO 600 vs buildout 319; INDWE 650 vs 185; INDEA 150 vs 19) and benchmarked to the **NISE-2025 order of magnitude**, *not* a precise NISE state-aggregation and *not* an average of the 2014/2025 vintages (the round hundreds are the tell; a real aggregation gives messy decimals). Because India-solar buildout sits far below these caps, their exact value **does not affect any result** — only the three *binding* non-India clips (LKA solar 16, BGD wind 3, MDV wind 0) require precise sourcing. So the "which NISE vintage?" question is immaterial for the India nodes.
