@@ -3,17 +3,20 @@
 **How to use:** open a NEW Claude Code session, cwd = `C:\Users\luisfernando\Desktop\OSeMOSYS\OSTRAM_mainredo`,
 and say *"Read and execute CLEANROOM_SOLVE_PROMPT.md."* Prep is DONE; this session only SOLVES + debugs.
 
-## ⛔ KNOWN ISSUE — FIX THIS FIRST: A_Calibrated_BAU is INFEASIBLE
-First CPLEX run (2026-07-11): **B_Optimised_VRE OPTIMAL (2,212,351 ✓), C_Target_VRE OPTIMAL (2,253,104 ✓)** —
-foundation solves. **A_Calibrated_BAU INFEASIBLE**: CPLEX presolve `Row TotalAnnualTechnologyActivityLowerLimit
-(PWRSPVINDNO,2023) infeasible` -> feasopt garbage (Sum TDC 19.3e9). Cause: base-year pin set that solar tech's
-2023 activity Lower=Upper=**136.0577 PJ EXACT**, but 2023 capacity (residual 22.76 + build 0.20 = 22.96 GW) at
-solar CF maxes ~136 PJ -> knife-edge. B/C have no such pin, so they're fine.
-**FIX:** the recipe TEXT said pin activity as **+/-0.2% BANDS**, but `apply_base_year_pin.py` does EXACT equality.
-Re-pin A (+ A_Calibrated_BAU_Clipped, which inherits A's pin) with a band/tolerance on the activity lower-limit
-(Lower = ~0.998x solved), recompile, re-solve; expect A ~ 2,314,332. If 0.2% is not enough or other VRE techs
-also go infeasible, widen the band or investigate the capacity pin. B/C need NO rework. A's current Outputs are
-the infeasible feasopt — discard on re-solve.
+## STATE: FULL SOLVE DONE (2026-07-12) — 12/15 OPTIMAL, 3 infeasible. FIX the 3 FIRST.
+All 15 re-solved with the banded pin (`apply_base_year_pin.py --band 0.002`, now committed) + dual simplex +
+feasopt-off. **12 Optimal**: baselines A/B/C 2,314,128/2,214,920/2,257,930 (within 0.01% of ws4); 3 clips;
+Solar Hi/130/Spike; IndiaCosts==IndiaCostsFuel 2,177,458; DirBidir==B_Opt_Clipped 2,215,995 (neutrality ok).
+The earlier A knife-edge is RESOLVED by the band.
+**⛔ 3 INFEASIBLE — one modeling decision (see CLEANROOM_RUNLOG.md solve-tracker for full detail):**
+`B_Opt_TradeCap15`, `B_Opt_TxCap150`, `B_Opt_DirContractual` — each infeasible on a BASE-YEAR backstop
+ActivityUpperLimit (PWRBCK{BGDXX,BGDXX,BTNXX} @ 2024/2025/2023). These are exactly the 3 sensitivities that
+restrict BASE-YEAR network flows; the WS-4 base-year pin freezes the calibrated import-reliant base-year mix, so
+cutting base-year imports leaves a node's base-year demand unmeetable (genuine demand-balance infeasibility, not
+a pin-vs-lever conflict; band won't help). They solved in pre-WS-3 Phase-B because there was no base-year pin.
+**FIX (modeling call):** apply the trade/tx/direction levers to the STUDY PERIOD 2027+ only (leave 2023-2026 =
+pinned calibrated mix), OR keep the base-year backstop available (zero it from 2027). Then rebuild+resolve those 3.
+The WACC test target `B_Opt_Clipped` solved fine (2,215,995) -> WACC_TEST_PROMPT.md is unblocked.
 
 ## STATE (already done — do NOT redo)
 - Branch `ws3-phaseb-cleanredo`. All **15 scenario datafiles are prepared, committed (`092dbb5`), and

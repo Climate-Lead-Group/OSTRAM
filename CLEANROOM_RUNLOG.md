@@ -63,7 +63,21 @@ Scratchpad helper relax_activity_band.py superseded by the pin `--band` (kept fo
 | 8 | B_Opt_SolarCapex130 | ~16m | 2,237,715 (Optimal) |
 | 9 | B_Opt_SolarCapexSpike | in progress | |
 **8/15 Optimal, 0 infeasible (band holding). Solar cost tiers rise 2.216->2.223->2.238M as expected.**
-avg ~15 min/scen; ETA all-15 ~00:15 (2026-07-12). Remaining 7. Update as each lands.
+avg ~15 min/scen. FINAL solve results (14/15 solved, DirContractual finishing):
+- **13 OPTIMAL** — A/B/C 2,314,128/2,214,920/2,257,930 (within 0.01% of ws4); clips 2,314,131/2,215,995/2,246,158;
+  Solar Hi/130/Spike 2,223,239/2,237,715/2,220,882 (rise with multiplier, sustained>transient ✓);
+  IndiaCosts==IndiaCostsFuel 2,177,458 (fuel non-binding ✓); DirBidir==B_Opt_Clipped 2,215,995 (neutrality ✓).
+- **3 INFEASIBLE (KNOWN — one modeling decision, NOT a pipeline bug): B_Opt_TradeCap15, B_Opt_TxCap150, B_Opt_DirContractual.**
+  CPLEX infeasible variable = a **base-year backstop ActivityUpperLimit**: TradeCap15 PWRBCKBGDXX 2024, TxCap150
+  PWRBCKBGDXX 2025, DirContractual PWRBCKBTNXX 2023. UNIFIED CAUSE: these are the 3 sensitivities that **restrict
+  base-year network flows** (import cap / cross-border tx cap / corridor direction). A's calibrated BAU balanced
+  those nodes' BASE-YEAR demand partly via imports; the WS-4 base-year PIN freezes the base-year domestic mix, the
+  sensitivity cuts base-year imports, and the backstop is pinned/zeroed -> node base-year demand unmeetable. All
+  Lower=Upper=0 on the backstop (no pin-vs-lever conflict; genuine demand-balance infeasibility). These SOLVED in
+  pre-WS-3 Phase-B (OSTRAM_clean) because there was no base-year pin. The 12 feasible scenarios only change costs or
+  FUTURE ceilings, not base-year flows. **FIX (continuation session, modeling call):** apply the trade/tx/direction
+  levers to the STUDY PERIOD 2027+ only (leave 2023-2026 = calibrated/pinned mix), OR keep the base-year backstop
+  available (zero it from 2027). Do NOT widen the band (won't help). Then rebuild+resolve those 3.
 
 ## Log
 - 2026-07-11 — env audit green; branch rebased onto phaseB (e4597e4); harness scaffolded (8c9b674).
@@ -88,3 +102,18 @@ avg ~15 min/scen; ETA all-15 ~00:15 (2026-07-12). Remaining 7. Update as each la
 - 2026-07-11 — glpsol --check invocation confirmed: datafile is DATA-ONLY, needs `-m osemosys_fast_preprocessed_storage_delay.txt -d <Pre_processed_..._RMCarefulXLSX.txt> --check`. Slow (>2 min/scenario) -> run in background.
 - 2026-07-11 — **CONCURRENCY BUG found + fixed.** STEP-4 clips B1 failed for all 3 with `Errno 22` on Config_MOMF_T1_A.yaml because I launched the solar build (also runs B1) concurrently -> B1/B2 mutate Config_MOMF_T1_A.yaml (Main_Scenario) so two pipelines collide on the file lock. B1 logged the error but still exited 0, leaving the clips' A2 params stale (RNWNLI internal-tx = 100 non-RE instead of 200 RE; A2 mtime 01:42 vs A-O 03:03). Caught via the DirBidir!=B_Opt_Clipped neutrality check (13319-line diff). glpsol passed the stale clips because it checks structure, not values. **RULE: never run two B1/B2 pipelines concurrently.** Rebuilding the 3 clips alone. STEP-5 sensitivities are unaffected (ran against read-only glpsol, no config collision; verified RNWNLI=200).
 - **RESUME POINT for remaining sensitivities:** seed ws4's FINAL B_Optimised_VRE solve (Executables/B_Optimised_VRE_0/Outputs from ws4_workcopy) [same self-consistent approach + same ws4-staleness caveat as A]; run `gen_sensitivity_patches.py` (recomputes TradeCap15 STRICT export_factor=0, TxCap150, IndiaCosts{,Fuel}); apply_patches each --source-scenario B_Optimised_VRE; for DirBidir/DirContractual also overlay set_interconnector_direction.py on the AR files (config set_interconnector_direction.yaml in each config dir); B1+B2; then glpsol --check all 15; validate_sensitivity_configs.py; desk_check.py; restore Config execute_model/create_matrix=True; STEP 7 stage batches + RUN_ORDER.md; cleanup + commit (exclude *_PRE_*/PREPATCH backups, mirrored Outputs, giant CSV/.sol/.lp).
+
+## SESSION 2 (overnight continuation, 2026-07-12) — fix 3 infeasible, WACC test, behavioural analysis, methodology
+Goals (in order, checkpoint-commit each; NO push): (1) commit pending doc updates + re-commit banded 15-scenario
+inputs snapshot; (2) fix the 3 infeasible (TradeCap15, TxCap150, DirContractual) by applying the trade/tx/direction
+levers to the STUDY PERIOD 2027+ ONLY (leave 2023-2026 = pinned calibrated mix), rebuild + re-solve -> expect
+Optimal near base; (3) run WACC_TEST_PROMPT.md (B_Opt_Clipped @ 13%) -> PASS banner + WACC_TEST_RESULT.md;
+(4) behavioural analysis of all 15 vs OSTRAM_clean Phase-B (same SIGNS/RANKING, not magnitudes); (5) OSTRAM_METHODOLOGY.md §8-C.
+Hard rules honored: one B2 at a time (Config_MOMF_T1_A.yaml lock); CPLEX = dual simplex + feasopt-off (no barrier);
+explicit `git add <path>` (never -A); commit as luviga, no Co-Authored-By; never push.
+- 2026-07-12 01:15 PDT — session start. Env audit: OSTRAM-env python present. NOTE: an unrelated
+  `build_dashboard_nonsupplied.py` runs on **system Python 3.12** (not OSTRAM-env), outside this repo — it is a
+  reader, does NOT touch Config_MOMF_T1_A.yaml, so it does not violate the one-pipeline rule. Left running.
+- STEP 1 — commit pending docs (RUNLOG + SOLVE_PROMPT) then re-commit the banded 15-scenario snapshot
+  (15 scenarios x {A1_Outputs, A2_Output_Params, A2_Outputs_Params_otoole}; excludes BAU churn + all *_PRE_*/PREPATCH
+  backups, matching the 092dbb5 file-set). Result: pending below.
