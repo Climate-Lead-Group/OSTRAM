@@ -143,7 +143,7 @@ def _year_cols(ws, years):
     return out
 
 
-def edit_sheet(ws, activity, newbuild, years, valid_techs, log, interconnectors=INTERCONNECTORS):
+def edit_sheet(ws, activity, newbuild, years, valid_techs, log, interconnectors=INTERCONNECTORS, band=0.0):
     h = _hdr(ws)
     tc, pc, pmc = h.get("Tech"), h.get("Parameter"), h.get("Projection.Mode")
     if tc is None or pc is None:
@@ -152,12 +152,15 @@ def edit_sheet(ws, activity, newbuild, years, valid_techs, log, interconnectors=
     if not ycols:
         return
 
-    def set_cells(r, ref_or_val, counter):
-        """ref_or_val: a {year:val} dict (per-tech ref) or a scalar (e.g. SENTINEL)."""
+    def set_cells(r, ref_or_val, counter, factor=1.0):
+        """ref_or_val: a {year:val} dict (per-tech ref) or a scalar (e.g. SENTINEL).
+        factor bands the pinned value: lower limits x(1-band), upper limits x(1+band)."""
         wrote = False
         for y, c in ycols.items():
             val = ref_or_val[y] if isinstance(ref_or_val, dict) else ref_or_val
             val = float(val) if val is not None else 0.0
+            if factor != 1.0 and val != 0.0:
+                val = round(val * factor, 6)
             cell = ws.cell(row=r, column=c)
             if cell.value != val:
                 cell.value = val
@@ -183,9 +186,11 @@ def edit_sheet(ws, activity, newbuild, years, valid_techs, log, interconnectors=
             continue   # interconnectors: MaxCapacity frozen==residual; pinning collides
                        # with the residual machinery (and they're already A==B==C)
         if par in ACTIVITY_PARAMS:
-            set_cells(r, {y: activity.get(tech, {}).get(y, 0.0) for y in years}, "pin_cells")
+            fac = (1.0 - band) if par == P_LOWER else (1.0 + band)  # band: lower down, upper up
+            set_cells(r, {y: activity.get(tech, {}).get(y, 0.0) for y in years}, "pin_cells", factor=fac)
         elif par in BUILD_PARAMS:
-            set_cells(r, {y: newbuild.get(tech, {}).get(y, 0.0) for y in years}, "build_cells")
+            fac = (1.0 - band) if par == P_MINCAPINV else (1.0 + band)
+            set_cells(r, {y: newbuild.get(tech, {}).get(y, 0.0) for y in years}, "build_cells", factor=fac)
         elif par == P_MAXCAP:
             set_cells(r, SENTINEL, "relax_cells")
 
@@ -213,7 +218,7 @@ def restore(d: Path, frm=None) -> Path:
     return frm
 
 
-def run(input_dir, from_solve_dir, tech_csv=None, years=DEFAULT_YEARS, skip_backup=False) -> dict:
+def run(input_dir, from_solve_dir, tech_csv=None, years=DEFAULT_YEARS, skip_backup=False, band=0.0) -> dict:
     input_dir = Path(input_dir)
     sd = Path(from_solve_dir)
     activity = read_ref(sd / ACTIVITY_CSV, set(years))
@@ -233,7 +238,7 @@ def run(input_dir, from_solve_dir, tech_csv=None, years=DEFAULT_YEARS, skip_back
     try:
         for sh in SHEETS:
             if sh in wb.sheetnames:
-                edit_sheet(wb[sh], activity, newbuild, years, valid_techs, log)
+                edit_sheet(wb[sh], activity, newbuild, years, valid_techs, log, band=band)
         wb.save(pf)
     finally:
         wb.close()
@@ -353,6 +358,9 @@ def main() -> int:
                    help="TECHNOLOGY.csv (valid tech set); the pin only touches these, never fuel/template rows")
     p.add_argument("--years", type=int, nargs="+", default=list(DEFAULT_YEARS))
     p.add_argument("--skip-backup", action="store_true")
+    p.add_argument("--band", type=float, default=0.0,
+                   help="pin as +/-band bands instead of exact equality (e.g. 0.002 = 0.2 pct); "
+                        "lower limits x(1-band), upper limits x(1+band); avoids knife-edge infeasibility.")
     p.add_argument("--self-test", action="store_true")
     p.add_argument("--restore", action="store_true")
     p.add_argument("--restore-from", type=Path, default=None)
@@ -368,7 +376,7 @@ def main() -> int:
     if not a.input_dir or not a.from_solve_dir:
         print("ERROR: --input-dir and --from-solve-dir are required", file=sys.stderr); return 1
     try:
-        log = run(a.input_dir, a.from_solve_dir, a.tech_csv, tuple(a.years), a.skip_backup)
+        log = run(a.input_dir, a.from_solve_dir, a.tech_csv, tuple(a.years), a.skip_backup, band=a.band)
     except Exception as e:
         print(f"ERROR: {e}", file=sys.stderr); return 1
     print_summary(log)

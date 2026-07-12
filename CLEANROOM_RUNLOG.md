@@ -34,8 +34,36 @@ Branch `ws3-phaseb-cleanredo` (local only — **not pushed**). Started 2026-07-1
 ## SOLVE (first CPLEX run — A,B,C, 2026-07-11 14:13-15:08)
 - **B_Optimised_VRE: OPTIMAL** — Sum TDC = **2,212,351** (expected ~2,215,073; 0.12% — foundation SOLVES correctly ✓).
 - **C_Target_VRE: OPTIMAL** — Sum TDC = **2,253,104** (expected ~2,257,995; 0.22% ✓).
-- **A_Calibrated_BAU: INFEASIBLE (KNOWN ISSUE — for fresh session).** CPLEX presolve: `Row TotalAnnualTechnologyActivityLowerLimit(PWRSPVINDNO,2023) infeasible` -> fell back to feasopt -> garbage Sum TDC 19.3e9. Cause: base-year pin sets PWRSPVINDNO 2023 activity Lower=Upper=**136.0577 PJ (EXACT equality)**, but 2023 capacity = residual 22.7646 + pinned build 0.1958 = 22.96 GW, which at solar CF maxes near ~136 PJ -> knife-edge infeasible. B has NO such pin (empty) so B/C are fine. NOTE: the recipe TEXT specified the pin as **"+/-0.2% BANDS"** but `apply_base_year_pin.py` does **exact equality** — a band (Lower = 0.998x solved) gives the sliver of slack and should fix it.
+- **A_Calibrated_BAU: FIXED -> OPTIMAL, anchor 2,314,128** (vs 2,314,332; -0.009% from the band). Fix: exact-equality pin was knife-edge BOTH sides -> applied the recipe's +/-0.2% both-sides band on activity AND build for base years (scratchpad relax_activity_band.py on A's A-O; PWRSPVINDNO lower x0.998, PWRBCKMDVXX etc. upper x1.002), recompiled, re-solved. ALSO dropped the always-on `"feasopt all"` from B2's CPLEX command (uncommitted edit) -> solve 55min -> **9.5min** and no garbage feasopt .sol. Barrier (lpmethod 4) still available for more speed (awaiting go). NOTE: A's committed A2 snapshot is the pre-band (infeasible) version; A_Calibrated_BAU_Clipped inherits A's pin and would need the same band. Cleaner long-term fix = add the band to apply_base_year_pin.py and re-pin all.
+- ~~A_Calibrated_BAU: INFEASIBLE (KNOWN ISSUE)~~ (RESOLVED above): CPLEX presolve: `Row TotalAnnualTechnologyActivityLowerLimit(PWRSPVINDNO,2023) infeasible` -> fell back to feasopt -> garbage Sum TDC 19.3e9. Cause: base-year pin sets PWRSPVINDNO 2023 activity Lower=Upper=**136.0577 PJ (EXACT equality)**, but 2023 capacity = residual 22.7646 + pinned build 0.1958 = 22.96 GW, which at solar CF maxes near ~136 PJ -> knife-edge infeasible. B has NO such pin (empty) so B/C are fine. NOTE: the recipe TEXT specified the pin as **"+/-0.2% BANDS"** but `apply_base_year_pin.py` does **exact equality** — a band (Lower = 0.998x solved) gives the sliver of slack and should fix it.
   - **FIX (fresh session):** re-pin A (and A_Calibrated_BAU_Clipped, which inherits A's pin) with a small band / tolerance on the activity lower-limit (per the recipe's "+/-0.2% bands"), recompile, re-solve; expect A ~ 2,314,332. A's current Outputs are the infeasible feasopt (garbage) — discard on re-solve. B/C are correct and need no rework.
+
+## FULL BANDED RE-DO (2026-07-11, per Luis: barrier + bake-band-into-pin + solve-all)
+Tooling (uncommitted until the full solve validates):
+- **B2** CPLEX cmd: added `"set lpmethod 4"` (barrier) + dropped `"feasopt all"`/`"write .feasopt.sol"`. A re-solve went 55min->9.5min.
+- **apply_base_year_pin.py**: added `--band FRAC` (lower limits x(1-band), upper x(1+band)); self-test passes; exact by default.
+Pipeline:
+1. Re-seeded ws4 canonical A-solve; re-pinned A/B/C with `--band 0.002`. Verified A/B/C PWRSPVINDNO 2023 Lower=135.786 Upper=136.330 (=136.0577 +/-0.2%), consistent.
+2. Rebuilt 3 clips + 9 sensitivities (+2 dir overlays) via apply_patches off the re-pinned baselines (inherit the band). [phase3_rebuild.log]
+3. NEXT: B1(all 15) + B2(barrier) solve all 15 sequentially [phase4]. Expect A~2,314,332 / B~2,215,073 / C~2,257,995 (band shifts base years <=0.2%).
+Scratchpad helper relax_activity_band.py superseded by the pin `--band` (kept for record).
+
+## SOLVE-TIMING TRACKER (phase4b — dual simplex, feasopt-off; started 20:28 2026-07-11)
+15 scenarios total. Per-scenario ~= .txt rebuild (2-4m) + glpsol --wlp LP-gen (~5m, mandatory for CPLEX)
++ CPLEX dual-simplex solve (~2.7m) + otoole sol->csv (~1-2m). Barrier abandoned (3-4x slower here).
+| # | scenario | duration | anchor |
+|---|---|---|---|
+| 1 | A_Calibrated_BAU | 15m20s | 2,314,128 (Optimal) |
+| 2 | B_Optimised_VRE | 18m48s | 2,214,920 (Optimal; -0.007% vs ws4) |
+| 3 | C_Target_VRE | 13m50s | 2,257,930 (Optimal; -0.003% vs ws4) |
+| 4 | A_Calibrated_BAU_Clipped | ~16m | 2,314,131 (Optimal) |
+| 5 | B_Opt_Clipped | ~16m | 2,215,995 (Optimal) |
+| 6 | C_Target_VRE_Clipped | ~16m | 2,246,158 (Optimal) |
+| 7 | B_Opt_SolarCapexHi | ~16m | 2,223,239 (Optimal) |
+| 8 | B_Opt_SolarCapex130 | ~16m | 2,237,715 (Optimal) |
+| 9 | B_Opt_SolarCapexSpike | in progress | |
+**8/15 Optimal, 0 infeasible (band holding). Solar cost tiers rise 2.216->2.223->2.238M as expected.**
+avg ~15 min/scen; ETA all-15 ~00:15 (2026-07-12). Remaining 7. Update as each lands.
 
 ## Log
 - 2026-07-11 — env audit green; branch rebased onto phaseB (e4597e4); harness scaffolded (8c9b674).
