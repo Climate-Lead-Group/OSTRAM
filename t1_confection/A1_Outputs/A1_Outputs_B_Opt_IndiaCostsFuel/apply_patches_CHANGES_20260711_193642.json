@@ -1,10 +1,10 @@
 {
   "scenario": "B_Opt_IndiaCostsFuel",
   "source": "B_Optimised_VRE",
-  "timestamp": "20260711_032146",
+  "timestamp": "20260711_193642",
   "patches_json": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A3_process\\rules_scripts\\configs\\B_Opt_IndiaCostsFuel\\patches.json",
   "target": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A1_Outputs\\A1_Outputs_B_Opt_IndiaCostsFuel",
-  "backup_dir": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A1_Outputs\\A1_Outputs_B_Opt_IndiaCostsFuel_PREPATCH_20260711_032146",
+  "backup_dir": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A1_Outputs\\A1_Outputs_B_Opt_IndiaCostsFuel_PREPATCH_20260711_193642",
   "cells": [
     {
       "tech": "PWRSPVINDEA",
@@ -206,32 +206,32 @@
       "tech": "PWRSPVINDEA",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 5.433476082857143,
-      "new": 0.08151,
+      "old": 5.422609,
+      "new": 0.081347,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDEA",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 5.76418223761745,
-      "new": 0.086471,
+      "old": 5.752654,
+      "new": 0.086298,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDEA",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 7.6522,
-      "new": 0.114794,
+      "old": 7.636896,
+      "new": 0.114565,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDEA",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 8.0311,
-      "new": 0.120479,
+      "old": 8.015038,
+      "new": 0.120238,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -434,32 +434,32 @@
       "tech": "PWRSPVINDNE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 1.222826961444374,
-      "new": 0.003057,
+      "old": 1.220381,
+      "new": 0.003051,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDNE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 1.2973,
-      "new": 0.003244,
+      "old": 1.294705,
+      "new": 0.003237,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDNE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 1.9585,
-      "new": 0.004897,
+      "old": 1.954583,
+      "new": 0.004887,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDNE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 2.0419,
-      "new": 0.005105,
+      "old": 2.037816,
+      "new": 0.005095,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -662,32 +662,32 @@
       "tech": "PWRSPVINDNO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 136.0577075662202,
-      "new": 8.164279,
+      "old": 135.785592,
+      "new": 8.14795,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDNO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 144.2619155123114,
-      "new": 8.656581,
+      "old": 143.973392,
+      "new": 8.639267,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDNO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 200.268597333681,
-      "new": 12.017318,
+      "old": 199.86806,
+      "new": 11.993283,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDNO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 310.7388943464728,
-      "new": 18.646198,
+      "old": 310.117417,
+      "new": 18.608906,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -890,32 +890,32 @@
       "tech": "PWRSPVINDSO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 148.5685284732199,
-      "new": 7.429169,
+      "old": 148.271391,
+      "new": 7.414311,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDSO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 157.5179840890113,
-      "new": 7.876687,
+      "old": 157.202948,
+      "new": 7.860933,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDSO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 167.0206486901667,
-      "new": 8.351868,
+      "old": 166.686607,
+      "new": 8.335164,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDSO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 178.3850742997584,
-      "new": 8.920146,
+      "old": 178.028304,
+      "new": 8.902305,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -1118,32 +1118,32 @@
       "tech": "PWRSPVINDWE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 106.1335847125427,
-      "new": 6.899373,
+      "old": 105.921318,
+      "new": 6.885574,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDWE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 131.1951027060724,
-      "new": 8.528535,
+      "old": 130.932713,
+      "new": 8.511477,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDWE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 163.264438953086,
-      "new": 10.61325,
+      "old": 162.93791,
+      "new": 10.592023,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDWE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 221.5853223641618,
-      "new": 14.404486,
+      "old": 221.142152,
+      "new": 14.375677,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -1346,32 +1346,32 @@
       "tech": "PWRSPVBGDXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 3.187995435134309,
-      "new": 0.012753,
+      "old": 3.181619,
+      "new": 0.012728,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVBGDXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 3.416088286566548,
-      "new": 0.013666,
+      "old": 3.409256,
+      "new": 0.013638,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVBGDXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 19.97669019753046,
-      "new": 0.079915,
+      "old": 19.936737,
+      "new": 0.079755,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVBGDXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 20.233,
-      "new": 0.08094,
+      "old": 20.192534,
+      "new": 0.080778,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -1574,32 +1574,32 @@
       "tech": "PWRSPVLKAXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 4.877745745951037,
-      "new": 0.007805,
+      "old": 4.86799,
+      "new": 0.00779,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVLKAXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 5.27435231663555,
-      "new": 0.00844,
+      "old": 5.263804,
+      "new": 0.008423,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVLKAXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 6.299348518794214,
-      "new": 0.01008,
+      "old": 6.28675,
+      "new": 0.01006,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVLKAXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 8.715043085690766,
-      "new": 0.013945,
+      "old": 8.697613,
+      "new": 0.013918,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -1802,32 +1802,32 @@
       "tech": "PWRSPVNPLXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 0.41436989713548,
-      "new": 0.001658,
+      "old": 0.413541,
+      "new": 0.001654,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVNPLXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 0.4492,
-      "new": 0.001797,
+      "old": 0.448302,
+      "new": 0.001793,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVNPLXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 6.642499999999999,
-      "new": 0.026573,
+      "old": 6.629215,
+      "new": 0.02652,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVNPLXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 6.6796,
-      "new": 0.026721,
+      "old": 6.666241,
+      "new": 0.026668,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -1862,7 +1862,7 @@
       "tech": "PWRSPVBTNXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 0.00169999999999997,
+      "old": 0.001697,
       "new": 0.0,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -1870,7 +1870,7 @@
       "tech": "PWRSPVBTNXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 0.002999999999999981,
+      "old": 0.002994,
       "new": 1e-06,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -1878,7 +1878,7 @@
       "tech": "PWRSPVBTNXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 0.004299999999999991,
+      "old": 0.004291,
       "new": 1e-06,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -2082,7 +2082,7 @@
       "tech": "PWRSPVMDVXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 0.1874561541508512,
+      "old": 0.187081,
       "new": 1.9e-05,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -2090,7 +2090,7 @@
       "tech": "PWRSPVMDVXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 0.2224,
+      "old": 0.221955,
       "new": 2.2e-05,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -2098,7 +2098,7 @@
       "tech": "PWRSPVMDVXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 0.3865999999999999,
+      "old": 0.385827,
       "new": 3.9e-05,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -2106,7 +2106,7 @@
       "tech": "PWRSPVMDVXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 0.5691000000000002,
+      "old": 0.567962,
       "new": 5.7e-05,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -2366,32 +2366,32 @@
       "tech": "PWRWONINDNO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 41.790744226865,
-      "new": 1.191155,
+      "old": 41.707163,
+      "new": 1.188773,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDNO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 44.33530379390699,
-      "new": 1.263683,
+      "old": 44.246633,
+      "new": 1.261155,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDNO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 47.02491946365618,
-      "new": 1.340344,
+      "old": 46.93087,
+      "new": 1.337664,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDNO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 49.91226523988886,
-      "new": 1.422642,
+      "old": 49.812441,
+      "new": 1.419797,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -2594,32 +2594,32 @@
       "tech": "PWRWONINDSO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 238.1543580515569,
-      "new": 10.598929,
+      "old": 237.678049,
+      "new": 10.577731,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDSO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 252.5594924674126,
-      "new": 11.240021,
+      "old": 252.054373,
+      "new": 11.217541,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDSO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 267.8540877345889,
-      "new": 11.920699,
+      "old": 267.31838,
+      "new": 11.896858,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDSO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 284.6955186079554,
-      "new": 12.670218,
+      "old": 284.126128,
+      "new": 12.644877,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -2822,32 +2822,32 @@
       "tech": "PWRWONINDWE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 173.2607720785731,
-      "new": 7.104402,
+      "old": 172.914251,
+      "new": 7.090193,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDWE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 183.9229734372545,
-      "new": 7.541596,
+      "old": 183.555127,
+      "new": 7.526513,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDWE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 195.5886418152068,
-      "new": 8.019936,
+      "old": 195.197465,
+      "new": 8.003896,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDWE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 208.7415396283033,
-      "new": 8.559259,
+      "old": 208.324057,
+      "new": 8.542141,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -3050,7 +3050,7 @@
       "tech": "PWRWONBGDXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 0.03279999999999997,
+      "old": 0.032734,
       "new": 1e-05,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -3058,7 +3058,7 @@
       "tech": "PWRWONBGDXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 0.06679999999999998,
+      "old": 0.066666,
       "new": 2e-05,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -3066,7 +3066,7 @@
       "tech": "PWRWONBGDXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 0.1029,
+      "old": 0.102694,
       "new": 3.1e-05,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -3270,32 +3270,32 @@
       "tech": "PWRWONLKAXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 3.203344872347559,
-      "new": 0.004805,
+      "old": 3.196938,
+      "new": 0.004796,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONLKAXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 3.4675,
-      "new": 0.005202,
+      "old": 3.460565,
+      "new": 0.005191,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONLKAXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 3.662,
-      "new": 0.005494,
+      "old": 3.654676,
+      "new": 0.005483,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONLKAXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 5.381199999999999,
-      "new": 0.008073,
+      "old": 5.370438,
+      "new": 0.008056,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {

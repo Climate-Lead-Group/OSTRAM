@@ -1,10 +1,10 @@
 {
-  "scenario": "B_Opt_SolarCapexHi",
-  "source": "B_Optimised_VRE",
-  "timestamp": "20260711_030632",
-  "patches_json": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A3_process\\rules_scripts\\configs\\B_Opt_SolarCapexHi\\patches.json",
-  "target": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A1_Outputs\\A1_Outputs_B_Opt_SolarCapexHi",
-  "backup_dir": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A1_Outputs\\A1_Outputs_B_Opt_SolarCapexHi_PREPATCH_20260711_030632",
+  "scenario": "A_Calibrated_BAU_Clipped",
+  "source": "A_Calibrated_BAU",
+  "timestamp": "20260711_193603",
+  "patches_json": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A3_process\\rules_scripts\\configs\\A_Calibrated_BAU_Clipped\\patches.json",
+  "target": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A1_Outputs\\A1_Outputs_A_Calibrated_BAU_Clipped",
+  "backup_dir": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A1_Outputs\\A1_Outputs_A_Calibrated_BAU_Clipped_PREPATCH_20260711_193603",
   "cells": [
     {
       "tech": "PWRSPVINDEA",
@@ -206,32 +206,32 @@
       "tech": "PWRSPVINDEA",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 5.433476082857143,
-      "new": 0.08151,
+      "old": 5.422609,
+      "new": 0.081347,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDEA",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 5.76418223761745,
-      "new": 0.086471,
+      "old": 5.752654,
+      "new": 0.086298,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDEA",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 7.6522,
-      "new": 0.114794,
+      "old": 7.636896,
+      "new": 0.114565,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDEA",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 8.0311,
-      "new": 0.120479,
+      "old": 8.015038,
+      "new": 0.120238,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -434,32 +434,32 @@
       "tech": "PWRSPVINDNE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 1.222826961444374,
-      "new": 0.003057,
+      "old": 1.220381,
+      "new": 0.003051,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDNE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 1.2973,
-      "new": 0.003244,
+      "old": 1.294705,
+      "new": 0.003237,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDNE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 1.9585,
-      "new": 0.004897,
+      "old": 1.954583,
+      "new": 0.004887,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDNE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 2.0419,
-      "new": 0.005105,
+      "old": 2.037816,
+      "new": 0.005095,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -662,32 +662,32 @@
       "tech": "PWRSPVINDNO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 136.0577075662202,
-      "new": 8.164279,
+      "old": 135.785592,
+      "new": 8.14795,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDNO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 144.2619155123114,
-      "new": 8.656581,
+      "old": 143.973392,
+      "new": 8.639267,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDNO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 200.268597333681,
-      "new": 12.017318,
+      "old": 199.86806,
+      "new": 11.993283,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDNO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 310.7388943464728,
-      "new": 18.646198,
+      "old": 310.117417,
+      "new": 18.608906,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -890,32 +890,32 @@
       "tech": "PWRSPVINDSO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 148.5685284732199,
-      "new": 7.429169,
+      "old": 148.271391,
+      "new": 7.414311,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDSO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 157.5179840890113,
-      "new": 7.876687,
+      "old": 157.202948,
+      "new": 7.860933,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDSO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 167.0206486901667,
-      "new": 8.351868,
+      "old": 166.686607,
+      "new": 8.335164,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDSO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 178.3850742997584,
-      "new": 8.920146,
+      "old": 178.028304,
+      "new": 8.902305,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -1118,32 +1118,32 @@
       "tech": "PWRSPVINDWE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 106.1335847125427,
-      "new": 6.899373,
+      "old": 105.921318,
+      "new": 6.885574,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDWE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 131.1951027060724,
-      "new": 8.528535,
+      "old": 130.932713,
+      "new": 8.511477,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDWE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 163.264438953086,
-      "new": 10.61325,
+      "old": 162.93791,
+      "new": 10.592023,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVINDWE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 221.5853223641618,
-      "new": 14.404486,
+      "old": 221.142152,
+      "new": 14.375677,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -1346,32 +1346,32 @@
       "tech": "PWRSPVBGDXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 3.187995435134309,
-      "new": 0.012753,
+      "old": 3.181619,
+      "new": 0.012728,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVBGDXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 3.416088286566548,
-      "new": 0.013666,
+      "old": 3.409256,
+      "new": 0.013638,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVBGDXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 19.97669019753046,
-      "new": 0.079915,
+      "old": 19.936737,
+      "new": 0.079755,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVBGDXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 20.233,
-      "new": 0.08094,
+      "old": 20.192534,
+      "new": 0.080778,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -1574,32 +1574,32 @@
       "tech": "PWRSPVLKAXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 4.877745745951037,
-      "new": 0.007805,
+      "old": 4.86799,
+      "new": 0.00779,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVLKAXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 5.27435231663555,
-      "new": 0.00844,
+      "old": 5.263804,
+      "new": 0.008423,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVLKAXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 6.299348518794214,
-      "new": 0.01008,
+      "old": 6.28675,
+      "new": 0.01006,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVLKAXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 8.715043085690766,
-      "new": 0.013945,
+      "old": 8.697613,
+      "new": 0.013918,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -1802,32 +1802,32 @@
       "tech": "PWRSPVNPLXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 0.41436989713548,
-      "new": 0.001658,
+      "old": 0.413541,
+      "new": 0.001654,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVNPLXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 0.4492,
-      "new": 0.001797,
+      "old": 0.448302,
+      "new": 0.001793,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVNPLXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 6.642499999999999,
-      "new": 0.026573,
+      "old": 6.629215,
+      "new": 0.02652,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRSPVNPLXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 6.6796,
-      "new": 0.026721,
+      "old": 6.666241,
+      "new": 0.026668,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -1862,7 +1862,7 @@
       "tech": "PWRSPVBTNXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 0.00169999999999997,
+      "old": 0.001697,
       "new": 0.0,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -1870,7 +1870,7 @@
       "tech": "PWRSPVBTNXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 0.002999999999999981,
+      "old": 0.002994,
       "new": 1e-06,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -1878,7 +1878,7 @@
       "tech": "PWRSPVBTNXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 0.004299999999999991,
+      "old": 0.004291,
       "new": 1e-06,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -2082,7 +2082,7 @@
       "tech": "PWRSPVMDVXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 0.1874561541508512,
+      "old": 0.187081,
       "new": 1.9e-05,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -2090,7 +2090,7 @@
       "tech": "PWRSPVMDVXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 0.2224,
+      "old": 0.221955,
       "new": 2.2e-05,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -2098,7 +2098,7 @@
       "tech": "PWRSPVMDVXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 0.3865999999999999,
+      "old": 0.385827,
       "new": 3.9e-05,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -2106,7 +2106,7 @@
       "tech": "PWRSPVMDVXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 0.5691000000000002,
+      "old": 0.567962,
       "new": 5.7e-05,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -2366,32 +2366,32 @@
       "tech": "PWRWONINDNO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 41.790744226865,
-      "new": 1.191155,
+      "old": 41.707163,
+      "new": 1.188773,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDNO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 44.33530379390699,
-      "new": 1.263683,
+      "old": 44.246633,
+      "new": 1.261155,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDNO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 47.02491946365618,
-      "new": 1.340344,
+      "old": 46.93087,
+      "new": 1.337664,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDNO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 49.91226523988886,
-      "new": 1.422642,
+      "old": 49.812441,
+      "new": 1.419797,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -2594,32 +2594,32 @@
       "tech": "PWRWONINDSO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 238.1543580515569,
-      "new": 10.598929,
+      "old": 237.678049,
+      "new": 10.577731,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDSO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 252.5594924674126,
-      "new": 11.240021,
+      "old": 252.054373,
+      "new": 11.217541,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDSO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 267.8540877345889,
-      "new": 11.920699,
+      "old": 267.31838,
+      "new": 11.896858,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDSO",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 284.6955186079554,
-      "new": 12.670218,
+      "old": 284.126128,
+      "new": 12.644877,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -2822,32 +2822,32 @@
       "tech": "PWRWONINDWE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 173.2607720785731,
-      "new": 7.104402,
+      "old": 172.914251,
+      "new": 7.090193,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDWE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 183.9229734372545,
-      "new": 7.541596,
+      "old": 183.555127,
+      "new": 7.526513,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDWE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 195.5886418152068,
-      "new": 8.019936,
+      "old": 195.197465,
+      "new": 8.003896,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONINDWE",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 208.7415396283033,
-      "new": 8.559259,
+      "old": 208.324057,
+      "new": 8.542141,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -3050,7 +3050,7 @@
       "tech": "PWRWONBGDXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 0.03279999999999997,
+      "old": 0.032734,
       "new": 1e-05,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -3058,7 +3058,7 @@
       "tech": "PWRWONBGDXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 0.06679999999999998,
+      "old": 0.066666,
       "new": 2e-05,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -3066,7 +3066,7 @@
       "tech": "PWRWONBGDXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 0.1029,
+      "old": 0.102694,
       "new": 3.1e-05,
       "reason": "scale NDC floor to clipped ceiling"
     },
@@ -3270,32 +3270,32 @@
       "tech": "PWRWONLKAXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2023,
-      "old": 3.203344872347559,
-      "new": 0.004805,
+      "old": 3.196938,
+      "new": 0.004796,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONLKAXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2024,
-      "old": 3.4675,
-      "new": 0.005202,
+      "old": 3.460565,
+      "new": 0.005191,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONLKAXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2025,
-      "old": 3.662,
-      "new": 0.005494,
+      "old": 3.654676,
+      "new": 0.005483,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
       "tech": "PWRWONLKAXX",
       "param": "TotalTechnologyAnnualActivityLowerLimit",
       "year": 2026,
-      "old": 5.381199999999999,
-      "new": 0.008073,
+      "old": 5.370438,
+      "new": 0.008056,
       "reason": "scale NDC floor to clipped ceiling"
     },
     {
@@ -3721,192 +3721,8 @@
     {
       "tech": "PWRWONMDVXX",
       "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2027,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2028,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2029,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2030,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2031,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2032,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2033,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2034,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2035,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2036,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2037,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2038,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2039,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2040,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2041,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2042,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2043,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2044,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2045,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2046,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2047,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2048,
-      "old": 0.1,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2049,
-      "old": 0.1012592288613303,
-      "new": 0.0,
-      "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRWONMDVXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2050,
-      "old": 0.1179407835400225,
+      "old": 0.00202,
       "new": 0.0,
       "reason": "clamp<=ceiling"
     },
@@ -3917,1966 +3733,6 @@
       "old": 0.002,
       "new": 0.0,
       "reason": "clamp<=ceiling"
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2023,
-      "old": 840.0,
-      "new": 924.0
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2024,
-      "old": 822.0,
-      "new": 904.2
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2025,
-      "old": 804.0,
-      "new": 884.4
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2026,
-      "old": 785.4,
-      "new": 863.94
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2027,
-      "old": 766.8,
-      "new": 843.48
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2028,
-      "old": 748.2,
-      "new": 823.02
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2029,
-      "old": 729.6,
-      "new": 802.56
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2030,
-      "old": 711.0,
-      "new": 782.1
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2031,
-      "old": 692.7,
-      "new": 761.97
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2032,
-      "old": 674.4,
-      "new": 741.84
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2033,
-      "old": 656.1,
-      "new": 721.71
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2034,
-      "old": 637.8,
-      "new": 701.58
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2035,
-      "old": 619.5,
-      "new": 681.45
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2036,
-      "old": 609.3,
-      "new": 670.23
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2037,
-      "old": 599.1,
-      "new": 659.01
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2038,
-      "old": 588.9,
-      "new": 647.79
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2039,
-      "old": 578.7,
-      "new": 636.57
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2040,
-      "old": 568.5,
-      "new": 625.35
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2041,
-      "old": 558.3,
-      "new": 614.13
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2042,
-      "old": 548.1,
-      "new": 602.91
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2043,
-      "old": 537.9,
-      "new": 591.69
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2044,
-      "old": 527.7,
-      "new": 580.47
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2045,
-      "old": 517.5,
-      "new": 569.25
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2046,
-      "old": 507.3,
-      "new": 558.03
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2047,
-      "old": 497.1,
-      "new": 546.81
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2048,
-      "old": 486.9,
-      "new": 535.59
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2049,
-      "old": 476.7,
-      "new": 524.37
-    },
-    {
-      "tech": "PWRSPVBGDXX",
-      "param": "CapitalCost",
-      "year": 2050,
-      "old": 466.5,
-      "new": 513.15
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2023,
-      "old": 896.0,
-      "new": 985.6
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2024,
-      "old": 876.8,
-      "new": 964.48
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2025,
-      "old": 857.6,
-      "new": 943.36
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2026,
-      "old": 837.76,
-      "new": 921.536
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2027,
-      "old": 817.92,
-      "new": 899.712
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2028,
-      "old": 798.08,
-      "new": 877.888
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2029,
-      "old": 778.24,
-      "new": 856.064
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2030,
-      "old": 758.4,
-      "new": 834.24
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2031,
-      "old": 738.88,
-      "new": 812.768
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2032,
-      "old": 719.36,
-      "new": 791.296
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2033,
-      "old": 699.84,
-      "new": 769.824
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2034,
-      "old": 680.32,
-      "new": 748.352
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2035,
-      "old": 660.8,
-      "new": 726.88
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2036,
-      "old": 649.92,
-      "new": 714.912
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2037,
-      "old": 639.04,
-      "new": 702.944
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2038,
-      "old": 628.16,
-      "new": 690.976
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2039,
-      "old": 617.28,
-      "new": 679.008
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2040,
-      "old": 606.4,
-      "new": 667.04
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2041,
-      "old": 595.52,
-      "new": 655.072
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2042,
-      "old": 584.64,
-      "new": 643.104
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2043,
-      "old": 573.76,
-      "new": 631.136
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2044,
-      "old": 562.88,
-      "new": 619.168
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2045,
-      "old": 552.0,
-      "new": 607.2
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2046,
-      "old": 541.12,
-      "new": 595.232
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2047,
-      "old": 530.24,
-      "new": 583.264
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2048,
-      "old": 519.36,
-      "new": 571.296
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2049,
-      "old": 508.48,
-      "new": 559.328
-    },
-    {
-      "tech": "PWRSPVNPLXX",
-      "param": "CapitalCost",
-      "year": 2050,
-      "old": 497.6,
-      "new": 547.36
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2023,
-      "old": 560.0,
-      "new": 616.0
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2024,
-      "old": 548.0,
-      "new": 602.8
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2025,
-      "old": 536.0,
-      "new": 589.6
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2026,
-      "old": 523.6,
-      "new": 575.96
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2027,
-      "old": 511.2,
-      "new": 562.32
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2028,
-      "old": 498.8,
-      "new": 548.68
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2029,
-      "old": 486.4,
-      "new": 535.04
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2030,
-      "old": 474.0,
-      "new": 521.4
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2031,
-      "old": 461.8,
-      "new": 507.98
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2032,
-      "old": 449.6,
-      "new": 494.56
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2033,
-      "old": 437.4,
-      "new": 481.14
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2034,
-      "old": 425.2,
-      "new": 467.72
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2035,
-      "old": 413.0,
-      "new": 454.3
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2036,
-      "old": 406.2,
-      "new": 446.82
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2037,
-      "old": 399.4,
-      "new": 439.34
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2038,
-      "old": 392.6,
-      "new": 431.86
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2039,
-      "old": 385.8,
-      "new": 424.38
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2040,
-      "old": 379.0,
-      "new": 416.9
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2041,
-      "old": 372.2,
-      "new": 409.42
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2042,
-      "old": 365.4,
-      "new": 401.94
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2043,
-      "old": 358.6,
-      "new": 394.46
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2044,
-      "old": 351.8,
-      "new": 386.98
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2045,
-      "old": 345.0,
-      "new": 379.5
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2046,
-      "old": 338.2,
-      "new": 372.02
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2047,
-      "old": 331.4,
-      "new": 364.54
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2048,
-      "old": 324.6,
-      "new": 357.06
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2049,
-      "old": 317.8,
-      "new": 349.58
-    },
-    {
-      "tech": "PWRSPVINDWE",
-      "param": "CapitalCost",
-      "year": 2050,
-      "old": 311.0,
-      "new": 342.1
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2023,
-      "old": 560.0,
-      "new": 616.0
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2024,
-      "old": 548.0,
-      "new": 602.8
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2025,
-      "old": 536.0,
-      "new": 589.6
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2026,
-      "old": 523.6,
-      "new": 575.96
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2027,
-      "old": 511.2,
-      "new": 562.32
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2028,
-      "old": 498.8,
-      "new": 548.68
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2029,
-      "old": 486.4,
-      "new": 535.04
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2030,
-      "old": 474.0,
-      "new": 521.4
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2031,
-      "old": 461.8,
-      "new": 507.98
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2032,
-      "old": 449.6,
-      "new": 494.56
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2033,
-      "old": 437.4,
-      "new": 481.14
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2034,
-      "old": 425.2,
-      "new": 467.72
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2035,
-      "old": 413.0,
-      "new": 454.3
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2036,
-      "old": 406.2,
-      "new": 446.82
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2037,
-      "old": 399.4,
-      "new": 439.34
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2038,
-      "old": 392.6,
-      "new": 431.86
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2039,
-      "old": 385.8,
-      "new": 424.38
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2040,
-      "old": 379.0,
-      "new": 416.9
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2041,
-      "old": 372.2,
-      "new": 409.42
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2042,
-      "old": 365.4,
-      "new": 401.94
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2043,
-      "old": 358.6,
-      "new": 394.46
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2044,
-      "old": 351.8,
-      "new": 386.98
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2045,
-      "old": 345.0,
-      "new": 379.5
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2046,
-      "old": 338.2,
-      "new": 372.02
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2047,
-      "old": 331.4,
-      "new": 364.54
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2048,
-      "old": 324.6,
-      "new": 357.06
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2049,
-      "old": 317.8,
-      "new": 349.58
-    },
-    {
-      "tech": "PWRSPVINDEA",
-      "param": "CapitalCost",
-      "year": 2050,
-      "old": 311.0,
-      "new": 342.1
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2023,
-      "old": 560.0,
-      "new": 616.0
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2024,
-      "old": 548.0,
-      "new": 602.8
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2025,
-      "old": 536.0,
-      "new": 589.6
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2026,
-      "old": 523.6,
-      "new": 575.96
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2027,
-      "old": 511.2,
-      "new": 562.32
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2028,
-      "old": 498.8,
-      "new": 548.68
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2029,
-      "old": 486.4,
-      "new": 535.04
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2030,
-      "old": 474.0,
-      "new": 521.4
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2031,
-      "old": 461.8,
-      "new": 507.98
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2032,
-      "old": 449.6,
-      "new": 494.56
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2033,
-      "old": 437.4,
-      "new": 481.14
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2034,
-      "old": 425.2,
-      "new": 467.72
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2035,
-      "old": 413.0,
-      "new": 454.3
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2036,
-      "old": 406.2,
-      "new": 446.82
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2037,
-      "old": 399.4,
-      "new": 439.34
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2038,
-      "old": 392.6,
-      "new": 431.86
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2039,
-      "old": 385.8,
-      "new": 424.38
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2040,
-      "old": 379.0,
-      "new": 416.9
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2041,
-      "old": 372.2,
-      "new": 409.42
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2042,
-      "old": 365.4,
-      "new": 401.94
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2043,
-      "old": 358.6,
-      "new": 394.46
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2044,
-      "old": 351.8,
-      "new": 386.98
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2045,
-      "old": 345.0,
-      "new": 379.5
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2046,
-      "old": 338.2,
-      "new": 372.02
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2047,
-      "old": 331.4,
-      "new": 364.54
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2048,
-      "old": 324.6,
-      "new": 357.06
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2049,
-      "old": 317.8,
-      "new": 349.58
-    },
-    {
-      "tech": "PWRSPVINDNE",
-      "param": "CapitalCost",
-      "year": 2050,
-      "old": 311.0,
-      "new": 342.1
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2023,
-      "old": 1008.0,
-      "new": 1108.8
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2024,
-      "old": 986.4,
-      "new": 1085.04
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2025,
-      "old": 964.8,
-      "new": 1061.28
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2026,
-      "old": 942.48,
-      "new": 1036.728
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2027,
-      "old": 920.16,
-      "new": 1012.176
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2028,
-      "old": 897.84,
-      "new": 987.624
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2029,
-      "old": 875.52,
-      "new": 963.072
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2030,
-      "old": 853.2,
-      "new": 938.52
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2031,
-      "old": 831.24,
-      "new": 914.364
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2032,
-      "old": 809.28,
-      "new": 890.208
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2033,
-      "old": 787.32,
-      "new": 866.052
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2034,
-      "old": 765.36,
-      "new": 841.896
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2035,
-      "old": 743.4,
-      "new": 817.74
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2036,
-      "old": 731.16,
-      "new": 804.276
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2037,
-      "old": 718.92,
-      "new": 790.812
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2038,
-      "old": 706.68,
-      "new": 777.348
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2039,
-      "old": 694.44,
-      "new": 763.884
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2040,
-      "old": 682.2,
-      "new": 750.42
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2041,
-      "old": 669.96,
-      "new": 736.956
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2042,
-      "old": 657.72,
-      "new": 723.492
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2043,
-      "old": 645.48,
-      "new": 710.028
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2044,
-      "old": 633.24,
-      "new": 696.564
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2045,
-      "old": 621.0,
-      "new": 683.1
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2046,
-      "old": 608.76,
-      "new": 669.636
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2047,
-      "old": 596.52,
-      "new": 656.172
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2048,
-      "old": 584.28,
-      "new": 642.708
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2049,
-      "old": 572.04,
-      "new": 629.244
-    },
-    {
-      "tech": "PWRSPVBTNXX",
-      "param": "CapitalCost",
-      "year": 2050,
-      "old": 559.8,
-      "new": 615.78
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2023,
-      "old": 560.0,
-      "new": 616.0
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2024,
-      "old": 548.0,
-      "new": 602.8
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2025,
-      "old": 536.0,
-      "new": 589.6
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2026,
-      "old": 523.6,
-      "new": 575.96
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2027,
-      "old": 511.2,
-      "new": 562.32
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2028,
-      "old": 498.8,
-      "new": 548.68
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2029,
-      "old": 486.4,
-      "new": 535.04
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2030,
-      "old": 474.0,
-      "new": 521.4
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2031,
-      "old": 461.8,
-      "new": 507.98
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2032,
-      "old": 449.6,
-      "new": 494.56
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2033,
-      "old": 437.4,
-      "new": 481.14
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2034,
-      "old": 425.2,
-      "new": 467.72
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2035,
-      "old": 413.0,
-      "new": 454.3
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2036,
-      "old": 406.2,
-      "new": 446.82
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2037,
-      "old": 399.4,
-      "new": 439.34
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2038,
-      "old": 392.6,
-      "new": 431.86
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2039,
-      "old": 385.8,
-      "new": 424.38
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2040,
-      "old": 379.0,
-      "new": 416.9
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2041,
-      "old": 372.2,
-      "new": 409.42
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2042,
-      "old": 365.4,
-      "new": 401.94
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2043,
-      "old": 358.6,
-      "new": 394.46
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2044,
-      "old": 351.8,
-      "new": 386.98
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2045,
-      "old": 345.0,
-      "new": 379.5
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2046,
-      "old": 338.2,
-      "new": 372.02
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2047,
-      "old": 331.4,
-      "new": 364.54
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2048,
-      "old": 324.6,
-      "new": 357.06
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2049,
-      "old": 317.8,
-      "new": 349.58
-    },
-    {
-      "tech": "PWRSPVINDSO",
-      "param": "CapitalCost",
-      "year": 2050,
-      "old": 311.0,
-      "new": 342.1
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2023,
-      "old": 560.0,
-      "new": 616.0
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2024,
-      "old": 548.0,
-      "new": 602.8
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2025,
-      "old": 536.0,
-      "new": 589.6
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2026,
-      "old": 523.6,
-      "new": 575.96
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2027,
-      "old": 511.2,
-      "new": 562.32
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2028,
-      "old": 498.8,
-      "new": 548.68
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2029,
-      "old": 486.4,
-      "new": 535.04
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2030,
-      "old": 474.0,
-      "new": 521.4
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2031,
-      "old": 461.8,
-      "new": 507.98
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2032,
-      "old": 449.6,
-      "new": 494.56
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2033,
-      "old": 437.4,
-      "new": 481.14
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2034,
-      "old": 425.2,
-      "new": 467.72
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2035,
-      "old": 413.0,
-      "new": 454.3
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2036,
-      "old": 406.2,
-      "new": 446.82
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2037,
-      "old": 399.4,
-      "new": 439.34
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2038,
-      "old": 392.6,
-      "new": 431.86
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2039,
-      "old": 385.8,
-      "new": 424.38
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2040,
-      "old": 379.0,
-      "new": 416.9
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2041,
-      "old": 372.2,
-      "new": 409.42
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2042,
-      "old": 365.4,
-      "new": 401.94
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2043,
-      "old": 358.6,
-      "new": 394.46
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2044,
-      "old": 351.8,
-      "new": 386.98
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2045,
-      "old": 345.0,
-      "new": 379.5
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2046,
-      "old": 338.2,
-      "new": 372.02
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2047,
-      "old": 331.4,
-      "new": 364.54
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2048,
-      "old": 324.6,
-      "new": 357.06
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2049,
-      "old": 317.8,
-      "new": 349.58
-    },
-    {
-      "tech": "PWRSPVINDNO",
-      "param": "CapitalCost",
-      "year": 2050,
-      "old": 311.0,
-      "new": 342.1
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2023,
-      "old": 849.0,
-      "new": 933.9
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2024,
-      "old": 830.81,
-      "new": 913.891
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2025,
-      "old": 812.61,
-      "new": 893.871
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2026,
-      "old": 793.82,
-      "new": 873.202
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2027,
-      "old": 775.02,
-      "new": 852.522
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2028,
-      "old": 756.22,
-      "new": 831.842
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2029,
-      "old": 737.42,
-      "new": 811.162
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2030,
-      "old": 718.62,
-      "new": 790.482
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2031,
-      "old": 700.12,
-      "new": 770.132
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2032,
-      "old": 681.63,
-      "new": 749.793
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2033,
-      "old": 663.13,
-      "new": 729.443
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2034,
-      "old": 644.63,
-      "new": 709.093
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2035,
-      "old": 626.14,
-      "new": 688.754
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2036,
-      "old": 615.83,
-      "new": 677.413
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2037,
-      "old": 605.52,
-      "new": 666.072
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2038,
-      "old": 595.21,
-      "new": 654.731
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2039,
-      "old": 584.9,
-      "new": 643.39
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2040,
-      "old": 574.59,
-      "new": 632.049
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2041,
-      "old": 564.28,
-      "new": 620.708
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2042,
-      "old": 553.97,
-      "new": 609.367
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2043,
-      "old": 543.66,
-      "new": 598.026
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2044,
-      "old": 533.35,
-      "new": 586.685
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2045,
-      "old": 523.04,
-      "new": 575.344
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2046,
-      "old": 512.74,
-      "new": 564.014
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2047,
-      "old": 502.43,
-      "new": 552.673
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2048,
-      "old": 492.12,
-      "new": 541.332
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2049,
-      "old": 481.81,
-      "new": 529.991
-    },
-    {
-      "tech": "PWRSPVLKAXX",
-      "param": "CapitalCost",
-      "year": 2050,
-      "old": 471.5,
-      "new": 518.65
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2023,
-      "old": 1680.0,
-      "new": 1848.0
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2024,
-      "old": 1644.0,
-      "new": 1808.4
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2025,
-      "old": 1608.0,
-      "new": 1768.8
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2026,
-      "old": 1570.8,
-      "new": 1727.88
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2027,
-      "old": 1533.6,
-      "new": 1686.96
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2028,
-      "old": 1496.4,
-      "new": 1646.04
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2029,
-      "old": 1459.2,
-      "new": 1605.12
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2030,
-      "old": 1422.0,
-      "new": 1564.2
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2031,
-      "old": 1385.4,
-      "new": 1523.94
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2032,
-      "old": 1348.8,
-      "new": 1483.68
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2033,
-      "old": 1312.2,
-      "new": 1443.42
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2034,
-      "old": 1275.6,
-      "new": 1403.16
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2035,
-      "old": 1239.0,
-      "new": 1362.9
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2036,
-      "old": 1218.6,
-      "new": 1340.46
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2037,
-      "old": 1198.2,
-      "new": 1318.02
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2038,
-      "old": 1177.8,
-      "new": 1295.58
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2039,
-      "old": 1157.4,
-      "new": 1273.14
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2040,
-      "old": 1137.0,
-      "new": 1250.7
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2041,
-      "old": 1116.6,
-      "new": 1228.26
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2042,
-      "old": 1096.2,
-      "new": 1205.82
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2043,
-      "old": 1075.8,
-      "new": 1183.38
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2044,
-      "old": 1055.4,
-      "new": 1160.94
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2045,
-      "old": 1035.0,
-      "new": 1138.5
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2046,
-      "old": 1014.6,
-      "new": 1116.06
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2047,
-      "old": 994.2,
-      "new": 1093.62
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2048,
-      "old": 973.8,
-      "new": 1071.18
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2049,
-      "old": 953.4,
-      "new": 1048.74
-    },
-    {
-      "tech": "PWRSPVMDVXX",
-      "param": "CapitalCost",
-      "year": 2050,
-      "old": 933.0,
-      "new": 1026.3
     }
   ],
   "rows_created": [],
