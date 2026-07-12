@@ -182,3 +182,19 @@ explicit `git add <path>` (never -A); commit as luviga, no Co-Authored-By; never
   clobbered. CORRECT injection = set `A2_otoole_outputs:False` for the WACC B2 run, edit the otoole DiscountRate.csv
   (GLOBAL,0.13) + DiscountRateStorage.csv (GLOBAL,<storage>,0.13), run B2 (NO B1), grep .txt for 0.13, solve, compare
   vs 2,215,995; then restore config + CSVs. (matches WACC_TEST_PROMPT's "B2 uses the otoole CSVs" assumption.)
+- **STEP 5 — OSTRAM_METHODOLOGY.md §8-C written** (WS-3/WS-4 re-solve, the 2027+ infeasibility fix incl. TxCap150
+  grandfather, new anchor table + oracle deltas, behavioural cross-check, WACC PASS); top status note + closing line
+  updated to supersede the "pending re-solve"/"WACC not run" caveats.
+
+## SESSION 2 COMPLETE (2026-07-12) — all 5 items GREEN; NOT pushed
+| Step | Result | Commit |
+|---|---|---|
+| 1 docs + banded snapshot | committed | d7301c5, cf0e2cb |
+| 2 fix 3 infeasible -> 15/15 Optimal | TradeCap15 2,224,144 · TxCap150 2,239,553 · DirContractual 2,224,494 (backstop 0) | fb681ed |
+| 3 WACC B_Opt_Clipped 10->13% | PASS: Sum-TDC 2,215,995 -> 1,761,993 (-20.5%); restored to 10% | 43b18f8 |
+| 4 behavioural vs Phase-B oracle | signs + coarse ranking hold; all BGD directions + neutralities OK | 43b18f8 |
+| 5 OSTRAM_METHODOLOGY.md §8-C | written | 6db9ccc |
+Final working tree: base 15-scenario set intact @ 10%; WACC edits reverted (config + CSVs clean); *_PRE_*/PREPATCH
+backups + Executables Outputs left uncommitted (regenerable/gitignored). No push (awaiting Luis's PR approval).
+OPTIONAL follow-on (documented, not run — beyond the 5 items): 7%/13% WACC matrix x {B_Opt_Clipped, TradeCap15,
+TxCap150, DirContractual} via the same mechanism (§8-C.5 / WACC_TEST_RESULT.md).
