@@ -3,33 +3,33 @@
 OSTRAM SENSITIVITY CONFIG VALIDATION
 ==============================================================================
 baseline objective: 2113984.5 M USD   (validated B_Optimised_VRE)
-generated: 2026-07-08T17:02:24
+generated: 2026-07-11T14:04:19
 
 ==============================================================================
 SCENARIO: B_Opt_Clipped
 ==============================================================================
   [PASS] 1_COMPLETENESS: 4 YAMLs + patches.json present & parse
   [PASS] 2_SCHEMA: lid & relax schema keys present
-  [PASS] 3_DIFF_vs_BOPT: 18 (tech,param) changed; 0 unexpected
+  [PASS] 3_DIFF_vs_BOPT: 37 (tech,param) changed; 0 unexpected
   [PASS] 4_COHERENCE: 0 patch-introduced; 88 inherited from B_Opt (benign, MaxCap dominates)
   [PASS] 5_VRE_CEILINGS: 20/20 present; clips: PWRSPVLKAXX(build 24.9>ceil 16.0, approved), PWRWONBGDXX(build 9.2>ceil 3.0, approved), PWRWONMDVXX(build 2.5>ceil 0.0, approved)
 
 ==============================================================================
-SCENARIO: B_Opt_TradeCap30
+SCENARIO: B_Opt_TradeCap15
 ==============================================================================
   [PASS] 1_COMPLETENESS: 4 YAMLs + patches.json present & parse
   [PASS] 2_SCHEMA: lid & relax schema keys present
-  [PASS] 3_DIFF_vs_BOPT: 24 (tech,param) changed; 0 unexpected
+  [PASS] 3_DIFF_vs_BOPT: 43 (tech,param) changed; 0 unexpected
   [PASS] 4_COHERENCE: 0 patch-introduced; 88 inherited from B_Opt (benign, MaxCap dominates)
   [PASS] 5_VRE_CEILINGS: 20/20 present; clips: PWRSPVLKAXX(build 24.9>ceil 16.0, approved), PWRWONBGDXX(build 9.2>ceil 3.0, approved), PWRWONMDVXX(build 2.5>ceil 0.0, approved)
-  [PASS] 6_RUN1_CAPS: real-corridor AUL == 0.30*demand+export; backstops==0
+  [PASS] 6_RUN1_CAPS: real-corridor AUL == 0.15*demand+export; backstops==0
 
 ==============================================================================
 SCENARIO: B_Opt_SolarCapexHi
 ==============================================================================
   [PASS] 1_COMPLETENESS: 4 YAMLs + patches.json present & parse
   [PASS] 2_SCHEMA: lid & relax schema keys present
-  [PASS] 3_DIFF_vs_BOPT: 28 (tech,param) changed; 0 unexpected
+  [PASS] 3_DIFF_vs_BOPT: 47 (tech,param) changed; 0 unexpected
   [PASS] 4_COHERENCE: 0 patch-introduced; 88 inherited from B_Opt (benign, MaxCap dominates)
   [PASS] 5_VRE_CEILINGS: 20/20 present; clips: PWRSPVLKAXX(build 24.9>ceil 16.0, approved), PWRWONBGDXX(build 9.2>ceil 3.0, approved), PWRWONMDVXX(build 2.5>ceil 0.0, approved)
 
@@ -38,7 +38,7 @@ SCENARIO: B_Opt_TxCap150
 ==============================================================================
   [PASS] 1_COMPLETENESS: 4 YAMLs + patches.json present & parse
   [PASS] 2_SCHEMA: lid & relax schema keys present
-  [PASS] 3_DIFF_vs_BOPT: 48 (tech,param) changed; 0 unexpected
+  [PASS] 3_DIFF_vs_BOPT: 67 (tech,param) changed; 0 unexpected
   [PASS] 4_COHERENCE: 0 patch-introduced; 88 inherited from B_Opt (benign, MaxCap dominates)
   [PASS] 5_VRE_CEILINGS: 20/20 present; clips: PWRSPVLKAXX(build 24.9>ceil 16.0, approved), PWRWONBGDXX(build 9.2>ceil 3.0, approved), PWRWONMDVXX(build 2.5>ceil 0.0, approved)
   [PASS] 7_RUN3_TXCAP: 11 cross-border MaxCap==1.5xRes; non-India backstops AUL==0
@@ -48,7 +48,7 @@ SCENARIO: B_Opt_IndiaCosts
 ==============================================================================
   [PASS] 1_COMPLETENESS: 4 YAMLs + patches.json present & parse
   [PASS] 2_SCHEMA: lid & relax schema keys present
-  [PASS] 3_DIFF_vs_BOPT: 101 (tech,param) changed; 0 unexpected
+  [PASS] 3_DIFF_vs_BOPT: 120 (tech,param) changed; 0 unexpected
   [PASS] 4_COHERENCE: 0 patch-introduced; 88 inherited from B_Opt (benign, MaxCap dominates)
   [PASS] 5_VRE_CEILINGS: 20/20 present; clips: PWRSPVLKAXX(build 24.9>ceil 16.0, approved), PWRWONBGDXX(build 9.2>ceil 3.0, approved), PWRWONMDVXX(build 2.5>ceil 0.0, approved)
 
@@ -57,7 +57,7 @@ SCENARIO: B_Opt_IndiaCostsFuel
 ==============================================================================
   [PASS] 1_COMPLETENESS: 4 YAMLs + patches.json present & parse
   [PASS] 2_SCHEMA: lid & relax schema keys present
-  [PASS] 3_DIFF_vs_BOPT: 101 (tech,param) changed; 0 unexpected
+  [PASS] 3_DIFF_vs_BOPT: 120 (tech,param) changed; 0 unexpected
   [PASS] 4_COHERENCE: 0 patch-introduced; 88 inherited from B_Opt (benign, MaxCap dominates)
   [PASS] 5_VRE_CEILINGS: 20/20 present; clips: PWRSPVLKAXX(build 24.9>ceil 16.0, approved), PWRWONBGDXX(build 9.2>ceil 3.0, approved), PWRWONMDVXX(build 2.5>ceil 0.0, approved)
 
@@ -66,7 +66,7 @@ VALIDATION MATRIX (run x check)
 ==============================================================================
 scenario                 1   2   3   4   5   6   7
 B_Opt_Clipped            P   P   P   P   P   -   -
-B_Opt_TradeCap30         P   P   P   P   P   P   -
+B_Opt_TradeCap15         P   P   P   P   P   P   -
 B_Opt_SolarCapexHi       P   P   P   P   P   -   -
 B_Opt_TxCap150           P   P   P   P   P   -   P
 B_Opt_IndiaCosts         P   P   P   P   P   -   -
