@@ -23,6 +23,16 @@ AO = REPO / "A1_Outputs" / "A1_Outputs_B_Optimised_VRE" / "A-O_Parametrization.x
 CONFIGS = REPO / "A3_process" / "rules_scripts" / "configs"
 BASE = json.loads((REPO / "sensitivity_expansion" / "reference" / "b_opt_baseline.json").read_text())
 YEARS = list(range(2023, 2051))
+# WS-4 base window = 2023-2026 (pinned to the calibrated mix by apply_base_year_pin.py).
+# Network-flow levers (import cap / tx cap / direction) must NOT touch the base window:
+# the pin freezes the calibrated import-reliant base-year balance, so cutting base-year
+# flows leaves a node's base-year demand unmeetable (the backstop is pinned off) ->
+# genuine demand-balance infeasibility. Applying the lever to the STUDY PERIOD 2027+ ONLY
+# leaves 2023-2026 = calibrated/pinned mix. Base-year cells are simply omitted from the
+# emitted edits, so they revert to the source B_Opt value (unconstrained: AUL default -1,
+# MaxCap 9999) -- exactly the calibrated behaviour. See CLEANROOM_RUNLOG.md SESSION 2.
+STUDY_START = 2027
+STUDY_YEARS = [y for y in YEARS if y >= STUDY_START]
 IND = ["INDEA", "INDNE", "INDNO", "INDSO", "INDWE"]
 NONIND = ["BGDXX", "BTNXX", "LKAXX", "MDVXX", "NPLXX"]
 
@@ -97,15 +107,20 @@ def gen_tradecap(frac, export_factor=1.5):
     a = auls(frac, export_factor)
     edits = []
     for c in REAL:
+        # STUDY PERIOD 2027+ ONLY: omit 2023-2026 so the base-year corridor AUL reverts to
+        # the source (unconstrained, -1) = pinned calibrated import mix.
+        study_vals = {y: v for y, v in a[c].items() if int(y) >= STUDY_START}
         edits.append({"sheet": "Secondary Techs", "tech": c,
                       "param": "TotalTechnologyAnnualActivityUpperLimit",
-                      "values": a[c], "create_if_absent": False,
-                      "note": f"import<={pct}% budget x per-year B_Opt share {alw}"})
+                      "values": study_vals, "create_if_absent": False,
+                      "note": f"import<={pct}% budget x per-year B_Opt share {alw}; study period 2027+ only (base years 2023-2026 = pinned calibrated mix)"})
     for c in ["TRNNLIBGDXX", "TRNRPOBGDXX"]:
+        # Backstop imports disallowed from 2027+ only (created row's base years stay empty
+        # -> AUL default -1 = available, matching the calibrated base mix).
         edits.append({"sheet": "Demand Techs", "tech": c,
                       "param": "TotalTechnologyAnnualActivityUpperLimit",
-                      "op": "set_flat", "value": 0.0, "create_if_absent": True,
-                      "note": "backstop import disallowed"})
+                      "values": {str(y): 0.0 for y in STUDY_YEARS}, "create_if_absent": True,
+                      "note": "backstop import disallowed (study period 2027+ only; base years left at calibrated mix)"})
     write_patches(scen, {
         "scenario": scen, "base_scenario": "B_Optimised_VRE",
         "cap_fraction": frac, "export_factor": export_factor,
@@ -121,48 +136,68 @@ def gen_txcap150():
     resid = {t: v.get(2023) for (t, p), v in st.items() if p == "ResidualCapacity" and t.startswith("TRN")}
     cross = sorted(t for t in resid if len(t) == 13 and t[3:6] != t[8:11])
     internal = sorted(t for t in resid if len(t) == 13 and t[3:6] == t[8:11])
-    build = {}
+    build = {}       # 2050 capacity (for the effect print)
+    basecap = {}     # max capacity over the pinned base window 2023-2026 (grandfather floor)
     capcsv = REPO / "Executables" / "B_Optimised_VRE_0" / "Outputs" / "TotalCapacityAnnual.csv"
     import csv as _csv
     with open(capcsv, newline="") as f:
         for row in _csv.DictReader(f):
-            if row["TECHNOLOGY"].startswith("TRN") and int(float(row["YEAR"])) == 2050:
-                build[row["TECHNOLOGY"]] = float(row["VALUE"])
+            t = row["TECHNOLOGY"]
+            if not t.startswith("TRN"):
+                continue
+            y = int(float(row["YEAR"]))
+            if y == 2050:
+                build[t] = float(row["VALUE"])
+            if 2023 <= y <= STUDY_START - 1:   # base window 2023-2026
+                basecap[t] = max(basecap.get(t, 0.0), float(row["VALUE"]))
 
     edits = []
-    print(f"  {'corridor':16}{'resid_2023':>11}{'1.5x_cap':>10}{'B_Opt_2050':>12}  effect")
+    print(f"  {'corridor':16}{'resid_2023':>11}{'1.5x_cap':>10}{'base_2326':>10}{'eff_cap':>9}{'B_Opt_2050':>12}  effect")
     for c in cross:
-        cap = round(1.5 * resid[c], 6)
-        vals = {str(y): cap for y in YEARS}
+        raw_cap = round(1.5 * resid[c], 6)
+        # STUDY PERIOD 2027+ ONLY on a CUMULATIVE, long-lived capacity variable: because
+        # interconnector capacity persists (life 40y), a 2027 total-capacity cap retroactively
+        # bounds base-year builds. The WS-4 base-year PIN fixes each node's base-year net import
+        # (e.g. BGD ~242 PJ in 2024), which physically REQUIRES the calibrated base-window corridor
+        # capacity (~8.2 GW on TRNBGDXXINDEA) -- far above 1.5x residual. So to genuinely "leave
+        # 2023-2026 = calibrated mix" we GRANDFATHER the cap to the base-window capacity: the
+        # 2027+ cap = max(1.5 x Residual_2023, base-window capacity). This freezes study-period
+        # expansion (B_Opt grows TRNBGDXXINDEA to 25.4 GW; here it holds ~8.2) without forcing the
+        # pinned base years infeasible. (A pure per-year ACTIVITY cap -- TradeCap15 -- has no such
+        # persistence and stays a clean 2027+ omission.)
+        cap = round(max(raw_cap, basecap.get(c, 0.0)), 6)
+        vals = {str(y): cap for y in STUDY_YEARS}
         edits.append({"sheet": "Secondary Techs", "tech": c, "param": "TotalAnnualMaxCapacity",
-                      "values": vals, "note": "cross-border cap = 1.5 x Residual_2023"})
+                      "values": vals, "note": "cross-border cap = max(1.5 x Residual_2023, base-window capacity); study period 2027+ only"})
         edits.append({"sheet": "Secondary Techs", "tech": c, "param": "TotalAnnualMaxCapacityInvestment",
-                      "values": vals, "note": "coherence: MaxCapInv <= MaxCap"})
+                      "values": vals, "note": "coherence: MaxCapInv <= MaxCap (study period 2027+ only)"})
         headroom = round(cap - resid[c], 6)  # MaxCap - Residual
         mincinv = st.get((c, "TotalAnnualMinCapacityInvestment"), {})
         mci_vals = {}
-        for y in YEARS:
+        for y in STUDY_YEARS:
             orig = mincinv.get(y)
             if orig is not None:
                 mci_vals[str(y)] = round(min(orig, headroom), 6)
         if mci_vals:
             edits.append({"sheet": "Secondary Techs", "tech": c, "param": "TotalAnnualMinCapacityInvestment",
-                          "values": mci_vals, "note": f"coherence: MinCapInv <= MaxCap-Residual ({headroom})"})
-        b = build.get(c, 0.0)
+                          "values": mci_vals, "note": f"coherence: MinCapInv <= MaxCap-Residual ({headroom}) (study period 2027+ only)"})
+        b = build.get(c, 0.0); bw = basecap.get(c, 0.0)
+        gf = " [grandfathered]" if cap > raw_cap + 1e-6 else ""
         eff = "blocked (0 residual)" if cap < 1e-9 else ("no bind" if b <= cap + 1e-6 else f"cut {b:.1f}->{cap:.2f}")
-        print(f"  {c:16}{resid[c]:>11.3f}{cap:>10.3f}{b:>12.3f}  {eff}")
-    # non-India backstops -> AUL 0 (activity-based block; MaxCap=0 breaks Residual<=MaxCap)
+        print(f"  {c:16}{resid[c]:>11.3f}{raw_cap:>10.3f}{bw:>10.3f}{cap:>9.3f}{b:>12.3f}  {eff}{gf}")
+    # non-India backstops -> AUL 0 from 2027+ ONLY (activity-based block; MaxCap=0 breaks
+    # Residual<=MaxCap). Base years 2023-2026 left empty -> AUL default -1 = calibrated mix.
     for pre in ("TRNNLI", "TRNRPO"):
         for n in NONIND:
             t = pre + n
             edits.append({"sheet": "Demand Techs", "tech": t,
                           "param": "TotalTechnologyAnnualActivityUpperLimit",
-                          "op": "set_flat", "value": 0.0, "create_if_absent": True,
-                          "note": "non-India backstop import disallowed (AUL=0; MaxCap=0 breaks Residual<=MaxCap)"})
+                          "values": {str(y): 0.0 for y in STUDY_YEARS}, "create_if_absent": True,
+                          "note": "non-India backstop import disallowed from 2027+ (AUL=0; base years = calibrated mix)"})
     print(f"  india-internal (kept, untouched): {[c[3:] for c in internal]}")
     write_patches("B_Opt_TxCap150", {
         "scenario": "B_Opt_TxCap150", "base_scenario": "B_Optimised_VRE",
-        "rule": "TotalAnnualMaxCapacity = 1.5 x ResidualCapacity_2023 for every cross-border TRN corridor (flat, all years). India-internal corridors kept at B_Opt. Non-India TRNNLI*/TRNRPO* backstops -> AUL 0 (activity-blocked; MaxCap=0 violates Residual<=MaxCap). Zero-residual corridors are blocked (pure rule, no floor).",
+        "rule": "TotalAnnualMaxCapacity = max(1.5 x ResidualCapacity_2023, calibrated base-window capacity) for every cross-border TRN corridor, applied to the STUDY PERIOD 2027+ only (base years 2023-2026 revert to the source/pinned calibrated mix). The base-window grandfather is required because interconnector capacity is cumulative and long-lived: the WS-4 base-year pin fixes each node's base-year net import, which needs the calibrated base-window corridor capacity, so a bare 1.5x-residual cap on 2027 would retroactively starve the pinned base years (genuine demand-balance infeasibility). India-internal corridors kept at B_Opt. Non-India TRNNLI*/TRNRPO* backstops -> AUL 0 from 2027+ (base years = calibrated). Zero-residual, never-built corridors stay blocked.",
         "apply_vre_ceiling_layer": True, "edits": edits})
 
 

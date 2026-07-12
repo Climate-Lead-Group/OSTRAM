@@ -1,10 +1,10 @@
 {
-  "scenario": "B_Opt_DirContractual",
+  "scenario": "B_Opt_TradeCap15",
   "source": "B_Optimised_VRE",
-  "timestamp": "20260711_193651",
-  "patches_json": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A3_process\\rules_scripts\\configs\\B_Opt_DirContractual\\patches.json",
-  "target": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A1_Outputs\\A1_Outputs_B_Opt_DirContractual",
-  "backup_dir": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A1_Outputs\\A1_Outputs_B_Opt_DirContractual_PREPATCH_20260711_193651",
+  "timestamp": "20260712_014026",
+  "patches_json": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A3_process\\rules_scripts\\configs\\B_Opt_TradeCap15\\patches.json",
+  "target": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A1_Outputs\\A1_Outputs_B_Opt_TradeCap15",
+  "backup_dir": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A1_Outputs\\A1_Outputs_B_Opt_TradeCap15_PREPATCH_20260712_014026",
   "cells": [
     {
       "tech": "PWRSPVINDEA",
@@ -3917,9 +3917,1028 @@
       "old": 0.002,
       "new": 0.0,
       "reason": "clamp<=ceiling"
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2027,
+      "old": null,
+      "new": 82.6389
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2028,
+      "old": null,
+      "new": 88.3041
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2029,
+      "old": null,
+      "new": 94.3672
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2030,
+      "old": null,
+      "new": 95.1314
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2031,
+      "old": null,
+      "new": 92.5421
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2032,
+      "old": null,
+      "new": 89.9898
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2033,
+      "old": null,
+      "new": 88.5752
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2034,
+      "old": null,
+      "new": 86.9016
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2035,
+      "old": null,
+      "new": 88.0791
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2036,
+      "old": null,
+      "new": 85.9597
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2037,
+      "old": null,
+      "new": 84.3762
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2038,
+      "old": null,
+      "new": 85.2785
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2039,
+      "old": null,
+      "new": 89.356
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2040,
+      "old": null,
+      "new": 95.5488
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2041,
+      "old": null,
+      "new": 97.3332
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2042,
+      "old": null,
+      "new": 97.5502
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2043,
+      "old": null,
+      "new": 102.55
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2044,
+      "old": null,
+      "new": 105.3858
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2045,
+      "old": null,
+      "new": 108.7542
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2046,
+      "old": null,
+      "new": 117.5026
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2047,
+      "old": null,
+      "new": 129.482
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2048,
+      "old": null,
+      "new": 144.034
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2049,
+      "old": null,
+      "new": 154.9049
+    },
+    {
+      "tech": "TRNBGDXXINDEA",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2050,
+      "old": null,
+      "new": 165.917
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2027,
+      "old": null,
+      "new": 0.3922
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2028,
+      "old": null,
+      "new": 0.3735
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2029,
+      "old": null,
+      "new": 0.3629
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2030,
+      "old": null,
+      "new": 3.115
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2031,
+      "old": null,
+      "new": 6.1719
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2032,
+      "old": null,
+      "new": 12.3861
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2033,
+      "old": null,
+      "new": 14.7134
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2034,
+      "old": null,
+      "new": 17.782
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2035,
+      "old": null,
+      "new": 18.2859
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2036,
+      "old": null,
+      "new": 18.5968
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2037,
+      "old": null,
+      "new": 20.2139
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2038,
+      "old": null,
+      "new": 19.4947
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2039,
+      "old": null,
+      "new": 18.6522
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2040,
+      "old": null,
+      "new": 18.1934
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2041,
+      "old": null,
+      "new": 17.2023
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2042,
+      "old": null,
+      "new": 17.2775
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2043,
+      "old": null,
+      "new": 16.7837
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2044,
+      "old": null,
+      "new": 16.7552
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2045,
+      "old": null,
+      "new": 16.9651
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2046,
+      "old": null,
+      "new": 18.15
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2047,
+      "old": null,
+      "new": 17.4448
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2048,
+      "old": null,
+      "new": 15.9373
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2049,
+      "old": null,
+      "new": 15.8021
+    },
+    {
+      "tech": "TRNBGDXXINDNE",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2050,
+      "old": null,
+      "new": 17.8069
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2027,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2028,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2029,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2030,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2031,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2032,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2033,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2034,
+      "old": null,
+      "new": 2.7255
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2035,
+      "old": null,
+      "new": 7.8612
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2036,
+      "old": null,
+      "new": 12.9605
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2037,
+      "old": null,
+      "new": 17.9141
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2038,
+      "old": null,
+      "new": 21.594
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2039,
+      "old": null,
+      "new": 24.7503
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2040,
+      "old": null,
+      "new": 28.1706
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2041,
+      "old": null,
+      "new": 32.1008
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2042,
+      "old": null,
+      "new": 36.3496
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2043,
+      "old": null,
+      "new": 39.0057
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2044,
+      "old": null,
+      "new": 42.6715
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2045,
+      "old": null,
+      "new": 45.0156
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2046,
+      "old": null,
+      "new": 42.534
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2047,
+      "old": null,
+      "new": 41.7797
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2048,
+      "old": null,
+      "new": 40.9761
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2049,
+      "old": null,
+      "new": 40.1221
+    },
+    {
+      "tech": "TRNBTNXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2050,
+      "old": null,
+      "new": 40.389
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2027,
+      "old": null,
+      "new": 0.3049
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2028,
+      "old": null,
+      "new": 0.3098
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2029,
+      "old": null,
+      "new": 0.2921
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2030,
+      "old": null,
+      "new": 3.2195
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2031,
+      "old": null,
+      "new": 8.1847
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2032,
+      "old": null,
+      "new": 10.2464
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2033,
+      "old": null,
+      "new": 15.3637
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2034,
+      "old": null,
+      "new": 17.596
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2035,
+      "old": null,
+      "new": 17.4719
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2036,
+      "old": null,
+      "new": 21.2323
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2037,
+      "old": null,
+      "new": 23.6739
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2038,
+      "old": null,
+      "new": 27.6376
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2039,
+      "old": null,
+      "new": 29.492
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2040,
+      "old": null,
+      "new": 29.025
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2041,
+      "old": null,
+      "new": 33.4537
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2042,
+      "old": null,
+      "new": 36.5947
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2043,
+      "old": null,
+      "new": 37.4425
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2044,
+      "old": null,
+      "new": 39.3207
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2045,
+      "old": null,
+      "new": 42.106
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2046,
+      "old": null,
+      "new": 43.7335
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2047,
+      "old": null,
+      "new": 42.6799
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2048,
+      "old": null,
+      "new": 40.3092
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2049,
+      "old": null,
+      "new": 40.7186
+    },
+    {
+      "tech": "TRNNPLXXBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2050,
+      "old": null,
+      "new": 38.1651
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2027,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2028,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2029,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2030,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2031,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2032,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2033,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2034,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2035,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2036,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2037,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2038,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2039,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2040,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2041,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2042,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2043,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2044,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2045,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2046,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2047,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2048,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2049,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2050,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2027,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2028,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2029,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2030,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2031,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2032,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2033,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2034,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2035,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2036,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2037,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2038,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2039,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2040,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2041,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2042,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2043,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2044,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2045,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2046,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2047,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2048,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2049,
+      "old": null,
+      "new": 0.0
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "year": 2050,
+      "old": null,
+      "new": 0.0
     }
   ],
-  "rows_created": [],
+  "rows_created": [
+    {
+      "tech": "TRNNLIBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "row": 352
+    },
+    {
+      "tech": "TRNRPOBGDXX",
+      "param": "TotalTechnologyAnnualActivityUpperLimit",
+      "row": 353
+    }
+  ],
   "skipped": [],
   "ceiling_layer": {
     "n_techs": 20,

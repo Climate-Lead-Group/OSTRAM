@@ -1,10 +1,10 @@
 {
   "scenario": "B_Opt_TxCap150",
   "source": "B_Optimised_VRE",
-  "timestamp": "20260711_193632",
+  "timestamp": "20260712_023301",
   "patches_json": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A3_process\\rules_scripts\\configs\\B_Opt_TxCap150\\patches.json",
   "target": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A1_Outputs\\A1_Outputs_B_Opt_TxCap150",
-  "backup_dir": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A1_Outputs\\A1_Outputs_B_Opt_TxCap150_PREPATCH_20260711_193632",
+  "backup_dir": "C:\\Users\\luisfernando\\Desktop\\OSeMOSYS\\OSTRAM_mainredo\\t1_confection\\A1_Outputs\\A1_Outputs_B_Opt_TxCap150_PREPATCH_20260712_023301",
   "cells": [
     {
       "tech": "PWRSPVINDEA",
@@ -3921,814 +3921,674 @@
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
-      "year": 2023,
-      "old": 9999.0,
-      "new": 3.75
-    },
-    {
-      "tech": "TRNBGDXXINDEA",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2024,
-      "old": 9999.0,
-      "new": 3.75
-    },
-    {
-      "tech": "TRNBGDXXINDEA",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2025,
-      "old": 9999.0,
-      "new": 3.75
-    },
-    {
-      "tech": "TRNBGDXXINDEA",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2026,
-      "old": 9999.0,
-      "new": 3.75
-    },
-    {
-      "tech": "TRNBGDXXINDEA",
-      "param": "TotalAnnualMaxCapacity",
       "year": 2027,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2028,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2029,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2030,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2031,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2032,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2033,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2034,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2035,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2036,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2037,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2038,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2039,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2040,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2041,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2042,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2043,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2044,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2045,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2046,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2047,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2048,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2049,
       "old": 9999.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacity",
       "year": 2050,
       "old": 9999.0,
-      "new": 3.75
-    },
-    {
-      "tech": "TRNBGDXXINDEA",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2023,
-      "old": 2.5,
-      "new": 3.75
-    },
-    {
-      "tech": "TRNBGDXXINDEA",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2024,
-      "old": 3.3,
-      "new": 3.75
-    },
-    {
-      "tech": "TRNBGDXXINDEA",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2025,
-      "old": 4.1,
-      "new": 3.75
-    },
-    {
-      "tech": "TRNBGDXXINDEA",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2026,
-      "old": 4.9,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2027,
       "old": 5.7,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2028,
       "old": 6.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2029,
       "old": 7.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2030,
       "old": 7.75,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2031,
       "old": 8.0,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2032,
       "old": 8.25,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2033,
       "old": 8.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2034,
       "old": 8.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2035,
       "old": 8.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2036,
       "old": 8.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2037,
       "old": 8.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2038,
       "old": 8.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2039,
       "old": 8.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2040,
       "old": 8.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2041,
       "old": 8.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2042,
       "old": 8.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2043,
       "old": 8.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2044,
       "old": 8.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2045,
       "old": 8.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2046,
       "old": 8.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2047,
       "old": 8.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2048,
       "old": 8.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2049,
       "old": 8.5,
-      "new": 3.75
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDEA",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2050,
       "old": 8.5,
-      "new": 3.75
-    },
-    {
-      "tech": "TRNBGDXXINDNE",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2023,
-      "old": 9999.0,
-      "new": 0.24
-    },
-    {
-      "tech": "TRNBGDXXINDNE",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2024,
-      "old": 9999.0,
-      "new": 0.24
-    },
-    {
-      "tech": "TRNBGDXXINDNE",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2025,
-      "old": 9999.0,
-      "new": 0.24
-    },
-    {
-      "tech": "TRNBGDXXINDNE",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2026,
-      "old": 9999.0,
-      "new": 0.24
+      "new": 8.236183
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2027,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2028,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2029,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2030,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2031,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2032,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2033,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2034,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2035,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2036,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2037,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2038,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2039,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2040,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2041,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2042,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2043,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2044,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2045,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2046,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2047,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2048,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2049,
       "old": 9999.0,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacity",
       "year": 2050,
       "old": 9999.0,
-      "new": 0.24
-    },
-    {
-      "tech": "TRNBGDXXINDNE",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2023,
-      "old": 0.16,
-      "new": 0.24
-    },
-    {
-      "tech": "TRNBGDXXINDNE",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2024,
-      "old": 0.36,
-      "new": 0.24
-    },
-    {
-      "tech": "TRNBGDXXINDNE",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2025,
-      "old": 0.5599999999999999,
-      "new": 0.24
-    },
-    {
-      "tech": "TRNBGDXXINDNE",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2026,
-      "old": 0.7599999999999999,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2027,
       "old": 0.96,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2028,
       "old": 1.16,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2029,
       "old": 1.3475,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2030,
       "old": 1.535,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2031,
       "old": 1.7225,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2032,
       "old": 1.91,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2033,
       "old": 2.16,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2034,
       "old": 2.41,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2035,
       "old": 2.66,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2036,
       "old": 2.66,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2037,
       "old": 2.66,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2038,
       "old": 2.66,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2039,
       "old": 2.66,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2040,
       "old": 2.66,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2041,
       "old": 2.66,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2042,
       "old": 2.66,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2043,
       "old": 2.66,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2044,
       "old": 2.66,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2045,
       "old": 2.66,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2046,
       "old": 2.66,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2047,
       "old": 2.66,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2048,
       "old": 2.66,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2049,
       "old": 2.66,
-      "new": 0.24
+      "new": 0.32
     },
     {
       "tech": "TRNBGDXXINDNE",
       "param": "TotalAnnualMaxCapacityInvestment",
       "year": 2050,
       "old": 2.66,
-      "new": 0.24
-    },
-    {
-      "tech": "TRNBTNXXBGDXX",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2023,
-      "old": 9999.0,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNBTNXXBGDXX",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2024,
-      "old": 9999.0,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNBTNXXBGDXX",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2025,
-      "old": 9999.0,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNBTNXXBGDXX",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2026,
-      "old": 9999.0,
-      "new": 0.0
+      "new": 0.32
     },
     {
       "tech": "TRNBTNXXBGDXX",
@@ -5027,34 +4887,6 @@
     {
       "tech": "TRNBTNXXINDEA",
       "param": "TotalAnnualMaxCapacity",
-      "year": 2023,
-      "old": 9999.0,
-      "new": 8.289
-    },
-    {
-      "tech": "TRNBTNXXINDEA",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2024,
-      "old": 9999.0,
-      "new": 8.289
-    },
-    {
-      "tech": "TRNBTNXXINDEA",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2025,
-      "old": 9999.0,
-      "new": 8.289
-    },
-    {
-      "tech": "TRNBTNXXINDEA",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2026,
-      "old": 9999.0,
-      "new": 8.289
-    },
-    {
-      "tech": "TRNBTNXXINDEA",
-      "param": "TotalAnnualMaxCapacity",
       "year": 2027,
       "old": 9999.0,
       "new": 8.289
@@ -5218,34 +5050,6 @@
       "param": "TotalAnnualMaxCapacity",
       "year": 2050,
       "old": 9999.0,
-      "new": 8.289
-    },
-    {
-      "tech": "TRNBTNXXINDEA",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2023,
-      "old": 5.53,
-      "new": 8.289
-    },
-    {
-      "tech": "TRNBTNXXINDEA",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2024,
-      "old": 5.664000000000001,
-      "new": 8.289
-    },
-    {
-      "tech": "TRNBTNXXINDEA",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2025,
-      "old": 5.798,
-      "new": 8.289
-    },
-    {
-      "tech": "TRNBTNXXINDEA",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2026,
-      "old": 5.932,
       "new": 8.289
     },
     {
@@ -5419,34 +5223,6 @@
     {
       "tech": "TRNBTNXXINDNE",
       "param": "TotalAnnualMaxCapacity",
-      "year": 2023,
-      "old": 9999.0,
-      "new": 0.165
-    },
-    {
-      "tech": "TRNBTNXXINDNE",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2024,
-      "old": 9999.0,
-      "new": 0.165
-    },
-    {
-      "tech": "TRNBTNXXINDNE",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2025,
-      "old": 9999.0,
-      "new": 0.165
-    },
-    {
-      "tech": "TRNBTNXXINDNE",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2026,
-      "old": 9999.0,
-      "new": 0.165
-    },
-    {
-      "tech": "TRNBTNXXINDNE",
-      "param": "TotalAnnualMaxCapacity",
       "year": 2027,
       "old": 9999.0,
       "new": 0.165
@@ -5610,34 +5386,6 @@
       "param": "TotalAnnualMaxCapacity",
       "year": 2050,
       "old": 9999.0,
-      "new": 0.165
-    },
-    {
-      "tech": "TRNBTNXXINDNE",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2023,
-      "old": 0.17,
-      "new": 0.165
-    },
-    {
-      "tech": "TRNBTNXXINDNE",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2024,
-      "old": 0.32,
-      "new": 0.165
-    },
-    {
-      "tech": "TRNBTNXXINDNE",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2025,
-      "old": 0.47,
-      "new": 0.165
-    },
-    {
-      "tech": "TRNBTNXXINDNE",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2026,
-      "old": 0.62,
       "new": 0.165
     },
     {
@@ -5811,34 +5559,6 @@
     {
       "tech": "TRNINDEANPLXX",
       "param": "TotalAnnualMaxCapacity",
-      "year": 2023,
-      "old": 9999.0,
-      "new": 1.95
-    },
-    {
-      "tech": "TRNINDEANPLXX",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2024,
-      "old": 9999.0,
-      "new": 1.95
-    },
-    {
-      "tech": "TRNINDEANPLXX",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2025,
-      "old": 9999.0,
-      "new": 1.95
-    },
-    {
-      "tech": "TRNINDEANPLXX",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2026,
-      "old": 9999.0,
-      "new": 1.95
-    },
-    {
-      "tech": "TRNINDEANPLXX",
-      "param": "TotalAnnualMaxCapacity",
       "year": 2027,
       "old": 9999.0,
       "new": 1.95
@@ -6002,34 +5722,6 @@
       "param": "TotalAnnualMaxCapacity",
       "year": 2050,
       "old": 9999.0,
-      "new": 1.95
-    },
-    {
-      "tech": "TRNINDEANPLXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2023,
-      "old": 1.35,
-      "new": 1.95
-    },
-    {
-      "tech": "TRNINDEANPLXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2024,
-      "old": 1.6,
-      "new": 1.95
-    },
-    {
-      "tech": "TRNINDEANPLXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2025,
-      "old": 1.85,
-      "new": 1.95
-    },
-    {
-      "tech": "TRNINDEANPLXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2026,
-      "old": 2.1,
       "new": 1.95
     },
     {
@@ -6203,34 +5895,6 @@
     {
       "tech": "TRNINDNONPLXX",
       "param": "TotalAnnualMaxCapacity",
-      "year": 2023,
-      "old": 9999.0,
-      "new": 1.8
-    },
-    {
-      "tech": "TRNINDNONPLXX",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2024,
-      "old": 9999.0,
-      "new": 1.8
-    },
-    {
-      "tech": "TRNINDNONPLXX",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2025,
-      "old": 9999.0,
-      "new": 1.8
-    },
-    {
-      "tech": "TRNINDNONPLXX",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2026,
-      "old": 9999.0,
-      "new": 1.8
-    },
-    {
-      "tech": "TRNINDNONPLXX",
-      "param": "TotalAnnualMaxCapacity",
       "year": 2027,
       "old": 9999.0,
       "new": 1.8
@@ -6394,34 +6058,6 @@
       "param": "TotalAnnualMaxCapacity",
       "year": 2050,
       "old": 9999.0,
-      "new": 1.8
-    },
-    {
-      "tech": "TRNINDNONPLXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2023,
-      "old": 1.2,
-      "new": 1.8
-    },
-    {
-      "tech": "TRNINDNONPLXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2024,
-      "old": 1.2,
-      "new": 1.8
-    },
-    {
-      "tech": "TRNINDNONPLXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2025,
-      "old": 1.5,
-      "new": 1.8
-    },
-    {
-      "tech": "TRNINDNONPLXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2026,
-      "old": 1.883333333333333,
       "new": 1.8
     },
     {
@@ -6591,34 +6227,6 @@
       "year": 2050,
       "old": 2.65,
       "new": 1.8
-    },
-    {
-      "tech": "TRNINDSOLKAXX",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2023,
-      "old": 9999.0,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNINDSOLKAXX",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2024,
-      "old": 9999.0,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNINDSOLKAXX",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2025,
-      "old": 9999.0,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNINDSOLKAXX",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2026,
-      "old": 9999.0,
-      "new": 0.0
     },
     {
       "tech": "TRNINDSOLKAXX",
@@ -6882,34 +6490,6 @@
     {
       "tech": "TRNNPLXXBGDXX",
       "param": "TotalAnnualMaxCapacity",
-      "year": 2023,
-      "old": 9999.0,
-      "new": 0.06
-    },
-    {
-      "tech": "TRNNPLXXBGDXX",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2024,
-      "old": 9999.0,
-      "new": 0.06
-    },
-    {
-      "tech": "TRNNPLXXBGDXX",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2025,
-      "old": 9999.0,
-      "new": 0.06
-    },
-    {
-      "tech": "TRNNPLXXBGDXX",
-      "param": "TotalAnnualMaxCapacity",
-      "year": 2026,
-      "old": 9999.0,
-      "new": 0.06
-    },
-    {
-      "tech": "TRNNPLXXBGDXX",
-      "param": "TotalAnnualMaxCapacity",
       "year": 2027,
       "old": 9999.0,
       "new": 0.06
@@ -7073,27 +6653,6 @@
       "param": "TotalAnnualMaxCapacity",
       "year": 2050,
       "old": 9999.0,
-      "new": 0.06
-    },
-    {
-      "tech": "TRNNPLXXBGDXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2023,
-      "old": 0.04,
-      "new": 0.06
-    },
-    {
-      "tech": "TRNNPLXXBGDXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2025,
-      "old": 0.08,
-      "new": 0.06
-    },
-    {
-      "tech": "TRNNPLXXBGDXX",
-      "param": "TotalAnnualMaxCapacityInvestment",
-      "year": 2026,
-      "old": 0.2,
       "new": 0.06
     },
     {
@@ -7274,34 +6833,6 @@
     {
       "tech": "TRNNLIBGDXX",
       "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2023,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLIBGDXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2024,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLIBGDXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2025,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLIBGDXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2026,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLIBGDXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
       "year": 2027,
       "old": null,
       "new": 0.0
@@ -7464,34 +6995,6 @@
       "tech": "TRNNLIBGDXX",
       "param": "TotalTechnologyAnnualActivityUpperLimit",
       "year": 2050,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLIBTNXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2023,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLIBTNXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2024,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLIBTNXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2025,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLIBTNXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2026,
       "old": null,
       "new": 0.0
     },
@@ -7666,34 +7169,6 @@
     {
       "tech": "TRNNLILKAXX",
       "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2023,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLILKAXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2024,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLILKAXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2025,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLILKAXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2026,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLILKAXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
       "year": 2027,
       "old": null,
       "new": 0.0
@@ -7856,34 +7331,6 @@
       "tech": "TRNNLILKAXX",
       "param": "TotalTechnologyAnnualActivityUpperLimit",
       "year": 2050,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLIMDVXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2023,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLIMDVXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2024,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLIMDVXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2025,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLIMDVXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2026,
       "old": null,
       "new": 0.0
     },
@@ -8058,34 +7505,6 @@
     {
       "tech": "TRNNLINPLXX",
       "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2023,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLINPLXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2024,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLINPLXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2025,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLINPLXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2026,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNNLINPLXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
       "year": 2027,
       "old": null,
       "new": 0.0
@@ -8248,34 +7667,6 @@
       "tech": "TRNNLINPLXX",
       "param": "TotalTechnologyAnnualActivityUpperLimit",
       "year": 2050,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPOBGDXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2023,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPOBGDXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2024,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPOBGDXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2025,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPOBGDXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2026,
       "old": null,
       "new": 0.0
     },
@@ -8450,34 +7841,6 @@
     {
       "tech": "TRNRPOBTNXX",
       "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2023,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPOBTNXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2024,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPOBTNXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2025,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPOBTNXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2026,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPOBTNXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
       "year": 2027,
       "old": null,
       "new": 0.0
@@ -8640,34 +8003,6 @@
       "tech": "TRNRPOBTNXX",
       "param": "TotalTechnologyAnnualActivityUpperLimit",
       "year": 2050,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPOLKAXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2023,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPOLKAXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2024,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPOLKAXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2025,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPOLKAXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2026,
       "old": null,
       "new": 0.0
     },
@@ -8842,34 +8177,6 @@
     {
       "tech": "TRNRPOMDVXX",
       "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2023,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPOMDVXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2024,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPOMDVXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2025,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPOMDVXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2026,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPOMDVXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
       "year": 2027,
       "old": null,
       "new": 0.0
@@ -9032,34 +8339,6 @@
       "tech": "TRNRPOMDVXX",
       "param": "TotalTechnologyAnnualActivityUpperLimit",
       "year": 2050,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPONPLXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2023,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPONPLXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2024,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPONPLXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2025,
-      "old": null,
-      "new": 0.0
-    },
-    {
-      "tech": "TRNRPONPLXX",
-      "param": "TotalTechnologyAnnualActivityUpperLimit",
-      "year": 2026,
       "old": null,
       "new": 0.0
     },

@@ -253,9 +253,10 @@ def determine_forward_mode(tech: str, mode_input_fuels: dict) -> int:
 # AR Projections editor
 # ---------------------------------------------------------------------------
 def edit_ar_projections(filepath: Path, trn_techs: set,
-                        config: dict) -> dict:
+                        config: dict, study_start_year: int | None = None) -> dict:
     wb = load_workbook(filepath)
-    log = {"file": str(filepath), "changes": [], "warnings": []}
+    log = {"file": str(filepath), "changes": [], "warnings": [],
+           "study_start_year": study_start_year}
 
     try:
         if AR_SHEET not in wb.sheetnames:
@@ -340,6 +341,10 @@ def edit_ar_projections(filepath: Path, trn_techs: set,
                 rows_touched += 1
                 row_idx = r["row"]
                 for year, col in sorted(year_cols.items()):
+                    # STUDY PERIOD restriction: leave base-window years (< study_start_year)
+                    # bidirectional so the pinned calibrated base-year flows stay feasible.
+                    if study_start_year is not None and year < study_start_year:
+                        continue
                     cell = ws.cell(row=row_idx, column=col)
                     if cell.value not in (0, 0.0, None):
                         cell.value = 0.0
@@ -453,7 +458,8 @@ def edit_ar_base_year(filepath: Path, trn_techs: set,
 # Orchestration
 # ---------------------------------------------------------------------------
 def run(input_dir, skip_backup: bool = False,
-        yaml_path: Path | None = None) -> dict:
+        yaml_path: Path | None = None,
+        study_start_year: int | None = None) -> dict:
     input_dir = Path(input_dir)
 
     if yaml_path is None:
@@ -476,7 +482,7 @@ def run(input_dir, skip_backup: bool = False,
     proj_file = input_dir / AR_PROJ_FILE
     if not proj_file.exists():
         raise FileNotFoundError(f"{proj_file} not found")
-    proj_log = edit_ar_projections(proj_file, trn_techs, config)
+    proj_log = edit_ar_projections(proj_file, trn_techs, config, study_start_year)
 
     # Build mode map for the base year pass
     mode_map = {
@@ -484,10 +490,16 @@ def run(input_dir, skip_backup: bool = False,
         for ch in proj_log.get("changes", [])
     }
 
-    # Edit AR Base Year
+    # Edit AR Base Year -- SKIP entirely when a study_start_year is set: the base-year AR
+    # file governs the pinned base window (< study_start_year), which must stay at the
+    # calibrated (bidirectional) mix so its demand balance remains feasible.
     base_file = input_dir / AR_BASE_FILE
     base_log = {"skipped": True}
-    if base_file.exists():
+    if study_start_year is not None:
+        print(f"[study_start_year={study_start_year}] skipping AR Base Year edit "
+              f"(base window stays at calibrated/bidirectional mix)")
+        base_log = {"skipped": True, "reason": f"study_start_year={study_start_year}"}
+    elif base_file.exists():
         base_log = edit_ar_base_year(base_file, trn_techs, config, mode_map)
     else:
         print(f"WARNING: {AR_BASE_FILE} not found -- skipping base year edit")
@@ -570,6 +582,11 @@ def main() -> int:
         "--yaml", type=Path, default=None,
         help="Path to YAML config (default: next to this script)",
     )
+    parser.add_argument(
+        "--study-start-year", type=int, default=None,
+        help="Apply the direction lever only to years >= this (study period); leave the "
+             "pinned base window (< this year) bidirectional. Omit for all-years (default).",
+    )
     args = parser.parse_args()
 
     if args.restore or args.restore_from is not None:
@@ -582,7 +599,7 @@ def main() -> int:
         return 0
 
     try:
-        log = run(args.input_dir, args.skip_backup, args.yaml)
+        log = run(args.input_dir, args.skip_backup, args.yaml, args.study_start_year)
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1

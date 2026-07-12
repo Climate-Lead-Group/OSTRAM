@@ -1,7 +1,7 @@
 {
  "scenario": "B_Opt_TxCap150",
  "base_scenario": "B_Optimised_VRE",
- "rule": "TotalAnnualMaxCapacity = 1.5 x ResidualCapacity_2023 for every cross-border TRN corridor (flat, all years). India-internal corridors kept at B_Opt. Non-India TRNNLI*/TRNRPO* backstops -> AUL 0 (activity-blocked; MaxCap=0 violates Residual<=MaxCap). Zero-residual corridors are blocked (pure rule, no floor).",
+ "rule": "TotalAnnualMaxCapacity = max(1.5 x ResidualCapacity_2023, calibrated base-window capacity) for every cross-border TRN corridor, applied to the STUDY PERIOD 2027+ only (base years 2023-2026 revert to the source/pinned calibrated mix). The base-window grandfather is required because interconnector capacity is cumulative and long-lived: the WS-4 base-year pin fixes each node's base-year net import, which needs the calibrated base-window corridor capacity, so a bare 1.5x-residual cap on 2027 would retroactively starve the pinned base years (genuine demand-balance infeasibility). India-internal corridors kept at B_Opt. Non-India TRNNLI*/TRNRPO* backstops -> AUL 0 from 2027+ (base years = calibrated). Zero-residual, never-built corridors stay blocked.",
  "apply_vre_ceiling_layer": true,
  "edits": [
   {
@@ -9,154 +9,134 @@
    "tech": "TRNBGDXXINDEA",
    "param": "TotalAnnualMaxCapacity",
    "values": {
-    "2023": 3.75,
-    "2024": 3.75,
-    "2025": 3.75,
-    "2026": 3.75,
-    "2027": 3.75,
-    "2028": 3.75,
-    "2029": 3.75,
-    "2030": 3.75,
-    "2031": 3.75,
-    "2032": 3.75,
-    "2033": 3.75,
-    "2034": 3.75,
-    "2035": 3.75,
-    "2036": 3.75,
-    "2037": 3.75,
-    "2038": 3.75,
-    "2039": 3.75,
-    "2040": 3.75,
-    "2041": 3.75,
-    "2042": 3.75,
-    "2043": 3.75,
-    "2044": 3.75,
-    "2045": 3.75,
-    "2046": 3.75,
-    "2047": 3.75,
-    "2048": 3.75,
-    "2049": 3.75,
-    "2050": 3.75
+    "2027": 8.236183,
+    "2028": 8.236183,
+    "2029": 8.236183,
+    "2030": 8.236183,
+    "2031": 8.236183,
+    "2032": 8.236183,
+    "2033": 8.236183,
+    "2034": 8.236183,
+    "2035": 8.236183,
+    "2036": 8.236183,
+    "2037": 8.236183,
+    "2038": 8.236183,
+    "2039": 8.236183,
+    "2040": 8.236183,
+    "2041": 8.236183,
+    "2042": 8.236183,
+    "2043": 8.236183,
+    "2044": 8.236183,
+    "2045": 8.236183,
+    "2046": 8.236183,
+    "2047": 8.236183,
+    "2048": 8.236183,
+    "2049": 8.236183,
+    "2050": 8.236183
    },
-   "note": "cross-border cap = 1.5 x Residual_2023"
+   "note": "cross-border cap = max(1.5 x Residual_2023, base-window capacity); study period 2027+ only"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNBGDXXINDEA",
    "param": "TotalAnnualMaxCapacityInvestment",
    "values": {
-    "2023": 3.75,
-    "2024": 3.75,
-    "2025": 3.75,
-    "2026": 3.75,
-    "2027": 3.75,
-    "2028": 3.75,
-    "2029": 3.75,
-    "2030": 3.75,
-    "2031": 3.75,
-    "2032": 3.75,
-    "2033": 3.75,
-    "2034": 3.75,
-    "2035": 3.75,
-    "2036": 3.75,
-    "2037": 3.75,
-    "2038": 3.75,
-    "2039": 3.75,
-    "2040": 3.75,
-    "2041": 3.75,
-    "2042": 3.75,
-    "2043": 3.75,
-    "2044": 3.75,
-    "2045": 3.75,
-    "2046": 3.75,
-    "2047": 3.75,
-    "2048": 3.75,
-    "2049": 3.75,
-    "2050": 3.75
+    "2027": 8.236183,
+    "2028": 8.236183,
+    "2029": 8.236183,
+    "2030": 8.236183,
+    "2031": 8.236183,
+    "2032": 8.236183,
+    "2033": 8.236183,
+    "2034": 8.236183,
+    "2035": 8.236183,
+    "2036": 8.236183,
+    "2037": 8.236183,
+    "2038": 8.236183,
+    "2039": 8.236183,
+    "2040": 8.236183,
+    "2041": 8.236183,
+    "2042": 8.236183,
+    "2043": 8.236183,
+    "2044": 8.236183,
+    "2045": 8.236183,
+    "2046": 8.236183,
+    "2047": 8.236183,
+    "2048": 8.236183,
+    "2049": 8.236183,
+    "2050": 8.236183
    },
-   "note": "coherence: MaxCapInv <= MaxCap"
+   "note": "coherence: MaxCapInv <= MaxCap (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNBGDXXINDNE",
    "param": "TotalAnnualMaxCapacity",
    "values": {
-    "2023": 0.24,
-    "2024": 0.24,
-    "2025": 0.24,
-    "2026": 0.24,
-    "2027": 0.24,
-    "2028": 0.24,
-    "2029": 0.24,
-    "2030": 0.24,
-    "2031": 0.24,
-    "2032": 0.24,
-    "2033": 0.24,
-    "2034": 0.24,
-    "2035": 0.24,
-    "2036": 0.24,
-    "2037": 0.24,
-    "2038": 0.24,
-    "2039": 0.24,
-    "2040": 0.24,
-    "2041": 0.24,
-    "2042": 0.24,
-    "2043": 0.24,
-    "2044": 0.24,
-    "2045": 0.24,
-    "2046": 0.24,
-    "2047": 0.24,
-    "2048": 0.24,
-    "2049": 0.24,
-    "2050": 0.24
+    "2027": 0.32,
+    "2028": 0.32,
+    "2029": 0.32,
+    "2030": 0.32,
+    "2031": 0.32,
+    "2032": 0.32,
+    "2033": 0.32,
+    "2034": 0.32,
+    "2035": 0.32,
+    "2036": 0.32,
+    "2037": 0.32,
+    "2038": 0.32,
+    "2039": 0.32,
+    "2040": 0.32,
+    "2041": 0.32,
+    "2042": 0.32,
+    "2043": 0.32,
+    "2044": 0.32,
+    "2045": 0.32,
+    "2046": 0.32,
+    "2047": 0.32,
+    "2048": 0.32,
+    "2049": 0.32,
+    "2050": 0.32
    },
-   "note": "cross-border cap = 1.5 x Residual_2023"
+   "note": "cross-border cap = max(1.5 x Residual_2023, base-window capacity); study period 2027+ only"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNBGDXXINDNE",
    "param": "TotalAnnualMaxCapacityInvestment",
    "values": {
-    "2023": 0.24,
-    "2024": 0.24,
-    "2025": 0.24,
-    "2026": 0.24,
-    "2027": 0.24,
-    "2028": 0.24,
-    "2029": 0.24,
-    "2030": 0.24,
-    "2031": 0.24,
-    "2032": 0.24,
-    "2033": 0.24,
-    "2034": 0.24,
-    "2035": 0.24,
-    "2036": 0.24,
-    "2037": 0.24,
-    "2038": 0.24,
-    "2039": 0.24,
-    "2040": 0.24,
-    "2041": 0.24,
-    "2042": 0.24,
-    "2043": 0.24,
-    "2044": 0.24,
-    "2045": 0.24,
-    "2046": 0.24,
-    "2047": 0.24,
-    "2048": 0.24,
-    "2049": 0.24,
-    "2050": 0.24
+    "2027": 0.32,
+    "2028": 0.32,
+    "2029": 0.32,
+    "2030": 0.32,
+    "2031": 0.32,
+    "2032": 0.32,
+    "2033": 0.32,
+    "2034": 0.32,
+    "2035": 0.32,
+    "2036": 0.32,
+    "2037": 0.32,
+    "2038": 0.32,
+    "2039": 0.32,
+    "2040": 0.32,
+    "2041": 0.32,
+    "2042": 0.32,
+    "2043": 0.32,
+    "2044": 0.32,
+    "2045": 0.32,
+    "2046": 0.32,
+    "2047": 0.32,
+    "2048": 0.32,
+    "2049": 0.32,
+    "2050": 0.32
    },
-   "note": "coherence: MaxCapInv <= MaxCap"
+   "note": "coherence: MaxCapInv <= MaxCap (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNBTNXXBGDXX",
    "param": "TotalAnnualMaxCapacity",
    "values": {
-    "2023": 0.0,
-    "2024": 0.0,
-    "2025": 0.0,
-    "2026": 0.0,
     "2027": 0.0,
     "2028": 0.0,
     "2029": 0.0,
@@ -182,17 +162,13 @@
     "2049": 0.0,
     "2050": 0.0
    },
-   "note": "cross-border cap = 1.5 x Residual_2023"
+   "note": "cross-border cap = max(1.5 x Residual_2023, base-window capacity); study period 2027+ only"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNBTNXXBGDXX",
    "param": "TotalAnnualMaxCapacityInvestment",
    "values": {
-    "2023": 0.0,
-    "2024": 0.0,
-    "2025": 0.0,
-    "2026": 0.0,
     "2027": 0.0,
     "2028": 0.0,
     "2029": 0.0,
@@ -218,17 +194,13 @@
     "2049": 0.0,
     "2050": 0.0
    },
-   "note": "coherence: MaxCapInv <= MaxCap"
+   "note": "coherence: MaxCapInv <= MaxCap (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNBTNXXBGDXX",
    "param": "TotalAnnualMinCapacityInvestment",
    "values": {
-    "2023": 0.0,
-    "2024": 0.0,
-    "2025": 0.0,
-    "2026": 0.0,
     "2027": 0.0,
     "2028": 0.0,
     "2029": 0.0,
@@ -254,17 +226,13 @@
     "2049": 0.0,
     "2050": 0.0
    },
-   "note": "coherence: MinCapInv <= MaxCap-Residual (0.0)"
+   "note": "coherence: MinCapInv <= MaxCap-Residual (0.0) (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNBTNXXINDEA",
    "param": "TotalAnnualMaxCapacity",
    "values": {
-    "2023": 8.289,
-    "2024": 8.289,
-    "2025": 8.289,
-    "2026": 8.289,
     "2027": 8.289,
     "2028": 8.289,
     "2029": 8.289,
@@ -290,17 +258,13 @@
     "2049": 8.289,
     "2050": 8.289
    },
-   "note": "cross-border cap = 1.5 x Residual_2023"
+   "note": "cross-border cap = max(1.5 x Residual_2023, base-window capacity); study period 2027+ only"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNBTNXXINDEA",
    "param": "TotalAnnualMaxCapacityInvestment",
    "values": {
-    "2023": 8.289,
-    "2024": 8.289,
-    "2025": 8.289,
-    "2026": 8.289,
     "2027": 8.289,
     "2028": 8.289,
     "2029": 8.289,
@@ -326,17 +290,13 @@
     "2049": 8.289,
     "2050": 8.289
    },
-   "note": "coherence: MaxCapInv <= MaxCap"
+   "note": "coherence: MaxCapInv <= MaxCap (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNBTNXXINDEA",
    "param": "TotalAnnualMinCapacityInvestment",
    "values": {
-    "2023": 0.0,
-    "2024": 0.0,
-    "2025": 0.0,
-    "2026": 0.0,
     "2027": 0.0,
     "2028": 0.0,
     "2029": 0.0,
@@ -362,17 +322,13 @@
     "2049": 0.0,
     "2050": 0.0
    },
-   "note": "coherence: MinCapInv <= MaxCap-Residual (2.763)"
+   "note": "coherence: MinCapInv <= MaxCap-Residual (2.763) (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNBTNXXINDNE",
    "param": "TotalAnnualMaxCapacity",
    "values": {
-    "2023": 0.165,
-    "2024": 0.165,
-    "2025": 0.165,
-    "2026": 0.165,
     "2027": 0.165,
     "2028": 0.165,
     "2029": 0.165,
@@ -398,17 +354,13 @@
     "2049": 0.165,
     "2050": 0.165
    },
-   "note": "cross-border cap = 1.5 x Residual_2023"
+   "note": "cross-border cap = max(1.5 x Residual_2023, base-window capacity); study period 2027+ only"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNBTNXXINDNE",
    "param": "TotalAnnualMaxCapacityInvestment",
    "values": {
-    "2023": 0.165,
-    "2024": 0.165,
-    "2025": 0.165,
-    "2026": 0.165,
     "2027": 0.165,
     "2028": 0.165,
     "2029": 0.165,
@@ -434,17 +386,13 @@
     "2049": 0.165,
     "2050": 0.165
    },
-   "note": "coherence: MaxCapInv <= MaxCap"
+   "note": "coherence: MaxCapInv <= MaxCap (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNBTNXXINDNE",
    "param": "TotalAnnualMinCapacityInvestment",
    "values": {
-    "2023": 0.0,
-    "2024": 0.0,
-    "2025": 0.0,
-    "2026": 0.0,
     "2027": 0.0,
     "2028": 0.0,
     "2029": 0.0,
@@ -470,17 +418,13 @@
     "2049": 0.0,
     "2050": 0.0
    },
-   "note": "coherence: MinCapInv <= MaxCap-Residual (0.055)"
+   "note": "coherence: MinCapInv <= MaxCap-Residual (0.055) (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNINDEANPLXX",
    "param": "TotalAnnualMaxCapacity",
    "values": {
-    "2023": 1.95,
-    "2024": 1.95,
-    "2025": 1.95,
-    "2026": 1.95,
     "2027": 1.95,
     "2028": 1.95,
     "2029": 1.95,
@@ -506,17 +450,13 @@
     "2049": 1.95,
     "2050": 1.95
    },
-   "note": "cross-border cap = 1.5 x Residual_2023"
+   "note": "cross-border cap = max(1.5 x Residual_2023, base-window capacity); study period 2027+ only"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNINDEANPLXX",
    "param": "TotalAnnualMaxCapacityInvestment",
    "values": {
-    "2023": 1.95,
-    "2024": 1.95,
-    "2025": 1.95,
-    "2026": 1.95,
     "2027": 1.95,
     "2028": 1.95,
     "2029": 1.95,
@@ -542,17 +482,13 @@
     "2049": 1.95,
     "2050": 1.95
    },
-   "note": "coherence: MaxCapInv <= MaxCap"
+   "note": "coherence: MaxCapInv <= MaxCap (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNINDEANPLXX",
    "param": "TotalAnnualMinCapacityInvestment",
    "values": {
-    "2023": 0.0,
-    "2024": 0.0,
-    "2025": 0.0,
-    "2026": 0.0,
     "2027": 0.0,
     "2028": 0.0,
     "2029": 0.0,
@@ -578,17 +514,13 @@
     "2049": 0.0,
     "2050": 0.0
    },
-   "note": "coherence: MinCapInv <= MaxCap-Residual (0.65)"
+   "note": "coherence: MinCapInv <= MaxCap-Residual (0.65) (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNINDNONPLXX",
    "param": "TotalAnnualMaxCapacity",
    "values": {
-    "2023": 1.8,
-    "2024": 1.8,
-    "2025": 1.8,
-    "2026": 1.8,
     "2027": 1.8,
     "2028": 1.8,
     "2029": 1.8,
@@ -614,17 +546,13 @@
     "2049": 1.8,
     "2050": 1.8
    },
-   "note": "cross-border cap = 1.5 x Residual_2023"
+   "note": "cross-border cap = max(1.5 x Residual_2023, base-window capacity); study period 2027+ only"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNINDNONPLXX",
    "param": "TotalAnnualMaxCapacityInvestment",
    "values": {
-    "2023": 1.8,
-    "2024": 1.8,
-    "2025": 1.8,
-    "2026": 1.8,
     "2027": 1.8,
     "2028": 1.8,
     "2029": 1.8,
@@ -650,17 +578,13 @@
     "2049": 1.8,
     "2050": 1.8
    },
-   "note": "coherence: MaxCapInv <= MaxCap"
+   "note": "coherence: MaxCapInv <= MaxCap (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNINDNONPLXX",
    "param": "TotalAnnualMinCapacityInvestment",
    "values": {
-    "2023": 0.0,
-    "2024": 0.0,
-    "2025": 0.0,
-    "2026": 0.0,
     "2027": 0.0,
     "2028": 0.0,
     "2029": 0.0,
@@ -686,17 +610,13 @@
     "2049": 0.0,
     "2050": 0.0
    },
-   "note": "coherence: MinCapInv <= MaxCap-Residual (0.6)"
+   "note": "coherence: MinCapInv <= MaxCap-Residual (0.6) (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNINDSOLKAXX",
    "param": "TotalAnnualMaxCapacity",
    "values": {
-    "2023": 0.0,
-    "2024": 0.0,
-    "2025": 0.0,
-    "2026": 0.0,
     "2027": 0.0,
     "2028": 0.0,
     "2029": 0.0,
@@ -722,17 +642,13 @@
     "2049": 0.0,
     "2050": 0.0
    },
-   "note": "cross-border cap = 1.5 x Residual_2023"
+   "note": "cross-border cap = max(1.5 x Residual_2023, base-window capacity); study period 2027+ only"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNINDSOLKAXX",
    "param": "TotalAnnualMaxCapacityInvestment",
    "values": {
-    "2023": 0.0,
-    "2024": 0.0,
-    "2025": 0.0,
-    "2026": 0.0,
     "2027": 0.0,
     "2028": 0.0,
     "2029": 0.0,
@@ -758,17 +674,13 @@
     "2049": 0.0,
     "2050": 0.0
    },
-   "note": "coherence: MaxCapInv <= MaxCap"
+   "note": "coherence: MaxCapInv <= MaxCap (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNINDSOLKAXX",
    "param": "TotalAnnualMinCapacityInvestment",
    "values": {
-    "2023": 0.0,
-    "2024": 0.0,
-    "2025": 0.0,
-    "2026": 0.0,
     "2027": 0.0,
     "2028": 0.0,
     "2029": 0.0,
@@ -794,17 +706,13 @@
     "2049": 0.0,
     "2050": 0.0
    },
-   "note": "coherence: MinCapInv <= MaxCap-Residual (0.0)"
+   "note": "coherence: MinCapInv <= MaxCap-Residual (0.0) (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNLKAXXMDVXX",
    "param": "TotalAnnualMaxCapacity",
    "values": {
-    "2023": 0.0,
-    "2024": 0.0,
-    "2025": 0.0,
-    "2026": 0.0,
     "2027": 0.0,
     "2028": 0.0,
     "2029": 0.0,
@@ -830,17 +738,13 @@
     "2049": 0.0,
     "2050": 0.0
    },
-   "note": "cross-border cap = 1.5 x Residual_2023"
+   "note": "cross-border cap = max(1.5 x Residual_2023, base-window capacity); study period 2027+ only"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNLKAXXMDVXX",
    "param": "TotalAnnualMaxCapacityInvestment",
    "values": {
-    "2023": 0.0,
-    "2024": 0.0,
-    "2025": 0.0,
-    "2026": 0.0,
     "2027": 0.0,
     "2028": 0.0,
     "2029": 0.0,
@@ -866,17 +770,13 @@
     "2049": 0.0,
     "2050": 0.0
    },
-   "note": "coherence: MaxCapInv <= MaxCap"
+   "note": "coherence: MaxCapInv <= MaxCap (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNLKAXXMDVXX",
    "param": "TotalAnnualMinCapacityInvestment",
    "values": {
-    "2023": 0.0,
-    "2024": 0.0,
-    "2025": 0.0,
-    "2026": 0.0,
     "2027": 0.0,
     "2028": 0.0,
     "2029": 0.0,
@@ -902,17 +802,13 @@
     "2049": 0.0,
     "2050": 0.0
    },
-   "note": "coherence: MinCapInv <= MaxCap-Residual (0.0)"
+   "note": "coherence: MinCapInv <= MaxCap-Residual (0.0) (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNMDVXXINDSO",
    "param": "TotalAnnualMaxCapacity",
    "values": {
-    "2023": 0.0,
-    "2024": 0.0,
-    "2025": 0.0,
-    "2026": 0.0,
     "2027": 0.0,
     "2028": 0.0,
     "2029": 0.0,
@@ -938,17 +834,13 @@
     "2049": 0.0,
     "2050": 0.0
    },
-   "note": "cross-border cap = 1.5 x Residual_2023"
+   "note": "cross-border cap = max(1.5 x Residual_2023, base-window capacity); study period 2027+ only"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNMDVXXINDSO",
    "param": "TotalAnnualMaxCapacityInvestment",
    "values": {
-    "2023": 0.0,
-    "2024": 0.0,
-    "2025": 0.0,
-    "2026": 0.0,
     "2027": 0.0,
     "2028": 0.0,
     "2029": 0.0,
@@ -974,17 +866,13 @@
     "2049": 0.0,
     "2050": 0.0
    },
-   "note": "coherence: MaxCapInv <= MaxCap"
+   "note": "coherence: MaxCapInv <= MaxCap (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNNPLXXBGDXX",
    "param": "TotalAnnualMaxCapacity",
    "values": {
-    "2023": 0.06,
-    "2024": 0.06,
-    "2025": 0.06,
-    "2026": 0.06,
     "2027": 0.06,
     "2028": 0.06,
     "2029": 0.06,
@@ -1010,17 +898,13 @@
     "2049": 0.06,
     "2050": 0.06
    },
-   "note": "cross-border cap = 1.5 x Residual_2023"
+   "note": "cross-border cap = max(1.5 x Residual_2023, base-window capacity); study period 2027+ only"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNNPLXXBGDXX",
    "param": "TotalAnnualMaxCapacityInvestment",
    "values": {
-    "2023": 0.06,
-    "2024": 0.06,
-    "2025": 0.06,
-    "2026": 0.06,
     "2027": 0.06,
     "2028": 0.06,
     "2029": 0.06,
@@ -1046,17 +930,13 @@
     "2049": 0.06,
     "2050": 0.06
    },
-   "note": "coherence: MaxCapInv <= MaxCap"
+   "note": "coherence: MaxCapInv <= MaxCap (study period 2027+ only)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNNPLXXBGDXX",
    "param": "TotalAnnualMinCapacityInvestment",
    "values": {
-    "2023": 0.0,
-    "2024": 0.0,
-    "2025": 0.0,
-    "2026": 0.0,
     "2027": 0.0,
     "2028": 0.0,
     "2029": 0.0,
@@ -1082,97 +962,337 @@
     "2049": 0.0,
     "2050": 0.0
    },
-   "note": "coherence: MinCapInv <= MaxCap-Residual (0.02)"
+   "note": "coherence: MinCapInv <= MaxCap-Residual (0.02) (study period 2027+ only)"
   },
   {
    "sheet": "Demand Techs",
    "tech": "TRNNLIBGDXX",
    "param": "TotalTechnologyAnnualActivityUpperLimit",
-   "op": "set_flat",
-   "value": 0.0,
+   "values": {
+    "2027": 0.0,
+    "2028": 0.0,
+    "2029": 0.0,
+    "2030": 0.0,
+    "2031": 0.0,
+    "2032": 0.0,
+    "2033": 0.0,
+    "2034": 0.0,
+    "2035": 0.0,
+    "2036": 0.0,
+    "2037": 0.0,
+    "2038": 0.0,
+    "2039": 0.0,
+    "2040": 0.0,
+    "2041": 0.0,
+    "2042": 0.0,
+    "2043": 0.0,
+    "2044": 0.0,
+    "2045": 0.0,
+    "2046": 0.0,
+    "2047": 0.0,
+    "2048": 0.0,
+    "2049": 0.0,
+    "2050": 0.0
+   },
    "create_if_absent": true,
-   "note": "non-India backstop import disallowed (AUL=0; MaxCap=0 breaks Residual<=MaxCap)"
+   "note": "non-India backstop import disallowed from 2027+ (AUL=0; base years = calibrated mix)"
   },
   {
    "sheet": "Demand Techs",
    "tech": "TRNNLIBTNXX",
    "param": "TotalTechnologyAnnualActivityUpperLimit",
-   "op": "set_flat",
-   "value": 0.0,
+   "values": {
+    "2027": 0.0,
+    "2028": 0.0,
+    "2029": 0.0,
+    "2030": 0.0,
+    "2031": 0.0,
+    "2032": 0.0,
+    "2033": 0.0,
+    "2034": 0.0,
+    "2035": 0.0,
+    "2036": 0.0,
+    "2037": 0.0,
+    "2038": 0.0,
+    "2039": 0.0,
+    "2040": 0.0,
+    "2041": 0.0,
+    "2042": 0.0,
+    "2043": 0.0,
+    "2044": 0.0,
+    "2045": 0.0,
+    "2046": 0.0,
+    "2047": 0.0,
+    "2048": 0.0,
+    "2049": 0.0,
+    "2050": 0.0
+   },
    "create_if_absent": true,
-   "note": "non-India backstop import disallowed (AUL=0; MaxCap=0 breaks Residual<=MaxCap)"
+   "note": "non-India backstop import disallowed from 2027+ (AUL=0; base years = calibrated mix)"
   },
   {
    "sheet": "Demand Techs",
    "tech": "TRNNLILKAXX",
    "param": "TotalTechnologyAnnualActivityUpperLimit",
-   "op": "set_flat",
-   "value": 0.0,
+   "values": {
+    "2027": 0.0,
+    "2028": 0.0,
+    "2029": 0.0,
+    "2030": 0.0,
+    "2031": 0.0,
+    "2032": 0.0,
+    "2033": 0.0,
+    "2034": 0.0,
+    "2035": 0.0,
+    "2036": 0.0,
+    "2037": 0.0,
+    "2038": 0.0,
+    "2039": 0.0,
+    "2040": 0.0,
+    "2041": 0.0,
+    "2042": 0.0,
+    "2043": 0.0,
+    "2044": 0.0,
+    "2045": 0.0,
+    "2046": 0.0,
+    "2047": 0.0,
+    "2048": 0.0,
+    "2049": 0.0,
+    "2050": 0.0
+   },
    "create_if_absent": true,
-   "note": "non-India backstop import disallowed (AUL=0; MaxCap=0 breaks Residual<=MaxCap)"
+   "note": "non-India backstop import disallowed from 2027+ (AUL=0; base years = calibrated mix)"
   },
   {
    "sheet": "Demand Techs",
    "tech": "TRNNLIMDVXX",
    "param": "TotalTechnologyAnnualActivityUpperLimit",
-   "op": "set_flat",
-   "value": 0.0,
+   "values": {
+    "2027": 0.0,
+    "2028": 0.0,
+    "2029": 0.0,
+    "2030": 0.0,
+    "2031": 0.0,
+    "2032": 0.0,
+    "2033": 0.0,
+    "2034": 0.0,
+    "2035": 0.0,
+    "2036": 0.0,
+    "2037": 0.0,
+    "2038": 0.0,
+    "2039": 0.0,
+    "2040": 0.0,
+    "2041": 0.0,
+    "2042": 0.0,
+    "2043": 0.0,
+    "2044": 0.0,
+    "2045": 0.0,
+    "2046": 0.0,
+    "2047": 0.0,
+    "2048": 0.0,
+    "2049": 0.0,
+    "2050": 0.0
+   },
    "create_if_absent": true,
-   "note": "non-India backstop import disallowed (AUL=0; MaxCap=0 breaks Residual<=MaxCap)"
+   "note": "non-India backstop import disallowed from 2027+ (AUL=0; base years = calibrated mix)"
   },
   {
    "sheet": "Demand Techs",
    "tech": "TRNNLINPLXX",
    "param": "TotalTechnologyAnnualActivityUpperLimit",
-   "op": "set_flat",
-   "value": 0.0,
+   "values": {
+    "2027": 0.0,
+    "2028": 0.0,
+    "2029": 0.0,
+    "2030": 0.0,
+    "2031": 0.0,
+    "2032": 0.0,
+    "2033": 0.0,
+    "2034": 0.0,
+    "2035": 0.0,
+    "2036": 0.0,
+    "2037": 0.0,
+    "2038": 0.0,
+    "2039": 0.0,
+    "2040": 0.0,
+    "2041": 0.0,
+    "2042": 0.0,
+    "2043": 0.0,
+    "2044": 0.0,
+    "2045": 0.0,
+    "2046": 0.0,
+    "2047": 0.0,
+    "2048": 0.0,
+    "2049": 0.0,
+    "2050": 0.0
+   },
    "create_if_absent": true,
-   "note": "non-India backstop import disallowed (AUL=0; MaxCap=0 breaks Residual<=MaxCap)"
+   "note": "non-India backstop import disallowed from 2027+ (AUL=0; base years = calibrated mix)"
   },
   {
    "sheet": "Demand Techs",
    "tech": "TRNRPOBGDXX",
    "param": "TotalTechnologyAnnualActivityUpperLimit",
-   "op": "set_flat",
-   "value": 0.0,
+   "values": {
+    "2027": 0.0,
+    "2028": 0.0,
+    "2029": 0.0,
+    "2030": 0.0,
+    "2031": 0.0,
+    "2032": 0.0,
+    "2033": 0.0,
+    "2034": 0.0,
+    "2035": 0.0,
+    "2036": 0.0,
+    "2037": 0.0,
+    "2038": 0.0,
+    "2039": 0.0,
+    "2040": 0.0,
+    "2041": 0.0,
+    "2042": 0.0,
+    "2043": 0.0,
+    "2044": 0.0,
+    "2045": 0.0,
+    "2046": 0.0,
+    "2047": 0.0,
+    "2048": 0.0,
+    "2049": 0.0,
+    "2050": 0.0
+   },
    "create_if_absent": true,
-   "note": "non-India backstop import disallowed (AUL=0; MaxCap=0 breaks Residual<=MaxCap)"
+   "note": "non-India backstop import disallowed from 2027+ (AUL=0; base years = calibrated mix)"
   },
   {
    "sheet": "Demand Techs",
    "tech": "TRNRPOBTNXX",
    "param": "TotalTechnologyAnnualActivityUpperLimit",
-   "op": "set_flat",
-   "value": 0.0,
+   "values": {
+    "2027": 0.0,
+    "2028": 0.0,
+    "2029": 0.0,
+    "2030": 0.0,
+    "2031": 0.0,
+    "2032": 0.0,
+    "2033": 0.0,
+    "2034": 0.0,
+    "2035": 0.0,
+    "2036": 0.0,
+    "2037": 0.0,
+    "2038": 0.0,
+    "2039": 0.0,
+    "2040": 0.0,
+    "2041": 0.0,
+    "2042": 0.0,
+    "2043": 0.0,
+    "2044": 0.0,
+    "2045": 0.0,
+    "2046": 0.0,
+    "2047": 0.0,
+    "2048": 0.0,
+    "2049": 0.0,
+    "2050": 0.0
+   },
    "create_if_absent": true,
-   "note": "non-India backstop import disallowed (AUL=0; MaxCap=0 breaks Residual<=MaxCap)"
+   "note": "non-India backstop import disallowed from 2027+ (AUL=0; base years = calibrated mix)"
   },
   {
    "sheet": "Demand Techs",
    "tech": "TRNRPOLKAXX",
    "param": "TotalTechnologyAnnualActivityUpperLimit",
-   "op": "set_flat",
-   "value": 0.0,
+   "values": {
+    "2027": 0.0,
+    "2028": 0.0,
+    "2029": 0.0,
+    "2030": 0.0,
+    "2031": 0.0,
+    "2032": 0.0,
+    "2033": 0.0,
+    "2034": 0.0,
+    "2035": 0.0,
+    "2036": 0.0,
+    "2037": 0.0,
+    "2038": 0.0,
+    "2039": 0.0,
+    "2040": 0.0,
+    "2041": 0.0,
+    "2042": 0.0,
+    "2043": 0.0,
+    "2044": 0.0,
+    "2045": 0.0,
+    "2046": 0.0,
+    "2047": 0.0,
+    "2048": 0.0,
+    "2049": 0.0,
+    "2050": 0.0
+   },
    "create_if_absent": true,
-   "note": "non-India backstop import disallowed (AUL=0; MaxCap=0 breaks Residual<=MaxCap)"
+   "note": "non-India backstop import disallowed from 2027+ (AUL=0; base years = calibrated mix)"
   },
   {
    "sheet": "Demand Techs",
    "tech": "TRNRPOMDVXX",
    "param": "TotalTechnologyAnnualActivityUpperLimit",
-   "op": "set_flat",
-   "value": 0.0,
+   "values": {
+    "2027": 0.0,
+    "2028": 0.0,
+    "2029": 0.0,
+    "2030": 0.0,
+    "2031": 0.0,
+    "2032": 0.0,
+    "2033": 0.0,
+    "2034": 0.0,
+    "2035": 0.0,
+    "2036": 0.0,
+    "2037": 0.0,
+    "2038": 0.0,
+    "2039": 0.0,
+    "2040": 0.0,
+    "2041": 0.0,
+    "2042": 0.0,
+    "2043": 0.0,
+    "2044": 0.0,
+    "2045": 0.0,
+    "2046": 0.0,
+    "2047": 0.0,
+    "2048": 0.0,
+    "2049": 0.0,
+    "2050": 0.0
+   },
    "create_if_absent": true,
-   "note": "non-India backstop import disallowed (AUL=0; MaxCap=0 breaks Residual<=MaxCap)"
+   "note": "non-India backstop import disallowed from 2027+ (AUL=0; base years = calibrated mix)"
   },
   {
    "sheet": "Demand Techs",
    "tech": "TRNRPONPLXX",
    "param": "TotalTechnologyAnnualActivityUpperLimit",
-   "op": "set_flat",
-   "value": 0.0,
+   "values": {
+    "2027": 0.0,
+    "2028": 0.0,
+    "2029": 0.0,
+    "2030": 0.0,
+    "2031": 0.0,
+    "2032": 0.0,
+    "2033": 0.0,
+    "2034": 0.0,
+    "2035": 0.0,
+    "2036": 0.0,
+    "2037": 0.0,
+    "2038": 0.0,
+    "2039": 0.0,
+    "2040": 0.0,
+    "2041": 0.0,
+    "2042": 0.0,
+    "2043": 0.0,
+    "2044": 0.0,
+    "2045": 0.0,
+    "2046": 0.0,
+    "2047": 0.0,
+    "2048": 0.0,
+    "2049": 0.0,
+    "2050": 0.0
+   },
    "create_if_absent": true,
-   "note": "non-India backstop import disallowed (AUL=0; MaxCap=0 breaks Residual<=MaxCap)"
+   "note": "non-India backstop import disallowed from 2027+ (AUL=0; base years = calibrated mix)"
   }
  ]
 }

@@ -3,19 +3,22 @@
 **How to use:** open a NEW Claude Code session, cwd = `C:\Users\luisfernando\Desktop\OSeMOSYS\OSTRAM_mainredo`,
 and say *"Read and execute CLEANROOM_SOLVE_PROMPT.md."* Prep is DONE; this session only SOLVES + debugs.
 
-## STATE: FULL SOLVE DONE (2026-07-12) — 12/15 OPTIMAL, 3 infeasible. FIX the 3 FIRST.
+## STATE: 15/15 OPTIMAL (2026-07-12, session 2). The 3 infeasible were fixed (see below).
 All 15 re-solved with the banded pin (`apply_base_year_pin.py --band 0.002`, now committed) + dual simplex +
 feasopt-off. **12 Optimal**: baselines A/B/C 2,314,128/2,214,920/2,257,930 (within 0.01% of ws4); 3 clips;
 Solar Hi/130/Spike; IndiaCosts==IndiaCostsFuel 2,177,458; DirBidir==B_Opt_Clipped 2,215,995 (neutrality ok).
 The earlier A knife-edge is RESOLVED by the band.
-**⛔ 3 INFEASIBLE — one modeling decision (see CLEANROOM_RUNLOG.md solve-tracker for full detail):**
-`B_Opt_TradeCap15`, `B_Opt_TxCap150`, `B_Opt_DirContractual` — each infeasible on a BASE-YEAR backstop
-ActivityUpperLimit (PWRBCK{BGDXX,BGDXX,BTNXX} @ 2024/2025/2023). These are exactly the 3 sensitivities that
-restrict BASE-YEAR network flows; the WS-4 base-year pin freezes the calibrated import-reliant base-year mix, so
-cutting base-year imports leaves a node's base-year demand unmeetable (genuine demand-balance infeasibility, not
-a pin-vs-lever conflict; band won't help). They solved in pre-WS-3 Phase-B because there was no base-year pin.
-**FIX (modeling call):** apply the trade/tx/direction levers to the STUDY PERIOD 2027+ only (leave 2023-2026 =
-pinned calibrated mix), OR keep the base-year backstop available (zero it from 2027). Then rebuild+resolve those 3.
+**✅ The 3 previously-infeasible are now OPTIMAL (session 2 fix, 2026-07-12):**
+`B_Opt_TradeCap15` 2,224,144 (+0.37%) · `B_Opt_TxCap150` 2,239,553 (+1.06%) · `B_Opt_DirContractual` 2,224,494 (+0.38%),
+all backstop gen 0, all deltas same-sign vs the pre-WS-3 oracle. Root cause was the WS-4 base-year pin (which fixes
+each node's calibrated base-year net import) colliding with levers that cut base-year network flows.
+**FIX applied (levers -> STUDY PERIOD 2027+ only, base window = pinned calibrated mix):**
+- TradeCap15 (per-year import ACTIVITY cap) + DirContractual (per-year direction/activity-ratio): clean — base-year
+  keys omitted / base-year AR left bidirectional (`set_interconnector_direction.py --study-start-year 2027`).
+- TxCap150 (CUMULATIVE capacity cap): omission alone fails because interconnector capacity persists (life 40y) so a
+  2027 cap retroactively starves base years, and the pin forces ~242 PJ of BGD base-year imports (needs ~8 GW vs the
+  ~4 GW that 1.5xResidual allows). FIX = GRANDFATHER the 2027+ cap to `max(1.5xResidual_2023, base-window capacity)`
+  (freezes study-period growth without breaking the pinned base years). Implemented in gen_sensitivity_patches.py.
 The WACC test target `B_Opt_Clipped` solved fine (2,215,995) -> WACC_TEST_PROMPT.md is unblocked.
 
 ## STATE (already done — do NOT redo)

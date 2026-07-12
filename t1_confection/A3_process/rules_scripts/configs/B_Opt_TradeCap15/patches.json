@@ -11,10 +11,6 @@
    "tech": "TRNBGDXXINDEA",
    "param": "TotalTechnologyAnnualActivityUpperLimit",
    "values": {
-    "2023": 61.6381,
-    "2024": 67.9408,
-    "2025": 72.6971,
-    "2026": 77.5356,
     "2027": 82.6389,
     "2028": 88.3041,
     "2029": 94.3672,
@@ -41,17 +37,13 @@
     "2050": 165.917
    },
    "create_if_absent": false,
-   "note": "import<=15% budget x per-year B_Opt share (strict cap, no export allowance)"
+   "note": "import<=15% budget x per-year B_Opt share (strict cap, no export allowance); study period 2027+ only (base years 2023-2026 = pinned calibrated mix)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNBGDXXINDNE",
    "param": "TotalTechnologyAnnualActivityUpperLimit",
    "values": {
-    "2023": 1.9683,
-    "2024": 0.3008,
-    "2025": 0.053,
-    "2026": 0.1955,
     "2027": 0.3922,
     "2028": 0.3735,
     "2029": 0.3629,
@@ -78,17 +70,13 @@
     "2050": 17.8069
    },
    "create_if_absent": false,
-   "note": "import<=15% budget x per-year B_Opt share (strict cap, no export allowance)"
+   "note": "import<=15% budget x per-year B_Opt share (strict cap, no export allowance); study period 2027+ only (base years 2023-2026 = pinned calibrated mix)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNBTNXXBGDXX",
    "param": "TotalTechnologyAnnualActivityUpperLimit",
    "values": {
-    "2023": 0.0,
-    "2024": 0.0,
-    "2025": 0.0,
-    "2026": 0.0,
     "2027": 0.0,
     "2028": 0.0,
     "2029": 0.0,
@@ -115,17 +103,13 @@
     "2050": 40.389
    },
    "create_if_absent": false,
-   "note": "import<=15% budget x per-year B_Opt share (strict cap, no export allowance)"
+   "note": "import<=15% budget x per-year B_Opt share (strict cap, no export allowance); study period 2027+ only (base years 2023-2026 = pinned calibrated mix)"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNNPLXXBGDXX",
    "param": "TotalTechnologyAnnualActivityUpperLimit",
    "values": {
-    "2023": 0.4922,
-    "2024": 0.2039,
-    "2025": 0.337,
-    "2026": 0.3124,
     "2027": 0.3049,
     "2028": 0.3098,
     "2029": 0.2921,
@@ -152,25 +136,73 @@
     "2050": 38.1651
    },
    "create_if_absent": false,
-   "note": "import<=15% budget x per-year B_Opt share (strict cap, no export allowance)"
+   "note": "import<=15% budget x per-year B_Opt share (strict cap, no export allowance); study period 2027+ only (base years 2023-2026 = pinned calibrated mix)"
   },
   {
    "sheet": "Demand Techs",
    "tech": "TRNNLIBGDXX",
    "param": "TotalTechnologyAnnualActivityUpperLimit",
-   "op": "set_flat",
-   "value": 0.0,
+   "values": {
+    "2027": 0.0,
+    "2028": 0.0,
+    "2029": 0.0,
+    "2030": 0.0,
+    "2031": 0.0,
+    "2032": 0.0,
+    "2033": 0.0,
+    "2034": 0.0,
+    "2035": 0.0,
+    "2036": 0.0,
+    "2037": 0.0,
+    "2038": 0.0,
+    "2039": 0.0,
+    "2040": 0.0,
+    "2041": 0.0,
+    "2042": 0.0,
+    "2043": 0.0,
+    "2044": 0.0,
+    "2045": 0.0,
+    "2046": 0.0,
+    "2047": 0.0,
+    "2048": 0.0,
+    "2049": 0.0,
+    "2050": 0.0
+   },
    "create_if_absent": true,
-   "note": "backstop import disallowed"
+   "note": "backstop import disallowed (study period 2027+ only; base years left at calibrated mix)"
   },
   {
    "sheet": "Demand Techs",
    "tech": "TRNRPOBGDXX",
    "param": "TotalTechnologyAnnualActivityUpperLimit",
-   "op": "set_flat",
-   "value": 0.0,
+   "values": {
+    "2027": 0.0,
+    "2028": 0.0,
+    "2029": 0.0,
+    "2030": 0.0,
+    "2031": 0.0,
+    "2032": 0.0,
+    "2033": 0.0,
+    "2034": 0.0,
+    "2035": 0.0,
+    "2036": 0.0,
+    "2037": 0.0,
+    "2038": 0.0,
+    "2039": 0.0,
+    "2040": 0.0,
+    "2041": 0.0,
+    "2042": 0.0,
+    "2043": 0.0,
+    "2044": 0.0,
+    "2045": 0.0,
+    "2046": 0.0,
+    "2047": 0.0,
+    "2048": 0.0,
+    "2049": 0.0,
+    "2050": 0.0
+   },
    "create_if_absent": true,
-   "note": "backstop import disallowed"
+   "note": "backstop import disallowed (study period 2027+ only; base years left at calibrated mix)"
   }
  ]
 }

@@ -114,6 +114,57 @@ explicit `git add <path>` (never -A); commit as luviga, no Co-Authored-By; never
 - 2026-07-12 01:15 PDT — session start. Env audit: OSTRAM-env python present. NOTE: an unrelated
   `build_dashboard_nonsupplied.py` runs on **system Python 3.12** (not OSTRAM-env), outside this repo — it is a
   reader, does NOT touch Config_MOMF_T1_A.yaml, so it does not violate the one-pipeline rule. Left running.
-- STEP 1 — commit pending docs (RUNLOG + SOLVE_PROMPT) then re-commit the banded 15-scenario snapshot
-  (15 scenarios x {A1_Outputs, A2_Output_Params, A2_Outputs_Params_otoole}; excludes BAU churn + all *_PRE_*/PREPATCH
-  backups, matching the 092dbb5 file-set). Result: pending below.
+- STEP 1 — **DONE** (commits d7301c5 docs, cf0e2cb banded snapshot / 213 files). Docs commit had a stray `@`
+  from PowerShell here-string syntax misfired in the Bash (POSIX sh) tool -> amended via `git commit --amend -F <file>`.
+  Snapshot = exactly 15 scenarios x {A1_Outputs, A2_Output_Params, A2_Outputs_Params_otoole}; BAU churn + all
+  *_PRE_*/PREPATCH backups excluded; CHANGES manifests tracked as renames (03:03 -> 19:36 banded rebuild).
+- STEP 2 — fix 3 infeasible (2027+ lever restriction). ROOT CAUSE confirmed by extracting the compiled TradeCap15
+  .txt: base-year pin sets `PWRBCKBGDXX 2023-2026 AUL=0`; the all-years patch capped base-year corridors
+  (TRNBGDXXINDEA=61.6, TRNBTNXXBGDXX=0) and zeroed base-year backstops (TRNNLI/TRNRPO=0) -> base-year imports cut ->
+  pinned domestic gen can't cover -> PWRBCKBGDXX must fire but AUL=0 -> INFEASIBLE.
+  FIX (code, reproducible): `TotalTechnologyAnnualActivityUpperLimit` in the .txt has `param default -1`
+  (unconstrained), so omitting base-year keys reverts 2023-2026 to -1 = calibrated free imports.
+  - gen_sensitivity_patches.py: added `STUDY_START=2027`/`STUDY_YEARS`; gen_tradecap + gen_txcap150 now emit
+    corridor `values` for 2027-2050 only and express the backstop AUL=0 as `values` (2027-2050) instead of
+    `set_flat` (which wrote all years). Regenerated ONLY TradeCap15 + TxCap150 patches.json (sanity check OK).
+  - set_interconnector_direction.py: added `--study-start-year` (proj: zero years >= it only; base-year AR file
+    skipped when set). Default None = all-years (backward compatible; DirBidir neutrality unaffected).
+  - Recipe per scenario (one B2 at a time): apply_patches -> [Dir: set_interconnector_direction --study-start-year 2027]
+    -> B1_Run_Compiler -> B2_Executing.
+  - **TradeCap15: OPTIMAL** (dual simplex, no feasopt). Sum-TDC = **2,224,144**; backstop gen = 0.
+    .txt verified: base years 2023-2026 ABSENT (default -1) for all 4 corridors + 2 backstops; PWRBCKBGDXX pin (0) intact;
+    2027+ carries the cap. Delta vs B_Opt_Clipped (2,215,995) = +8,149 (+0.37%); oracle was +0.5% (same sign). ✓
+  - **TxCap150**: first attempt (naive 2027+ omission of the capacity cap) re-solved INFEASIBLE (PWRBCKBGDXX 2024).
+    DIAGNOSIS (decisive): unlike TradeCap15's per-year ACTIVITY cap, TxCap150 caps `TotalAnnualMaxCapacity`, a
+    CUMULATIVE + long-lived (interconnector life 40y) variable. Even with base-year cells omitted (revert to 9999),
+    the 2027 cap (TRNBGDXXINDEA=3.75) retroactively bounds base-year builds because they persist into 2027. AND the
+    WS-4 base-year pin fixes BGD's 2024 net import at ~242 PJ (demand 456 - pinned domestic gen 214), which physically
+    needs ~7.7 GW of import corridor; 1.5xResidual sums to only ~4 GW (~128 PJ). So the capped corridors cannot carry
+    the pinned base-year import -> genuine pin-vs-lever conflict, NOT fixable by omitting base years.
+    FIX (faithful realization of "leave base years = calibrated mix" for a cumulative variable): GRANDFATHER the cap
+    to `max(1.5xResidual_2023, calibrated base-window capacity)` for 2027+. Only TRNBGDXXINDEA (3.75->8.236) and
+    TRNBGDXXINDNE (0.24->0.32) are grandfathered (the two corridors B_Opt over-builds in the base window); all others
+    keep 1.5xResidual. This freezes study-period expansion (B_Opt grows TRNBGDXXINDEA to 25.4 GW; capped at 8.236)
+    without starving the pinned base years. NOTE FOR LUIS: this makes TxCap150's capacity cut on BGD's main corridor
+    weaker than the pre-WS-3 oracle (which had no base-year pin) -- direction/ranking should still hold, magnitude softer.
+    gen_txcap150 now reads B_Opt base-window capacity and emits the grandfathered cap. Re-solving (v2).
+    **TxCap150 v2: OPTIMAL.** Sum-TDC = **2,239,553**; backstop gen = 0. Delta vs B_Opt_Clipped = +23,558 (+1.06%);
+    oracle was +1.3% -> same sign, magnitude only slightly softer (grandfather holds TRNBGDXXINDEA at 8.24 vs B_Opt's
+    25.4 GW growth, still a large study-period cut). .txt verified: base years 9999, 2027+ = 8.2362 (grandfathered).
+  - **DirContractual**: A1 rebuilt + direction overlay `--study-start-year 2027` (base-year AR file skipped;
+    disabled modes retain 2023-2026 bidirectional, zeroed 2027+ only — verified TRNBTNXXBGDXX mode2 base=1/0.95, 2027+=0).
+    Direction is a per-year activity-ratio lever (NOT cumulative) so the clean 2027+ omission works (no grandfather needed).
+    **DirContractual: OPTIMAL.** Sum-TDC = **2,224,494**; backstop gen = 0. Delta vs B_Opt_Clipped = +8,499 (+0.38%);
+    oracle +0.2% -> same sign (direction slightly RAISES cost by removing build-for-export). Base-year infeasibility
+    (PWRBCKBTNXX 2023) resolved: base years bidirectional -> Bhutan can import in base window.
+- **STEP 2 COMPLETE: all 3 now OPTIMAL, backstop gen 0. => 15/15 scenarios Optimal.**
+  TradeCap15 2,224,144 (+0.37%) · TxCap150 2,239,553 (+1.06%) · DirContractual 2,224,494 (+0.38%).
+  Mechanism summary: TradeCap15 (activity cap) + DirContractual (direction/activity-ratio) are per-year -> clean 2027+
+  omission. TxCap150 (cumulative capacity cap) needed the base-window grandfather because the pin fixes base-year net
+  imports that physically require more corridor capacity than 1.5xResidual. All signs match the pre-WS-3 Phase-B oracle.
+- STEP 3 (WACC) de-risk (read-only, done while TxCap150 solved): DiscountRate.csv + DiscountRateStorage.csv are
+  header-only TEMPLATES and ABSENT from A2_Output_Params/B_Opt_Clipped -> B2's process_scenario_folder (gated on
+  `A2_otoole_outputs:True`) writes the empty template over the otoole CSV every run, so editing ONLY the otoole CSV is
+  clobbered. CORRECT injection = set `A2_otoole_outputs:False` for the WACC B2 run, edit the otoole DiscountRate.csv
+  (GLOBAL,0.13) + DiscountRateStorage.csv (GLOBAL,<storage>,0.13), run B2 (NO B1), grep .txt for 0.13, solve, compare
+  vs 2,215,995; then restore config + CSVs. (matches WACC_TEST_PROMPT's "B2 uses the otoole CSVs" assumption.)
