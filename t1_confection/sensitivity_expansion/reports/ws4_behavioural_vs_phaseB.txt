@@ -1,0 +1,44 @@
+scenario                         syscost   d_vs_Clip    CO2_50   coalGW  solarGW   windGW  BGDdomPJ   bckstop
+A_Calibrated_BAU               2,314,128     +98,133    3858.6    529.5    283.0    142.3    1003.5    0.0000
+A_Calibrated_BAU_Clipped       2,314,131     +98,136    3858.6    529.5    283.0    142.3    1003.5    0.0000
+B_Optimised_VRE                2,214,920      -1,076    1890.7    310.0    886.5    506.7     769.8    0.0000
+B_Opt_Clipped                  2,215,995          +0    1899.2    310.0    878.3    498.0     770.8    0.0000
+C_Target_VRE                   2,257,930     +41,934    2684.7    395.2    838.9    200.0    1109.4    0.0000
+C_Target_VRE_Clipped           2,246,158     +30,163    2684.1    390.1    837.1    233.8    1134.2    0.0000
+B_Opt_TradeCap15               2,224,144      +8,148    1743.0    310.8    878.3    497.9    1596.2    0.0000
+B_Opt_TxCap150                 2,239,553     +23,558    1809.4    331.2    870.5    497.5    1595.1    0.0000
+B_Opt_DirContractual           2,224,494      +8,498    1887.5    323.3    870.5    498.0     589.4    0.0000
+B_Opt_SolarCapexHi             2,223,239      +7,243    1899.2    310.0    878.3    498.0     770.8    0.0000
+B_Opt_SolarCapex130            2,237,715     +21,720    1902.1    310.0    873.4    498.0     770.0    0.0000
+B_Opt_SolarCapexSpike          2,220,882      +4,886    1899.1    310.0    878.3    498.0     769.8    0.0000
+B_Opt_IndiaCosts               2,177,458     -38,537    1881.9    311.2    878.3    497.9     958.1    0.0000
+B_Opt_IndiaCostsFuel           2,177,458     -38,537    1881.9    311.2    878.3    497.9     958.1    0.0000
+B_Opt_DirBidir                 2,215,995          +0    1899.2    310.0    878.3    498.0     770.8    0.0000
+
+--- SYSTEM-COST RANKING (cheapest->dearest) vs oracle order ---
+   1. B_Opt_IndiaCosts               2,177,458
+   2. B_Opt_IndiaCostsFuel           2,177,458
+   3. B_Optimised_VRE                2,214,920
+   4. B_Opt_Clipped                  2,215,995
+   5. B_Opt_DirBidir                 2,215,995
+   6. B_Opt_SolarCapexSpike          2,220,882  [new post-oracle]
+   7. B_Opt_SolarCapexHi             2,223,239  (oracle pos 7)
+   8. B_Opt_TradeCap15               2,224,144  (oracle pos 8)
+   9. B_Opt_DirContractual           2,224,494  (oracle pos 6)
+  10. B_Opt_SolarCapex130            2,237,715  [new post-oracle]
+  11. B_Opt_TxCap150                 2,239,553
+  12. C_Target_VRE_Clipped           2,246,158
+  13. C_Target_VRE                   2,257,930
+  14. A_Calibrated_BAU               2,314,128
+  15. A_Calibrated_BAU_Clipped       2,314,131
+
+--- BGD domestic-gen + CO2 DIRECTION vs B_Opt_Clipped (sign vs oracle) ---
+  B_Opt_TradeCap15           mine dBGD=   +825.4 (UP   )  oracle UP     OK
+  B_Opt_TxCap150             mine dBGD=   +824.3 (UP   )  oracle UP     OK
+  B_Opt_DirContractual       mine dBGD=   -181.4 (DOWN )  oracle DOWN   OK
+  B_Opt_IndiaCosts           mine dBGD=   +187.3 (UP   )  oracle UP     OK
+  B_Opt_DirBidir             mine dBGD=     +0.0 (~SAME)  oracle ~SAME  OK
+
+--- Neutralities ---
+  IndiaCosts == IndiaCostsFuel : OK
+  DirBidir   == B_Opt_Clipped  : OK

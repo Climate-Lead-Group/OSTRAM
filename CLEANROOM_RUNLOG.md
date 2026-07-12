@@ -162,6 +162,20 @@ explicit `git add <path>` (never -A); commit as luviga, no Co-Authored-By; never
   Mechanism summary: TradeCap15 (activity cap) + DirContractual (direction/activity-ratio) are per-year -> clean 2027+
   omission. TxCap150 (cumulative capacity cap) needed the base-window grandfather because the pin fixes base-year net
   imports that physically require more corridor capacity than 1.5xResidual. All signs match the pre-WS-3 Phase-B oracle.
+- **STEP 3 (WACC) — ✅ PASS.** B_Opt_Clipped DiscountRate+DiscountRateStorage 0.10->0.13. Injection (confirmed):
+  set `A2_otoole_outputs:False`, edit the otoole DiscountRate.csv (GLOBAL,0.13) + DiscountRateStorage.csv (20 storages),
+  B2 only (no B1). Compiled .txt verified `DiscountRate := GLOBAL 0.13` (+ all 20 storages). CPLEX Optimal, backstop 0.
+  **Sum-TDC 10% = 2,215,995 -> 13% = 1,761,993 (Δ -454,002, -20.49%)** -> knob definitively live (higher rate discounts
+  future costs harder -> lower NPV). 2050 mix shift small but directionally correct: solar 878.3->874.0 (-4.3), oil +0.47,
+  hydro +0.57, CO2 +7.6 Mt -> VRE robust to a +3pt WACC (Phase-B §5.4 restated). WACC_TEST_RESULT.md written.
+  RESTORED B_Opt_Clipped to 0.10 (config + CSVs reverted from backup; re-solving to regenerate 10% Outputs).
+- **STEP 4 — behavioural analysis of all 15 vs pre-WS-3 Phase-B oracle: SIGNS + coarse RANKING HOLD.**
+  BGD self-sufficiency direction ALL match: TradeCap15 UP, TxCap150 UP, DirContractual DOWN (deepens dependence -
+  the counter-intuitive result), IndiaCosts UP, DirBidir ~SAME. Backstop gen = 0 for all 15. Neutralities hold:
+  IndiaCosts==IndiaCostsFuel (2,177,458), DirBidir==B_Opt_Clipped (2,215,995). Solar tiers Spike<Hi<130
+  (transient < x1.10 < x1.30). CO2 ordering matches (BAU>>C_Target>B-family; TradeCap15 lowest). Coarse cost ranking
+  matches (IndiaCosts cheapest -> B_Opt cluster -> sensitivities -> C_Target -> A_BAU). Only within-cluster reshuffle:
+  DirContractual +0.38% (oracle +0.2%) now ~= TradeCap15 +0.37%, from WS-3/WS-4's higher transmission costs -- sign unchanged.
 - STEP 3 (WACC) de-risk (read-only, done while TxCap150 solved): DiscountRate.csv + DiscountRateStorage.csv are
   header-only TEMPLATES and ABSENT from A2_Output_Params/B_Opt_Clipped -> B2's process_scenario_folder (gated on
   `A2_otoole_outputs:True`) writes the empty template over the otoole CSV every run, so editing ONLY the otoole CSV is
