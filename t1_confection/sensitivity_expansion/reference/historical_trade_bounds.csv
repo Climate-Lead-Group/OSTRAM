@@ -1,0 +1,8 @@
+node,net_twh,gross_import_twh,gross_export_twh,historical_import_share,isolated_flag,source_note
+BGDXX,11.93,11.93,0.0,0.10-0.16,0,"Dominant importer (FY23-24, Adani Godda). Model 2050 share ~62% real-corridor -> Run 1 target."
+BTNXX,-4.54,0.0,4.54,,0,Dominant hydro exporter (CY23; -7.04 CY22).
+NPLXX,0.5,0.5,0.0,,0,Near-zero swing (net-imp FY22-23; slight exporter FY23-24).
+LKAXX,0.0,0.0,0.0,,1,Electrically isolated - no operational interconnector. Model builds TRNINDSOLKAXX (unrealistic; Run-3 candidate).
+MDVXX,0.0,0.0,0.0,,1,Electrically isolated island mini-grids. Model builds TRNLKAXXMDVXX/TRNMDVXXINDSO (unrealistic; Run-3 candidate).
+INDEA,0.0,,,,0,India intl flows sit in INDEA & INDNE (BGD/BTN/NPL corridors).
+INDNE,0.0,,,,0,India intl flows sit in INDEA & INDNE.

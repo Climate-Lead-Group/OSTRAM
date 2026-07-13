@@ -1,0 +1,27 @@
+{
+ "description": "Shared VRE physical-potential ceiling layer. TotalAnnualMaxCapacity (GW), flat 2023-2050. ceiling = min(atlas, B_Opt MaxCap) per Luis decision (pure-guard for confounds; atlas-enforced on clips).",
+ "param": "TotalAnnualMaxCapacity",
+ "sheet": "Secondary Techs",
+ "ceilings_gw": {
+  "PWRSPVINDEA": 150,
+  "PWRSPVINDNE": 25,
+  "PWRSPVINDNO": 600,
+  "PWRSPVINDSO": 500,
+  "PWRSPVINDWE": 650,
+  "PWRSPVBGDXX": 40,
+  "PWRSPVLKAXX": 16,
+  "PWRSPVNPLXX": 40,
+  "PWRSPVBTNXX": 1.8102,
+  "PWRSPVMDVXX": 1,
+  "PWRWONINDEA": 0.0,
+  "PWRWONINDNE": 0.0,
+  "PWRWONINDNO": 285,
+  "PWRWONINDSO": 445,
+  "PWRWONINDWE": 410,
+  "PWRWONBGDXX": 3,
+  "PWRWONLKAXX": 15,
+  "PWRWONNPLXX": 0.0,
+  "PWRWONBTNXX": 0.5,
+  "PWRWONMDVXX": 0
+ }
+}

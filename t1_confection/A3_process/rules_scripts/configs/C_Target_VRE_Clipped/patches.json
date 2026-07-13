@@ -1,0 +1,7 @@
+{
+ "scenario": "C_Target_VRE_Clipped",
+ "base_scenario": "C_Target_VRE",
+ "description": "Ceiling-only scenario: applies the shared VRE physical-potential ceiling layer (min(atlas, B_Opt MaxCap)) to the validated C_Target_VRE A-O. No run-specific lever. Measures the cost of physical VRE realism on the target pathway.",
+ "apply_vre_ceiling_layer": true,
+ "edits": []
+}

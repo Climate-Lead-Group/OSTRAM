@@ -1,0 +1,16 @@
+{
+ "scenario": "B_Opt_SolarCapex130",
+ "base_scenario": "B_Optimised_VRE",
+ "description": "PRIMARY sustained solar CAPEX stress. Solar CapitalCost x1.30 for all PWRSPV<node> (10 nodes), all years, over the shared VRE-ceiling layer. Literature-anchored: NREL ATB Conservative-vs-Moderate spread ~30%, IEA diversification premium, WACC-stress equivalent. Same mechanism as SolarCapexHi, factor 1.30.",
+ "apply_vre_ceiling_layer": true,
+ "edits": [
+  {
+   "sheet": "Secondary Techs",
+   "tech_prefix": "PWRSPV",
+   "param": "CapitalCost",
+   "op": "multiply",
+   "factor": 1.30,
+   "note": "PWRSPV CAPEX x1.30, all years; rides on top of per-node cost multipliers already in the A-O."
+  }
+ ]
+}

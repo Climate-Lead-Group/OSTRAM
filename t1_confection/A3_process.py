@@ -509,6 +509,84 @@ def stage_5_rules_scripts(
         )
 
 
+def stage_ws3_interconnector_costs(
+    s5: Path,
+    soasia: Path,
+    materialized_template: Path | None,
+) -> None:
+    """WS-3: wire v18 Interconnector_Params cost columns into the model.
+
+    Interconnector CapitalCost/FixedCost historically came from the OG_csvs base
+    (distance-computed legacy values) and the sourced Interconnector_Params sheet
+    was never consumed. This stage makes that sheet the source of truth: it
+    applies Interconnector_Params -> Secondary Techs (CapitalCost, FixedCost) and
+    Fixed Horizon Parameters (OperationalLife), reading the per-scenario
+    materialized template so any scenario override flows through. Residuals/caps
+    (owned by fix_trn_residuals / relax_interconnectors) and losses are untouched.
+    Skipped in legacy mode (no v18 template).
+    """
+    if not soasia.is_file():
+        return
+    script = RULES_SCRIPTS_DIR / "apply_interconnector_costs.py"
+    if not script.is_file():
+        sys.exit(f"ERROR: apply_interconnector_costs.py not found at {script}")
+    banner("WS-3 — apply v18 Interconnector_Params costs (CapitalCost / FixedCost / OperationalLife)")
+    cmd = [PYTHON, script, "--input-dir", s5, "--skip-backup"]
+    if materialized_template is not None:
+        cmd += ["--template", materialized_template]
+    run_subproc(cmd, label="apply_interconnector_costs.py")
+
+
+def stage_ws3_internal_transmission(s5: Path) -> None:
+    """WS-3 D5: calibrate the six INTERNAL (intra-node) transmission families.
+
+    A2_AddTx injects RNWTRN/RNWNLI/RNWRPO (RE) and PWRTRN/TRNNLI/TRNRPO (non-RE)
+    flat (CapEx 100, FOM 4, ResidualCapacity 5, life 20); the Stage-1 template
+    merge then rewrites their OperationalLife to 50/20. This late stage makes
+    Config_country_codes.yaml + a desk-checked per-node residuals file the source
+    of truth, writing on the final A-O_Parametrization.xlsx:
+      * Demand Techs -> per-node ResidualCapacity (RNWTRN/PWRTRN; NLI/RPO = 0),
+        RE CapitalCost/FixedCost = base x re_capex_multiplier, non-RE = base;
+      * Fixed Horizon Parameters -> OperationalLife = 40 (all six families).
+    Runs after stage 5 and the interconnector-cost stage, so nothing downstream
+    clobbers it. Interconnectors (13-char TRN*****), DSPTRN, generators, storage
+    and losses are all left untouched. Uniform across nodes (intra-node tx is
+    accounting; the study is about interties).
+    """
+    script = RULES_SCRIPTS_DIR / "apply_internal_transmission.py"
+    config = T1_CONFECTION / "Config_country_codes.yaml"
+    residuals = RULES_SCRIPTS_DIR / "internal_tx_residuals.csv"
+    if not (script.is_file() and config.is_file() and residuals.is_file()):
+        print("    [SKIP] internal-transmission stage: script/config/residuals missing")
+        return
+    banner("WS-3 — calibrate internal transmission (per-node ResidualCapacity / RE CapEx / OperationalLife=40)")
+    run_subproc([
+        PYTHON, script, "--input-dir", s5, "--skip-backup",
+        "--config", config, "--residuals", residuals,
+    ], label="apply_internal_transmission.py")
+
+
+def stage_ws3_internal_tx_losses(s5: Path) -> None:
+    """WS-4: give the six internal transmission families a non-zero loss.
+
+    A2 injects internal-tx output activity = 1.0 (0% loss). This stage sets
+    OutputActivityRatio = 1 - internal_transmission.transmission_loss (default
+    0.03 -> 0.97) on the internal families' Output rows in the A-O_AR files'
+    'Demand Techs' sheet, matching how the interconnectors carry per-corridor
+    losses. Runs after the internal-tx cost/residual stage; interconnectors,
+    DSPTRN, generators and storage untouched.
+    """
+    script = RULES_SCRIPTS_DIR / "apply_internal_tx_losses.py"
+    config = T1_CONFECTION / "Config_country_codes.yaml"
+    if not (script.is_file() and config.is_file()):
+        print("    [SKIP] internal-tx losses stage: script/config missing")
+        return
+    banner("WS-4 — internal transmission losses (OutputActivityRatio = 1 - loss)")
+    run_subproc([
+        PYTHON, script, "--input-dir", s5, "--skip-backup", "--config", config,
+    ], label="apply_internal_tx_losses.py")
+
+
 def stage_6_persist_restrictions(
     s5: Path,
     soasia: Path,
@@ -728,6 +806,9 @@ def main() -> int:
     stage_4_consolidate(s1, s3, s5, param_for_stage4)
     stage_4_5_apply_inherited_restrictions(s5, soasia, inherit_from)
     stage_5_rules_scripts(wd, s5, rules_scripts)
+    stage_ws3_interconnector_costs(s5, soasia, materialized_template)
+    stage_ws3_internal_transmission(s5)
+    stage_ws3_internal_tx_losses(s5)
     stage_6_sync_og_to_ts20(wd, s1)
     stage_6_persist_restrictions(s5, soasia, scenario, rules_scripts)
 

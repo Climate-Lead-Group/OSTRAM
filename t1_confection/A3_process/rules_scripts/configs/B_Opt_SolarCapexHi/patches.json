@@ -1,0 +1,16 @@
+{
+ "scenario": "B_Opt_SolarCapexHi",
+ "base_scenario": "B_Optimised_VRE",
+ "description": "Solar CapitalCost multiplied by 'factor' (KNOB, default 1.10) for all PWRSPV<node>, all 10 nodes, all years. Over the shared VRE-ceiling layer (expected not to bind: dearer solar -> less solar). To change the stress level before CPLEX, edit the single 'factor' value below.",
+ "apply_vre_ceiling_layer": true,
+ "edits": [
+  {
+   "sheet": "Secondary Techs",
+   "tech_prefix": "PWRSPV",
+   "param": "CapitalCost",
+   "op": "multiply",
+   "factor": 1.10,
+   "note": "KNOB -- solar CAPEX multiplier. Default 1.10 (+10%). Edit this one number to rescale the shock; rides on top of per-node cost multipliers already in the A-O."
+  }
+ ]
+}

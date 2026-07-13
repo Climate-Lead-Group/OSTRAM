@@ -1,0 +1,63 @@
+==================================================================================
+OSTRAM SENSITIVITY DESK-CHECK (pre-CPLEX, partial balance)
+==================================================================================
+BGD VRE ceilings: solar 40 GW (CF 0.1682), wind 3 GW (CF 0.2292)
+max domestic VRE @ ceiling = (40x0.1682+3x0.2292)x31.536 = 233.9 PJ (flat; capacity-bound)
+
+----------------------------------------------------------------------------------
+RUN 1  B_Opt_TradeCap50  --  BGD import cap 50%, backstops zeroed
+----------------------------------------------------------------------------------
+ year    demand  maxImp50%    minDom   maxVRE  FORCED_FIRM
+ 2023     427.3      213.7     213.7    233.9        -20.2
+ 2030     676.4      338.2     338.2    233.9        104.4
+ 2040    1139.6      569.8     569.8    233.9        335.9
+ 2050    1748.5      874.3     874.3    233.9        640.4
+
+>> BGD FORCED-FIRM 2050 = 640.4 PJ  (177.9 TWh) that MUST come from
+   coal/gas/existing-firm once imports are capped at 50% and VRE hits its ceilings.
+   B_Opt 2050 BGD firm generation = 439.2 PJ  (coal 160.6 + gas 201.6 + oil 66.8 + hydro 10.2)
+   => additional firm required vs B_Opt ~= 201.2 PJ (new coal/gas; MaxCap uncapped => feasible).
+   Domestic VRE is CAPPED: solar ceiling 40 GW is the active limit (B_Opt built 10.5 GW).
+
+----------------------------------------------------------------------------------
+RUN 2  B_Opt_SolarHi10  --  solar CapitalCost x1.10
+----------------------------------------------------------------------------------
+(illustrative LCOE, discount rate 0.08 assumed; USD/MWh)
+         tech/node      2035      2050
+   solar BGD B_Opt      44.5      34.7
+    solar BGD +10%      48.4      37.7
+ solar INDNO B_Opt      26.5      20.7
+  solar INDNO +10%      28.9      22.5
+     coal BGD 2050                96.6
+     gas  BGD 2050               101.8
+
+>> Solar +10% CapEx raises BGD solar LCOE by 3.0 USD/MWh (+8.5%), i.e. ~0.82 M USD per PJ solar.
+   Solar (even +10%: 38) stays FAR below BGD coal (97) / gas (102).
+   => small system-cost rise, minimal substitution; VRE ceilings stay IDLE for Run 2.
+
+----------------------------------------------------------------------------------
+RUN 3  B_Opt_LinkFreeze  --  freeze TRNBGDXXINDEA & TRNNPLXXBGDXX at residual
+----------------------------------------------------------------------------------
+        corridor  B_Opt imp 2050  residual GW  frozen cap PJ  removed PJ
+   TRNBGDXXINDEA           724.2         2.50           78.8       645.4
+   TRNNPLXXBGDXX           166.6         0.04            1.3       165.3
+
+>> Import capacity removed from BGD ~= 811 PJ/yr (2050); affected node = BGDXX.
+   Backstops are NOT frozen in Run 3 -> BGD can reroute via TRNBGDXXINDNE/TRNBTNXXBGDXX + backstops,
+   so forced-firm pressure is milder than Run 1; BGD VRE headroom still capped (solar 40, wind 3 GW).
+
+----------------------------------------------------------------------------------
+VRE CEILINGS the constraints could drive against
+----------------------------------------------------------------------------------
+  Already clipping baseline (atlas-enforced): PWRSPVLKAXX 16, PWRWONBGDXX 3, PWRWONMDVXX 0
+  Active domestic-VRE limit under Run 1: PWRSPVBGDXX 40 GW (BGD solar)
+  Pure-guard (preserve B_Opt): PWRWON INDEA/INDNE/NPLXX = 0; PWRSPVBTNXX 1.81
+  India big nodes: non-binding headroom (buildout << ceiling)
+
+----------------------------------------------------------------------------------
+EXPECTED DIRECTIONS (sanity, not truth)
+----------------------------------------------------------------------------------
+  Run              | Sys cost | Coal GW | VRE GW    | Net imports | Binding
+  TradeCap50       | UP sm-mod| UP(BGD) | UP->CAP   | DOWN(BGD)   | imports<=50%; BGD SPV 40
+  SolarHi10        | UP small | UP small| DOWN small| shift/flat  | solar+10% vs firm; ceilings idle
+  LinkFreeze       | UP mod   | UP      | redistrib | DOWN(BGD)   | frozen corridors; BGD ceilings

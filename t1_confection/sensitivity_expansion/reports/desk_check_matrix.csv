@@ -1,0 +1,12 @@
+scenario,metric,value
+B_Opt_TradeCap50,forced_firm_2030_PJ,104.4
+B_Opt_TradeCap50,forced_firm_2040_PJ,335.9
+B_Opt_TradeCap50,forced_firm_2050_PJ,640.4
+B_Opt_TradeCap50,extra_firm_vs_bopt_2050_PJ,201.2
+B_Opt_SolarHi10,solarBGD_LCOE_2050,34.7
+B_Opt_SolarHi10,solarBGD_LCOE_2050_+10%,37.7
+B_Opt_SolarHi10,coalBGD_LCOE_2050,96.6
+B_Opt_SolarHi10,delta_solar_LCOE_pct,8.5
+B_Opt_LinkFreeze,removed_TRNBGDXXINDEA_PJ,645.4
+B_Opt_LinkFreeze,removed_TRNNPLXXBGDXX_PJ,165.3
+B_Opt_LinkFreeze,total_removed_2050_PJ,810.7

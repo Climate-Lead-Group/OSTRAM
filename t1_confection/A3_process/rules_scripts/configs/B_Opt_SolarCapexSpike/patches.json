@@ -1,0 +1,17 @@
+{
+ "scenario": "B_Opt_SolarCapexSpike",
+ "base_scenario": "B_Optimised_VRE",
+ "description": "Transient severe solar CAPEX spike x1.50 for 2028-2030 ONLY (reverts to 1.0 elsewhere). Uses the multiply op's optional per-year 'years' filter (added to apply_patches.py for this scenario). Over the shared VRE-ceiling layer.",
+ "apply_vre_ceiling_layer": true,
+ "edits": [
+  {
+   "sheet": "Secondary Techs",
+   "tech_prefix": "PWRSPV",
+   "param": "CapitalCost",
+   "op": "multiply",
+   "factor": 1.50,
+   "years": [2028, 2029, 2030],
+   "note": "PWRSPV CAPEX x1.50 for 2028/2029/2030 only; all other years unchanged via the years filter."
+  }
+ ]
+}
