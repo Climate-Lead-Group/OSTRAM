@@ -1,0 +1,13 @@
+## set_interconnector_direction.yaml — DEFAULT (no-op)
+##
+## Controls which direction(s) power can flow through interconnectors.
+## By default all links are bidirectional — list a tech here to restrict it.
+##
+## Directions are relative to the tech name TRN<SRC><DST>:
+##   forward       = SRC -> DST only  (e.g. BGD -> India East for TRNBGDXXINDEA)
+##   reverse       = DST -> SRC only  (e.g. India East -> BGD)
+##   bidirectional = both modes active (default, same as not listing the tech)
+##
+## Per-scenario overrides go in configs/<scenario>/set_interconnector_direction.yaml
+
+directions: {}

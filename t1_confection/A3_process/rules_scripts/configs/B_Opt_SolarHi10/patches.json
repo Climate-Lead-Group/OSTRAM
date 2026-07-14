@@ -1,0 +1,16 @@
+{
+ "scenario": "B_Opt_SolarHi10",
+ "base_scenario": "B_Optimised_VRE",
+ "description": "Solar CapitalCost x1.10 for all PWRSPV<node>, all years. Over shared VRE-ceiling layer.",
+ "apply_vre_ceiling_layer": true,
+ "edits": [
+  {
+   "sheet": "Secondary Techs",
+   "tech_prefix": "PWRSPV",
+   "param": "CapitalCost",
+   "op": "multiply",
+   "factor": 1.1,
+   "note": "+10% solar CAPEX rides on top of per-node node multipliers"
+  }
+ ]
+}

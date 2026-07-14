@@ -805,9 +805,13 @@ def main_executer(params, scenario_name, HERE):
                     f'"set threads {cplex_threads}" '
                     f'"set randomseed {cplex_random_seed}" '
                     f'"set parallel 1" '
+                    # lpmethod left at CPLEX default (dual simplex) — barrier (lpmethod 4) was
+                    # tried and ran ~3-4x SLOWER on this OSeMOSYS LP (21 min vs ~5 min solve).
                     f'"optimize" '
-                    f'"feasopt all" '
-                    f'"write {output_file}.feasopt.sol" '
+                    # NOTE: dropped the always-on `"feasopt all" "write .feasopt.sol"` — it ran a
+                    # full second (relaxation) solve on EVERY scenario (feasible ones too) and, on an
+                    # infeasible optimize, its relaxed solution overwrote .sol with garbage. The real
+                    # solution comes from `optimize` -> .sol; infeasibility is read from .cplex.log.
                     f'"write {output_file}.sol"'
                 )
                 commands.append(str_solve)

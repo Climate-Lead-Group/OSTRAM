@@ -1,0 +1,8 @@
+## B_Opt_DirBidir -- interconnector-direction validation anchor
+##
+## All cross-border corridors left bidirectional (both modes active).
+## set_interconnector_direction.py treats an empty map as a no-op, so this
+## scenario == B_Opt_Clipped and is used to prove the direction machinery is
+## neutral before trusting DirContractual's deltas.
+
+directions: {}

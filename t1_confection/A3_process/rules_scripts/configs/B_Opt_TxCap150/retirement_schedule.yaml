@@ -1,0 +1,47 @@
+## B_Optimised_VRE — thermal retirement schedule  (v2)
+##
+## Lifetimes calibrated to midpoints of Natalia's country-level research
+## (Energy_Data_for_YAML_ALL_6_Countries.xlsx, "Retirements" sheet, Note 8).
+##
+## Generic lifetime ranges (Note 8):
+##   COA 30–40 yr  →  midpoint 35
+##   GAS 25–35 yr  →  midpoint 30
+##   PET 20–30 yr  →  midpoint 25
+##   NUC 40–60 yr  →  midpoint 50
+##
+## Same midpoints used across BAU and Opti — no defensible basis for
+## differentiating lifetimes between scenarios.
+##
+## OPTION B (cliff profile) remains deferred — requires set_retirement_schedule.py
+## patch. Once supported, cliff would give physically more realistic behavior:
+## full nameplate until late-life, then linear tail. See v1 for commented params.
+##
+## Scenario differentiation from BAU is via the lid relaxation_schedule
+## in lid_rule.yaml, NOT via retirement lifetimes.
+##
+## Sources: CEA NRAP 2025, IEPMP In-Between, IPSDP, CEB LTGEP 2025-2044,
+##          Bhutan NEP 2025, ADB Maldives Road Map 2020, CCDR 2024/2025.
+
+base_year: 2028
+
+age_based:
+  COA:
+    lifetime_years: 35
+    retirement_profile: linear
+  NGS:
+    lifetime_years: 30
+    retirement_profile: linear
+  PET:
+    lifetime_years: 25
+    retirement_profile: linear
+  NUC:
+    lifetime_years: 50
+    retirement_profile: linear
+
+exempt:
+  - 'PWRHYD*'
+  - 'PWRSPV*'
+  - 'PWRWON*'
+  - 'PWRBCK*'
+
+scheduled: []
