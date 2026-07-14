@@ -2,9 +2,13 @@
 
 The Secondary Technologies Editor provides a user-friendly Excel interface for modifying technology parameters across scenarios, with support for automatic OSTRAM source data integration.
 
+:::{note}
+This is a **manual, optional** layer, independent of the automated Stage A3 scenario engine (retirement schedules, investment lids, VRE targets, etc. -- see {doc}`pipeline`). D1 reads whatever currently exists in each scenario's `A1_Outputs_<scenario>/` folder, regardless of whether it was produced by plain A1/A2 or by the full A3 rule-script chain, and D2 writes edits back into those same files. A3 never invokes D1/D2, and D1/D2 never touch `A3_process/` internals. Use this workflow for one-off overrides, interconnection ON/OFF toggling, or OSTRAM-source auto-population not covered by an A3 rule script.
+:::
+
 ## Overview
 
-The editor workflow has two steps:
+The editor workflow has two steps, neither of which takes command-line arguments -- both scripts operate on whatever scenario folders currently exist under `A1_Outputs/`:
 
 1. **Generate the template** (`D1`) -- Creates `Secondary_Techs_Editor.xlsx`.
 2. **Apply changes** (`D2`) -- Reads the filled template and updates the model files.
@@ -64,17 +68,21 @@ In the **Editor** sheet (and similarly in the **Interconnections** sheet for tra
 
 ### OSTRAM Configuration (OSTRAM_Config Sheet)
 
-The **OSTRAM_Config** sheet provides toggle switches for automatic data population:
+The **OSTRAM_Config** sheet provides toggle switches for automatic data population. All are `YES`/`NO` switches (default `NO` except `PetroleumSplitMode`):
 
-| Parameter | Values | Description |
-|-----------|--------|-------------|
-| `ResidualCapacitiesFromOSTRAM` | YES / NO | Auto-populate ResidualCapacity from installed capacity data |
-| `PetroleumSplitMode` | `OIL_only` / `Split_PET_OIL` | How to handle petroleum capacity allocation |
-| `DemandFromOSTRAM` | YES / NO | Auto-populate electricity demand from generation data |
-| `ActivityLowerLimitFromOSTRAM` | YES / NO | Auto-populate TotalTechnologyAnnualActivityLowerLimit |
-| `ActivityUpperLimitFromOSTRAM` | YES / NO | Auto-populate TotalTechnologyAnnualActivityUpperLimit |
-| `TradeBalanceDemandAdjustment` | YES / NO | Adjust demand based on trade balance data |
-| `InterconnectionsControl` | ON / OFF | Enable/disable interconnection technologies |
+| Parameter | Values | Default | Description |
+|-----------|--------|---------|-------------|
+| `ResidualCapacitiesFromOSTRAM` | YES / NO | NO | Auto-populate ResidualCapacity from installed capacity data |
+| `PetroleumSplitMode` | `OIL_only` / `Split_PET_OIL` | Split_PET_OIL | How to handle petroleum capacity allocation |
+| `DemandFromOSTRAM` | YES / NO | NO | Auto-populate electricity demand from generation data |
+| `ActivityLowerLimitFromOSTRAM` | YES / NO | NO | Auto-populate TotalTechnologyAnnualActivityLowerLimit |
+| `ActivityUpperLimitFromOSTRAM` | YES / NO | NO | Auto-populate TotalTechnologyAnnualActivityUpperLimit |
+| `TradeBalanceDemandAdjustment` | YES / NO | NO | Adjust demand based on trade balance data |
+| `InterconnectionsControl` | YES / NO | NO | Master switch for the interconnection controls below |
+
+:::{note}
+`InterconnectionsControl` itself is `YES`/`NO`, like every other master toggle in this sheet. `ON`/`OFF` is used only for the per-row **Status** column inside the separate **Interconnections** sheet (one row per TRN technology), not for this master switch.
+:::
 
 ### Petroleum Split Modes
 
@@ -151,14 +159,33 @@ python t1_confection/D2_update_secondary_techs.py
 
 ---
 
+## Optional Pre-Fill Step: Interconnection Limits From Flows
+
+**Script:** `t1_confection/Z_AUX_D1b_set_trn_limits_from_flows.py`
+
+A standalone, manual tool meant to run **between D1 and D2** (not invoked automatically by either). It reads bilateral electricity flow data from `Matriz Balance energético/flujos_energia_estimados_optimizacion.xlsx` (sheet "Flujos por Interconexión") and writes `TotalTechnologyAnnualActivityLowerLimit`/`UpperLimit` (±5% of the historical flow, converted GWh → PJ) directly into the already-generated `Secondary_Techs_Editor.xlsx`'s **Editor** sheet, as a pre-fill for TRN interconnection rows before you run D2. It takes no command-line arguments.
+
+```bash
+python t1_confection/D1_generate_editor_template.py
+python t1_confection/Z_AUX_D1b_set_trn_limits_from_flows.py   # optional pre-fill
+# ... review/adjust the Editor sheet ...
+python t1_confection/D2_update_secondary_techs.py
+```
+
 ## Related Files
 
 | File | Description |
 |------|-------------|
 | `D1_generate_editor_template.py` | Generates the Excel template |
 | `D2_update_secondary_techs.py` | Applies changes to scenario files |
+| `Z_AUX_D1b_set_trn_limits_from_flows.py` | Optional pre-fill of TRN interconnection activity limits from flow data |
 | `Secondary_Techs_Editor.xlsx` | The editor template (generated) |
-| `OSTRAM - Installed Capacity by Source - Annual.xlsx` | Installed capacity source data |
-| `OSTRAM - Electric Generation by Source - Annual.xlsx` | Electricity generation source data |
+| `OSTRAM - Installed Capacity by Source - Annual.xlsx` | Installed capacity source data (MW → GW) |
+| `OSTRAM - Electric Generation by Source - Annual.xlsx` | Electricity generation source data (GWh → PJ) |
 | `Shares_PET_OIL_Split.xlsx` | Petroleum/oil split proportions per scenario |
 | `Shares_Power_Generation_Technologies.xlsx` | Power generation technology shares |
+| `flujos_energia_estimados_optimizacion.xlsx` (`Matriz Balance energético/`) | Bilateral trade-balance and interconnection flow data (GWh → PJ), used by `TradeBalanceDemandAdjustment` and by `Z_AUX_D1b_set_trn_limits_from_flows.py` |
+
+:::{note}
+`CapacityAndDistances.xlsx` and `RateGrowthDemand_RenovabilityGoals.xlsx` also exist at `t1_confection/` root but are not currently read by D1, D2, or any other script -- they appear to be staged data for future use, not active inputs.
+:::

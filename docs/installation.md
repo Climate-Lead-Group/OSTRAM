@@ -42,8 +42,10 @@ The environment installs the following packages:
 | xlsxwriter | >= 3.2.4 | Excel file writing |
 | pyyaml | >= 6.0 | YAML configuration parsing |
 | git | >= 2.40 | Version control |
-| dvc | latest | Data Version Control pipeline |
+| dvc | latest | Data Version Control (init/pull only -- see note below) |
 | otoole | >= 1.1.1 | OSeMOSYS data format conversion |
+
+`run.py` also installs `ruamel.yaml` automatically if missing (used by `B1_Run_Compiler.py` to rewrite `Config_MOMF_T1_A.yaml`'s `Main_Scenario` in place); it is not listed in `environment.yaml` itself.
 
 ## Solver Setup
 

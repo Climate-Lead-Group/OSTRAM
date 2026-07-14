@@ -10,38 +10,38 @@ OSTRAM processes energy system data through a multi-stage pipeline. This page do
 │                                                                      │
 │  A0: Generate Tech-Country Matrix                                    │
 │   ↓                                                                  │
-│  A1: Preprocess Raw CSVs → Excel Model Files                        │
+│  A1: Preprocess Raw CSVs → Excel Model Files (creates BAU folder)    │
 │   ↓                                                                  │
-│  A2: Add Transmission Technologies                                   │
-│   ↓                                                                  │
-│  (Optional) A3: Migrate Old Inputs                                   │
-│   ↓                                                                  │
-│  D1: Generate Secondary Techs Editor Template                        │
-│   ↓                                                                  │
-│  Manual Editing of Secondary_Techs_Editor.xlsx                       │
-│   ↓                                                                  │
-│  D2: Apply Edits to Model Files (Parametrization, Demand,            │
-│      Interconnections)                                               │
+│  A2: Add Transmission/Dispatch Technologies (snapshots BAU)          │
 ├──────────────────────────────────────────────────────────────────────┤
-│                    SCENARIO CREATION & EDITING                       │
+│                    SCENARIO GENERATION (A3)                          │
 │                                                                      │
-│  To create a new scenario:                                           │
-│    1. Duplicate the BAU folder (A1_Outputs_BAU → A1_Outputs_NEW)     │
-│    2. Use D2 to parametrize A-O_Parametrization.xlsx and toggle      │
-│       interconnections ON/OFF                                        │
-│    3. Edit A-O_Demand.xlsx directly for demand changes               │
+│  For each active scenario declared in the SOASIA v18 Control sheet:  │
+│    1. Restore the post-A2 BAU snapshot                               │
+│    2. Merge 20-timeslice fabric, apply template extensions/fixes     │
+│    3. Run automatic pre-solver validation (auto-fix)                 │
+│    4. Apply scenario-specific rule scripts (retirement schedules,    │
+│       investment lids, VRE targets, interconnector relaxation, ...)  │
+│    5. Deliver the finished workbook set to A1_Outputs_<scenario>/    │
+├──────────────────────────────────────────────────────────────────────┤
+│         OPTIONAL MANUAL TOUCH-UP (Secondary Techs Editor)             │
 │                                                                      │
-│  To edit parameters in an existing scenario:                         │
-│    • Edit A1_Outputs files directly, OR                              │
-│    • Use Secondary_Techs_Editor.xlsx + D2 for supported parameters   │
+│  D1: Generate Secondary_Techs_Editor.xlsx from current A1_Outputs     │
+│   ↓                                                                  │
+│  Manual editing (parameter overrides, interconnection ON/OFF,        │
+│      demand growth, OSTRAM source-data integration)                  │
+│   ↓                                                                  │
+│  D2: Apply edits back to the scenario's model files                  │
 ├──────────────────────────────────────────────────────────────────────┤
 │                        MODEL EXECUTION                               │
 │                                                                      │
-│  B1: Compile Excel → OSeMOSYS CSVs                                  │
+│  B1: Compile Excel → OSeMOSYS CSVs (per scenario)                    │
 │   ↓                                                                  │
-│  B2: Execute Solver → Results                                        │
+│  B2: Patch datafile → Execute Solver → Results                       │
 └──────────────────────────────────────────────────────────────────────┘
 ```
+
+`run.py` runs A0 is **not** included in the automated chain -- it is a one-off setup step you run manually whenever the country/technology configuration changes. A1+A2 run automatically only the first time (or after deleting the post-A2 snapshot). A3, B1, and B2 always run automatically. D1/D2 are always manual and sit outside `run.py` entirely.
 
 ---
 
@@ -62,7 +62,7 @@ python t1_confection/A0_generate_tech_country_matrix.py
 ### What It Does
 
 1. Reads the country list from `Config_country_codes.yaml`.
-2. Creates a matrix of 21 technology codes against all countries.
+2. Creates a matrix of technology codes against all countries.
 3. Marks implausible combinations (from `implausible_combinations` in the YAML) as **NO** with red highlighting.
 4. All other combinations default to **YES**.
 5. Writes the matrix to `Tech_Country_Matrix.xlsx` with 5 sheets.
@@ -77,7 +77,7 @@ python t1_confection/A0_generate_tech_country_matrix.py
 | COA | Coal |
 | COG | Cogeneration |
 | CSP | Concentrated Solar Power |
-| GAS | Natural Gas |
+| GAS | Natural Gas (legacy code, superseded by NGS -- see below) |
 | GEO | Geothermal |
 | HYD | Hydroelectric |
 | LDS | Long Duration Storage |
@@ -109,11 +109,9 @@ Edit `Tech_Country_Matrix.xlsx` to customize:
 
 **Script:** `t1_confection/A1_Pre_processing_OG_csvs.py`
 
-The largest processing step. Reads raw OSeMOSYS CSV files and produces structured Excel model files for each scenario.
+The largest processing step. Reads raw OSeMOSYS CSV files and produces structured Excel model files for the `BAU` scenario.
 
 ### Usage
-
-From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
 
 ```bash
 python t1_confection/A1_Pre_processing_OG_csvs.py
@@ -122,13 +120,14 @@ python t1_confection/A1_Pre_processing_OG_csvs.py
 ### Input Files
 
 - `OG_csvs_inputs/*.csv` -- All standard OSeMOSYS parameter and set CSV files.
+- `Miscellaneous/A-O_*.xlsx`, `A-Xtra_Emissions.xlsx`, `A-Xtra_Storage.xlsx` -- workbook templates.
 - `Tech_Country_Matrix.xlsx` -- Technology filtering configuration.
 - `Config_country_codes.yaml` -- Country definitions and settings.
 - `Config_region_consolidation.yaml` -- Region consolidation rules.
 
-### Output Files (per scenario)
+### Output Files
 
-Written to `A1_Outputs/A1_Outputs_{scenario}/`:
+Written to `A1_Outputs/A1_Outputs_BAU/`:
 
 | File | Content |
 |------|---------|
@@ -137,22 +136,23 @@ Written to `A1_Outputs/A1_Outputs_{scenario}/`:
 | `A-O_AR_Model_Base_Year.xlsx` | Base year activity ratios (InputActivityRatio, OutputActivityRatio) |
 | `A-O_AR_Projections.xlsx` | Projection activity ratios |
 
+A1 also writes normalized CSVs back to `OG_csvs_inputs/` and updates parts of `Config_MOMF_T1_A.yaml` (years, temporal structure).
+
 ### Processing Steps
 
-The script performs these operations in order:
-
 1. **Read all CSV files** into memory as DataFrames.
-2. **Replace country codes** according to the configuration.
-3. **Filter by first year** -- removes data before `first_year`.
-4. **Normalize temporal profiles** -- ensures SpecifiedDemandProfile sums to 1.0 per fuel/tech/year.
-5. **Consolidate regions** (if enabled) -- merges sub-regional data using avg/sum rules.
-6. **Remove internal interconnections** after consolidation.
-7. **Clean PWR technologies** -- handles PWR00/PWR01 duplicates based on `pwr_cleanup_mode`.
-8. **Apply Tech-Country Matrix filtering** -- removes technology-country pairs marked NO.
-9. **Unify NGS technologies** -- merges CCG+OCG into NGS where enabled.
-10. **Write Excel output files** with formatted sheets and human-readable names.
-11. **Update demand profiles and projections**.
-12. **Update parametrization capacities and temporal splits**.
+2. **Normalize temporal profiles** -- `SpecifiedDemandProfile`, `YearSplit`, `DaySplit` are re-normalized so they sum correctly per fuel/tech/year.
+3. **Replace country code** `JAM` with `BRB` (a hardcoded legacy-data fix).
+4. **Filter by first year** -- removes data before `first_year` (2023) through the last year (2050).
+5. **Apply Tech-Country Matrix filtering** -- removes technology-country pairs marked NO.
+6. **Unify NGS technologies** -- merges CCG+OCG into NGS where enabled.
+7. **Consolidate regions** (if enabled in `Config_region_consolidation.yaml`) -- merges sub-regional data using avg/sum rules, then removes internal interconnections that become self-loops.
+8. **Clean PWR technologies** -- handles PWR00/PWR01 duplicates based on `pwr_cleanup_mode`.
+9. **Write Excel output files** for the `BAU` scenario, with formatted sheets and human-readable names.
+
+:::{note}
+A1 only produces the `BAU` scenario folder. All other scenarios (`A_Calibrated_BAU`, `B_Optimised_VRE`, `C_Target_VRE`, ...) are generated by **Stage A3** from the post-A2 BAU snapshot -- they are not separate A1 runs.
+:::
 
 ---
 
@@ -160,11 +160,9 @@ The script performs these operations in order:
 
 **Script:** `t1_confection/A2_AddTx.py`
 
-Adds transmission (TRN) and dispatch (DSPTRN) technology entries to the Excel model files. Creates 6 transmission types plus 1 dispatch type per country for renewable and non-renewable power routing, and updates interconnection fuel codes.
+Adds transmission (TRN) and dispatch (DSPTRN) technology entries to the `BAU` Excel model files. Creates 6 transmission types plus 1 dispatch type per country-region pair, and rewrites the electricity fuel tiers to route power through cross-border interconnections. On success, it also creates the `_post_a2_snapshot_BAU/` folder that Stage A3 restores from for every scenario.
 
 ### Usage
-
-From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
 
 ```bash
 python t1_confection/A2_AddTx.py
@@ -176,182 +174,150 @@ python t1_confection/A2_AddTx.py
 |------|-------------|
 | `RNWTRN` | Renewable transmission (existing) |
 | `RNWRPO` | Renewable transmission (repowered) |
-| `RNWNLI` | Renewable transmission (new lines) |
+| `RNWNLI` | Renewable transmission (new lines, unplanned candidate) |
 | `PWRTRN` | Non-renewable transmission (existing) |
 | `TRNRPO` | Non-renewable transmission (repowered) |
-| `TRNNLI` | Non-renewable transmission (new lines) |
+| `TRNNLI` | Non-renewable transmission (new lines, unplanned candidate) |
 | `DSPTRN` | Dispatch (interconnection routing, 2 modes) |
 
-### Fuel Routing
+### Fuel Routing (Four Electricity Tiers)
 
 The script assigns fuel codes for the energy flow:
 
-- `ELC*00` -- Renewable electricity
-- `ELC*01` -- Non-renewable electricity
-- `ELC*02` -- Transmission output / Demand
-- `ELC*03` -- Dispatch-ready for interconnection
+- `ELC*00` -- Renewable power plant output.
+- `ELC*01` -- Non-renewable power plant output.
+- `ELC*02` -- Transmission line output (available for domestic demand and as DSPTRN Mode 1 input).
+- `ELC*03` -- Dispatch-ready for interconnection (DSPTRN output on both modes; TRN interconnector reads this as input on the exporting side).
+- `ELC*04` -- Imported electricity (TRN interconnector writes this on the importing side; DSPTRN Mode 2 reads it back to make it dispatch-ready again).
 
 ### What It Does
 
-1. Reads the country list from `Config_country_codes.yaml`.
-2. For each scenario's Excel files:
-   - Classifies power plant output as renewable (`ELC*00`) or non-renewable (`ELC*01`) in **Secondary** sheets.
-   - Updates TRN interconnection fuel codes from `ELC*02`/`ELC*01` to `ELC*03` in **Secondary** sheets.
-   - Adds transmission technology entries (RNWTRN, PWRTRN, etc.) to **Demand Techs** sheets.
-   - Adds DSPTRN dispatch technology (Mode 1: `ELC*02` → `ELC*03`, Mode 2: `ELC*03` → `ELC*01`) to **Demand Techs** sheets.
-   - Adds parameter entries to `A-O_Parametrization.xlsx` (sheets: **Fixed Horizon Parameters**, **Demand Techs**).
+1. Reads the country/region list from `Config_country_codes.yaml`.
+2. Classifies power plant output as renewable (`ELC*00`) or non-renewable (`ELC*01`) in the **Secondary** sheets.
+3. If `enable_dsptrn: true` (current default): rewrites TRN interconnector fuel codes so their input reads `ELC*03` and their output writes `ELC*04`.
+4. Adds transmission technology entries (RNWTRN, PWRTRN, etc.) to the **Demand Techs** sheets, converting `ELC*00`/`ELC*01` into `ELC*02`.
+5. Adds the `DSPTRN` dispatch technology (Mode 1: `ELC*02` → `ELC*03`; Mode 2: `ELC*04` → `ELC*03`) to the **Demand Techs** sheets.
+6. Adds parameter entries to `A-O_Parametrization.xlsx` (sheets: **Fixed Horizon Parameters**, **Demand Techs**), using the per-technology defaults from `Config_country_codes.yaml` (`RNWTRN`, `PWRTRN`, `DSPTRN`, etc.).
+7. Copies the finished `A1_Outputs_BAU/` folder to `_post_a2_snapshot_BAU/`, replacing any previous snapshot.
+
+### Command-Line Options
+
+| Flag | Description |
+|------|-------------|
+| `--yaml` | Path to `Config_country_codes.yaml` |
+| `--base` | Base year AR workbook filename |
+| `--proj` | Projections AR workbook filename |
+| `--param` | Parametrization workbook filename |
+| `--demand` | Demand workbook filename |
+
+---
+
+## Stage A3: Scenario Generation
+
+**Script:** `t1_confection/A3_process.py`, orchestrating scripts under `t1_confection/A3_process/`
+
+This is the primary scenario-creation mechanism. It always restores its input from the post-A2 `BAU` snapshot (never the current scenario folder), then layers a chain of automated fixes and scenario-specific rule scripts before delivering the finished workbook set to `A1_Outputs/A1_Outputs_<scenario>/`. `run.py` calls it once per active scenario, in dependency order.
+
+### Usage
+
+```bash
+python t1_confection/A3_process.py --scenario BAU
+python t1_confection/A3_process.py --scenario B_Optimised_VRE
+```
 
 ### Command-Line Options
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--yaml` | Auto-detected | Path to YAML configuration |
-| `--base` | `A-O_AR_Model_Base_Year.xlsx` | Base year filename |
-| `--proj` | `A-O_AR_Projections.xlsx` | Projections filename |
-| `--param` | `A-O_Parametrization.xlsx` | Parametrization filename |
+| `--scenario` | `BAU` | Scenario name. Must exist in the SOASIA v18 `Control` sheet. |
+| `--soasia` | `A3_process/SOASIA_OSeMOSYS_Template_v18.xlsx` | Override the template path (useful for testing new scenarios without touching the canonical file). |
+| `--rules-script` | From `Control` sheet | Override the scenario's rule-script chain. An empty string skips the rule-script stage entirely. |
+| `--inherit-from` | From `Control` sheet | Override `inherit_restrictions_from` (comma-separated scenario names). |
+| `--input-dir` | `A1_Outputs/A1_Outputs_<scenario>` | Override the input workbook directory. |
+| `--output-dir` | Same as `--input-dir` | Override the delivery directory. |
+| `--keep-workdir` | off | Preserve the `_run_<timestamp>/` working directory for debugging instead of deleting it. |
+
+### Scenario Definition (SOASIA v18 `Control` Sheet)
+
+Scenarios are declared as rows in the `Control` sheet of `SOASIA_OSeMOSYS_Template_v18.xlsx`, with columns:
+
+| Column | Meaning |
+|--------|---------|
+| `scenario` | Scenario name (matches `A1_Outputs_<scenario>`) |
+| `active` | Whether `run.py`/`_scenarios.py list-active` include it |
+| `rules_script` | Comma/newline-separated list of `.py` filenames under `rules_scripts/`, run in order in Stage 5 |
+| `inherit_restrictions_from` | Comma-separated scenario names whose persisted `Restrictions` rows this scenario reads (creates a dependency edge) |
+| `notes` | Free-text |
+
+To add a new scenario: add a `Control` row, create scenario-tagged override rows in the template's parametric sheets if needed, and create `t1_confection/A3_process/rules_scripts/configs/<Scenario>/` with the YAML files the chosen rule scripts expect.
+
+### Execution Order
+
+For a single `--scenario` invocation, `A3_process.py` runs:
+
+```text
+0. Restore input from _post_a2_snapshot_BAU (always, regardless of scenario).
+1. Build a temporary workdir: t1_confection/A3_process/_run_<timestamp>/.
+2. Stage 0: materialize the SOASIA v18 scenario template (_scenarios.py).
+3. Stage 0.5: fix_rnwbio_restore.py -- restore RNWBIO reference rows.
+4. Stage 1: 1_merge_timeslices_into_WV.py, 2_extract_ao_extensions.py,
+   3_update_ao_from_extensions.py, 4_apply_manual_fixes.py,
+   5_propagate_timeslice_fabric.py.
+5. Stage 1b: A0_insert_reserve_margin.py, add_max_capacity_investment_rule_OLD_8ee8056.py,
+   add_max_capacity_investment_rule_NEW_2be1616.py, fix_elc_pmode_revert.py,
+   B1b_Pre_solver_validation.py --auto-fix-all (auto-fixes infeasible
+   Min/Max capacity investment and activity-limit combinations).
+6. Stage 2/2.5: patch_ao_c2a.py, fix_pwrpet_clear.py.
+7. Stage 3: fix_trn_residuals.py --mode min --cutoff-year 2023,
+   clear_stale_unbinding_caps.py, cap_trn_to_residual.py.
+8. Stage 4: consolidate the 4 final workbooks.
+9. Stage 4.5: apply inherited Restrictions from inherit_restrictions_from (skipped if empty).
+10. Stage 5: run the scenario's rules_script chain, each against the consolidated workbooks.
+11. Stage 6: 6_sync_og_to_ts20.py -- sync OG_csvs_inputs/Config_MOMF_T1_A.yaml to the
+    20-timeslice fabric; persist each rule script's CHANGES.json into the SOASIA
+    v18 Restrictions sheet.
+12. Deliver the final workbook set to A1_Outputs/A1_Outputs_<scenario>/; remove the
+    workdir unless --keep-workdir.
+```
+
+### Scenario Rule Scripts
+
+All live under `t1_confection/A3_process/rules_scripts/`, each reading a scenario-specific YAML from `rules_scripts/configs/<Scenario>/`. Every rule script writes a timestamped backup and a `*_CHANGES.json` change log before/after modifying the workbook, and accepts `--input-dir`, `--sheets`, `--skip-backup`, `--yaml`; most (all except `add_max_cap_investment_lid_rule.py`) also accept `--self-test`, `--restore`, `--restore-from`.
+
+| Script | What it does |
+|--------|---------------|
+| `set_retirement_schedule.py` | Draws down `ResidualCapacity` for thermal technologies via age-based (linear/logistic) and/or explicit scheduled retirement trajectories. |
+| `add_max_cap_investment_lid_rule.py` | Computes a per-year cap ("lid") on `TotalAnnualMaxCapacityInvestment` for generation technologies, anchored to demand growth with a security-factor floor above minimum investment. |
+| `relax_interconnectors.py` | Opens `TotalAnnualMaxCapacityInvestment` (and, where overridden, `TotalAnnualMaxCapacity`) for TRN interconnectors beyond their residual capacity, via a uniform headroom factor or explicit per-corridor overrides. |
+| `set_min_capacity_floors.py` | Applies exogenous min/max capacity or activity floors/ceilings from a curated YAML (national plans, CCDRs/IRPs), matched by technology pattern and country-region. |
+| `set_vre_targets.py` | Sets renewable generation/capacity floors per country-region and technology as a percentage of a prior scenario's solved `ProductionByTechnology.csv` (typically `A_Calibrated_BAU`), with optional capacity-envelope bounding. |
+
+### Current Scenarios
+
+| Scenario | Rule-script chain | Summary |
+|----------|--------------------|---------|
+| `BAU` | (none -- produced by A1/A2/A3 with no rule scripts) | Business-as-usual baseline. |
+| `A_Calibrated_BAU` | `set_retirement_schedule`, `add_max_cap_investment_lid_rule`, `set_min_capacity_floors`, `relax_interconnectors` | Calibration/validation scenario: reproduces BAU proportions with a flat (non-relaxing) investment lid and no interconnector headroom. Its solved output feeds `set_vre_targets.py` for `C_Target_VRE`. |
+| `B_Optimised_VRE` | `set_retirement_schedule`, `add_max_cap_investment_lid_rule`, `relax_interconnectors`, `add_storage_min_investment` | Least-cost VRE-optimized scenario: investment lids relax sharply over time (up to 25x by 2050) for non-locked technologies, interconnector caps get 1.5x headroom plus evidence-based per-corridor overrides, and storage gets small seed investment floors. Solved independently from the BAU snapshot (no inheritance). |
+| `C_Target_VRE` | `set_retirement_schedule`, `add_max_cap_investment_lid_rule`, `set_vre_targets`, `relax_interconnectors`, `add_storage_min_investment` | NDC-target-driven VRE scenario: layers explicit country/region renewable-generation floors (from NDC pledges, pinned near target) on top of the same relaxed-lid/loose-interconnector machinery as `B_Optimised_VRE`. |
+
+:::{warning}
+`set_vre_targets.py` (used by `C_Target_VRE`) requires a solved `A_Calibrated_BAU` run to already exist under `Executables/` -- run/solve `A_Calibrated_BAU` through B1/B2 before generating `C_Target_VRE`.
+:::
 
 ---
 
-## Stage A3: Migrate Old Inputs (Optional)
+## Optional Manual Layer: Secondary Techs Editor (D1/D2)
 
-**Script:** `t1_confection/A3_migrate_old_inputs_CLG.py`
-
-Migrates data from an older input format (`Old_Inputs/` directory) into the current model structure. This is only needed when transitioning from a legacy data format.
-
-### Usage
-
-From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
+D1/D2 are a separate, always-manual mechanism for touching up whatever workbook set currently exists in `A1_Outputs_<scenario>/` -- whether produced by plain A1/A2 or by the full A3 rule-script engine. They are not part of `run.py` and A3 never invokes them; use them for one-off parameter overrides, interconnection ON/OFF toggling, or auto-populating parameters from OSTRAM source data that isn't covered by a rule script. See {doc}`secondary-techs-editor` for full details.
 
 ```bash
-python t1_confection/A3_migrate_old_inputs_CLG.py
-python t1_confection/A3_migrate_old_inputs_CLG.py --dry-run  # Preview without writing
+python t1_confection/D1_generate_editor_template.py   # generates Secondary_Techs_Editor.xlsx
+# ... fill in the Editor / Interconnections / Demand_Growth / etc. sheets ...
+python t1_confection/D2_update_secondary_techs.py      # applies the edits back
 ```
 
-### Required Setup
-
-The `Old_Inputs/` folder **must be created manually** inside `t1_confection/`. It is not generated by any script. The folder must contain the following files, which must have **the same format** as the current model files:
-
-```
-Old_Inputs/
-├── A2_Extra_Inputs/
-│   └── A-Xtra_Storage.xlsx
-└── A1_Outputs/
-    └── A1_Outputs_{scenario}/
-        ├── A-O_Parametrization.xlsx
-        ├── A-O_Demand.xlsx
-        ├── A-O_AR_Projections.xlsx
-        └── A-O_AR_Model_Base_Year.xlsx
-```
-
-If the `Old_Inputs/` folder does not exist, the script will exit with an error.
-
-### What It Does
-
-- Applies technology name transformations (CCG+OCG to NGS, suffix removal).
-- Imports and normalizes profiles from old files.
-- Reads equivalence rules from `Config_tech_equivalences.yaml`.
-
----
-
-## Stage D1: Generate Secondary Techs Editor Template (Optional)
-
-**Script:** `t1_confection/D1_generate_editor_template.py`
-
-Creates the `Secondary_Techs_Editor.xlsx` workbook, which provides a user-friendly interface for editing secondary technology parameters across all scenarios. This step is only needed when you want to regenerate the editor template (e.g., after adding a new scenario or country).
-
-### Usage
-
-From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
-
-```bash
-python t1_confection/D1_generate_editor_template.py
-```
-
-### What It Does
-
-1. Reads all `A-O_Parametrization.xlsx` files across scenario folders.
-2. Collects TRN interconnection technologies from the base year file.
-3. Generates `Secondary_Techs_Editor.xlsx` with dropdown lists, auto-fill formulas, and configuration sheets.
-
-### Output Sheets
-
-| Sheet | Purpose |
-|-------|---------|
-| **Instructions** | User guide |
-| **OSTRAM_Config** | Toggle switches for OSTRAM data integration |
-| **Editor** | Main editing area (Scenario, Country, Technology, Parameter, Year columns) |
-| **Demand_Growth** | Demand growth rates per country |
-| **Scenarios_Demand_Growth** | Scenario-specific demand growth overrides |
-| **Renewability_Targets** | Renewable percentage targets per year/country |
-| **Technology_Weights** | Custom distribution weights for technologies |
-| **Interconnections** | Transmission interconnection ON/OFF controls (if TRN technologies exist) |
-
----
-
-## Stage D2: Apply Edits to Model Files (Optional)
-
-**Script:** `t1_confection/D2_update_secondary_techs.py`
-
-Reads the filled `Secondary_Techs_Editor.xlsx` and applies all changes to the model files. This step is only needed when you want to apply changes to the model -- for example, when parametrizing a scenario, toggling interconnections, or updating demand growth rates.
-
-### Usage
-
-From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
-
-```bash
-python t1_confection/D2_update_secondary_techs.py
-```
-
-### What It Does
-
-1. Reads manual edit instructions from the **Editor** sheet.
-2. Reads OSTRAM configuration toggles from the **OSTRAM_Config** sheet.
-3. For each scenario:
-   - Creates a **backup** of the files before modifying them.
-   - Applies manual edits to `A-O_Parametrization.xlsx` (Secondary Techs sheet).
-   - If OSTRAM integration is enabled: populates ResidualCapacity, demand, activity limits, and petroleum split.
-   - Applies interconnection ON/OFF controls from the **Interconnections** sheet to base year and projection activity ratios.
-   - Updates `A-O_Demand.xlsx` (if demand integration is enabled).
-4. Sets **Projection.Mode** to "User defined" for modified parameters.
-5. Generates a detailed log file (`secondary_techs_update_log_*.txt`).
-
-### What Can Be Edited with Secondary_Techs_Editor + D2
-
-| What | Where in Editor |
-|------|-----------------|
-| Technology cost and capacity parameters (CapitalCost, FixedCost, ResidualCapacity, etc.) | **Editor** sheet |
-| Interconnection ON/OFF per direction | **Interconnections** sheet |
-| Demand growth rates | **Demand_Growth** / **Scenarios_Demand_Growth** sheets |
-| Renewable energy targets | **Renewability_Targets** sheet |
-| Technology activity distribution weights | **Technology_Weights** sheet |
-| OSTRAM automatic data integration toggles | **OSTRAM_Config** sheet |
-
-### What Requires Direct Editing of A1_Outputs Files
-
-| What | File to Edit Directly |
-|------|-----------------------|
-| Demand values and profiles | `A-O_Demand.xlsx` |
-| Activity ratios (InputActivityRatio, OutputActivityRatio) | `A-O_AR_Model_Base_Year.xlsx` / `A-O_AR_Projections.xlsx` |
-| Parameters not in Secondary Techs sheet | `A-O_Parametrization.xlsx` (other sheets) |
-
-### Creating a New Scenario
-
-To create a new scenario (e.g., NDC based on BAU):
-
-1. **Duplicate** the base scenario folder: copy `A1_Outputs/A1_Outputs_BAU/` to `A1_Outputs/A1_Outputs_NDC/`.
-2. **Regenerate the editor template** by running D1 (so the new scenario appears in dropdowns).
-3. **Parametrize** the new scenario using `Secondary_Techs_Editor.xlsx`:
-   - In the **Editor** sheet, select the new scenario and modify technology parameters.
-   - In the **Interconnections** sheet, toggle interconnections ON/OFF for the new scenario.
-4. **Edit demand** directly in `A1_Outputs/A1_Outputs_NDC/A-O_Demand.xlsx` for scenario-specific demand changes.
-5. **Run D2** to apply all changes.
-
-### Editing Parameters in an Existing Scenario
-
-There are two approaches:
-
-1. **Via Secondary_Techs_Editor + D2**: For parameters available in the editor (Secondary Techs parameters, interconnections, demand growth, renewability targets). Run D1 first if the template is outdated, fill in the editor, then run D2.
-2. **Direct editing**: Go directly to the Excel files in `A1_Outputs/A1_Outputs_{scenario}/` and modify values manually. This is needed for demand profiles, activity ratios, and other parameters not covered by the editor.
+Neither script takes command-line arguments; both operate on whatever scenario folders currently exist under `A1_Outputs/`.
 
 ---
 
@@ -363,32 +329,35 @@ Reads the Excel model files and compiles them into OSeMOSYS-format CSV parameter
 
 ### Usage
 
-This stage runs automatically via the DVC pipeline. From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
-
 ```bash
 python -u t1_confection/B1_Run_Compiler.py
+python -u t1_confection/B1_Run_Compiler.py --scenarios "BAU,B_Optimised_VRE"
 ```
+
+`B1_Run_Compiler.py` discovers scenario folders by their `A1_Outputs_*` suffix (skipping any containing `backup`, `snapshot`, `pre_experiment`, or an 8-digit datestamp). With `--scenarios` omitted, it compiles **every** discovered scenario; an unknown name in `--scenarios` aborts with an error. For each scenario it temporarily rewrites `xtra_scen.Main_Scenario` in `Config_MOMF_T1_A.yaml`, runs `B1_Compiler.py` (which itself takes no arguments), and restores the YAML from a `.bak` backup afterward regardless of success.
 
 ### Input Files
 
 - `A1_Outputs/A1_Outputs_{scenario}/A-O_*.xlsx` -- All Excel model files.
-- `A2_Extra_Inputs/A-Xtra_*.xlsx` -- Extra inputs (storage, emissions, projections).
+- `A2_Extra_Inputs/A-Xtra_*.xlsx` -- Extra inputs (storage, emissions, projections, battery replacement).
 - `Config_MOMF_T1_A.yaml` -- Compiler configuration.
+- `OG_csvs_inputs/EMISSION.csv` -- when `Use_OG_module: true`.
 
 ### Output Files
 
-- `A2_Output_Params/{scenario}/*.csv` -- One CSV per OSeMOSYS parameter.
+- `A2_Output_Params/{scenario}/*.csv` -- One CSV per OSeMOSYS parameter/set.
 - `A2_Structure_Lists.xlsx` -- Generated structure/set listings.
+- `A-O_Demand_COMPLETED.xlsx`, `A-O_Parametrization_COMPLETED.xlsx`, `A-O_Parametrization_Natural_COMPLETED.xlsx`, `A-O_AR_Projections_COMPLETED.xlsx` -- user-facing completed workbooks per scenario.
 
 ### Compilation Logic
 
-The compiler handles:
-
-- **Projection modes**: Flat, yearly percentage change, user-defined, interpolation to stated value, zero.
-- **Activity ratios**: InputActivityRatio and OutputActivityRatio from base year and projection sheets.
+- **Projection modes**: `Flat`, `Yearly percent change`, `User defined`, `Interpolate to stated end value from projection parameter`, `Zero` -- plus demand-specific modes (`GDP`, `GDP joint <tech>`, `Flat after final year`, `Interpolate to final value`, `Percent growth of incomplete years`).
+- **Activity ratios**: `InputActivityRatio`/`OutputActivityRatio` from the base-year and projection AR workbooks.
 - **Parametrization**: All technology parameters (costs, capacities, operational life, etc.).
-- **Transport** (when enabled): Fleet calculations, distance handling, occupancy rates.
-- **Capacity limits**: Hard limits, lower limits, continuous residual capacity.
+- **Storage**: `StorageLevelStart`, `OperationalLifeStorage`, `CapitalCostStorage`, `ResidualStorageCapacity`, `TechnologyToStorage`/`FromStorage` from `A-Xtra_Storage.xlsx`.
+- **System parameters**: an optional `System Parameters` sheet in `A-O_Parametrization.xlsx` supplies `ReserveMargin`.
+- **Transport**: only compiled `if Use_Transport` (currently `false` -- dead code path in the active configuration).
+- **Timeslice conversions**: `Conversionls`/`Conversionld`/`Conversionlh` are derived from the `xtra_scen` block in `Config_MOMF_T1_A.yaml` -- see {doc}`data-reference` for the current 20-timeslice structure.
 
 ---
 
@@ -396,23 +365,41 @@ The compiler handles:
 
 **Script:** `t1_confection/B2_Executing_OG_Model.py`
 
-Runs the OSeMOSYS optimization model using the configured solver.
+Runs the OSeMOSYS optimization model using the configured solver, after applying a chain of datafile patches.
 
 ### Usage
 
-This stage runs automatically via the DVC pipeline. From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
-
 ```bash
 python -u t1_confection/B2_Executing_OG_Model.py
+python -u t1_confection/B2_Executing_OG_Model.py --scenarios "BAU,B_Optimised_VRE"
 ```
 
-### Execution Steps
+With `--scenarios` omitted, B2 runs every subfolder of `A2_Output_Params/` (except `Default`), or only the YAML `Main_Scenario` if `only_main_scenario: true`.
 
-1. **CSV to datafile conversion** via otoole.
-2. **Preprocessing** -- runs the OSeMOSYS preprocessor.
-3. **Solver execution** -- runs the selected solver (GLPK/CBC/CPLEX/Gurobi).
-4. **Result extraction** -- converts solver output back to CSV.
-5. **Post-processing** -- capital annualization, scenario concatenation.
+### Patch Chain
+
+Applied in this fixed order to the preprocessed datafile before solving, each stage gated by its own YAML flag (current values from `Config_MOMF_T1_AB.yaml` shown):
+
+| Step | Script | Flag | Current value |
+|------|--------|------|----------------|
+| 1 | otoole CSV → datafile conversion | -- | always |
+| 2 | `Miscellaneous/preprocess_data.py` | -- | always |
+| 3 | `inject_DaysInDayType.py` | -- | always (no gate) |
+| 4 | `patch_storage_delay.py` | `storage_delay_active` | **True** -- delays storage builds for the first `storage_delay_first_n_years` (5) years |
+| 5 | `strip_storage.py` | `strip_storage_active` | True (but forced **off** whenever storage_delay is active -- see below) |
+| 6 | `open_pwrbck_caps.py` | `open_pwrbck_active` | **True** -- opens PWRBCK capacity caps to `open_pwrbck_value` (9999) |
+| 7 | `patch_reserve_margin_repair_careful.py` (older, blunt) | `reserve_margin_repair_active` | False |
+| 8 | `patch_reserve_margin_repair_careful_xlsx.py` (current) | `reserve_margin_xlsx_active` | **True** -- uses `firm_capacity_fallbacks_by_cr.xlsx` |
+
+:::{important}
+`storage_delay_active` and `strip_storage_active` are mutually exclusive: if both are `True` in the YAML, B2 forces `strip_storage_active` to `False` at startup. Storage delay always wins. Check the live YAML rather than assuming a flag combination -- these values change frequently between experiments.
+:::
+
+Each active patch appends a suffix to the preprocessed filename (e.g. `Pre_processed_BAU_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt`), so the datafile passed to the solver reflects exactly which patches ran.
+
+### Output File Prefix
+
+When `storage_delay_active: True` (the current default), B2 overrides `prefix_final_files` for the whole run from `OSTRAM_` to `storage_delay_prefix_final_files` (`OSTRAM_StorageDelay_`), and exports the root datafile as `storage_delay_root_datafile` (`OSTRAM_data_storage_delay.txt`) instead of `OSTRAM_data.txt`. A single run only ever produces one of these two output sets -- check which files are actually current (by modification date) rather than assuming the plain `OSTRAM_*` names are up to date.
 
 ### Solver Configuration
 
@@ -424,13 +411,17 @@ cplex_threads: 4
 cplex_random_seed: 12345
 ```
 
+For any non-GLPK solver, the LP matrix is still built through `glpsol --wlp ... --check` first. The CPLEX invocation runs `optimize` followed by `feasopt all` (a feasibility-relaxation pass) before writing the final `.sol`:
+
+```
+cplex -c "set logfile ..." "read ....lp" "set threads N" "set randomseed S" "set parallel 1" "optimize" "feasopt all" "write ....feasopt.sol" "write ....sol"
+```
+
 ### Parallel Execution
 
-When `parallel: True` and `only_main_scenario: False`, multiple scenarios are solved simultaneously:
-
 ```yaml
-parallel: True
-max_x_per_iter: 4  # Max scenarios per batch
+parallel: False        # currently disabled
+max_x_per_iter: 4       # max scenarios per batch, when enabled
 ```
 
 ### Output Files
@@ -438,10 +429,8 @@ max_x_per_iter: 4  # Max scenarios per batch
 | Directory/File | Content |
 |----------------|---------|
 | `A2_Outputs_Params_otoole/{scenario}/` | otoole-format CSVs (one per parameter) |
-| `Executables/` | Compiled solver data files |
-| `OSTRAM_Inputs.csv` | Combined inputs (all scenarios) |
-| `OSTRAM_Outputs.csv` | Combined outputs (all scenarios) |
-| `OSTRAM_Combined_Inputs_Outputs.csv` | Merged inputs and outputs |
+| `Executables/{scenario}_0/` | Compiled datafiles, `.lp`, `.sol`, per-scenario result CSVs |
+| `{prefix}Inputs.csv` / `{prefix}Outputs.csv` / `{prefix}Combined_Inputs_Outputs.csv` | Combined result files, with `{prefix}` depending on `storage_delay_active` (see Quick Start) |
 
 ### Reproducibility
 
@@ -450,3 +439,4 @@ Deterministic results are ensured through:
 - `PYTHONHASHSEED=0` (set by `run.py`).
 - Configurable random seeds per solver.
 - Sorted CSV files for consistent ordering.
+- `reuse_existing_sol: True` lets you regenerate outputs from a previous `.sol` file without re-solving (falls back to a normal solve if the `.sol` is missing).

@@ -21,6 +21,7 @@ Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
    pipeline
    secondary-techs-editor
    country-management
+   auxiliary-tools
 
 .. toctree::
    :maxdepth: 2
@@ -28,10 +29,6 @@ Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
 
    configuration
    data-reference
-
-..
-   auxiliary-tools is commented out for now but kept for future use:
-   auxiliary-tools
 
 
 Indices and tables
