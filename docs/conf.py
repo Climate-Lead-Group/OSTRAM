@@ -38,3 +38,11 @@ html_theme_options = {
     "titles_only": False,
 }
 html_static_path = ["_static"]
+
+html_context = {
+    "display_github": True,
+    "github_user": "Climate-Lead-Group",
+    "github_repo": "OSTRAM",
+    "github_version": "main",
+    "conf_py_path": "/docs/",
+}
