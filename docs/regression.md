@@ -16,7 +16,10 @@ The three scenarios without tracked A2/otoole snapshots are `B_Opt_LinkFreeze`,
 `B_Opt_SolarHi10`, and `B_Opt_TradeCap50`. Historical direct outputs are also absent for
 `B_Opt_TradeCap30`. These are explicit coverage gaps, not inferred passes.
 
-The repository therefore uses three explicit scopes:
+The four active scenarios in the SOASIA v18 `Control` sheet (`BAU`,
+`A_Calibrated_BAU`, `B_Optimised_VRE`, and `C_Target_VRE`) define normal A3
+execution, not regression acceptance. The repository uses three separate evidence
+scopes:
 
 - **20-scenario preservation:** every A1 and rule/config scenario remains mandatory.
 - **16-scenario static cleanup acceptance:** the non-superseded scenarios with complete
@@ -27,8 +30,21 @@ The repository therefore uses three explicit scopes:
   a legacy non-decision support scenario and its available reference uses the older
   `NoStorage` chain rather than the current `StorageDelayN5` chain.
 
+The 16-scenario static scope is plain `BAU` plus these 15 decision-relevant scenarios:
+`A_Calibrated_BAU`, `A_Calibrated_BAU_Clipped`, `B_Optimised_VRE`,
+`B_Opt_Clipped`, `B_Opt_DirBidir`, `B_Opt_DirContractual`, `B_Opt_IndiaCosts`,
+`B_Opt_IndiaCostsFuel`, `B_Opt_SolarCapex130`, `B_Opt_SolarCapexHi`,
+`B_Opt_SolarCapexSpike`, `B_Opt_TradeCap15`, `B_Opt_TxCap150`, `C_Target_VRE`,
+and `C_Target_VRE_Clipped`.
+
 The four superseded scenarios remain protected and visible in reports. They are excluded
 only from the cleanup acceptance decision, not removed from the inventory.
+
+`tests/regression/scenarios.yaml` is the machine-readable preservation and static-scope
+policy. The committed static decision is recorded in
+`tests/regression/baselines/5ce4e66480e1-static-nosolver/cleanup_acceptance_16.json`;
+the narrower compiled-input result is recorded in
+`tests/regression/reports/final_compiled_input_equivalence_15.json`.
 
 ## Run the checks
 
@@ -70,3 +86,15 @@ policy. Compact final hashes are recorded in
   solver-backed acceptance baseline.
 - Full CPLEX behavioral equivalence, DVC pipeline reconstruction, and any core
   A0-B2/A3/configuration changes remain outside the no-solver evidence level.
+- A future solver-backed validation branch must bind its candidate to an exact source
+  commit and toolchain, solve the 15 decision-relevant scenarios, retain status/log
+  evidence, and compare agreed numerical outputs under documented tolerances. Byte-exact
+  compiled inputs remain a prerequisite, not a substitute for that solve evidence.
+- Plain `BAU` may be retained as a support diagnostic, but it is not a decision-scope
+  solver acceptance scenario unless the policy is explicitly changed. The four
+  superseded scenarios likewise remain preservation-only unless a later scope decision
+  promotes them.
+- Changes to scenario propagation, execution ordering, failure semantics, solver
+  invocation, or core A0-B2/A3 transformations must be evaluated on future
+  solver-backed refactor branches. No such equivalence is claimed by the current
+  cleanup branch.
