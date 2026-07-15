@@ -35,6 +35,9 @@ DEFAULT_TOLERANCES = HERE / "tolerances.yaml"
 ZERO_THRESHOLD = 1e-6
 INTEGER_LIKE_COLUMNS = {"YEAR", "MODE_OF_OPERATION"}
 INDEX_COLUMNS = {"Unnamed: 0"}
+PRESERVATION_SCOPES = {"preservation", "regression"}
+CLEANUP_ACCEPTANCE_SCOPE = "cleanup-acceptance"
+STATIC_ACCEPTANCE_STAGES = ("a1", "config", "a2", "otoole")
 
 PROTECTED_TREE_ROOTS = (
     "t1_confection/A1_Outputs",
@@ -118,6 +121,34 @@ def load_scenarios(path: Path = DEFAULT_SCENARIOS) -> list[dict]:
     return scenarios
 
 
+def scenarios_for_scope(
+    inventory: Sequence[Mapping[str, object]],
+    scope: str,
+) -> list[Mapping[str, object]]:
+    """Return an explicit policy scope without dropping preservation inventory entries."""
+    if scope in PRESERVATION_SCOPES:
+        return list(inventory)
+    if scope != CLEANUP_ACCEPTANCE_SCOPE:
+        raise RegressionError(f"unknown scenario scope: {scope}")
+    if any(not isinstance(item.get("cleanup_acceptance"), bool) for item in inventory):
+        raise RegressionError("every scenario must declare boolean cleanup_acceptance")
+    excluded = [item for item in inventory if not item["cleanup_acceptance"]]
+    missing_reasons = [
+        str(item["name"])
+        for item in excluded
+        if not isinstance(item.get("cleanup_exclusion_reason"), str)
+        or not str(item["cleanup_exclusion_reason"]).strip()
+    ]
+    if missing_reasons:
+        raise RegressionError(
+            "cleanup exclusions require reasons: " + ", ".join(sorted(missing_reasons))
+        )
+    selected = [item for item in inventory if item["cleanup_acceptance"]]
+    if len(inventory) != 20 or len(selected) != 16 or len(excluded) != 4:
+        raise RegressionError("cleanup policy must preserve 20 scenarios and accept exactly 16")
+    return selected
+
+
 def _scenario_dirs(parent: Path, prefix: str = "") -> set[str]:
     if not parent.is_dir():
         return set()
@@ -148,12 +179,25 @@ def discover_scenarios(repo: Path, inventory: Sequence[Mapping[str, object]]) ->
         "unexpected_a1": a1 - expected,
         "missing_configs": expected - configs,
         "unexpected_configs": configs - expected,
+        "missing_a2": expected - a2,
+        "missing_otoole": expected - otoole,
     }
 
 
 def discovery_passes(discovery: Mapping[str, set[str]]) -> bool:
     expected = discovery["expected"]
     return len(expected) == 20 and discovery["a1"] == expected and discovery["configs"] == expected
+
+
+def cleanup_acceptance_discovery_passes(discovery: Mapping[str, set[str]]) -> bool:
+    expected = discovery["expected"]
+    return (
+        len(expected) == 16
+        and expected <= discovery["a1"]
+        and expected <= discovery["configs"]
+        and expected <= discovery["a2"]
+        and expected <= discovery["otoole"]
+    )
 
 
 def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
@@ -865,6 +909,114 @@ def _read_csv_dicts(path: Path) -> list[dict]:
         return list(csv.DictReader(handle))
 
 
+def cleanup_acceptance_report(
+    inventory: Sequence[Mapping[str, object]],
+    coverage: Sequence[Mapping[str, str]],
+    comparisons: Sequence[Mapping[str, str]],
+    manifest: Mapping[str, object] | None = None,
+) -> dict:
+    """Evaluate the user-approved 16-scenario offline cleanup gate."""
+    accepted = scenarios_for_scope(inventory, CLEANUP_ACCEPTANCE_SCOPE)
+    accepted_names = [str(item["name"]) for item in accepted]
+    excluded = [
+        {
+            "name": str(item["name"]),
+            "reason": str(item["cleanup_exclusion_reason"]),
+        }
+        for item in inventory
+        if not item["cleanup_acceptance"]
+    ]
+    coverage_by_scenario = {str(row.get("scenario", "")): row for row in coverage}
+    comparison_by_key = {
+        (str(row.get("scenario", "")), str(row.get("stage", ""))): row
+        for row in comparisons
+    }
+    failures: list[str] = []
+
+    for item in inventory:
+        scenario = str(item["name"])
+        row = coverage_by_scenario.get(scenario)
+        if row is None:
+            failures.append(f"{scenario}: missing preservation coverage row")
+            continue
+        for field in (
+            "working_tracked_a1",
+            "working_tracked_config",
+            "reference_generated_a1",
+            "reference_generated_config",
+        ):
+            if str(row.get(field, "")).lower() != "true":
+                failures.append(f"{scenario}: preservation field {field} is not present")
+
+    status_counts: Counter[str] = Counter()
+    for scenario in accepted_names:
+        row = coverage_by_scenario.get(scenario)
+        if row is None:
+            failures.append(f"{scenario}: missing cleanup-acceptance coverage row")
+            continue
+        for stage in STATIC_ACCEPTANCE_STAGES:
+            for source in ("working_tracked", "reference_generated"):
+                field = f"{source}_{stage}"
+                if str(row.get(field, "")).lower() != "true":
+                    failures.append(f"{scenario}: required field {field} is not present")
+            comparison = comparison_by_key.get((scenario, stage))
+            if comparison is None:
+                failures.append(f"{scenario}/{stage}: missing static comparison")
+            else:
+                status = str(comparison.get("status", ""))
+                status_counts[status] += 1
+                if status not in {"exact", "normalized-exact"}:
+                    failures.append(f"{scenario}/{stage}: unacceptable comparison status {status}")
+        for field in (
+            "reference_generated_compiled_txt_count",
+            "reference_generated_output_csv_count",
+        ):
+            try:
+                present = int(str(row.get(field, "0"))) > 0
+            except ValueError:
+                present = False
+            if not present:
+                failures.append(f"{scenario}: required historical field {field} is absent")
+
+    manifest = manifest or {}
+    return {
+        "schema_version": 1,
+        "scope": CLEANUP_ACCEPTANCE_SCOPE,
+        "ok": not failures,
+        "preservation_scenario_count": len(inventory),
+        "cleanup_acceptance_scenario_count": len(accepted_names),
+        "cleanup_acceptance_scenarios": accepted_names,
+        "excluded_scenarios": excluded,
+        "required_static_stages": list(STATIC_ACCEPTANCE_STAGES),
+        "static_comparison_summary": dict(sorted(status_counts.items())),
+        "historical_reference_requirement": (
+            "compiled text and direct output CSVs present for each accepted scenario"
+        ),
+        "solver_execution": "not-performed",
+        "solver_equivalence": "pending a source-bound CPLEX baseline",
+        "source_evidence": {
+            "working": manifest.get("working"),
+            "reference": manifest.get("reference"),
+            "protected_working_tree": manifest.get("protected_working_tree"),
+        },
+        "failures": sorted(set(failures)),
+    }
+
+
+def evaluate_cleanup_acceptance(evidence_dir: Path, scenario_file: Path = DEFAULT_SCENARIOS) -> dict:
+    required = ("manifest.json", "coverage.csv", "comparisons.csv")
+    missing = required_files_report(evidence_dir, required)["missing"]
+    if missing:
+        raise RegressionError("acceptance evidence is missing: " + ", ".join(missing))
+    manifest = json.loads((evidence_dir / "manifest.json").read_text(encoding="utf-8"))
+    return cleanup_acceptance_report(
+        load_scenarios(scenario_file),
+        _read_csv_dicts(evidence_dir / "coverage.csv"),
+        _read_csv_dicts(evidence_dir / "comparisons.csv"),
+        manifest,
+    )
+
+
 def compare_evidence_dirs(baseline: Path, candidate: Path) -> dict:
     required = ("manifest.json", "hashes.csv", "metrics.csv", "coverage.csv", "comparisons.csv")
     left_missing = required_files_report(baseline, required)["missing"]
@@ -891,13 +1043,32 @@ def _format_set(values: Iterable[str]) -> str:
 
 def command_discover(args: argparse.Namespace) -> int:
     inventory = load_scenarios(args.scenarios_file)
-    result = discover_scenarios(args.repo, inventory)
-    print(f"expected={len(result['expected'])} a1={len(result['a1'])} configs={len(result['configs'])}")
-    print(f"a2={len(result['a2'])} otoole={len(result['otoole'])}")
-    for key in ("missing_a1", "unexpected_a1", "missing_configs", "unexpected_configs"):
+    preservation = discover_scenarios(args.repo, inventory)
+    scoped = scenarios_for_scope(inventory, args.scope)
+    result = discover_scenarios(args.repo, scoped)
+    print(
+        f"scope={args.scope} expected={len(result['expected'])} "
+        f"a1={len(result['a1'] & result['expected'])} "
+        f"configs={len(result['configs'] & result['expected'])}"
+    )
+    print(
+        f"a2={len(result['a2'] & result['expected'])} "
+        f"otoole={len(result['otoole'] & result['expected'])}"
+    )
+    for key in ("missing_a1", "missing_configs", "missing_a2", "missing_otoole"):
         print(f"{key}={_format_set(result[key])}")
-    passed = discovery_passes(result)
-    print("PASS exact authoritative 20-scenario discovery" if passed else "FAIL scenario discovery")
+    preservation_passed = discovery_passes(preservation)
+    passed = (
+        preservation_passed
+        if args.scope in PRESERVATION_SCOPES
+        else preservation_passed and cleanup_acceptance_discovery_passes(result)
+    )
+    if passed and args.scope in PRESERVATION_SCOPES:
+        print("PASS exact authoritative 20-scenario preservation discovery")
+    elif passed:
+        print("PASS 16-scenario cleanup acceptance discovery with 20-scenario preservation")
+    else:
+        print("FAIL scenario discovery")
     return 0 if passed else 1
 
 
@@ -922,6 +1093,16 @@ def command_compare(args: argparse.Namespace) -> int:
     return 0 if result.get("ok") else 1
 
 
+def command_gate(args: argparse.Namespace) -> int:
+    result = evaluate_cleanup_acceptance(args.evidence, args.scenarios_file)
+    payload = json.dumps(result, indent=2, sort_keys=True) + "\n"
+    if args.out:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(payload, encoding="utf-8")
+    print(payload, end="")
+    return 0 if result["ok"] else 1
+
+
 def command_verify_protected(args: argparse.Namespace) -> int:
     result = verify_protected(args.repo, args.manifest)
     print(json.dumps(result, indent=2, sort_keys=True))
@@ -933,7 +1114,11 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
     discover = sub.add_parser("discover", help="verify exact A1/config scenario discovery")
     discover.add_argument("--repo", type=Path, default=Path("."))
-    discover.add_argument("--scope", choices=["regression"], default="regression")
+    discover.add_argument(
+        "--scope",
+        choices=["regression", "preservation", CLEANUP_ACCEPTANCE_SCOPE],
+        default="regression",
+    )
     discover.add_argument("--scenarios-file", type=Path, default=DEFAULT_SCENARIOS)
     discover.set_defaults(func=command_discover)
 
@@ -950,6 +1135,13 @@ def build_parser() -> argparse.ArgumentParser:
     compare.add_argument("--candidate", type=Path, required=True)
     compare.add_argument("--profile", choices=["strict"], default="strict")
     compare.set_defaults(func=command_compare)
+
+    gate = sub.add_parser("gate", help="evaluate an explicit offline cleanup acceptance scope")
+    gate.add_argument("--evidence", type=Path, required=True)
+    gate.add_argument("--scope", choices=[CLEANUP_ACCEPTANCE_SCOPE], default=CLEANUP_ACCEPTANCE_SCOPE)
+    gate.add_argument("--scenarios-file", type=Path, default=DEFAULT_SCENARIOS)
+    gate.add_argument("--out", type=Path)
+    gate.set_defaults(func=command_gate)
 
     protected = sub.add_parser("verify-protected", help="verify protected trees against a manifest")
     protected.add_argument("--repo", type=Path, default=Path("."))

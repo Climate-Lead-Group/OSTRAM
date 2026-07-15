@@ -16,13 +16,26 @@ The three scenarios without tracked A2/otoole snapshots are `B_Opt_LinkFreeze`,
 `B_Opt_SolarHi10`, and `B_Opt_TradeCap50`. Historical direct outputs are also absent for
 `B_Opt_TradeCap30`. These are explicit coverage gaps, not inferred passes.
 
+The repository therefore uses two explicit scopes:
+
+- **20-scenario preservation:** every A1 and rule/config scenario remains mandatory.
+- **16-scenario cleanup acceptance:** the non-superseded scenarios with complete A1,
+  config, A2, otoole, compiled-reference, and historical-output coverage.
+
+The four superseded scenarios remain protected and visible in reports. They are excluded
+only from the cleanup acceptance decision, not removed from the inventory.
+
 ## Run the checks
 
 ```powershell
 $Py = 'python'  # or an existing OSTRAM-env Python executable
 
 & $Py -m unittest discover -s tests\regression -p 'test_*.py' -v
-& $Py tests\regression\ostram_regression.py discover --repo . --scope regression
+& $Py tests\regression\ostram_regression.py discover --repo . --scope preservation
+& $Py tests\regression\ostram_regression.py discover --repo . --scope cleanup-acceptance
+& $Py tests\regression\ostram_regression.py gate `
+  --scope cleanup-acceptance `
+  --evidence tests\regression\baselines\5ce4e66480e1-static-nosolver
 & $Py tests\regression\ostram_regression.py verify-protected `
   --repo . `
   --manifest tests\regression\baselines\5ce4e66480e1-static-nosolver\manifest.json
@@ -36,18 +49,17 @@ $Py = 'python'  # or an existing OSTRAM-env Python executable
 2. **Available historical-output evidence:** hashes record the direct output CSVs that
    exist in the read-only reference checkout, with missing scenarios reported.
 3. **Full solver-backed behavioral equivalence:** pending. No offline hash or static check
-   establishes complete CPLEX numerical equivalence.
+   establishes complete CPLEX numerical equivalence, including for the accepted 16.
 
 See `tests/regression/README.md` for capture and comparison commands and the normalization
 policy.
 
 ## Deferred solver-backed work
 
-- Stage 3 utility reorganization is not attempted in this offline cleanup because the
-  all-20 pre-solver gate is incomplete: tracked A2/otoole material covers 17 scenarios
-  and no safely regenerated candidate set exists.
+- The approved 16-scenario offline gate permits only isolated, non-core Stage 3 utility
+  organization. All 20 scenario definitions remain under the preservation gate.
 - The current `run.py --scenarios` propagation behavior is documented but unchanged. A
-  future behavior change must be evaluated with a source-bound all-20 candidate and the
+  future behavior change must be evaluated with a source-bound candidate and the
   solver-backed acceptance baseline.
-- Full all-20 CPLEX behavioral equivalence, DVC pipeline reconstruction, and any core
+- Full CPLEX behavioral equivalence, DVC pipeline reconstruction, and any core
   A0-B2/A3/configuration changes remain outside the no-solver evidence level.

@@ -14,6 +14,7 @@ import ostram_regression as regression
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
 FIXTURES = TEST_ROOT / "fixtures"
+BASELINE = TEST_ROOT / "baselines" / "5ce4e66480e1-static-nosolver"
 
 
 class NormalizationTests(unittest.TestCase):
@@ -73,6 +74,45 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(result["missing_a1"], {"S19"})
         self.assertEqual(result["unexpected_configs"], {"EXTRA"})
         self.assertFalse(regression.discovery_passes(result))
+
+    def test_cleanup_scope_preserves_twenty_and_accepts_sixteen(self) -> None:
+        inventory = regression.load_scenarios()
+        selected = regression.scenarios_for_scope(inventory, "cleanup-acceptance")
+        excluded = {item["name"] for item in inventory if not item["cleanup_acceptance"]}
+        self.assertEqual(len(inventory), 20)
+        self.assertEqual(len(selected), 16)
+        self.assertEqual(
+            excluded,
+            {"B_Opt_LinkFreeze", "B_Opt_SolarHi10", "B_Opt_TradeCap30", "B_Opt_TradeCap50"},
+        )
+
+    def test_cleanup_acceptance_discovery_is_complete(self) -> None:
+        inventory = regression.load_scenarios()
+        selected = regression.scenarios_for_scope(inventory, "cleanup-acceptance")
+        result = regression.discover_scenarios(REPO_ROOT, selected)
+        self.assertTrue(regression.cleanup_acceptance_discovery_passes(result))
+        self.assertEqual(result["missing_a2"], set())
+        self.assertEqual(result["missing_otoole"], set())
+
+
+class CleanupAcceptanceGateTests(unittest.TestCase):
+    def test_committed_evidence_passes_cleanup_acceptance(self) -> None:
+        report = regression.evaluate_cleanup_acceptance(BASELINE)
+        self.assertTrue(report["ok"])
+        self.assertEqual(report["preservation_scenario_count"], 20)
+        self.assertEqual(report["cleanup_acceptance_scenario_count"], 16)
+        self.assertEqual(report["static_comparison_summary"], {"exact": 62, "normalized-exact": 2})
+        self.assertEqual(report["solver_execution"], "not-performed")
+
+    def test_missing_accepted_artifact_fails_gate(self) -> None:
+        inventory = regression.load_scenarios()
+        coverage = regression._read_csv_dicts(BASELINE / "coverage.csv")
+        comparisons = regression._read_csv_dicts(BASELINE / "comparisons.csv")
+        changed = [dict(row) for row in coverage]
+        next(row for row in changed if row["scenario"] == "BAU")["working_tracked_a2"] = "False"
+        report = regression.cleanup_acceptance_report(inventory, changed, comparisons)
+        self.assertFalse(report["ok"])
+        self.assertIn("BAU: required field working_tracked_a2 is not present", report["failures"])
 
 
 class HashAndComparisonTests(unittest.TestCase):
