@@ -80,7 +80,9 @@ All three remain feasible (zero base-year backstop). Correcting interconnector c
 - `t1_confection/A3_process.py` — added `stage_ws3_interconnector_costs` + its call after stage 5.
 - `t1_confection/A3_process/rules_scripts/apply_interconnector_costs.py` — **new** (the wiring step; self-tested).
 - `t1_confection/A3_process/SOASIA_OSeMOSYS_Template_v18.xlsx` — `Interconnector_Params` final values (backup: `*_PRE_WS3_VALUES_*.xlsx`).
-- `ws3_transmission_audit/set_final_v18_interconnector_values.py` — the logged v18 value editor (audit trail).
+- `docs/archive/ws3-ws4/scripts/set_final_v18_interconnector_values.py` — the archived
+  original of the logged v18 value editor; its former path under
+  `ws3_transmission_audit/` now fails closed.
 
 ## 7. Still open
 

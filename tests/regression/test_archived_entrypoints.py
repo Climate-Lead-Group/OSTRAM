@@ -30,6 +30,7 @@ class ArchivedEntrypointTests(unittest.TestCase):
     def test_obsolete_legacy_tools_have_no_production_import(self) -> None:
         obsolete_modules = {
             "concat_all_scenarios",
+            "set_final_v18_interconnector_values",
             "Z_AUX_fix_excel_profiles",
             "Z_AUX_united_regions",
         }
@@ -89,6 +90,36 @@ class ArchivedEntrypointTests(unittest.TestCase):
         self.assertNotIn("load_workbook", stub)
         self.assertNotIn("shutil", stub)
         self.assertNotIn(".save(", stub)
+
+    def test_ws3_template_writer_is_archived_and_fails_closed(self) -> None:
+        archived_path = (
+            ARCHIVE_ROOT / "ws3-ws4" / "scripts" / "set_final_v18_interconnector_values.py"
+        )
+        stub_path = (
+            REPO_ROOT / "ws3_transmission_audit" / "set_final_v18_interconnector_values.py"
+        )
+        archived = archived_path.read_text(encoding="utf-8-sig")
+        stub = stub_path.read_text(encoding="utf-8-sig")
+
+        ast.parse(archived, filename=str(archived_path))
+        ast.parse(stub, filename=str(stub_path))
+        self.assertIn("OSTRAM_ws3_workcopy", archived)
+        self.assertIn("shutil.copy", archived)
+        self.assertIn("wb.save(V18)", archived)
+        self.assertIn("return 2", stub)
+        self.assertIn("disabled", stub)
+        self.assertNotIn("OSTRAM_ws3_workcopy", stub)
+        self.assertNotIn("openpyxl", stub)
+        self.assertNotIn("shutil", stub)
+        self.assertNotIn(".save(", stub)
+
+        retained_audits = (
+            "audit_transmission_values.py",
+            "compute_internal_tx_residuals.py",
+            "verify_base_consistency.py",
+        )
+        for name in retained_audits:
+            self.assertTrue((REPO_ROOT / "ws3_transmission_audit" / name).is_file(), name)
 
 
 if __name__ == "__main__":

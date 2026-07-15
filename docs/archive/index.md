@@ -33,3 +33,4 @@ for the present workflow.
 | [Legacy merge-based concatenator](legacy-tools/concat_all_scenarios_merge.py) | `/t1_confection/concat_all_scenarios.py` | Retired row-multiplying predecessor; historical code only |
 | [Legacy Brazil region helper](legacy-tools/Z_AUX_united_regions.py) | `/t1_confection/Z_AUX_united_regions.py` | Retired hard-coded LATAM transformation; historical code only |
 | [Legacy demand-profile writer](legacy-tools/Z_AUX_fix_excel_profiles.py) | `/t1_confection/Z_AUX_fix_excel_profiles.py` | Retired stale workbook writer; former path fails closed |
+| [WS-3 v18 template writer](ws3-ws4/scripts/set_final_v18_interconnector_values.py) | `/ws3_transmission_audit/set_final_v18_interconnector_values.py` | Quarantined absolute-path, in-place workbook editor; former path fails closed |
