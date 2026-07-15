@@ -7,10 +7,13 @@ to the explicitly supplied output directory.
 
 The authoritative preservation inventory is the 20 entries in `scenarios.yaml`. A
 separate `cleanup_acceptance` field selects the 16 non-superseded scenarios with complete
-offline evidence. The four excluded scenarios remain discoverable and protected, and
-each has an explicit exclusion reason. The inventory is intentionally JSON-compatible
-YAML so the harness has no third-party runtime dependency. The same is true of
-`tolerances.yaml`.
+static offline evidence. Final solver-consumed compiled-input equivalence has a narrower
+15-scenario decision scope: it includes `A_Calibrated_BAU` as the baseline and excludes
+plain `BAU`, which is a retained legacy support scenario whose available reference uses
+the older `NoStorage` chain. The four superseded scenarios remain discoverable and
+protected, and each has an explicit exclusion reason. The inventory is intentionally
+JSON-compatible YAML so the harness has no third-party runtime dependency. The same is
+true of `tolerances.yaml`.
 
 ## Commands
 
@@ -64,9 +67,14 @@ column remains empty until a safely regenerated candidate actually exists.
 ## Scope policy
 
 - **Preservation:** all 20 A1/config scenario definitions must remain present exactly.
-- **Cleanup acceptance:** 16 non-superseded scenarios must have working and reference A1,
-  config, A2, and otoole evidence with exact or normalized-exact static comparisons. The
-  read-only reference must also contain compiled text and direct output CSVs for each.
+- **Static cleanup acceptance:** 16 non-superseded scenarios must have working and
+  reference A1, config, A2, and otoole evidence with exact or normalized-exact static
+  comparisons.
+- **Final compiled-input equivalence:** 15 decision-relevant scenarios must have
+  byte-exact final solver-consumed `.txt` files. Plain `BAU` remains under preservation
+  and static cleanup acceptance but is excluded from this final-compiled decision scope.
+  The compact hashes are recorded in
+  `reports/final_compiled_input_equivalence_15.json`.
 - **Excluded but protected:** `B_Opt_LinkFreeze`, `B_Opt_SolarHi10`,
   `B_Opt_TradeCap30`, and `B_Opt_TradeCap50` are not inferred passes and are not deleted.
 

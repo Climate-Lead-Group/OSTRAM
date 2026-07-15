@@ -16,11 +16,16 @@ The three scenarios without tracked A2/otoole snapshots are `B_Opt_LinkFreeze`,
 `B_Opt_SolarHi10`, and `B_Opt_TradeCap50`. Historical direct outputs are also absent for
 `B_Opt_TradeCap30`. These are explicit coverage gaps, not inferred passes.
 
-The repository therefore uses two explicit scopes:
+The repository therefore uses three explicit scopes:
 
 - **20-scenario preservation:** every A1 and rule/config scenario remains mandatory.
-- **16-scenario cleanup acceptance:** the non-superseded scenarios with complete A1,
-  config, A2, otoole, compiled-reference, and historical-output coverage.
+- **16-scenario static cleanup acceptance:** the non-superseded scenarios with complete
+  A1, config, A2, and otoole coverage.
+- **15-scenario final compiled-input equivalence:** the decision-relevant scenarios have
+  byte-exact final solver-consumed `.txt` files. `A_Calibrated_BAU` is the baseline.
+  Plain `BAU` remains retained, discovered, and protected, but is excluded because it is
+  a legacy non-decision support scenario and its available reference uses the older
+  `NoStorage` chain rather than the current `StorageDelayN5` chain.
 
 The four superseded scenarios remain protected and visible in reports. They are excluded
 only from the cleanup acceptance decision, not removed from the inventory.
@@ -49,10 +54,12 @@ $Py = 'python'  # or an existing OSTRAM-env Python executable
 2. **Available historical-output evidence:** hashes record the direct output CSVs that
    exist in the read-only reference checkout, with missing scenarios reported.
 3. **Full solver-backed behavioral equivalence:** pending. No offline hash or static check
-   establishes complete CPLEX numerical equivalence, including for the accepted 16.
+   establishes complete CPLEX numerical equivalence. The recorded 15/15 byte-exact final
+   compiled inputs are strong pre-solver evidence, not literal CPLEX behavioral proof.
 
 See `tests/regression/README.md` for capture and comparison commands and the normalization
-policy.
+policy. Compact final hashes are recorded in
+`tests/regression/reports/final_compiled_input_equivalence_15.json`.
 
 ## Deferred solver-backed work
 
