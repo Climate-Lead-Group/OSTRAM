@@ -330,7 +330,8 @@ interconnector cost/parameter calibration) shifts the whole frontier up; the del
   moved from the pre-WS-3 cheapest lever (+0.2%) to ≈TradeCap15 (+0.38% vs +0.37%), because WS-3/WS-4 raised
   transmission costs that the direction lever interacts with. Sign unchanged; a sub-0.1% within-cluster move.
 
-Reproduce with `sensitivity_expansion/analyse_ws4_vs_phaseB.py` (reads the solved `Executables/<s>_0/Outputs/`).
+Reproduce with `t1_confection/sensitivity_expansion/analyse_ws4_vs_phaseB.py` (reads the solved
+`t1_confection/Executables/<s>_0/Outputs/`).
 
 ### 8-C.5 WACC / discount-rate test (mechanism proof) — ✅ PASS
 `B_Opt_Clipped` re-solved with DiscountRate + DiscountRateStorage **0.10 → 0.13** (a single knob; injected via the
@@ -365,12 +366,12 @@ WACC test are confirmed in §8-C.*
 
 A verification pass sourced the study's previously-uncited, load-bearing assumptions. **No ceiling or model
 value was changed** — this records provenance and corrects labels/wording only. Full reference list + per-node
-support table: `sensitivity_expansion/reference/vre_ceiling_provenance.md`. Key items:
+support table: `t1_confection/sensitivity_expansion/reference/vre_ceiling_provenance.md`. Key items:
 
-- **VRE ceilings — label fix:** `vre_ceilings.csv` tags all solar "NISE-2025" / all wind "NIWE 150 m", but NISE/NIWE are **India-only** (MNRE). India stands (solar → NISE 2025, 3,343 GWp; wind → NIWE 150 m, 1,163.9 GW — our India totals reconcile). The **five non-India nodes** need their own sources — cleanest is a **Global Solar/Wind Atlas** (World Bank/ESMAP·DTU) baseline + a national study on each clip.
+- **VRE ceilings — label fix:** `t1_confection/sensitivity_expansion/reference/vre_ceilings.csv` tags all solar "NISE-2025" / all wind "NIWE 150 m", but NISE/NIWE are **India-only** (MNRE). India stands (solar → NISE 2025, 3,343 GWp; wind → NIWE 150 m, 1,163.9 GW — our India totals reconcile). The **five non-India nodes** need their own sources — cleanest is a **Global Solar/Wind Atlas** (World Bank/ESMAP·DTU) baseline + a national study on each clip.
 - **Clip caveats (state in the report; none changes a result):** LKA solar 16 GW is a 2050 *scenario-build* figure (ADB/UNDP), not pure technical potential (~6 GW); **BGD onshore wind 3 GW is a modeler's conservative screen — a cite-gap** (only a gross ">30 GW, unrealistic" figure exists); **MDV onshore wind ≈0** is defensible but not literally zero (~80 MW niche, Greater Malé).
 - **Transmission loss:** recast "~3%" → "**~3–4%**" per Grid-India ISTS notices (3.96% recent), and **drop "single largest driver of system cost"** (over-claim — generation capital+fuel dominate). §2.1's model result "+4.1% on A, dwarfs the interconnector/D5 effects" is correctly scoped and stands.
 - **WACC 10%:** defensible via IRENA "10% rest-of-world" (RPGC 2018); conservative/high end of the ~4–9% (OECD/IEA) to 6% (World Bank) range; no South-Asia-specific single source.
 - **D4 refs:** [27] (Koirala & Rahut 2022) is an **ADBI blog, not peer-reviewed** — re-tag as grey literature; [25]/[26] are the journal + working-paper versions of one study (add middle initials to [26]).
 
-See `reference/vre_ceiling_provenance.md` for full citations, URLs, and the per-node support table.
+See `t1_confection/sensitivity_expansion/reference/vre_ceiling_provenance.md` for full citations, URLs, and the per-node support table.
