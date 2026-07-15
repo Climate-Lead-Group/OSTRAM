@@ -1,4 +1,8 @@
-# RUN_ORDER — CPLEX solve batch (staged; NOT run in the cleanroom prep)
+# RUN_ORDER — historical 15-scenario CPLEX batch record
+
+> **Status:** This file preserves the final-15 cleanroom batch procedure. It is not the
+> canonical command for the protected 20-scenario inventory. The batch files also contain
+> a machine-specific Python path. Review and replace that path before any manual use.
 
 All 15 scenario datafiles are prepared (no-solve). To solve with CPLEX, run the batches
 below **from the repo root**, one at a time. Config is already restored to solve-mode
@@ -8,7 +12,9 @@ below **from the repo root**, one at a time. Config is already restored to solve
 ## ⚠️ HARD RULE: never run two batches (or two B1/B2 pipelines) at once
 B1/B2 mutate `t1_confection/Config_MOMF_T1_A.yaml` (Main_Scenario). Two concurrent
 pipelines collide on that file lock (`Errno 22`) and silently corrupt a scenario's compile.
-Each batch runs its scenarios **sequentially** in one B2 process — that is safe. Run
+Each batch runs its scenarios **sequentially** in one B2 process. B2 discovers folders
+alphabetically and filters that list, so the order written inside `--scenarios` is not a
+guaranteed execution order. Run
 `run_baselines.bat` → wait → `run_sensitivities.bat` → wait → `run_directions.bat`.
 
 ## Order
@@ -27,8 +33,9 @@ baselines are pinned to a since-overwritten A-solve, so a byte/anchor match at b
 expected. Foundation (2027+) is byte-exact to ws4.
 
 ## Don't-chase-ghosts (expected, not bugs)
-- Both `_output.sol` and `_output.feasopt.sol` written each solve; real status ("Dual simplex -
-  Optimal") is in `_output.cplex.log`. NOT infeasibility.
+- Current B2 writes `_output.sol` after `optimize`; FeasOpt is off and stale
+  `_output.feasopt.sol` files are deleted before a CPLEX run. Read final status from
+  `_output.cplex.log` and verify the expected `.sol` exists.
 - `IndiaCostsFuel` == `IndiaCosts` (fuel non-binding); `DirBidir` == `B_Opt_Clipped` (neutrality — the
   prepared .txt are already 0-diff).
 - v18 shows modified after any A3 run (stage-6 Restrictions rewrite) — benign, do not commit.
