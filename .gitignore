@@ -18,15 +18,11 @@ t1_confection/OSTRAM_Outputs*.csv
 # Per-scenario solver output (any chain of suffixes), regenerable
 t1_confection/Executables/*/Pre_processed_*_output.csv
 
-# storage_delay artifacts (regenerable when storage_delay_active: True).
-# Covers both CamelCase ("StorageDelay") and snake_case ("storage_delay")
-# variants used across patched datafiles, patched OSeMOSYS model, root
-# datafile export, and OSTRAM_StorageDelay_* combined inputs/outputs.
-*StorageDelay*
-*storage_delay*
-# Keep the source patcher tracked (gitignore does not affect already-tracked
-# files, but this is defensive in case someone re-adds it).
-!t1_confection/patch_storage_delay.py
+# Storage-delay outputs (regenerable when storage_delay_active: True).
+# Other storage-delay artifacts are covered by the path-specific Executables
+# and combined-output rules below; keep source files visible to Git.
+/OSTRAM_data_storage_delay.txt
+t1_confection/osemosys_fast_preprocessed_storage_delay.txt
 
 # Python scripts
 t1_confection/setup_utils.py
@@ -57,13 +53,6 @@ t1_confection/A1_Outputs/secondary_techs_update_log_*.txt
 # *.log
 # *.Log
 # *.LOG
-*debug*
-*Debug*
-*DEBUG*
-*backup*
-*Backup*
-*BACKUP*
-
 # guides
 OSTRAM_Guia_instalacion_ejecucion.pdf
 
@@ -77,6 +66,9 @@ t1_confection/A1_Outputs/*/A-O_AR_Projections_backup_*.xlsx
 
 # OG csvs inputs - backup files
 t1_confection/OG_csvs_inputs/*backup*
+
+# B1's temporary compiler configuration backup (normally removed on exit)
+t1_confection/Config_MOMF_T1_A.yaml.bak
 
 # ===== Additions =====
 
@@ -120,8 +112,6 @@ venv/
 
 # V3 sandbox output (not for commits)
 t1_confection/test_a3_mod/dry_run/
-*.lp
-*.sol
 
 # Local/generated OSTRAM combined datasets
 t1_confection/OSTRAM_Combined_Inputs.csv
@@ -160,3 +150,12 @@ t1_confection/Executables/*/*_0.txt
 t1_confection/A1_Outputs/*_PREPATCH_*
 t1_confection/A1_Outputs/*_PRE_*
 t1_confection/A3_process/SOASIA_OSeMOSYS_Template_v18_PRE_*.xlsx
+
+# Timestamped sensitivity patch audit records are reproducible. Existing
+# tracked records remain historical evidence; ignore only new generated ones.
+t1_confection/A1_Outputs/**/apply_patches_CHANGES_*.json
+
+# Raw/candidate regression artifacts stay outside Git; compact baselines under
+# tests/regression/baselines/ remain tracked.
+tests/regression/artifacts/
+tests/regression/candidates/
