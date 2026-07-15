@@ -1,12 +1,13 @@
 """
-concat_all_scenarios.py — merge OSTRAM per-scenario Input + output CSVs
-=======================================================================
+concat_all_scenarios_2.py — stack OSTRAM per-scenario Input + output CSVs
+========================================================================
 Mirrors the concatenation logic in B2_Executing_OG_Model.py
 (`concatenate_all_scenarios`).
 
 WHY THE REWRITE
 ---------------
-The previous version did:
+The previous version, now archived at
+``docs/archive/legacy-tools/concat_all_scenarios_merge.py``, did:
 
     merged = pd.merge(df_in, df_out, on=common, how='outer')
 
@@ -25,8 +26,8 @@ output rows — nothing is duplicated or scattered. This script copies that.
 
 Usage
 -----
-    python concat_all_scenarios.py
-    python concat_all_scenarios.py --search-dir Executables \
+    python concat_all_scenarios_2.py
+    python concat_all_scenarios_2.py --search-dir Executables \
         --scenarios BAU,A_Calibrated_BAU,B_Optimised_VRE
 """
 import os

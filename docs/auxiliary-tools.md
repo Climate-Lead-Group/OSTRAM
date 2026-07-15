@@ -148,19 +148,19 @@ sort_csv_files_in_folder("path/to/csv/folder")
 
 ---
 
-## Region Consolidation (Brazil) -- Legacy, Unused
+## Region Consolidation (Brazil) -- Archived
 
-**Script:** `t1_confection/Z_AUX_united_regions.py`
+**Historical script:** `docs/archive/legacy-tools/Z_AUX_united_regions.py`
 
 A specialized, manually-configured script for consolidating Brazilian sub-regions (CN, NW, NE, CW, SO, SE, WE) into a unified XX region, dating from the model's earlier LATAM phase.
 
 :::{note}
-This script is genuinely dead code in the current South/Southeast Asia model -- it is not imported or invoked anywhere in the active pipeline, and it is entirely hardcoded to Brazil (`"BRA"`, `brazil_regions = [...]`, `"BRACN"` → `"BRAXX"` string substitutions). For general region consolidation (e.g. merging India's 5 regions), use the configurable mechanism in `Config_region_consolidation.yaml` instead -- see {doc}`country-management`.
+This script is genuinely dead code in the current South/Southeast Asia model -- it is not imported or invoked anywhere in the active pipeline, and it is entirely hardcoded to Brazil (`"BRA"`, `brazil_regions = [...]`, `"BRACN"` → `"BRAXX"` string substitutions). It is archived for provenance and must not be run against current workbooks. For general region consolidation (e.g. merging India's 5 regions), use the configurable mechanism in `Config_region_consolidation.yaml` instead -- see {doc}`country-management`.
 :::
 
-### Usage
+### Historical configuration
 
-The script uses boolean flags at the top of the file to control which files to process:
+The archived script used boolean flags at the top of the file to control which files it processed:
 
 ```python
 parametrization = False  # Process A-O_Parametrization.xlsx

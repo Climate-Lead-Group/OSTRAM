@@ -30,3 +30,5 @@ for the present workflow.
 | [Legacy baseline runner](legacy-runners/root/run_baselines.bat) | `/run_baselines.bat` | Disabled machine-specific B2/solver runner |
 | [Legacy root sensitivity runner](legacy-runners/root/run_sensitivities.bat) | `/run_sensitivities.bat` | Disabled machine-specific B2/solver runner |
 | [Legacy root directions runner](legacy-runners/root/run_directions.bat) | `/run_directions.bat` | Disabled machine-specific B2/solver runner |
+| [Legacy merge-based concatenator](legacy-tools/concat_all_scenarios_merge.py) | `/t1_confection/concat_all_scenarios.py` | Retired row-multiplying predecessor; historical code only |
+| [Legacy Brazil region helper](legacy-tools/Z_AUX_united_regions.py) | `/t1_confection/Z_AUX_united_regions.py` | Retired hard-coded LATAM transformation; historical code only |

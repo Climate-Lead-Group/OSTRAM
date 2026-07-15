@@ -1,0 +1,3 @@
+REGION,YEAR,TECHNOLOGY,FUEL,InputParameter,InputValue
+R1,2030,T1,,CapitalCost,10
+R1,2030,T1,,FixedCost,1
