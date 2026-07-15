@@ -27,3 +27,6 @@ for the present workflow.
 | [Legacy Git setup guide](legacy/OSTRAM_Git_Setup_Guide.html) | `/OSTRAM_Git_Setup_Guide.html` | Retired standalone HTML guide |
 | [Legacy sensitivity runner](legacy-runners/t1_confection/run_sensitivities.bat) | `/t1_confection/run_sensitivities.bat` | Disabled runner for the retired `OSTRAM_clean` checkout |
 | [Legacy directions runner](legacy-runners/t1_confection/run_directions.bat) | `/t1_confection/run_directions.bat` | Disabled runner for the retired `OSTRAM_clean` checkout |
+| [Legacy baseline runner](legacy-runners/root/run_baselines.bat) | `/run_baselines.bat` | Disabled machine-specific B2/solver runner |
+| [Legacy root sensitivity runner](legacy-runners/root/run_sensitivities.bat) | `/run_sensitivities.bat` | Disabled machine-specific B2/solver runner |
+| [Legacy root directions runner](legacy-runners/root/run_directions.bat) | `/run_directions.bat` | Disabled machine-specific B2/solver runner |

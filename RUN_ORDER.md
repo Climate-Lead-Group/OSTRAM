@@ -1,13 +1,16 @@
 # RUN_ORDER — historical 15-scenario CPLEX batch record
 
 > **Status:** This file preserves the final-15 cleanroom batch procedure. It is not the
-> canonical command for the protected 20-scenario inventory. The batch files also contain
-> a machine-specific Python path. Review and replace that path before any manual use.
+> canonical command for the protected 20-scenario inventory. The original batch files
+> contain a machine-specific Python path and are archived under
+> `docs/archive/legacy-runners/root/`; their former root locations now fail closed. Do not
+> execute the archived copies.
 > The obsolete same-named runners formerly under `t1_confection/` are archived under
 > `docs/archive/legacy-runners/` and their old locations now fail closed.
 
-All 15 scenario datafiles are prepared (no-solve). To solve with CPLEX, run the batches
-below **from the repo root**, one at a time. Config is already restored to solve-mode
+At the time of this record, all 15 scenario datafiles were prepared (no-solve). The
+archived procedure called for running the batches below from the repository root, one at
+a time. The recorded config was restored to solve-mode
 (`Config_MOMF_T1_AB.yaml`: `execute_model: True`, `create_matrix: True`, `solver: cplex`,
 `cplex_threads: 4`).
 
@@ -16,8 +19,8 @@ B1/B2 mutate `t1_confection/Config_MOMF_T1_A.yaml` (Main_Scenario). Two concurre
 pipelines collide on that file lock (`Errno 22`) and silently corrupt a scenario's compile.
 Each batch runs its scenarios **sequentially** in one B2 process. B2 discovers folders
 alphabetically and filters that list, so the order written inside `--scenarios` is not a
-guaranteed execution order. Run
-`run_baselines.bat` → wait → `run_sensitivities.bat` → wait → `run_directions.bat`.
+guaranteed execution order. The historical sequence was `run_baselines.bat` → wait →
+`run_sensitivities.bat` → wait → `run_directions.bat`.
 
 ## Order
 1. **`run_baselines.bat`** — `A_Calibrated_BAU`, then `C_Target_VRE`, then `B_Optimised_VRE`.

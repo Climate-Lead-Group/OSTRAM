@@ -8,6 +8,8 @@ The archived `t1_confection/run_sensitivities.bat` and
 solver workflows. Their former repository locations now contain fail-closed notices so
 an accidental invocation cannot start that obsolete workflow.
 
-The root-level batch files and `RUN_ORDER.md` are separately preserved as historical
-final-15 operating records. They also require manual path and configuration review before
-use.
+The archived `root/run_baselines.bat`, `root/run_sensitivities.bat`, and
+`root/run_directions.bat` preserve the final-15 machine-specific solver commands. Their
+former root locations now contain fail-closed notices. `RUN_ORDER.md` remains the
+historical operating record; neither it nor the archived batches is a current execution
+instruction.
