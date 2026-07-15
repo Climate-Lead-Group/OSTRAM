@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "zero_threshold": 1e-6,
+  "default": {"absolute": 1e-6, "relative": 1e-8},
+  "metrics": {
+    "TotalDiscountedCost.csv": {"absolute": 1e-4, "relative": 1e-9, "total_absolute": 1e-3},
+    "TotalCapacityAnnual.csv": {"absolute": 1e-6, "relative": 1e-8},
+    "NewCapacity.csv": {"absolute": 1e-6, "relative": 1e-8},
+    "ProductionByTechnologyAnnual.csv": {"absolute": 1e-5, "relative": 1e-8},
+    "TotalTechnologyAnnualActivity.csv": {"absolute": 1e-5, "relative": 1e-8},
+    "TotalAnnualTechnologyActivityByMode.csv": {"absolute": 1e-5, "relative": 1e-8},
+    "NewStorageCapacity.csv": {"absolute": 1e-6, "relative": 1e-8},
+    "StorageUpperLimit.csv": {"absolute": 1e-6, "relative": 1e-8},
+    "StorageLevelYearStart.csv": {"absolute": 1e-6, "relative": 1e-8},
+    "NetChargeWithinYear.csv": {"absolute": 1e-6, "relative": 1e-8}
+  }
+}

@@ -1,0 +1,168 @@
+{
+  "candidate": null,
+  "comparison_summary": {
+    "exact": 72,
+    "missing-working": 26,
+    "normalized-exact": 2
+  },
+  "equivalence_scope": {
+    "exact_pre_solver_static": "hashes and normalized hashes for artifacts that exist in both sources",
+    "full_solver_behavior": "pending a coherent all-20 CPLEX-backed baseline",
+    "historical_outputs": "reference-only hashes; provenance is incomplete and coverage is not all-20"
+  },
+  "evidence_kind": "offline-static-and-historical-output",
+  "normalizer_version": 1,
+  "protected_working_tree": {
+    "aggregate_raw_sha256": "0d0f0aaff470e3edc29d169829021e44de754cea0826b9e39d8fd115139af69d",
+    "file_count": 2344,
+    "total_bytes": 271225419
+  },
+  "reference": {
+    "branch": "ws3-phaseb-cleanredo",
+    "commit": "f1db168c8db0b61d03898f68cef2a7f28eccc80a",
+    "dirty_paths": [
+      "CLEANUP_AGENT_PLAN.md"
+    ],
+    "remote": "https://github.com/Climate-Lead-Group/OSTRAM.git",
+    "tree": "800103e866c4ce7f119f5887bdfd037bd46a310b"
+  },
+  "runtime": {
+    "platform": "Windows",
+    "python": "3.10.20"
+  },
+  "scenario_count": 20,
+  "scenarios": [
+    {
+      "name": "BAU",
+      "recipe": "tracked-snapshot",
+      "source_scenario": "BAU",
+      "tier": "support"
+    },
+    {
+      "name": "A_Calibrated_BAU",
+      "recipe": "tracked-snapshot",
+      "source_scenario": "A_Calibrated_BAU",
+      "tier": "active"
+    },
+    {
+      "name": "A_Calibrated_BAU_Clipped",
+      "recipe": "clipped",
+      "source_scenario": "A_Calibrated_BAU",
+      "tier": "final"
+    },
+    {
+      "name": "B_Optimised_VRE",
+      "recipe": "tracked-snapshot",
+      "source_scenario": "B_Optimised_VRE",
+      "tier": "active"
+    },
+    {
+      "name": "B_Opt_Clipped",
+      "recipe": "clipped",
+      "source_scenario": "B_Optimised_VRE",
+      "tier": "final"
+    },
+    {
+      "name": "B_Opt_DirBidir",
+      "recipe": "clipped+direction-bidirectional-2027",
+      "source_scenario": "B_Optimised_VRE",
+      "tier": "final"
+    },
+    {
+      "name": "B_Opt_DirContractual",
+      "recipe": "clipped+direction-contractual-2027",
+      "source_scenario": "B_Optimised_VRE",
+      "tier": "final"
+    },
+    {
+      "name": "B_Opt_IndiaCosts",
+      "recipe": "india-costs",
+      "source_scenario": "B_Optimised_VRE",
+      "tier": "final"
+    },
+    {
+      "name": "B_Opt_IndiaCostsFuel",
+      "recipe": "india-costs-fuel",
+      "source_scenario": "B_Optimised_VRE",
+      "tier": "final"
+    },
+    {
+      "name": "B_Opt_LinkFreeze",
+      "recipe": "link-freeze",
+      "source_scenario": "B_Optimised_VRE",
+      "tier": "superseded-protected"
+    },
+    {
+      "name": "B_Opt_SolarCapex130",
+      "recipe": "solar-capex-130",
+      "source_scenario": "B_Optimised_VRE",
+      "tier": "final"
+    },
+    {
+      "name": "B_Opt_SolarCapexHi",
+      "recipe": "solar-capex-high",
+      "source_scenario": "B_Optimised_VRE",
+      "tier": "final"
+    },
+    {
+      "name": "B_Opt_SolarCapexSpike",
+      "recipe": "solar-capex-spike",
+      "source_scenario": "B_Optimised_VRE",
+      "tier": "final"
+    },
+    {
+      "name": "B_Opt_SolarHi10",
+      "recipe": "solar-high-10",
+      "source_scenario": "B_Optimised_VRE",
+      "tier": "superseded-protected"
+    },
+    {
+      "name": "B_Opt_TradeCap15",
+      "recipe": "trade-cap-15",
+      "source_scenario": "B_Optimised_VRE",
+      "tier": "final"
+    },
+    {
+      "name": "B_Opt_TradeCap30",
+      "recipe": "trade-cap-30",
+      "source_scenario": "B_Optimised_VRE",
+      "tier": "superseded-protected"
+    },
+    {
+      "name": "B_Opt_TradeCap50",
+      "recipe": "trade-cap-50",
+      "source_scenario": "B_Optimised_VRE",
+      "tier": "superseded-protected"
+    },
+    {
+      "name": "B_Opt_TxCap150",
+      "recipe": "transmission-capex-150",
+      "source_scenario": "B_Optimised_VRE",
+      "tier": "final"
+    },
+    {
+      "name": "C_Target_VRE",
+      "recipe": "tracked-snapshot",
+      "source_scenario": "C_Target_VRE",
+      "tier": "active"
+    },
+    {
+      "name": "C_Target_VRE_Clipped",
+      "recipe": "clipped",
+      "source_scenario": "C_Target_VRE",
+      "tier": "final"
+    }
+  ],
+  "schema_version": 1,
+  "solver_execution": "not-performed",
+  "working": {
+    "branch": "cleanup/repo-structure",
+    "commit": "5ce4e66480e1326796406915885e972ef3687f5f",
+    "dirty_paths": [
+      "cleanroom_tests/cleanroom_check.py",
+      "tests/"
+    ],
+    "remote": "https://github.com/Climate-Lead-Group/OSTRAM.git",
+    "tree": "234bbaca96075e8d2945cfd8f955e387ba4121fa"
+  }
+}
