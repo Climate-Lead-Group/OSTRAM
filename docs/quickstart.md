@@ -131,6 +131,7 @@ OSTRAM/
 ├── docs/archive/audits/TECHNICAL_INVENTORY.md  # Historical generated inventory
 ├── concatenate_files/
 │   └── concatenate_ostram.py       # Result concatenation, invoked by B2
+├── tools/analysis/                 # Standalone result analysis; no solver execution
 └── t1_confection/                  # Core model directory
     ├── Config_MOMF_T1_A.yaml       # Compiler configuration (years, timeslices, sheet/param lists)
     ├── Config_MOMF_T1_AB.yaml      # Execution configuration (solver, patch chain toggles)
