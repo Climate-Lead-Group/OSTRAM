@@ -4,7 +4,7 @@
 #
 # Anchors = Sum of Outputs/TotalDiscountedCost.csv (VALUE column), StorageDelayN5.
 # "measured" = summed from the hero on 2026-07-11; "recipe" = value asserted in
-# CLEANROOM_FINALPROMPT.md. Reproduction is proven by byte-diff of the compiled
+# docs/archive/cleanroom/CLEANROOM_FINALPROMPT.md. Pre-solver reproduction evidence uses byte-diff of the compiled
 # CR-stripped .txt (below), NOT by the anchor (anchor is a solve-time sanity value).
 
 # The compiled datafile to byte-diff (per scenario dir <scen>_0):

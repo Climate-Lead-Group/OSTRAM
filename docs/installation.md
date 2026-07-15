@@ -20,6 +20,11 @@ git clone https://github.com/Climate-Lead-Group/OSTRAM.git
 cd OSTRAM
 ```
 
+Use a local, non-synchronized working directory for large model artifacts and generated
+workbooks. The retired standalone instructions are preserved in the
+[legacy Git setup guide](archive/legacy/OSTRAM_Git_Setup_Guide.html) for historical
+context; this page is the maintained setup guide.
+
 ## Conda Environment
 
 OSTRAM uses a Conda environment defined in `environment.yaml`. The `run.py` launcher

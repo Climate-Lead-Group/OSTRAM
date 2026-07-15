@@ -164,7 +164,8 @@ generation/storage capital+fixed costs set to India's reference), `B_Opt_IndiaCo
   **India-vs-neighbour cost gap** (−1.8%), implying some of Bangladesh's import reliance is a cost-assumption
   artefact. `IndiaCostsFuel` reproduces `IndiaCosts` exactly (fuel-price harmonisation non-binding).
 
-Full detail: `sensitivity_expansion/PHASE_B_METHODOLOGY_AND_RESULTS.md` and `PHASE_B_IMPLEMENTATION_LOG.md`.
+Full detail: `t1_confection/sensitivity_expansion/PHASE_B_METHODOLOGY_AND_RESULTS.md` and
+`docs/archive/phase-b/PHASE_B_IMPLEMENTATION_LOG.md`.
 
 ---
 
@@ -201,14 +202,15 @@ All 15 inherit the WS-3+WS-4 foundation (transmission costs, losses, base-year p
 ## 7. Reproducibility & verification
 
 - **Anchor definition:** Σ `Outputs/TotalDiscountedCost.csv` (not the raw `.sol`; constant offset ~165,245 post-loss).
-- **No-solve reproduction proof:** compile a scenario's datafile without solving (`execute_model:False`),
-  CR-strip, and byte-diff against the corresponding hero-run repo — a 0-diff on the compiled input
-  *guarantees* the solve reproduces, so reproduction can be proven before any CPLEX run.
+- **No-solve reproduction evidence:** compile a scenario's datafile without solving (`execute_model:False`),
+  normalize supported line-ending differences, and compare it with the corresponding historical input.
+  A zero diff establishes exact pre-solver input equivalence; it does not guarantee numerical identity
+  across solver versions or replace a CPLEX-backed behavioral baseline.
 - **Hero repos (read-only oracles):** `OSTRAM_latest` (pre-WS-3), `OSTRAM_ws3_workcopy_D5` (WS-3),
   `OSTRAM_ws4_workcopy` (WS-4 final + cumulative source).
 - **Clean-room rebuild:** the canonical repo is reconstructed from source in `OSTRAM_mainredo`, verified by
   byte-diff at each layer, with a self-checking test harness and per-step checkpoint commits
-  (see `CLEANROOM_FINALPROMPT.md`). The CPLEX solves are staged as a batch, not run inline.
+  (see `docs/archive/cleanroom/CLEANROOM_FINALPROMPT.md`). The CPLEX solves are staged as a batch, not run inline.
 - **Solve settings:** CPLEX 22.1.2, StorageDelayN5 variant, `cplex_threads: 4`; every reported solve is
   CPLEX-optimal with zero base-year backstop generation.
 
@@ -219,7 +221,7 @@ All 15 inherit the WS-3+WS-4 foundation (transmission costs, losses, base-year p
 ### A. Must resolve before publishing final sensitivity numbers
 1. **Combined 15-scenario re-solve on the WS-3/WS-4 foundation is pending.** The Phase-B magnitudes in §4
    are from the *pre-WS-3* solve. The report's headline sensitivity numbers must come from the clean-redo
-   batch solve (staged in `CLEANROOM_FINALPROMPT.md`). Expect the *story* to hold, the *numbers* to move.
+   batch solve (staged in `docs/archive/cleanroom/CLEANROOM_FINALPROMPT.md`). Expect the *story* to hold, the *numbers* to move.
 2. **Unclipped-B_Opt Capital(NPV) concat glitch.** That one cell reads ~6.89M (≈10× the others); it is an
    aggregation artefact and must be fixed before any capital-vs-opex breakdown is published. System-cost
    anchors are unaffected (benchmarked against clean values).
@@ -343,13 +345,14 @@ backstop 0).
   CO₂ +7.6 Mt — VRE edges down, firm/fossil edges up. The small magnitude is itself the result: the ceiling-clipped
   VRE stays far cheaper than firm even at 13%, so the least-cost pathway's reliance on cheap VRE is **not fragile** to
   a +300 bps WACC shock (the cost-of-capital restatement of the §5.4 robustness finding). The same mechanism extends to
-  a 7%/13% × {B_Opt_Clipped, TradeCap15, TxCap150, DirContractual} matrix; full numbers in `WACC_TEST_RESULT.md`.
+  a 7%/13% × {B_Opt_Clipped, TradeCap15, TxCap150, DirContractual} matrix; full numbers in
+  `docs/archive/validation/WACC_TEST_RESULT.md`.
 
 ---
 
 ## 9. Source files (where each fact lives)
-- **This programme:** `sensitivity_expansion/PHASE_B_IMPLEMENTATION_LOG.md`, `PHASE_B_METHODOLOGY_AND_RESULTS.md`; `ws3_transmission_audit/WS3_PROMOTION_HANDOFF.md`, `WS3_calibration_report.md`, `WS3_value_audit.md`, `WS4_HANDOVER_PROMPT.md`, `WS4_PREFLIGHT.md`; `reference/interconnector_direction_references.md` (cited corridor directions); `reference/vre_ceilings.csv` (ceiling provenance).
-- **Rebuild recipe:** `CLEANROOM_FINALPROMPT.md`.
+- **This programme:** `docs/archive/phase-b/PHASE_B_IMPLEMENTATION_LOG.md`, `t1_confection/sensitivity_expansion/PHASE_B_METHODOLOGY_AND_RESULTS.md`; `docs/archive/ws3-ws4/WS3_PROMOTION_HANDOFF.md`, `ws3_transmission_audit/WS3_calibration_report.md`, `ws3_transmission_audit/WS3_value_audit.md`, `docs/archive/ws3-ws4/WS4_HANDOVER_PROMPT.md`, `docs/archive/ws3-ws4/WS4_PREFLIGHT.md`; `reference/interconnector_direction_references.md` (cited corridor directions); `reference/vre_ceilings.csv` (ceiling provenance).
+- **Rebuild recipe:** `docs/archive/cleanroom/CLEANROOM_FINALPROMPT.md`.
 - **Results tables:** `sensitivity_report.txt`, `sensitivity_comparison.csv` (pre-WS-3 basis).
 - **Solved anchors:** hero repos `OSTRAM_latest`, `OSTRAM_ws3_workcopy_D5`, `OSTRAM_ws4_workcopy`.
 

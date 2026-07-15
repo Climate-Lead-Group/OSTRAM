@@ -128,7 +128,7 @@ OSTRAM/
 ├── run.py                          # Main launcher (A1/A2 → A3 → B1 → B2)
 ├── dvc.yaml                        # DVC data-versioning (not used to orchestrate execution)
 ├── environment.yaml                # Conda environment spec
-├── TECHNICAL_INVENTORY.md          # Generated technical inventory of the whole repo
+├── docs/archive/audits/TECHNICAL_INVENTORY.md  # Historical generated inventory
 ├── concatenate_files/
 │   └── concatenate_ostram.py       # Result concatenation, invoked by B2
 └── t1_confection/                  # Core model directory

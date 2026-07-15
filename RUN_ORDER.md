@@ -27,8 +27,8 @@ guaranteed execution order. Run
 3. **`run_directions.bat`** — `DirBidir` (neutrality: must == B_Opt_Clipped) + `DirContractual`.
 
 ## Expected anchors (Sum TotalDiscountedCost)
-Baselines: A 2,314,332 / B 2,215,073 / C 2,257,995 — **but see the base-year-pin caveat in
-CLEANROOM_RUNLOG.md**: our baselines pin ws4's FINAL A-solve (self-consistent); ws4's committed
+Baselines: A 2,314,332 / B 2,215,073 / C 2,257,995 — but see the base-year-pin caveat in
+the archived [cleanroom run log](docs/archive/cleanroom/CLEANROOM_RUNLOG.md): our baselines pin ws4's FINAL A-solve (self-consistent); ws4's committed
 baselines are pinned to a since-overwritten A-solve, so a byte/anchor match at base years is not
 expected. Foundation (2027+) is byte-exact to ws4.
 
