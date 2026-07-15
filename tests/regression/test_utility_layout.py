@@ -25,6 +25,7 @@ CORE_ENTRY_POINTS = (
     "t1_confection/B1_Compiler.py",
     "t1_confection/B2_Executing_OG_Model.py",
 )
+LEGACY_RUNNER_NAMES = ("run_directions.bat", "run_sensitivities.bat")
 
 
 class UtilityLayoutTests(unittest.TestCase):
@@ -49,6 +50,17 @@ class UtilityLayoutTests(unittest.TestCase):
             source = (REPO_ROOT / relative).read_text(encoding="utf-8-sig")
             for name in UTILITY_NAMES:
                 self.assertNotIn(name, source, f"{relative} references {name}")
+
+    def test_obsolete_nested_runners_are_archived_and_fail_closed(self) -> None:
+        archive = REPO_ROOT / "docs" / "archive" / "legacy-runners" / "t1_confection"
+        for name in LEGACY_RUNNER_NAMES:
+            archived = (archive / name).read_text(encoding="utf-8-sig").lower()
+            stub = (LEGACY_ROOT / name).read_text(encoding="utf-8-sig").lower()
+            self.assertIn("ostram_clean", archived)
+            self.assertIn("exit /b 2", stub)
+            self.assertIn("obsolete runner is disabled", stub)
+            self.assertNotIn("b2_executing_og_model.py", stub)
+            self.assertNotIn("python ", stub)
 
 
 if __name__ == "__main__":

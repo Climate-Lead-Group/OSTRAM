@@ -3,6 +3,8 @@
 > **Status:** This file preserves the final-15 cleanroom batch procedure. It is not the
 > canonical command for the protected 20-scenario inventory. The batch files also contain
 > a machine-specific Python path. Review and replace that path before any manual use.
+> The obsolete same-named runners formerly under `t1_confection/` are archived under
+> `docs/archive/legacy-runners/` and their old locations now fail closed.
 
 All 15 scenario datafiles are prepared (no-solve). To solve with CPLEX, run the batches
 below **from the repo root**, one at a time. Config is already restored to solve-mode

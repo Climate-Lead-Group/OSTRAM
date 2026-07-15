@@ -25,3 +25,5 @@ for the present workflow.
 | [Phase-B implementation log](phase-b/PHASE_B_IMPLEMENTATION_LOG.md) | `/t1_confection/sensitivity_expansion/PHASE_B_IMPLEMENTATION_LOG.md` | Historical implementation log |
 | [Technical inventory](audits/TECHNICAL_INVENTORY.md) | `/TECHNICAL_INVENTORY.md` | Point-in-time generated repository audit |
 | [Legacy Git setup guide](legacy/OSTRAM_Git_Setup_Guide.html) | `/OSTRAM_Git_Setup_Guide.html` | Retired standalone HTML guide |
+| [Legacy sensitivity runner](legacy-runners/t1_confection/run_sensitivities.bat) | `/t1_confection/run_sensitivities.bat` | Disabled runner for the retired `OSTRAM_clean` checkout |
+| [Legacy directions runner](legacy-runners/t1_confection/run_directions.bat) | `/t1_confection/run_directions.bat` | Disabled runner for the retired `OSTRAM_clean` checkout |
