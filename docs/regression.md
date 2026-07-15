@@ -40,3 +40,14 @@ $Py = 'python'  # or an existing OSTRAM-env Python executable
 
 See `tests/regression/README.md` for capture and comparison commands and the normalization
 policy.
+
+## Deferred solver-backed work
+
+- Stage 3 utility reorganization is not attempted in this offline cleanup because the
+  all-20 pre-solver gate is incomplete: tracked A2/otoole material covers 17 scenarios
+  and no safely regenerated candidate set exists.
+- The current `run.py --scenarios` propagation behavior is documented but unchanged. A
+  future behavior change must be evaluated with a source-bound all-20 candidate and the
+  solver-backed acceptance baseline.
+- Full all-20 CPLEX behavioral equivalence, DVC pipeline reconstruction, and any core
+  A0-B2/A3/configuration changes remain outside the no-solver evidence level.
