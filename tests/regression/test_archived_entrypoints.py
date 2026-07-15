@@ -28,7 +28,11 @@ class ArchivedEntrypointTests(unittest.TestCase):
             ast.parse(archived.read_text(encoding="utf-8-sig"), filename=str(archived))
 
     def test_obsolete_legacy_tools_have_no_production_import(self) -> None:
-        obsolete_modules = {"concat_all_scenarios", "Z_AUX_united_regions"}
+        obsolete_modules = {
+            "concat_all_scenarios",
+            "Z_AUX_fix_excel_profiles",
+            "Z_AUX_united_regions",
+        }
         for path in REPO_ROOT.rglob("*.py"):
             if ARCHIVE_ROOT in path.parents:
                 continue
@@ -68,6 +72,23 @@ class ArchivedEntrypointTests(unittest.TestCase):
         )
         self.assertIn("pd.merge", archived)
         self.assertIn("pd.concat", maintained)
+
+    def test_stale_workbook_writer_is_archived_and_fails_closed(self) -> None:
+        archived_path = LEGACY_TOOLS / "Z_AUX_fix_excel_profiles.py"
+        stub_path = REPO_ROOT / "t1_confection" / "Z_AUX_fix_excel_profiles.py"
+        archived = archived_path.read_text(encoding="utf-8-sig")
+        stub = stub_path.read_text(encoding="utf-8-sig")
+
+        ast.parse(archived, filename=str(archived_path))
+        ast.parse(stub, filename=str(stub_path))
+        self.assertIn("import openpyxl", archived)
+        self.assertIn("wb.save(excel_path)", archived)
+        self.assertIn("return 2", stub)
+        self.assertIn("disabled", stub)
+        self.assertNotIn("openpyxl", stub)
+        self.assertNotIn("load_workbook", stub)
+        self.assertNotIn("shutil", stub)
+        self.assertNotIn(".save(", stub)
 
 
 if __name__ == "__main__":

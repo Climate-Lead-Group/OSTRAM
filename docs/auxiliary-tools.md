@@ -61,30 +61,33 @@ year = get_first_year()      # 2023
 
 ---
 
-## Demand Profile Normalizer
+## Demand Profile Normalizer -- Archived
 
-**Script:** `t1_confection/Z_AUX_fix_excel_profiles.py`
+**Historical script:** `docs/archive/legacy-tools/Z_AUX_fix_excel_profiles.py`
 
-Fixes rounding drift in SpecifiedDemandProfile sheets that can cause OSeMOSYS model errors. Profiles must sum to exactly 1.0 per fuel/technology per year.
+This retired script normalized rounding drift in `SpecifiedDemandProfile` sheets. It
+wrote demand workbooks in place after creating timestamped backups, using a hard-coded
+scenario list from the earlier LATAM model phase.
 
-### Usage
+The former path, `t1_confection/Z_AUX_fix_excel_profiles.py`, is retained as a
+fail-closed notice. It does not import `openpyxl`, open a workbook, create a backup, or
+write a file. The archived source is provenance only and must not be executed against
+current model inputs.
 
-```bash
-python t1_confection/Z_AUX_fix_excel_profiles.py
-```
+### Historical behavior
 
-### What It Does
-
-1. Iterates over a **hardcoded** scenario list (`main()`, currently `["BAU", "NDC", "NDC+ELC", "NDC_NoRPO"]`).
-2. Opens each `A1_Outputs_<scenario>/A-O_Demand.xlsx` file, if it exists.
-3. For each profile sheet, normalizes values so that each fuel/technology column sums to exactly 1.0 per year.
-4. Creates a **timestamped backup** before modifying any file.
+1. Iterated over a hard-coded scenario list: `BAU`, `NDC`, `NDC+ELC`, and `NDC_NoRPO`.
+2. Opened each matching `A1_Outputs_<scenario>/A-O_Demand.xlsx` file.
+3. Normalized each fuel/technology profile to sum to 1.0 per year.
+4. Created a timestamped backup and saved changes in place.
 
 :::{warning}
-The hardcoded scenario list is stale -- it dates from the model's earlier LATAM phase. None of `NDC`, `NDC+ELC`, `NDC_NoRPO` exist in the current model; only `BAU` (of the four hardcoded names) is real. Real current scenarios are `BAU`, `A_Calibrated_BAU`, `B_Optimised_VRE`, `C_Target_VRE`. Update the list in the script before relying on it for anything beyond `BAU`.
+The hard-coded list is stale: `NDC`, `NDC+ELC`, and `NDC_NoRPO` are not current
+scenarios. Reviving this transformation would require a separate, fixture-backed model
+change rather than editing or running the archived copy.
 :::
 
-### Tolerance
+### Historical tolerance
 
 Values within `0.0001` of 1.0 are considered acceptable. Values outside this range are corrected by proportional scaling.
 
