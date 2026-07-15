@@ -336,6 +336,11 @@ python -u t1_confection/B1_Run_Compiler.py --scenarios "BAU,B_Optimised_VRE"
 
 `B1_Run_Compiler.py` discovers scenario folders by their `A1_Outputs_*` suffix (skipping any containing `backup`, `snapshot`, `pre_experiment`, or an 8-digit datestamp). With `--scenarios` omitted, it compiles **every** discovered scenario; an unknown name in `--scenarios` aborts with an error. For each scenario it temporarily rewrites `xtra_scen.Main_Scenario` in `Config_MOMF_T1_A.yaml`, runs `B1_Compiler.py` (which itself takes no arguments), and restores the YAML from a `.bak` backup afterward regardless of success.
 
+Discovery is alphabetical and filtering preserves that order; the order in a comma list
+does not control execution. The runner logs an individual compiler failure and continues,
+so verify every requested scenario artifact instead of trusting only the overall process
+exit code.
+
 ### Input Files
 
 - `A1_Outputs/A1_Outputs_{scenario}/A-O_*.xlsx` -- All Excel model files.
@@ -386,7 +391,7 @@ Applied in this fixed order to the preprocessed datafile before solving, each st
 | 2 | `Miscellaneous/preprocess_data.py` | -- | always |
 | 3 | `inject_DaysInDayType.py` | -- | always (no gate) |
 | 4 | `patch_storage_delay.py` | `storage_delay_active` | **True** -- delays storage builds for the first `storage_delay_first_n_years` (5) years |
-| 5 | `strip_storage.py` | `strip_storage_active` | True (but forced **off** whenever storage_delay is active -- see below) |
+| 5 | `strip_storage.py` | `strip_storage_active` | **False** (and forced off whenever storage delay is active) |
 | 6 | `open_pwrbck_caps.py` | `open_pwrbck_active` | **True** -- opens PWRBCK capacity caps to `open_pwrbck_value` (9999) |
 | 7 | `patch_reserve_margin_repair_careful.py` (older, blunt) | `reserve_margin_repair_active` | False |
 | 8 | `patch_reserve_margin_repair_careful_xlsx.py` (current) | `reserve_margin_xlsx_active` | **True** -- uses `firm_capacity_fallbacks_by_cr.xlsx` |
@@ -411,11 +416,15 @@ cplex_threads: 4
 cplex_random_seed: 12345
 ```
 
-For any non-GLPK solver, the LP matrix is still built through `glpsol --wlp ... --check` first. The CPLEX invocation runs `optimize` followed by `feasopt all` (a feasibility-relaxation pass) before writing the final `.sol`:
+For any non-GLPK solver, the LP matrix is still built through `glpsol --wlp ... --check` first. The current CPLEX path runs `optimize` and writes the resulting `.sol`:
 
 ```
-cplex -c "set logfile ..." "read ....lp" "set threads N" "set randomseed S" "set parallel 1" "optimize" "feasopt all" "write ....feasopt.sol" "write ....sol"
+cplex -c "set logfile ..." "read ....lp" "set threads N" "set randomseed S" "set parallel 1" "optimize" "write ....sol"
 ```
+
+FeasOpt is deliberately off. B2 deletes stale `.feasopt.sol` files before a CPLEX run;
+solver feasibility/status must be read from the CPLEX log and the expected `.sol`, not
+inferred from the presence of an old FeasOpt artifact.
 
 ### Parallel Execution
 
@@ -434,9 +443,13 @@ max_x_per_iter: 4       # max scenarios per batch, when enabled
 
 ### Reproducibility
 
-Deterministic results are ensured through:
+The pipeline reduces avoidable nondeterminism through:
 
 - `PYTHONHASHSEED=0` (set by `run.py`).
 - Configurable random seeds per solver.
 - Sorted CSV files for consistent ordering.
 - `reuse_existing_sol: True` lets you regenerate outputs from a previous `.sol` file without re-solving (falls back to a normal solve if the `.sol` is missing).
+
+These controls do not prove numerical equivalence across solver/toolchain versions. Use
+the regression evidence policy in {doc}`regression`; full behavioral equivalence requires
+a coherent solver-backed baseline.

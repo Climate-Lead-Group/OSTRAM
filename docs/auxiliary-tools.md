@@ -2,6 +2,24 @@
 
 OSTRAM includes several utility scripts (prefixed with `Z_`) for data maintenance, visualization, and support tasks. None of the scripts on this page take command-line arguments unless noted otherwise -- most operate on hardcoded paths relative to `t1_confection/`.
 
+## Standalone Result Analysis
+
+Four result-only utilities are organized under `tools/analysis/`:
+
+```text
+tools/analysis/check_combined.py
+tools/analysis/ostram_scenario_analysis.py
+tools/analysis/ostram_trn_plotter.py
+tools/analysis/slice_by_country.py
+```
+
+They read existing combined CSVs and produce summaries, slices, or plots; they are not
+part of A0-B2/A3 execution and do not launch a solver. Compatibility wrappers remain at
+their former `t1_confection/` paths. Use the `tools/analysis/` paths for new commands and
+automation. The plotting scripts require optional matplotlib/NumPy/pandas dependencies.
+
+See `tools/analysis/README.md` for the individual utility descriptions.
+
 ## Configuration Loader
 
 **Script:** `t1_confection/Z_AUX_config_loader.py`

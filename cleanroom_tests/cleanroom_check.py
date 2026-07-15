@@ -131,6 +131,10 @@ def _read_param_csv(scen, name):
     with p.open(newline="", encoding="utf-8") as fh:
         return list(csv.DictReader(fh))
 
+def _row_value(row):
+    """Accept both compiler ``Value`` and otoole/output ``VALUE`` headers."""
+    return row.get("VALUE", row.get("Value"))
+
 def check_foundation():
     # interconnector CapEx range 380..2800 + life 40 ; internal-tx OAR 0.97 ; A==B==C internal-tx
     rows = _read_param_csv("A_Calibrated_BAU", "CapitalCost")
@@ -139,7 +143,8 @@ def check_foundation():
     def val(rows, tech, year="2023"):
         for r in rows:
             if r.get("TECHNOLOGY") == tech and r.get("YEAR") == year:
-                return float(r["VALUE"])
+                value = _row_value(r)
+                return float(value) if value not in (None, "") else None
         return None
     cc = {t: val(rows, t) for t in ("TRNBGDXXINDEA", "TRNMDVXXINDSO")}
     (ok if cc["TRNBGDXXINDEA"] == 380.0 else bad)(f"interconnector CapEx min TRNBGDXXINDEA=380 (got {cc['TRNBGDXXINDEA']})")
@@ -147,12 +152,15 @@ def check_foundation():
     ol = _read_param_csv("A_Calibrated_BAU", "OperationalLife")
     if ol:
         def olv(tech):
-            return next((float(r["VALUE"]) for r in ol if r.get("TECHNOLOGY") == tech), None)
+            return next((float(_row_value(r)) for r in ol
+                         if r.get("TECHNOLOGY") == tech and _row_value(r) not in (None, "")), None)
         (ok if olv("TRNMDVXXINDSO") == 40.0 else bad)(f"interconnector life TRNMDVXXINDSO=40 (got {olv('TRNMDVXXINDSO')})")
         (ok if olv("RNWTRNINDWE") == 40.0 else bad)(f"internal-tx life RNWTRNINDWE=40 (got {olv('RNWTRNINDWE')})")
     oar = _read_param_csv("A_Calibrated_BAU", "OutputActivityRatio")
     if oar:
-        vals = [float(r["VALUE"]) for r in oar if r.get("TECHNOLOGY") == "RNWTRNINDWE" and r.get("YEAR") == "2030"]
+        vals = [float(_row_value(r)) for r in oar
+                if r.get("TECHNOLOGY") == "RNWTRNINDWE"
+                and r.get("YEAR") == "2030" and _row_value(r) not in (None, "")]
         (ok if vals and abs(vals[0]-0.97) < 1e-9 else bad)(f"internal-tx OAR RNWTRNINDWE@2030=0.97 (got {vals})")
     ccc = val(_read_param_csv("C_Target_VRE", "CapitalCost") or [], "RNWTRNINDWE")
     (ok if ccc == 200.0 else bad)(f"internal-tx CapEx A==C RNWTRNINDWE=200 (C got {ccc})")
@@ -164,7 +172,9 @@ def check_clips():
         bad("clips: B_Opt_Clipped not built yet"); return
     want = {"PWRSPVLKAXX": 16.0, "PWRWONBGDXX": 3.0, "PWRWONMDVXX": 0.0}
     for tech, exp in want.items():
-        v = next((float(r["VALUE"]) for r in rows if r.get("TECHNOLOGY") == tech and r.get("YEAR") == "2030"), None)
+        v = next((float(_row_value(r)) for r in rows
+                  if r.get("TECHNOLOGY") == tech and r.get("YEAR") == "2030"
+                  and _row_value(r) not in (None, "")), None)
         (ok if v is not None and abs(v-exp) < 1e-6 else bad)(f"clip {tech}={exp} (got {v})")
 
 def check_sensitivities():

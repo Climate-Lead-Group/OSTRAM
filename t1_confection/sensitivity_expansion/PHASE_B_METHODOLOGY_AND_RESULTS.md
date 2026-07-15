@@ -4,7 +4,7 @@
 **CLG · OSTRAM** — 10-node OSeMOSYS South Asia model (BGD, BTN, IND×5, LKA, MDV, NPL).
 Comprehensive record of the Phase-B sensitivity set: what was run, how, what it shows, and
 why each lever matters. Companion to the build-side paper trail in
-[`PHASE_B_IMPLEMENTATION_LOG.md`](PHASE_B_IMPLEMENTATION_LOG.md).
+[`PHASE_B_IMPLEMENTATION_LOG.md`](../../docs/archive/phase-b/PHASE_B_IMPLEMENTATION_LOG.md).
 
 > **Status:** 13 scenarios, all solved optimal (CPLEX 22.1.2), zero backstop generation, all
 > validated. Results drawn from `OSTRAM_StorageDelay_Combined_Inputs_Outputs_2026-07-09.csv`
@@ -375,7 +375,7 @@ Maldives corridors are flagged as *inferred* and are inactive in B_Opt regardles
 ## 9. Reproducibility
 
 Full build steps, the file-edit trail, and the per-scenario workflow are in
-[`PHASE_B_IMPLEMENTATION_LOG.md`](PHASE_B_IMPLEMENTATION_LOG.md). In brief (conda env `OSTRAM-env`;
+[`PHASE_B_IMPLEMENTATION_LOG.md`](../../docs/archive/phase-b/PHASE_B_IMPLEMENTATION_LOG.md). In brief (conda env `OSTRAM-env`;
 always `set PYTHONIOENCODING=utf-8 && chcp 65001` first):
 
 ```bash
@@ -460,4 +460,4 @@ cheaper capital unlocks Bangladesh nuclear (3.4→11.6 GW) and coal (6.6→8.3 G
 ---
 
 *CLG · OSTRAM — generated 2026-07-09. Numbers from the 2026-07-09 combined solve; methodology and
-build trail cross-referenced to `PHASE_B_IMPLEMENTATION_LOG.md`.*
+build trail cross-referenced to `docs/archive/phase-b/PHASE_B_IMPLEMENTATION_LOG.md`.*

@@ -11,13 +11,19 @@ cd OSTRAM
 python run.py
 ```
 
+:::{warning}
+`run.py` is an execution launcher, not an inspection command. It may install missing
+dependencies, initialize `.dvc/`, modify materialized scenario workbooks/configuration,
+and invoke the configured optimizer in B2.
+:::
+
 The `run.py` launcher automatically:
 
 1. Creates the Conda environment (`OSTRAM-env`) if it does not exist, and installs any missing dependencies into it.
 2. Initializes the DVC repository if it does not exist yet (`dvc init`), and runs `dvc pull` if a DVC remote is configured.
-3. Runs **A1 + A2** as a combo, but only if no `_post_a2_snapshot_*` folder exists yet in `t1_confection/A1_Outputs/` (A2 creates the snapshot at the end of its run). If a snapshot already exists, A1/A2 are skipped and A3 restores from it instead -- delete the snapshot folder if you need to force a full A1/A2 re-run from raw CSVs.
+3. Runs **A1 + A2** as a combo, but only if no `_post_a2_snapshot_*` folder exists yet in `t1_confection/A1_Outputs/` (A2 creates the snapshot at the end of its run). If a snapshot already exists, A1/A2 are skipped and A3 restores from it instead. The tracked snapshot is protected because the complete raw-input rebuild is not yet automated; do not delete it merely to force a rebuild.
 4. Discovers the active scenarios (via `t1_confection/A3_process/_scenarios.py list-active`, in dependency order) and runs **A3** once per scenario.
-5. Runs **B1** (`B1_Run_Compiler.py`) and then **B2** (`B2_Executing_OG_Model.py`), passing the same scenario filter to both.
+5. Runs **B1** (`B1_Run_Compiler.py`) and then **B2** (`B2_Executing_OG_Model.py`), passing the same scenario filter to both. B1/B2 filter their alphabetically discovered folder lists, so comma-list order is not execution order.
 
 :::{note}
 Unlike older versions of this pipeline, `run.py` does **not** call `dvc repro`. It invokes each stage script directly as a subprocess. `dvc.yaml` and `dvc pull` are only used for pulling versioned data, not for orchestrating execution.
@@ -29,17 +35,31 @@ Unlike older versions of this pipeline, `run.py` does **not** call `dvc repro`. 
 |------|---------|--------------|
 | `--env-name` | Read from `environment.yaml`, else `OSTRAM-env` | Conda environment name |
 | `--env-file` | `environment.yaml` | Path to the Conda environment file |
-| `--dvc-file` | `dvc.yaml` | Path to the DVC pipeline file (used only for the optional `dvc pull` check) |
+| `--dvc-file` | `dvc.yaml` | Path resolved and printed for context; it currently does not select stages or alter `dvc pull` |
 | `--skip-pull` | off | Skip `dvc pull` even if a remote is configured |
 | `--skip-a3` | off | Skip the A3 scenario-processing stage |
 | `--skip-b1` | off | Skip the B1 compiler stage |
 | `--skip-b2` | off | Skip the B2 execution stage |
-| `--scenarios` | all active scenarios | Comma-separated scenario subset, e.g. `--scenarios "B_Optimised_VRE,C_Target_VRE"`. Propagated to A3, B1, and B2. |
+| `--scenarios` | all active scenarios | Comma-separated subset. With A3 enabled, every name must be active in the SOASIA v18 `Control` sheet. With `--skip-a3`, existing derived snapshot names can be passed to B1/B2. |
 
 Example running only two scenarios, skipping the solver stage:
 
 ```bash
 python run.py --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --skip-b2
+```
+
+This example still runs A3 and B1. `--skip-b2` prevents optimizer execution but does not
+make `run.py` read-only.
+
+### Scenario scope
+
+The preservation inventory contains 20 scenario snapshots under both `A1_Outputs/` and
+`A3_process/rules_scripts/configs/`. Only four are active Control scenarios (BAU, A, B,
+and C); derived and superseded-but-protected scenarios are not a plain `run.py` pass.
+Use the solver-free regression inventory to inspect coverage:
+
+```bash
+python tests/regression/ostram_regression.py discover --repo . --scope regression
 ```
 
 ## 2. Pipeline Stages Invoked by `run.py`
@@ -108,9 +128,10 @@ OSTRAM/
 ├── run.py                          # Main launcher (A1/A2 → A3 → B1 → B2)
 ├── dvc.yaml                        # DVC data-versioning (not used to orchestrate execution)
 ├── environment.yaml                # Conda environment spec
-├── TECHNICAL_INVENTORY.md          # Generated technical inventory of the whole repo
+├── docs/archive/audits/TECHNICAL_INVENTORY.md  # Historical generated inventory
 ├── concatenate_files/
 │   └── concatenate_ostram.py       # Result concatenation, invoked by B2
+├── tools/analysis/                 # Standalone result analysis; no solver execution
 └── t1_confection/                  # Core model directory
     ├── Config_MOMF_T1_A.yaml       # Compiler configuration (years, timeslices, sheet/param lists)
     ├── Config_MOMF_T1_AB.yaml      # Execution configuration (solver, patch chain toggles)
@@ -127,7 +148,7 @@ OSTRAM/
     ├── A3_process/                 # A3 scenario-processing engine (see Stage A3 below)
     │   ├── SOASIA_OSeMOSYS_Template_v18.xlsx   # Control/Restrictions + scenario template
     │   └── rules_scripts/
-    │       └── configs/            # Per-scenario rule YAMLs (A_Calibrated_BAU/, B_Optimised_VRE/, C_Target_VRE/)
+    │       └── configs/            # Rule/config snapshots for the full protected 20-scenario inventory
     ├── A2_Extra_Inputs/             # Extra inputs (storage, emissions, projections, battery replacement)
     ├── A2_Output_Params/            # B1-compiled parameter CSVs (per scenario)
     ├── A2_Outputs_Params_otoole/    # otoole-format CSVs for the solver

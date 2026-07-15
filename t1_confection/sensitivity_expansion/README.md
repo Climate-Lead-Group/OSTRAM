@@ -1,6 +1,12 @@
 <!-- CLG / OSTRAM -->
 # OSTRAM Sensitivity Expansion — Task 1 (Design & Validate)
 
+> **Historical scope:** This document records the original three-sensitivity design and
+> its former checkout names. The scenarios remain regression-protected, but these are not
+> current repository setup or execution instructions. Use explicit `--source-scenario`
+> arguments and the 20-scenario inventory in `tests/regression/scenarios.yaml` for current
+> audit work.
+
 **CLG · OSTRAM** — three one-at-a-time sensitivities branched from the validated
 **B_Optimised_VRE** baseline, over a shared VRE physical-potential ceiling layer.
 Built and validated pre-CPLEX. **Task 2 (separate session) runs the solver.**
@@ -39,7 +45,7 @@ A1_Outputs/A1_Outputs_<scenario>/A-O_Parametrization.xlsx   (patched, ready for 
 ```
 
 ## Design decisions (Luis, Step-0 gate)
-1. **Build in `OSTRAM_clean`; read validated B_Opt outputs from `OSTRAM_latest`.** OSTRAM_clean's
+1. **Historical build used `OSTRAM_clean` and read validated B_Opt outputs from `OSTRAM_latest`.** That checkout's
    config + A-O inputs are byte-identical to the validated run; only its cached `Executables`
    solve is stale (solar 415 vs validated 887). Task 2 should re-solve B_Opt here first to
    confirm it reproduces the anchors (obj 2,113,984; solar 887; wind 507; coal 299).
@@ -67,7 +73,7 @@ python desk_check.py                       # -> reports/
 `apply_patches` is idempotent (rebuilds each target from a fresh B_Opt copy), non-destructive
 to the source B_Opt A-O, and supports `--restore` and `--self-test`.
 
-## Task 2 (separate session — runs CPLEX)
+## Historical Task 2 recipe (runs CPLEX; not a current all-scenario command)
 1. (Recommended) re-solve `B_Optimised_VRE` and confirm it reproduces the anchors.
 2. `python B1_Run_Compiler.py --scenarios B_Opt_TradeCap50,B_Opt_SolarHi10,B_Opt_LinkFreeze`
 3. `python B2_Executing_OG_Model.py --scenarios ...`  (settings: `strip_storage: False`, `delay: True`)

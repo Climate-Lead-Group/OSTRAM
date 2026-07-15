@@ -20,9 +20,16 @@ git clone https://github.com/Climate-Lead-Group/OSTRAM.git
 cd OSTRAM
 ```
 
+Use a local, non-synchronized working directory for large model artifacts and generated
+workbooks. The retired standalone instructions are preserved in the
+[legacy Git setup guide](archive/legacy/OSTRAM_Git_Setup_Guide.html) for historical
+context; this page is the maintained setup guide.
+
 ## Conda Environment
 
-OSTRAM uses a Conda environment defined in `environment.yaml`. The `run.py` launcher automatically creates it if it does not exist, but you can also create it manually:
+OSTRAM uses a Conda environment defined in `environment.yaml`. The `run.py` launcher
+creates it if it does not exist and installs missing dependencies into an existing
+environment. For a controlled setup, create it manually:
 
 ```bash
 conda env create -f environment.yaml
@@ -105,13 +112,23 @@ cplex -c "quit"
 gurobi_cl --version
 ```
 
-## DVC Setup (Optional)
+## DVC State (Optional and Legacy)
 
-OSTRAM uses [DVC](https://dvc.org/) (Data Version Control) to manage the pipeline. The `run.py` script handles DVC commands automatically, but if you want to run stages manually:
+`run.py` initializes `.dvc/` when it is absent and performs `dvc pull` only when a DVC
+remote is configured. It does **not** call `dvc repro`; A1/A2, A3, B1, and B2 are invoked
+directly as subprocesses.
 
-```bash
-conda activate OSTRAM-env
-dvc repro
-```
+The tracked `dvc.yaml` and `dvc.lock` are retained as historical/partial pipeline state.
+The lock contains older output names and does not represent the current 20-scenario
+inventory. Do not use `dvc repro` as a current execution recipe or rebuild the lock until
+data ownership and the canonical all-scenario command are defined.
 
-This will execute all pipeline stages that have outdated outputs based on dependency tracking.
+The `run.py --dvc-file` option currently resolves and prints the supplied path, but it
+does not select DVC stages or change what `dvc pull` retrieves.
+
+## Launcher Side Effects
+
+Before running `python run.py`, note that it can create or update a Conda environment,
+initialize DVC metadata, restore/materialize scenario workbooks through A3, compile B1
+inputs, and launch the solver in B2. For inspection-only or regression work, use the
+solver-free commands in {doc}`regression` instead.

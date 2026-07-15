@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "report": "final decision-scope compiled-input equivalence",
+  "verified_source_commit": "41a54e51fd5a0776569b4900c44c624f09cc1f09",
+  "policy": {
+    "preservation_scenario_count": 20,
+    "static_cleanup_acceptance_scenario_count": 16,
+    "final_compiled_equivalence_scenario_count": 15,
+    "decision_relevant_baseline": "A_Calibrated_BAU",
+    "plain_bau": {
+      "preserved": true,
+      "discovered": true,
+      "protected_by_preservation_gate": true,
+      "included_in_final_compiled_equivalence": false,
+      "reason": "legacy non-decision support scenario; the available final reference uses the older NoStorage chain rather than the current StorageDelayN5 chain"
+    },
+    "superseded_protected_scenarios": [
+      "B_Opt_LinkFreeze",
+      "B_Opt_SolarHi10",
+      "B_Opt_TradeCap30",
+      "B_Opt_TradeCap50"
+    ]
+  },
+  "result": {
+    "expected_final_compiled_files": 15,
+    "compared_final_compiled_files": 15,
+    "byte_exact_files": 15,
+    "normalized_exact_files": 15,
+    "duplicate_parameter_key_or_set_membership_count": 0,
+    "status": "pass"
+  },
+  "final_solver_consumed_files": [
+    {
+      "scenario": "A_Calibrated_BAU",
+      "bytes": 3351297,
+      "sha256": "63c5f0745269f695648d0ee4e1ae0bd583f2fba77c8921d697d2c21e5982267f"
+    },
+    {
+      "scenario": "A_Calibrated_BAU_Clipped",
+      "bytes": 3349191,
+      "sha256": "9729e51499f1f698d72f25b470260948c7f61c742e6372b980fe6700a4f94ea6"
+    },
+    {
+      "scenario": "B_Optimised_VRE",
+      "bytes": 3362891,
+      "sha256": "5e1a313b87725c422360b55c2eb8eae09240c20328f6f75f71f88f3c3bb7af72"
+    },
+    {
+      "scenario": "B_Opt_Clipped",
+      "bytes": 3360735,
+      "sha256": "8a81ce55bc6cf6bb9a6b45ce41b1e15cdfffc894b226578152107de21e275106"
+    },
+    {
+      "scenario": "B_Opt_DirBidir",
+      "bytes": 3360735,
+      "sha256": "8a81ce55bc6cf6bb9a6b45ce41b1e15cdfffc894b226578152107de21e275106"
+    },
+    {
+      "scenario": "B_Opt_DirContractual",
+      "bytes": 3341583,
+      "sha256": "db71d809bf22615c3853b4e877ca99b382f3cae135b6a989ecb7e2840162f125"
+    },
+    {
+      "scenario": "B_Opt_IndiaCosts",
+      "bytes": 3357675,
+      "sha256": "9d68372f13bfb40766c3d5f36f5829b5566a0ead7ef03cdfb692cf4b2e4a1154"
+    },
+    {
+      "scenario": "B_Opt_IndiaCostsFuel",
+      "bytes": 3358083,
+      "sha256": "5262fd3fb2e097396c39b34a7da436661bff977a7bbd49164fcadae1dc96c49f"
+    },
+    {
+      "scenario": "B_Opt_SolarCapex130",
+      "bytes": 3361071,
+      "sha256": "bb054bca2d64eeee22d85d58255b600bd2f8e769e5ec49840c41958474b6e1a9"
+    },
+    {
+      "scenario": "B_Opt_SolarCapexHi",
+      "bytes": 3361064,
+      "sha256": "21620a29fd8f0187301a3ce3e223741063161b52be776012e90d548d6253db19"
+    },
+    {
+      "scenario": "B_Opt_SolarCapexSpike",
+      "bytes": 3360749,
+      "sha256": "8cf20bdc0cdb389fde33a5f76c6104fc417758fe8bf8baa71b3049d93238d0fb"
+    },
+    {
+      "scenario": "B_Opt_TradeCap15",
+      "bytes": 3365324,
+      "sha256": "14b83c8624594c8aa2bfa26166084b84a50677657f1d1cba63bb78e6abf78db4"
+    },
+    {
+      "scenario": "B_Opt_TxCap150",
+      "bytes": 3367145,
+      "sha256": "d3fd23f7ed87eacdf38f18deaa8435e54bda24e7c105d8c3ae64dcc6179aeaaf"
+    },
+    {
+      "scenario": "C_Target_VRE",
+      "bytes": 3384380,
+      "sha256": "dc78e3733ed10e11c3f035aeb1654703ef8cd7db4a871de5c4a3636d730f0ed0"
+    },
+    {
+      "scenario": "C_Target_VRE_Clipped",
+      "bytes": 3382283,
+      "sha256": "7e885b6146e121ac2f86181589cef70738d83f1c5457c982b9a6152a6b233851"
+    }
+  ],
+  "evidence_limit": "Exact final compiled-input equivalence is strong pre-solver evidence; it is not literal CPLEX behavioral proof."
+}

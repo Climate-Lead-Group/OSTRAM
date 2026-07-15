@@ -4,13 +4,16 @@ Energy system optimization modeling based on OSeMOSYS.
 
 ## Description
 
-This project implements an automated pipeline for running energy optimization models using OSeMOSYS. The system supports multiple solvers (GLPK, CBC, CPLEX, Gurobi) and is designed to ensure full reproducibility of results.
+This project implements a staged pipeline for preparing and running OSeMOSYS energy
+system models. It supports GLPK, CBC, CPLEX, and Gurobi. Reproducibility depends on the
+tracked scenario snapshots, configuration, exact toolchain, and solver settings; random
+seeds alone do not guarantee numerical identity across solver versions or platforms.
 
 ## Key Features
 
-- **Automated Pipeline**: Complete workflow management with DVC
+- **Staged Pipeline**: Direct A1/A2, A3, B1, and B2 orchestration through `run.py`
 - **Multiple Solvers**: Support for GLPK, CBC, CPLEX, and Gurobi
-- **Guaranteed Reproducibility**: Configurable seeds for deterministic results
+- **Regression Evidence**: Solver-free all-scenario inventory and static/hash comparisons
 - **Performance Monitoring**: Built-in timer for tracking execution times
 - **Automatic Environment Management**: Automatic creation and update of the Conda environment
 
@@ -32,25 +35,42 @@ cd OSTRAM
 python run.py
 ```
 
-The `run.py` script automatically handles:
+The `run.py` script can handle:
 - Conda environment creation
 - Dependency installation
+- Conditional A1/A2 preprocessing and active-scenario A3 generation
 - Optional `dvc pull`
 - Direct execution of `t1_confection/B1_Run_Compiler.py`
 - Direct execution of `t1_confection/B2_Executing_OG_Model.py`
 - Output file generation
 
+> **Important:** `run.py` may install dependencies, initialize `.dvc/`, and invoke the
+> configured solver. Inspect the live configuration before running it. It does not call
+> `dvc repro`. The tracked `dvc.yaml` and `dvc.lock` describe older partial state and are
+> not the canonical all-scenario execution path.
+
+The repository preserves 20 scenario snapshots. A normal `run.py` pass discovers only
+the active scenarios in the SOASIA v18 `Control` sheet. A `--scenarios` list containing
+derived or superseded snapshots is rejected by A3 unless `--skip-a3` is used. Do not
+assume that plain `run.py` is an all-20 command.
+
 ## Documentation
 
-For detailed installation and configuration instructions, see the full guide:
-- **Installation and Execution Guide**: `OSTRAM_Guia_instalacion_ejecucion.md`
+For detailed instructions, see:
+
+- [Installation](docs/installation.md)
+- [Quick start](docs/quickstart.md)
+- [Pipeline workflow](docs/pipeline.md)
+- [Offline regression evidence](tests/regression/README.md)
 
 ## Output File Structure
 
-Results are generated in `t1_confection/` with the following files:
-- `OSTRAM_Inputs.csv` / `OSTRAM_Inputs_YYYY-MM-DD.csv`
-- `OSTRAM_Outputs.csv` / `OSTRAM_Outputs_YYYY-MM-DD.csv`
-- `OSTRAM_Combined_Inputs_Outputs.csv` / `OSTRAM_Combined_Inputs_Outputs_YYYY-MM-DD.csv`
+Results are generated in `t1_confection/`. Their prefix is selected by
+`storage_delay_active`:
+
+- storage delay off: `OSTRAM_Inputs.csv`, `OSTRAM_Outputs.csv`, and
+  `OSTRAM_Combined_Inputs_Outputs.csv`, plus dated copies;
+- storage delay on: the corresponding `OSTRAM_StorageDelay_*` files.
 
 The main preprocessed solver datafile is also exported at repository root as `OSTRAM_data.txt`.
 
@@ -58,7 +78,7 @@ Date-stamped files maintain a complete execution history.
 
 ## Configuration
 
-The main configuration file is `t1_confection/MOMF_T1_AB.yaml`, where you can adjust:
+The execution configuration is `t1_confection/Config_MOMF_T1_AB.yaml`, where you can adjust:
 - Solver to use (`solver: 'cplex'`)
 - Number of threads for commercial solvers
 - Seeds for reproducibility
