@@ -77,7 +77,7 @@ to the source B_Opt A-O, and supports `--restore` and `--self-test`.
 1. (Recommended) re-solve `B_Optimised_VRE` and confirm it reproduces the anchors.
 2. `python B1_Run_Compiler.py --scenarios B_Opt_TradeCap50,B_Opt_SolarHi10,B_Opt_LinkFreeze`
 3. `python B2_Executing_OG_Model.py --scenarios ...`  (settings: `strip_storage: False`, `delay: True`)
-4. `python concat_all_scenarios_2.py`
+4. `python ..\tools\analysis\concat_all_scenarios.py`
    - **Note:** new scenarios are not in the v18 Control sheet (which we must not edit). The
      configs here are built for the **patch-B_Opt's-A-O** path (no A3 re-run needed). If Task 2
      instead re-runs A3 per scenario, the v18-Control gating must be resolved first.

@@ -48,4 +48,5 @@ expected. Foundation (2027+) is byte-exact to ws4.
 ## Verify after solving
 - Behavioural (not byte): expect same SIGNS/RANKING vs the pre-WS-3 Phase-B story, not identical
   magnitudes (WS-3/WS-4 shifted the foundation).
-  `t1_confection/sensitivity_expansion/analyse_ws4_vs_phaseB.py`.
+  `t1_confection/sensitivity_expansion/analyse_ws4_vs_phaseB.py` (analysis-only,
+  but retained in place because it is covered by the protected-tree gate).

@@ -330,8 +330,9 @@ interconnector cost/parameter calibration) shifts the whole frontier up; the del
   moved from the pre-WS-3 cheapest lever (+0.2%) to ≈TradeCap15 (+0.38% vs +0.37%), because WS-3/WS-4 raised
   transmission costs that the direction lever interacts with. Sign unchanged; a sub-0.1% within-cluster move.
 
-Reproduce with `t1_confection/sensitivity_expansion/analyse_ws4_vs_phaseB.py` (reads the solved
-`t1_confection/Executables/<s>_0/Outputs/`).
+Reproduce with `t1_confection/sensitivity_expansion/analyse_ws4_vs_phaseB.py` (reads the
+solved `t1_confection/Executables/<s>_0/Outputs/`). This analysis-only script remains in
+place because the protected-tree gate covers its current path.
 
 ### 8-C.5 WACC / discount-rate test (mechanism proof) — ✅ PASS
 `B_Opt_Clipped` re-solved with DiscountRate + DiscountRateStorage **0.10 → 0.13** (a single knob; injected via the
