@@ -30,6 +30,10 @@ PRIMARY_CORE_ENTRYPOINTS = (
     "t1_confection/B2_Executing_OG_Model.py",
 )
 
+CORE_IMPLEMENTATION_MODULES = (
+    "t1_confection/b1_runner.py",
+)
+
 OPTIONAL_MODEL_WRITING_ENTRYPOINTS = (
     "t1_confection/D1_generate_editor_template.py",
     "t1_confection/D2_update_secondary_techs.py",
@@ -179,7 +183,11 @@ def _main_guard(tree: ast.Module) -> ast.If:
 
 class EntrypointClassificationTests(unittest.TestCase):
     def test_core_entrypoints_and_analysis_utilities_are_disjoint_and_parse(self) -> None:
-        core = set(PRIMARY_CORE_ENTRYPOINTS) | set(OPTIONAL_MODEL_WRITING_ENTRYPOINTS)
+        core = (
+            set(PRIMARY_CORE_ENTRYPOINTS)
+            | set(CORE_IMPLEMENTATION_MODULES)
+            | set(OPTIONAL_MODEL_WRITING_ENTRYPOINTS)
+        )
         utilities = set(ANALYSIS_UTILITIES)
         self.assertTrue(core.isdisjoint(utilities))
 
@@ -195,10 +203,16 @@ class EntrypointClassificationTests(unittest.TestCase):
             referenced = {name for name in utility_names if name in source}
             self.assertEqual(referenced, set(), f"{relative} references {referenced}")
 
+        for relative in CORE_IMPLEMENTATION_MODULES:
+            source = _source(relative)
+            referenced = {name for name in utility_names if name in source}
+            self.assertEqual(referenced, set(), f"{relative} references {referenced}")
+
     def test_classification_and_boundaries_are_documented(self) -> None:
         text = CHARACTERIZATION_DOC.read_text(encoding="utf-8")
         for relative in (
             *PRIMARY_CORE_ENTRYPOINTS,
+            *CORE_IMPLEMENTATION_MODULES,
             *OPTIONAL_MODEL_WRITING_ENTRYPOINTS,
             *ANALYSIS_UTILITIES,
         ):
@@ -206,7 +220,7 @@ class EntrypointClassificationTests(unittest.TestCase):
 
         boundary_markers = (
             "A1_Pre_processing_OG_csvs.py` -> `A2_AddTx.py` -> per-scenario `A3_process.py`",
-            "list_scenario_suffixes` -> `update_main_scenario` -> `run_compiler`",
+            "`list_scenario_suffixes` once, then `update_main_scenario` ->",
             "run_otoole_conversion` -> `run_preprocessing_script` -> "
             "`run_days_in_day_type_patcher`",
             "stage_0_5_rnwbio` -> `stage_1_scripts_1_to_5` -> `stage_1b`",
@@ -444,40 +458,50 @@ class CallPathBoundaryTests(unittest.TestCase):
             ],
         )
 
-    def test_b1_call_and_restore_boundaries_are_unchanged(self) -> None:
-        tree = _tree("t1_confection/B1_Run_Compiler.py")
-        main = _function(tree, "main")
-        selected = {
-            "list_scenario_suffixes",
-            "shutil.copy2",
-            "update_main_scenario",
-            "run_compiler",
-            "shutil.move",
-        }
+    def test_b1_wrapper_and_isolated_boundaries_are_explicit(self) -> None:
+        wrapper_tree = _tree("t1_confection/B1_Run_Compiler.py")
+        wrapper_main = _function(wrapper_tree, "main")
         self.assertEqual(
-            _calls(main, selected),
+            _calls(
+                wrapper_main,
+                {
+                    "parse_cli_args",
+                    "_impl.B1Paths.from_entrypoint",
+                    "_impl.orchestrate",
+                },
+            ),
             [
-                "list_scenario_suffixes",
-                "shutil.copy2",
-                "update_main_scenario",
-                "run_compiler",
-                "shutil.move",
+                "_impl.orchestrate",
+                "parse_cli_args",
+                "_impl.B1Paths.from_entrypoint",
             ],
         )
+        wrapper_source = _source("t1_confection/B1_Run_Compiler.py")
+        self.assertNotIn("subprocess", wrapper_source)
+        self.assertNotIn("shutil", wrapper_source)
 
-        restore_try = next(
-            node
-            for node in ast.walk(main)
-            if isinstance(node, ast.Try)
-            and "shutil.move" in _calls(ast.Module(body=node.finalbody, type_ignores=[]))
-        )
-        self.assertIn("run_compiler", _calls(restore_try))
+        tree = _tree("t1_confection/b1_runner.py")
+        for name in (
+            "resolve_scenarios",
+            "build_compiler_command",
+            "execute_command",
+            "preserved_configuration",
+            "orchestrate",
+        ):
+            _function(tree, name)
 
         runner = _function(tree, "run_compiler")
-        self.assertEqual(_calls(runner, {"subprocess.run"}), ["subprocess.run"])
-        runner_source = ast.get_source_segment(_source("t1_confection/B1_Run_Compiler.py"), runner)
-        self.assertIn("[sys.executable, str(compiler)]", runner_source)
-        self.assertIn("cwd=str(script_dir)", runner_source)
+        self.assertEqual(
+            _calls(runner, {"build_compiler_command", "execute_command"}),
+            ["build_compiler_command", "execute_command"],
+        )
+        executor = _function(tree, "execute_command")
+        executor_source = ast.get_source_segment(
+            _source("t1_confection/b1_runner.py"), executor
+        )
+        self.assertIn("list(command.argv)", executor_source)
+        self.assertIn("cwd=str(command.cwd)", executor_source)
+        self.assertNotIn("env=", executor_source)
 
     def test_a3_main_keeps_snapshot_and_stage_order(self) -> None:
         tree = _tree("t1_confection/A3_process.py")

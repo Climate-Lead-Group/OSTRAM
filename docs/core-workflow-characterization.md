@@ -1,8 +1,9 @@
 # Core workflow characterization
 
-This note records the pre-refactor, no-solver contract for OSTRAM's core workflow.
-The tests in `tests/regression/test_core_workflow_characterization.py` enforce the
-contract with AST inspection, temporary fixtures, and mocked process boundaries.
+This note records the pre-refactor behavioral contract and current isolated
+boundaries for OSTRAM's core workflow. The tests in
+`tests/regression/test_core_workflow_characterization.py` enforce the contract with
+AST inspection, temporary fixtures, and mocked process boundaries.
 They do not run a model stage, DVC, a batch file, or a solver. This is
 characterization evidence, not a claim of behavioral or numerical equivalence.
 
@@ -18,6 +19,10 @@ The primary core entrypoints are protected operational code:
 - `t1_confection/B1_Run_Compiler.py`
 - `t1_confection/B1_Compiler.py`
 - `t1_confection/B2_Executing_OG_Model.py`
+
+`t1_confection/B1_Run_Compiler.py` remains the public B1 CLI, while the protected
+core implementation now lives in `t1_confection/b1_runner.py`. The wrapper retains
+the former callable helper surface and delegates explicitly to that module.
 
 The following are optional model-writing entrypoints. They are core/protected even
 though `run.py` does not call them:
@@ -65,12 +70,17 @@ order. An explicit scenario filter preserves that active order for A3, while the
 original comma-separated filter order is forwarded to B1 and B2. A failed delegated
 command propagates out of the launcher.
 
-`B1_Run_Compiler.py` follows `list_scenario_suffixes` -> `update_main_scenario` -> `run_compiler`
-for every selected scenario. Discovery sorts `A1_Outputs_*` directories and excludes
-backup, snapshot, pre-experiment, and dated names. Filtering preserves discovery
-order. The runner backs up `Config_MOMF_T1_A.yaml` before iteration and restores it in
-a `finally` block. A config-update failure skips that scenario; a nonzero compiler
-return is reported and iteration continues. `run_compiler` launches
+`B1_Run_Compiler.py` delegates to the isolated B1 orchestration boundaries in
+`b1_runner.py`: argument parsing, `B1Paths` construction, scenario discovery and
+pure resolution, configuration preservation, compiler-command construction, an
+injectable command executor, and top-level orchestration. The per-scenario effect
+path remains `list_scenario_suffixes` once, then `update_main_scenario` ->
+`run_compiler` for each selected scenario. Discovery sorts `A1_Outputs_*`
+directories and excludes backup, snapshot, pre-experiment, and dated names. Filtering
+preserves discovery order and collapses requested duplicates. The runner backs up
+`Config_MOMF_T1_A.yaml` before iteration and restores it in a `finally` block. A
+config-update failure skips that scenario; a nonzero compiler return is reported and
+iteration continues. `run_compiler` launches
 `B1_Compiler.py` with the current interpreter and the `t1_confection/` working
 directory.
 
@@ -96,6 +106,51 @@ CLI filter without reordering the discovered list. Its compiled-input path is
 both linear calls and `multiprocessing.Process`; it constructs GLPK, CBC, CPLEX, or
 Gurobi commands and launches them only under the existing execution/configuration
 flags. Solver execution remains outside this test phase.
+
+## B1 runner contract
+
+The accepted B1 command line has one optional value, `--scenarios`. Its parsed
+default is `None`; standard `argparse` help exits zero, while an unknown option or a
+missing value exits two. A missing config or compiler exits one. If discovery finds
+no scenarios, B1 warns and exits zero before validating an explicit filter.
+
+With no filter, every eligible discovered scenario runs in sorted discovery order.
+A truthy filter is comma-split, trimmed, and stripped of empty values. Unknown names
+are reported in requested order, including duplicates, and abort before backup.
+Valid names are selected in discovery order, so `C,A,C` runs `A` then `C` once each.
+A comma/whitespace-only truthy filter selects no scenarios but still enters the
+backup/restore scope and finishes successfully; an empty string is treated as no
+filter.
+
+The compiler plan contains exactly the current `sys.executable` and the absolute
+`B1_Compiler.py` path. Execution uses a token list, sets `cwd` to the B1 script
+directory, and omits `env`, `shell`, `check`, timeout, and output-capture arguments.
+The compiler therefore inherits the complete B1 environment and console streams.
+There is no B2 or solver call in this path.
+
+The configuration scope deliberately preserves all predecessor outcomes. Backup is
+`shutil.copy2(config, config.yaml.bak)` and occurs before the scope's `try/finally`;
+a backup error propagates without a restore attempt. Success, compiler launch
+exceptions, and `KeyboardInterrupt` all attempt byte-exact restoration with
+`shutil.move`. An ordinary restore error is warned and swallowed, the backup is
+reported when present, and B1 still prints `All done` and exits zero even though the
+live config may remain modified when the body otherwise finishes. A body exception
+still propagates after the failed restore, without `All done`. This hazard is
+characterized, not corrected by the isolation refactor. The last-resort
+no-YAML-library regex behavior is likewise preserved despite its known
+malformed-replacement edge case.
+
+A compiler nonzero exit is reported but does not stop later scenarios or change the
+final successful B1 exit. An ordinary config-update exception skips only that
+scenario. A compiler-launch or other unexpected exception stops iteration,
+restores, and propagates without printing `All done`.
+
+Importing the public wrapper and helper is side-effect free. `B1_Compiler.py` remains
+a top-level executable and is never imported by the runner. After B1 has printed
+restoration and `All done`, no B1 code remains except return from `main()`; each
+compiler child has already been synchronously awaited. The previously observed
+external-wrapper timeout after those messages is therefore not treated as a B1 wait
+or as success without the separate process/config/artifact checks.
 
 ## `run.py` launcher contract
 
@@ -191,11 +246,12 @@ static cleanup-acceptance scenarios, and the 15 decision-relevant compiled-input
 scenarios. Plain `BAU` remains in the first two scopes only; the four superseded
 scenarios remain preservation-only.
 
-Temporary fixtures cover B1 directory discovery, B1 config restoration, A3 rules
-YAML precedence, and the shared country-config loader's script-relative path, sorted
+Temporary fixtures cover B1 CLI/filter/order behavior, command construction,
+compiler-error continuation, every safely testable restoration route, A3 rules YAML
+precedence, and the shared country-config loader's script-relative path, sorted
 country accessor, preserved configured order, and cache. Mocked launcher tests prove
 stage/scenario propagation without starting a child process. AST checks cover the
-guarded B2 and A3 orchestration paths.
+isolated B1 boundaries and guarded B2 and A3 orchestration paths.
 
 For this phase, `tests/regression/` is the maintained no-solver-safe path. AST
 inspection rejects process-launch APIs there except the regression harness's single
