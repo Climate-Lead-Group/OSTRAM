@@ -1,0 +1,546 @@
+from __future__ import annotations
+
+import ast
+import importlib.util
+import io
+import os
+import subprocess
+import sys
+import tempfile
+import unittest
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
+from itertools import product
+from pathlib import Path
+from unittest import mock
+
+
+TEST_ROOT = Path(__file__).resolve().parent
+REPO_ROOT = TEST_ROOT.parents[1]
+RUN_PATH = REPO_ROOT / "run.py"
+
+
+def _load_launcher(label: str):
+    module_name = f"_ostram_run_orchestration_{label}"
+    spec = importlib.util.spec_from_file_location(module_name, RUN_PATH)
+    if spec is None or spec.loader is None:
+        raise AssertionError(f"could not load module spec for {RUN_PATH}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    try:
+        spec.loader.exec_module(module)
+    finally:
+        sys.modules.pop(module_name, None)
+    return module
+
+
+@contextmanager
+def _working_directory(path: Path):
+    previous = Path.cwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(previous)
+
+
+class LauncherHarness:
+    def __init__(
+        self,
+        launcher,
+        *,
+        snapshot_exists: bool = True,
+        active_scenarios: tuple[str, ...] = ("A", "B", "C"),
+        dvc_remote: bool = False,
+        guessed_env: str | None = "yaml-env",
+        pipeline_failure: tuple[str, int] | None = None,
+    ) -> None:
+        self.launcher = launcher
+        self.snapshot_exists = snapshot_exists
+        self.active_scenarios = list(active_scenarios)
+        self.dvc_remote = dvc_remote
+        self.guessed_env = guessed_env
+        self.pipeline_failure = pipeline_failure
+        self.events: list[tuple[object, ...]] = []
+        self.patches: list[mock._patch] = []
+
+    def _record(self, name: str, *args: object) -> None:
+        self.events.append((name, *args, Path.cwd()))
+
+    def _guess_env(self, env_file: str) -> str | None:
+        self._record("guess_env", env_file)
+        return self.guessed_env
+
+    def _check_tool(self, tool: str) -> None:
+        self._record("check_tool", tool)
+
+    def _create_env(self, env_name: str, env_file: str) -> None:
+        self._record("create_env", env_name, env_file)
+
+    def _ensure_deps(self, env_name: str) -> None:
+        self._record("ensure_deps", env_name)
+
+    def _ensure_dvc(self, env_name: str) -> None:
+        self._record("ensure_dvc", env_name)
+
+    def _has_remote(self, env_name: str) -> bool:
+        self._record("has_dvc_remote", env_name)
+        return self.dvc_remote
+
+    def _dvc_command(self, env_name: str, args: str) -> None:
+        self._record("dvc_command", env_name, args)
+
+    def _snapshot(self, path: Path) -> bool:
+        self._record("snapshot_exists", path)
+        return self.snapshot_exists
+
+    def _enumerate(self, env_name: str) -> list[str]:
+        self._record("enumerate_active", env_name)
+        return list(self.active_scenarios)
+
+    def _pipeline(self, env_name: str, script: Path, extra_args: str = "") -> None:
+        self._record("pipeline", env_name, script, extra_args)
+        if self.pipeline_failure is not None and self.pipeline_failure[0] == script.name:
+            raise subprocess.CalledProcessError(
+                self.pipeline_failure[1], f"recorded {script.name}"
+            )
+
+    def _a3(self, env_name: str, script: Path, scenario: str) -> None:
+        self._record("a3", env_name, script, scenario)
+
+    def __enter__(self):
+        replacements = {
+            "guess_env_name_from_yaml": self._guess_env,
+            "check_tool_available": self._check_tool,
+            "create_env_if_missing": self._create_env,
+            "ensure_deps": self._ensure_deps,
+            "ensure_dvc_repo": self._ensure_dvc,
+            "has_dvc_remote": self._has_remote,
+            "dvc_command": self._dvc_command,
+            "post_a2_snapshot_exists": self._snapshot,
+            "enumerate_active_scenarios": self._enumerate,
+            "run_pipeline_script": self._pipeline,
+            "run_a3_for_scenario": self._a3,
+        }
+        self.patches = [
+            mock.patch.object(self.launcher, name, replacement)
+            for name, replacement in replacements.items()
+        ]
+        for patch in self.patches:
+            patch.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        for patch in reversed(self.patches):
+            patch.stop()
+
+
+def _event_names(events: list[tuple[object, ...]]) -> list[str]:
+    return [str(event[0]) for event in events]
+
+
+class ImportAndCliCharacterizationTests(unittest.TestCase):
+    def test_import_has_no_process_or_pipeline_side_effects(self) -> None:
+        with (
+            mock.patch.object(subprocess, "check_call") as check_call,
+            mock.patch.object(subprocess, "check_output") as check_output,
+            mock.patch.object(subprocess, "run") as process_run,
+            redirect_stdout(io.StringIO()) as stdout,
+            redirect_stderr(io.StringIO()) as stderr,
+        ):
+            launcher = _load_launcher("import_safety")
+
+        check_call.assert_not_called()
+        check_output.assert_not_called()
+        process_run.assert_not_called()
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertEqual(stderr.getvalue(), "")
+        self.assertTrue(callable(launcher.main))
+
+    def test_defaults_and_free_form_cli_values_are_forwarded_exactly(self) -> None:
+        launcher = _load_launcher("cli_values")
+        argv = [
+            "run.py",
+            "--env-name",
+            "custom env",
+            "--env-file",
+            "config/custom environment.yaml",
+            "--dvc-file",
+            "config/custom dvc.yaml",
+            "--skip-pull",
+            "--skip-a3",
+            "--skip-b1",
+            "--skip-b2",
+        ]
+        with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
+            cwd = Path(temp).resolve()
+            with (
+                _working_directory(cwd),
+                LauncherHarness(launcher) as harness,
+                mock.patch.object(sys, "argv", argv),
+                redirect_stdout(io.StringIO()) as stdout,
+            ):
+                result = launcher.main()
+
+        self.assertIsNone(result)
+        self.assertEqual(
+            _event_names(harness.events),
+            [
+                "check_tool",
+                "create_env",
+                "ensure_deps",
+                "ensure_dvc",
+                "snapshot_exists",
+            ],
+        )
+        self.assertEqual(harness.events[0], ("check_tool", "conda", cwd))
+        self.assertEqual(
+            harness.events[1],
+            (
+                "create_env",
+                "custom env",
+                "config/custom environment.yaml",
+                cwd,
+            ),
+        )
+        self.assertEqual(
+            harness.events[-1],
+            ("snapshot_exists", cwd / "t1_confection" / "A1_Outputs", cwd),
+        )
+        output = stdout.getvalue()
+        self.assertIn("Using environment: custom env", output)
+        self.assertIn(f"DVC config: {cwd / 'config' / 'custom dvc.yaml'}", output)
+        self.assertIn("Skipping `dvc pull` by request.", output)
+
+    def test_default_environment_resolution_order(self) -> None:
+        launcher = _load_launcher("env_defaults")
+        cases = (
+            ("from-yaml", "from-yaml"),
+            (None, launcher.ENV_NAME_DEFAULT),
+        )
+        for guessed, expected in cases:
+            with self.subTest(guessed=guessed):
+                with (
+                    LauncherHarness(launcher, guessed_env=guessed) as harness,
+                    mock.patch.object(sys, "argv", ["run.py", "--skip-pull", "--skip-a3", "--skip-b1", "--skip-b2"]),
+                    redirect_stdout(io.StringIO()),
+                ):
+                    launcher.main()
+
+                self.assertEqual(harness.events[0][0:2], ("guess_env", "environment.yaml"))
+                self.assertEqual(harness.events[2][0:3], ("create_env", expected, "environment.yaml"))
+
+    def test_unknown_option_and_help_use_argparse_exit_codes_before_setup(self) -> None:
+        launcher = _load_launcher("argparse_exits")
+        cases = ((["run.py", "--not-an-option"], 2), (["run.py", "--help"], 0))
+        for argv, expected_code in cases:
+            with self.subTest(argv=argv):
+                with (
+                    mock.patch.object(launcher, "check_tool_available") as check_tool,
+                    mock.patch.object(sys, "argv", argv),
+                    redirect_stdout(io.StringIO()),
+                    redirect_stderr(io.StringIO()),
+                ):
+                    with self.assertRaises(SystemExit) as raised:
+                        launcher.main()
+                self.assertEqual(raised.exception.code, expected_code)
+                check_tool.assert_not_called()
+
+    def test_main_guard_maps_process_and_other_failures_to_current_exit_codes(self) -> None:
+        tree = ast.parse(RUN_PATH.read_text(encoding="utf-8-sig"), filename="run.py")
+        guard = next(
+            node
+            for node in tree.body
+            if isinstance(node, ast.If)
+            and isinstance(node.test, ast.Compare)
+            and isinstance(node.test.left, ast.Name)
+            and node.test.left.id == "__name__"
+        )
+        guard_source = ast.get_source_segment(
+            RUN_PATH.read_text(encoding="utf-8-sig"), guard
+        )
+        self.assertIn("main()", guard_source)
+        self.assertIn("except subprocess.CalledProcessError as e:", guard_source)
+        self.assertIn("sys.exit(e.returncode)", guard_source)
+        self.assertIn("except Exception as e:", guard_source)
+        self.assertIn("sys.exit(1)", guard_source)
+
+
+class StageAndScenarioCharacterizationTests(unittest.TestCase):
+    def test_every_skip_flag_combination_preserves_selected_stage_order(self) -> None:
+        launcher = _load_launcher("skip_matrix")
+        for skip_a3, skip_b1, skip_b2 in product((False, True), repeat=3):
+            with self.subTest(skip_a3=skip_a3, skip_b1=skip_b1, skip_b2=skip_b2):
+                argv = ["run.py", "--skip-pull"]
+                if skip_a3:
+                    argv.append("--skip-a3")
+                if skip_b1:
+                    argv.append("--skip-b1")
+                if skip_b2:
+                    argv.append("--skip-b2")
+                with (
+                    LauncherHarness(launcher, active_scenarios=("A", "B")) as harness,
+                    mock.patch.object(sys, "argv", argv),
+                    redirect_stdout(io.StringIO()),
+                ):
+                    launcher.main()
+
+                stage_events = [
+                    event[0]
+                    for event in harness.events
+                    if event[0] in {"enumerate_active", "a3", "pipeline"}
+                ]
+                expected: list[str] = []
+                if not skip_a3:
+                    expected.extend(["enumerate_active", "a3", "a3"])
+                if not skip_b1:
+                    expected.append("pipeline")
+                if not skip_b2:
+                    expected.append("pipeline")
+                self.assertEqual(stage_events, expected)
+
+                pipeline_names = [
+                    event[2].name for event in harness.events if event[0] == "pipeline"
+                ]
+                expected_names: list[str] = []
+                if not skip_b1:
+                    expected_names.append("B1_Run_Compiler.py")
+                if not skip_b2:
+                    expected_names.append("B2_Executing_OG_Model.py")
+                self.assertEqual(pipeline_names, expected_names)
+
+    def test_a1_a2_snapshot_gate_is_independent_of_all_skip_flags(self) -> None:
+        launcher = _load_launcher("snapshot_gate")
+        argv = [
+            "run.py",
+            "--skip-pull",
+            "--skip-a3",
+            "--skip-b1",
+            "--skip-b2",
+        ]
+        for snapshot_exists, expected_scripts in (
+            (True, []),
+            (False, ["A1_Pre_processing_OG_csvs.py", "A2_AddTx.py"]),
+        ):
+            with self.subTest(snapshot_exists=snapshot_exists):
+                with (
+                    LauncherHarness(launcher, snapshot_exists=snapshot_exists) as harness,
+                    mock.patch.object(sys, "argv", argv),
+                    redirect_stdout(io.StringIO()),
+                ):
+                    launcher.main()
+                scripts = [
+                    event[2].name for event in harness.events if event[0] == "pipeline"
+                ]
+                self.assertEqual(scripts, expected_scripts)
+
+    def test_scenario_filter_uses_active_order_for_a3_but_original_order_for_b1_b2(self) -> None:
+        launcher = _load_launcher("scenario_order")
+        with (
+            LauncherHarness(launcher, active_scenarios=("A", "B", "C")) as harness,
+            mock.patch.object(
+                sys, "argv", ["run.py", "--skip-pull", "--scenarios", " C , A, C "]
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            launcher.main()
+
+        self.assertEqual(
+            [event[3] for event in harness.events if event[0] == "a3"], ["A", "C"]
+        )
+        self.assertEqual(
+            [event[3] for event in harness.events if event[0] == "pipeline"],
+            ['--scenarios "C,A,C"', '--scenarios "C,A,C"'],
+        )
+
+    def test_empty_scenario_filter_runs_no_a3_but_forwards_no_b1_b2_option(self) -> None:
+        launcher = _load_launcher("empty_scenarios")
+        with (
+            LauncherHarness(launcher, active_scenarios=("A", "B")) as harness,
+            mock.patch.object(
+                sys, "argv", ["run.py", "--skip-pull", "--scenarios", ", , "]
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            launcher.main()
+
+        self.assertEqual([event for event in harness.events if event[0] == "a3"], [])
+        self.assertEqual(
+            [event[3] for event in harness.events if event[0] == "pipeline"], ["", ""]
+        )
+
+    def test_unknown_scenario_is_rejected_after_a1_a2_and_before_a3_b1_b2(self) -> None:
+        launcher = _load_launcher("unknown_scenario")
+        with (
+            LauncherHarness(
+                launcher, snapshot_exists=False, active_scenarios=("A", "B")
+            ) as harness,
+            mock.patch.object(
+                sys, "argv", ["run.py", "--skip-pull", "--scenarios", "Missing"]
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "names not in active scenarios"):
+                launcher.main()
+
+        pipeline_names = [
+            event[2].name for event in harness.events if event[0] == "pipeline"
+        ]
+        self.assertEqual(
+            pipeline_names, ["A1_Pre_processing_OG_csvs.py", "A2_AddTx.py"]
+        )
+        self.assertEqual([event for event in harness.events if event[0] == "a3"], [])
+
+    def test_skip_a3_bypasses_scenario_validation_and_forwards_unknown_name(self) -> None:
+        launcher = _load_launcher("skip_a3_validation")
+        with (
+            LauncherHarness(launcher, active_scenarios=("A", "B")) as harness,
+            mock.patch.object(
+                sys,
+                "argv",
+                ["run.py", "--skip-pull", "--skip-a3", "--scenarios", "Missing"],
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            launcher.main()
+
+        self.assertNotIn("enumerate_active", _event_names(harness.events))
+        self.assertEqual(
+            [event[3] for event in harness.events if event[0] == "pipeline"],
+            ['--scenarios "Missing"', '--scenarios "Missing"'],
+        )
+
+    def test_dvc_remote_check_and_pull_selection(self) -> None:
+        launcher = _load_launcher("dvc_pull")
+        for remote, expected_tail in (
+            (False, ["has_dvc_remote"]),
+            (True, ["has_dvc_remote", "dvc_command"]),
+        ):
+            with self.subTest(remote=remote):
+                argv = ["run.py", "--skip-a3", "--skip-b1", "--skip-b2"]
+                with (
+                    LauncherHarness(launcher, dvc_remote=remote) as harness,
+                    mock.patch.object(sys, "argv", argv),
+                    redirect_stdout(io.StringIO()),
+                ):
+                    launcher.main()
+                dvc_events = [
+                    name
+                    for name in _event_names(harness.events)
+                    if name in {"has_dvc_remote", "dvc_command"}
+                ]
+                self.assertEqual(dvc_events, expected_tail)
+                if remote:
+                    event = next(e for e in harness.events if e[0] == "dvc_command")
+                    self.assertEqual(event[1:3], ("yaml-env", "pull"))
+
+    def test_pipeline_failure_propagates_exactly_and_stops_later_stages(self) -> None:
+        launcher = _load_launcher("failure_stop")
+        failure = ("A2_AddTx.py", 7)
+        with (
+            LauncherHarness(
+                launcher, snapshot_exists=False, pipeline_failure=failure
+            ) as harness,
+            mock.patch.object(sys, "argv", ["run.py", "--skip-pull"]),
+            redirect_stdout(io.StringIO()),
+        ):
+            with self.assertRaises(subprocess.CalledProcessError) as raised:
+                launcher.main()
+
+        self.assertEqual(raised.exception.returncode, 7)
+        self.assertEqual(
+            [event[2].name for event in harness.events if event[0] == "pipeline"],
+            ["A1_Pre_processing_OG_csvs.py", "A2_AddTx.py"],
+        )
+        self.assertNotIn("enumerate_active", _event_names(harness.events))
+
+
+class CommandBoundaryCharacterizationTests(unittest.TestCase):
+    def test_run_sets_only_pythonhashseed_override_and_inherits_cwd(self) -> None:
+        launcher = _load_launcher("run_env")
+        cwd = Path.cwd()
+        with (
+            mock.patch.dict(
+                launcher.os.environ,
+                {"EXISTING": "kept", "PYTHONHASHSEED": "random"},
+                clear=True,
+            ),
+            mock.patch.object(launcher.subprocess, "check_call") as check_call,
+        ):
+            result = launcher.run("tool --flag value")
+
+        self.assertIsNone(result)
+        check_call.assert_called_once_with(
+            "tool --flag value",
+            shell=True,
+            env={"EXISTING": "kept", "PYTHONHASHSEED": "0"},
+        )
+        self.assertEqual(Path.cwd(), cwd)
+
+    def test_run_pipeline_and_a3_construct_exact_shell_commands(self) -> None:
+        launcher = _load_launcher("command_strings")
+        with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
+            cwd = Path(temp).resolve()
+            pipeline_script = cwd / "t1_confection" / "B1_Run_Compiler.py"
+            pipeline_script.parent.mkdir()
+            pipeline_script.write_text("# fixture only\n", encoding="utf-8")
+            a3_script = pipeline_script.with_name("A3_process.py")
+            a3_script.write_text("# fixture only\n", encoding="utf-8")
+            commands: list[tuple[str, Path]] = []
+
+            def record(command: str) -> None:
+                commands.append((command, Path.cwd()))
+
+            with (
+                _working_directory(cwd),
+                mock.patch.object(launcher, "run", side_effect=record),
+                redirect_stdout(io.StringIO()),
+            ):
+                launcher.run_pipeline_script(
+                    "Env Name", pipeline_script, '--scenarios "C,A"'
+                )
+                launcher.run_a3_for_scenario("Env Name", a3_script, "Scenario A")
+
+        self.assertEqual(
+            commands,
+            [
+                (
+                    f'conda run -n Env Name python -u "{pipeline_script}" '
+                    '--scenarios "C,A"',
+                    cwd,
+                ),
+                (
+                    f'conda run -n Env Name python -u "{a3_script}" '
+                    '--scenario "Scenario A"',
+                    cwd,
+                ),
+            ],
+        )
+
+    def test_pipeline_display_requires_script_to_be_below_current_directory(self) -> None:
+        launcher = _load_launcher("relative_display")
+        with tempfile.TemporaryDirectory(dir=TEST_ROOT) as script_temp:
+            script = Path(script_temp).resolve() / "stage.py"
+            script.write_text("# fixture only\n", encoding="utf-8")
+            with tempfile.TemporaryDirectory(dir=TEST_ROOT) as cwd_temp:
+                with (
+                    _working_directory(Path(cwd_temp).resolve()),
+                    mock.patch.object(launcher, "run") as process_boundary,
+                    redirect_stdout(io.StringIO()),
+                ):
+                    with self.assertRaises(ValueError):
+                        launcher.run_pipeline_script("env", script)
+            process_boundary.assert_not_called()
+
+    def test_missing_stage_files_fail_before_command_execution(self) -> None:
+        launcher = _load_launcher("missing_scripts")
+        missing = TEST_ROOT / "does-not-exist.py"
+        with mock.patch.object(launcher, "run") as process_boundary:
+            with self.assertRaises(FileNotFoundError):
+                launcher.run_pipeline_script("env", missing)
+            with self.assertRaises(FileNotFoundError):
+                launcher.run_a3_for_scenario("env", missing, "A")
+        process_boundary.assert_not_called()
+
+
+if __name__ == "__main__":
+    unittest.main()
