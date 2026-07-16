@@ -556,76 +556,138 @@ class CallPathBoundaryTests(unittest.TestCase):
             main_source.index("build_workdir("),
         )
 
-    def test_b2_discovery_generation_patch_and_solver_boundaries_are_unchanged(self) -> None:
-        tree = _tree("t1_confection/B2_Executing_OG_Model.py")
-        guard = _main_guard(tree)
-        selected = {
-            "sorted",
-            "os.listdir",
-            "scenarios.remove",
-            "process_scenario_folder",
-            "run_otoole_conversion",
-            "run_preprocessing_script",
-            "run_days_in_day_type_patcher",
-            "run_storage_delay_patcher",
-            "run_strip_storage_patcher",
-            "run_open_pwrbck_patcher",
-            "run_reserve_margin_repair_patcher",
-            "run_reserve_margin_xlsx_patcher",
-            "generate_combined_input_file",
-            "export_root_datafile",
-            "chunk_scenarios",
-            "main_executer",
+    def test_b2_discovery_generation_patch_and_solver_boundaries_are_explicit(
+        self,
+    ) -> None:
+        entry_tree = _tree("t1_confection/B2_Executing_OG_Model.py")
+        orchestrator_tree = _tree("t1_confection/b2_orchestrator.py")
+        guard = _main_guard(entry_tree)
+        self.assertEqual(_calls(guard, {"main"}), ["main"])
+
+        resolution = _function(orchestrator_tree, "resolve_scenarios")
+        self.assertEqual(
+            _calls(resolution, {"sorted", "os.listdir", "scenarios.remove"}),
+            ["sorted", "os.listdir", "scenarios.remove"],
+        )
+        resolution_source = ast.get_source_segment(
+            _source("t1_confection/b2_orchestrator.py"), resolution
+        )
+        self.assertIn(
+            "scenarios = [scenario for scenario in scenarios if scenario in requested]",
+            resolution_source,
+        )
+        self.assertIn(
+            'params_a2["xtra_scen"]["Main_Scenario"]',
+            resolution_source,
+        )
+
+        compiled_input = _function(orchestrator_tree, "run_compiled_input_stage")
+        selected_compiled_calls = {
+            "dependencies.process_scenario_folder",
+            "dependencies.run_otoole_conversion",
+            "dependencies.run_preprocessing_script",
+            "dependencies.run_days_in_day_type_patcher",
+            "dependencies.run_storage_delay_patcher",
+            "dependencies.run_strip_storage_patcher",
+            "dependencies.run_open_pwrbck_patcher",
+            "dependencies.run_reserve_margin_repair_patcher",
+            "dependencies.run_reserve_margin_xlsx_patcher",
+            "dependencies.generate_combined_input_file",
+            "dependencies.export_root_datafile",
         }
         self.assertEqual(
-            _calls(guard, selected),
+            _calls(compiled_input, selected_compiled_calls),
             [
-                "sorted",
-                "os.listdir",
-                "scenarios.remove",
-                "process_scenario_folder",
-                "run_otoole_conversion",
-                "run_preprocessing_script",
-                "run_days_in_day_type_patcher",
-                "run_storage_delay_patcher",
-                "run_strip_storage_patcher",
-                "run_open_pwrbck_patcher",
-                "run_reserve_margin_repair_patcher",
-                "run_reserve_margin_xlsx_patcher",
-                "generate_combined_input_file",
-                "export_root_datafile",
-                "chunk_scenarios",
-                "main_executer",
+                "dependencies.process_scenario_folder",
+                "dependencies.run_otoole_conversion",
+                "dependencies.run_preprocessing_script",
+                "dependencies.run_days_in_day_type_patcher",
+                "dependencies.run_storage_delay_patcher",
+                "dependencies.run_strip_storage_patcher",
+                "dependencies.run_open_pwrbck_patcher",
+                "dependencies.run_reserve_margin_repair_patcher",
+                "dependencies.run_reserve_margin_xlsx_patcher",
+                "dependencies.generate_combined_input_file",
+                "dependencies.export_root_datafile",
             ],
         )
 
-        guard_source = ast.get_source_segment(
-            _source("t1_confection/B2_Executing_OG_Model.py"), guard
+        execution = _function(orchestrator_tree, "run_execution_stage")
+        self.assertEqual(
+            _calls(
+                execution,
+                {
+                    "dependencies.chunk_scenarios",
+                    "dependencies.mp_module.Process",
+                    "dependencies.main_executer",
+                },
+            ),
+            [
+                "dependencies.chunk_scenarios",
+                "dependencies.mp_module.Process",
+                "dependencies.main_executer",
+            ],
         )
-        self.assertIn("scenarios = [s for s in scenarios if s in requested]", guard_source)
-        self.assertIn("params_A2['xtra_scen']['Main_Scenario']", guard_source)
-
         processes = [
             call
-            for call in ast.walk(guard)
-            if isinstance(call, ast.Call) and _call_name(call) == "mp.Process"
+            for call in ast.walk(execution)
+            if isinstance(call, ast.Call)
+            and _call_name(call) == "dependencies.mp_module.Process"
         ]
         self.assertEqual(len(processes), 1)
-        target = next(keyword.value for keyword in processes[0].keywords if keyword.arg == "target")
-        self.assertIsInstance(target, ast.Name)
-        self.assertEqual(target.id, "main_executer")
-
-        executor = _function(tree, "main_executer")
-        self.assertEqual(
-            _calls(executor, {"subprocess.run"}),
-            ["subprocess.run", "subprocess.run", "subprocess.run", "subprocess.run"],
+        target = next(
+            keyword.value
+            for keyword in processes[0].keywords
+            if keyword.arg == "target"
         )
-        executor_source = ast.get_source_segment(
-            _source("t1_confection/B2_Executing_OG_Model.py"), executor
+        self.assertIsInstance(target, ast.Attribute)
+        self.assertEqual(target.attr, "main_executer")
+        self.assertIsInstance(target.value, ast.Name)
+        self.assertEqual(target.value.id, "dependencies")
+
+        executor = _function(entry_tree, "main_executer")
+        self.assertEqual(
+            _calls(
+                executor,
+                {
+                    "b2_orchestrator.ScenarioExecutionDependencies",
+                    "b2_orchestrator.execute_scenario",
+                },
+            ),
+            [
+                "b2_orchestrator.ScenarioExecutionDependencies",
+                "b2_orchestrator.execute_scenario",
+            ],
+        )
+
+        solver_boundary = _function(orchestrator_tree, "invoke_solver_command")
+        self.assertEqual(
+            _calls(solver_boundary, {"process_runner"}),
+            ["process_runner"],
+        )
+        solver_boundary_source = ast.get_source_segment(
+            _source("t1_confection/b2_orchestrator.py"), solver_boundary
+        )
+        self.assertIn(
+            "process_runner(command, shell=True, check=True)",
+            solver_boundary_source,
+        )
+
+        solver_adapter = next(
+            node
+            for node in orchestrator_tree.body
+            if isinstance(node, ast.ClassDef) and node.name == "SolverAdapter"
+        )
+        prepare_command = next(
+            node
+            for node in solver_adapter.body
+            if isinstance(node, ast.FunctionDef) and node.name == "prepare_command"
+        )
+        adapter_source = ast.get_source_segment(
+            _source("t1_confection/b2_orchestrator.py"), prepare_command
         )
         for solver in ("glpsol", "cbc", "cplex", "gurobi_cl"):
-            self.assertIn(solver, executor_source)
-        self.assertIn("subprocess.run(cmd, shell=True, check=True)", executor_source)
+            self.assertIn(solver, adapter_source)
 
 
 class NoSolverSafetyTests(unittest.TestCase):

@@ -21,6 +21,13 @@ from typing import List, Any
 from pathlib import Path
 import numpy as np
 
+try:
+    from t1_confection import b2_orchestrator
+except ModuleNotFoundError as error:  # Direct execution from inside t1_confection.
+    if error.name != "t1_confection":
+        raise
+    import b2_orchestrator
+
 ########################################################################################
 def ensure_env_tool_paths():
     """Expose the active Python environment's executable folders to subprocesses."""
@@ -652,228 +659,21 @@ def get_config_main_path(here, base_folder):
     return str(repo_root / base_folder)
 
 def main_executer(params, scenario_name, HERE):
-    
-    folder_scenario = os.path.join(HERE, params['executables'], scenario_name + '_0')                             
-    
-    # Build paths for the data file and the output file, adapting to filesystem differences
-    data_file = os.path.join(folder_scenario, params['preprocess_data_name'] + scenario_name + '_0')
-    output_file = os.path.join(folder_scenario, params['preprocess_data_name'] + scenario_name + '_0' + params['output_files'])
-    this_case = scenario_name + '_0.txt'
-
-    # storage_delay redirect: when active, point solver at the patched sibling file.
-    # Produces e.g. Pre_processed_BAU_0_StorageDelayN5.txt
-    if params.get('storage_delay_active', False):
-        _sd_suffix = params.get('storage_delay_suffix', 'StorageDelayN5')
-        _base = params['preprocess_data_name'] + scenario_name + '_0'
-        data_file = os.path.join(folder_scenario, f"{_base}_{_sd_suffix}")
-        output_file = os.path.join(folder_scenario, f"{_base}_{_sd_suffix}{params['output_files']}")
-        print(f"[storage_delay] redirecting solver to: {data_file}.txt")
-
-    # Strip-storage diagnostic redirect: when active, point solver at the patched sibling file.
-    # Produces e.g. Pre_processed_BAU_0_NoStorage.txt and Pre_processed_BAU_0_NoStorage_output.{lp,sol,cplex.log}
-    if params.get('strip_storage_active', False):
-        _strip_suffix = params.get('strip_storage_suffix', 'NoStorage')
-        _base = params['preprocess_data_name'] + scenario_name + '_0'
-        data_file = os.path.join(folder_scenario, f"{_base}_{_strip_suffix}")
-        output_file = os.path.join(folder_scenario, f"{_base}_{_strip_suffix}{params['output_files']}")
-        print(f"[strip_storage] redirecting solver to: {data_file}.txt")
-
-    # PWRBCK-cap-opening diagnostic redirect: chains OpenBCK suffix on top of
-    # any active storage_delay/strip suffix.
-    if params.get('open_pwrbck_active', False):
-        _bck_suffix = params.get('open_pwrbck_suffix', 'OpenBCK')
-        _base = params['preprocess_data_name'] + scenario_name + '_0'
-        _chain_parts = []
-        if params.get('storage_delay_active', False):
-            _chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
-        if params.get('strip_storage_active', False):
-            _chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
-        _chain_parts.append(_bck_suffix)
-        _chain = '_'.join(_chain_parts)
-        data_file = os.path.join(folder_scenario, f"{_base}_{_chain}")
-        output_file = os.path.join(folder_scenario, f"{_base}_{_chain}{params['output_files']}")
-        print(f"[open_pwrbck] redirecting solver to: {data_file}.txt")
-
-    # Reserve-margin repair redirect: chains after storage_delay/strip/open-BCK when active.
-    if params.get('reserve_margin_repair_active', False):
-        _rm_suffix = params.get('reserve_margin_repair_suffix', 'RMRepair')
-        _base = params['preprocess_data_name'] + scenario_name + '_0'
-        _chain_parts = []
-        if params.get('storage_delay_active', False):
-            _chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
-        if params.get('strip_storage_active', False):
-            _chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
-        if params.get('open_pwrbck_active', False):
-            _chain_parts.append(params.get('open_pwrbck_suffix', 'OpenBCK'))
-        _chain_parts.append(_rm_suffix)
-        _chain = '_'.join(_chain_parts)
-        data_file = os.path.join(folder_scenario, f"{_base}_{_chain}")
-        output_file = os.path.join(folder_scenario, f"{_base}_{_chain}{params['output_files']}")
-        print(f"[reserve_margin_repair] redirecting solver to: {data_file}.txt")
-
-    # Careful XLSX reserve-margin repair redirect.
-    if params.get('reserve_margin_xlsx_active', False):
-        _xlsx_suffix = params.get('reserve_margin_xlsx_suffix', 'RMCarefulXLSX')
-        _base = params['preprocess_data_name'] + scenario_name + '_0'
-        _chain_parts = []
-        if params.get('storage_delay_active', False):
-            _chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
-        if params.get('strip_storage_active', False):
-            _chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
-        if params.get('open_pwrbck_active', False):
-            _chain_parts.append(params.get('open_pwrbck_suffix', 'OpenBCK'))
-        if params.get('reserve_margin_repair_active', False):
-            _chain_parts.append(params.get('reserve_margin_repair_suffix', 'RMRepair'))
-        _chain_parts.append(_xlsx_suffix)
-        _chain = '_'.join(_chain_parts)
-        data_file = os.path.join(folder_scenario, f"{_base}_{_chain}")
-        output_file = os.path.join(folder_scenario, f"{_base}_{_chain}{params['output_files']}")
-        print(f"[reserve_margin_xlsx] redirecting solver to: {data_file}.txt")
-
-    # Determine the solver according to the parameters
-    solver = params['solver']
-    commands = []
-
-    # reuse_existing_sol: when active and the .sol file is already present at the
-    # path the solver would write to, skip LP creation, solver invocation and
-    # cleanup of the existing .sol. Everything downstream (otoole sol->csv,
-    # per-scenario concat, cross-scenario concat) still runs.
-    _reuse_sol = (
-        params.get('reuse_existing_sol', False)
-        and os.path.exists(output_file + '.sol')
+    execution_dependencies = b2_orchestrator.ScenarioExecutionDependencies(
+        run_process=subprocess.run,
+        check_environment=check_enviro_variables,
+        get_executable=get_env_executable,
+        get_config_main_path=get_config_main_path,
+        path_exists=os.path.exists,
+        remove_file=os.remove,
+        python_executable=sys.executable,
     )
-    if params.get('reuse_existing_sol', False) and not _reuse_sol:
-        print(
-            f"[reuse_existing_sol] Requested but {output_file}.sol not found; "
-            f"falling back to a normal solve."
-        )
-    if _reuse_sol:
-        print(f"[reuse_existing_sol] Reusing existing solution: {output_file}.sol")
-
-    if solver == 'glpk':
-        if params['execute_model'] and not _reuse_sol:
-            # Using newer GLPK options
-
-            check_enviro_variables('glpsol')
-
-            # Compose the command to solve the model with the new options
-            str_solve = f'glpsol -m {params["osemosys_model"]} -d {data_file}.txt --wglp {output_file}.glp --write {output_file}.sol'
-            commands.append(str_solve)
-
-    else:
-        if params['create_matrix'] and not _reuse_sol:
-            # For LP models
-            str_solve = f'glpsol -m {params["osemosys_model"]} -d {data_file}.txt --wlp {output_file}.lp --check'
-            commands.append(str_solve)
-
-        if solver == 'cbc':
-            # Using CBC solver
-            if params['execute_model'] and not _reuse_sol:
-                if os.path.exists(output_file + '.sol'):
-                    os.remove(output_file + '.sol')
-
-                check_enviro_variables('cbc')
-
-                # Get random seed for reproducibility
-                cbc_random_seed = params.get('cbc_random_seed', 12345)
-
-                # Compose the command for the CBC solver with random seeds for deterministic behavior
-                str_solve = f'cbc {output_file}.lp randomSeed {cbc_random_seed} randomCbcSeed {cbc_random_seed} -seconds {params["iteration_time"]} solve -solu {output_file}.sol'
-                commands.append(str_solve)
-
-        elif solver == 'cplex':
-            # Using CPLEX solver
-            if params['execute_model'] and not _reuse_sol:
-                for solution_file in (output_file + '.sol', output_file + '.feasopt.sol'):
-                    if os.path.exists(solution_file):
-                        os.remove(solution_file)
-
-                # Number of threads cplex uses
-                cplex_threads = params['cplex_threads']
-
-                # Get random seed for reproducibility
-                cplex_random_seed = params.get('cplex_random_seed', 12345)
-
-                check_enviro_variables('cplex')
-
-                # Compose the command for the CPLEX solver with a random seed for deterministic behavior
-                # str_solve = f'cplex -c "read {output_file}.lp" "set threads {cplex_threads}" "set randomseed {cplex_random_seed}" "set parallel 1" "optimize" "write {output_file}.sol"'
-                str_solve = (
-                    f'cplex -c '
-                    f'"set logfile {output_file}.cplex.log" '
-                    f'"read {output_file}.lp" '
-                    f'"set threads {cplex_threads}" '
-                    f'"set randomseed {cplex_random_seed}" '
-                    f'"set parallel 1" '
-                    # lpmethod left at CPLEX default (dual simplex) — barrier (lpmethod 4) was
-                    # tried and ran ~3-4x SLOWER on this OSeMOSYS LP (21 min vs ~5 min solve).
-                    f'"optimize" '
-                    # NOTE: dropped the always-on `"feasopt all" "write .feasopt.sol"` — it ran a
-                    # full second (relaxation) solve on EVERY scenario (feasible ones too) and, on an
-                    # infeasible optimize, its relaxed solution overwrote .sol with garbage. The real
-                    # solution comes from `optimize` -> .sol; infeasibility is read from .cplex.log.
-                    f'"write {output_file}.sol"'
-                )
-                commands.append(str_solve)
-
-        elif solver == 'gurobi':
-            # Using Gurobi solver
-            if params['execute_model'] and not _reuse_sol:
-                if os.path.exists(output_file + '.sol'):
-                    os.remove(output_file + '.sol')
-
-                # Number of threads gurobi uses
-                gurobi_threads = params['gurobi_threads']
-
-                # Get random seed for reproducibility
-                gurobi_seed = params.get('gurobi_seed', 12345)
-
-                check_enviro_variables('gurobi_cl')
-
-                # Compose the command for the Gurobi solver with a seed for deterministic behavior
-                str_solve = f'gurobi_cl Threads={gurobi_threads} Seed={gurobi_seed} ResultFile={output_file}.sol {output_file}.lp'
-                commands.append(str_solve)
-
-    if params['execute_model'] or params['create_matrix']:
-        for cmd in commands:
-            subprocess.run(cmd, shell=True, check=True)
-
-    if params['execute_model'] and solver in ['cbc', 'cplex', 'gurobi'] and not os.path.exists(output_file + '.sol'):
-        raise FileNotFoundError(
-            f"Solver finished but did not create the expected solution file: {output_file}.sol"
-        )
-        
-    print(f'✅ Scenario {scenario_name}_0 solved successfully.')
-    print('\n#------------------------------------------------------------------------------#')
-
-    # Paths to convert outputs
-    file_path_conv_format = os.path.join(HERE, params['Miscellaneous'], params['conv_format'])
-    # file_path_template = os.path.join(params['Miscellaneous'], params['templates'])
-    file_path_template = os.path.join(HERE, params['A2_output_otoole'], scenario_name)
-    file_path_outputs = os.path.join(folder_scenario, params['outputs'])
-
-    # Convert .sol outputs to csv format
-    if solver == 'glpk' and params['glpk_option'] == 'new':
-        str_outputs = f'"{get_env_executable("otoole")}" results {solver} csv "{output_file}.sol" "{file_path_outputs}" datafile "{data_file}.txt" "{file_path_conv_format}" --glpk_model "{output_file}.glp"'
-        if params['execute_model']:
-            subprocess.run(str_outputs, shell=True, check=True)
-
-    elif solver in ['cbc', 'cplex', 'gurobi']:
-
-        str_outputs = f'"{get_env_executable("otoole")}" results {solver} csv "{output_file}.sol" "{file_path_outputs}" csv "{file_path_template}" "{file_path_conv_format}" 2> "{output_file}.log"'
-        if params['execute_model']:
-            subprocess.run(str_outputs, shell=True, check=True)
-
-    # Module to concatenate otoole csv outputs
-    if solver in ['glpk', 'cbc', 'cplex', 'gurobi']:
-        file_conca_csvs = get_config_main_path(HERE, params['concatenate_folder'])
-        script_concate_csv = os.path.join(file_conca_csvs, params['concat_csvs'])
-        str_otoole_concate_csv = f'"{sys.executable}" -u "{script_concate_csv}" "{file_path_outputs}" "{output_file}"'  # last int is the ID tier
-        if params['concat_otoole_csv']:
-            subprocess.run(str_otoole_concate_csv, shell=True, check=True)
-        print(f'✅ Outputs concatenated to {scenario_name}_0_Output.csv successfully.')
-        print('\n#------------------------------------------------------------------------------#')
-
+    return b2_orchestrator.execute_scenario(
+        params,
+        scenario_name,
+        HERE,
+        execution_dependencies,
+    )
 def delete_files(file, data_file, solver):
     # Delete files
     if file and os.path.exists(file):
@@ -1249,293 +1049,50 @@ def chunk_scenarios(
     return scenarios_list_max_per_iter
 
 ########################################################################################
-if __name__ == "__main__":
-    # Start timer
-    start1 = time.time()
-
-    # CLI args (optional scenario filter)
-    _cli_parser = argparse.ArgumentParser(description="Execute OSeMOSYS model across scenarios")
-    _cli_parser.add_argument(
-        "--scenarios",
-        default=None,
-        help="Comma-separated list of scenario names to run (e.g. "
-             "'B_Optimised_VRE,C_Target_VRE'). When omitted, runs all "
-             "scenarios found in the A2 output directory.",
-    )
-    _cli_args = _cli_parser.parse_args()
-
-    # Folder where this script lives: .../OSTRAM/t1_confection
+def _set_here(value):
     global HERE
-    def get_here() -> Path:
-        # 1) Normal script (direct execution)
-        if '__file__' in globals():
-            return Path(__file__).resolve().parent
-        # 2) Some IDEs expose __main__.__file__
-        main = sys.modules.get('__main__')
-        if hasattr(main, '__file__'):
-            return Path(main.__file__).resolve().parent
-        # 3) Console/interactive execution: current working directory
-        return Path.cwd().resolve()
-
-    HERE = get_here()
-    
-    
-    # (Optional) Change CWD to the script's folder
-    if Path.cwd() != HERE:
-        os.chdir(HERE)
-        print(f"[INFO] Working dir -> {HERE}")
-        
-    # Load parameters from YAML
-    with open('Config_MOMF_T1_AB.yaml', 'r') as f:
-        params = yaml.safe_load(f)
-
-    # storage_delay precedence: when this patcher is active it is mutually
-    # exclusive with strip_storage, switches the solver to the patched model
-    # written by patch_storage_delay.py, and uses its own prefix so the run's
-    # combined inputs/outputs do not overwrite the baseline OSTRAM_* artifacts.
-    if params.get('storage_delay_active', False):
-        if params.get('strip_storage_active', False):
-            print("[storage_delay] strip_storage_active forced to False (mutually exclusive)")
-            params['strip_storage_active'] = False
-        params.setdefault('storage_delay_model_input', params['osemosys_model'])
-        params.setdefault('storage_delay_model_output', 'osemosys_fast_preprocessed_storage_delay.txt')
-        params['osemosys_model'] = params['storage_delay_model_output']
-        if params.get('storage_delay_prefix_final_files'):
-            params['prefix_final_files'] = params['storage_delay_prefix_final_files']
-        print(f"[storage_delay] osemosys_model -> {params['osemosys_model']}")
-        print(f"[storage_delay] prefix_final_files -> {params['prefix_final_files']}")
-
-    # Load parameters from YAML
-    with open('Config_MOMF_T1_A.yaml', 'r') as f:
-        params_A2 = yaml.safe_load(f)
-    
-    # Define base source and destination paths
-    base_input_path = os.path.join(HERE, params['A2_output'])
-    template_path = os.path.join(HERE, params['Miscellaneous'], params['templates'])
-    base_output_path = os.path.join(HERE, params['A2_output_otoole'])
-
-    scenarios=sorted(os.listdir(base_input_path))
-    try:
-        scenarios.remove('Default')
-    except ValueError:
-        pass
-
-    if params['only_main_scenario']:
-        scenarios = []
-        scenarios.append(params_A2['xtra_scen']['Main_Scenario'])
-
-    if _cli_args.scenarios:
-        requested = [s.strip() for s in _cli_args.scenarios.split(",") if s.strip()]
-        discovered = set(scenarios)
-        unknown = [s for s in requested if s not in discovered]
-        if unknown:
-            print(
-                f"[ERROR] --scenarios contains names not found in {base_input_path}: "
-                f"{unknown}. Discovered: {scenarios}"
-            )
-            sys.exit(1)
-        scenarios = [s for s in scenarios if s in requested]
-        print(f"[INFO] Scenario filter active: {scenarios}")
-
-    main_scenario_name = params_A2['xtra_scen']['Main_Scenario']
-    
-    ###############################################################################################
-    # Write txt model
-    for scenario_name in scenarios:
-         
-        if params['A2_otoole_outputs']:
-            process_scenario_folder(
-                base_input_path=base_input_path,
-                template_path=template_path,
-                base_output_path=base_output_path,
-                scenario_name=scenario_name
-            )
-        if params['write_txt_model']:
-            conversion_ok = run_otoole_conversion(
-                base_output_path=base_output_path,
-                scenario_name=scenario_name,
-                params=params
-            )
-
-            if conversion_ok:
-                run_preprocessing_script(params, scenario_name)
-                run_days_in_day_type_patcher(params, scenario_name)
-                run_storage_delay_patcher(params, scenario_name)
-                run_strip_storage_patcher(params, scenario_name)
-                run_open_pwrbck_patcher(params, scenario_name)
-                run_reserve_margin_repair_patcher(params, scenario_name)
-                run_reserve_margin_xlsx_patcher(params, scenario_name)
-            else:
-                print(f"❌ Skipping preprocessing for '{scenario_name}' because the otoole conversion failed.")
-                print('#------------------------------------------------------------------------------#')
-                continue
+    HERE = value
 
 
-        input_folder = os.path.join(HERE, base_output_path, scenario_name)
-        output_folder = os.path.join(HERE, params['executables'], scenario_name + '_0')
-        
-        # List available files for preview (just to verify configuration)
-        os.makedirs(input_folder, exist_ok=True)
-        os.makedirs(output_folder, exist_ok=True)
-        
-        # Concatenate inputs
-        generate_combined_input_file(input_folder, output_folder, scenario_name + '_0')
+def _load_annualizer():
+    from Z_AUX_capital_annualization_script import annualize_capital_investment
 
-        #
-    ###############################################################################################
-
-    if params['write_txt_model'] and main_scenario_name in scenarios:
-        export_root_datafile(HERE, params, main_scenario_name)
-        
-        
-        
-    ###############################################################################################
-    # Execute txt model
-    if params['execute_model'] or params['create_matrix']:
-        if params['parallel']:
-            print('Started parallelization of model execution')
-            max_x_per_iter = params['max_x_per_iter'] # FLAG: This is an input
-            scenarios_list_max_per_iter = chunk_scenarios(scenarios, max_x_per_iter)
-            #
-            for scens_list in scenarios_list_max_per_iter:
-                processes = []
-                for scenario_name in scens_list:
-                    p = mp.Process(target=main_executer, args=(params, scenario_name, HERE) )
-                    processes.append(p)
-                    p.start()
-                #
-                for process in processes:
-                    process.join()
-            
-        # This is for the linear version
-        else:
-            print('Started linear executions')
-            for scenario_num in scenarios:
-                main_executer(params, scenario_num, HERE)
-    
-    ###############################################################################################
-    # Delete files
-    for scenario_name in scenarios:
-        # Delete Outputs folder with otoole csv files
-        if params['del_files']:
-            # Delete Outputs folder with otoole csv files
-            folder_scenario = os.path.join(HERE, params['executables'], scenario_name + '_0') 
-            outputs_otoole_csvs = os.path.join(HERE, folder_scenario, params['outputs'])
-            data_file = os.path.join(HERE, folder_scenario, scenario_name + '_0' + '.txt')
-            sol_file = os.path.join(HERE, folder_scenario, params['preprocess_data_name'] + scenario_name + '_0' + params['output_files'] + '.sol')
-            if os.path.exists(outputs_otoole_csvs):
-                shutil.rmtree(outputs_otoole_csvs)
-        
-            # Delete glp, lp, txt and sol files
-            if params['solver'] in ['glpk', 'cbc', 'cplex']:
-                delete_files(sol_file, data_file, params['solver'])
-
-            print(f'✅ Intermediate files for scenario {scenario_name}_0 deleted successfully.')
-            print('\n#------------------------------------------------------------------------------#')
-
-    ###############################################################################################
-
-    end_1 = time.time()   
-    time_elapsed_1 = -start1 + end_1
-    print( str( time_elapsed_1 ) + ' seconds /', str( time_elapsed_1/60 ) + ' minutes' )
-
-    start2 = time.time()
-    
-    ###############################################################################################
-    # Concatenate inputs and outputs
-    if params['concat_scenarios_csv']:
-        input_output_path, output_output_path, combined_output_path = concatenate_all_scenarios(HERE,params)
-        print(f'✅ Inputs and outputs concatenated for all scenarios successfully.')
-        print(f'The files are: ({input_output_path}), ({output_output_path}) and ({combined_output_path})')
-    ###############################################################################################
-
-    ###############################################################################################
-    # Annualize capital investment
-    if params.get('annualize_capital', False):
-        try:
-            print('\n')
-            print('#'*80)
-            print('# CAPITAL INVESTMENT ANNUALIZATION')
-            print('#'*80)
-
-            # Import the annualization function
-            from Z_AUX_capital_annualization_script import annualize_capital_investment
-
-            # Define the path to the combined file
-            combined_file_path = os.path.join(HERE, params['prefix_final_files'] + 'Combined_Inputs_Outputs.csv')
-
-            # Check whether the file exists
-            if os.path.exists(combined_file_path):
-                print(f'Starting annualization for: {combined_file_path}')
-
-                # Call the annualization function
-                annualize_capital_investment(
-                    input_file_path=combined_file_path,
-                    verbose=True
-                )
-
-                print(f'✅ Capital investment annualization completed successfully.')
-
-                # Create a dated copy with annualized data
-                today = date.today().isoformat()  # 'YYYY-MM-DD'
-                dated_combined = combined_file_path.replace('.csv', f'_{today}.csv')
-                shutil.copy2(combined_file_path, dated_combined)
-                print(f'✅ Annualized file copied to: {dated_combined}')
-                print('#'*80)
-            else:
-                print(f'⚠️  WARNING: Combined file not found at {combined_file_path}')
-                print('Skipping capital investment annualization.')
-                print('#'*80)
-
-        except Exception as e:
-            print(f'❌ ERROR during capital investment annualization: {e}')
-            print('Continuing without annualization...')
-            import traceback
-            traceback.print_exc()
-            print('#'*80)
-    else:
-        # If annualization is disabled, still create a dated copy of the combined file
-        combined_file_path = os.path.join(HERE, params['prefix_final_files'] + 'Combined_Inputs_Outputs.csv')
-        if os.path.exists(combined_file_path):
-            today = date.today().isoformat()  # 'YYYY-MM-DD'
-            dated_combined = combined_file_path.replace('.csv', f'_{today}.csv')
-            shutil.copy2(combined_file_path, dated_combined)
-            print(f'✅ Combined file copied to: {dated_combined}')
-    ###############################################################################################
+    return annualize_capital_investment
 
 
+def _orchestration_dependencies():
+    return b2_orchestrator.B2Dependencies(
+        process_scenario_folder=process_scenario_folder,
+        run_otoole_conversion=run_otoole_conversion,
+        run_preprocessing_script=run_preprocessing_script,
+        run_days_in_day_type_patcher=run_days_in_day_type_patcher,
+        run_storage_delay_patcher=run_storage_delay_patcher,
+        run_strip_storage_patcher=run_strip_storage_patcher,
+        run_open_pwrbck_patcher=run_open_pwrbck_patcher,
+        run_reserve_margin_repair_patcher=run_reserve_margin_repair_patcher,
+        run_reserve_margin_xlsx_patcher=run_reserve_margin_xlsx_patcher,
+        generate_combined_input_file=generate_combined_input_file,
+        export_root_datafile=export_root_datafile,
+        main_executer=main_executer,
+        chunk_scenarios=chunk_scenarios,
+        delete_files=delete_files,
+        concatenate_all_scenarios=concatenate_all_scenarios,
+        load_annualizer=_load_annualizer,
+        yaml_safe_load=yaml.safe_load,
+        mp_module=mp,
+    )
 
 
-    # # 1. Load the dataframes from the CSVs
-    # df_inputs_all = pd.read_csv('REALC_TX_Inputs.csv', low_memory=False)
-    # df_outputs_all = pd.read_csv('REALC_TX_Outputs.csv', low_memory=False)
+def main(argv=None):
+    return b2_orchestrator.orchestrate_b2(
+        _orchestration_dependencies,
+        argv=argv,
+        module_file=globals().get(
+            "__file__", b2_orchestrator._MISSING_MODULE_FILE
+        ),
+        set_here=_set_here,
+    )
 
-    # # 2. Concatenate them vertically (one below the other)
-    # df_combined = pd.concat([df_inputs_all, df_outputs_all], ignore_index=True, sort=False)
 
-    # # 3. (Optional) Reorder columns if desired,
-    # #    for example, putting 'Scenario' and 'Future' at the front
-    # cols_front = ['Scenario', 'Future']
-    # other_cols = [c for c in df_combined.columns if c not in cols_front]
-    # df_combined = df_combined[cols_front + other_cols]
-
-    # # 4. Save the combined CSV
-    # today = date.today().isoformat()  # e.g. '2025-07-14'
-    # combined_filename = f"{params['prefix_final_files']}Combined_Inputs_Outputs_{today}.csv"
-    # df_combined.to_csv(combined_filename, index=False)
-
-    # print(f"Combined file saved at: {combined_filename}")
-    ###############################################################################################
-    
-    
-    end_2 = time.time()   
-    time_elapsed_2 = -start2 + end_2
-    print( str( time_elapsed_2 ) + ' seconds /', str( time_elapsed_2/60 ) + ' minutes' )
-    print('\n#------------------------------------------------------------------------------#')
-    
-    time_elapsed_3 = -start1 + end_2
-    print( str( time_elapsed_3 ) + ' seconds /', str( time_elapsed_3/60 ) + ' minutes' )
-    print('*: For all effects, we have finished the work of this script.')
-
-            
-
+if __name__ == "__main__":
+    main()

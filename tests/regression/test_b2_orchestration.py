@@ -22,10 +22,15 @@ from unittest import mock
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
 B2_ENTRYPOINT = REPO_ROOT / "t1_confection" / "B2_Executing_OG_Model.py"
+B2_ORCHESTRATOR = REPO_ROOT / "t1_confection" / "b2_orchestrator.py"
 
 
 def _source() -> str:
     return B2_ENTRYPOINT.read_text(encoding="utf-8-sig")
+
+
+def _orchestrator_source() -> str:
+    return B2_ORCHESTRATOR.read_text(encoding="utf-8-sig")
 
 
 def _main_guard(tree: ast.Module) -> ast.If:
@@ -55,6 +60,13 @@ def _selected_calls(node: ast.AST, selected: set[str]) -> list[str]:
     return [_call_name(item) for item in calls if _call_name(item) in selected]
 
 
+def _function(tree: ast.Module, name: str) -> ast.FunctionDef:
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name == name:
+            return node
+    raise AssertionError(f"function {name!r} not found")
+
+
 def _load_b2(label: str):
     module_name = f"_ostram_b2_characterization_{label}"
     spec = importlib.util.spec_from_file_location(module_name, B2_ENTRYPOINT)
@@ -70,7 +82,7 @@ def _load_b2(label: str):
 
 
 def _load_b2_guard_as_callable(label: str):
-    """Load the predecessor and expose its guarded body without executing it."""
+    """Expose the guarded entrypoint body without executing it at import time."""
     source = _source()
     tree = ast.parse(source, filename=str(B2_ENTRYPOINT))
     guard = _main_guard(tree)
@@ -367,49 +379,114 @@ class B2ImportAndCliCharacterizationTests(unittest.TestCase):
 
 class B2AstBoundaryCharacterizationTests(unittest.TestCase):
     def test_top_level_stage_order_includes_both_solver_routes_and_postprocessing(self) -> None:
-        tree = ast.parse(_source(), filename=str(B2_ENTRYPOINT))
-        guard = _main_guard(tree)
-        selected = {
-            "os.chdir",
-            "process_scenario_folder",
-            "run_otoole_conversion",
-            "run_preprocessing_script",
-            "run_days_in_day_type_patcher",
-            "run_storage_delay_patcher",
-            "run_strip_storage_patcher",
-            "run_open_pwrbck_patcher",
-            "run_reserve_margin_repair_patcher",
-            "run_reserve_margin_xlsx_patcher",
-            "generate_combined_input_file",
-            "export_root_datafile",
-            "chunk_scenarios",
-            "mp.Process",
-            "main_executer",
-            "delete_files",
-            "concatenate_all_scenarios",
-            "annualize_capital_investment",
-            "shutil.copy2",
-        }
+        entry_tree = ast.parse(_source(), filename=str(B2_ENTRYPOINT))
+        orchestrator_tree = ast.parse(
+            _orchestrator_source(), filename=str(B2_ORCHESTRATOR)
+        )
         self.assertEqual(
-            _selected_calls(guard, selected),
+            _selected_calls(_main_guard(entry_tree), {"main"}),
+            ["main"],
+        )
+        self.assertEqual(
+            _selected_calls(
+                _function(entry_tree, "main"),
+                {"b2_orchestrator.orchestrate_b2"},
+            ),
+            ["b2_orchestrator.orchestrate_b2"],
+        )
+
+        top_level = _function(orchestrator_tree, "orchestrate_b2")
+        self.assertEqual(
+            _selected_calls(
+                top_level,
+                {
+                    "os.chdir",
+                    "build_run_plan",
+                    "run_compiled_input_stage",
+                    "run_execution_stage",
+                    "run_cleanup_stage",
+                    "run_final_postprocessing_stage",
+                },
+            ),
             [
                 "os.chdir",
-                "process_scenario_folder",
-                "run_otoole_conversion",
-                "run_preprocessing_script",
-                "run_days_in_day_type_patcher",
-                "run_storage_delay_patcher",
-                "run_strip_storage_patcher",
-                "run_open_pwrbck_patcher",
-                "run_reserve_margin_repair_patcher",
-                "run_reserve_margin_xlsx_patcher",
-                "generate_combined_input_file",
-                "export_root_datafile",
-                "chunk_scenarios",
-                "mp.Process",
-                "main_executer",
-                "delete_files",
-                "concatenate_all_scenarios",
+                "build_run_plan",
+                "run_compiled_input_stage",
+                "run_execution_stage",
+                "run_cleanup_stage",
+                "run_final_postprocessing_stage",
+            ],
+        )
+
+        compiled_input = _function(orchestrator_tree, "run_compiled_input_stage")
+        compiled_calls = {
+            "dependencies.process_scenario_folder",
+            "dependencies.run_otoole_conversion",
+            "dependencies.run_preprocessing_script",
+            "dependencies.run_days_in_day_type_patcher",
+            "dependencies.run_storage_delay_patcher",
+            "dependencies.run_strip_storage_patcher",
+            "dependencies.run_open_pwrbck_patcher",
+            "dependencies.run_reserve_margin_repair_patcher",
+            "dependencies.run_reserve_margin_xlsx_patcher",
+            "dependencies.generate_combined_input_file",
+            "dependencies.export_root_datafile",
+        }
+        self.assertEqual(
+            _selected_calls(compiled_input, compiled_calls),
+            [
+                "dependencies.process_scenario_folder",
+                "dependencies.run_otoole_conversion",
+                "dependencies.run_preprocessing_script",
+                "dependencies.run_days_in_day_type_patcher",
+                "dependencies.run_storage_delay_patcher",
+                "dependencies.run_strip_storage_patcher",
+                "dependencies.run_open_pwrbck_patcher",
+                "dependencies.run_reserve_margin_repair_patcher",
+                "dependencies.run_reserve_margin_xlsx_patcher",
+                "dependencies.generate_combined_input_file",
+                "dependencies.export_root_datafile",
+            ],
+        )
+
+        execution = _function(orchestrator_tree, "run_execution_stage")
+        self.assertEqual(
+            _selected_calls(
+                execution,
+                {
+                    "dependencies.chunk_scenarios",
+                    "dependencies.mp_module.Process",
+                    "dependencies.main_executer",
+                },
+            ),
+            [
+                "dependencies.chunk_scenarios",
+                "dependencies.mp_module.Process",
+                "dependencies.main_executer",
+            ],
+        )
+
+        cleanup = _function(orchestrator_tree, "run_cleanup_stage")
+        self.assertEqual(
+            _selected_calls(cleanup, {"dependencies.delete_files"}),
+            ["dependencies.delete_files"],
+        )
+        postprocessing = _function(
+            orchestrator_tree, "run_final_postprocessing_stage"
+        )
+        self.assertEqual(
+            _selected_calls(
+                postprocessing,
+                {
+                    "dependencies.concatenate_all_scenarios",
+                    "dependencies.load_annualizer",
+                    "annualize_capital_investment",
+                    "shutil.copy2",
+                },
+            ),
+            [
+                "dependencies.concatenate_all_scenarios",
+                "dependencies.load_annualizer",
                 "annualize_capital_investment",
                 "shutil.copy2",
                 "shutil.copy2",
@@ -417,30 +494,28 @@ class B2AstBoundaryCharacterizationTests(unittest.TestCase):
         )
 
     def test_exact_outer_and_parallel_guards_dominate_the_two_executor_routes(self) -> None:
-        source = _source()
-        tree = ast.parse(source, filename=str(B2_ENTRYPOINT))
-        guard = _main_guard(tree)
-        guard_source = ast.get_source_segment(source, guard)
-        assert guard_source is not None
+        source = _orchestrator_source()
+        tree = ast.parse(source, filename=str(B2_ORCHESTRATOR))
+        execution = _function(tree, "run_execution_stage")
+        execution_source = ast.get_source_segment(source, execution)
+        assert execution_source is not None
         self.assertIn(
-            "if params['execute_model'] or params['create_matrix']:", guard_source
+            'if params["execute_model"] or params["create_matrix"]:',
+            execution_source,
         )
-        self.assertIn("if params['parallel']:", guard_source)
-        self.assertIn(
-            "mp.Process(target=main_executer, args=(params, scenario_name, HERE) )",
-            guard_source,
-        )
-        self.assertIn("main_executer(params, scenario_num, HERE)", guard_source)
+        self.assertIn('if params["parallel"]:', execution_source)
 
         process_calls = [
             call
-            for call in ast.walk(guard)
-            if isinstance(call, ast.Call) and _call_name(call) == "mp.Process"
+            for call in ast.walk(execution)
+            if isinstance(call, ast.Call)
+            and _call_name(call) == "dependencies.mp_module.Process"
         ]
         direct_calls = [
             call
-            for call in ast.walk(guard)
-            if isinstance(call, ast.Call) and _call_name(call) == "main_executer"
+            for call in ast.walk(execution)
+            if isinstance(call, ast.Call)
+            and _call_name(call) == "dependencies.main_executer"
         ]
         self.assertEqual(len(process_calls), 1)
         self.assertEqual(len(direct_calls), 1)
@@ -449,8 +524,45 @@ class B2AstBoundaryCharacterizationTests(unittest.TestCase):
             for keyword in process_calls[0].keywords
             if keyword.arg == "target"
         )
-        self.assertIsInstance(target, ast.Name)
-        self.assertEqual(target.id, "main_executer")
+        self.assertIsInstance(target, ast.Attribute)
+        self.assertEqual(target.attr, "main_executer")
+        self.assertIsInstance(target.value, ast.Name)
+        self.assertEqual(target.value.id, "dependencies")
+
+    def test_named_matrix_and_solver_boundaries_are_injectable(self) -> None:
+        entry_tree = ast.parse(_source(), filename=str(B2_ENTRYPOINT))
+        entry_executor = _function(entry_tree, "main_executer")
+        self.assertEqual(
+            _selected_calls(
+                entry_executor,
+                {
+                    "b2_orchestrator.ScenarioExecutionDependencies",
+                    "b2_orchestrator.execute_scenario",
+                },
+            ),
+            [
+                "b2_orchestrator.ScenarioExecutionDependencies",
+                "b2_orchestrator.execute_scenario",
+            ],
+        )
+
+        tree = ast.parse(_orchestrator_source(), filename=str(B2_ORCHESTRATOR))
+        for name in ("run_matrix_preparation", "invoke_solver_command"):
+            boundary = _function(tree, name)
+            self.assertEqual(
+                _selected_calls(boundary, {"process_runner"}),
+                ["process_runner"],
+            )
+            process_call = next(
+                item for item in ast.walk(boundary) if isinstance(item, ast.Call)
+            )
+            self.assertEqual(
+                [
+                    (keyword.arg, keyword.value.value)
+                    for keyword in process_call.keywords
+                ],
+                [("shell", True), ("check", True)],
+            )
 
 
 class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
@@ -700,6 +812,76 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
                     sum(event[0] == "concat_scenarios" for event in harness.events),
                     int(concat_scenarios),
                 )
+
+    def test_explicit_solver_adapter_is_fail_closed_for_compile_only_and_matrix_only(
+        self,
+    ) -> None:
+        module = _load_b2("solver_adapter_fail_closed")
+        orchestrator = module.b2_orchestrator
+
+        class SentinelSolverAdapter:
+            def prepare_command(self, *args, **kwargs):
+                raise AssertionError("solver command preparation was reachable")
+
+            def invoke(self, *args, **kwargs):
+                raise AssertionError("solver invocation was reachable")
+
+        def reject_process(*args, **kwargs):
+            raise AssertionError("external process boundary was reachable")
+
+        dependencies = orchestrator.ScenarioExecutionDependencies(
+            run_process=reject_process,
+            check_environment=lambda solver: None,
+            get_executable=lambda executable: f"fixture-{executable}",
+            get_config_main_path=lambda here, folder: str(
+                Path(here).parent / folder
+            ),
+            path_exists=lambda path: False,
+            remove_file=lambda path: None,
+            python_executable=sys.executable,
+        )
+        root = Path("C:/fixture/t1_confection")
+        sentinel = SentinelSolverAdapter()
+
+        with redirect_stdout(io.StringIO()):
+            orchestrator.execute_scenario(
+                _base_params(
+                    solver="cplex",
+                    execute_model=False,
+                    create_matrix=False,
+                    concat_otoole_csv=False,
+                ),
+                "A",
+                root,
+                dependencies,
+                solver_adapter=sentinel,
+                matrix_runner=reject_process,
+            )
+
+        matrix_commands: list[str] = []
+
+        def record_matrix(command, process_runner) -> None:
+            self.assertIs(process_runner, reject_process)
+            matrix_commands.append(command)
+
+        with redirect_stdout(io.StringIO()):
+            orchestrator.execute_scenario(
+                _base_params(
+                    solver="cplex",
+                    execute_model=False,
+                    create_matrix=True,
+                    concat_otoole_csv=False,
+                ),
+                "A",
+                root,
+                dependencies,
+                solver_adapter=sentinel,
+                matrix_runner=record_matrix,
+            )
+
+        self.assertEqual(len(matrix_commands), 1)
+        self.assertIn("glpsol", matrix_commands[0])
+        self.assertIn("--check", matrix_commands[0])
 
     def test_parallel_route_batches_process_targets_and_ignores_child_exitcodes(self) -> None:
         module = _load_b2_guard_as_callable("parallel_route")
