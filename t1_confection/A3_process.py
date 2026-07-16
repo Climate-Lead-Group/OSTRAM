@@ -47,6 +47,13 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+try:
+    from t1_confection import a3_orchestrator as _orchestrator
+except ModuleNotFoundError as error:
+    if error.name != "t1_confection":
+        raise
+    import a3_orchestrator as _orchestrator
+
 T1_CONFECTION = Path(__file__).resolve().parent
 A3_PROCESS_DIR = T1_CONFECTION / "A3_process"
 RULES_SCRIPTS_DIR = A3_PROCESS_DIR / "rules_scripts"
@@ -725,108 +732,70 @@ def _resolve_scenario_config(
     return scenario, rules_scripts, inherit_from
 
 
+def _materialize_scenario_template(
+    soasia: Path,
+    scenario: str,
+    output_path: Path,
+) -> None:
+    """Load the existing scenario helper only when materialization is needed."""
+    sys.path.insert(0, str(A3_PROCESS_DIR))
+    try:
+        import _scenarios
+    finally:
+        sys.path.pop(0)
+    _scenarios.materialize_scenario_template(soasia, scenario, output_path)
+
+
+def _orchestration_paths() -> _orchestrator.A3Paths:
+    """Expose script-anchored A3 paths as one immutable plan input."""
+    return _orchestrator.A3Paths(
+        t1_confection=T1_CONFECTION,
+        process_dir=A3_PROCESS_DIR,
+        default_soasia=SOASIA_V18,
+    )
+
+
+def _orchestration_dependencies() -> _orchestrator.A3Dependencies:
+    """Bind existing helpers to the isolated orchestration effect seams."""
+    return _orchestrator.A3Dependencies(
+        resolve_scenario_config=_resolve_scenario_config,
+        resolve_path=_resolve,
+        build_workdir=build_workdir,
+        materialize_scenario_template=_materialize_scenario_template,
+        stage_0_5_rnwbio=stage_0_5_rnwbio,
+        stage_1_scripts_1_to_5=stage_1_scripts_1_to_5,
+        stage_1b=stage_1b,
+        stage_2_and_2_5=stage_2_and_2_5,
+        stage_3_fix_2=stage_3_fix_2,
+        stage_4_consolidate=stage_4_consolidate,
+        stage_4_5_apply_inherited_restrictions=(
+            stage_4_5_apply_inherited_restrictions
+        ),
+        stage_5_rules_scripts=stage_5_rules_scripts,
+        stage_ws3_interconnector_costs=stage_ws3_interconnector_costs,
+        stage_ws3_internal_transmission=stage_ws3_internal_transmission,
+        stage_ws3_internal_tx_losses=stage_ws3_internal_tx_losses,
+        stage_6_sync_og_to_ts20=stage_6_sync_og_to_ts20,
+        stage_6_persist_restrictions=stage_6_persist_restrictions,
+        deliver_outputs=deliver_outputs,
+        remove_tree=shutil.rmtree,
+        copy_tree=shutil.copytree,
+        copy_file=shutil.copy,
+        environment=os.environ,
+        clock=time.time,
+        timestamp_now=datetime.now,
+        banner=banner,
+        emit=print,
+    )
+
+
 def main() -> int:
-    args = parse_cli_args()
-
-    if not A3_PROCESS_DIR.is_dir():
-        sys.exit(f"ERROR: A3_process folder missing: {A3_PROCESS_DIR}")
-
-    soasia = args.soasia if args.soasia is not None else SOASIA_V18
-    scenario, rules_scripts, inherit_from = _resolve_scenario_config(args, soasia)
-
-    # Resolve input/output dirs. Default: A1_Outputs/A1_Outputs_<scenario>.
-    if args.input_dir is not None:
-        input_dir = _resolve(args.input_dir)
-    else:
-        input_dir = T1_CONFECTION / "A1_Outputs" / f"A1_Outputs_{scenario}"
-    output_dir = _resolve(args.output_dir) if args.output_dir is not None else input_dir
-    workdir_base = A3_PROCESS_DIR
-
-    # Snapshot fuente: SIEMPRE BAU. All scenarios diverge from BAU only via
-    # SOASIA v18 overrides + inherited restrictions + scenario rules_script.
-    snapshot_dir = T1_CONFECTION / "A1_Outputs" / "_post_a2_snapshot_BAU"
-    if not snapshot_dir.is_dir():
-        sys.exit(
-            f"ERROR: snapshot post-A2 not found: {snapshot_dir}\n"
-            f"       Run A1 + A2 (for BAU) first; A2 creates the snapshot."
-        )
-
-    t_start = time.time()
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    banner(f"A3 workflow run @ {ts}")
-    print(f"  scenario          : {scenario}")
-    print(f"  input-dir         : {input_dir}")
-    print(f"  output-dir        : {output_dir}")
-    print(f"  snapshot (source) : {snapshot_dir}")
-    print(f"  SOASIA v18        : {soasia if soasia.is_file() else '(legacy mode, v18 absent)'}")
-    print(f"  rules_scripts     : {rules_scripts or '(none)'}")
-    print(f"  inherit_from      : {inherit_from or '(none)'}")
-
-    # 0. Restore input_dir from snapshot (clean canonical post-A2 state)
-    if input_dir.exists():
-        shutil.rmtree(input_dir)
-    shutil.copytree(snapshot_dir, input_dir)
-    print(f"  -> {input_dir.name} restored from {snapshot_dir.name}")
-
-    # 1. Build workdir (stages incl. the rules_scripts chain staged into wd/rules_scripts/)
-    paths = build_workdir(workdir_base, ts, rules_scripts, scenario)
-    wd = paths["wd"]
-    s1 = paths["s1"]; s1b = paths["s1b"]; s2 = paths["s2"]; s3 = paths["s3"]; s5 = paths["s5"]
-    print(f"  workdir           : {wd}")
-
-    # 2. Stage 0 — materialize per-scenario template + expose it via env var so
-    #    1_merge_timeslices_into_WV.py picks it up instead of the raw v17.
-    materialized_template = None
-    if soasia.is_file():
-        materialized_template = wd / f"_materialized_{scenario}.xlsx"
-        banner(f"Stage 0 — materialize scenario template for '{scenario}'")
-        sys.path.insert(0, str(A3_PROCESS_DIR))
-        try:
-            import _scenarios
-        finally:
-            sys.path.pop(0)
-        _scenarios.materialize_scenario_template(soasia, scenario, materialized_template)
-        os.environ["OSTRAM_TEMPLATE_PATH"] = str(materialized_template)
-        print(f"    materialized -> {materialized_template.name}")
-        print(f"    OSTRAM_TEMPLATE_PATH set; stage 1 will read it instead of v17")
-
-    # 3. Copy inputs into stage1
-    for f in INPUT_FILES:
-        src = input_dir / f
-        if not src.exists():
-            sys.exit(f"ERROR: input file missing: {src}")
-        shutil.copy(src, s1 / f)
-
-    # 4. Pipeline stages
-    stage_0_5_rnwbio(wd, s1)
-    stage_1_scripts_1_to_5(s1)
-    stage_1b(wd, s1, s1b)
-    stage_2_and_2_5(wd, s1b, s2)
-    param_for_stage4 = stage_3_fix_2(s2, s3)
-    stage_4_consolidate(s1, s3, s5, param_for_stage4)
-    stage_4_5_apply_inherited_restrictions(s5, soasia, inherit_from)
-    stage_5_rules_scripts(wd, s5, rules_scripts)
-    stage_ws3_interconnector_costs(s5, soasia, materialized_template)
-    stage_ws3_internal_transmission(s5)
-    stage_ws3_internal_tx_losses(s5)
-    stage_6_sync_og_to_ts20(wd, s1)
-    stage_6_persist_restrictions(s5, soasia, scenario, rules_scripts)
-
-    # 5. Deliver
-    deliver_outputs(s5, output_dir)
-
-    # 6. Cleanup workdir
-    if not args.keep_workdir:
-        shutil.rmtree(wd, ignore_errors=True)
-        print(f"\n  Cleaned up workdir: {wd.name}")
-    else:
-        print(f"\n  Workdir preserved: {wd}")
-    # Clear env var so other code in the same process is not affected
-    os.environ.pop("OSTRAM_TEMPLATE_PATH", None)
-
-    elapsed = time.time() - t_start
-    banner(f"DONE in {elapsed:.1f}s")
-    return 0
+    return _orchestrator.orchestrate_a3(
+        parse_cli_args(),
+        _orchestration_paths(),
+        _orchestration_dependencies(),
+        INPUT_FILES,
+    )
 
 
 if __name__ == "__main__":

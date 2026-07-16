@@ -24,6 +24,12 @@ The primary core entrypoints are protected operational code:
 core implementation now lives in `t1_confection/b1_runner.py`. The wrapper retains
 the former callable helper surface and delegates explicitly to that module.
 
+`t1_confection/A3_process.py` remains the public A3 CLI and retains its callable
+stage/helper surface. The protected planning and effect sequence now lives in
+`t1_confection/a3_orchestrator.py`; the entrypoint binds the existing helpers to
+that module explicitly, without importing or rewriting any computational
+transformation.
+
 The following are optional model-writing entrypoints. They are core/protected even
 though `run.py` does not call them:
 
@@ -84,8 +90,10 @@ iteration continues. `run_compiler` launches
 `B1_Compiler.py` with the current interpreter and the `t1_confection/` working
 directory.
 
-`A3_process.py` restores every selected input directory from
-`_post_a2_snapshot_BAU` before building its work directory. Its frozen stage path is
+`A3_process.py` delegates read-only planning and the effect sequence to
+`a3_orchestrator.py`, while retaining all existing stage helpers. Every selected
+input directory is restored from `_post_a2_snapshot_BAU` before the work directory
+is built. The frozen stage path is
 `stage_0_5_rnwbio` -> `stage_1_scripts_1_to_5` -> `stage_1b` ->
 `stage_2_and_2_5` -> `stage_3_fix_2` -> `stage_4_consolidate` ->
 `stage_4_5_apply_inherited_restrictions` -> `stage_5_rules_scripts` ->
@@ -101,6 +109,51 @@ ordered path succeeds.
 compiled-input generation, matrix preparation, solver invocation, per-scenario
 output handling, and final postprocessing boundaries. Both modules are import-safe.
 Solver execution remains outside this test phase.
+
+## A3 orchestration contract
+
+The accepted direct A3 command keeps the seven predecessor options:
+`--scenario`, `--soasia`, `--rules-script`, `--inherit-from`, `--input-dir`,
+`--output-dir`, and `--keep-workdir`. Their defaults and standard `argparse` exit
+behavior are unchanged. The default scenario remains `BAU`; an explicitly relative
+SOASIA path remains caller-working-directory-relative, while relative input/output
+overrides remain anchored to `t1_confection/`. Importing either the entrypoint or
+the isolated orchestrator performs no planning, filesystem mutation, workbook
+operation, or process launch.
+
+`A3Paths` makes the entrypoint roots explicit. `resolve_plan` produces an immutable
+`A3Plan` containing the scenario, ordered rule chain, ordered inherited restrictions,
+SOASIA path, input/output destinations, fixed BAU snapshot, workdir base, and cleanup
+choice. The existing `_resolve_scenario_config` remains on the public helper surface
+and is injected into planning, so legacy mode, Control-sheet validation, CLI
+override precedence, duplicate rule/inheritance values, and error text remain
+unchanged. Direct A3 still processes one named Control scenario; multi-scenario
+active discovery, topological order, duplicate collapse, and filtering remain owned
+by `_scenarios.py` and `run.py`.
+
+The canonical Control sheet has exactly four active definitions in this order:
+`BAU`, `A_Calibrated_BAU`, `B_Optimised_VRE`, and `C_Target_VRE`. The only active
+dependency edge is `BAU` -> `A_Calibrated_BAU`. Filtering follows the already
+topologically ordered active list and does not add prerequisites. The other 16
+protected scenario definitions are downstream/post-A3 configurations, not inactive
+Control rows, and are not promoted into the A3 loop.
+
+`A3Dependencies` is the explicit effect boundary. It receives the unchanged
+materializer, workdir builder, 13 ordered stage helpers, delivery helper, snapshot
+copy/remove operations, environment mapping, clocks, banner, and output emitter.
+`execute_plan` first checks the BAU snapshot, then preserves the predecessor order:
+plan banner -> input deletion/restore -> workdir construction -> optional scenario
+materialization and `OSTRAM_TEMPLATE_PATH` assignment -> four input copies -> the
+frozen stage chain -> four-file delivery -> optional workdir deletion -> environment
+removal -> completion banner. It never invokes B1, B2, the compiler, a matrix tool,
+or a solver itself; computational A3 helpers retain their existing subprocess
+boundary in `A3_process.py`.
+
+Failure handling is deliberately unchanged. Missing prerequisites and failed helper
+processes remain fail-fast. An unexpected exception, `SystemExit`, or
+`KeyboardInterrupt` after work begins propagates immediately; workdir cleanup and
+`OSTRAM_TEMPLATE_PATH` removal remain success-path-only. This known partial-state
+hazard is characterized rather than repaired in this structural refactor.
 
 ## B2 orchestration contract
 

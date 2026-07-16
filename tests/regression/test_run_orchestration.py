@@ -400,6 +400,63 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
             ['--scenarios "C,A,C"', '--scenarios "C,A,C"'],
         )
 
+    def test_a3_filter_does_not_auto_add_the_bau_prerequisite(self) -> None:
+        launcher = _load_launcher("no_prerequisite_closure")
+        active = (
+            "BAU",
+            "A_Calibrated_BAU",
+            "B_Optimised_VRE",
+            "C_Target_VRE",
+        )
+        with (
+            LauncherHarness(launcher, active_scenarios=active) as harness,
+            mock.patch.object(
+                sys,
+                "argv",
+                [
+                    "run.py",
+                    "--skip-pull",
+                    "--scenarios",
+                    "A_Calibrated_BAU",
+                ],
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            launcher.main()
+
+        self.assertEqual(
+            [event[3] for event in harness.events if event[0] == "a3"],
+            ["A_Calibrated_BAU"],
+        )
+
+    def test_unknown_scenario_diagnostics_preserve_order_and_duplicates(self) -> None:
+        launcher = _load_launcher("unknown_duplicates")
+        with (
+            LauncherHarness(launcher, active_scenarios=("BAU", "A")) as harness,
+            mock.patch.object(
+                sys,
+                "argv",
+                [
+                    "run.py",
+                    "--skip-pull",
+                    "--scenarios",
+                    "Missing,A,Missing,Other",
+                ],
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            with self.assertRaisesRegex(
+                RuntimeError,
+                r"\['Missing', 'Missing', 'Other'\]",
+            ):
+                launcher.main()
+
+        self.assertEqual([event for event in harness.events if event[0] == "a3"], [])
+        self.assertEqual(
+            [event for event in harness.events if event[0] == "pipeline"],
+            [],
+        )
+
     def test_empty_scenario_filter_runs_no_a3_but_forwards_no_b1_b2_option(self) -> None:
         launcher = _load_launcher("empty_scenarios")
         with (
@@ -415,6 +472,33 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
         self.assertEqual(
             [event[3] for event in harness.events if event[0] == "pipeline"], ["", ""]
         )
+
+    def test_explicit_empty_string_is_no_filter_but_whitespace_selects_nothing(self) -> None:
+        launcher = _load_launcher("empty_string_distinction")
+        for raw, expected_a3 in (("", ["A", "B"]), ("   ", [])):
+            with self.subTest(raw=raw):
+                with (
+                    LauncherHarness(
+                        launcher,
+                        active_scenarios=("A", "B"),
+                    ) as harness,
+                    mock.patch.object(
+                        sys,
+                        "argv",
+                        ["run.py", "--skip-pull", "--scenarios", raw],
+                    ),
+                    redirect_stdout(io.StringIO()),
+                ):
+                    launcher.main()
+
+                self.assertEqual(
+                    [event[3] for event in harness.events if event[0] == "a3"],
+                    expected_a3,
+                )
+                self.assertEqual(
+                    [event[3] for event in harness.events if event[0] == "pipeline"],
+                    ["", ""],
+                )
 
     def test_unknown_scenario_is_rejected_after_a1_a2_and_before_a3_b1_b2(self) -> None:
         launcher = _load_launcher("unknown_scenario")
