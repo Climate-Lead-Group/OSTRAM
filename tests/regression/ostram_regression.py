@@ -51,6 +51,7 @@ PROTECTED_TREE_ROOTS = (
     "t1_confection/sensitivity_expansion/reference",
 )
 PROTECTED_FILES = (
+    ".gitattributes",
     "run.py",
     "dvc.yaml",
     "dvc.lock",
