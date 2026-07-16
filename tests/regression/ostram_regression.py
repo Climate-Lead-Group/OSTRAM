@@ -61,6 +61,7 @@ PROTECTED_FILES = (
     "t1_confection/b1_runner.py",
     "t1_confection/B1_Compiler.py",
     "t1_confection/B2_Executing_OG_Model.py",
+    "t1_confection/b2_orchestrator.py",
     "t1_confection/Config_MOMF_T1_A.yaml",
     "t1_confection/Config_MOMF_T1_AB.yaml",
     "t1_confection/A3_process/SOASIA_OSeMOSYS_Template_v18.xlsx",

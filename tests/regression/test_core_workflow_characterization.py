@@ -32,6 +32,7 @@ PRIMARY_CORE_ENTRYPOINTS = (
 
 CORE_IMPLEMENTATION_MODULES = (
     "t1_confection/b1_runner.py",
+    "t1_confection/b2_orchestrator.py",
 )
 
 OPTIONAL_MODEL_WRITING_ENTRYPOINTS = (

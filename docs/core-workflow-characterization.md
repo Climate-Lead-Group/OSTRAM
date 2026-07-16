@@ -96,16 +96,59 @@ takes precedence over the default rules YAML. Helper failure is fail-fast throug
 `run_subproc`; work-directory and environment cleanup currently occur only after the
 ordered path succeeds.
 
-`B2_Executing_OG_Model.py` discovers sorted entries under the configured A2 output,
-removes `Default`, optionally reduces the list to `Main_Scenario`, and then applies a
-CLI filter without reordering the discovered list. Its compiled-input path is
-`run_otoole_conversion` -> `run_preprocessing_script` -> `run_days_in_day_type_patcher` ->
-`run_storage_delay_patcher` -> `run_strip_storage_patcher` ->
-`run_open_pwrbck_patcher` -> `run_reserve_margin_repair_patcher` ->
-`run_reserve_margin_xlsx_patcher`. `main_executer` is the only solve boundary for
-both linear calls and `multiprocessing.Process`; it constructs GLPK, CBC, CPLEX, or
-Gurobi commands and launches them only under the existing execution/configuration
-flags. Solver execution remains outside this test phase.
+`B2_Executing_OG_Model.py` retains the public entrypoint and computational helpers;
+`t1_confection/b2_orchestrator.py` now owns explicit argument/scenario resolution,
+compiled-input generation, matrix preparation, solver invocation, per-scenario
+output handling, and final postprocessing boundaries. Both modules are import-safe.
+Solver execution remains outside this test phase.
+
+## B2 orchestration contract
+
+The accepted B2 command line has one optional value, `--scenarios`, with parsed
+default `None`. Standard `argparse` help exits zero; an unknown option or missing
+value exits two before configuration or pipeline work. Discovery sorts every entry
+under the configured A2 output, removes only the exact `Default` entry, optionally
+replaces discovery with `Main_Scenario`, and then filters without reordering.
+Unknown requested names retain duplicates in the error and exit one. Valid requested
+duplicates collapse because selection follows the discovered list.
+
+The fixed top-level order is configuration and scenario planning, compiled-input
+generation, optional execution, optional cleanup, first timing, optional
+cross-scenario concatenation and annualization/dated-copy handling, then final
+timing. For each scenario, the compiled-input path is
+`process_scenario_folder` when enabled. After that optional step, the successful
+conversion and patch path remains `run_otoole_conversion` -> `run_preprocessing_script` -> `run_days_in_day_type_patcher` -> `run_storage_delay_patcher` ->
+`run_strip_storage_patcher` -> `run_open_pwrbck_patcher` ->
+`run_reserve_margin_repair_patcher` ->
+`run_reserve_margin_xlsx_patcher`, followed by the combined final text generation.
+A failed conversion skips the remaining work for that scenario and continues with
+the next. Root data-file export remains conditional on text generation and selection
+of the configured main scenario.
+
+Exactly two `main_executer` routes remain: a `multiprocessing.Process` target when
+`parallel` is true and a direct linear call otherwise. The unchanged outer guard for
+both is exactly `execute_model or create_matrix`; neither flag defaults to true.
+Consequently, a configuration with both false never enters `main_executer`, never
+constructs a solver adapter, and never reaches a matrix or solver process boundary.
+Parallel child exit codes remain unchecked; direct exceptions still stop later
+cleanup and postprocessing.
+
+Within a represented per-scenario execution, non-GLPK matrix preparation remains
+conditional on `create_matrix` and absence of a reusable solution. GLPK, CBC, CPLEX,
+and Gurobi command preparation and invocation are isolated behind `SolverAdapter`
+and `invoke_solver_command`; this boundary is reached only when `execute_model` is
+true and a solution is not reused. When matrix creation and solving are both active,
+solver-specific stale-file removal and environment checking still occur before the
+matrix command, while the matrix subprocess still runs before the solver subprocess.
+Commands retain inherited working directory/environment plus `shell=True` and
+`check=True`. Per-scenario otoole conversion remains conditional on `execute_model`;
+per-scenario concatenation remains conditional on `concat_otoole_csv` but is
+dominated by entry into one of the two executor routes. Cross-scenario concatenation
+is independently controlled by `concat_scenarios_csv`.
+
+The source retains its existing Unicode status output. Captured Windows validation
+must set `PYTHONIOENCODING=utf-8` before the first B2 invocation; the refactor does
+not reconfigure console encoding or change user-visible status text.
 
 ## B1 runner contract
 
