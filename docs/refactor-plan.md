@@ -1,5 +1,8 @@
 # Next-phase script and workflow refactor plan
 
+All branches and PRs proposed here must follow the
+[`cleanup and refactor governance rules`](refactor-rules.md).
+
 ## Status and evidence boundary
 
 This is a planning document. It does not authorize moving a script or changing

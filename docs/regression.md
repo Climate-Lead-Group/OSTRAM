@@ -1,5 +1,8 @@
 # Offline Regression Evidence
 
+Future cleanup and refactor PRs must follow the
+[`cleanup and refactor governance rules`](refactor-rules.md).
+
 The solver-free regression harness lives in `tests/regression/`. It never calls OSTRAM
 stages, DVC, GLPK, CPLEX, or another optimizer. Its only child process is `git`, used for
 read-only metadata and tracked-file discovery.
