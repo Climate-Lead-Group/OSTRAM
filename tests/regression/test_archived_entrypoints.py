@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import ast
 import csv
+import io
+import runpy
 import unittest
 from collections import Counter
+from contextlib import redirect_stderr
 from pathlib import Path
 
 
@@ -12,9 +15,51 @@ REPO_ROOT = TEST_ROOT.parents[1]
 ARCHIVE_ROOT = REPO_ROOT / "docs" / "archive"
 LEGACY_TOOLS = ARCHIVE_ROOT / "legacy-tools"
 FIXTURES = TEST_ROOT / "fixtures"
+PYTHON_FAIL_CLOSED_STUBS = (
+    REPO_ROOT / "t1_confection" / "Z_AUX_fix_excel_profiles.py",
+    REPO_ROOT / "ws3_transmission_audit" / "set_final_v18_interconnector_values.py",
+)
+BATCH_FAIL_CLOSED_STUBS = (
+    REPO_ROOT / "run_baselines.bat",
+    REPO_ROOT / "run_directions.bat",
+    REPO_ROOT / "run_sensitivities.bat",
+    REPO_ROOT / "t1_confection" / "run_directions.bat",
+    REPO_ROOT / "t1_confection" / "run_sensitivities.bat",
+)
 
 
 class ArchivedEntrypointTests(unittest.TestCase):
+    def test_python_archive_stubs_exit_two_without_importing_archived_code(self) -> None:
+        for stub_path in PYTHON_FAIL_CLOSED_STUBS:
+            stderr = io.StringIO()
+            with (
+                self.subTest(stub=stub_path.relative_to(REPO_ROOT)),
+                redirect_stderr(stderr),
+                self.assertRaises(SystemExit) as raised,
+            ):
+                runpy.run_path(str(stub_path), run_name="__main__")
+            self.assertEqual(raised.exception.code, 2)
+            self.assertIn("disabled", stderr.getvalue().lower())
+
+    def test_batch_archive_stubs_allow_only_notices_then_exit_two(self) -> None:
+        for stub_path in BATCH_FAIL_CLOSED_STUBS:
+            commands = [
+                line.strip().lower()
+                for line in stub_path.read_text(encoding="utf-8-sig").splitlines()
+                if line.strip()
+            ]
+            with self.subTest(stub=stub_path.relative_to(REPO_ROOT)):
+                self.assertEqual(commands[-1], "exit /b 2")
+                self.assertTrue(
+                    all(
+                        command == "@echo off"
+                        or command.startswith("echo ")
+                        or command == "exit /b 2"
+                        for command in commands
+                    ),
+                    commands,
+                )
+
     def test_obsolete_legacy_tools_are_archived_and_parse(self) -> None:
         expected = {
             REPO_ROOT / "t1_confection" / "concat_all_scenarios.py":

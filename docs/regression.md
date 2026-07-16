@@ -7,6 +7,11 @@ The solver-free regression harness lives in `tests/regression/`. It never calls 
 stages, DVC, GLPK, CPLEX, or another optimizer. Its only child process is `git`, used for
 read-only metadata and tracked-file discovery.
 
+The pre-refactor entrypoint, discovery, call-order, mutation, and process-boundary
+contract is recorded in
+[`core-workflow-characterization.md`](core-workflow-characterization.md) and enforced
+by the regression unit suite.
+
 ## Current static inventory
 
 - Authoritative A1 snapshot scenarios: 20/20.
