@@ -58,6 +58,7 @@ PROTECTED_FILES = (
     "t1_confection/A2_AddTx.py",
     "t1_confection/A3_process.py",
     "t1_confection/B1_Run_Compiler.py",
+    "t1_confection/b1_runner.py",
     "t1_confection/B1_Compiler.py",
     "t1_confection/B2_Executing_OG_Model.py",
     "t1_confection/Config_MOMF_T1_A.yaml",
