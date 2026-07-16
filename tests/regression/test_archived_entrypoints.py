@@ -113,7 +113,7 @@ class ArchivedEntrypointTests(unittest.TestCase):
         archived = (LEGACY_TOOLS / "concat_all_scenarios_merge.py").read_text(
             encoding="utf-8-sig"
         )
-        maintained = (REPO_ROOT / "t1_confection" / "concat_all_scenarios_2.py").read_text(
+        maintained = (REPO_ROOT / "tools" / "analysis" / "concat_all_scenarios.py").read_text(
             encoding="utf-8-sig"
         )
         self.assertIn("pd.merge", archived)

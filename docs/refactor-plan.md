@@ -62,17 +62,10 @@ in this category until call-site characterization proves otherwise.
 ### Analysis utilities
 
 These read model inputs or existing outputs and produce analysis, figures, slices,
-or reports. They are candidates for a later utility-only move, with compatibility
-wrappers where users may call the old paths:
-
-- the canonical utilities under `tools/analysis/` and their current
-  `t1_confection/` compatibility wrappers;
-- `t1_confection/analyse_sensitivity.py`, `concat_all_scenarios_2.py`, and
-  `reproduce_A1_A6.py`;
-- `t1_confection/sensitivity_expansion/analyse_ws4_vs_phaseB.py`; and
-- `t1_confection/Z_AUX_generate_interactive_dashboards_aggregated.py`,
-  `Z_AUX_generate_RES_diagram.py`, `Z_AUX_generate_transmission_maps.py`, and
-  `Z_AUX_interconnections_dashboard.py`.
+or reports. Canonical moved implementations are under `tools/analysis/`, with
+compatibility wrappers at the former `t1_confection/` paths. The WS-4 report remains
+at `t1_confection/sensitivity_expansion/analyse_ws4_vs_phaseB.py` because the
+protected-tree gate covers that path even though its behavior is analysis-only.
 
 ### Validation and regression
 
@@ -154,13 +147,31 @@ common offline gate:
 Tests that need temporary files must use isolated fixtures, never tracked workbooks,
 templates, scenario directories, configs, or evidence outputs.
 
-## Proposed utility, validation, and archive moves
+## Analysis utilities round 2 status
 
-These are proposals for later branches, not work for the current documentation
-branch. “Wrapper” means that the old user-facing path remains as a small forwarding
-entrypoint for at least one deprecation cycle.
+The `refactor/analysis-utilities-round2` phase implements seven analysis-only moves
+from the inventory below:
 
-| Old path | Proposed path | Reason | Affected imports, config, or docs | Risk | Required no-solver checks beyond the standard gate | Solver-backed verification |
+- `tools/analysis/concat_all_scenarios.py`;
+- `tools/analysis/analyse_sensitivity.py`;
+- `tools/analysis/reproduce_A1_A6.py`; and
+- the four scripts under `tools/analysis/visualization/`.
+
+The old user-facing paths remain forwarding wrappers for a deprecation cycle. Inputs
+and generated-output locations remain anchored to `t1_confection/` where they were
+script-relative before the move; the aggregated dashboard retains its intentional
+current-working-directory behavior. No validation, maintenance, archive, or core move
+is included in this phase. The WS-4 analysis utility is deliberately deferred: moving
+it would change the protected-tree hash and therefore cannot be accepted as Tier 1.
+
+## Utility, validation, and archive move inventory
+
+The analysis-only rows other than the protected WS-4 utility are implemented by the
+round-2 phase. The WS-4, validation, maintenance, and archive rows remain proposals
+for later branches. “Wrapper” means that the old user-facing path remains as a small
+forwarding entrypoint for at least one deprecation cycle.
+
+| Old path | Canonical or proposed path | Reason | Affected imports, config, or docs | Risk | Required no-solver checks beyond the standard gate | Solver-backed verification |
 |---|---|---|---|---|---|---|
 | `t1_confection/concat_all_scenarios.py` | `docs/archive/legacy-tools/concat_all_scenarios_merge.py` | Preserve the row-duplicating predecessor without presenting it as maintained. | References in `concat_all_scenarios_2.py` and historical sensitivity documentation. No active inbound import was found. | Low–medium | Assert no production import; archive-link check; fixture demonstrating why the old merge is not canonical. | No. |
 | `t1_confection/concat_all_scenarios_2.py` | `tools/analysis/concat_all_scenarios.py`, plus old-path wrapper | Give the maintained output concatenator a descriptive canonical home. | `analyse_sensitivity.py`, sensitivity methodology/README material, and user invocations. | Medium | Fixture covering scenario discovery, column order, row counts, and byte/normalized output equality through both entrypoints. | No; it consumes existing outputs. |

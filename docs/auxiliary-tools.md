@@ -4,19 +4,26 @@ OSTRAM includes several utility scripts (prefixed with `Z_`) for data maintenanc
 
 ## Standalone Result Analysis
 
-Four result-only utilities are organized under `tools/analysis/`:
+The result-only utilities are organized under `tools/analysis/`:
 
 ```text
 tools/analysis/check_combined.py
 tools/analysis/ostram_scenario_analysis.py
 tools/analysis/ostram_trn_plotter.py
 tools/analysis/slice_by_country.py
+tools/analysis/concat_all_scenarios.py
+tools/analysis/analyse_sensitivity.py
+t1_confection/sensitivity_expansion/analyse_ws4_vs_phaseB.py  (protected; retained in place)
+tools/analysis/reproduce_A1_A6.py
+tools/analysis/visualization/
 ```
 
 They read existing combined CSVs and produce summaries, slices, or plots; they are not
 part of A0-B2/A3 execution and do not launch a solver. Compatibility wrappers remain at
 their former `t1_confection/` paths. Use the `tools/analysis/` paths for new commands and
-automation. The plotting scripts require optional matplotlib/NumPy/pandas dependencies.
+automation. Script-relative model inputs and generated-output locations remain under
+`t1_confection/` after the implementation move. The plotting scripts require optional
+matplotlib/NumPy/pandas/Plotly dependencies.
 
 See `tools/analysis/README.md` for the individual utility descriptions.
 
@@ -95,14 +102,16 @@ Values within `0.0001` of 1.0 are considered acceptable. Values outside this ran
 
 ## Interactive Dashboard Generator
 
-**Script:** `t1_confection/Z_AUX_generate_interactive_dashboards_aggregated.py`
+**Script:** `tools/analysis/visualization/Z_AUX_generate_interactive_dashboards_aggregated.py`
+
+**Compatibility wrapper:** `t1_confection/Z_AUX_generate_interactive_dashboards_aggregated.py`
 
 Generates standalone HTML dashboards with embedded Plotly.js charts for analyzing power (PWR) technology results. Prompts interactively (`input()`) for which CSV files to load from the current directory -- it is not scriptable/headless.
 
 ### Usage
 
 ```bash
-python t1_confection/Z_AUX_generate_interactive_dashboards_aggregated.py
+python tools/analysis/visualization/Z_AUX_generate_interactive_dashboards_aggregated.py
 ```
 
 ### What It Produces
@@ -205,14 +214,16 @@ annualize_capital_investment(
 
 ## RES (Reference Energy System) Diagram
 
-**Script:** `t1_confection/Z_AUX_generate_RES_diagram.py`
+**Script:** `tools/analysis/visualization/Z_AUX_generate_RES_diagram.py`
+
+**Compatibility wrapper:** `t1_confection/Z_AUX_generate_RES_diagram.py`
 
 Reads `Config_country_codes.yaml` for country names and the `BAU` scenario's `A-O_AR_Model_Base_Year.xlsx` (sheets `Primary`, `Secondary`, `Demand Techs`, `Transport Groups`) to build a fuel → technology → fuel flow map. Regions are discovered dynamically from `ELC[A-Z]{5}\d{2}` fuel codes -- there is no hardcoded country list, so it works automatically as countries/regions are added or removed.
 
 ### Usage
 
 ```bash
-python t1_confection/Z_AUX_generate_RES_diagram.py
+python tools/analysis/visualization/Z_AUX_generate_RES_diagram.py
 ```
 
 ### What It Produces
@@ -223,14 +234,16 @@ A standalone, self-contained Sankey diagram at `Figures/RES_Diagram.html`, with 
 
 ## Transmission Maps and Dispatch Chart
 
-**Script:** `t1_confection/Z_AUX_generate_transmission_maps.py`
+**Script:** `tools/analysis/visualization/Z_AUX_generate_transmission_maps.py`
+
+**Compatibility wrapper:** `t1_confection/Z_AUX_generate_transmission_maps.py`
 
 Reads `OSTRAM_Combined_Inputs_Outputs.csv` and `Miscellaneous/centerpoints.csv` (the geographic centerpoints generated for each country/region, including any added via `Z_generate_country_template.py`). Identifies cross-border interconnectors with the pattern `^TRN[A-Z]{5}[A-Z]{5}$`.
 
 ### Usage
 
 ```bash
-python t1_confection/Z_AUX_generate_transmission_maps.py
+python tools/analysis/visualization/Z_AUX_generate_transmission_maps.py
 ```
 
 ### What It Produces
@@ -244,14 +257,16 @@ Two standalone HTML files in `Figures/`:
 
 ## Interconnections Dashboard
 
-**Script:** `t1_confection/Z_AUX_interconnections_dashboard.py`
+**Script:** `tools/analysis/visualization/Z_AUX_interconnections_dashboard.py`
+
+**Compatibility wrapper:** `t1_confection/Z_AUX_interconnections_dashboard.py`
 
 Reads `OSTRAM_Combined_Inputs_Outputs.csv`. Hardcodes the current scenario order (`BAU`, `A_Calibrated_BAU`, `B_Optimised_VRE`, `C_Target_VRE`) and the current 10-node country/region list -- update both if scenarios or countries change. Excludes `TRNNLI*` (unplanned candidate lines) from the flow analysis, showing only existing/committed interconnections.
 
 ### Usage
 
 ```bash
-python t1_confection/Z_AUX_interconnections_dashboard.py
+python tools/analysis/visualization/Z_AUX_interconnections_dashboard.py
 ```
 
 ### What It Produces

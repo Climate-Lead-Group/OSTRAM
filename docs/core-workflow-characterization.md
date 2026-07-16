@@ -26,22 +26,29 @@ though `run.py` does not call them:
 - `t1_confection/D2_update_secondary_techs.py`
 - `t1_confection/Z_AUX_D1b_set_trn_limits_from_flows.py`
 
-The following are analysis utilities, not core workflow stages. The first four
-canonical paths retain compatibility wrappers at their old `t1_confection/` paths:
+The following are canonical analysis utilities, not core workflow stages. Each retains
+a compatibility wrapper at its former `t1_confection/` path:
 
 - `tools/analysis/check_combined.py` and `t1_confection/check_combined.py`
 - `tools/analysis/ostram_scenario_analysis.py` and
   `t1_confection/ostram_scenario_analysis.py`
 - `tools/analysis/ostram_trn_plotter.py` and `t1_confection/ostram_trn_plotter.py`
 - `tools/analysis/slice_by_country.py` and `t1_confection/slice_by_country.py`
-- `t1_confection/analyse_sensitivity.py`
-- `t1_confection/concat_all_scenarios_2.py`
-- `t1_confection/reproduce_A1_A6.py`
-- `t1_confection/sensitivity_expansion/analyse_ws4_vs_phaseB.py`
-- `t1_confection/Z_AUX_generate_interactive_dashboards_aggregated.py`
-- `t1_confection/Z_AUX_generate_RES_diagram.py`
-- `t1_confection/Z_AUX_generate_transmission_maps.py`
-- `t1_confection/Z_AUX_interconnections_dashboard.py`
+- `tools/analysis/analyse_sensitivity.py` and
+  `t1_confection/analyse_sensitivity.py`
+- `tools/analysis/concat_all_scenarios.py` and
+  `t1_confection/concat_all_scenarios_2.py`
+- `tools/analysis/reproduce_A1_A6.py` and `t1_confection/reproduce_A1_A6.py`
+- `t1_confection/sensitivity_expansion/analyse_ws4_vs_phaseB.py` (analysis-only,
+  but retained in place because the protected-tree gate covers this path)
+- `tools/analysis/visualization/Z_AUX_generate_interactive_dashboards_aggregated.py`
+  and `t1_confection/Z_AUX_generate_interactive_dashboards_aggregated.py`
+- `tools/analysis/visualization/Z_AUX_generate_RES_diagram.py` and
+  `t1_confection/Z_AUX_generate_RES_diagram.py`
+- `tools/analysis/visualization/Z_AUX_generate_transmission_maps.py` and
+  `t1_confection/Z_AUX_generate_transmission_maps.py`
+- `tools/analysis/visualization/Z_AUX_interconnections_dashboard.py` and
+  `t1_confection/Z_AUX_interconnections_dashboard.py`
 
 Validation code, fail-closed stubs, and material under `docs/archive/` are neither
 core stages nor analysis utilities. A helper with a historical-looking name remains

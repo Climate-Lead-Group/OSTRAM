@@ -388,8 +388,8 @@ python A3_process\rules_scripts\set_interconnector_direction.py --input-dir A1_O
 # 4. compile → 5. verify (glpsol --check) → 6. solve (CPLEX) → 7. analyse
 python B1_Run_Compiler.py --scenarios <SCEN>
 python B2_Executing_OG_Model.py --scenarios <SCEN>
-python concat_all_scenarios_2.py
-python analyse_sensitivity.py          # -> sensitivity_report.txt / sensitivity_comparison.csv
+python ..\tools\analysis\concat_all_scenarios.py
+python ..\tools\analysis\analyse_sensitivity.py  # -> sensitivity_report.txt / sensitivity_comparison.csv
 ```
 
 Validation of the design (pre-CPLEX) is in `validate_sensitivity_configs.py` (7 checks) and
