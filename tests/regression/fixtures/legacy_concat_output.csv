@@ -1,0 +1,4 @@
+REGION,YEAR,TECHNOLOGY,FUEL,OutputParameter,OutputValue
+R1,2030,T1,,AnnualCapacity,5
+R1,2030,T1,,AnnualGeneration,20
+R1,2030,T1,,DiscountedCost,11
