@@ -158,6 +158,7 @@ class CheckoutEolPolicyTests(unittest.TestCase):
 
     def test_committed_manifest_matches_raw_protected_worktree(self) -> None:
         self.assertIn(".gitattributes", regression.PROTECTED_FILES)
+        self.assertIn("t1_confection/a3_orchestrator.py", regression.PROTECTED_FILES)
         result = regression.verify_protected(REPO_ROOT, PROTECTED_MANIFEST)
         self.assertTrue(result["ok"], json.dumps(result, indent=2, sort_keys=True))
 

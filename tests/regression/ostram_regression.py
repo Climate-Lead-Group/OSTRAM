@@ -58,6 +58,7 @@ PROTECTED_FILES = (
     "t1_confection/A1_Pre_processing_OG_csvs.py",
     "t1_confection/A2_AddTx.py",
     "t1_confection/A3_process.py",
+    "t1_confection/a3_orchestrator.py",
     "t1_confection/B1_Run_Compiler.py",
     "t1_confection/b1_runner.py",
     "t1_confection/B1_Compiler.py",

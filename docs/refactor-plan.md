@@ -198,12 +198,19 @@ Core entrypoint paths must remain in place. A future refactor may move implement
 behind them only after characterization tests exist and a solver baseline can be
 reproduced in an authorized environment.
 
+The A3 orchestration phase now implements one such boundary:
+`t1_confection/A3_process.py` retains the direct CLI and callable transformation
+helpers, while `t1_confection/a3_orchestrator.py` owns explicit paths, a read-only
+run plan, injected effects, and the preserved stage sequence. It does not move or
+rewrite computational transformations. Acceptance still requires the Tier 3
+compiled-input and solver evidence described below.
+
 | Existing entrypoint | Proposed implementation path | Reason and preserved boundary | Affected imports, config, or docs | Risk | Required no-solver checks beyond the standard gate | Solver-backed verification |
 |---|---|---|---|---|---|---|
 | `run.py` | `t1_confection/workflow/launcher.py`; retain root wrapper | Isolate path resolution, dependency checks, command construction, and stage selection without changing the public command. | All run documentation, DVC/Conda detection, A1–B2 command lines, environment handling, exit propagation. | High | Mocked command-construction and dispatch tests for every flag/solver; current exit/failure characterization; invocation from another working directory; no subprocess model stage. | Yes, for each supported stage sequence selected for release. |
 | `t1_confection/B1_Run_Compiler.py` | `t1_confection/workflow/b1_runner.py`; retain old wrapper | Isolate scenario discovery, temporary config editing, compiler dispatch, restoration, and failure aggregation. | `run.py`, `Config_MOMF_T1_A.yaml`, `B1_Compiler.py`, scenario ordering, logs, and current continue-on-error semantics. | High | Fixture-only discovery/filter/order tests; config restoration after success and exception; characterize current exit status before deciding any change. | Yes; exact 15-scenario compiled inputs first, then solver-backed comparison. |
 | `t1_confection/B2_Executing_OG_Model.py` | modules under `t1_confection/workflow/b2/`; retain old wrapper | Separate configuration, scenario discovery, patch ordering, solver dispatch, result concatenation, and annualization from the entrypoint. | `run.py`, both configs, all B2 patch helpers, `concatenate_ostram.py`, solver adapters, output layout, and annualization. | Critical | Mock every external command; assert scenario and patch order, cwd restoration, arguments, failure propagation, and output-path construction; no solver invocation. | Yes; full solver-backed equivalence for the decision-relevant 15, with plain BAU diagnostic only. |
-| `t1_confection/A3_process.py` | modules under `t1_confection/workflow/a3/`; retain old wrapper | Separate snapshot/restore, scenario generation, rule dispatch, validation, and persistence while preserving file order and workbook semantics. | `run.py`, `_scenarios.py`, every active A3 helper/rule, restrictions, workbook names, and scenario directory layout. | Critical | Temporary workbook fixtures only; call-order and rollback tests; snapshot/restore failure tests; protected-tree check; exact compiled-input comparison when candidate evidence can be generated without solving. | Yes before accepting changed operational output. |
+| `t1_confection/A3_process.py` | `t1_confection/a3_orchestrator.py`; retain public entrypoint and helper surface | Isolate snapshot/restore, scenario planning, rule dispatch, validation, and persistence while preserving file order and workbook semantics. | `run.py`, `_scenarios.py`, every active A3 helper/rule, restrictions, workbook names, and scenario directory layout. | Critical | Mocked predecessor/candidate trace; temporary filesystem fixtures; CLI, path, environment, stage-order, failure, and interruption tests; protected-tree check; exact compiled-input comparison without solving. | Yes before accepting changed operational output. |
 | `t1_confection/A1_Pre_processing_OG_csvs.py` | incrementally extracted pure transforms under `t1_confection/workflow/transforms/a1/`; retain entrypoint | Reduce a monolith without changing CSV reads, defaults, ordering, or workbook schema. | A0/A2 expectations, config loader, input CSVs, output workbooks, DVC stages, and downstream compiler assumptions. | Critical | One pure transform at a time; immutable fixtures; exact table/schema/order/dtype comparisons; protected-tree verification. | Yes after exact 15-scenario compiled-input equivalence. |
 | `t1_confection/B1_Compiler.py` | incrementally extracted pure transforms under `t1_confection/workflow/transforms/b1/`; retain entrypoint | Make compilation rules testable while preserving scenario-specific overrides and emitted text. | B1 runner, both configs, A1/A2/A3 outputs, OSeMOSYS text schema/order, and scenario folders. | Critical | Golden fixtures per extracted transform; exact and normalized-exact compiler output; all 15 decision-relevant scenarios before integration. | Yes; compiled equivalence is necessary but not sufficient for this core change. |
 
@@ -233,8 +240,9 @@ semantics. A convenience abstraction is not evidence of equivalent behaviour.
    exact compiled-input equivalence, then run solver-backed comparison.
 7. `refactor/b2-orchestration`: split B2 in dependency-order, one seam per PR, with
    full solver-backed verification.
-8. `refactor/a3-orchestration`: isolate snapshot, scenario, rule, and validation
-   stages with workbook fixtures and solver-backed comparison.
+8. `refactor/a3-orchestration`: the structural isolation is implemented on its
+   dedicated branch; retain its compiled-input evidence and solver-backed comparison
+   as acceptance requirements.
 9. `refactor/a1-b1-transforms`: extract one pure transformation at a time only after
    the orchestration boundaries and solver baseline are stable.
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import builtins
 import importlib.util
 import io
 import os
@@ -20,6 +21,7 @@ from unittest import mock
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
 A3_ENTRYPOINT = REPO_ROOT / "t1_confection" / "A3_process.py"
+A3_ORCHESTRATOR = REPO_ROOT / "t1_confection" / "a3_orchestrator.py"
 SCENARIO_HELPER = REPO_ROOT / "t1_confection" / "A3_process" / "_scenarios.py"
 
 ACTIVE_SCENARIOS = (
@@ -53,6 +55,10 @@ def _load_module(path: Path, label: str):
 
 def _load_a3(label: str):
     return _load_module(A3_ENTRYPOINT, label)
+
+
+def _load_orchestrator(label: str):
+    return _load_module(A3_ORCHESTRATOR, f"orchestrator_{label}")
 
 
 def _load_scenarios(label: str):
@@ -320,6 +326,72 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
         self.assertEqual(stderr.getvalue(), "")
         self.assertTrue(callable(module.main))
 
+    def test_direct_script_import_fallback_is_silent_and_import_safe(self) -> None:
+        real_import = builtins.__import__
+
+        def without_namespace_package(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == "t1_confection":
+                raise ModuleNotFoundError(
+                    "No module named 't1_confection'",
+                    name="t1_confection",
+                )
+            return real_import(name, globals, locals, fromlist, level)
+
+        sys.modules.pop("a3_orchestrator", None)
+        try:
+            with (
+                mock.patch.object(
+                    sys,
+                    "path",
+                    [str(A3_ENTRYPOINT.parent), *sys.path],
+                ),
+                mock.patch.object(builtins, "__import__", side_effect=without_namespace_package),
+                mock.patch.object(subprocess, "run") as process_run,
+                redirect_stdout(io.StringIO()) as stdout,
+                redirect_stderr(io.StringIO()) as stderr,
+            ):
+                module = _load_a3("direct_script_fallback")
+        finally:
+            sys.modules.pop("a3_orchestrator", None)
+
+        process_run.assert_not_called()
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertEqual(stderr.getvalue(), "")
+        self.assertTrue(callable(module.main))
+
+    def test_existing_callable_helper_surface_remains_available(self) -> None:
+        module = _load_a3("callable_surface")
+        expected = (
+            "_resolve",
+            "parse_cli_args",
+            "banner",
+            "step",
+            "run_subproc",
+            "_read_script_yaml_name",
+            "_resolve_script_yaml",
+            "build_workdir",
+            "stage_0_5_rnwbio",
+            "stage_1_scripts_1_to_5",
+            "stage_1b",
+            "stage_2_and_2_5",
+            "stage_3_fix_2",
+            "stage_4_consolidate",
+            "stage_4_5_apply_inherited_restrictions",
+            "stage_5_rules_scripts",
+            "stage_ws3_interconnector_costs",
+            "stage_ws3_internal_transmission",
+            "stage_ws3_internal_tx_losses",
+            "stage_6_sync_og_to_ts20",
+            "stage_6_persist_restrictions",
+            "deliver_outputs",
+            "_resolve_scenario_config",
+            "main",
+        )
+        self.assertEqual(
+            [name for name in expected if not callable(getattr(module, name, None))],
+            [],
+        )
+
     def test_cli_defaults_and_explicit_values_match_predecessor(self) -> None:
         module = _load_a3("cli_values")
         with mock.patch.object(sys, "argv", ["A3_process.py"]):
@@ -377,16 +449,42 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
         )
         for argv, code in cases:
             with self.subTest(argv=argv):
+                stdout = io.StringIO()
                 with (
                     mock.patch.object(sys, "argv", argv),
-                    redirect_stdout(io.StringIO()),
+                    redirect_stdout(stdout),
                     redirect_stderr(io.StringIO()),
                     mock.patch.object(module, "build_workdir") as build,
+                    mock.patch.object(module, "_orchestration_paths") as paths,
+                    mock.patch.object(
+                        module,
+                        "_orchestration_dependencies",
+                    ) as dependencies,
+                    mock.patch.object(
+                        module._orchestrator,
+                        "orchestrate_a3",
+                    ) as orchestrate,
                 ):
                     with self.assertRaises(SystemExit) as raised:
                         module.main()
                 self.assertEqual(raised.exception.code, code)
                 build.assert_not_called()
+                paths.assert_not_called()
+                dependencies.assert_not_called()
+                orchestrate.assert_not_called()
+                if code == 0:
+                    help_text = stdout.getvalue()
+                    self.assertIn("A3_process.py", help_text)
+                    for option in (
+                        "--scenario",
+                        "--soasia",
+                        "--rules-script",
+                        "--inherit-from",
+                        "--input-dir",
+                        "--output-dir",
+                        "--keep-workdir",
+                    ):
+                        self.assertIn(option, help_text)
 
     def test_direct_script_guard_returns_main_result_through_sys_exit(self) -> None:
         tree = ast.parse(A3_ENTRYPOINT.read_text(encoding="utf-8-sig"), filename=str(A3_ENTRYPOINT))
@@ -410,16 +508,17 @@ class A3ScenarioPlanningCharacterizationTests(unittest.TestCase):
 
     def test_canonical_control_has_exact_active_order_and_only_bau_to_a_dependency(self) -> None:
         configs = self.scenarios.read_control_sheet(self.scenarios.DEFAULT_SOASIA)
+        self.assertEqual(tuple(config.scenario for config in configs), ACTIVE_SCENARIOS)
+        self.assertTrue(all(config.active for config in configs))
         ordered = self.scenarios.topological_order(configs)
         self.assertEqual(tuple(config.scenario for config in ordered), ACTIVE_SCENARIOS)
-        active_names = set(ACTIVE_SCENARIOS)
-        active_edges = {
+        dependency_edges = {
             (source, config.scenario)
-            for config in ordered
+            for config in configs
             for source in config.inherit_restrictions_from
-            if source in active_names and source != config.scenario
+            if source != config.scenario
         }
-        self.assertEqual(active_edges, {("BAU", "A_Calibrated_BAU")})
+        self.assertEqual(dependency_edges, {("BAU", "A_Calibrated_BAU")})
 
     def test_topological_order_drops_inactive_dependencies_and_detects_cycles(self) -> None:
         config = self.scenarios.ScenarioConfig
@@ -530,10 +629,159 @@ class A3ScenarioPlanningCharacterizationTests(unittest.TestCase):
             )
 
 
+class A3IsolatedBoundaryTests(unittest.TestCase):
+    def test_isolated_module_has_no_b1_b2_compiler_matrix_or_solver_boundary(self) -> None:
+        source = A3_ORCHESTRATOR.read_text(encoding="utf-8-sig")
+        forbidden = (
+            "B1_Run_Compiler",
+            "B1_Compiler",
+            "B2_Executing_OG_Model",
+            "main_executer",
+            "multiprocessing",
+            "SolverAdapter",
+            "subprocess",
+            "create_matrix",
+            "glpsol",
+            "cbc",
+            "cplex",
+            "gurobi",
+        )
+        self.assertEqual(
+            [marker for marker in forbidden if marker in source],
+            [],
+        )
+
+    def test_public_main_forwards_explicit_plan_and_dependency_seams(self) -> None:
+        module = _load_a3("wrapper_forwarding")
+        cli_args = object()
+        paths = object()
+        dependencies = object()
+        with (
+            mock.patch.object(module, "parse_cli_args", return_value=cli_args),
+            mock.patch.object(module, "_orchestration_paths", return_value=paths),
+            mock.patch.object(
+                module,
+                "_orchestration_dependencies",
+                return_value=dependencies,
+            ),
+            mock.patch.object(
+                module._orchestrator,
+                "orchestrate_a3",
+                return_value=23,
+            ) as orchestrate,
+        ):
+            result = module.main()
+
+        self.assertEqual(result, 23)
+        orchestrate.assert_called_once_with(
+            cli_args,
+            paths,
+            dependencies,
+            module.INPUT_FILES,
+        )
+
+    def test_entrypoint_path_resolution_and_run_planning_are_pure(self) -> None:
+        orchestrator = _load_orchestrator("pure_plan")
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            t1 = root / "t1_confection"
+            process_dir = t1 / "A3_process"
+            process_dir.mkdir(parents=True)
+            entrypoint = t1 / "A3_process.py"
+            paths = orchestrator.A3Paths.from_entrypoint(entrypoint)
+            self.assertEqual(
+                paths,
+                orchestrator.A3Paths(
+                    t1_confection=t1,
+                    process_dir=process_dir,
+                    default_soasia=(
+                        process_dir / "SOASIA_OSeMOSYS_Template_v18.xlsx"
+                    ),
+                ),
+            )
+
+            events: list[tuple[object, ...]] = []
+
+            def resolve_config(args, soasia):
+                events.append(("resolve_config", args.scenario, soasia))
+                return "Scenario_A", ["one.py", "two.py"], ["BAU"]
+
+            def resolve_path(value):
+                events.append(("resolve_path", value))
+                return t1 / Path(value)
+
+            dependencies = SimpleNamespace(
+                resolve_scenario_config=resolve_config,
+                resolve_path=resolve_path,
+            )
+            args = argparse.Namespace(
+                scenario="Scenario_A",
+                soasia=Path("caller-relative.xlsx"),
+                input_dir=Path("input override"),
+                output_dir=Path("output override"),
+                keep_workdir=True,
+            )
+            plan = orchestrator.resolve_plan(args, paths, dependencies)
+
+        self.assertEqual(
+            events,
+            [
+                ("resolve_config", "Scenario_A", Path("caller-relative.xlsx")),
+                ("resolve_path", Path("input override")),
+                ("resolve_path", Path("output override")),
+            ],
+        )
+        self.assertEqual(plan.scenario, "Scenario_A")
+        self.assertEqual(plan.rules_scripts, ("one.py", "two.py"))
+        self.assertEqual(plan.inherit_from, ("BAU",))
+        self.assertEqual(plan.soasia, Path("caller-relative.xlsx"))
+        self.assertEqual(plan.input_dir, t1 / "input override")
+        self.assertEqual(plan.output_dir, t1 / "output override")
+        self.assertEqual(
+            plan.snapshot_dir,
+            t1 / "A1_Outputs" / "_post_a2_snapshot_BAU",
+        )
+        self.assertEqual(plan.workdir_base, process_dir)
+        self.assertTrue(plan.keep_workdir)
+
+    def test_default_plan_keeps_script_anchored_paths_and_in_place_delivery(self) -> None:
+        orchestrator = _load_orchestrator("default_plan")
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            process_dir = root / "A3_process"
+            process_dir.mkdir()
+            default_soasia = process_dir / "template.xlsx"
+            paths = orchestrator.A3Paths(
+                t1_confection=root,
+                process_dir=process_dir,
+                default_soasia=default_soasia,
+            )
+            args = argparse.Namespace(
+                scenario="BAU",
+                soasia=None,
+                input_dir=None,
+                output_dir=None,
+                keep_workdir=False,
+            )
+            dependencies = SimpleNamespace(
+                resolve_scenario_config=lambda _args, _soasia: ("BAU", [], []),
+                resolve_path=mock.Mock(side_effect=AssertionError("not expected")),
+            )
+            plan = orchestrator.resolve_plan(args, paths, dependencies)
+
+        expected_input = root / "A1_Outputs" / "A1_Outputs_BAU"
+        self.assertEqual(plan.soasia, default_soasia)
+        self.assertEqual(plan.input_dir, expected_input)
+        self.assertEqual(plan.output_dir, expected_input)
+        self.assertFalse(plan.keep_workdir)
+        dependencies.resolve_path.assert_not_called()
+
+
 class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
     def test_mocked_trace_matches_frozen_predecessor_observables(self) -> None:
         module = _load_a3("predecessor_trace")
         harness = A3TraceHarness(module)
+        original_cwd = Path.cwd()
         try:
             result = harness.run()
             materialized = harness.workdir / "_materialized_A_Calibrated_BAU.xlsx"
@@ -623,7 +871,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
             )
             self.assertEqual(result, 0)
             self.assertEqual(harness.events, expected)
-            self.assertEqual(Path.cwd(), REPO_ROOT)
+            self.assertEqual(Path.cwd(), original_cwd)
             self.assertNotIn("OSTRAM_TEMPLATE_PATH", os.environ)
             self.assertFalse(harness.workdir.exists())
             self.assertTrue((harness.input_dir / INPUT_FILES[0]).is_file())
@@ -673,8 +921,9 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
         self.assertIn("--- stdout ---", stdout.getvalue())
         self.assertIn("--- stderr ---", stdout.getvalue())
 
-    def test_unexpected_exception_and_interrupt_leave_predecessor_cleanup_state(self) -> None:
+    def test_stage_exit_exception_and_interrupt_leave_predecessor_cleanup_state(self) -> None:
         cases: tuple[BaseException, ...] = (
+            SystemExit("FAILED: fixture stage"),
             RuntimeError("unexpected fixture failure"),
             KeyboardInterrupt(),
         )

@@ -12,6 +12,13 @@ contract is recorded in
 [`core-workflow-characterization.md`](core-workflow-characterization.md) and enforced
 by the regression unit suite.
 
+Focused A3 predecessor/candidate coverage lives in
+`tests/regression/test_a3_orchestration.py`. It uses only disposable fixtures and
+in-process doubles. The suite verifies CLI and import behavior, exact active order
+and dependency semantics, path/environment/artifact boundaries, the full ordered
+stage trace, success and failure/interruption behavior, and that no real A3
+transformation, B1, B2, compiler, matrix, or solver process is invoked.
+
 ## Current static inventory
 
 - Authoritative A1 snapshot scenarios: 20/20.

@@ -31,6 +31,7 @@ PRIMARY_CORE_ENTRYPOINTS = (
 )
 
 CORE_IMPLEMENTATION_MODULES = (
+    "t1_confection/a3_orchestrator.py",
     "t1_confection/b1_runner.py",
     "t1_confection/b2_orchestrator.py",
 )
@@ -505,56 +506,80 @@ class CallPathBoundaryTests(unittest.TestCase):
         self.assertNotIn("env=", executor_source)
 
     def test_a3_main_keeps_snapshot_and_stage_order(self) -> None:
-        tree = _tree("t1_confection/A3_process.py")
-        main = _function(tree, "main")
-        stages = {
-            "_resolve_scenario_config",
-            "shutil.copytree",
-            "build_workdir",
-            "_scenarios.materialize_scenario_template",
-            "stage_0_5_rnwbio",
-            "stage_1_scripts_1_to_5",
-            "stage_1b",
-            "stage_2_and_2_5",
-            "stage_3_fix_2",
-            "stage_4_consolidate",
-            "stage_4_5_apply_inherited_restrictions",
-            "stage_5_rules_scripts",
-            "stage_ws3_interconnector_costs",
-            "stage_ws3_internal_transmission",
-            "stage_ws3_internal_tx_losses",
-            "stage_6_sync_og_to_ts20",
-            "stage_6_persist_restrictions",
-            "deliver_outputs",
-        }
+        entry_tree = _tree("t1_confection/A3_process.py")
+        main = _function(entry_tree, "main")
         self.assertEqual(
-            _calls(main, stages),
+            _calls(
+                main,
+                {
+                    "_orchestrator.orchestrate_a3",
+                    "parse_cli_args",
+                    "_orchestration_paths",
+                    "_orchestration_dependencies",
+                },
+            ),
             [
-                "_resolve_scenario_config",
-                "shutil.copytree",
-                "build_workdir",
-                "_scenarios.materialize_scenario_template",
-                "stage_0_5_rnwbio",
-                "stage_1_scripts_1_to_5",
-                "stage_1b",
-                "stage_2_and_2_5",
-                "stage_3_fix_2",
-                "stage_4_consolidate",
-                "stage_4_5_apply_inherited_restrictions",
-                "stage_5_rules_scripts",
-                "stage_ws3_interconnector_costs",
-                "stage_ws3_internal_transmission",
-                "stage_ws3_internal_tx_losses",
-                "stage_6_sync_og_to_ts20",
-                "stage_6_persist_restrictions",
-                "deliver_outputs",
+                "_orchestrator.orchestrate_a3",
+                "parse_cli_args",
+                "_orchestration_paths",
+                "_orchestration_dependencies",
             ],
         )
-        main_source = ast.get_source_segment(_source("t1_confection/A3_process.py"), main)
-        self.assertIn('"_post_a2_snapshot_BAU"', main_source)
+
+        tree = _tree("t1_confection/a3_orchestrator.py")
+        execute = _function(tree, "execute_plan")
+        stages = {
+            "dependencies.copy_tree",
+            "dependencies.build_workdir",
+            "dependencies.materialize_scenario_template",
+            "dependencies.stage_0_5_rnwbio",
+            "dependencies.stage_1_scripts_1_to_5",
+            "dependencies.stage_1b",
+            "dependencies.stage_2_and_2_5",
+            "dependencies.stage_3_fix_2",
+            "dependencies.stage_4_consolidate",
+            "dependencies.stage_4_5_apply_inherited_restrictions",
+            "dependencies.stage_5_rules_scripts",
+            "dependencies.stage_ws3_interconnector_costs",
+            "dependencies.stage_ws3_internal_transmission",
+            "dependencies.stage_ws3_internal_tx_losses",
+            "dependencies.stage_6_sync_og_to_ts20",
+            "dependencies.stage_6_persist_restrictions",
+            "dependencies.deliver_outputs",
+        }
+        self.assertEqual(
+            _calls(execute, stages),
+            [
+                "dependencies.copy_tree",
+                "dependencies.build_workdir",
+                "dependencies.materialize_scenario_template",
+                "dependencies.stage_0_5_rnwbio",
+                "dependencies.stage_1_scripts_1_to_5",
+                "dependencies.stage_1b",
+                "dependencies.stage_2_and_2_5",
+                "dependencies.stage_3_fix_2",
+                "dependencies.stage_4_consolidate",
+                "dependencies.stage_4_5_apply_inherited_restrictions",
+                "dependencies.stage_5_rules_scripts",
+                "dependencies.stage_ws3_interconnector_costs",
+                "dependencies.stage_ws3_internal_transmission",
+                "dependencies.stage_ws3_internal_tx_losses",
+                "dependencies.stage_6_sync_og_to_ts20",
+                "dependencies.stage_6_persist_restrictions",
+                "dependencies.deliver_outputs",
+            ],
+        )
+        plan = _function(tree, "resolve_plan")
+        plan_source = ast.get_source_segment(
+            _source("t1_confection/a3_orchestrator.py"), plan
+        )
+        execute_source = ast.get_source_segment(
+            _source("t1_confection/a3_orchestrator.py"), execute
+        )
+        self.assertIn('"_post_a2_snapshot_BAU"', plan_source)
         self.assertLess(
-            main_source.index("shutil.copytree(snapshot_dir, input_dir)"),
-            main_source.index("build_workdir("),
+            execute_source.index("dependencies.copy_tree("),
+            execute_source.index("dependencies.build_workdir("),
         )
 
     def test_b2_discovery_generation_patch_and_solver_boundaries_are_explicit(
