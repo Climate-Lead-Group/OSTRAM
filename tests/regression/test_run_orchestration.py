@@ -156,6 +156,54 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
         self.assertEqual(stderr.getvalue(), "")
         self.assertTrue(callable(launcher.main))
 
+    def test_parse_args_accepts_explicit_argv_and_preserves_cli_contract(self) -> None:
+        launcher = _load_launcher("parse_args")
+        with mock.patch.object(sys, "argv", ["run.py", "--not-an-option"]):
+            defaults = launcher.parse_args([])
+            explicit = launcher.parse_args(
+                [
+                    "--env-name",
+                    "custom env",
+                    "--env-file",
+                    "config/custom environment.yaml",
+                    "--dvc-file",
+                    "config/custom dvc.yaml",
+                    "--skip-pull",
+                    "--skip-a3",
+                    "--skip-b1",
+                    "--skip-b2",
+                    "--scenarios",
+                    " C , A, C ",
+                ]
+            )
+
+        self.assertEqual(
+            vars(defaults),
+            {
+                "env_name": None,
+                "env_file": launcher.ENV_FILE_DEFAULT,
+                "dvc_file": launcher.DVC_FILE_DEFAULT,
+                "skip_pull": False,
+                "skip_a3": False,
+                "skip_b1": False,
+                "skip_b2": False,
+                "scenarios": None,
+            },
+        )
+        self.assertEqual(
+            vars(explicit),
+            {
+                "env_name": "custom env",
+                "env_file": "config/custom environment.yaml",
+                "dvc_file": "config/custom dvc.yaml",
+                "skip_pull": True,
+                "skip_a3": True,
+                "skip_b1": True,
+                "skip_b2": True,
+                "scenarios": " C , A, C ",
+            },
+        )
+
     def test_defaults_and_free_form_cli_values_are_forwarded_exactly(self) -> None:
         launcher = _load_launcher("cli_values")
         argv = [

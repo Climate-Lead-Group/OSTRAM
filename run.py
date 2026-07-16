@@ -285,7 +285,7 @@ def format_duration(start_time: dt.datetime, end_time: dt.datetime) -> str:
 
 
 # ---------- Main ----------
-def main() -> None:
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description="Top-level runner for OSTRAM A3/B1/B2 execution")
     parser.add_argument(
         "--env-name",
@@ -309,7 +309,11 @@ def main() -> None:
              "'B_Optimised_VRE,C_Target_VRE'). When omitted, runs all active "
              "scenarios. Filter is propagated to A3, B1 and B2.",
     )
-    args = parser.parse_args()
+    return parser.parse_args(argv)
+
+
+def main() -> None:
+    args = parse_args()
 
     env_name = args.env_name or guess_env_name_from_yaml(args.env_file) or ENV_NAME_DEFAULT
     env_file = args.env_file
