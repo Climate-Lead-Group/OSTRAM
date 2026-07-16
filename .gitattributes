@@ -1,0 +1,49 @@
+# Keep ordinary repository text deterministic on every platform.
+* text=auto eol=lf
+
+# Windows command scripts require CRLF working-tree line endings.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Office and workbook formats are binary containers.
+*.xls binary
+*.xlsx binary
+*.xlsm binary
+*.xlsb binary
+*.ods binary
+*.doc binary
+*.docx binary
+*.ppt binary
+*.pptx binary
+*.twbx binary
+
+# Images and portable documents are binary assets.
+*.bmp binary
+*.gif binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.tif binary
+*.tiff binary
+*.webp binary
+*.pdf binary
+
+# Archives and compressed assets must never receive text conversion.
+*.7z binary
+*.bz2 binary
+*.gz binary
+*.rar binary
+*.tar binary
+*.tbz2 binary
+*.tgz binary
+*.xz binary
+*.zip binary
+
+# Serialized and columnar model data are binary.
+*.feather binary
+*.npy binary
+*.npz binary
+*.parquet binary
+*.pickle binary
+*.pkl binary
