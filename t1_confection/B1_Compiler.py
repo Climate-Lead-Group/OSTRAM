@@ -15,54 +15,46 @@ from copy import deepcopy
 import yaml
 import warnings
 import os
+
+try:
+    from t1_confection.a1_b1_transforms import delivery as _delivery
+    from t1_confection.a1_b1_transforms import effects as _effects
+    from t1_confection.a1_b1_transforms import planning as _planning
+    from t1_confection.a1_b1_transforms import tables as _tables
+    from t1_confection.a1_b1_transforms import validation as _validation
+except ModuleNotFoundError as error:
+    if error.name != 't1_confection':
+        raise
+    from a1_b1_transforms import delivery as _delivery
+    from a1_b1_transforms import effects as _effects
+    from a1_b1_transforms import planning as _planning
+    from a1_b1_transforms import tables as _tables
+    from a1_b1_transforms import validation as _validation
 #
 start1 = time.time()
 
-
-def normalize_year_like_columns(df):
-    """Normalize Excel year headers to plain string years like '2023'."""
-    rename_map = {}
-    for col in df.columns:
-        if isinstance(col, (int, np.integer)):
-            rename_map[col] = str(col)
-        elif isinstance(col, float) and col.is_integer():
-            rename_map[col] = str(int(col))
-        elif isinstance(col, str):
-            stripped = col.strip()
-            if stripped.isdigit():
-                rename_map[col] = str(int(stripped))
-    if rename_map:
-        df = df.rename(columns=rename_map)
-    return df
+normalize_year_like_columns = _tables.normalize_year_like_columns
 #
 # Read yaml file with parameterization
-with open('Config_MOMF_T1_A.yaml', 'r') as file:
-    # Load content file
-    params = yaml.safe_load(file)
+params = _effects.read_config(_planning.CONFIG_PATH)
+transform_plan = _planning.build_transform_plan(params)
 
-baseyear = params['base_year']
-endyear = params['final_year']
+baseyear = transform_plan.base_year
+endyear = transform_plan.final_year
 global time_range_vector
-time_range_vector = [ n for n in range( int(baseyear), int(endyear)+1 ) ]
+time_range_vector = transform_plan.time_range_vector
 #
-Wide_Param_Header = params['sets']
+Wide_Param_Header = transform_plan.wide_param_header
 #
-dict_xtra_scen = params['xtra_scen']
-other_setup_parameters = pd.DataFrame(list(dict_xtra_scen.items()), columns=['Name', 'Param'])
-other_setup_params_name = other_setup_parameters['Name'].tolist()
-other_setup_params_param = other_setup_parameters['Param'].tolist()
-other_setup_params_timeslices = other_setup_params_param[other_setup_params_name.index('Timeslices')]
-other_setup_params_timeslices.sort()
-other_setup_params = {}
-for n in range( len( other_setup_params_name ) ):
-    other_setup_params.update( { other_setup_params_name[n]:other_setup_params_param[n] } )
+other_setup_params_timeslices = transform_plan.other_setup_params_timeslices
+other_setup_params = transform_plan.other_setup_params
 #
 print_aid_parameter = False
 #------------------------------------------------------------------------------
 print('1 - Connect the model activity ratios.')
 #
-AR_Model_Base_Year = pd.ExcelFile(os.path.join(params['A1_outputs'], params['A1_outputs'] + '_' + params['xtra_scen']['Main_Scenario'] + params['Print_Base_Year']))
-AR_Projections = pd.ExcelFile(os.path.join(params['A1_outputs'],params['A1_outputs'] + '_' + params['xtra_scen']['Main_Scenario'] + params['Print_Proj']))
+AR_Model_Base_Year = _effects.open_workbook(transform_plan.scenario_workbook('Print_Base_Year'))
+AR_Projections = _effects.open_workbook(transform_plan.scenario_workbook('Print_Proj'))
 groups_list = AR_Model_Base_Year.sheet_names # see all sheet names
 # NOTE THIS IS THE SAME AS :: AR_Projections.sheet_names # see all sheet names
 
@@ -339,7 +331,7 @@ print('3 (end) - The model has ben connected.')
 # DEMAND
 print('4 - Process the model demand.')
 
-Demand = pd.ExcelFile(os.path.join(params['A1_outputs'],params['A1_outputs'] + '_' + params['xtra_scen']['Main_Scenario'] + params['Print_Demand']))
+Demand = _effects.open_workbook(transform_plan.scenario_workbook('Print_Demand'))
 param_sheets = Demand.sheet_names # see all sheet names
 
 
@@ -360,7 +352,7 @@ df_SpecDemandProfile = pd.DataFrame( columns = Wide_Param_Header )
 #
 
 
-Projections = pd.ExcelFile(params['A2_extra_inputs'] + params['Xtra_Proj'])
+Projections = _effects.open_workbook(transform_plan.extra_input('Xtra_Proj'))
 Projections_sheet = normalize_year_like_columns(Projections.parse( Projections.sheet_names[0] )) # see all sheet names
 Projections_control = normalize_year_like_columns(Projections.parse( Projections.sheet_names[1] ))
 Projection_Driver_Vars = Projections_control[ 'Variable' ].tolist()
@@ -458,20 +450,21 @@ for s in range( len( param_sheets ) ):
                 accumulated_rows_SpecAnnualDemand.append(spec_annual_demand_row)
                 
             
-            if other_setup_params_timeslices != timeslices_list_check and other_setup_params['Timeslice'] == 'Some' and \
-                timeslices_list_check != []:
-                print('These variables are differents, so you need check A-O_Demand.xlsx sheet Timeslices and Config_MOMF_T1_A.yaml variable xtra_scen/Timeslices')
-                sys.exit()
-            elif other_setup_params['Timeslice'] == 'Some' and timeslices_list_check != []:
+            _validation.validate_demand_timeslices(
+                other_setup_params_timeslices,
+                other_setup_params['Timeslice'],
+                timeslices_list_check,
+            )
+            if (
+                other_setup_params_timeslices == timeslices_list_check
+                and other_setup_params['Timeslice'] == 'Some'
+                and timeslices_list_check != []
+            ):
                 timeslices_list = timeslices_list_check
             elif (
-                    (other_setup_params['Timeslice'] == 'Some' and not timeslices_list_check)
-                    or
-                    (other_setup_params['Timeslice'] == 'All' and timeslices_list_check)
-                ):
-                print('Check the defintion of Timeslices, into A-O_Demand.xlsx sheet Timeslices and Config_MOMF_T1_A.yaml variable xtra_scen/Timeslice')
-                sys.exit()
-            elif other_setup_params['Timeslice'] == 'All':
+                other_setup_params['Timeslice'] == 'All'
+                and timeslices_list_check == []
+            ):
                 timeslices_list = [other_setup_params['Timeslice']]
             
     
@@ -530,13 +523,13 @@ print('5 - Parameterize technologies.')
 # ------------------------------------------------------------------------------
 # THIS SECTION ONLY PARAMETERIZES TECHNOLOGIES:
 
-Battery_Replacement = pd.ExcelFile(params['A2_extra_inputs'] + params['Xtra_Battery'])
+Battery_Replacement = _effects.open_workbook(transform_plan.extra_input('Xtra_Battery'))
 Battery_Replacement_df = Battery_Replacement.parse( Battery_Replacement.sheet_names[0] ) # see all sheet names
 
 if params['Use_Transport']:
-    Fleet = pd.ExcelFile(os.path.join(params['A1_outputs'],params['A1_outputs'] + '_' + params['xtra_scen']['Main_Scenario'] + params['Print_Fleet']))
+    Fleet = _effects.open_workbook(transform_plan.scenario_workbook('Print_Fleet'))
     Fleet_df = Fleet.parse( Fleet.sheet_names[0] )
-    Fleet_Groups = pickle.load( open( os.path.join(params['A1_outputs'],params['A1_outputs'] + '_' + params['xtra_scen']['Main_Scenario'] + params['Pickle_Fleet_Groups']), "rb" ) )
+    Fleet_Groups = _effects.load_pickle(transform_plan.scenario_workbook('Pickle_Fleet_Groups'))
     Fleet_Groups_Distance = {}
     Fleet_Groups_OR = {} # *OR* is occupancy rate
 
@@ -544,7 +537,7 @@ if params['Use_Transport']:
 
 
 #
-Parametrization = pd.ExcelFile(os.path.join(params['A1_outputs'],params['A1_outputs'] + '_' + params['xtra_scen']['Main_Scenario'] + params['Print_Paramet']))
+Parametrization = _effects.open_workbook(transform_plan.scenario_workbook('Print_Paramet'))
 param_sheets = Parametrization.sheet_names # see all sheet names]
 if 'growth_formula' in param_sheets:
     param_sheets.remove('growth_formula')
@@ -946,17 +939,21 @@ for s in range( len( param_sheets ) ):
             elif this_projection_mode not in ['EMPTY', 'Zero', '', None, 'According to demand'] and type(this_projection_mode) == str and param_sheets[s] != 'Other_Techs':
                 if this_param in ['CapacityFactor']:
                     
-                    if other_setup_params_timeslices != timeslices_list_check and other_setup_params['Timeslice'] == 'Some' and \
-                        timeslices_list_check != []:
-                        print('These variables are differents, so you need check A-O_Parametrization.xlsx sheet Timeslices and Config_MOMF_T1_A.yaml variable xtra_scen/Timeslices')
-                        sys.exit()
-                    elif other_setup_params['Timeslice'] == 'Some' and timeslices_list_check != []:
+                    _validation.validate_capacity_timeslices(
+                        other_setup_params_timeslices,
+                        other_setup_params['Timeslice'],
+                        timeslices_list_check,
+                    )
+                    if (
+                        other_setup_params_timeslices == timeslices_list_check
+                        and other_setup_params['Timeslice'] == 'Some'
+                        and timeslices_list_check != []
+                    ):
                         timeslices_list = timeslices_list_check
-                    elif (other_setup_params['Timeslice'] == 'Some' and timeslices_list_check == []) or \
-                        (other_setup_params['Timeslice'] == 'All' and timeslices_list_check != []):
-                        print('Check the defintion of Timeslices, into A-O_Parametrization.xlsx sheet Timeslices and Config_MOMF_T1_A.yaml variable xtra_scen/Timeslice')
-                        sys.exit()
-                    elif other_setup_params['Timeslice'] == 'All':
+                    elif (
+                        other_setup_params['Timeslice'] == 'All'
+                        and timeslices_list_check == []
+                    ):
                         timeslices_list = [other_setup_params['Timeslice']]
                     
                     timeslices_capacities = this_df_new_2['Timeslices'].tolist()
@@ -1079,6 +1076,10 @@ df_Yearsplit = pd.DataFrame( columns = Wide_Param_Header )
 # Initialize an empty list to accumulate dictionaries
 accumulated_dicts_Yearsplit = []
 
+_validation.validate_yearsplit_timeslices(
+    other_setup_params['Timeslice'],
+    other_setup_params_timeslices,
+)
 if other_setup_params['Timeslice'] == 'Some' and other_setup_params_timeslices != []:
     timeslices_list = other_setup_params_timeslices
     this_df = params_dict[ 'Yearsplit' ]
@@ -1101,9 +1102,6 @@ if other_setup_params['Timeslice'] == 'Some' and other_setup_params_timeslices !
             # Add the dictionary to the list
             accumulated_dicts_Yearsplit.append(this_dict_4_wide)
     
-elif other_setup_params['Timeslice'] == 'Some' and other_setup_params_timeslices == []:
-    print('These variables have inconsistance variable xtra_scen/Timeslice and xtra_scen/Timeslices')
-    sys.exit()
 elif other_setup_params['Timeslice'] == 'All':
     timeslices_list = [other_setup_params['Timeslice']]
 
@@ -1135,6 +1133,10 @@ df_DaySplit = pd.DataFrame( columns = Wide_Param_Header )
 # Initialize an empty list to accumulate dictionaries
 accumulated_dicts_DaySplit = []
 
+_validation.validate_daysplit_time_brackets(
+    other_setup_params['DailyTimeBracket'],
+    other_setup_params_timeslices,
+)
 if len(other_setup_params['DailyTimeBracket']) > 1:
     timeslices_list = other_setup_params_timeslices
     this_df = params_dict[ 'DaySplit' ]
@@ -1157,9 +1159,6 @@ if len(other_setup_params['DailyTimeBracket']) > 1:
             # Add the dictionary to the list
             accumulated_dicts_DaySplit.append(this_dict_4_wide)
     
-elif len(other_setup_params['DailyTimeBracket'])<2 and other_setup_params_timeslices == []:
-    print('These variables have inconsistance variable xtra_scen/DailyTimeBracket')
-    sys.exit()
 elif other_setup_params['DailyTimeBracket'] == 1:
     timeslices_list = [other_setup_params['DailyTimeBracket'][0]]
 
@@ -1186,7 +1185,7 @@ with warnings.catch_warnings():
 overall_param_df_dict.update( { 'DaySplit':df_DaySplit } )
 #------------------------------------------------------------------------------
 print('7 - Include emissions.')
-Emissions = pd.ExcelFile(params['A2_extra_inputs'] + params['Xtra_Emi'])
+Emissions = _effects.open_workbook(transform_plan.extra_input('Xtra_Emi'))
 # Emissions.sheet_names # see all sheet names // this only need thes wide format
 Emissions_ghg_df = Emissions.parse( params['GHGs'] )
 Emissions_ext_df = Emissions.parse( params['Externalities'] )
@@ -1194,7 +1193,7 @@ Emissions_ext_df = Emissions.parse( params['Externalities'] )
 emissions_list = list( set( Emissions_ghg_df['Emission'].tolist() + Emissions_ext_df['External Cost'].tolist() ) )
 
 if params['Use_OG_module']:
-    Emissions_OG = pd.read_csv(os.path.join('OG_csvs_inputs', 'EMISSION.csv'))
+    Emissions_OG = _effects.read_csv(transform_plan.og_emissions_csv())
     emissions_list = Emissions_OG['VALUE'].tolist()
 
 #
@@ -1344,7 +1343,7 @@ for param, rows in sorted(accumulated_data_by_param.items()):  # Sort for determ
         overall_param_df_dict_ndp[param] = pd.concat([overall_param_df_dict_ndp[param], new_rows_df], ignore_index=True)
 #------------------------------------------------------------------------------
 print('8 - Include Storage.')
-Storages = pd.ExcelFile(params['A2_extra_inputs'] + params['Xtra_Storage'])
+Storages = _effects.open_workbook(transform_plan.extra_input('Xtra_Storage'))
 # Emissions.sheet_names # see all sheet names // this only need thes wide format
 xtra_storage_fixed_hori_param = Storages.parse( params['xs_1'] )
 xtra_storage_capitalcost = Storages.parse( params['xs_2'] )
@@ -1585,23 +1584,12 @@ print('10 - System-level parameters (ReserveMargin).')
 # Currently only ReserveMargin is expected.
 #
 if 'System Parameters' in Parametrization.sheet_names:
-    sys_params_df = normalize_year_like_columns(Parametrization.parse('System Parameters'))
-    accumulated_rows_sys = []
-    for n in sys_params_df.index:
-        this_param = sys_params_df.loc[n, 'Parameter']
-        for y in range(len(time_range_vector)):
-            yr_key = str(time_range_vector[y])
-            this_value = sys_params_df.loc[n, yr_key]
-            if pd.notna(this_value):
-                accumulated_rows_sys.append({
-                    'PARAMETER': this_param,
-                    'Scenario': other_setup_params['Main_Scenario'],
-                    'REGION': other_setup_params['Region'],
-                    'YEAR': time_range_vector[y],
-                    'Value': round(float(this_value), 4)
-                })
-    if accumulated_rows_sys:
-        new_rows_sys_df = pd.DataFrame(accumulated_rows_sys)
+    new_rows_sys_df = _tables.build_system_parameter_rows(
+        Parametrization.parse('System Parameters'),
+        time_range_vector,
+        other_setup_params,
+    )
+    if not new_rows_sys_df.empty:
         for param_name in new_rows_sys_df['PARAMETER'].unique():
             mask = new_rows_sys_df['PARAMETER'] == param_name
             overall_param_df_dict[param_name] = new_rows_sys_df.loc[mask].copy()
@@ -1620,154 +1608,73 @@ print('*: For all effects, we have finished the processing tasks of this script.
 
 #---------------------------------
 # Print updated demand DF (user)
-writer_Demand_df_new = pd.ExcelWriter(os.path.join(params['A1_outputs'],params['A1_outputs'] + '_' + params['xtra_scen']['Main_Scenario'] + params['Print_Dem_Completed']), engine='xlsxwriter')
-Demand_df_new[params['initial_year']] = Demand_df_new[params['initial_year']].astype(float)
-Demand_df_new = Demand_df_new.round( 4 )
-Demand_df_new.to_excel( writer_Demand_df_new, sheet_name = params['A_O_Dem'], index=False)
-writer_Demand_df_new.close()
+Demand_df_new = _effects.write_completed_demand_workbook(
+    transform_plan.scenario_workbook('Print_Dem_Completed'),
+    Demand_df_new,
+    params['initial_year'],
+    params['A_O_Dem'],
+)
 #---------------------------------
 # Print updated *parameterization* DF (user) // this is in Osemosys terms
-writer_Param_df = pd.ExcelWriter(os.path.join(params['A1_outputs'],params['A1_outputs'] + '_' + params['xtra_scen']['Main_Scenario'] + params['Print_Paramet_Completed']), engine='xlsxwriter')
-param_sheets_print = list( params_dict_new.keys() )
-for s in range( len( param_sheets_print ) ):
-    this_df_print = params_dict_new[ param_sheets_print[s] ]
-    this_df_print = this_df_print.round( 4 )
-    this_df_print.to_excel( writer_Param_df, sheet_name = param_sheets_print[s], index=False)
-writer_Param_df.close()
+_effects.write_sheet_mapping_workbook(
+    transform_plan.scenario_workbook('Print_Paramet_Completed'),
+    params_dict_new,
+)
 #---------------------------------
 # Print updated *parameterization* DF (user) // this is in "natural" terms, i.e. the value of each one of the vehicles per unit
-writer_Param_Natural_df = pd.ExcelWriter(os.path.join(params['A1_outputs'],params['A1_outputs'] + '_' + params['xtra_scen']['Main_Scenario'] + params['Print_Paramet_Natural_Completed']), engine='xlsxwriter')
-param_sheets_print = list( params_dict_new_natural.keys() )
-for s in range( len( param_sheets_print ) ):
-    this_df_print = params_dict_new_natural[ param_sheets_print[s] ]
-    this_df_print = this_df_print.round( 4 )
-    this_df_print.to_excel( writer_Param_Natural_df, sheet_name = param_sheets_print[s], index=False)
-writer_Param_Natural_df.close()
+_effects.write_sheet_mapping_workbook(
+    transform_plan.scenario_workbook('Print_Paramet_Natural_Completed'),
+    params_dict_new_natural,
+)
 #---------------------------------
 # Print updated 'Activity Ratio' projections
-writer_AR_Proj_df = pd.ExcelWriter(os.path.join(params['A1_outputs'],params['A1_outputs'] + '_' + params['xtra_scen']['Main_Scenario'] + params['Print_Proj_Completed']), engine='xlsxwriter')
-param_sheets_print = list( AR_Base_proj_df_new.keys() )
-for s in range( len( param_sheets_print ) ):
-    this_df_print = AR_Base_proj_df_new[ param_sheets_print[s] ]
-    this_df_print = this_df_print.round( 4 )
-    this_df_print.to_excel( writer_AR_Proj_df, sheet_name = param_sheets_print[s], index=False)
-writer_AR_Proj_df.close()
+_effects.write_sheet_mapping_workbook(
+    transform_plan.scenario_workbook('Print_Proj_Completed'),
+    AR_Base_proj_df_new,
+)
 #
 #***********************************************************************************
 
 #
 #***********************************************************************************
 #
-lx = [  len( time_range_vector ), len( All_Tech_list ), len( other_setup_params['Timeslices'] ), len( All_Fuel_list ),
-        len( emissions_list ), len( other_setup_params['Mode_of_Operation'] ), len( [ other_setup_params['Region'] ] ),
-        len( other_setup_params['Season']), len( other_setup_params['DayType'] ),
-        len( other_setup_params['DailyTimeBracket'] ), len( other_setup_params['Storage'] )]
-mx = max( lx )
-df_structure_year = time_range_vector + [ '' for n in range( mx-lx[0] ) ]
-df_structure_tech = All_Tech_list + [ '' for n in range( mx-lx[1] ) ]
-df_structure_timeslice = other_setup_params['Timeslices'] + [ '' for n in range( mx-lx[2] ) ]
-df_structure_fuel = All_Fuel_list + [ '' for n in range( mx-lx[3] ) ]
-df_structure_emission = emissions_list + [ '' for n in range( mx-lx[4] ) ]
-df_structure_moo = other_setup_params['Mode_of_Operation'] + [ '' for n in range( mx-lx[5] ) ]
-df_structure_region = [ other_setup_params['Region'] ] + [ '' for n in range( mx-lx[6] ) ]
-df_structure_season = other_setup_params['Season'] + [ '' for n in range( mx-lx[7] ) ]
-df_structure_daytype = other_setup_params['DayType'] + [ '' for n in range( mx-lx[8] ) ]
-df_structure_dtb = other_setup_params['DailyTimeBracket'] + [ '' for n in range( mx-lx[9] ) ]
-df_structure_storage = other_setup_params['Storage'] + [ '' for n in range( mx-lx[10] ) ]
-#
-df_structure = pd.DataFrame( columns = params['columns4'] )
-df_structure['YEAR'] = df_structure_year
-df_structure['TECHNOLOGY'] = df_structure_tech
-df_structure['TIMESLICE'] = df_structure_timeslice
-df_structure['FUEL'] = df_structure_fuel
-df_structure['EMISSION'] = df_structure_emission
-df_structure['MODE_OF_OPERATION'] = df_structure_moo
-df_structure['REGION'] = df_structure_region
-df_structure['DAYTYPE'] = df_structure_daytype
-df_structure['DAILYTIMEBRACKET'] = df_structure_dtb
-df_structure['SEASON'] = df_structure_season
-df_structure['STORAGE'] = df_structure_storage # This should be changed when storage is added
-writer_Structure_df = pd.ExcelWriter(params['Print_A2_Struct_List'], engine='xlsxwriter')
-df_structure.to_excel( writer_Structure_df, sheet_name = params['lists'], index=False)
-writer_Structure_df.close()
-#
-structure_dict = {
-    'YEAR': df_structure_year,
-    'TECHNOLOGY': df_structure_tech,
-    'TIMESLICE': df_structure_timeslice,
-    'FUEL': df_structure_fuel,
-    'EMISSION': df_structure_emission,
-    'MODE_OF_OPERATION': df_structure_moo,
-    'REGION': df_structure_region,
-    'DAYTYPE': df_structure_daytype,
-    'DAILYTIMEBRACKET': df_structure_dtb,
-    'SEASON': df_structure_season,
-    'STORAGE': df_structure_storage
-}
+structure_tables = _tables.build_structure_tables(
+    time_range_vector,
+    All_Tech_list,
+    All_Fuel_list,
+    emissions_list,
+    other_setup_params,
+    params,
+)
+_effects.write_structure_workbook(
+    transform_plan.structure_workbook(),
+    structure_tables.table,
+    params['lists'],
+)
+structure_dict = structure_tables.values
 #
 #***********************************************************************************
 #
 # Clean dicts
-overall_param_df_dict = {
-    k: v for k, v in overall_param_df_dict.items() if not pd.isna(k)
-}
-overall_param_df_dict_ndp = {
-    k: v for k, v in overall_param_df_dict.items() if not pd.isna(k)
-}
-#
-list_dicts = list( overall_param_df_dict.keys() )
-
-path_main_scenario = os.path.join(params['A2_output_main_scen'], params['xtra_scen']['Main_Scenario'])
-
-os.makedirs(path_main_scenario, exist_ok=True)
-
-list_dicts = list(overall_param_df_dict.keys())
-for d in range(len(list_dicts)):
-    df_to_print = overall_param_df_dict[list_dicts[d]]    
-    df_to_print.to_csv(
-        os.path.join(path_main_scenario, list_dicts[d] + '.csv'),
-        index=False,
-        header=True
-    )
-
-for col_name, data_list in sorted(structure_dict.items()):  # Sort for deterministic order
-    df = pd.DataFrame({'VALUE': data_list})
-    file_path = os.path.join(path_main_scenario, f'{col_name}.csv')
-    df.to_csv(file_path, index=False, header=True)
+overall_param_df_dict, overall_param_df_dict_ndp = (
+    _delivery.clean_parameter_tables(overall_param_df_dict)
+)
+_delivery.deliver_main_csvs(
+    transform_plan.main_output_root(),
+    other_setup_params['Main_Scenario'],
+    overall_param_df_dict,
+    structure_dict,
+)
 
 # Check if there are additional scenarios defined
 if other_setup_params['Other_Scenarios']:
-    
-    # Loop through each additional scenario
-    for scenario in other_setup_params['Other_Scenarios']:
-        
-        # Create the output folder for this scenario
-        output_path = os.path.join(params['A2_output'], scenario)
-        os.makedirs(output_path, exist_ok=True)
-
-        # Process and save DataFrames for this scenario
-        for name, df in sorted(overall_param_df_dict_ndp.items()):  # Sort for deterministic order
-            # Replace the main scenario name with the current scenario
-            df_scenario = df.replace({
-                'Scenario': {
-                    other_setup_params['Main_Scenario']: scenario
-                }
-            })
-            # Save the modified DataFrame as a CSV file
-            df_scenario.to_csv(
-                os.path.join(output_path, f'{name}.csv'),
-                index=False,
-                header=True
-            )
-
-        # Save structure reference lists as individual CSVs
-        for col_name, data_list in sorted(structure_dict.items()):  # Sort for deterministic order
-            df_structure = pd.DataFrame({'VALUE': data_list})
-            df_structure.to_csv(
-                os.path.join(output_path, f'{col_name}.csv'),
-                index=False,
-                header=True
-            )
+    _delivery.deliver_additional_csvs(
+        transform_plan.additional_output_root(),
+        other_setup_params['Other_Scenarios'],
+        other_setup_params['Main_Scenario'],
+        overall_param_df_dict_ndp,
+        structure_dict,
+    )
 #
 #
 end_2 = time.time()   
