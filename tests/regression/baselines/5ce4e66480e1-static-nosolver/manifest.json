@@ -13,9 +13,9 @@
   "evidence_kind": "offline-static-and-historical-output",
   "normalizer_version": 1,
   "protected_working_tree": {
-    "aggregate_raw_sha256": "357a36b46b64f15705d6c00498a0e23df0cea087d37eb5b70f7a04d456b7a9bc",
-    "file_count": 2348,
-    "total_bytes": 266956469
+    "aggregate_raw_sha256": "1b42974e549d181484a161e157dbccd957f666e189fb9cb3a24726e858e5753d",
+    "file_count": 2354,
+    "total_bytes": 266969431
   },
   "reference": {
     "branch": "ws3-phaseb-cleanredo",
