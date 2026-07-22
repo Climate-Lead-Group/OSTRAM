@@ -52,6 +52,8 @@ PROTECTED_TREE_ROOTS = (
 )
 PROTECTED_FILES = (
     ".gitattributes",
+    "ostram/__init__.py",
+    "ostram/__main__.py",
     "run.py",
     "dvc.yaml",
     "dvc.lock",

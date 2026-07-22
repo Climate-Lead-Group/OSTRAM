@@ -2,17 +2,49 @@
 
 This page walks you through running OSTRAM for the first time.
 
+## Canonical Command Interface
+
+OSTRAM provides one platform-neutral, repository-local command hierarchy. Run it
+from the repository root; no installation or PATH modification is required:
+
+```bash
+cd OSTRAM
+python -m ostram --help
+```
+
+| Canonical command | Historical compatibility command | Exact existing boundary |
+|---|---|---|
+| `python -m ostram run [args]` | `python run.py [args]` | Full `run.py` orchestration |
+| `python -m ostram transform [args]` | `python t1_confection/A3_process.py [args]` | One A3 scenario transformation |
+| `python -m ostram compile-inputs [args]` | `python t1_confection/B1_Run_Compiler.py [args]` | B1 multi-scenario runner |
+
+Arguments follow the command directly; do not add a `--` separator. Subcommand help
+comes from the corresponding historical parser, for example:
+
+```bash
+python -m ostram transform --help
+python -m ostram compile-inputs --scenarios "A_Calibrated_BAU,B_Optimised_VRE"
+```
+
+All historical commands in this guide remain supported. There is no bare `ostram`
+executable because the repository has no console-script packaging or installation
+step. There are deliberately no `prepare-model` or `solve` subcommands: the existing
+B2 public command is one configuration-driven workflow that combines input
+preparation, optional matrix/solver execution, cleanup, and postprocessing. Giving
+only part of that behavior a friendly name would be misleading.
+
 ## 1. Run the Full Pipeline
 
 From an **Anaconda Prompt** (or any terminal with conda available):
 
 ```bash
 cd OSTRAM
-python run.py
+python -m ostram run
 ```
 
 :::{warning}
-`run.py` is an execution launcher, not an inspection command. It may install missing
+`python -m ostram run` dispatches the unchanged `run.py` execution launcher; neither
+route is an inspection command. It may install missing
 dependencies, initialize `.dvc/`, modify materialized scenario workbooks/configuration,
 and invoke the configured optimizer in B2.
 :::
@@ -45,7 +77,7 @@ Unlike older versions of this pipeline, `run.py` does **not** call `dvc repro`. 
 Example running only two scenarios, skipping the solver stage:
 
 ```bash
-python run.py --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --skip-b2
+python -m ostram run --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --skip-b2
 ```
 
 This example still runs A3 and B1. `--skip-b2` prevents optimizer execution but does not

@@ -4,8 +4,10 @@ Future cleanup and refactor PRs must follow the
 [`cleanup and refactor governance rules`](refactor-rules.md).
 
 The solver-free regression harness lives in `tests/regression/`. It never calls OSTRAM
-stages, DVC, GLPK, CPLEX, or another optimizer. Its only child process is `git`, used for
-read-only metadata and tracked-file discovery.
+stages, DVC, GLPK, CPLEX, or another optimizer. Child processes are limited to `git`
+for read-only metadata/tracked-file discovery and the current Python interpreter for
+exact `--help` or unknown-command CLI smoke checks. The CLI tests also install
+fail-closed in-process sentinels at each first workflow-effect boundary.
 
 The pre-refactor entrypoint, discovery, call-order, mutation, and process-boundary
 contract is recorded in

@@ -1,9 +1,11 @@
 # Offline regression evidence
 
 This directory provides the solver-free acceptance layer for repository cleanup. It
-does not run OSTRAM stages, DVC, GLPK, CPLEX, or another optimizer. The harness only
-reads files and uses `git` for repository metadata; `capture` writes compact evidence
-to the explicitly supplied output directory.
+does not run OSTRAM stages, DVC, GLPK, CPLEX, or another optimizer. The evidence
+harness reads files and uses `git` for repository metadata; `capture` writes compact
+evidence to the explicitly supplied output directory. The unit suite additionally
+uses the current Python interpreter for tightly constrained CLI `--help` and
+unknown-command smoke checks guarded by fail-closed workflow-effect tests.
 
 The authoritative preservation inventory is the 20 entries in `scenarios.yaml`. A
 separate `cleanup_acceptance` field selects the 16 non-superseded scenarios with complete
