@@ -30,6 +30,11 @@ PRIMARY_CORE_ENTRYPOINTS = (
     "t1_confection/B2_Executing_OG_Model.py",
 )
 
+CANONICAL_CLI_MODULES = (
+    "ostram/__init__.py",
+    "ostram/__main__.py",
+)
+
 CORE_IMPLEMENTATION_MODULES = (
     "t1_confection/a3_orchestrator.py",
     "t1_confection/b1_runner.py",
@@ -187,6 +192,7 @@ class EntrypointClassificationTests(unittest.TestCase):
     def test_core_entrypoints_and_analysis_utilities_are_disjoint_and_parse(self) -> None:
         core = (
             set(PRIMARY_CORE_ENTRYPOINTS)
+            | set(CANONICAL_CLI_MODULES)
             | set(CORE_IMPLEMENTATION_MODULES)
             | set(OPTIONAL_MODEL_WRITING_ENTRYPOINTS)
         )
@@ -214,6 +220,7 @@ class EntrypointClassificationTests(unittest.TestCase):
         text = CHARACTERIZATION_DOC.read_text(encoding="utf-8")
         for relative in (
             *PRIMARY_CORE_ENTRYPOINTS,
+            *CANONICAL_CLI_MODULES,
             *CORE_IMPLEMENTATION_MODULES,
             *OPTIONAL_MODEL_WRITING_ENTRYPOINTS,
             *ANALYSIS_UTILITIES,
@@ -739,7 +746,7 @@ class NoSolverSafetyTests(unittest.TestCase):
         "asyncio.create_subprocess_shell",
     }
 
-    def test_regression_suite_has_no_process_launch_except_read_only_git_metadata(self) -> None:
+    def test_regression_suite_allows_only_git_metadata_and_cli_help_smoke(self) -> None:
         found: list[tuple[Path, str, str, ast.Call]] = []
 
         class Visitor(ast.NodeVisitor):
@@ -765,10 +772,20 @@ class NoSolverSafetyTests(unittest.TestCase):
             tree = ast.parse(path.read_text(encoding="utf-8-sig"), filename=str(path))
             Visitor(path).visit(tree)
 
-        self.assertEqual(len(found), 1, [(str(p), f, n) for p, f, n, _ in found])
-        path, function, name, call = found[0]
-        self.assertEqual(path, TEST_ROOT / "ostram_regression.py")
-        self.assertEqual((function, name), ("_git", "subprocess.run"))
+        self.assertEqual(len(found), 2, [(str(p), f, n) for p, f, n, _ in found])
+        by_boundary = {
+            (path.name, function, name): call
+            for path, function, name, call in found
+        }
+        self.assertEqual(
+            set(by_boundary),
+            {
+                ("ostram_regression.py", "_git", "subprocess.run"),
+                ("test_canonical_cli.py", "_run_smoke", "subprocess.run"),
+            },
+        )
+
+        call = by_boundary[("ostram_regression.py", "_git", "subprocess.run")]
         self.assertTrue(call.args)
         command = call.args[0]
         self.assertIsInstance(command, ast.List)
@@ -777,6 +794,52 @@ class NoSolverSafetyTests(unittest.TestCase):
         self.assertEqual(command.elts[1].value, "-C")
         shell_keywords = [kw for kw in call.keywords if kw.arg == "shell"]
         self.assertEqual(shell_keywords, [])
+
+        smoke = by_boundary[
+            ("test_canonical_cli.py", "_run_smoke", "subprocess.run")
+        ]
+        self.assertEqual(len(smoke.args), 1)
+        smoke_command = smoke.args[0]
+        self.assertIsInstance(smoke_command, ast.List)
+        self.assertEqual(len(smoke_command.elts), 3)
+        executable, no_bytecode, forwarded = smoke_command.elts
+        self.assertIsInstance(executable, ast.Attribute)
+        self.assertIsInstance(executable.value, ast.Name)
+        self.assertEqual((executable.value.id, executable.attr), ("sys", "executable"))
+        self.assertIsInstance(no_bytecode, ast.Constant)
+        self.assertEqual(no_bytecode.value, "-B")
+        self.assertIsInstance(forwarded, ast.Starred)
+        self.assertIsInstance(forwarded.value, ast.Name)
+        self.assertEqual(forwarded.value.id, "arguments")
+        smoke_keywords = {keyword.arg: keyword.value for keyword in smoke.keywords}
+        self.assertEqual(
+            set(smoke_keywords),
+            {"cwd", "env", "capture_output", "text", "timeout", "check"},
+        )
+        for keyword in ("capture_output", "text"):
+            self.assertIs(smoke_keywords[keyword].value, True)
+        self.assertEqual(smoke_keywords["timeout"].value, 30)
+        self.assertIs(smoke_keywords["check"].value, False)
+
+        cli_test = ast.parse(
+            (TEST_ROOT / "test_canonical_cli.py").read_text(encoding="utf-8-sig")
+        )
+        smoke_invocations = [
+            node
+            for node in ast.walk(cli_test)
+            if isinstance(node, ast.Call) and _call_name(node) == "_run_smoke"
+        ]
+        self.assertEqual(len(smoke_invocations), 2)
+        literal_routes = []
+        for invocation in smoke_invocations:
+            self.assertIsInstance(invocation.args[0], ast.List)
+            literal_routes.append(
+                [element.value for element in invocation.args[0].elts]
+            )
+        self.assertEqual(
+            literal_routes,
+            [["-m", "ostram", "--help"], ["-m", "ostram", "unknown"]],
+        )
 
 
 if __name__ == "__main__":

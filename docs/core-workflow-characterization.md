@@ -20,6 +20,43 @@ The primary core entrypoints are protected operational code:
 - `t1_confection/B1_Compiler.py`
 - `t1_confection/B2_Executing_OG_Model.py`
 
+The repository-local canonical command package is also protected operational code:
+
+- `ostram/__init__.py`
+- `ostram/__main__.py`
+
+From the repository root, `python -m ostram` provides three exact compatibility
+dispatches:
+
+| Canonical route | Historical route | Shared callable boundary |
+|---|---|---|
+| `python -m ostram run ...` | `python run.py ...` | `run.main()` plus the direct launcher guard's exit translation |
+| `python -m ostram transform ...` | `python t1_confection/A3_process.py ...` | `A3_process.main()` |
+| `python -m ostram compile-inputs ...` | `python t1_confection/B1_Run_Compiler.py ...` | `B1_Run_Compiler.main()` |
+
+The dispatcher examines only the first token. It passes every remaining token once,
+in the same order and without an extra `--`, through a temporary historical
+`sys.argv`, then restores the original object even after `SystemExit`, an ordinary
+exception, or `KeyboardInterrupt`. It does not change the caller working directory
+or environment, redirect streams, add a process boundary, or import an unselected
+route. The selected historical `main()` retains all of its existing effects,
+including any subprocesses it normally starts. Importing either canonical module is
+side-effect free.
+
+Canonical `run` retains the historical direct guard: a delegated
+`CalledProcessError` is reported on stderr and returns the child code, another
+ordinary exception is reported on stderr and returns one, and `SystemExit` or
+`KeyboardInterrupt` propagates. A3 propagates its `main()` result through the process
+exit; B1 retains its natural successful exit zero. Downstream parser help and errors
+therefore remain byte-for-byte those of the selected historical entrypoint.
+
+There is no canonical command for the import-executing, per-scenario
+`t1_confection/B1_Compiler.py`; `compile-inputs` correctly targets the public B1
+runner. `prepare-model` and `solve` are deliberately deferred because
+`t1_confection/B2_Executing_OG_Model.py` exposes only one configuration-driven public
+workflow spanning compiled-input generation, optional matrix/solver execution,
+cleanup, and postprocessing. Naming one portion would invent a public boundary.
+
 `t1_confection/B1_Run_Compiler.py` remains the public B1 CLI, while the protected
 core implementation now lives in `t1_confection/b1_runner.py`. The wrapper retains
 the former callable helper surface and delegates explicitly to that module.

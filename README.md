@@ -11,7 +11,8 @@ seeds alone do not guarantee numerical identity across solver versions or platfo
 
 ## Key Features
 
-- **Staged Pipeline**: Direct A1/A2, A3, B1, and B2 orchestration through `run.py`
+- **Staged Pipeline**: A platform-neutral `python -m ostram` command hierarchy,
+  with every historical script entrypoint still supported
 - **Multiple Solvers**: Support for GLPK, CBC, CPLEX, and Gurobi
 - **Regression Evidence**: Solver-free all-scenario inventory and static/hash comparisons
 - **Performance Monitoring**: Built-in timer for tracking execution times
@@ -31,11 +32,26 @@ seeds alone do not guarantee numerical identity across solver versions or platfo
 git clone https://github.com/Climate-Lead-Group/OSTRAM.git
 cd OSTRAM
 
-# Run the model (from Anaconda Prompt)
-python run.py
+# Run the model (from Anaconda Prompt, at the repository root)
+python -m ostram run
 ```
 
-The `run.py` script can handle:
+The canonical repository-local commands are:
+
+| Canonical command | Historical compatibility command | Existing behavior |
+|---|---|---|
+| `python -m ostram run [args]` | `python run.py [args]` | Established A1/A2/A3/B1/B2 launcher |
+| `python -m ostram transform [args]` | `python t1_confection/A3_process.py [args]` | Established single-scenario A3 transformation |
+| `python -m ostram compile-inputs [args]` | `python t1_confection/B1_Run_Compiler.py [args]` | Established multi-scenario B1 runner |
+
+Run `python -m ostram --help` for the hierarchy or append `--help` to a
+subcommand for its unchanged historical arguments. This interface is intentionally
+repository-local: there is no installed bare `ostram` executable or PATH setup.
+`prepare-model` and `solve` are not aliases because the existing B2 command combines
+input preparation, optional matrix/solver execution, cleanup, and postprocessing under
+configuration control. The supported historical B2 command remains available.
+
+The `run` command can handle:
 - Conda environment creation
 - Dependency installation
 - Conditional A1/A2 preprocessing and active-scenario A3 generation
@@ -44,12 +60,13 @@ The `run.py` script can handle:
 - Direct execution of `t1_confection/B2_Executing_OG_Model.py`
 - Output file generation
 
-> **Important:** `run.py` may install dependencies, initialize `.dvc/`, and invoke the
+> **Important:** `python -m ostram run` and `run.py` may install dependencies,
+> initialize `.dvc/`, and invoke the
 > configured solver. Inspect the live configuration before running it. It does not call
 > `dvc repro`. The tracked `dvc.yaml` and `dvc.lock` describe older partial state and are
 > not the canonical all-scenario execution path.
 
-The repository preserves 20 scenario snapshots. A normal `run.py` pass discovers only
+The repository preserves 20 scenario snapshots. A normal `run`/`run.py` pass discovers only
 the active scenarios in the SOASIA v18 `Control` sheet. A `--scenarios` list containing
 derived or superseded snapshots is rejected by A3 unless `--skip-a3` is used. Do not
 assume that plain `run.py` is an all-20 command.

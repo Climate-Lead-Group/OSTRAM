@@ -158,6 +158,9 @@ class CheckoutEolPolicyTests(unittest.TestCase):
 
     def test_committed_manifest_matches_raw_protected_worktree(self) -> None:
         self.assertIn(".gitattributes", regression.PROTECTED_FILES)
+        for path in ("ostram/__init__.py", "ostram/__main__.py"):
+            self.assertIn(path, regression.PROTECTED_FILES)
+            self.assertTrue((REPO_ROOT / path).is_file())
         self.assertIn("t1_confection/a3_orchestrator.py", regression.PROTECTED_FILES)
         for path in (
             "t1_confection/a1_b1_transforms/__init__.py",
