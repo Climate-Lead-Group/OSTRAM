@@ -2,27 +2,18 @@
 fix_trn_residuals.py
 ====================
 
-Splits cumulative ResidualCapacity values for transmission (TRN) technologies
-in an OSeMOSYS A-O Parametrization workbook into:
+Maintains transmission (TRN) commissioning constraints in an OSeMOSYS
+A-O Parametrization workbook.
 
-  1. Pre-cutoff stock  -> remains in ResidualCapacity, made constant across
-                          all model years (capacity that already existed).
-  2. Post-cutoff commissionings -> moved to either
-        TotalAnnualMinCapacityInvestment[year]  (mode='min', exogenous timing)
-     or TotalAnnualMaxCapacity[year]            (mode='max', endogenous timing,
-                                                 cap = original cumulative profile)
+In the production ``mode='min'`` route, the exact v18
+``TotalAnnualMinCapacityInvestment`` contribution authority is additively
+merged into the existing minimum rows. The complete v18 RC Authority V1 table
+is then applied to final cross-border ``ResidualCapacity``.
 
-Techs whose ResidualCapacity is already flat across all years are left untouched
-(they represent stock with no scheduled additions).
-
-The legacy input/NATY profile is used only to preserve the established
-commissioning and minimum-investment schedule. Final cross-border TRN
-ResidualCapacity is always replaced by the complete, digest-validated RC
-Authority V1 table from the materialized v18 workbook supplied by --authority.
-
-Commissioning schedule sources, in order of precedence:
-  (1) --override CSV (columns: tech, year, capacity_added)
-  (2) auto-derive from year-over-year deltas in the existing ResidualCapacity row
+An explicit ``--override`` retains the generic commissioning override path.
+``mode='max'`` retains the generic input-profile cap behavior. Production
+numeric authority is supplied only through the raw or materialized v18 workbook
+passed with ``--authority``.
 
 Outputs:
   - Corrected workbook (--output)
@@ -42,6 +33,7 @@ import argparse
 import csv
 import hashlib
 import math
+import sys
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -49,6 +41,17 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
+
+_SCRIPT_DIR = Path(__file__).resolve().parent
+if str(_SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPT_DIR))
+
+from interconnector_authority import (  # noqa: E402
+    MINIMUM_CONTRIBUTION_TECHS,
+    load_minimum_boundary_authority,
+    load_minimum_contribution_authority,
+    validate_minimum_contribution_authority,
+)
 
 # ------------------------------------------------------------------ constants
 SHEET_NAME = "Secondary Techs"
@@ -60,10 +63,6 @@ MAX_CAP_PARAM = "TotalAnnualMaxCapacity"
 DEFAULT_CUTOFF_YEAR = 2023
 FLAT_TOLERANCE = 1e-9
 DEFAULT_PROJECTION_MODE = "User defined"
-
-# OSeMOSYS "unbounded" convention. ResidualCapacity values at this magnitude
-# are treated as sentinel (don't adopt as a reference correction).
-SENTINEL_VALUE = 9999.0
 
 # columns in the metadata block (left of the year columns)
 TECH_COL = "Tech"
@@ -103,10 +102,8 @@ class TechFix:
     base_value: float                       # value at cutoff year (kept flat in RC)
     original_profile: Dict[int, float]      # year -> profile value (used to derive deltas)
     commissionings: List[Commissioning]     # only events with capacity_added > 0
-    flatten_only: bool = True               # if False, this is a magnitude-only correction
-                                            # (input residual was already flat,
-                                            # but we're changing its level)
-    base_source: str = "input"              # "input" or "reference"
+    flatten_only: bool = True
+    base_source: str = "input"
     profile_source: str = "input"           # which profile drove `commissionings`
 
 
@@ -119,7 +116,7 @@ class DiffEntry:
     year: int
     old_value: float
     new_value: float
-    source: str = "split"   # "split", "magnitude", or final "authority_v1"
+    source: str = "split"   # "split" or final "authority_v1"
 
 
 # ---------------------------------------------------------------- header parse
@@ -406,28 +403,8 @@ def build_fix_plan(
     ws: Worksheet,
     cutoff_year: int,
     overrides: Optional[Dict[str, List[Commissioning]]] = None,
-    reference_residuals: Optional[Dict[str, Dict[int, float]]] = None,
 ) -> Tuple[List[TechFix], List[str], List[str]]:
-    """
-    Build the per-tech fix plan.
-
-    For each TRN tech (existing in the input's Secondary Techs sheet):
-
-      1. If the input residual is GROWING (max - min > tol):
-           - Flatten it. The flat level is:
-             * NATY's 2023 value — IF reference is provided AND NATY's 2023
-               value differs from input's, AND NATY's 2023 value is neither
-               9999 (sentinel) nor 0 (likely missing/wrong data in NATY).
-             * Otherwise the input's own 2023 value.
-           - Commissioning events (deltas) are derived from the SAME profile
-             the base came from (input or reference) — they must be consistent.
-      2. If the input residual is already FLAT but the reference says the
-         magnitude should be different (subject to the 9999/0 guard):
-           - Set residual flat at the reference's value. No commissionings.
-      3. Otherwise: skip — no change needed.
-
-    Returns (plans, skipped_techs, warnings).
-    """
+    """Build the generic input-profile plan used by override/max routes."""
     meta_cols, year_cols = _build_column_index(ws)
     if cutoff_year not in year_cols:
         raise ValueError(
@@ -440,91 +417,112 @@ def build_fix_plan(
     skipped: List[str] = []
     warnings: List[str] = []
 
-    def _ref_base_acceptable(t: str) -> Optional[float]:
-        """Return the reference's cutoff-year value for `t` if it should
-        override the input base, else None.  Implements the 9999/0 guard."""
-        if reference_residuals is None or t not in reference_residuals:
-            return None
-        ref_prof = reference_residuals[t]
-        if cutoff_year not in ref_prof:
-            return None
-        ref_base = ref_prof[cutoff_year]
-        input_base = profiles[t][1][cutoff_year]
-        if abs(ref_base - input_base) <= FLAT_TOLERANCE:
-            return None  # no magnitude difference
-        if ref_base >= SENTINEL_VALUE - FLAT_TOLERANCE:
-            return None  # 9999 guard
-        if abs(ref_base) <= FLAT_TOLERANCE:
-            return None  # zero guard
-        return ref_base
-
     for tech in sorted(profiles):
         _, profile = profiles[tech]
-        input_grows = not is_flat(profile)
-        ref_override = _ref_base_acceptable(tech)
-
-        if not input_grows and ref_override is None:
+        if is_flat(profile):
             skipped.append(tech)
             continue
 
-        if input_grows:
-            # Case 1: flatten. Pick the profile to drive deltas.
-            if ref_override is not None and tech in (reference_residuals or {}):
-                # adopt NATY's magnitude AND derive deltas from NATY's profile
-                use_profile = reference_residuals[tech]
-                base_value = ref_override
-                base_source = "reference"
-                profile_source = "reference"
-            else:
-                use_profile = profile
-                base_value = profile[cutoff_year]
-                base_source = "input"
-                profile_source = "input"
-
-            if overrides and tech in overrides:
-                commissionings = list(overrides[tech])
-            else:
-                commissionings = [
-                    Commissioning(tech=tech, year=y, capacity_added=d)
-                    for y, d in derive_commissionings(use_profile, cutoff_year)
-                ]
-
-            # warn on negative deltas in the profile we're using
-            years_sorted = sorted(use_profile.keys())
-            for prev_y, y in zip(years_sorted, years_sorted[1:]):
-                if y <= cutoff_year:
-                    continue
-                delta = use_profile[y] - use_profile[prev_y]
-                if delta < -FLAT_TOLERANCE:
-                    warnings.append(
-                        f"{tech}: negative delta {delta:+.3f} between {prev_y} "
-                        f"and {y} in {profile_source} profile (decommissioning); "
-                        f"not handled by this script"
-                    )
-
-            plans.append(TechFix(
-                tech=tech,
-                base_value=base_value,
-                original_profile=dict(use_profile),
-                commissionings=commissionings,
-                flatten_only=True,
-                base_source=base_source,
-                profile_source=profile_source,
-            ))
+        if overrides and tech in overrides:
+            commissionings = list(overrides[tech])
         else:
-            # Case 2: input already flat, but reference says magnitude differs.
-            # Just change the level. No commissionings.
-            plans.append(TechFix(
-                tech=tech,
-                base_value=ref_override,
-                original_profile=dict(profile),
-                commissionings=[],
-                flatten_only=False,
-                base_source="reference",
-                profile_source="input",   # not used
-            ))
+            commissionings = [
+                Commissioning(tech=tech, year=year, capacity_added=addition)
+                for year, addition in derive_commissionings(
+                    profile, cutoff_year
+                )
+            ]
+
+        years_sorted = sorted(profile)
+        for previous_year, year in zip(years_sorted, years_sorted[1:]):
+            if year <= cutoff_year:
+                continue
+            delta = profile[year] - profile[previous_year]
+            if delta < -FLAT_TOLERANCE:
+                warnings.append(
+                    f"{tech}: negative delta {delta:+.3f} between "
+                    f"{previous_year} and {year} in input profile "
+                    "(decommissioning); not handled by this script"
+                )
+
+        plans.append(TechFix(
+            tech=tech,
+            base_value=profile[cutoff_year],
+            original_profile=dict(profile),
+            commissionings=commissionings,
+            flatten_only=True,
+            base_source="input",
+            profile_source="input",
+        ))
 
     return plans, skipped, warnings
+
+
+def build_minimum_contribution_plan(
+    ws: Worksheet,
+    contribution_authority: Mapping[str, Mapping[int, float]],
+    cutoff_year: int,
+    overrides: Optional[Dict[str, List[Commissioning]]] = None,
+) -> Tuple[List[TechFix], List[str], List[str]]:
+    """Build the exact v18 minimum-contribution participation/write plan.
+
+    The 11 authority rows participate even when their complete contribution is
+    zero. An explicit override replaces the authority schedule for that
+    technology. As in the predecessor route, overrides for skipped flat input
+    technologies do not expand the minimum-investment write domain.
+    """
+    validate_minimum_contribution_authority(contribution_authority)
+    meta_cols, year_cols = _build_column_index(ws)
+    if cutoff_year not in year_cols:
+        raise ValueError(
+            f"Cutoff year {cutoff_year} not found in sheet header; "
+            f"available years: {sorted(year_cols)}"
+        )
+    profiles = _read_residual_profile(ws, meta_cols, year_cols)
+    missing_profiles = sorted(MINIMUM_CONTRIBUTION_TECHS - set(profiles))
+    if missing_profiles:
+        raise ValueError(
+            "model workbook missing minimum-contribution technologies: "
+            f"{missing_profiles}"
+        )
+
+    plan_techs = set(MINIMUM_CONTRIBUTION_TECHS)
+    if overrides:
+        plan_techs.update(
+            tech
+            for tech in overrides
+            if tech in profiles and not is_flat(profiles[tech][1])
+        )
+
+    plans: List[TechFix] = []
+    for tech in sorted(plan_techs):
+        profile = profiles[tech][1]
+        if overrides and tech in overrides:
+            commissionings = list(overrides[tech])
+            profile_source = "override"
+        else:
+            commissionings = [
+                Commissioning(
+                    tech=tech, year=year, capacity_added=float(capacity)
+                )
+                for year, capacity in sorted(
+                    contribution_authority[tech].items()
+                )
+                if float(capacity) > FLAT_TOLERANCE
+            ]
+            profile_source = "v18 minimum contribution"
+        plans.append(TechFix(
+            tech=tech,
+            base_value=profile[cutoff_year],
+            original_profile=dict(profile),
+            commissionings=commissionings,
+            flatten_only=True,
+            base_source="input",
+            profile_source=profile_source,
+        ))
+
+    skipped = sorted(set(profiles) - plan_techs)
+    return plans, skipped, []
 
 
 # ---------------------------------------------------------------- apply
@@ -678,29 +676,24 @@ def write_diff_md(
     cutoff_year: int,
     path: Path,
 ) -> None:
-    magnitude_diffs = [d for d in diffs if d.source == "magnitude"]
     split_diffs = [d for d in diffs if d.source == "split"]
     authority_diffs = [d for d in diffs if d.source == "authority_v1"]
 
     flatten_plans = [p for p in plans if p.flatten_only]
-    magn_only_plans = [p for p in plans if not p.flatten_only]
 
     lines: List[str] = []
-    lines.append(f"# TRN ResidualCapacity Fix — Diff Log")
+    lines.append("# TRN Interconnector Authority — Diff Log")
     lines.append("")
     lines.append(f"- Mode: **{mode}** "
                  f"(`{MIN_INV_PARAM}` if min, `{MAX_CAP_PARAM}` if max)")
     lines.append(f"- Cutoff year: **{cutoff_year}**")
-    lines.append(f"- Techs split (residual flattened, deltas → "
-                 f"`{MIN_INV_PARAM if mode == 'min' else MAX_CAP_PARAM}`): "
+    lines.append(f"- Techs written to "
+                 f"`{MIN_INV_PARAM if mode == 'min' else MAX_CAP_PARAM}`: "
                  f"**{len(flatten_plans)}**")
-    lines.append(f"- Techs with magnitude-only correction "
-                 f"(already flat in input, level adjusted from reference): "
-                 f"**{len(magn_only_plans)}**")
     lines.append(f"- Techs skipped (no change needed): **{len(skipped)}**")
-    if magnitude_diffs:
-        lines.append(f"- Cell changes from magnitude correction: **{len(magnitude_diffs)}**")
-    lines.append(f"- Cell changes from residual splitting: **{len(split_diffs)}**")
+    lines.append(
+        f"- Cell changes from commissioning schedules: **{len(split_diffs)}**"
+    )
     lines.append(
         f"- Cell changes from RC Authority V1: **{len(authority_diffs)}**"
     )
@@ -710,29 +703,14 @@ def write_diff_md(
         for w in warnings:
             lines.append(f"- {w}")
     lines.append("")
-    lines.append("## Skipped (no change needed — already flat & magnitude OK)")
+    lines.append("## Skipped (outside the selected write plan)")
     for t in skipped:
         lines.append(f"- `{t}`")
-    if magn_only_plans:
-        lines.append("")
-        lines.append("## Magnitude-only corrections "
-                     "(input was already flat; level changed from reference)")
-        for plan in magn_only_plans:
-            old_level = plan.original_profile[cutoff_year]
-            lines.append(f"- `{plan.tech}`: {old_level:.3f} → "
-                         f"**{plan.base_value:.3f}** (flat across all years)")
     lines.append("")
-    lines.append("## Per-tech commissioning schedules (residual splits)")
+    lines.append("## Per-tech commissioning schedules")
     for plan in flatten_plans:
         lines.append(f"\n### `{plan.tech}`")
-        lines.append(f"- Pre-{cutoff_year} stock (kept in `ResidualCapacity`, "
-                     f"flat across all years): **{plan.base_value:.3f}** "
-                     f"_(base from {plan.base_source})_")
-        if plan.profile_source != plan.base_source:
-            lines.append(f"- Commissioning deltas derived from "
-                         f"`{plan.profile_source}` profile")
-        elif plan.profile_source == "reference":
-            lines.append(f"- Commissioning deltas derived from reference profile")
+        lines.append(f"- Schedule source: `{plan.profile_source}`")
         if plan.commissionings:
             lines.append(f"- Post-{cutoff_year} commissionings "
                          f"(moved to `{MIN_INV_PARAM if mode == 'min' else MAX_CAP_PARAM}`):")
@@ -743,38 +721,6 @@ def write_diff_md(
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-# ---------------------------------------------------------------- magnitude reference
-def _read_reference_residuals(
-    reference_path: Path,
-) -> Dict[str, Dict[int, float]]:
-    """Read TRN ResidualCapacity rows from a reference workbook's Secondary
-    Techs sheet. Returns {tech -> {year -> value}}."""
-    bm_wb = load_workbook(reference_path, data_only=True)
-    if SHEET_NAME not in bm_wb.sheetnames:
-        raise ValueError(
-            f"reference missing sheet '{SHEET_NAME}'; has: {bm_wb.sheetnames}"
-        )
-    bm_ws = bm_wb[SHEET_NAME]
-    bm_meta, bm_years = _build_column_index(bm_ws)
-    tech_c = bm_meta[TECH_COL]
-    param_c = bm_meta[PARAM_COL]
-
-    out: Dict[str, Dict[int, float]] = {}
-    for r in range(2, bm_ws.max_row + 1):
-        t = bm_ws.cell(row=r, column=tech_c).value
-        p = bm_ws.cell(row=r, column=param_c).value
-        if not isinstance(t, str) or not t.startswith(TECH_PREFIX):
-            continue
-        if p != RESIDUAL_PARAM:
-            continue
-        prof = {}
-        for y, c in bm_years.items():
-            v = bm_ws.cell(row=r, column=c).value
-            prof[y] = float(v) if v is not None else 0.0
-        out[t] = prof
-    return out
-
-
 # ---------------------------------------------------------------- pipeline
 def run_fix(
     input_path: Path,
@@ -782,15 +728,21 @@ def run_fix(
     mode: str = "min",
     cutoff_year: int = DEFAULT_CUTOFF_YEAR,
     override_path: Optional[Path] = None,
-    reference_path: Optional[Path] = None,
     authority_path: Optional[Path] = None,
 ) -> Tuple[List[DiffEntry], List[TechFix], List[str], List[str]]:
-    """Open workbook, build plan (consulting reference if given), apply fixes,
-    save. Pure pipeline (no CLI)."""
+    """Validate v18 authority, apply the selected plan, and save."""
+    if mode not in ("min", "max"):
+        raise ValueError(f"mode must be 'min' or 'max', got {mode!r}")
     if authority_path is None:
-        raise ValueError("RC Authority V1 workbook is required")
-    # Validate the complete authority before opening or mutating the target.
+        raise ValueError("v18 interconnector authority workbook is required")
+
+    # All production authority families fail closed before the target workbook
+    # is opened or can be mutated.
     authority = load_rc_authority(authority_path)
+    contribution_authority = load_minimum_contribution_authority(
+        authority_path
+    )
+    load_minimum_boundary_authority(authority_path)
 
     wb = load_workbook(input_path)
     if SHEET_NAME not in wb.sheetnames:
@@ -802,20 +754,19 @@ def run_fix(
     diffs: List[DiffEntry] = []
     warnings: List[str] = []
 
-    reference_residuals = None
-    if reference_path is not None:
-        reference_residuals = _read_reference_residuals(reference_path)
-
     overrides = load_overrides(override_path) if override_path else None
-    plans, skipped, plan_warnings = build_fix_plan(
-        ws, cutoff_year, overrides, reference_residuals=reference_residuals
-    )
+    if mode == "min":
+        plans, skipped, plan_warnings = build_minimum_contribution_plan(
+            ws, contribution_authority, cutoff_year, overrides
+        )
+    else:
+        plans, skipped, plan_warnings = build_fix_plan(
+            ws, cutoff_year, overrides
+        )
     warnings.extend(plan_warnings)
 
     target_param = MIN_INV_PARAM if mode == "min" else MAX_CAP_PARAM
     for plan in plans:
-        # NATY remains an input to the established commissioning/minimum plan,
-        # but it has no authority to write ResidualCapacity.
         d, preexisting = apply_fix(
             ws, plan, mode=mode, cutoff_year=cutoff_year,
             write_residual=False,
@@ -856,14 +807,10 @@ def main(argv: Optional[List[str]] = None) -> int:
                         "additions after move to the destination parameter")
     p.add_argument("--override", type=Path, default=None,
                    help="optional CSV with columns tech,year,capacity_added "
-                        "to override the auto-derived commissioning schedule")
-    p.add_argument("--reference", type=Path, default=None,
-                   help="optional legacy reference used only to preserve the "
-                        "established commissioning/minimum-investment schedule; "
-                        "it cannot write final TRN ResidualCapacity")
+                        "to override the selected commissioning schedule")
     p.add_argument("--authority", type=Path, required=True,
-                   help="materialized v18 workbook containing the complete, "
-                        "digest-validated RC Authority V1 table")
+                   help="raw or materialized v18 workbook containing the "
+                        "digest-validated interconnector authorities")
     args = p.parse_args(argv)
 
     diffs, plans, skipped, warnings = run_fix(
@@ -872,7 +819,6 @@ def main(argv: Optional[List[str]] = None) -> int:
         mode=args.mode,
         cutoff_year=args.cutoff_year,
         override_path=args.override,
-        reference_path=args.reference,
         authority_path=args.authority,
     )
 

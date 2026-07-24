@@ -248,9 +248,9 @@ def build_workdir(
     shutil.copy(A3_PROCESS_DIR / "patch_ao_c2a.py", s2)
     shutil.copy(A3_PROCESS_DIR / "TECH_TYPES.csv", s2)
 
-    # Stage 3: FIX_2 scripts + NATY reference
+    # Stage 3: FIX_2 scripts + shared v18 authority loader
     for f in ("fix_trn_residuals.py", "clear_stale_unbinding_caps.py",
-              "cap_trn_to_residual.py", "A-O_Parametrization_NATY.xlsx"):
+              "cap_trn_to_residual.py", "interconnector_authority.py"):
         shutil.copy(A3_PROCESS_DIR / f, s3)
 
     # Workdir-level scripts (run from `wd`, operate on subdirs via --input args)
@@ -418,7 +418,6 @@ def stage_3_fix_2(s2: Path, s3: Path) -> Path:
         PYTHON, s3 / "fix_trn_residuals.py",
         "--input", "A-O_Parametrization_c2a_patched.xlsx",
         "--output", "A-O_Parametrization_c2a_patched_FIXED.xlsx",
-        "--reference", "A-O_Parametrization_NATY.xlsx",
         "--authority", authority_path,
         "--diff-csv", "diff_log.csv",
         "--diff-md", "diff_log.md",

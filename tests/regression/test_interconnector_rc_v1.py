@@ -5,9 +5,7 @@ import hashlib
 import importlib.util
 import inspect
 import json
-import shutil
 import sys
-import tempfile
 import unittest
 from decimal import Decimal
 from pathlib import Path
@@ -21,6 +19,7 @@ REPO_ROOT = TEST_ROOT.parents[1]
 T1_ROOT = REPO_ROOT / "t1_confection"
 TEMPLATE = T1_ROOT / "A3_process" / "SOASIA_OSeMOSYS_Template_v18.xlsx"
 FIX_SCRIPT = T1_ROOT / "A3_process" / "fix_trn_residuals.py"
+AUTHORITY_SCRIPT = T1_ROOT / "A3_process" / "interconnector_authority.py"
 A3_SCRIPT = T1_ROOT / "A3_process.py"
 PATCH_SCRIPT = T1_ROOT / "sensitivity_expansion" / "apply_patches.py"
 TXCAP_CONFIG = T1_ROOT / "A3_process" / "rules_scripts" / "configs" / "B_Opt_TxCap150" / "patches.json"
@@ -51,6 +50,42 @@ AUTHORITY = {
 }
 ZERO_TECHS = frozenset(tech for tech, value in AUTHORITY.items() if value == 0)
 AUTHORITY_SEMANTIC_SHA256 = "6c4420017b4a2df0b0e4ab6cc11f0bb45c79aa139bed858bdea5fec1aa54584b"
+MINIMUM_CONTRIBUTION_TECHS = frozenset({
+    "TRNBTNXXBGDXX",
+    "TRNBTNXXINDEA",
+    "TRNBTNXXINDNE",
+    "TRNINDEAINDWE",
+    "TRNINDEANPLXX",
+    "TRNINDNOINDWE",
+    "TRNINDNONPLXX",
+    "TRNINDSOINDWE",
+    "TRNINDSOLKAXX",
+    "TRNLKAXXMDVXX",
+    "TRNNPLXXBGDXX",
+})
+MINIMUM_CONTRIBUTION_NONZERO = {
+    ("TRNBTNXXBGDXX", 2035): Decimal("0.75"),
+    ("TRNINDEAINDWE", 2025): Decimal("1.599999999999998"),
+    ("TRNINDNOINDWE", 2024): Decimal("1.600000000000001"),
+    ("TRNINDNOINDWE", 2026): Decimal("8.399999999999999"),
+    ("TRNINDNOINDWE", 2028): Decimal("4.200000000000003"),
+    ("TRNINDSOINDWE", 2024): Decimal("4.199999999999999"),
+    ("TRNINDSOINDWE", 2025): Decimal("4.199999999999999"),
+    ("TRNINDSOINDWE", 2026): Decimal("1.600000000000001"),
+    ("TRNINDSOLKAXX", 2030): Decimal("0.5"),
+    ("TRNLKAXXMDVXX", 2030): Decimal("0.5"),
+    ("TRNNPLXXBGDXX", 2033): Decimal("1"),
+}
+MINIMUM_CONTRIBUTION_SEMANTIC_SHA256 = (
+    "d5e7860480abdda57e207b1639032e9744d5d71096efad5028d372e174ffc958"
+)
+MINIMUM_BOUNDARIES = {
+    "TRNBGDXXINDEA": Decimal("2.5"),
+    "TRNNPLXXBGDXX": Decimal("0.04"),
+}
+MINIMUM_BOUNDARY_SEMANTIC_SHA256 = (
+    "d155a0c4f68b7ef2875b7a14bf2e7d5341e1ff09af16ca4ee7f868d85dcc6ca7"
+)
 TXCAP_FLOORS = {
     "TRNBGDXXINDEA": Decimal("8.236183089312995"),
     "TRNBGDXXINDNE": Decimal("0.32"),
@@ -105,6 +140,37 @@ def _authority_digest(values: dict[str, dict[int, object]]) -> str:
         for year in YEARS
     )
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _dense_minimum_contributions():
+    return {
+        tech: {
+            year: MINIMUM_CONTRIBUTION_NONZERO.get(
+                (tech, year), Decimal("0")
+            )
+            for year in YEARS
+        }
+        for tech in MINIMUM_CONTRIBUTION_TECHS
+    }
+
+
+def _find_authority_row(worksheet, parameter: str, tech: str) -> int:
+    headers = {
+        cell.value: cell.column
+        for cell in worksheet[1]
+        if cell.value is not None
+    }
+    rows = [
+        row
+        for row in range(2, worksheet.max_row + 1)
+        if worksheet.cell(row, headers["Parameter"]).value == parameter
+        and worksheet.cell(row, headers["Tech"]).value == tech
+    ]
+    if len(rows) != 1:
+        raise AssertionError(
+            f"expected one {tech}/{parameter} authority row, got {rows}"
+        )
+    return rows[0]
 
 
 def _read_authority_rows(path: Path):
@@ -271,23 +337,163 @@ class InterconnectorAuthorityWorkbookTests(unittest.TestCase):
             self.assertEqual(set(loaded[tech]), set(YEARS))
             self.assertEqual({_decimal(v) for v in loaded[tech].values()}, {expected})
 
-        with tempfile.TemporaryDirectory() as tmp:
-            corrupt = Path(tmp) / "corrupt_authority.xlsx"
-            shutil.copy2(TEMPLATE, corrupt)
-            workbook = load_workbook(corrupt)
-            worksheet = workbook["Interconnector_Params"]
-            headers = {cell.value: cell.column for cell in worksheet[1] if cell.value is not None}
-            for row in range(2, worksheet.max_row + 1):
-                if (
-                    worksheet.cell(row, headers["Tech"]).value == "TRNBTNXXINDNE"
-                    and worksheet.cell(row, headers["Parameter"]).value == "ResidualCapacity"
-                ):
-                    worksheet.cell(row, headers[2023]).value = 0.171
-                    break
-            workbook.save(corrupt)
-            workbook.close()
+        workbook = load_workbook(TEMPLATE)
+        worksheet = workbook["Interconnector_Params"]
+        headers = {
+            cell.value: cell.column
+            for cell in worksheet[1]
+            if cell.value is not None
+        }
+        for row in range(2, worksheet.max_row + 1):
+            if (
+                worksheet.cell(row, headers["Tech"]).value == "TRNBTNXXINDNE"
+                and worksheet.cell(row, headers["Parameter"]).value
+                == "ResidualCapacity"
+            ):
+                worksheet.cell(row, headers[2023]).value = 0.171
+                break
+        with mock.patch.object(module, "load_workbook", return_value=workbook):
             with self.assertRaises(ValueError):
-                module.load_rc_authority(corrupt)
+                module.load_rc_authority(TEMPLATE)
+
+    def test_v18_contains_exact_minimum_contribution_and_boundary_domains(
+        self,
+    ) -> None:
+        module = _load_module(AUTHORITY_SCRIPT, "minimum_domains")
+        contributions = module.load_minimum_contribution_authority(TEMPLATE)
+        boundaries = module.load_minimum_boundary_authority(TEMPLATE)
+
+        expected_contributions = _dense_minimum_contributions()
+        self.assertEqual(set(contributions), set(MINIMUM_CONTRIBUTION_TECHS))
+        self.assertEqual(
+            sum(len(profile) for profile in contributions.values()), 11 * 28
+        )
+        for tech in sorted(MINIMUM_CONTRIBUTION_TECHS):
+            self.assertEqual(set(contributions[tech]), set(YEARS))
+            for year in YEARS:
+                self.assertEqual(
+                    _decimal(contributions[tech][year]),
+                    expected_contributions[tech][year],
+                )
+        self.assertEqual(
+            _authority_digest(contributions),
+            MINIMUM_CONTRIBUTION_SEMANTIC_SHA256,
+        )
+        self.assertEqual(
+            module.MINIMUM_CONTRIBUTION_SEMANTIC_SHA256,
+            MINIMUM_CONTRIBUTION_SEMANTIC_SHA256,
+        )
+
+        self.assertEqual(set(boundaries), set(MINIMUM_BOUNDARIES))
+        self.assertEqual(
+            sum(len(profile) for profile in boundaries.values()), 2 * 28
+        )
+        for tech, expected in MINIMUM_BOUNDARIES.items():
+            self.assertEqual(set(boundaries[tech]), set(YEARS))
+            self.assertEqual(
+                {_decimal(value) for value in boundaries[tech].values()},
+                {expected},
+            )
+        self.assertEqual(
+            _authority_digest(boundaries),
+            MINIMUM_BOUNDARY_SEMANTIC_SHA256,
+        )
+        self.assertEqual(
+            module.MINIMUM_BOUNDARY_SEMANTIC_SHA256,
+            MINIMUM_BOUNDARY_SEMANTIC_SHA256,
+        )
+
+    def test_minimum_loader_fails_closed_on_schema_domain_and_value_corruption(
+        self,
+    ) -> None:
+        module = _load_module(AUTHORITY_SCRIPT, "minimum_corruptions")
+        parameter = module.MINIMUM_CONTRIBUTION_PARAMETER
+        tech = "TRNBTNXXBGDXX"
+
+        def mutate_missing(worksheet, headers, row):
+            worksheet.cell(row, headers["Parameter"]).value = "unrelated"
+
+        def mutate_duplicate(worksheet, headers, row):
+            worksheet.append([
+                worksheet.cell(row, column).value
+                for column in range(1, worksheet.max_column + 1)
+            ])
+
+        def mutate_wrong_domain(worksheet, headers, row):
+            worksheet.cell(row, headers["Tech"]).value = "TRNUNKNOWN"
+
+        def mutate_wrong_metadata(worksheet, headers, row):
+            worksheet.cell(row, headers["Unit"]).value = "GW"
+
+        def mutate_non_numeric(worksheet, headers, row):
+            worksheet.cell(row, headers[2023]).value = "not-a-number"
+
+        def mutate_negative(worksheet, headers, row):
+            worksheet.cell(row, headers[2023]).value = -1
+
+        def mutate_formula(worksheet, headers, row):
+            worksheet.cell(row, headers[2023]).value = "=1"
+
+        def mutate_blank(worksheet, headers, row):
+            worksheet.cell(row, headers[2023]).value = None
+
+        mutations = {
+            "missing": mutate_missing,
+            "duplicate": mutate_duplicate,
+            "wrong-domain": mutate_wrong_domain,
+            "wrong-metadata": mutate_wrong_metadata,
+            "non-numeric": mutate_non_numeric,
+            "negative": mutate_negative,
+            "formula": mutate_formula,
+            "blank": mutate_blank,
+        }
+        for label, mutation in mutations.items():
+            with self.subTest(corruption=label):
+                workbook = load_workbook(TEMPLATE, data_only=False)
+                worksheet = workbook["Interconnector_Params"]
+                headers = {
+                    cell.value: cell.column
+                    for cell in worksheet[1]
+                    if cell.value is not None
+                }
+                row = _find_authority_row(worksheet, parameter, tech)
+                mutation(worksheet, headers, row)
+                with mock.patch.object(
+                    module, "load_workbook", return_value=workbook
+                ):
+                    with self.assertRaises(ValueError):
+                        module.load_minimum_contribution_authority(TEMPLATE)
+
+    def test_invalid_authority_fails_before_model_open_or_output_mutation(
+        self,
+    ) -> None:
+        module = _load_module(FIX_SCRIPT, "fail_before_model")
+        missing_input = REPO_ROOT / "model-is-deliberately-unavailable.xlsx"
+        output = REPO_ROOT / "must-not-exist.xlsx"
+        self.assertFalse(missing_input.exists())
+        self.assertFalse(output.exists())
+        with (
+            mock.patch.object(
+                module, "load_rc_authority", return_value={
+                    tech: {year: float(value) for year in YEARS}
+                    for tech, value in AUTHORITY.items()
+                }
+            ),
+            mock.patch.object(
+                module,
+                "load_minimum_contribution_authority",
+                side_effect=ValueError("corrupt contribution authority"),
+            ),
+            mock.patch.object(module, "load_workbook") as model_open,
+        ):
+            with self.assertRaises(ValueError):
+                module.run_fix(
+                    missing_input,
+                    output,
+                    authority_path=TEMPLATE,
+                )
+        model_open.assert_not_called()
+        self.assertFalse(output.exists())
 
 
 class InterconnectorRuntimeRouteTests(unittest.TestCase):
@@ -306,9 +512,14 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
         cap_at = stage_source.index('label="cap_trn_to_residual.py"')
         self.assertLess(fix_at, clear_at)
         self.assertLess(clear_at, cap_at)
-        self.assertIn('"--reference", "A-O_Parametrization_NATY.xlsx"', stage_source)
         self.assertIn('os.environ.get("OSTRAM_TEMPLATE_PATH")', stage_source)
         self.assertIn('"--authority", authority_path', stage_source)
+        retired_token = "_".join(
+            ("A-O", "Parametrization", "NA" + "TY")
+        ) + ".xlsx"
+        self.assertNotIn(retired_token, source)
+        self.assertNotIn("--" + "reference", stage_source)
+        self.assertIn('"interconnector_authority.py"', source)
 
         module = _load_module(FIX_SCRIPT, "runtime_route")
         run_source = inspect.getsource(module.run_fix)
@@ -316,47 +527,128 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
         self.assertLess(run_source.index("load_rc_authority("), run_source.index("load_workbook("))
         self.assertLess(run_source.rindex("apply_fix("), run_source.index("apply_rc_authority("))
         self.assertEqual(run_source.count("apply_rc_authority("), 1)
+        self.assertNotIn("reference_path", inspect.signature(module.run_fix).parameters)
+        self.assertFalse(hasattr(module, "load_reference_profiles"))
+        self.assertNotIn("--" + "reference", FIX_SCRIPT.read_text(encoding="utf-8"))
 
-    def test_rc_suppression_preserves_complete_minimum_family(self) -> None:
-        module = _load_module(FIX_SCRIPT, "minimum_isolation")
-        baseline_book, baseline_sheet = _secondary_fixture()
-        candidate_book, candidate_sheet = _secondary_fixture()
-        profile = {year: 0.110 if year < 2033 else 0.150 for year in YEARS}
-        plan = module.TechFix(
-            tech="TRNBTNXXINDNE",
-            base_value=0.110,
-            original_profile=profile,
-            commissionings=[
-                module.Commissioning(
-                    tech="TRNBTNXXINDNE", year=2033, capacity_added=0.040
-                )
-            ],
-            flatten_only=True,
-            base_source="reference",
-            profile_source="reference",
+    def test_exact_minimum_plan_is_additive_dense_and_includes_zero_profiles(
+        self,
+    ) -> None:
+        module = _load_module(FIX_SCRIPT, "minimum_participation")
+        contributions = {
+            tech: {
+                year: float(value)
+                for year, value in profile.items()
+            }
+            for tech, profile in _dense_minimum_contributions().items()
+        }
+        workbook, worksheet = _secondary_fixture()
+        plans, skipped, warnings = module.build_minimum_contribution_plan(
+            worksheet, contributions, cutoff_year=2023
         )
-        module.apply_fix(
-            baseline_sheet, plan, mode="min", cutoff_year=2023,
-            write_residual=True,
+        self.assertEqual({plan.tech for plan in plans}, set(MINIMUM_CONTRIBUTION_TECHS))
+        self.assertEqual(len(plans), 11)
+        self.assertEqual(
+            set(skipped), set(AUTHORITY) - set(MINIMUM_CONTRIBUTION_TECHS)
         )
-        module.apply_fix(
-            candidate_sheet, plan, mode="min", cutoff_year=2023,
+        self.assertEqual(warnings, [])
+
+        columns = {
+            cell.value: cell.column
+            for cell in worksheet[1]
+            if cell.value is not None
+        }
+        additive_tech = "TRNINDEAINDWE"
+        target_row = next(
+            row for row in range(2, worksheet.max_row + 1)
+            if worksheet.cell(row, columns["Tech"]).value == additive_tech
+            and worksheet.cell(row, columns["Parameter"]).value
+            == module.MIN_INV_PARAM
+        )
+        worksheet.cell(target_row, columns[2025]).value = 0.25
+        worksheet.cell(target_row, columns["Projection.Mode"]).value = "EMPTY"
+        additive_plan = next(
+            plan for plan in plans if plan.tech == additive_tech
+        )
+        _, preexisting = module.apply_fix(
+            worksheet,
+            additive_plan,
+            mode="min",
+            cutoff_year=2023,
             write_residual=False,
         )
-        authority = {
-            tech: {year: float(value) for year in YEARS}
-            for tech, value in AUTHORITY.items()
-        }
-        module.apply_rc_authority(candidate_sheet, authority)
-        self.assertEqual(
-            _snapshot_parameter(candidate_sheet, module.MIN_INV_PARAM),
-            _snapshot_parameter(baseline_sheet, module.MIN_INV_PARAM),
+        self.assertEqual(preexisting, {2025: 0.25})
+        self.assertAlmostEqual(
+            worksheet.cell(target_row, columns[2025]).value,
+            1.849999999999998,
         )
-        candidate_rc = _snapshot_parameter(candidate_sheet, module.RESIDUAL_PARAM)
+        self.assertEqual(worksheet.cell(target_row, columns[2024]).value, 0.0)
+        self.assertEqual(
+            worksheet.cell(target_row, columns["Projection.Mode"]).value,
+            "User defined",
+        )
+        self.assertTrue(
+            all(
+                isinstance(worksheet.cell(target_row, columns[year]).value, float)
+                for year in YEARS
+            )
+        )
+
+        zero_tech = "TRNBTNXXINDEA"
+        zero_plan = next(plan for plan in plans if plan.tech == zero_tech)
+        self.assertEqual(zero_plan.commissionings, [])
+        zero_row = next(
+            row for row in range(2, worksheet.max_row + 1)
+            if worksheet.cell(row, columns["Tech"]).value == zero_tech
+            and worksheet.cell(row, columns["Parameter"]).value
+            == module.MIN_INV_PARAM
+        )
+        worksheet.cell(zero_row, columns["Projection.Mode"]).value = "EMPTY"
+        module.apply_fix(
+            worksheet,
+            zero_plan,
+            mode="min",
+            cutoff_year=2023,
+            write_residual=False,
+        )
+        self.assertEqual(
+            {worksheet.cell(zero_row, columns[year]).value for year in YEARS},
+            {0.0},
+        )
+        self.assertEqual(
+            worksheet.cell(zero_row, columns["Projection.Mode"]).value,
+            "User defined",
+        )
+        workbook.close()
+
+    def test_fix_route_runs_with_retired_workbook_unavailable(self) -> None:
+        module = _load_module(FIX_SCRIPT, "no_retired_runtime_route")
+        retired_token = "_".join(
+            ("A-O", "Parametrization", "NA" + "TY")
+        ) + ".xlsx"
+        unavailable = REPO_ROOT / retired_token
+        self.assertFalse(unavailable.exists())
+        contributions = module.load_minimum_contribution_authority(TEMPLATE)
+        authority = module.load_rc_authority(TEMPLATE)
+        module.load_minimum_boundary_authority(TEMPLATE)
+        workbook, worksheet = _secondary_fixture()
+        plans, _, _ = module.build_minimum_contribution_plan(
+            worksheet, contributions, cutoff_year=2023
+        )
+        for plan in plans:
+            module.apply_fix(
+                worksheet,
+                plan,
+                mode="min",
+                cutoff_year=2023,
+                write_residual=False,
+            )
+        module.apply_rc_authority(worksheet, authority)
+        residual = _snapshot_parameter(worksheet, module.RESIDUAL_PARAM)
         for tech, expected in AUTHORITY.items():
-            self.assertEqual({_decimal(v) for v in candidate_rc[tech]}, {expected})
-        baseline_book.close()
-        candidate_book.close()
+            self.assertEqual({_decimal(value) for value in residual[tech]}, {expected})
+        workbook.close()
+        self.assertFalse(unavailable.exists())
 
     def test_protected_cap_and_relax_implementations_are_byte_identical(self) -> None:
         protected = {
@@ -445,7 +737,34 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
         for edit in edits[:4]:
             self.assertEqual(edit.get("residual_source", "effective"), "effective")
         for edit in edits[4:]:
-            self.assertEqual(edit.get("residual_source"), "legacy_min_reference")
+            self.assertEqual(
+                edit.get("residual_source"), "minimum_investment_boundary"
+            )
+
+    def test_no_production_or_config_dependency_on_retired_workbook(self) -> None:
+        retired_token = "_".join(
+            ("A-O", "Parametrization", "NA" + "TY")
+        ) + ".xlsx"
+        roots = (
+            T1_ROOT,
+            REPO_ROOT / "config",
+        )
+        suffixes = {".py", ".json", ".yaml", ".yml", ".toml", ".ini", ".cfg"}
+        offenders = []
+        for root in roots:
+            if not root.exists():
+                continue
+            for path in root.rglob("*"):
+                if (
+                    path.is_file()
+                    and path.suffix.lower() in suffixes
+                    and "__pycache__" not in path.parts
+                    and retired_token in path.read_text(
+                        encoding="utf-8", errors="ignore"
+                    )
+                ):
+                    offenders.append(path.relative_to(REPO_ROOT).as_posix())
+        self.assertEqual(offenders, [])
 
 
 class TxCap150FormulaTests(unittest.TestCase):
@@ -545,7 +864,9 @@ class TxCap150FormulaTests(unittest.TestCase):
                     )
                 workbook.close()
 
-    def test_linkfreeze_minimum_clamp_uses_legacy_boundary_only(self) -> None:
+    def test_linkfreeze_minimum_clamp_uses_v18_boundary_not_effective_rc(
+        self,
+    ) -> None:
         module = _load_module(PATCH_SCRIPT, "linkfreeze_minimum")
         config = json.loads(LINKFREEZE_CONFIG.read_text(encoding="utf-8"))
         edits = {
@@ -553,34 +874,93 @@ class TxCap150FormulaTests(unittest.TestCase):
             if edit["param"] == "TotalAnnualMinCapacityInvestment"
         }
         cases = (
-            ("TRNBGDXXINDEA", 2.496, 2.5),
-            ("TRNNPLXXBGDXX", 0.0, 0.02),
+            ("TRNBGDXXINDEA", 2.496, 3.0, Decimal("2.5")),
+            ("TRNNPLXXBGDXX", 0.0, 1.0, Decimal("0.04")),
         )
-        legacy = {
-            "TRNBGDXXINDEA": {year: 2.5 for year in YEARS},
-            "TRNNPLXXBGDXX": {year: 0.04 for year in YEARS},
+        boundaries = module.load_minimum_investment_boundaries(TEMPLATE)
+        self.assertEqual(
+            _authority_digest(boundaries),
+            MINIMUM_BOUNDARY_SEMANTIC_SHA256,
+        )
+        for tech, effective_rc, minimum, expected in cases:
+            with self.subTest(tech=tech):
+                workbook, worksheet = _patch_fixture(
+                    tech, effective_rc, minimum
+                )
+                columns, year_columns = module.scan_columns(worksheet)
+                module.apply_edit(
+                    worksheet,
+                    columns,
+                    year_columns,
+                    edits[tech],
+                    _patch_log(),
+                    minimum_boundaries=boundaries,
+                )
+                row = module.find_row(
+                    worksheet,
+                    columns,
+                    tech,
+                    "TotalAnnualMinCapacityInvestment",
+                )
+                self.assertIsNotNone(row)
+                assert row is not None
+                self.assertEqual(
+                    _decimal(worksheet.cell(row, year_columns[2033]).value),
+                    expected,
+                )
+                self.assertNotEqual(
+                    _decimal(worksheet.cell(row, year_columns[2033]).value),
+                    Decimal(str(effective_rc)),
+                )
+                workbook.close()
+
+    def test_boundary_source_rejects_wrong_parameter_and_operation(self) -> None:
+        module = _load_module(PATCH_SCRIPT, "boundary_source_contract")
+        base = {
+            "sheet": "Secondary Techs",
+            "tech": "TRNBGDXXINDEA",
+            "residual_source": "minimum_investment_boundary",
         }
-        with mock.patch.object(
-            module, "load_legacy_min_residuals", return_value=legacy
+        wrong_parameter = {
+            **base,
+            "param": "TotalAnnualMaxCapacity",
+            "op": "clamp_to_residual",
+        }
+        wrong_operation = {
+            **base,
+            "param": "TotalAnnualMinCapacityInvestment",
+            "op": "set_to_residual",
+        }
+        for edit in (wrong_parameter, wrong_operation):
+            with self.subTest(edit=edit):
+                with self.assertRaises(ValueError):
+                    module.validate_residual_source(edit)
+
+    def test_invalid_boundary_source_fails_before_target_directory_mutation(
+        self,
+    ) -> None:
+        module = _load_module(PATCH_SCRIPT, "boundary_before_mutation")
+        patches = {
+            "edits": [{
+                "sheet": "Secondary Techs",
+                "tech": "TRNBGDXXINDEA",
+                "param": "TotalAnnualMaxCapacity",
+                "op": "clamp_to_residual",
+                "residual_source": "minimum_investment_boundary",
+            }]
+        }
+        with (
+            mock.patch.object(Path, "is_file", return_value=True),
+            mock.patch.object(
+                Path, "read_text", return_value=json.dumps(patches)
+            ),
+            mock.patch.object(module.shutil, "copytree") as copytree,
+            mock.patch.object(module.shutil, "rmtree") as rmtree,
         ):
-            for tech, effective_rc, minimum in cases:
-                with self.subTest(tech=tech):
-                    workbook, worksheet = _patch_fixture(tech, effective_rc, minimum)
-                    columns, year_columns = module.scan_columns(worksheet)
-                    module.apply_edit(
-                        worksheet, columns, year_columns, edits[tech], _patch_log()
-                    )
-                    row = module.find_row(
-                        worksheet, columns, tech,
-                        "TotalAnnualMinCapacityInvestment",
-                    )
-                    self.assertIsNotNone(row)
-                    assert row is not None
-                    self.assertEqual(
-                        _decimal(worksheet.cell(row, year_columns[2033]).value),
-                        Decimal(str(minimum)),
-                    )
-                    workbook.close()
+            with self.assertRaises(ValueError):
+                module.build_scenario("Bad")
+        copytree.assert_not_called()
+        rmtree.assert_not_called()
 
 
 class SemanticComparisonBehaviorTests(unittest.TestCase):
