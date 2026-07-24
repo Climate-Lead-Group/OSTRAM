@@ -41,6 +41,7 @@
    "tech": "TRNBGDXXINDEA",
    "param": "TotalAnnualMinCapacityInvestment",
    "op": "clamp_to_residual",
+   "residual_source": "legacy_min_reference",
    "note": "clamp legacy MinCapInv <= residual so Min<=Max after freeze"
   },
   {
@@ -48,6 +49,7 @@
    "tech": "TRNNPLXXBGDXX",
    "param": "TotalAnnualMinCapacityInvestment",
    "op": "clamp_to_residual",
+   "residual_source": "legacy_min_reference",
    "note": "clamp legacy MinCapInv <= residual so Min<=Max after freeze"
   }
  ]

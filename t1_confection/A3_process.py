@@ -398,6 +398,17 @@ def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
 def stage_3_fix_2(s2: Path, s3: Path) -> Path:
     banner("Stage 3 — FIX_2 pipeline (fix_trn + clear_stale + cap_trn)")
 
+    authority_path_raw = os.environ.get("OSTRAM_TEMPLATE_PATH")
+    if not authority_path_raw:
+        raise RuntimeError(
+            "OSTRAM_TEMPLATE_PATH is required for RC Authority V1"
+        )
+    authority_path = Path(authority_path_raw).resolve()
+    if not authority_path.is_file():
+        raise FileNotFoundError(
+            f"RC Authority V1 materialized workbook not found: {authority_path}"
+        )
+
     # Move Stage 2.5 output into stage3/
     shutil.copy(s2 / "A-O_Parametrization_c2a_patched.xlsx",
                 s3 / "A-O_Parametrization_c2a_patched.xlsx")
@@ -408,6 +419,7 @@ def stage_3_fix_2(s2: Path, s3: Path) -> Path:
         "--input", "A-O_Parametrization_c2a_patched.xlsx",
         "--output", "A-O_Parametrization_c2a_patched_FIXED.xlsx",
         "--reference", "A-O_Parametrization_NATY.xlsx",
+        "--authority", authority_path,
         "--diff-csv", "diff_log.csv",
         "--diff-md", "diff_log.md",
         "--mode", "min",
