@@ -40,6 +40,14 @@ patches.json edit schema (one dict per edit):
         op:"set_flat"+value           -> set every model year to value
         op:"set_to_residual"          -> set every year = that tech's
                                          ResidualCapacity (same sheet)
+        op:"set_to_residual_factor_floor"
+                                      -> selected years = max(
+                                         factor * effective RC[residual_year],
+                                         base_window_floor)
+        op:"clamp_to_residual"         -> clamp to the effective RC, or to the
+                                         legacy flat model-start boundary when
+                                         residual_source is
+                                         "legacy_min_reference" (minimum only)
     create_if_absent : bool (default False) -> create the param row if missing
     note             : free text (audit only)
 """
@@ -48,10 +56,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import shutil
 import sys
 import tempfile
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
 
 from openpyxl import load_workbook, Workbook
@@ -63,6 +73,7 @@ PARAM_FILE = "A-O_Parametrization.xlsx"
 PROJ_MODE_COL = "Projection.Mode"
 PROJ_MODE_USER = "User defined"
 RES_PARAM = "ResidualCapacity"
+MIN_INV_PARAM = "TotalAnnualMinCapacityInvestment"
 YEAR_MIN, YEAR_MAX = 2020, 2060
 
 SCRIPT_DIR = Path(__file__).resolve().parent          # .../sensitivity_expansion
@@ -70,6 +81,7 @@ REPO = SCRIPT_DIR.parent                               # .../t1_confection
 A1_OUTPUTS = REPO / "A1_Outputs"
 CONFIGS = REPO / "A3_process" / "rules_scripts" / "configs"
 CEIL_BASE = SCRIPT_DIR / "reference" / "vre_ceilings_base.json"
+LEGACY_MIN_REFERENCE = REPO / "A3_process" / "A-O_Parametrization_NATY.xlsx"
 
 
 # --------------------------------------------------------------------------
@@ -124,6 +136,126 @@ def find_row(ws, col_map, tech, param):
         if str(t).strip() == tech and str(p).strip() == param:
             return r
     return None
+
+
+def find_unique_row(ws, col_map, tech, param):
+    rows = []
+    tc, pc = col_map["tech"], col_map["param"]
+    for r in range(2, ws.max_row + 1):
+        if (
+            str(ws.cell(row=r, column=tc).value or "").strip() == tech
+            and str(ws.cell(row=r, column=pc).value or "").strip() == param
+        ):
+            rows.append(r)
+    if len(rows) != 1:
+        raise ValueError(
+            f"expected exactly one {tech}/{param} row, found {len(rows)}"
+        )
+    return rows[0]
+
+
+def finite_nonnegative(value, context):
+    if isinstance(value, bool) or value is None:
+        raise ValueError(f"{context}: expected numeric value, got {value!r}")
+    try:
+        result = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"{context}: expected numeric value, got {value!r}"
+        ) from exc
+    if not math.isfinite(result) or result < 0:
+        raise ValueError(
+            f"{context}: expected finite non-negative value, got {value!r}"
+        )
+    return result
+
+
+@lru_cache(maxsize=1)
+def load_legacy_min_residuals(reference_path=LEGACY_MIN_REFERENCE):
+    """Read NATY residuals solely as the established minimum/FUTURE bound."""
+    if not reference_path.is_file():
+        raise FileNotFoundError(
+            f"legacy minimum-investment reference not found: {reference_path}"
+        )
+    wb = load_workbook(
+        reference_path, data_only=True, read_only=True, keep_links=False
+    )
+    try:
+        if "Secondary Techs" not in wb.sheetnames:
+            raise ValueError("legacy minimum reference missing Secondary Techs")
+        ws = wb["Secondary Techs"]
+        header = next(
+            ws.iter_rows(min_row=1, max_row=1, values_only=True)
+        )
+        col_map, year_cols = {}, {}
+        for index, raw in enumerate(header):
+            year = _as_year(raw)
+            if year is not None:
+                year_cols[year] = index
+            elif raw in ("Technology", "Tech"):
+                col_map["tech"] = index
+            elif raw == "Parameter":
+                col_map["param"] = index
+        if set(col_map) != {"tech", "param"}:
+            raise ValueError(
+                "legacy minimum reference is missing Tech/Parameter columns"
+            )
+        result = {}
+        tc, pc = col_map["tech"], col_map["param"]
+        for values in ws.iter_rows(min_row=2, values_only=True):
+            tech = str(values[tc] or "").strip()
+            param = str(values[pc] or "").strip()
+            if not tech.startswith("TRN") or param != RES_PARAM:
+                continue
+            if tech in result:
+                raise ValueError(
+                    f"legacy minimum reference has duplicate "
+                    f"{tech}/{RES_PARAM}"
+                )
+            result[tech] = {
+                year: finite_nonnegative(
+                    values[col],
+                    f"legacy minimum reference {tech}/{year}",
+                )
+                for year, col in year_cols.items()
+            }
+    finally:
+        wb.close()
+    return result
+
+
+def residual_values_for_edit(ws, col_map, year_cols, tech, param, edit):
+    source = edit.get("residual_source", "effective")
+    if source == "effective":
+        row = find_unique_row(ws, col_map, tech, RES_PARAM)
+        return {
+            year: finite_nonnegative(
+                ws.cell(row, col).value,
+                f"effective {tech}/{RES_PARAM}/{year}",
+            )
+            for year, col in year_cols.items()
+        }
+    if source == "legacy_min_reference":
+        if param != MIN_INV_PARAM:
+            raise ValueError(
+                "legacy_min_reference is permitted only for "
+                f"{MIN_INV_PARAM}, got {param}"
+            )
+        profiles = load_legacy_min_residuals()
+        if tech not in profiles:
+            raise ValueError(
+                f"legacy minimum reference missing {tech}/{RES_PARAM}"
+            )
+        if 2023 not in profiles[tech]:
+            raise ValueError(
+                f"legacy minimum reference {tech} missing cutoff year 2023"
+            )
+        # Stage 3 historically flattened NATY's model-start value before the
+        # LinkFreeze minimum clamp ran. Reproduce that minimum-only boundary;
+        # the later NATY profile must not become a new schedule.
+        boundary = profiles[tech][2023]
+        return {year: boundary for year in year_cols}
+    raise ValueError(f"unsupported residual_source {source!r}")
 
 
 def find_any_row_for_tech(ws, col_map, tech):
@@ -199,6 +331,8 @@ def apply_edit(ws, col_map, year_cols, edit, log):
     for tech in techs_matching(ws, col_map, edit):
         r = find_row(ws, col_map, tech, param)
         if r is None:
+            if edit.get("op") == "set_to_residual_factor_floor":
+                raise ValueError(f"required target row missing: {tech}/{param}")
             if not create:
                 log["skipped"].append({"tech": tech, "param": param,
                                        "reason": "row absent, create_if_absent=false"})
@@ -207,7 +341,46 @@ def apply_edit(ws, col_map, year_cols, edit, log):
             log["rows_created"].append({"tech": tech, "param": param, "row": r})
 
         # compute new value per year
-        if "values" in edit:
+        if edit.get("op") == "set_to_residual_factor_floor":
+            residual_year = int(edit["residual_year"])
+            if residual_year not in year_cols:
+                raise ValueError(
+                    f"{tech}/{param}: residual year {residual_year} missing"
+                )
+            factor = finite_nonnegative(
+                edit["factor"], f"{tech}/{param} factor"
+            )
+            if factor <= 0:
+                raise ValueError(f"{tech}/{param}: factor must be positive")
+            floor = finite_nonnegative(
+                edit["base_window_floor"],
+                f"{tech}/{param} base_window_floor",
+            )
+            years = tuple(int(year) for year in edit["years"])
+            if not years or len(set(years)) != len(years):
+                raise ValueError(
+                    f"{tech}/{param}: years must be unique and non-empty"
+                )
+            missing_years = sorted(set(years) - set(year_cols))
+            if missing_years:
+                raise ValueError(
+                    f"{tech}/{param}: target years missing {missing_years}"
+                )
+            residual_row = find_unique_row(
+                ws, col_map, tech, RES_PARAM
+            )
+            residual = finite_nonnegative(
+                ws.cell(residual_row, year_cols[residual_year]).value,
+                f"effective {tech}/{RES_PARAM}/{residual_year}",
+            )
+            formula_value = round(
+                max(round(factor * residual, 6), floor), 6
+            )
+            year_set = set(years)
+            newfn = lambda y, old, value=formula_value, yrs=year_set: (
+                value if y in yrs else old
+            )
+        elif "values" in edit:
             newfn = lambda y, old, v=edit["values"]: (
                 v[str(y)] if str(y) in v else (v[y] if y in v else old))
         elif edit.get("op") == "multiply":
@@ -229,20 +402,17 @@ def apply_edit(ws, col_map, year_cols, edit, log):
             val = float(edit["value"])
             newfn = lambda y, old, val=val: val
         elif edit.get("op") == "set_to_residual":
-            resvals = read_row_values(ws, col_map, year_cols, tech, RES_PARAM) or {}
+            resvals = residual_values_for_edit(
+                ws, col_map, year_cols, tech, param, edit
+            )
             def newfn(y, old, rv=resvals):
-                v = rv.get(y)
-                try:
-                    return round(float(v), 6) if v is not None else 0.0
-                except (TypeError, ValueError):
-                    return 0.0
+                return round(rv[y], 6)
         elif edit.get("op") == "clamp_to_residual":
-            resvals = read_row_values(ws, col_map, year_cols, tech, RES_PARAM) or {}
+            resvals = residual_values_for_edit(
+                ws, col_map, year_cols, tech, param, edit
+            )
             def newfn(y, old, rv=resvals):
-                try:
-                    cap = float(rv.get(y)) if rv.get(y) is not None else 0.0
-                except (TypeError, ValueError):
-                    cap = 0.0
+                cap = rv[y]
                 if old is None:
                     return None
                 try:

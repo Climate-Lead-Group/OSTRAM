@@ -15,6 +15,11 @@ in an OSeMOSYS A-O Parametrization workbook into:
 Techs whose ResidualCapacity is already flat across all years are left untouched
 (they represent stock with no scheduled additions).
 
+The legacy input/NATY profile is used only to preserve the established
+commissioning and minimum-investment schedule. Final cross-border TRN
+ResidualCapacity is always replaced by the complete, digest-validated RC
+Authority V1 table from the materialized v18 workbook supplied by --authority.
+
 Commissioning schedule sources, in order of precedence:
   (1) --override CSV (columns: tech, year, capacity_added)
   (2) auto-derive from year-over-year deltas in the existing ResidualCapacity row
@@ -35,15 +40,19 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
+import math
 from dataclasses import dataclass, field
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Mapping, Optional, Tuple
 
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
 # ------------------------------------------------------------------ constants
 SHEET_NAME = "Secondary Techs"
+AUTHORITY_SHEET_NAME = "Interconnector_Params"
 TECH_PREFIX = "TRN"
 RESIDUAL_PARAM = "ResidualCapacity"
 MIN_INV_PARAM = "TotalAnnualMinCapacityInvestment"
@@ -60,6 +69,22 @@ SENTINEL_VALUE = 9999.0
 TECH_COL = "Tech"
 PARAM_COL = "Parameter"
 PROJ_MODE_COL = "Projection.Mode"
+
+# RC Authority V1 is a dense 18-technology x 28-year table in the materialized
+# v18 workbook. The digest commits the complete numeric table without making
+# this script a second source of the values.
+AUTHORITY_YEARS = tuple(range(2023, 2051))
+AUTHORITY_TECHS = frozenset({
+    "TRNBGDXXINDEA", "TRNBGDXXINDNE", "TRNBTNXXBGDXX",
+    "TRNBTNXXINDEA", "TRNBTNXXINDNE", "TRNINDEAINDNE",
+    "TRNINDEAINDNO", "TRNINDEAINDSO", "TRNINDEAINDWE",
+    "TRNINDEANPLXX", "TRNINDNEINDNO", "TRNINDNOINDWE",
+    "TRNINDNONPLXX", "TRNINDSOINDWE", "TRNINDSOLKAXX",
+    "TRNLKAXXMDVXX", "TRNMDVXXINDSO", "TRNNPLXXBGDXX",
+})
+AUTHORITY_SEMANTIC_SHA256 = (
+    "6c4420017b4a2df0b0e4ab6cc11f0bb45c79aa139bed858bdea5fec1aa54584b"
+)
 
 
 # ------------------------------------------------------------------ data model
@@ -94,7 +119,7 @@ class DiffEntry:
     year: int
     old_value: float
     new_value: float
-    source: str = "split"   # "overlay" (from benchmark) or "split" (residual->TAMCI)
+    source: str = "split"   # "split", "magnitude", or final "authority_v1"
 
 
 # ---------------------------------------------------------------- header parse
@@ -157,6 +182,198 @@ def _find_param_row(
         ):
             return row_idx
     return None
+
+
+def _decimal_text(value: object, context: str) -> str:
+    """Return a canonical finite, non-negative decimal string."""
+    if isinstance(value, bool) or value is None:
+        raise ValueError(f"{context}: expected a numeric value, got {value!r}")
+    try:
+        decimal_value = Decimal(str(value))
+    except (InvalidOperation, ValueError) as exc:
+        raise ValueError(
+            f"{context}: expected a numeric value, got {value!r}"
+        ) from exc
+    if not decimal_value.is_finite() or decimal_value < 0:
+        raise ValueError(
+            f"{context}: expected a finite non-negative value, got {value!r}"
+        )
+    if decimal_value == 0:
+        return "0"
+    return format(decimal_value.normalize(), "f")
+
+
+def authority_semantic_sha256(
+    authority: Mapping[str, Mapping[int, float]],
+) -> str:
+    """Hash the canonical technology/year/value authority domain."""
+    payload = "".join(
+        f"{tech}|{year}|"
+        f"{_decimal_text(authority[tech][year], f'{tech}/{year}')}\n"
+        for tech in sorted(authority)
+        for year in sorted(authority[tech])
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _validate_authority_mapping(
+    authority: Mapping[str, Mapping[int, float]],
+) -> None:
+    techs = set(authority)
+    if techs != set(AUTHORITY_TECHS):
+        missing = sorted(AUTHORITY_TECHS - techs)
+        extra = sorted(techs - AUTHORITY_TECHS)
+        raise ValueError(
+            "RC Authority V1 technology domain mismatch: "
+            f"missing={missing}, extra={extra}"
+        )
+    expected_years = set(AUTHORITY_YEARS)
+    for tech in sorted(AUTHORITY_TECHS):
+        years = set(authority[tech])
+        if years != expected_years:
+            raise ValueError(
+                f"RC Authority V1 year domain mismatch for {tech}: "
+                f"missing={sorted(expected_years - years)}, "
+                f"extra={sorted(years - expected_years)}"
+            )
+        for year in AUTHORITY_YEARS:
+            _decimal_text(authority[tech][year], f"{tech}/{year}")
+    digest = authority_semantic_sha256(authority)
+    if digest != AUTHORITY_SEMANTIC_SHA256:
+        raise ValueError(
+            "RC Authority V1 semantic digest mismatch: "
+            f"expected {AUTHORITY_SEMANTIC_SHA256}, got {digest}"
+        )
+
+
+def load_rc_authority(authority_path: Path) -> Dict[str, Dict[int, float]]:
+    """Load and fully validate RC Authority V1 from materialized v18."""
+    if not authority_path.is_file():
+        raise FileNotFoundError(
+            f"RC Authority V1 workbook not found: {authority_path}"
+        )
+    wb = load_workbook(
+        authority_path, data_only=False, read_only=True, keep_links=False
+    )
+    try:
+        if AUTHORITY_SHEET_NAME not in wb.sheetnames:
+            raise ValueError(
+                f"authority workbook missing sheet '{AUTHORITY_SHEET_NAME}'"
+            )
+        ws = wb[AUTHORITY_SHEET_NAME]
+        meta_cols, year_cols = _build_column_index(ws)
+        required_meta = {
+            TECH_COL, PARAM_COL, "Parameter.ID", "Unit",
+            PROJ_MODE_COL, "Projection.Parameter",
+        }
+        missing_meta = sorted(required_meta - set(meta_cols))
+        if missing_meta:
+            raise ValueError(
+                f"RC Authority V1 missing metadata columns: {missing_meta}"
+            )
+        if set(year_cols) != set(AUTHORITY_YEARS):
+            raise ValueError(
+                "RC Authority V1 workbook year columns must be exactly "
+                f"2023-2050; got {sorted(year_cols)}"
+            )
+
+        authority: Dict[str, Dict[int, float]] = {}
+        for row_idx, values in enumerate(
+            ws.iter_rows(min_row=2, values_only=True), start=2
+        ):
+            tech = values[meta_cols[TECH_COL] - 1]
+            param = values[meta_cols[PARAM_COL] - 1]
+            if not isinstance(tech, str) or not tech.startswith(TECH_PREFIX):
+                continue
+            if param != RESIDUAL_PARAM:
+                continue
+            if tech in authority:
+                raise ValueError(
+                    f"RC Authority V1 duplicate row for {tech} at row {row_idx}"
+                )
+            if values[meta_cols["Parameter.ID"] - 1] != 3:
+                raise ValueError(
+                    f"RC Authority V1 {tech}: Parameter.ID must be 3"
+                )
+            if values[meta_cols["Unit"] - 1] != "GW":
+                raise ValueError(f"RC Authority V1 {tech}: Unit must be GW")
+            if (
+                values[meta_cols[PROJ_MODE_COL] - 1]
+                != DEFAULT_PROJECTION_MODE
+            ):
+                raise ValueError(
+                    f"RC Authority V1 {tech}: Projection.Mode must be "
+                    f"{DEFAULT_PROJECTION_MODE!r}"
+                )
+            projection_parameter = values[
+                meta_cols["Projection.Parameter"] - 1
+            ]
+            if _decimal_text(
+                projection_parameter, f"{tech}/Projection.Parameter"
+            ) != "0":
+                raise ValueError(
+                    f"RC Authority V1 {tech}: Projection.Parameter must be 0"
+                )
+            profile: Dict[int, float] = {}
+            for year in AUTHORITY_YEARS:
+                raw = values[year_cols[year] - 1]
+                canonical = _decimal_text(raw, f"{tech}/{year}")
+                profile[year] = float(Decimal(canonical))
+            authority[tech] = profile
+    finally:
+        wb.close()
+
+    _validate_authority_mapping(authority)
+    return authority
+
+
+def apply_rc_authority(
+    ws: Worksheet,
+    authority: Mapping[str, Mapping[int, float]],
+) -> List[DiffEntry]:
+    """Write the validated v18 RC table into model Secondary Techs."""
+    _validate_authority_mapping(authority)
+    meta_cols, year_cols = _build_column_index(ws)
+    if not set(AUTHORITY_YEARS).issubset(year_cols):
+        missing = sorted(set(AUTHORITY_YEARS) - set(year_cols))
+        raise ValueError(f"model workbook missing authority years: {missing}")
+
+    rows: Dict[str, int] = {}
+    for row_idx in range(2, ws.max_row + 1):
+        tech = ws.cell(row_idx, meta_cols[TECH_COL]).value
+        param = ws.cell(row_idx, meta_cols[PARAM_COL]).value
+        if tech not in AUTHORITY_TECHS or param != RESIDUAL_PARAM:
+            continue
+        if tech in rows:
+            raise ValueError(
+                f"model workbook has duplicate {tech}/{RESIDUAL_PARAM} rows"
+            )
+        rows[tech] = row_idx
+    if set(rows) != set(AUTHORITY_TECHS):
+        raise ValueError(
+            "model workbook RC row domain mismatch: "
+            f"missing={sorted(AUTHORITY_TECHS - set(rows))}"
+        )
+
+    diffs: List[DiffEntry] = []
+    for tech in sorted(AUTHORITY_TECHS):
+        row_idx = rows[tech]
+        for year in AUTHORITY_YEARS:
+            cell = ws.cell(row_idx, year_cols[year])
+            old = cell.value
+            old_f = float(old) if old is not None else 0.0
+            new_f = float(authority[tech][year])
+            cell.value = new_f
+            if not math.isclose(
+                old_f, new_f, rel_tol=0.0, abs_tol=FLAT_TOLERANCE
+            ):
+                diffs.append(
+                    DiffEntry(
+                        SHEET_NAME, tech, RESIDUAL_PARAM, year,
+                        old_f, new_f, source="authority_v1",
+                    )
+                )
+    return diffs
 
 
 # ---------------------------------------------------------------- planning
@@ -316,6 +533,7 @@ def apply_fix(
     plan: TechFix,
     mode: str,
     cutoff_year: int,
+    write_residual: bool = True,
 ) -> Tuple[List[DiffEntry], Dict[int, float]]:
     """
     Apply a single TechFix to the worksheet.
@@ -336,17 +554,18 @@ def apply_fix(
         raise RuntimeError(
             f"ResidualCapacity row for {plan.tech} not found"
         )
-    rc_source = "magnitude" if not plan.flatten_only else "split"
-    for y, c in year_cols.items():
-        old = ws.cell(row=rc_row, column=c).value
-        old_f = float(old) if old is not None else 0.0
-        new_f = float(plan.base_value)
-        if abs(old_f - new_f) > FLAT_TOLERANCE:
-            ws.cell(row=rc_row, column=c).value = new_f
-            diffs.append(
-                DiffEntry(SHEET_NAME, plan.tech, RESIDUAL_PARAM, y,
-                          old_f, new_f, source=rc_source)
-            )
+    if write_residual:
+        rc_source = "magnitude" if not plan.flatten_only else "split"
+        for y, c in year_cols.items():
+            old = ws.cell(row=rc_row, column=c).value
+            old_f = float(old) if old is not None else 0.0
+            new_f = float(plan.base_value)
+            if abs(old_f - new_f) > FLAT_TOLERANCE:
+                ws.cell(row=rc_row, column=c).value = new_f
+                diffs.append(
+                    DiffEntry(SHEET_NAME, plan.tech, RESIDUAL_PARAM, y,
+                              old_f, new_f, source=rc_source)
+                )
 
     # If this is a magnitude-only correction (input was already flat,
     # we're just changing the level), there are no commissionings to write.
@@ -461,6 +680,7 @@ def write_diff_md(
 ) -> None:
     magnitude_diffs = [d for d in diffs if d.source == "magnitude"]
     split_diffs = [d for d in diffs if d.source == "split"]
+    authority_diffs = [d for d in diffs if d.source == "authority_v1"]
 
     flatten_plans = [p for p in plans if p.flatten_only]
     magn_only_plans = [p for p in plans if not p.flatten_only]
@@ -481,6 +701,9 @@ def write_diff_md(
     if magnitude_diffs:
         lines.append(f"- Cell changes from magnitude correction: **{len(magnitude_diffs)}**")
     lines.append(f"- Cell changes from residual splitting: **{len(split_diffs)}**")
+    lines.append(
+        f"- Cell changes from RC Authority V1: **{len(authority_diffs)}**"
+    )
     if warnings:
         lines.append("")
         lines.append("## Warnings")
@@ -560,9 +783,15 @@ def run_fix(
     cutoff_year: int = DEFAULT_CUTOFF_YEAR,
     override_path: Optional[Path] = None,
     reference_path: Optional[Path] = None,
+    authority_path: Optional[Path] = None,
 ) -> Tuple[List[DiffEntry], List[TechFix], List[str], List[str]]:
     """Open workbook, build plan (consulting reference if given), apply fixes,
     save. Pure pipeline (no CLI)."""
+    if authority_path is None:
+        raise ValueError("RC Authority V1 workbook is required")
+    # Validate the complete authority before opening or mutating the target.
+    authority = load_rc_authority(authority_path)
+
     wb = load_workbook(input_path)
     if SHEET_NAME not in wb.sheetnames:
         raise ValueError(
@@ -585,7 +814,12 @@ def run_fix(
 
     target_param = MIN_INV_PARAM if mode == "min" else MAX_CAP_PARAM
     for plan in plans:
-        d, preexisting = apply_fix(ws, plan, mode=mode, cutoff_year=cutoff_year)
+        # NATY remains an input to the established commissioning/minimum plan,
+        # but it has no authority to write ResidualCapacity.
+        d, preexisting = apply_fix(
+            ws, plan, mode=mode, cutoff_year=cutoff_year,
+            write_residual=False,
+        )
         diffs.extend(d)
         if preexisting:
             entries = ", ".join(f"{y}: {v:+.3f}" for y, v in sorted(preexisting.items()))
@@ -593,6 +827,8 @@ def run_fix(
                 f"{plan.tech}: pre-existing nonzero {target_param} values "
                 f"preserved/merged: {{{entries}}}"
             )
+
+    diffs.extend(apply_rc_authority(ws, authority))
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(output_path)
@@ -622,10 +858,12 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="optional CSV with columns tech,year,capacity_added "
                         "to override the auto-derived commissioning schedule")
     p.add_argument("--reference", type=Path, default=None,
-                   help="optional reference workbook whose ResidualCapacity "
-                        "column corrects A-O's TRN base magnitudes. A reference "
-                        "value is adopted only if it differs from input AND "
-                        "is neither 9999 (sentinel) nor 0 (treated as missing).")
+                   help="optional legacy reference used only to preserve the "
+                        "established commissioning/minimum-investment schedule; "
+                        "it cannot write final TRN ResidualCapacity")
+    p.add_argument("--authority", type=Path, required=True,
+                   help="materialized v18 workbook containing the complete, "
+                        "digest-validated RC Authority V1 table")
     args = p.parse_args(argv)
 
     diffs, plans, skipped, warnings = run_fix(
@@ -635,6 +873,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         cutoff_year=args.cutoff_year,
         override_path=args.override,
         reference_path=args.reference,
+        authority_path=args.authority,
     )
 
     if args.diff_csv:
