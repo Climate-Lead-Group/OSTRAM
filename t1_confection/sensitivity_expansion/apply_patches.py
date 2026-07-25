@@ -45,9 +45,10 @@ patches.json edit schema (one dict per edit):
                                          factor * effective RC[residual_year],
                                          base_window_floor)
         op:"clamp_to_residual"         -> clamp to the effective RC, or to the
-                                         legacy flat model-start boundary when
-                                         residual_source is
-                                         "legacy_min_reference" (minimum only)
+                                         separate v18 compatibility boundary
+                                         when residual_source is
+                                         "minimum_investment_boundary"
+                                         (minimum only)
     create_if_absent : bool (default False) -> create the param row if missing
     note             : free text (audit only)
 """
@@ -61,7 +62,6 @@ import shutil
 import sys
 import tempfile
 from datetime import datetime
-from functools import lru_cache
 from pathlib import Path
 
 from openpyxl import load_workbook, Workbook
@@ -79,9 +79,22 @@ YEAR_MIN, YEAR_MAX = 2020, 2060
 SCRIPT_DIR = Path(__file__).resolve().parent          # .../sensitivity_expansion
 REPO = SCRIPT_DIR.parent                               # .../t1_confection
 A1_OUTPUTS = REPO / "A1_Outputs"
-CONFIGS = REPO / "A3_process" / "rules_scripts" / "configs"
+A3_PROCESS_DIR = REPO / "A3_process"
+CONFIGS = A3_PROCESS_DIR / "rules_scripts" / "configs"
 CEIL_BASE = SCRIPT_DIR / "reference" / "vre_ceilings_base.json"
-LEGACY_MIN_REFERENCE = REPO / "A3_process" / "A-O_Parametrization_NATY.xlsx"
+SOASIA_V18 = A3_PROCESS_DIR / "SOASIA_OSeMOSYS_Template_v18.xlsx"
+MINIMUM_BOUNDARY_SOURCE = "minimum_investment_boundary"
+
+# ``apply_patches.py`` is also executed directly, with only
+# ``sensitivity_expansion/`` on sys.path. Make the sibling Stage-3 authority
+# module importable without creating a second implementation or data fallback.
+if str(A3_PROCESS_DIR) not in sys.path:
+    sys.path.insert(0, str(A3_PROCESS_DIR))
+
+from interconnector_authority import (  # noqa: E402
+    MINIMUM_BOUNDARY_PARAMETER,
+    load_minimum_boundary_authority,
+)
 
 
 # --------------------------------------------------------------------------
@@ -170,61 +183,40 @@ def finite_nonnegative(value, context):
     return result
 
 
-@lru_cache(maxsize=1)
-def load_legacy_min_residuals(reference_path=LEGACY_MIN_REFERENCE):
-    """Read NATY residuals solely as the established minimum/FUTURE bound."""
-    if not reference_path.is_file():
-        raise FileNotFoundError(
-            f"legacy minimum-investment reference not found: {reference_path}"
-        )
-    wb = load_workbook(
-        reference_path, data_only=True, read_only=True, keep_links=False
-    )
-    try:
-        if "Secondary Techs" not in wb.sheetnames:
-            raise ValueError("legacy minimum reference missing Secondary Techs")
-        ws = wb["Secondary Techs"]
-        header = next(
-            ws.iter_rows(min_row=1, max_row=1, values_only=True)
-        )
-        col_map, year_cols = {}, {}
-        for index, raw in enumerate(header):
-            year = _as_year(raw)
-            if year is not None:
-                year_cols[year] = index
-            elif raw in ("Technology", "Tech"):
-                col_map["tech"] = index
-            elif raw == "Parameter":
-                col_map["param"] = index
-        if set(col_map) != {"tech", "param"}:
-            raise ValueError(
-                "legacy minimum reference is missing Tech/Parameter columns"
-            )
-        result = {}
-        tc, pc = col_map["tech"], col_map["param"]
-        for values in ws.iter_rows(min_row=2, values_only=True):
-            tech = str(values[tc] or "").strip()
-            param = str(values[pc] or "").strip()
-            if not tech.startswith("TRN") or param != RES_PARAM:
-                continue
-            if tech in result:
-                raise ValueError(
-                    f"legacy minimum reference has duplicate "
-                    f"{tech}/{RES_PARAM}"
-                )
-            result[tech] = {
-                year: finite_nonnegative(
-                    values[col],
-                    f"legacy minimum reference {tech}/{year}",
-                )
-                for year, col in year_cols.items()
-            }
-    finally:
-        wb.close()
-    return result
+def load_minimum_investment_boundaries(authority_path=None):
+    """Load the exact dense minimum-clamp authority from canonical v18."""
+    path = SOASIA_V18 if authority_path is None else authority_path
+    return load_minimum_boundary_authority(Path(path).resolve())
 
 
-def residual_values_for_edit(ws, col_map, year_cols, tech, param, edit):
+def validate_residual_source(edit):
+    """Validate a patch's optional external residual source."""
+    source = edit.get("residual_source")
+    if source is None or source == "effective":
+        return False
+    if source != MINIMUM_BOUNDARY_SOURCE:
+        raise ValueError(f"unsupported residual_source {source!r}")
+    if (
+        edit.get("param") != MIN_INV_PARAM
+        or edit.get("op") != "clamp_to_residual"
+    ):
+        raise ValueError(
+            f"{MINIMUM_BOUNDARY_SOURCE} is permitted only for "
+            f"{MIN_INV_PARAM} clamp_to_residual edits, got "
+            f"parameter={edit.get('param')!r}, op={edit.get('op')!r}"
+        )
+    return True
+
+
+def residual_values_for_edit(
+    ws,
+    col_map,
+    year_cols,
+    tech,
+    param,
+    edit,
+    minimum_boundaries=None,
+):
     source = edit.get("residual_source", "effective")
     if source == "effective":
         row = find_unique_row(ws, col_map, tech, RES_PARAM)
@@ -235,26 +227,34 @@ def residual_values_for_edit(ws, col_map, year_cols, tech, param, edit):
             )
             for year, col in year_cols.items()
         }
-    if source == "legacy_min_reference":
+    if source == MINIMUM_BOUNDARY_SOURCE:
         if param != MIN_INV_PARAM:
             raise ValueError(
-                "legacy_min_reference is permitted only for "
+                f"{MINIMUM_BOUNDARY_SOURCE} is permitted only for "
                 f"{MIN_INV_PARAM}, got {param}"
             )
-        profiles = load_legacy_min_residuals()
+        profiles = (
+            minimum_boundaries
+            if minimum_boundaries is not None
+            else load_minimum_investment_boundaries()
+        )
         if tech not in profiles:
             raise ValueError(
-                f"legacy minimum reference missing {tech}/{RES_PARAM}"
+                f"{MINIMUM_BOUNDARY_PARAMETER} authority missing {tech}"
             )
-        if 2023 not in profiles[tech]:
+        missing_years = sorted(set(year_cols) - set(profiles[tech]))
+        if missing_years:
             raise ValueError(
-                f"legacy minimum reference {tech} missing cutoff year 2023"
+                f"{MINIMUM_BOUNDARY_PARAMETER} authority {tech} "
+                f"missing years {missing_years}"
             )
-        # Stage 3 historically flattened NATY's model-start value before the
-        # LinkFreeze minimum clamp ran. Reproduce that minimum-only boundary;
-        # the later NATY profile must not become a new schedule.
-        boundary = profiles[tech][2023]
-        return {year: boundary for year in year_cols}
+        return {
+            year: finite_nonnegative(
+                profiles[tech][year],
+                f"{MINIMUM_BOUNDARY_PARAMETER} authority {tech}/{year}",
+            )
+            for year in year_cols
+        }
     raise ValueError(f"unsupported residual_source {source!r}")
 
 
@@ -325,8 +325,16 @@ def flip_proj_mode(ws, col_map, row):
 # --------------------------------------------------------------------------
 # Edit application
 # --------------------------------------------------------------------------
-def apply_edit(ws, col_map, year_cols, edit, log):
+def apply_edit(
+    ws,
+    col_map,
+    year_cols,
+    edit,
+    log,
+    minimum_boundaries=None,
+):
     param = edit["param"]
+    validate_residual_source(edit)
     create = bool(edit.get("create_if_absent", False))
     for tech in techs_matching(ws, col_map, edit):
         r = find_row(ws, col_map, tech, param)
@@ -403,13 +411,13 @@ def apply_edit(ws, col_map, year_cols, edit, log):
             newfn = lambda y, old, val=val: val
         elif edit.get("op") == "set_to_residual":
             resvals = residual_values_for_edit(
-                ws, col_map, year_cols, tech, param, edit
+                ws, col_map, year_cols, tech, param, edit, minimum_boundaries
             )
             def newfn(y, old, rv=resvals):
                 return round(rv[y], 6)
         elif edit.get("op") == "clamp_to_residual":
             resvals = residual_values_for_edit(
-                ws, col_map, year_cols, tech, param, edit
+                ws, col_map, year_cols, tech, param, edit, minimum_boundaries
             )
             def newfn(y, old, rv=resvals):
                 cap = rv[y]
@@ -555,11 +563,28 @@ def apply_ceiling_layer(wb, log):
     log["ceiling_layer"] = {"n_techs": len(ceilings), "source": str(CEIL_BASE)}
 
 
-def apply_run_patches(wb, patches, log):
+def apply_run_patches(wb, patches, log, minimum_boundaries=None):
     for edit in patches.get("edits", []):
         ws = wb[edit["sheet"]]
         col_map, year_cols = scan_columns(ws)
-        apply_edit(ws, col_map, year_cols, edit, log)
+        apply_edit(
+            ws,
+            col_map,
+            year_cols,
+            edit,
+            log,
+            minimum_boundaries=minimum_boundaries,
+        )
+
+
+def validate_patch_authorities(patches, authority_path=None):
+    """Validate external patch authorities before target-directory mutation."""
+    requires_minimum_boundary = False
+    for edit in patches.get("edits", []):
+        requires_minimum_boundary |= validate_residual_source(edit)
+    if not requires_minimum_boundary:
+        return None
+    return load_minimum_investment_boundaries(authority_path)
 
 
 # --------------------------------------------------------------------------
@@ -575,6 +600,7 @@ def build_scenario(scenario, source="B_Optimised_VRE", skip_backup=False):
     if not patches_path.is_file():
         raise FileNotFoundError(f"patches.json not found: {patches_path}")
     patches = json.loads(patches_path.read_text(encoding="utf-8"))
+    minimum_boundaries = validate_patch_authorities(patches)
 
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     # Backup any pre-existing target, then rebuild from a FRESH source copy.
@@ -594,7 +620,12 @@ def build_scenario(scenario, source="B_Optimised_VRE", skip_backup=False):
     wb = load_workbook(tgt_dir / PARAM_FILE)
     if patches.get("apply_vre_ceiling_layer", True):
         apply_ceiling_layer(wb, log)
-    apply_run_patches(wb, patches, log)
+    apply_run_patches(
+        wb,
+        patches,
+        log,
+        minimum_boundaries=minimum_boundaries,
+    )
     wb.save(tgt_dir / PARAM_FILE)
     wb.close()
 
@@ -644,7 +675,7 @@ def self_test():
     ws.append(hdr)
     ws.append([1, "PWRSPVBGDXX", "solar", 1, "CapitalCost", None, "User defined", 0] + [100.0] * 28)
     ws.append([1, "PWRSPVBGDXX", "solar", 2, "TotalAnnualMaxCapacity", None, "User defined", 0] + [365.0] * 28)
-    ws.append([2, "TRNBGDXXINDEA", "trn", 3, "ResidualCapacity", None, "User defined", 0] + [2.5] * 28)
+    ws.append([2, "TRNBGDXXINDEA", "trn", 3, "ResidualCapacity", None, "User defined", 0] + [3.0] * 28)
     ws.append([2, "TRNBGDXXINDEA", "trn", 4, "TotalAnnualMaxCapacity", None, "User defined", 0] + [9999.0] * 28)
     ws.append([2, "TRNBGDXXINDEA", "trn", 5, "TotalTechnologyAnnualActivityUpperLimit", None, "EMPTY", 0] + [None] * 28)
     ws.append([9, "TRNNLIBGDXX", "bk", 6, "ResidualCapacity", None, "User defined", 0] + [5.0] * 28)
@@ -661,10 +692,10 @@ def self_test():
     r = find_row(ws, col_map, "PWRSPVBGDXX", "TotalAnnualMaxCapacity")
     assert abs(ws.cell(row=r, column=year_cols[2030]).value - 40.0) < 1e-6, "set_flat failed"
 
-    # set_to_residual (freeze 9999 -> 2.5)
+    # set_to_residual (freeze 9999 -> 3)
     apply_edit(ws, col_map, year_cols, {"param": "TotalAnnualMaxCapacity", "tech": "TRNBGDXXINDEA", "op": "set_to_residual"}, log)
     r = find_row(ws, col_map, "TRNBGDXXINDEA", "TotalAnnualMaxCapacity")
-    assert abs(ws.cell(row=r, column=year_cols[2050]).value - 2.5) < 1e-6, "set_to_residual failed"
+    assert abs(ws.cell(row=r, column=year_cols[2050]).value - 3.0) < 1e-6, "set_to_residual failed"
 
     # explicit values on existing empty AUL row
     apply_edit(ws, col_map, year_cols, {"param": "TotalTechnologyAnnualActivityUpperLimit", "tech": "TRNBGDXXINDEA", "values": {"2050": 123.4}}, log)

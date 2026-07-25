@@ -45,7 +45,7 @@ The pipeline reads 4 files from `--input-dir`:
 | 1b | V2 fix on PWRHYDLKAXX TotalAnnualMaxCapacity (residual+ΣMin constraint) | `B1b_Pre_solver_validation.py` |
 | 2 | Add CapacityToActivityUnit=31.536 rows for GENERATION+STORAGE techs | `patch_ao_c2a.py` |
 | 2.5 | Manual edit: clear PWRPETBGDXX CapacityFactor (336 cells) | `fix_pwrpet_clear.py` |
-| 3 | TRN ResidualCapacity split with NATY reference | `fix_trn_residuals.py` |
+| 3 | Apply the v18 TRN residual and additive minimum/FUTURE authorities | `fix_trn_residuals.py` + `interconnector_authority.py` |
 | 3 | Reset stale unbinding caps (PWRSPV/WON/HYD/SHP) | `clear_stale_unbinding_caps.py` |
 | 3 | Cap TRN MaxCapacity to ResidualCapacity | `cap_trn_to_residual.py` |
 | 4 | Consolidate the 4 files into the output folder | (orchestrator) |
@@ -57,7 +57,8 @@ The pipeline reads 4 files from `--input-dir`:
 - `1_merge_timeslices_into_WV.py` … `5_propagate_timeslice_fabric.py`
   (stage1 scripts; WORK_DIR auto-detects to script folder)
 - `patch_ao_c2a.py`
-- `fix_trn_residuals.py`, `clear_stale_unbinding_caps.py`, `cap_trn_to_residual.py`
+- `fix_trn_residuals.py`, `interconnector_authority.py`,
+  `clear_stale_unbinding_caps.py`, `cap_trn_to_residual.py`
 - `add_max_capacity_investment_rule_OLD_8ee8056.py`
   (snapshot of the pre-modification version Luis used at 07:23 on 2026-04-30)
 - `add_max_capacity_investment_rule_NEW_2be1616.py`
@@ -71,7 +72,9 @@ The pipeline reads 4 files from `--input-dir`:
 - `SOASIA_OSeMOSYS_Template_v17.xlsx` (script 1 input)
 - `OSTRAM_Timeslice_Outputs.xlsx` (script 1 input)
 - `OSTRAM_AO_Extensions_FILLED.xlsx` (human-curated input to script 3)
-- `A-O_Parametrization_NATY.xlsx` (`fix_trn_residuals.py --reference`)
+- `SOASIA_OSeMOSYS_Template_v18.xlsx` (`Interconnector_Params` owns the
+  residual-capacity authority, the additive minimum/FUTURE contribution, and
+  the separate minimum-investment clamp boundary)
 - `A-O_Parametrization_REFERENCE_with_RNWBIO.xlsx` (`fix_rnwbio_restore.py --source`)
 - `TECH_TYPES.csv` (used by `patch_ao_c2a.py` and the lid script)
 - `Config_MOMF_T1_A.yaml` (used by B1b for `base_year`)

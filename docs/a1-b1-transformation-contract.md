@@ -18,9 +18,12 @@ a solver-backed behavioral or numerical equivalence claim.
 The governing branch sequence is:
 
 1. `refactor/a1-b1-transforms` -- structural isolation only;
-2. `fix/interconnector-v18-source-of-truth` -- the separately parked numerical
-   correction; and
-3. `validation/solver-baseline-15` -- separately authorized solver evidence.
+2. `fix/interconnector-v18-source-of-truth` -- the merged residual-capacity
+   authority correction;
+3. `refactor/retire-naty-workbook` -- the behavior-preserving authority
+   migration recorded here; and
+4. `validation/solver-baseline-15` -- separately scoped work outside this
+   branch and outside the evidence recorded here.
 
 Work assigned to a later branch must not be prepared silently on this branch.
 
@@ -84,6 +87,16 @@ scenarios remain later, ordered scenario-specific patches; this refactor does no
 promote them into the active A3 loop or change patch precedence. A3 helper failure
 remains fail-fast, while work-directory and `OSTRAM_TEMPLATE_PATH` cleanup remain
 success-path-only.
+
+The materialized v18 `Interconnector_Params` sheet is the sole runtime authority
+for three distinct interconnector families: final `ResidualCapacity`, additive
+`TotalAnnualMinCapacityInvestment` FUTURE contributions, and the separate
+`MinimumInvestmentClampBoundary` compatibility family. The additive family
+contains only the contribution merged into any pre-existing minimum; it is not a
+copy of the final minimum row. The clamp family is used only by the two LinkFreeze
+minimum clamps and is never interpreted as installed residual capacity or a FUTURE
+addition. The former NATY workbook is not staged, passed on the command line, or
+available as a runtime fallback.
 
 ### B1: selection, compilation, and CSV delivery
 
@@ -271,27 +284,29 @@ reopen numerical provenance or substitute the scratch helper. Any proposal that
 would make the external helper affect normal production behavior belongs on a
 separate, explicitly authorized branch.
 
-## Parked interconnector correction
+## Interconnector authority migration
 
-Audit 1D is accepted and parked. The following current files and writer semantics
-are frozen on this branch:
+PR #22 established the v18 residual-capacity authority. This follow-up migration
+moves the remaining additive minimum/FUTURE contribution and LinkFreeze
+minimum-only compatibility boundary into the same production workbook without
+changing their effective values, row participation, additive merge, or writer
+order. The following unaffected production scripts remain protected:
 
 | File | Frozen SHA-256 |
 |---|---|
-| [`fix_trn_residuals.py`](../t1_confection/A3_process/fix_trn_residuals.py) | `bdf290c6429f15b52c74999a1fd64e22698bb9224b62e25bdac5d7aa18c5065` |
-| [`cap_trn_to_residual.py`](../t1_confection/A3_process/cap_trn_to_residual.py) | `f9f876d1e58ccd8dd1339aea703477fe7a85bef776ad227ab99d972d25f7c6a36` |
+| [`cap_trn_to_residual.py`](../t1_confection/A3_process/cap_trn_to_residual.py) | `f9f876d1e58cc8dd1339aea703477fe7a85bef776ad227ab99d972d25f7c6a36` |
 | [`relax_interconnectors.py`](../t1_confection/A3_process/rules_scripts/relax_interconnectors.py) | `e496d54157459e7da2eb460d0cc76264eeee26a386e6a8c811cad1285424fbb7` |
 
-This refactor must not change TRN costs, operational life,
+This migration must not change TRN costs, operational life,
 `ResidualCapacity`, `FUTURE` classification, `TotalAnnualMaxCapacity`,
-`TotalAnnualMaxCapacityInvestment`, or `relax_interconnectors` behavior. It must not
-modify `SOASIA_v18_REFS.xlsx` or `A-O_Parametrization_NATY.xlsx`. An unavoidable
-import-only adaptation to any frozen script is a stop condition requiring review,
-not an implied exception.
+`TotalAnnualMaxCapacityInvestment`, or `relax_interconnectors` behavior.
+`SOASIA_v18_REFS.xlsx` remains auxiliary evidence and is not a runtime authority.
+The retired NATY workbook has no production, configuration, or test fallback.
 
-Any candidate compiled-input difference is a blocker here. The parked correction
-must not be allowlisted, normalized away, or introduced as an incidental refactor
-result.
+Any candidate compiled-input difference is a blocker here. It must not be
+allowlisted or normalized away. Validation on this branch is compile-only and
+no-solver; it establishes solver-consumed-input identity and does not claim
+solver-backed behavioral or numerical equivalence.
 
 ## Required disposable validation evidence
 

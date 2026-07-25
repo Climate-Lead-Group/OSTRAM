@@ -41,16 +41,16 @@
    "tech": "TRNBGDXXINDEA",
    "param": "TotalAnnualMinCapacityInvestment",
    "op": "clamp_to_residual",
-   "residual_source": "legacy_min_reference",
-   "note": "clamp legacy MinCapInv <= residual so Min<=Max after freeze"
+   "residual_source": "minimum_investment_boundary",
+   "note": "clamp MinCapInv to the separate v18 minimum-only compatibility boundary"
   },
   {
    "sheet": "Secondary Techs",
    "tech": "TRNNPLXXBGDXX",
    "param": "TotalAnnualMinCapacityInvestment",
    "op": "clamp_to_residual",
-   "residual_source": "legacy_min_reference",
-   "note": "clamp legacy MinCapInv <= residual so Min<=Max after freeze"
+   "residual_source": "minimum_investment_boundary",
+   "note": "clamp MinCapInv to the separate v18 minimum-only compatibility boundary"
   }
  ]
 }
