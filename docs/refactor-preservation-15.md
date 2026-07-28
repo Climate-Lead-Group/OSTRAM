@@ -33,7 +33,8 @@ The accepted final-input lineage is:
 
 - Verified source commit: `41a54e51fd5a0776569b4900c44c624f09cc1f09`
 - Source tree: `54f9e174fde266013ee9a20ff89f618140077c26`
-- Committed final-equivalence report: `tests/regression/reports/final_compiled_input_equivalence_15.json`
+- Committed pre-correction equivalence report:
+  `tests/regression/reports/pre_correction_41a54e5_compiled_input_equivalence_15.json`
 - Report SHA-256: `85c8489e65e8028dd5955dbbf204f2222796799d132ba979cf238e60008b8286`
 - Read-only reference checkout: `OSTRAM_mainredo`, branch `ws3-phaseb-cleanredo`, commit `f1db168c8db0b61d03898f68cef2a7f28eccc80a`, tree `800103e866c4ce7f119f5887bdfd037bd46a310b`
 - External B1 comparison report SHA-256: `c9773ac0dbf6e983ad5aa712b46144af078fc8d1a07bdd5ac6b1a76bd807dcb3`

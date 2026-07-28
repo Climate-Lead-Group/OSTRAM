@@ -31,6 +31,14 @@ templates must not be rewritten to make a cleanup or refactor pass.
   it must remain explicitly **solver-pending** until the required solver evidence
   passes.
 
+Current accepted solver baseline: correction `d295dcc`, protected manifest
+SHA-256
+`778b4706522bc2b29911e74d5b31d24355c84cbe4c0c7d11d1c9680b2ddc9916`.
+A new candidate does not inherit solver equivalence merely by ancestry.
+Repository housekeeping follows the guarded protocol in
+[`regression.md`](regression.md#maintained-no-solver-byte-identity-contract),
+uses raw byte identity, and does not run a solver.
+
 ## Scenario policy
 
 Discovery and preservation always cover all 20 definitions in
@@ -139,6 +147,10 @@ Run all Tier 0 checks and applicable focused unit/characterization tests. In a
 disposable checkout, regenerate the canonical solver-consumed `.txt` files for all 15
 decision-relevant scenarios and compare them with the accepted baseline using the
 documented byte-exact or normalized-exact rules. Do not execute a solver.
+
+For repository housekeeping, the stricter maintained rule applies: all 15 raw
+bytes must match the accepted record exactly. Normalization, tolerance, and
+waivers are not permitted.
 
 ### Tier 3: core workflow or solver-boundary changes
 

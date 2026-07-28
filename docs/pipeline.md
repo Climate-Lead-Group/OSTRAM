@@ -320,6 +320,15 @@ derived scenarios are never direct pin targets.
 
 :::{warning}
 `set_vre_targets.py` (used by `C_Target_VRE`) requires a solved `A_Calibrated_BAU` run to already exist under `Executables/` -- run/solve `A_Calibrated_BAU` through B1/B2 before generating `C_Target_VRE`.
+
+For the maintained no-solver reproduction gate, do not solve or substitute an
+arbitrary A result. Seed the immutable accepted combined output
+`Pre_processed_A_Calibrated_BAU_0_StorageDelayN5_OpenBCK_RMCarefulXLSX_output.csv`
+(44,743,620 bytes; SHA-256
+`762a7b926f91710846dc37e474747f5d670aed3d8746d7b74117ee978e645f5a`)
+from the protected `s15-e7f99ab54fda-20260728T052124Z-9ccc09` lineage, then
+run A3 only for `C_Target_VRE`. See the guarded
+[regression contract](regression.md#maintained-no-solver-byte-identity-contract).
 :::
 
 ---
