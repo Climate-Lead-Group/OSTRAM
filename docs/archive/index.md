@@ -15,6 +15,7 @@ for the present workflow.
 | [Cleanroom final prompt](cleanroom/CLEANROOM_FINALPROMPT.md) | `/CLEANROOM_FINALPROMPT.md` | Historical rebuild prompt |
 | [Cleanroom run log](cleanroom/CLEANROOM_RUNLOG.md) | `/CLEANROOM_RUNLOG.md` | Historical execution and validation log |
 | [Cleanroom solve prompt](cleanroom/CLEANROOM_SOLVE_PROMPT.md) | `/CLEANROOM_SOLVE_PROMPT.md` | Historical solver handoff; not an offline command |
+| [Cleanroom run order](cleanroom/RUN_ORDER.md) | `/RUN_ORDER.md` | Historical final-15 solver order; last tracked touch `fd810ed` (2026-07-15); do not execute for housekeeping |
 | [WACC test prompt](validation/WACC_TEST_PROMPT.md) | `/WACC_TEST_PROMPT.md` | Historical validation prompt |
 | [WACC test result](validation/WACC_TEST_RESULT.md) | `/WACC_TEST_RESULT.md` | Preserved result record |
 | [BAU pre-solver validation report](validation/BAU_pre_solver_validation_report_20260514.csv) | `/t1_confection/Executables/BAU_0/_validation_report.csv` | Historical generated validation evidence; last tracked touch `ae9f563` (2026-07-16); no execution instruction |
@@ -24,6 +25,8 @@ for the present workflow.
 | [WS4 handover prompt](ws3-ws4/WS4_HANDOVER_PROMPT.md) | `/ws3_transmission_audit/WS4_HANDOVER_PROMPT.md` | Historical handoff |
 | [WS4 preflight](ws3-ws4/WS4_PREFLIGHT.md) | `/ws3_transmission_audit/WS4_PREFLIGHT.md` | Historical preflight record |
 | [Phase-B implementation log](phase-b/PHASE_B_IMPLEMENTATION_LOG.md) | `/t1_confection/sensitivity_expansion/PHASE_B_IMPLEMENTATION_LOG.md` | Historical implementation log |
+| [Refactor plan](refactor/refactor-plan.md) | `/docs/refactor-plan.md` | Completed planning record; last tracked touch `4174e1b` (2026-07-16); superseded by accepted baseline authority |
+| [Refactor preservation record](refactor/refactor-preservation-15.md) | `/docs/refactor-preservation-15.md` | Historical no-solver checkpoint; last tracked touch `682436f` (2026-07-22); preserved as evidence |
 | [Technical inventory](audits/TECHNICAL_INVENTORY.md) | `/TECHNICAL_INVENTORY.md` | Point-in-time generated repository audit |
 | [Legacy Git setup guide](legacy/OSTRAM_Git_Setup_Guide.html) | `/OSTRAM_Git_Setup_Guide.html` | Retired standalone HTML guide |
 | [Legacy sensitivity runner](legacy-runners/t1_confection/run_sensitivities.bat) | `/t1_confection/run_sensitivities.bat` | Disabled runner for the retired `OSTRAM_clean` checkout |

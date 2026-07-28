@@ -1,9 +1,15 @@
 # A1/A2-to-B1 transformation contract
 
+> **Historical transformation contract:** The branch-scoped no-solver evidence and
+> claims below are preserved as recorded. Current acceptance authority is the
+> [portable final 15-scenario baseline](../tests/regression/reports/accepted_compiled_solver_baseline_15.json),
+> derived from accepted correction `d295dcc` and protected manifest SHA-256
+> `778b4706522bc2b29911e74d5b31d24355c84cbe4c0c7d11d1c9680b2ddc9916`.
+>
 This document freezes the transformation boundary exercised by
 `refactor/a1-b1-transforms`. It supplements the
 [cleanup and refactor rules](refactor-rules.md), the
-[refactor plan](refactor-plan.md), the
+[archived refactor plan](archive/refactor/refactor-plan.md), the
 [core workflow characterization](core-workflow-characterization.md), and the
 [offline regression policy](regression.md). Those documents remain authoritative
 when this note is silent.
@@ -15,7 +21,7 @@ calculation, data, scenario, path, filename, writer-order, message, exit, or fai
 semantic change. Compiled-input equality is required pre-solver evidence; it is not
 a solver-backed behavioral or numerical equivalence claim.
 
-The governing branch sequence is:
+The governing branch sequence recorded at this checkpoint was:
 
 1. `refactor/a1-b1-transforms` -- structural isolation only;
 2. `fix/interconnector-v18-source-of-truth` -- the merged residual-capacity
@@ -23,7 +29,8 @@ The governing branch sequence is:
 3. `refactor/retire-naty-workbook` -- the behavior-preserving authority
    migration recorded here; and
 4. `validation/solver-baseline-15` -- separately scoped work outside this
-   branch and outside the evidence recorded here.
+   branch and outside the evidence recorded here; it was subsequently completed
+   and superseded as current authority by the accepted baseline linked above.
 
 Work assigned to a later branch must not be prepared silently on this branch.
 The separately authorized `fix/v18-pwr-min-2023-2026-pin` branch is a narrow
@@ -374,9 +381,9 @@ the disposable location, exact candidate commit, accepted-reference identity,
 scenario list, config backup/restoration evidence, comparison rule, and process and
 artifact monitoring result.
 
-Until all required evidence has completed, it must be described as pending. Even a
-fully byte-exact 15-scenario result establishes solver-consumed-input equivalence
-only. Solver-backed behavioral and numerical equivalence remains outside this
+At this checkpoint, evidence not yet completed had to be described as pending. Even a
+fully byte-exact 15-scenario result established solver-consumed-input equivalence
+only. Solver-backed behavioral and numerical equivalence remained outside this
 branch's authorized claim boundary.
 
 ## Validation record for `0cc2c68`

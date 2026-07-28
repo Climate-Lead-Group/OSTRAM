@@ -1,12 +1,17 @@
 # WS-3 — Transmission Value & Sourcing Audit
 
+> **Historical decision-gate snapshot:** The `[PENDING]` tokens and recommendations
+> below describe this checkpoint, not current repository authority. Current acceptance
+> is recorded by correction `d295dcc` and protected final-manifest SHA-256
+> `778b4706522bc2b29911e74d5b31d24355c84cbe4c0c7d11d1c9680b2ddc9916`.
+>
 **Status:** Phase 0–1 complete · **READ-ONLY** · no model value changed · decision gate below
 **Branch:** `validated-baseline-3scenario` (identical commit to `main`)
 **Date:** 2026-07-09
 **Scenarios audited:** A_Calibrated_BAU · B_Optimised_VRE · C_Target_VRE
 **Env:** OSTRAM-env (Python 3.10.20, openpyxl 3.1.5, pandas 2.3.3)
 
-> **UPDATE 2026-07-09 (post-gate):** this is the Phase-0/1 *gate* snapshot; its recommendations were subsequently approved and applied. Interconnector costs are now live (v18 → A3 → compiled); the two `[PENDING]` citations below (NP↔BD, BT↔BD) are **backfilled in `SOASIA_v18_REFS.xlsx`**; internal transmission (§7 / D5) is **calibrated + solved** (per-node residuals, RE 2× CapEx, `OperationalLife` 40). Current state → `WS3_calibration_report.md`. Work now in `OSTRAM_ws3_workcopy_D5`.
+> **UPDATE 2026-07-09 (post-gate):** this is the Phase-0/1 *gate* snapshot; its recommendations were subsequently approved and applied. Interconnector costs are now live (v18 → A3 → compiled); the two `[PENDING]` citations below (NP↔BD, BT↔BD) are **backfilled in `SOASIA_v18_REFS.xlsx`**; internal transmission (§7 / D5) is **calibrated + solved** (per-node residuals, RE 2× CapEx, `OperationalLife` 40). The later accepted state is the portable baseline identified in the banner; `WS3_calibration_report.md` preserves the intervening milestone.
 
 ---
 
@@ -168,7 +173,7 @@ No RE-vs-non-RE differentiation, no sourcing. Research (per WS-3 brief: LBNL Gor
 
 ---
 
-## 9. Recommended Phase 2–4 plan (pending your gate sign-off — NOT yet executed)
+## 9. Historical recommended plan at gate time
 
 1. **Phase 2 (confirm):** controlled BAU re-run test → settle H1/H2 (§3). Compute internal residuals per node (peak×1.2, RE/non-RE split) → CSV desk-check.
 2. **Phase 3 (inject, only approved values):** if H2, wire `Interconnector_Params` into the compile (or patch the post-A2 snapshot per full tech code); set approved submarine/life values + source text; internal RE/non-RE CapEx via one exposed multiplier; `OperationalLife=40` for all transmission; add the 3 missing corridors.

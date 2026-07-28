@@ -5,7 +5,8 @@
 > its former checkout names. The scenarios remain regression-protected, but these are not
 > current repository setup or execution instructions. Use explicit `--source-scenario`
 > arguments and the 20-scenario inventory in `tests/regression/scenarios.yaml` for current
-> audit work.
+> audit work. The accepted decision-scenario record is
+> [`accepted_compiled_solver_baseline_15.json`](../../tests/regression/reports/accepted_compiled_solver_baseline_15.json).
 
 **CLG · OSTRAM** — three one-at-a-time sensitivities branched from the validated
 **B_Optimised_VRE** baseline, over a shared VRE physical-potential ceiling layer.

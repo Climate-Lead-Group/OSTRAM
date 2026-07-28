@@ -10,6 +10,6 @@ an accidental invocation cannot start that obsolete workflow.
 
 The archived `root/run_baselines.bat`, `root/run_sensitivities.bat`, and
 `root/run_directions.bat` preserve the final-15 machine-specific solver commands. Their
-former root locations now contain fail-closed notices. `RUN_ORDER.md` remains the
-historical operating record; neither it nor the archived batches is a current execution
-instruction.
+former root locations now contain fail-closed notices.
+[`RUN_ORDER.md`](../cleanroom/RUN_ORDER.md) is archived as the historical operating
+record; neither it nor the archived batches is a current execution instruction.

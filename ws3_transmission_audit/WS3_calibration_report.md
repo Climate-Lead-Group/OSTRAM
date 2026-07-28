@@ -1,5 +1,10 @@
 # WS-3 — Transmission Calibration Report (Phase 3 injection + Phase 4 re-verify)
 
+> **Historical milestone:** This report preserves its 2026-07-09 measurements and
+> solve claims. Current authority is accepted correction `d295dcc` and protected
+> final-manifest SHA-256
+> `778b4706522bc2b29911e74d5b31d24355c84cbe4c0c7d11d1c9680b2ddc9916`.
+>
 **Status:** Phase 3–4 COMPLETE — all 3 scenarios re-run (A3+B1) and re-solved (B2); verified · original untouched
 **Working copy:** `OSTRAM_ws3_workcopy` (original `OSTRAM_clean` untouched) · branch-only, no merge
 **Date:** 2026-07-09
@@ -55,7 +60,7 @@ FOM convention: FixedCost = 1.5% × CapitalCost. OperationalLife = 40 yr (all co
 - **Original repo untouched:** contamination check clean — `OSTRAM_clean` Executables still dated 2026-07-07; all writes landed in the copy via the config's relative paths.
 - **Phase 0 re-verify (all 3 solved) ✔:** base year IDENTICAL across scenarios (SpecifiedAnnualDemand, ResidualCapacity, CapitalCost @2023); zero base-year backstop in all three (feasible); scenarios still diverge only via their policy overlays.
 
-## 5. Cost impact (pending B2 solve — your Anaconda run)
+## 5. Interim cost impact (subsequently solved)
 
 Baseline objective anchors (pre-change, from Phase 0): A_Calibrated_BAU = 2,224,447 · B_Optimised_VRE = 2,113,985 · C_Target_VRE = 2,158,340.
 
@@ -84,7 +89,7 @@ All three remain feasible (zero base-year backstop). Correcting interconnector c
   original of the logged v18 value editor; its former path under
   `ws3_transmission_audit/` now fails closed.
 
-## 7. Still open
+## 7. Still open at that checkpoint
 
 - **Citations backfill (D7): ✔ DONE (2026-07-09).** NP↔BD (`TRNNPLXXBGDXX`) and BT↔BD (`TRNBTNXXBGDXX`) IEEE citations written into `SOASIA_v18_REFS.xlsx` → `Interconnector_Params` (CapitalCost + FixedCost rows); 0 `[Pending]` cells remain. Backup: `inputs/SOASIA_v18_REFS_PRE_D7_*.xlsx`. Optional remaining polish: a `Source` column in the live v18 `Interconnector_Params`, and REFS rows for the 3 added corridors (already noted in §3). No model effect.
 - **D5 (internal transmission):** research complete (per-node premiums + per-kW-vs-per-MWh finding); recommendation pending your return to it. Internal transmission values are unchanged so far (flat $100/$200 not yet applied).
@@ -155,11 +160,12 @@ All solved runs OPTIMAL (CPLEX dual simplex) and feasible (base-year `BCK` = 0).
 - `t1_confection/A3_process/rules_scripts/internal_tx_residuals.csv` — **new** (frozen desk-checked per-node residuals).
 - `t1_confection/Config_country_codes.yaml` — `internal_transmission` knob block; family `OperationalLife` 20→40.
 
-## P2.7 Still open (post-D5)
+## P2.7 Still open at that checkpoint (post-D5)
 
 - **`C_Target_VRE`:** ✔ solved (D5, optimal, feasible); delta in P2.5. **D5 is complete.**
 - **D7 citations** — ✔ NP↔BD / BT↔BD backfilled in REFS `IEEE Reference` (2026-07-09; CapEx + FOM rows; 0 pending left). Optional polish left: a `Source` column in the live v18 `Interconnector_Params`, and REFS rows for the 3 added corridors.
-- **Promotion:** bring the `_D5` changes into `OSTRAM_clean` on a dedicated branch (branch-only, no merge), alongside the interconnector changes. `git add` specific files only.
+- **Promotion:** this recorded next step was subsequently completed and is
+  superseded by the accepted correction and manifest identified in the banner.
 
 ## P2.8 Methodology, verification & honest caveats
 

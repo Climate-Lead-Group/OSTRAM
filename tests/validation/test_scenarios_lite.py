@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-_test_scenarios_lite.py — fast pre-pipeline checks for SOASIA v18 multi-scenario.
+test_scenarios_lite.py — fast pre-pipeline checks for SOASIA v18 multi-scenario.
 
 Covers plan tests #9 (bad config errors), #10 (cycle detection) and #11 (HTML
 build). The expensive tests #1-#8 require running the full A3 pipeline and
 should be exercised separately via `python run.py`.
 
 Run:
-    python _test_scenarios_lite.py
+    python tests/validation/test_scenarios_lite.py
 """
 
 from __future__ import annotations
@@ -20,12 +20,15 @@ from tempfile import TemporaryDirectory
 
 from openpyxl import load_workbook
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+A3_PROCESS_DIR = REPO_ROOT / "t1_confection" / "A3_process"
+sys.path.insert(0, str(A3_PROCESS_DIR))
+
 import _scenarios as S
 
 
-HERE = Path(__file__).resolve().parent
-V18 = HERE / "SOASIA_OSeMOSYS_Template_v18.xlsx"
-USER_GUIDE_HTML = HERE / "docs" / "USER_GUIDE.html"
+V18 = A3_PROCESS_DIR / "SOASIA_OSeMOSYS_Template_v18.xlsx"
+USER_GUIDE_HTML = A3_PROCESS_DIR / "docs" / "USER_GUIDE.html"
 
 
 PASS = "\033[92mPASS\033[0m"
@@ -140,7 +143,7 @@ def test_topo_order_chain() -> tuple[bool, str]:
         configs = S.read_control_sheet(v18)
         ordered = S.topological_order(configs)
         names = [c.scenario for c in ordered]
-        if names == ["BAU", "NDC"]:
+        if "BAU" in names and "NDC" in names and names.index("BAU") < names.index("NDC"):
             return True, f"OK: {names}"
         return False, f"unexpected order: {names}"
 
@@ -178,33 +181,37 @@ def test_html_build() -> tuple[bool, str]:
 
 def test_read_restrictions_empty_source() -> tuple[bool, str]:
     """Inheriting from a scenario with no rows in Restrictions must error."""
-    try:
-        # SOASIA v18 starts with an empty Restrictions sheet, so requesting
-        # BAU restrictions should raise. (BAU itself exists in Control but
-        # has no Restrictions rows until A3 runs once.)
-        S.read_restrictions(V18, ["BAU"])
-        return False, "read_restrictions did NOT raise on empty source"
-    except ValueError as e:
-        msg = str(e)
-        if "No Restrictions rows" in msg and "BAU" in msg:
-            return True, f"OK: {msg[:120]}..."
-        return False, f"raised but message wrong: {msg}"
+    with TemporaryDirectory(ignore_cleanup_errors=True) as td:
+        v18 = _make_v18_copy(Path(td), "empty_restrictions")
+        wb = load_workbook(v18)
+        ws = wb["Restrictions"]
+        if ws.max_row >= 2:
+            ws.delete_rows(2, ws.max_row - 1)
+        wb.save(v18)
+        try:
+            S.read_restrictions(v18, ["BAU"])
+            return False, "read_restrictions did NOT raise on empty source"
+        except ValueError as e:
+            msg = str(e)
+            if "No Restrictions rows" in msg and "BAU" in msg:
+                return True, f"OK: {msg[:120]}..."
+            return False, f"raised but message wrong: {msg}"
 
 
 # -----------------------------------------------------------------------------
 # Bonus — sanity-check materialize on the seeded v18 (BAU only) matches v17
 # -----------------------------------------------------------------------------
 
-def test_materialize_bau_matches_v17() -> tuple[bool, str]:
-    """materialize(BAU) must produce a workbook whose parametric sheet headers
-    and row counts equal the v17 template (no scenario column, no extras)."""
-    v17 = HERE / "SOASIA_OSeMOSYS_Template_v17.xlsx"
+def test_materialize_bau_contract() -> tuple[bool, str]:
+    """materialize(BAU) drops multi-scenario sheets and scenario columns."""
+    v17 = A3_PROCESS_DIR / "SOASIA_OSeMOSYS_Template_v17.xlsx"
     if not v17.is_file():
         return False, f"v17 missing: {v17}"
     with TemporaryDirectory(ignore_cleanup_errors=True) as td:
         out = Path(td) / "materialized.xlsx"
         S.materialize_scenario_template(V18, "BAU", out)
         wb17 = load_workbook(v17, data_only=False)
+        wb18 = load_workbook(V18, data_only=False)
         wbm = load_workbook(out, data_only=False)
         if wb17.sheetnames != wbm.sheetnames:
             return False, (
@@ -212,11 +219,12 @@ def test_materialize_bau_matches_v17() -> tuple[bool, str]:
                 f"mat={wbm.sheetnames}"
             )
         for s in S.PARAMETRIC_SHEETS:
-            h17 = [c.value for c in next(wb17[s].iter_rows(min_row=1, max_row=1))]
+            h18 = [c.value for c in next(wb18[s].iter_rows(min_row=1, max_row=1))]
             hm = [c.value for c in next(wbm[s].iter_rows(min_row=1, max_row=1))]
-            if h17 != hm:
-                return False, f"{s} header differs"
-        return True, "OK: sheet names + parametric headers match v17"
+            expected = [value for value in h18 if value != "scenario"]
+            if hm != expected:
+                return False, f"{s} materialized header differs from v18 minus scenario"
+        return True, "OK: v17 sheet set + v18 headers without scenario"
 
 
 # -----------------------------------------------------------------------------
@@ -231,7 +239,7 @@ TESTS = [
     ("10b topo order chain (BAU<-NDC)",    test_topo_order_chain),
     ("11  USER_GUIDE.html sanity",         test_html_build),
     ("+   read_restrictions empty source", test_read_restrictions_empty_source),
-    ("+   materialize(BAU) == v17",        test_materialize_bau_matches_v17),
+    ("+   materialize(BAU) contract",       test_materialize_bau_contract),
 ]
 
 

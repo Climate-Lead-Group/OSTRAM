@@ -2,7 +2,7 @@
 
 These rules apply to every OSTRAM cleanup or refactor branch and pull request (PR).
 They are the acceptance policy for the proposals in
-[`refactor-plan.md`](refactor-plan.md); the evidence commands and current baseline are
+the archived [`refactor-plan.md`](archive/refactor/refactor-plan.md); the evidence commands and current baseline are
 documented in [`regression.md`](regression.md). A plan, passing offline check, or
 historical result does not override these rules.
 

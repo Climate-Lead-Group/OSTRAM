@@ -1,5 +1,9 @@
 # RUN_ORDER — historical 15-scenario CPLEX batch record
 
+> **Historical record only:** This archived solve order is preserved as evidence and
+> must not be executed for housekeeping or no-solver validation. Current maintained
+> no-solver instructions are in [`docs/regression.md`](../../regression.md).
+>
 > **Status:** This file preserves the final-15 cleanroom batch procedure. It is not the
 > canonical command for the protected 20-scenario inventory. The original batch files
 > contain a machine-specific Python path and are archived under
@@ -33,7 +37,7 @@ guaranteed execution order. The historical sequence was `run_baselines.bat` → 
 
 ## Expected anchors (Sum TotalDiscountedCost)
 Baselines: A 2,314,332 / B 2,215,073 / C 2,257,995 — but see the base-year-pin caveat in
-the archived [cleanroom run log](docs/archive/cleanroom/CLEANROOM_RUNLOG.md): our baselines pin ws4's FINAL A-solve (self-consistent); ws4's committed
+the archived [cleanroom run log](CLEANROOM_RUNLOG.md): our baselines pin ws4's FINAL A-solve (self-consistent); ws4's committed
 baselines are pinned to a since-overwritten A-solve, so a byte/anchor match at base years is not
 expected. Foundation (2027+) is byte-exact to ws4.
 
