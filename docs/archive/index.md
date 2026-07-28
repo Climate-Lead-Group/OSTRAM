@@ -17,6 +17,7 @@ for the present workflow.
 | [Cleanroom solve prompt](cleanroom/CLEANROOM_SOLVE_PROMPT.md) | `/CLEANROOM_SOLVE_PROMPT.md` | Historical solver handoff; not an offline command |
 | [WACC test prompt](validation/WACC_TEST_PROMPT.md) | `/WACC_TEST_PROMPT.md` | Historical validation prompt |
 | [WACC test result](validation/WACC_TEST_RESULT.md) | `/WACC_TEST_RESULT.md` | Preserved result record |
+| [BAU pre-solver validation report](validation/BAU_pre_solver_validation_report_20260514.csv) | `/t1_confection/Executables/BAU_0/_validation_report.csv` | Historical generated validation evidence; last tracked touch `ae9f563` (2026-07-16); no execution instruction |
 | [WS3 handover prompt](ws3-ws4/WS3_HANDOVER_PROMPT.md) | `/ws3_transmission_audit/WS3_HANDOVER_PROMPT.md` | Historical handoff |
 | [WS3 promotion handoff](ws3-ws4/WS3_PROMOTION_HANDOFF.md) | `/ws3_transmission_audit/WS3_PROMOTION_HANDOFF.md` | Historical promotion record |
 | [WS3 task ledger](ws3-ws4/WS3_TASK_LEDGER.md) | `/ws3_transmission_audit/WS3_TASK_LEDGER.md` | Historical implementation ledger |

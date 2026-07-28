@@ -141,6 +141,10 @@ t1_confection/Executables/**/*_Input.csv
 t1_confection/Executables/**/*_Output.csv
 t1_confection/Executables/**/*.warnings.txt
 t1_confection/Executables/**/*.cplex.log
+# Generated per-scenario execution logs; existing empty diagnostics were untracked.
+t1_confection/Executables/**/*_output.log
+# Generated pre-solver validation reports; the tracked BAU record is archived.
+t1_confection/Executables/**/_validation_report.csv
 t1_confection/Executables/**/Pre_processed_*.txt
 t1_confection/Executables/*/*_0.txt
 
