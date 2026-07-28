@@ -172,6 +172,31 @@ def load_config(yaml_path: Path) -> dict:
     # knife-edge; ~1% gives the solver a real interval at negligible overshoot.
     pin_slack = float(cfg.get("pin_slack", 0.01))
 
+    # Explicit post-derivation caps for individual activity-lower keys.
+    # These are deliberately exact-key rules rather than schedule changes:
+    # the canonical target is derived first, then min(raw, maximum) is applied.
+    activity_lower_caps = []
+    seen_activity_lower_cap_keys = set()
+    for entry in cfg.get("activity_lower_caps", []) or []:
+        region = str(entry.get("region", ""))
+        technology = str(entry.get("technology", ""))
+        year = int(entry.get("year", 0))
+        maximum = float(entry.get("maximum"))
+        if not region or not technology or year <= 0:
+            raise ValueError(
+                f"Activity-lower cap missing region/technology/year: {entry}"
+            )
+        key = (region, technology, year)
+        if key in seen_activity_lower_cap_keys:
+            raise ValueError(f"Duplicate activity-lower cap key: {key}")
+        seen_activity_lower_cap_keys.add(key)
+        activity_lower_caps.append({
+            "region": region,
+            "technology": technology,
+            "year": year,
+            "maximum": maximum,
+        })
+
     # Parse targets
     raw_targets = cfg.get("targets", []) or []
     targets = []
@@ -195,6 +220,7 @@ def load_config(yaml_path: Path) -> dict:
         "default_capacity_factor": default_capacity_factor,
         "pin_generation_to_target": pin_generation_to_target,
         "pin_slack": pin_slack,
+        "activity_lower_caps": activity_lower_caps,
         "targets": targets,
     }
 
@@ -546,6 +572,29 @@ def find_or_create_param_row(ws, tech: str, param: str, tech_col: int,
     return new_row
 
 
+def cap_activity_lower_value(value: float, *, region: str, technology: str,
+                             year: int, caps: list[dict]) -> tuple[float, dict | None]:
+    """Apply at most one exact-key post-derivation activity-lower cap."""
+    for rule in caps:
+        if (
+            rule["region"] == region
+            and rule["technology"] == technology
+            and rule["year"] == year
+        ):
+            maximum = rule["maximum"]
+            final = min(value, maximum)
+            return final, {
+                "region": region,
+                "technology": technology,
+                "year": year,
+                "raw_derived_value": value,
+                "maximum": maximum,
+                "final_value": final,
+                "applied": final < value,
+            }
+    return value, None
+
+
 # ---------------------------------------------------------------------------
 # Core logic
 # ---------------------------------------------------------------------------
@@ -564,6 +613,7 @@ def apply_vre_targets(ws, config: dict, total_prod: dict,
     default_cf = config.get("default_capacity_factor", 0.10)
     pin_gen = config.get("pin_generation_to_target", False)
     pin_slack = config.get("pin_slack", 0.01)
+    activity_lower_caps = config.get("activity_lower_caps", [])
 
     headers = find_named_columns(ws, ["Tech", "Parameter", PROJ_MODE_COL])
     tech_col = headers.get("Tech")
@@ -583,6 +633,7 @@ def apply_vre_targets(ws, config: dict, total_prod: dict,
         "changes": [],
         "warnings": [],
         "projection_mode_flips": [],
+        "activity_lower_caps": [],
     }
 
     # Build MaxCapInv lookup (needed for untie rule in capacity mode)
@@ -692,6 +743,17 @@ def apply_vre_targets(ws, config: dict, total_prod: dict,
                             f"({prod:.2f} PJ). Capped to {cap:.2f} PJ."
                         )
 
+                    raw_derived_floor_pj = floor_pj
+                    floor_pj, boundary_cap = cap_activity_lower_value(
+                        floor_pj,
+                        region="GLOBAL",
+                        technology=tech,
+                        year=year,
+                        caps=activity_lower_caps,
+                    )
+                    if boundary_cap is not None:
+                        log["activity_lower_caps"].append(boundary_cap)
+
                     if values_differ(old, floor_pj):
                         cell.value = floor_pj
                         row_modified = True
@@ -700,7 +762,17 @@ def apply_vre_targets(ws, config: dict, total_prod: dict,
                             "old": old, "new": floor_pj,
                             "pct": pct, "total_prod": prod,
                             "capped": capped,
-                            "reason": "activity_floor",
+                            "raw_derived_value": raw_derived_floor_pj,
+                            "boundary_cap": (
+                                boundary_cap["maximum"]
+                                if boundary_cap is not None else None
+                            ),
+                            "reason": (
+                                "activity_floor_boundary_cap"
+                                if boundary_cap is not None
+                                and boundary_cap["applied"]
+                                else "activity_floor"
+                            ),
                         })
 
                 if row_modified and proj_mode_col is not None:
@@ -1061,6 +1133,14 @@ def print_summary(log: dict) -> None:
             print(f"    - {reason:30s} : {count}")
         print(f"  Projection.Mode flips: "
               f"{len(s.get('projection_mode_flips', []))}")
+
+        for cap in s.get("activity_lower_caps", []):
+            print(
+                "  Activity-lower cap: "
+                f"({cap['region']}, {cap['technology']}, {cap['year']}) "
+                f"raw={cap['raw_derived_value']} maximum={cap['maximum']} "
+                f"final={cap['final_value']} applied={cap['applied']}"
+            )
 
         warnings = s.get("warnings", [])
         if warnings:

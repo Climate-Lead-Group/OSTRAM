@@ -5,6 +5,7 @@ import ast
 import builtins
 import importlib.util
 import io
+import json
 import os
 import shutil
 import subprocess
@@ -23,6 +24,7 @@ REPO_ROOT = TEST_ROOT.parents[1]
 A3_ENTRYPOINT = REPO_ROOT / "t1_confection" / "A3_process.py"
 A3_ORCHESTRATOR = REPO_ROOT / "t1_confection" / "a3_orchestrator.py"
 SCENARIO_HELPER = REPO_ROOT / "t1_confection" / "A3_process" / "_scenarios.py"
+SCENARIO_REGISTRY = TEST_ROOT / "scenarios.yaml"
 
 ACTIVE_SCENARIOS = (
     "BAU",
@@ -124,9 +126,14 @@ class A3TraceHarness:
     def close(self) -> None:
         self._temp.cleanup()
 
-    def _args(self, *, keep_workdir: bool = False) -> argparse.Namespace:
+    def _args(
+        self,
+        *,
+        keep_workdir: bool = False,
+        scenario: str = "A_Calibrated_BAU",
+    ) -> argparse.Namespace:
         return argparse.Namespace(
-            scenario="A_Calibrated_BAU",
+            scenario=scenario,
             soasia=self.soasia,
             rules_script=None,
             inherit_from=None,
@@ -141,6 +148,7 @@ class A3TraceHarness:
         fail_stage: str | None = None,
         failure: BaseException | None = None,
         keep_workdir: bool = False,
+        scenario: str = "A_Calibrated_BAU",
     ) -> int:
         module = self.module
         events = self.events
@@ -151,7 +159,7 @@ class A3TraceHarness:
         def resolve_config(args, soasia):
             events.append(("resolve_config", args.scenario, soasia, Path.cwd()))
             return (
-                "A_Calibrated_BAU",
+                args.scenario,
                 ["set_retirement_schedule.py", "set_min_capacity_floors.py"],
                 ["BAU"],
             )
@@ -252,6 +260,9 @@ class A3TraceHarness:
             "stage_ws3_internal_tx_losses": inert_stage(
                 "stage_ws3_internal_tx_losses"
             ),
+            "stage_ws4_pwr_min_pin": inert_stage(
+                "stage_ws4_pwr_min_pin"
+            ),
             "stage_6_sync_og_to_ts20": inert_stage("stage_6_sync_og_to_ts20"),
             "stage_6_persist_restrictions": inert_stage(
                 "stage_6_persist_restrictions"
@@ -266,7 +277,14 @@ class A3TraceHarness:
             mock.patch.object(module, "A3_PROCESS_DIR", self.process_dir),
             mock.patch.object(module, "RULES_SCRIPTS_DIR", self.rules_dir),
             mock.patch.object(module, "SOASIA_V18", self.soasia),
-            mock.patch.object(module, "parse_cli_args", return_value=self._args(keep_workdir=keep_workdir)),
+            mock.patch.object(
+                module,
+                "parse_cli_args",
+                return_value=self._args(
+                    keep_workdir=keep_workdir,
+                    scenario=scenario,
+                ),
+            ),
             mock.patch.object(module, "_resolve_scenario_config", side_effect=resolve_config),
             mock.patch.object(module, "build_workdir", side_effect=build_workdir),
             mock.patch.object(module, "deliver_outputs", side_effect=deliver),
@@ -381,6 +399,7 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
             "stage_ws3_interconnector_costs",
             "stage_ws3_internal_transmission",
             "stage_ws3_internal_tx_losses",
+            "stage_ws4_pwr_min_pin",
             "stage_6_sync_og_to_ts20",
             "stage_6_persist_restrictions",
             "deliver_outputs",
@@ -854,6 +873,13 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                     ),
                     ("stage_ws3_internal_transmission", harness.paths["s5"], template_value, harness.caller),
                     ("stage_ws3_internal_tx_losses", harness.paths["s5"], template_value, harness.caller),
+                    (
+                        "stage_ws4_pwr_min_pin",
+                        harness.paths["s5"],
+                        "A_Calibrated_BAU",
+                        template_value,
+                        harness.caller,
+                    ),
                     ("stage_6_sync_og_to_ts20", harness.workdir, harness.paths["s1"], template_value, harness.caller),
                     (
                         "stage_6_persist_restrictions",
@@ -893,6 +919,103 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
             self.assertNotIn("OSTRAM_TEMPLATE_PATH", os.environ)
             self.assertIn(f"Workdir preserved: {harness.workdir}", harness.stdout)
         finally:
+            harness.close()
+
+    def test_static_pin_dispatches_only_for_exact_canonical_roots(self) -> None:
+        payload = json.loads(SCENARIO_REGISTRY.read_text(encoding="utf-8"))
+        scenarios = [item["name"] for item in payload["scenarios"]]
+        expected_roots = {
+            "A_Calibrated_BAU",
+            "B_Optimised_VRE",
+            "C_Target_VRE",
+        }
+        for index, scenario in enumerate(scenarios):
+            with self.subTest(scenario=scenario):
+                module = _load_a3(f"pin_dispatch_{index}")
+                harness = A3TraceHarness(module)
+                try:
+                    self.assertEqual(harness.run(scenario=scenario), 0)
+                    pin_events = [
+                        event
+                        for event in harness.events
+                        if event[0] == "stage_ws4_pwr_min_pin"
+                    ]
+                    self.assertEqual(len(pin_events), int(scenario in expected_roots))
+                    if pin_events:
+                        self.assertEqual(pin_events[0][1:3], (
+                            harness.paths["s5"],
+                            scenario,
+                        ))
+                finally:
+                    harness.close()
+
+    def test_static_pin_wrapper_uses_exact_assets_and_cli(self) -> None:
+        module = _load_a3("pin_wrapper")
+        with tempfile.TemporaryDirectory() as temp:
+            rules_dir = Path(temp)
+            script = rules_dir / "apply_base_year_pin.py"
+            rules = rules_dir / "pwr_min_2023_2026_pin.csv"
+            script.write_text("# fixture\n", encoding="utf-8")
+            rules.write_text("fixture\n", encoding="utf-8")
+            stage5 = rules_dir / "stage5"
+            stage5.mkdir()
+            for scenario in sorted(module.PIN_ROOT_SCENARIOS):
+                with self.subTest(scenario=scenario):
+                    with (
+                        mock.patch.object(module, "RULES_SCRIPTS_DIR", rules_dir),
+                        mock.patch.object(module, "banner"),
+                        mock.patch.object(module, "run_subproc") as run_subproc,
+                    ):
+                        module.stage_ws4_pwr_min_pin(stage5, scenario)
+                    run_subproc.assert_called_once_with(
+                        [
+                            module.PYTHON,
+                            script,
+                            "--input-dir",
+                            stage5,
+                            "--scenario",
+                            scenario,
+                            "--rules-csv",
+                            rules,
+                            "--skip-backup",
+                        ],
+                        label="apply_base_year_pin.py",
+                    )
+
+    def test_static_pin_wrapper_fails_closed_on_scenario_or_missing_asset(self):
+        module = _load_a3("pin_wrapper_failures")
+        with tempfile.TemporaryDirectory() as temp:
+            rules_dir = Path(temp)
+            with (
+                mock.patch.object(module, "RULES_SCRIPTS_DIR", rules_dir),
+                mock.patch.object(module, "run_subproc") as run_subproc,
+            ):
+                with self.assertRaisesRegex(ValueError, "unsupported"):
+                    module.stage_ws4_pwr_min_pin(rules_dir, "BAU")
+                with self.assertRaisesRegex(FileNotFoundError, "asset missing"):
+                    module.stage_ws4_pwr_min_pin(
+                        rules_dir,
+                        "A_Calibrated_BAU",
+                    )
+            run_subproc.assert_not_called()
+
+    def test_static_pin_failure_prevents_stage6_and_delivery(self) -> None:
+        module = _load_a3("pin_failure")
+        harness = A3TraceHarness(module)
+        failure = RuntimeError("pin fixture failure")
+        try:
+            with self.assertRaisesRegex(RuntimeError, "pin fixture failure"):
+                harness.run(
+                    fail_stage="stage_ws4_pwr_min_pin",
+                    failure=failure,
+                )
+            names = [event[0] for event in harness.events]
+            self.assertIn("stage_ws4_pwr_min_pin", names)
+            self.assertNotIn("stage_6_sync_og_to_ts20", names)
+            self.assertNotIn("stage_6_persist_restrictions", names)
+            self.assertNotIn("deliver_outputs", names)
+        finally:
+            os.environ.pop("OSTRAM_TEMPLATE_PATH", None)
             harness.close()
 
     def test_expected_subprocess_failure_is_fail_fast_system_exit(self) -> None:

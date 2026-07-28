@@ -26,6 +26,10 @@ The governing branch sequence is:
    branch and outside the evidence recorded here.
 
 Work assigned to a later branch must not be prepared silently on this branch.
+The separately authorized `fix/v18-pwr-min-2023-2026-pin` branch is a narrow
+exception to the historical behavior-preserving scope: it changes only the
+frozen non-Maldives 2023--2026 PWR/MIN allowlist through a root-gated late-A3
+stage. Historical validation records below remain scoped to their named commits.
 
 ## Frozen predecessor chain
 
@@ -78,7 +82,8 @@ stage sequence:
 `stage_2_and_2_5` -> `stage_3_fix_2` -> `stage_4_consolidate` ->
 `stage_4_5_apply_inherited_restrictions` -> `stage_5_rules_scripts` ->
 `stage_ws3_interconnector_costs` -> `stage_ws3_internal_transmission` ->
-`stage_ws3_internal_tx_losses` -> `stage_6_sync_og_to_ts20` ->
+`stage_ws3_internal_tx_losses` -> `stage_ws4_pwr_min_pin` ->
+`stage_6_sync_og_to_ts20` ->
 `stage_6_persist_restrictions` -> `deliver_outputs`.
 
 Normal A3 execution still contains only the four active Control definitions:
@@ -87,6 +92,14 @@ scenarios remain later, ordered scenario-specific patches; this refactor does no
 promote them into the active A3 loop or change patch precedence. A3 helper failure
 remains fail-fast, while work-directory and `OSTRAM_TEMPLATE_PATH` cleanup remain
 success-path-only.
+
+The late `stage_ws4_pwr_min_pin` dispatches only for the exact
+`A_Calibrated_BAU`, `B_Optimised_VRE`, and `C_Target_VRE` roots. It applies the
+version-controlled `pwr_min_2023_2026_pin.csv` allowlist to existing workbook
+rows before Stage 6. The transformer validates the allowlist digest and contract,
+writes only its explicit 2023--2026 PWR/MIN cells, never reads solver output, and
+does not emit a generic `*_CHANGES.json`. Plain `BAU` is untouched; derived
+scenarios inherit their corrected root before their bounded sensitivity patches.
 
 The materialized v18 `Interconnector_Params` sheet is the sole runtime authority
 for three distinct interconnector families: final `ResidualCapacity`, additive
@@ -274,8 +287,15 @@ lineage evidence, not production source. It must not be copied into the reposito
 imported by the compiler, or executed as part of the normal transformation path.
 The tracked
 [`apply_base_year_pin.py`](../t1_confection/A3_process/rules_scripts/apply_base_year_pin.py)
-recipe with `--band 0.002` supersedes that scratch step for the accepted
-reproducible derivation.
+is now the static production transformer. Its audited allowlist is mechanically
+projected from the frozen corrected evidence, and its embedded digests bind both
+that canonical source (`canonical_source_rules.csv` SHA-256
+`9c28f9d43c3037daa668554a94061e829d0974662a746efa48d4a2dc341b9ca6`)
+and the 1,956-row production projection (`pwr_min_2023_2026_pin.csv` SHA-256
+`cdcb0aeb570486b40ab96be68f6db031af54afa3ac02e4832a456522ca73a17c`).
+It creates no row or column and fails closed on an invalid rule, asset, scenario,
+or workbook match. The former solve-derived `--band 0.002` recipe is historical
+lineage only; it is not part of the production interface or derivation.
 
 When changed production paths begin at B1, validation may consume the accepted,
 frozen A-derived artifacts and hashes without rerunning A3. If those artifacts or
@@ -296,6 +316,11 @@ order. The following unaffected production scripts remain protected:
 |---|---|
 | [`cap_trn_to_residual.py`](../t1_confection/A3_process/cap_trn_to_residual.py) | `f9f876d1e58cc8dd1339aea703477fe7a85bef776ad227ab99d972d25f7c6a36` |
 | [`relax_interconnectors.py`](../t1_confection/A3_process/rules_scripts/relax_interconnectors.py) | `e496d54157459e7da2eb460d0cc76264eeee26a386e6a8c811cad1285424fbb7` |
+
+The following byte-identity requirements apply to that earlier
+behavior-preserving migration. The later PWR/MIN correction instead requires the
+candidate/current compiled-input difference set to equal exactly its frozen
+target set.
 
 This migration must not change TRN costs, operational life,
 `ResidualCapacity`, `FUTURE` classification, `TotalAnnualMaxCapacity`,
@@ -355,6 +380,9 @@ only. Solver-backed behavioral and numerical equivalence remains outside this
 branch's authorized claim boundary.
 
 ## Validation record for `0cc2c68`
+
+This historical record predates and does not validate the late-WS4 static
+PWR/MIN pin.
 
 The contract above was exercised at candidate commit
 `0cc2c68234df903beadf037082301e2211557e61` in the disposable clean clone

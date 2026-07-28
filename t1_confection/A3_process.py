@@ -26,6 +26,8 @@ Pipeline:
   Stage 4.5  apply_inherited_restrictions   write Restrictions rows from
                                             inherit_restrictions_from scenarios
   Stage 5    <rules_script>                 applies the scenario's rules
+  Late WS-4  apply_base_year_pin            exact audited 2023-2026 PWR/MIN
+                                            keys on the three canonical roots
   Stage 6    persist_run_restrictions       write CHANGES.json into v18
 
 Usage:
@@ -58,6 +60,7 @@ T1_CONFECTION = Path(__file__).resolve().parent
 A3_PROCESS_DIR = T1_CONFECTION / "A3_process"
 RULES_SCRIPTS_DIR = A3_PROCESS_DIR / "rules_scripts"
 SOASIA_V18 = A3_PROCESS_DIR / "SOASIA_OSeMOSYS_Template_v18.xlsx"
+PIN_ROOT_SCENARIOS = _orchestrator.PWR_MIN_PIN_ROOT_SCENARIOS
 
 # =============================================================================
 # USER CONFIGURATION — defaults; can be overridden via CLI
@@ -605,6 +608,42 @@ def stage_ws3_internal_tx_losses(s5: Path) -> None:
     ], label="apply_internal_tx_losses.py")
 
 
+def stage_ws4_pwr_min_pin(s5: Path, scenario: str) -> None:
+    """Restore only the audited 2023-2026 PWR/MIN keys on canonical roots.
+
+    This late A3 stage consumes a version-controlled static allowlist.  It
+    neither reads solver output nor emits a generic ``*_CHANGES.json`` that
+    Stage 6 could persist as a competing Restrictions authority.
+    """
+    if scenario not in PIN_ROOT_SCENARIOS:
+        raise ValueError(f"unsupported PWR/MIN pin scenario: {scenario!r}")
+    script = RULES_SCRIPTS_DIR / "apply_base_year_pin.py"
+    rules_csv = RULES_SCRIPTS_DIR / "pwr_min_2023_2026_pin.csv"
+    missing = [path for path in (script, rules_csv) if not path.is_file()]
+    if missing:
+        raise FileNotFoundError(
+            "PWR/MIN pin production asset missing: "
+            + ", ".join(str(path) for path in missing)
+        )
+    banner(
+        "WS-4 — restore audited non-Maldives 2023-2026 PWR/MIN calibration"
+    )
+    run_subproc(
+        [
+            PYTHON,
+            script,
+            "--input-dir",
+            s5,
+            "--scenario",
+            scenario,
+            "--rules-csv",
+            rules_csv,
+            "--skip-backup",
+        ],
+        label="apply_base_year_pin.py",
+    )
+
+
 def stage_6_persist_restrictions(
     s5: Path,
     soasia: Path,
@@ -786,6 +825,7 @@ def _orchestration_dependencies() -> _orchestrator.A3Dependencies:
         stage_ws3_interconnector_costs=stage_ws3_interconnector_costs,
         stage_ws3_internal_transmission=stage_ws3_internal_transmission,
         stage_ws3_internal_tx_losses=stage_ws3_internal_tx_losses,
+        stage_ws4_pwr_min_pin=stage_ws4_pwr_min_pin,
         stage_6_sync_og_to_ts20=stage_6_sync_og_to_ts20,
         stage_6_persist_restrictions=stage_6_persist_restrictions,
         deliver_outputs=deliver_outputs,

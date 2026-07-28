@@ -1,387 +1,700 @@
+"""Apply the audited 2023-2026 PWR/MIN calibration allowlist.
+
+The accepted WS-4 recipe formerly read a solver result and broadly rewrote
+whole technology bands.  Production now consumes a frozen, key-complete table
+derived from the independently audited restoration evidence.  Only an exact
+``(REGION, TECHNOLOGY, PARAMETER, YEAR)`` rule may change a workbook cell.
+
+Frozen lineage:
+
+* corrected evidence ``canonical_source_rules.csv`` SHA-256:
+  ``9c28f9d43c3037daa668554a94061e829d0974662a746efa48d4a2dc341b9ca6``
+* production projection ``pwr_min_2023_2026_pin.csv`` SHA-256:
+  ``cdcb0aeb570486b40ab96be68f6db031af54afa3ac02e4832a456522ca73a17c``
+
+The transformation is deliberately unable to create rows or columns, touch
+Maldives, write outside 2023-2026, or synthesize an absent value as zero or
+9999.  ``Projection.Mode`` is row-wide, so an EMPTY row can be activated only
+when every non-target year cell is blank; otherwise the run fails before any
+workbook mutation.
 """
-apply_base_year_pin.py
-======================
 
-WS-4 base-year lock. Pins the base window (default 2023-2026) so ALL scenarios
-reproduce the calibrated reference run identically — BOTH generation AND capacity
-— in those years; divergence only from 2027+.
-
-Why both generation and capacity
----------------------------------
-Pinning activity alone (Lower==Upper) forces identical *generation*, but if the
-capacity build is left free (e.g. investment ceiling relaxed) a scenario can
-build capacity *ahead* in the base window for its own 2027+ future (e.g.
-C_Target_VRE building VRE early), so 2023-2026 *capacity* would differ. To make
-the base window truly identical we pin the build too.
-
-Mechanism (per pin year, in "Primary Techs" + "Secondary Techs")
-----------------------------------------------------------------
-Reads the calibrated A_Calibrated_BAU solve outputs:
-  * TotalTechnologyAnnualActivity.csv  -> activity reference
-  * NewCapacity.csv                    -> annual new-build reference
-and sets:
-  TotalTechnologyAnnualActivityLowerLimit = UpperLimit = activity_ref   (generation pinned)
-  TotalAnnualMaxCapacityInvestment = TotalAnnualMinCapacityInvestment = newbuild_ref  (build pinned)
-  TotalAnnualMaxCapacity = 9999   (ceiling relaxed so the pinned build is never blocked;
-                                   harmless, since the build is pinned below it)
-Projection.Mode is flipped EMPTY->"User defined" on every written row (otherwise
-B1/otoole ignores year-indexed rows).
-
-Applied to every scenario (incl. the reference, which reproduces itself) -> the
-2023-2026 state is byte-identical across scenarios. 2027+ rows are untouched.
-
-EXCLUSION: the 18 cross-border interconnectors (INTERCONNECTORS, == cap_trn_to_residual
-.TRN_TECHS) are skipped ENTIRELY. cap_trn_to_residual freezes their TotalAnnualMaxCapacity
-== ResidualCapacity (zero headroom), so forcing a base-year MinCapacityInvestment on them
-makes Residual + Sum(MinCapInvest) exceed MaxCapacity in a later year -> GLPK --check fails.
-That is safe: the freeze already makes interconnector capacity identical across scenarios
-(verified A==B==C), so not pinning them creates no base-year difference. The internal-
-transmission families (PWRTRN/RNWTRN/DSPTRN/RNWNLI/RNWRPO/TRNNLI/TRNRPO) are uncapped and
-are NOT excluded -> they get the full activity+build pin so their base-year capacity is
-identical by construction too.
-
-ORDERING: the reference is the calibrated solve, which changes with other input
-edits (e.g. the 3% loss) -> run this AFTER a first CPLEX solve of the reference
-scenario, then re-compile (B1) + re-solve.
-
-USAGE
-    python apply_base_year_pin.py --input-dir A1_Outputs/A1_Outputs_B_Optimised_VRE \\
-        --from-solve-dir Executables/A_Calibrated_BAU_0/Outputs
-    python apply_base_year_pin.py --self-test
-    python apply_base_year_pin.py --input-dir <dir> --restore
-"""
 from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
+import math
+import os
 import shutil
 import sys
+from collections import Counter, defaultdict
+from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
-from openpyxl import load_workbook, Workbook
+from openpyxl import load_workbook
+
 
 PARAM_FILE = "A-O_Parametrization.xlsx"
 SHEETS = ("Primary Techs", "Secondary Techs")
-DEFAULT_YEARS = (2023, 2024, 2025, 2026)
-SENTINEL = 9999
+PIN_YEARS = frozenset({2023, 2024, 2025, 2026})
+PIN_ROOT_SCENARIOS = frozenset(
+    {"A_Calibrated_BAU", "B_Optimised_VRE", "C_Target_VRE"}
+)
+RULES_CSV = Path(__file__).with_name("pwr_min_2023_2026_pin.csv")
+RULES_SHA256 = (
+    "cdcb0aeb570486b40ab96be68f6db031af54afa3ac02e4832a456522ca73a17c"
+)
+CANONICAL_SOURCE_RULES_SHA256 = (
+    "9c28f9d43c3037daa668554a94061e829d0974662a746efa48d4a2dc341b9ca6"
+)
+BACKUP_TAG = "_PRE_PWR_MIN_PIN_"
 
-P_LOWER = "TotalTechnologyAnnualActivityLowerLimit"
-P_UPPER = "TotalTechnologyAnnualActivityUpperLimit"
-P_MAXCAP = "TotalAnnualMaxCapacity"
-P_MAXCAPINV = "TotalAnnualMaxCapacityInvestment"
-P_MINCAPINV = "TotalAnnualMinCapacityInvestment"
-ACTIVITY_PARAMS = (P_LOWER, P_UPPER)
-BUILD_PARAMS = (P_MAXCAPINV, P_MINCAPINV)
-BACKUP_TAG = "_PRE_BASEYEAR_PIN_"
-
-ACTIVITY_CSV = "TotalTechnologyAnnualActivity.csv"
-NEWCAP_CSV = "NewCapacity.csv"
-
-# The 18 cross-border interconnectors (mirrors cap_trn_to_residual.TRN_TECHS,
-# which is the source of truth). Their TotalAnnualMaxCapacity is FROZEN ==
-# ResidualCapacity by cap_trn_to_residual (zero headroom), so forcing a base-year
-# MinCapacityInvestment on them makes Residual + Sum(MinCapInvest) exceed
-# MaxCapacity in a later year -> GLPK --check fails ("Residual, Total annual maxcap
-# and mincap investments"). They are already scenario-independent (the freeze makes
-# their build identical across A/B/C), so they are EXCLUDED from the pin entirely.
-# NOTE: this is ONLY the 18 interconnectors, NOT the internal-transmission families
-# (PWRTRN/RNWTRN/DSPTRN/…), which are uncapped and therefore safely pinned.
-INTERCONNECTORS = frozenset({
-    "TRNBGDXXINDEA", "TRNBGDXXINDNE", "TRNBTNXXBGDXX", "TRNBTNXXINDEA",
-    "TRNBTNXXINDNE", "TRNINDEAINDNE", "TRNINDEAINDNO", "TRNINDEAINDSO",
-    "TRNINDEAINDWE", "TRNINDEANPLXX", "TRNINDNEINDNO", "TRNINDNOINDWE",
-    "TRNINDNONPLXX", "TRNINDSOINDWE", "TRNINDSOLKAXX", "TRNLKAXXMDVXX",
-    "TRNMDVXXINDSO", "TRNNPLXXBGDXX",
-})
-
-
-def read_ref(path: Path, years) -> dict:
-    """{tech: {year: value}} for the pin years, from an otoole result CSV."""
-    out = {}
-    with open(path, newline="", encoding="utf-8") as f:
-        r = csv.DictReader(f)
-        cols = {c.lower(): c for c in (r.fieldnames or [])}
-        tcol, ycol, vcol = cols.get("technology"), cols.get("year"), cols.get("value")
-        if not (tcol and ycol and vcol):
-            raise ValueError(f"{path} needs TECHNOLOGY/YEAR/VALUE columns; got {r.fieldnames}")
-        for row in r:
-            try:
-                y = int(float(row[ycol]))
-            except (TypeError, ValueError):
-                continue
-            if y in years:
-                out.setdefault(row[tcol], {})[y] = float(row[vcol])
-    return out
-
-
-def read_techs(path: Path) -> set:
-    """Valid TECHNOLOGY set from a one-column TECHNOLOGY.csv (skip header)."""
-    out = set()
-    with open(path, newline="", encoding="utf-8") as f:
-        for i, row in enumerate(csv.reader(f)):
-            if i == 0 or not row or not str(row[0]).strip():
-                continue
-            out.add(str(row[0]).strip())
-    return out
-
-
-def _hdr(ws):
-    return {ws.cell(row=1, column=c).value: c for c in range(1, ws.max_column + 1)
-            if ws.cell(row=1, column=c).value is not None}
+P_MAX_CAP = "TotalAnnualMaxCapacity"
+P_MAX_INV = "TotalAnnualMaxCapacityInvestment"
+P_MIN_INV = "TotalAnnualMinCapacityInvestment"
+P_ACTIVITY_LOWER = "TotalTechnologyAnnualActivityLowerLimit"
+P_ACTIVITY_UPPER = "TotalTechnologyAnnualActivityUpperLimit"
+ALLOWED_PARAMETERS = frozenset(
+    {
+        P_MAX_CAP,
+        P_MAX_INV,
+        P_MIN_INV,
+        P_ACTIVITY_LOWER,
+        P_ACTIVITY_UPPER,
+    }
+)
+ACTIVITY_PARAMETERS = frozenset({P_ACTIVITY_LOWER, P_ACTIVITY_UPPER})
+ALLOWED_COUNTRIES = frozenset({"BGD", "BTN", "IND", "LKA", "NPL"})
+ORDERED_INDICES = ("REGION", "TECHNOLOGY", "YEAR")
+EXPECTED_AUTHORITY = "BENCHMARK_SUPPORTED"
+EXPECTED_LINEAGE = "ACCEPTED_WS4_BASE_YEAR_PIN_2023_2026"
+EXPECTED_FIELDS = (
+    "source_rule_id",
+    "parameter",
+    "ordered_parameter_indices",
+    "region",
+    "technology",
+    "semantic_technology_group",
+    "canonical_country",
+    "year",
+    "required_root_present",
+    "required_root_value",
+    "required_root_state",
+    "verified_physical_unit",
+    "verified_compiled_unit",
+    "root_scenarios_with_actual_change",
+    "authority_classification",
+    "authority_lineage_class",
+)
+EXPECTED_PARAMETER_COUNTS = {
+    P_MAX_CAP: 620,
+    P_MAX_INV: 388,
+    P_MIN_INV: 144,
+    P_ACTIVITY_LOWER: 216,
+    P_ACTIVITY_UPPER: 588,
+}
+EXPECTED_STATE_COUNTS = {"POSITIVE": 1356, "ZERO": 600}
+EXPECTED_SCENARIO_COUNTS = {
+    "A_Calibrated_BAU": 1915,
+    "B_Optimised_VRE": 1956,
+    "C_Target_VRE": 1956,
+}
 
 
-def _year_cols(ws, years):
-    out = {}
-    for c in range(1, ws.max_column + 1):
-        v = ws.cell(row=1, column=c).value
-        yi = v if isinstance(v, int) else (
-            int(float(v)) if isinstance(v, str) and v.strip().split(".")[0].isdigit() else None)
-        if yi in years:
-            out[yi] = c
-    return out
+@dataclass(frozen=True)
+class PinRule:
+    source_rule_id: str
+    parameter: str
+    region: str
+    technology: str
+    semantic_technology_group: str
+    canonical_country: str
+    year: int
+    present: bool
+    value: Decimal
+    state: str
+    physical_unit: str
+    compiled_unit: str
+    root_scenarios: tuple[str, ...]
+    authority_classification: str
+    authority_lineage_class: str
+
+    @property
+    def complete_key(self) -> tuple[str, str, str, int]:
+        return self.region, self.technology, self.parameter, self.year
 
 
-def edit_sheet(ws, activity, newbuild, years, valid_techs, log, interconnectors=INTERCONNECTORS, band=0.0):
-    h = _hdr(ws)
-    tc, pc, pmc = h.get("Tech"), h.get("Parameter"), h.get("Projection.Mode")
-    if tc is None or pc is None:
-        return
-    ycols = _year_cols(ws, set(years))
-    if not ycols:
-        return
-
-    def set_cells(r, ref_or_val, counter, factor=1.0):
-        """ref_or_val: a {year:val} dict (per-tech ref) or a scalar (e.g. SENTINEL).
-        factor bands the pinned value: lower limits x(1-band), upper limits x(1+band)."""
-        wrote = False
-        for y, c in ycols.items():
-            val = ref_or_val[y] if isinstance(ref_or_val, dict) else ref_or_val
-            val = float(val) if val is not None else 0.0
-            if factor != 1.0 and val != 0.0:
-                val = round(val * factor, 6)
-            cell = ws.cell(row=r, column=c)
-            if cell.value != val:
-                cell.value = val
-                log[counter] += 1
-                wrote = True
-        # a year-indexed row is only compiled by B1 if Projection.Mode is set
-        if pmc is not None:
-            pm = ws.cell(row=r, column=pmc)
-            if pm.value in (None, "", "EMPTY"):
-                pm.value = "User defined"
-                log["pm_flips"] += 1
-        return wrote
-
-    for r in range(2, ws.max_row + 1):
-        tech = ws.cell(row=r, column=tc).value
-        par = ws.cell(row=r, column=pc).value
-        if not isinstance(tech, str):
-            continue
-        if valid_techs is not None and tech not in valid_techs:
-            continue   # only pin real technologies; never activate fuel/template rows
-        if interconnectors and tech in interconnectors:
-            log["ic_rows_skipped"] += 1
-            continue   # interconnectors: MaxCapacity frozen==residual; pinning collides
-                       # with the residual machinery (and they're already A==B==C)
-        if par in ACTIVITY_PARAMS:
-            fac = (1.0 - band) if par == P_LOWER else (1.0 + band)  # band: lower down, upper up
-            set_cells(r, {y: activity.get(tech, {}).get(y, 0.0) for y in years}, "pin_cells", factor=fac)
-        elif par in BUILD_PARAMS:
-            fac = (1.0 - band) if par == P_MINCAPINV else (1.0 + band)
-            set_cells(r, {y: newbuild.get(tech, {}).get(y, 0.0) for y in years}, "build_cells", factor=fac)
-        elif par == P_MAXCAP:
-            set_cells(r, SENTINEL, "relax_cells")
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
 
 
-def make_backup(d: Path) -> Path:
-    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    b = d.parent / f"{d.name}{BACKUP_TAG}{stamp}"
-    if b.exists():
-        raise FileExistsError(b)
-    shutil.copytree(d, b)
-    return b
-
-
-def restore(d: Path, frm=None) -> Path:
-    d = Path(d)
-    if frm is None:
-        c = sorted(p for p in d.parent.iterdir()
-                   if p.is_dir() and p.name.startswith(f"{d.name}{BACKUP_TAG}"))
-        if not c:
-            raise FileNotFoundError(f"no {BACKUP_TAG}* backup by {d}")
-        frm = c[-1]
-    if d.is_dir():
-        shutil.rmtree(d)
-    shutil.copytree(frm, d)
-    return frm
-
-
-def run(input_dir, from_solve_dir, tech_csv=None, years=DEFAULT_YEARS, skip_backup=False, band=0.0) -> dict:
-    input_dir = Path(input_dir)
-    sd = Path(from_solve_dir)
-    activity = read_ref(sd / ACTIVITY_CSV, set(years))
-    newbuild = read_ref(sd / NEWCAP_CSV, set(years))
-    valid_techs = read_techs(Path(tech_csv)) if tech_csv else None
-    pf = input_dir / PARAM_FILE
-    if not pf.exists():
-        raise FileNotFoundError(pf)
-    backup = None if skip_backup else make_backup(input_dir)
-    log = {"input_dir": str(input_dir), "from_solve_dir": str(sd), "years": list(years),
-           "activity_techs": len(activity), "newbuild_techs": len(newbuild),
-           "valid_techs": len(valid_techs) if valid_techs is not None else None,
-           "pin_cells": 0, "build_cells": 0, "relax_cells": 0, "pm_flips": 0,
-           "ic_rows_skipped": 0,
-           "timestamp": datetime.now().isoformat(), "backup_dir": str(backup) if backup else None}
-    wb = load_workbook(pf)
+def _parse_decimal(raw: str, *, label: str) -> Decimal:
     try:
-        for sh in SHEETS:
-            if sh in wb.sheetnames:
-                edit_sheet(wb[sh], activity, newbuild, years, valid_techs, log, band=band)
-        wb.save(pf)
+        value = Decimal(raw)
+    except (InvalidOperation, ValueError) as error:
+        raise ValueError(f"{label} is not a decimal: {raw!r}") from error
+    if not value.is_finite():
+        raise ValueError(f"{label} must be finite: {raw!r}")
+    return value
+
+
+def _validate_units(
+    parameter: str,
+    technology: str,
+    physical_unit: str,
+    compiled_unit: str,
+) -> None:
+    if parameter in ACTIVITY_PARAMETERS:
+        expected = ("PJ_per_year_activity", "PJ_per_year")
+    elif technology.startswith("MIN"):
+        expected = (
+            "native_supply_capacity_unit",
+            "native_supply_capacity_unit",
+        )
+    else:
+        expected = ("GW", "GW")
+    actual = (physical_unit, compiled_unit)
+    if actual != expected:
+        raise ValueError(
+            f"invalid unit pair for {technology}/{parameter}: "
+            f"{actual!r}, expected {expected!r}"
+        )
+
+
+def _parse_rule(row: dict[str, str], row_number: int) -> PinRule:
+    label = f"rules row {row_number}"
+    try:
+        indices = tuple(json.loads(row["ordered_parameter_indices"]))
+    except (json.JSONDecodeError, TypeError) as error:
+        raise ValueError(f"{label} has invalid ordered indices") from error
+    if indices != ORDERED_INDICES:
+        raise ValueError(f"{label} ordered indices are not {ORDERED_INDICES!r}")
+    if row["region"] != "GLOBAL":
+        raise ValueError(f"{label} region is not GLOBAL")
+    parameter = row["parameter"]
+    if parameter not in ALLOWED_PARAMETERS:
+        raise ValueError(f"{label} has unsupported parameter {parameter!r}")
+    try:
+        year = int(row["year"])
+    except ValueError as error:
+        raise ValueError(f"{label} has invalid year {row['year']!r}") from error
+    if year not in PIN_YEARS:
+        raise ValueError(f"{label} year {year} is outside 2023-2026")
+    technology = row["technology"]
+    if not technology.startswith(("PWR", "MIN")):
+        raise ValueError(f"{label} technology is not PWR/MIN: {technology!r}")
+    if "MDV" in technology:
+        raise ValueError(f"{label} contains a Maldives technology")
+    country = row["canonical_country"]
+    if country not in ALLOWED_COUNTRIES:
+        raise ValueError(f"{label} has unsupported country {country!r}")
+    if row["required_root_present"] != "true":
+        raise ValueError(
+            f"{label} must be explicitly present; absence cannot be encoded"
+        )
+    value = _parse_decimal(
+        row["required_root_value"],
+        label=f"{label} required_root_value",
+    )
+    if value < 0:
+        raise ValueError(f"{label} value must be non-negative")
+    state = row["required_root_state"]
+    expected_state = "ZERO" if value == 0 else "POSITIVE"
+    if state != expected_state:
+        raise ValueError(
+            f"{label} state/value mismatch: {state!r} vs {value}"
+        )
+    if value == Decimal("9999") and parameter != P_MAX_CAP:
+        raise ValueError(f"{label} uses 9999 outside {P_MAX_CAP}")
+    scenarios = tuple(
+        item
+        for item in row["root_scenarios_with_actual_change"].split(";")
+        if item
+    )
+    if not scenarios or len(scenarios) != len(set(scenarios)):
+        raise ValueError(f"{label} has invalid root-scenario membership")
+    if not set(scenarios).issubset(PIN_ROOT_SCENARIOS):
+        raise ValueError(f"{label} has an unsupported root scenario")
+    if row["authority_classification"] != EXPECTED_AUTHORITY:
+        raise ValueError(f"{label} is not benchmark-supported")
+    if row["authority_lineage_class"] != EXPECTED_LINEAGE:
+        raise ValueError(f"{label} has an unsupported authority lineage")
+    expected_id = (
+        f"PWR_MIN_PIN::{parameter}::GLOBAL::{technology}::{year}"
+    )
+    if row["source_rule_id"] != expected_id:
+        raise ValueError(
+            f"{label} source_rule_id does not match its complete key"
+        )
+    _validate_units(
+        parameter,
+        technology,
+        row["verified_physical_unit"],
+        row["verified_compiled_unit"],
+    )
+    return PinRule(
+        source_rule_id=row["source_rule_id"],
+        parameter=parameter,
+        region="GLOBAL",
+        technology=technology,
+        semantic_technology_group=row["semantic_technology_group"],
+        canonical_country=country,
+        year=year,
+        present=True,
+        value=value,
+        state=state,
+        physical_unit=row["verified_physical_unit"],
+        compiled_unit=row["verified_compiled_unit"],
+        root_scenarios=scenarios,
+        authority_classification=row["authority_classification"],
+        authority_lineage_class=row["authority_lineage_class"],
+    )
+
+
+def _validate_production_contract(rules: tuple[PinRule, ...]) -> None:
+    if len(rules) != 1956:
+        raise ValueError(f"production rule count is {len(rules)}, expected 1956")
+    if len({(rule.technology, rule.parameter) for rule in rules}) != 517:
+        raise ValueError("production rules do not resolve to exactly 517 rows")
+    if len({rule.technology for rule in rules}) != 182:
+        raise ValueError("production rules do not contain exactly 182 technologies")
+    if Counter(rule.parameter for rule in rules) != EXPECTED_PARAMETER_COUNTS:
+        raise ValueError("production parameter distribution mismatch")
+    if Counter(rule.state for rule in rules) != EXPECTED_STATE_COUNTS:
+        raise ValueError("production state distribution mismatch")
+    scenario_counts = {
+        scenario: sum(scenario in rule.root_scenarios for rule in rules)
+        for scenario in PIN_ROOT_SCENARIOS
+    }
+    if scenario_counts != EXPECTED_SCENARIO_COUNTS:
+        raise ValueError(
+            f"production scenario distribution mismatch: {scenario_counts}"
+        )
+
+
+def load_pin_rules(
+    rules_csv: Path | str = RULES_CSV,
+    *,
+    enforce_production_contract: bool | None = None,
+) -> tuple[PinRule, ...]:
+    """Load and fail-close validate the complete source-rule allowlist."""
+    path = Path(rules_csv)
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    is_default = path.resolve() == RULES_CSV.resolve()
+    if enforce_production_contract is None:
+        enforce_production_contract = is_default
+    if is_default:
+        actual_hash = _sha256(path)
+        if actual_hash != RULES_SHA256:
+            raise ValueError(
+                f"production rule hash mismatch: {actual_hash} != {RULES_SHA256}"
+            )
+    with path.open("r", encoding="utf-8-sig", newline="") as stream:
+        reader = csv.DictReader(stream)
+        fields = tuple(reader.fieldnames or ())
+        if fields != EXPECTED_FIELDS:
+            raise ValueError(
+                f"rule header mismatch: {fields!r} != {EXPECTED_FIELDS!r}"
+            )
+        rules = tuple(
+            _parse_rule(row, row_number)
+            for row_number, row in enumerate(reader, start=2)
+        )
+    ids = [rule.source_rule_id for rule in rules]
+    keys = [rule.complete_key for rule in rules]
+    if len(ids) != len(set(ids)):
+        raise ValueError("duplicate source_rule_id in pin rules")
+    if len(keys) != len(set(keys)):
+        raise ValueError("duplicate complete source key in pin rules")
+    if enforce_production_contract:
+        _validate_production_contract(rules)
+    return rules
+
+
+def _headers(worksheet) -> dict[object, int]:
+    headers: dict[object, int] = {}
+    for column in range(1, worksheet.max_column + 1):
+        value = worksheet.cell(row=1, column=column).value
+        if value is None:
+            continue
+        if value in headers:
+            raise ValueError(
+                f"{worksheet.title!r} has duplicate header {value!r}"
+            )
+        headers[value] = column
+    return headers
+
+
+def _year_columns(headers: dict[object, int]) -> dict[int, int]:
+    result: dict[int, int] = {}
+    for raw, column in headers.items():
+        year: int | None = None
+        if isinstance(raw, int) and not isinstance(raw, bool):
+            year = raw
+        elif isinstance(raw, str) and raw.strip().isdigit():
+            year = int(raw.strip())
+        if year is None:
+            continue
+        if year in result:
+            raise ValueError(f"duplicate year header {year}")
+        result[year] = column
+    return result
+
+
+def _cell_decimal(value: object, *, label: str) -> Decimal:
+    if value is None or value == "" or isinstance(value, bool):
+        raise ValueError(f"{label} is not an explicit numeric value")
+    if isinstance(value, str) and value.startswith("="):
+        raise ValueError(f"{label} is a formula")
+    try:
+        result = Decimal(str(value))
+    except (InvalidOperation, ValueError) as error:
+        raise ValueError(f"{label} is not numeric: {value!r}") from error
+    if not result.is_finite():
+        raise ValueError(f"{label} is not finite")
+    return result
+
+
+def _excel_number(value: Decimal) -> int | float:
+    if value == value.to_integral_value():
+        return int(value)
+    result = float(value)
+    if not math.isfinite(result):
+        raise ValueError(f"cannot serialize non-finite value {value}")
+    return result
+
+
+def make_backup(input_dir: Path) -> Path:
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup = input_dir.parent / f"{input_dir.name}{BACKUP_TAG}{stamp}"
+    if backup.exists():
+        raise FileExistsError(backup)
+    shutil.copytree(input_dir, backup)
+    return backup
+
+
+def restore(input_dir: Path | str, restore_from: Path | str | None = None) -> Path:
+    destination = Path(input_dir)
+    if restore_from is None:
+        candidates = sorted(
+            path
+            for path in destination.parent.iterdir()
+            if path.is_dir()
+            and path.name.startswith(f"{destination.name}{BACKUP_TAG}")
+        )
+        if not candidates:
+            raise FileNotFoundError(
+                f"no {BACKUP_TAG}* backup found beside {destination}"
+            )
+        source = candidates[-1]
+    else:
+        source = Path(restore_from)
+    if not source.is_dir():
+        raise FileNotFoundError(source)
+    if destination.exists():
+        shutil.rmtree(destination)
+    shutil.copytree(source, destination)
+    return source
+
+
+def apply_pin_rules(
+    input_dir: Path | str,
+    scenario: str,
+    rules_csv: Path | str = RULES_CSV,
+    *,
+    skip_backup: bool = False,
+    enforce_production_contract: bool | None = None,
+) -> dict[str, object]:
+    """Apply exact rules for one canonical root scenario.
+
+    All structural, key, and row-wide projection checks complete before the
+    first workbook assignment.  A validation failure therefore leaves the
+    input workbook byte-for-byte unchanged.
+    """
+    if scenario not in PIN_ROOT_SCENARIOS:
+        raise ValueError(f"unsupported pin scenario: {scenario!r}")
+    rules_path = Path(rules_csv)
+    all_rules = load_pin_rules(
+        rules_path,
+        enforce_production_contract=enforce_production_contract,
+    )
+    rules = tuple(
+        rule for rule in all_rules if scenario in rule.root_scenarios
+    )
+    if not rules:
+        raise ValueError(f"no pin rules apply to scenario {scenario!r}")
+    if (
+        rules_path.resolve() == RULES_CSV.resolve()
+        and len(rules) != EXPECTED_SCENARIO_COUNTS[scenario]
+    ):
+        raise ValueError(
+            f"{scenario} rule count is {len(rules)}, expected "
+            f"{EXPECTED_SCENARIO_COUNTS[scenario]}"
+        )
+
+    directory = Path(input_dir)
+    workbook_path = directory / PARAM_FILE
+    if not workbook_path.is_file():
+        raise FileNotFoundError(workbook_path)
+    workbook = load_workbook(workbook_path)
+    temp_path = workbook_path.with_name(
+        f".{workbook_path.stem}.pwr-min-pin.tmp.xlsx"
+    )
+    if temp_path.exists():
+        workbook.close()
+        raise FileExistsError(temp_path)
+
+    rules_by_row: dict[tuple[str, str], list[PinRule]] = defaultdict(list)
+    for rule in rules:
+        rules_by_row[(rule.technology, rule.parameter)].append(rule)
+
+    try:
+        missing_sheets = [sheet for sheet in SHEETS if sheet not in workbook]
+        if missing_sheets:
+            raise ValueError(f"missing required sheets: {missing_sheets}")
+        locations: dict[tuple[str, str], list[tuple[object, int]]] = defaultdict(
+            list
+        )
+        sheet_metadata: dict[str, tuple[dict[object, int], dict[int, int]]] = {}
+        for sheet_name in SHEETS:
+            worksheet = workbook[sheet_name]
+            headers = _headers(worksheet)
+            required_headers = {
+                "Tech",
+                "Parameter",
+                "Projection.Mode",
+                "Projection.Parameter",
+            }
+            missing_headers = sorted(required_headers - set(headers))
+            if missing_headers:
+                raise ValueError(
+                    f"{sheet_name!r} is missing headers {missing_headers}"
+                )
+            years = _year_columns(headers)
+            sheet_metadata[sheet_name] = headers, years
+            tech_column = headers["Tech"]
+            parameter_column = headers["Parameter"]
+            for row_number in range(2, worksheet.max_row + 1):
+                key = (
+                    worksheet.cell(row=row_number, column=tech_column).value,
+                    worksheet.cell(
+                        row=row_number, column=parameter_column
+                    ).value,
+                )
+                if key in rules_by_row:
+                    locations[key].append((worksheet, row_number))
+
+        missing_rows = sorted(
+            key for key in rules_by_row if len(locations.get(key, ())) == 0
+        )
+        duplicate_rows = {
+            key: [(worksheet.title, row) for worksheet, row in found]
+            for key, found in locations.items()
+            if len(found) > 1
+        }
+        if missing_rows:
+            raise ValueError(f"missing target workbook rows: {missing_rows[:10]}")
+        if duplicate_rows:
+            raise ValueError(f"duplicate target workbook rows: {duplicate_rows}")
+
+        assignments: list[tuple[object, int, Decimal, PinRule]] = []
+        projection_flips: list[tuple[object, int]] = []
+        for key, row_rules in rules_by_row.items():
+            worksheet, row_number = locations[key][0]
+            headers, year_columns = sheet_metadata[worksheet.title]
+            target_years = {rule.year for rule in row_rules}
+            missing_years = sorted(target_years - set(year_columns))
+            if missing_years:
+                raise ValueError(
+                    f"{worksheet.title}/{key} is missing years {missing_years}"
+                )
+            mode_cell = worksheet.cell(
+                row=row_number, column=headers["Projection.Mode"]
+            )
+            mode = mode_cell.value
+            if mode == "User defined":
+                pass
+            elif mode in (None, "", "EMPTY"):
+                non_target_values = [
+                    (year, worksheet.cell(row=row_number, column=column).value)
+                    for year, column in sorted(year_columns.items())
+                    if year not in target_years
+                    and worksheet.cell(row=row_number, column=column).value
+                    not in (None, "")
+                ]
+                if non_target_values:
+                    raise ValueError(
+                        f"{worksheet.title}/{key} cannot activate row-wide "
+                        f"Projection.Mode; populated non-target years: "
+                        f"{non_target_values[:8]}"
+                    )
+                projection_parameter = worksheet.cell(
+                    row=row_number, column=headers["Projection.Parameter"]
+                ).value
+                if projection_parameter not in (None, "", 0, 0.0):
+                    raise ValueError(
+                        f"{worksheet.title}/{key} has unsafe "
+                        f"Projection.Parameter {projection_parameter!r}"
+                    )
+                projection_flips.append((mode_cell, row_number))
+            else:
+                raise ValueError(
+                    f"{worksheet.title}/{key} has unsupported "
+                    f"Projection.Mode {mode!r}"
+                )
+            for rule in row_rules:
+                cell = worksheet.cell(
+                    row=row_number, column=year_columns[rule.year]
+                )
+                if cell.value not in (None, ""):
+                    _cell_decimal(
+                        cell.value,
+                        label=(
+                            f"{worksheet.title}/{rule.technology}/"
+                            f"{rule.parameter}/{rule.year}"
+                        ),
+                    )
+                assignments.append((cell, row_number, rule.value, rule))
+
+        backup = None if skip_backup else make_backup(directory)
+        changed_value_cells = 0
+        zero_cells = 0
+        positive_cells = 0
+        for cell, _row_number, value, rule in assignments:
+            current = (
+                None
+                if cell.value in (None, "")
+                else _cell_decimal(
+                    cell.value,
+                    label=f"current cell for {rule.source_rule_id}",
+                )
+            )
+            if current != value:
+                cell.value = _excel_number(value)
+                changed_value_cells += 1
+            if rule.state == "ZERO":
+                zero_cells += 1
+            else:
+                positive_cells += 1
+        changed_projection_modes = 0
+        for mode_cell, _row_number in projection_flips:
+            if mode_cell.value != "User defined":
+                mode_cell.value = "User defined"
+                changed_projection_modes += 1
+
+        for cell, _row_number, value, rule in assignments:
+            actual = _cell_decimal(
+                cell.value,
+                label=f"post-apply cell for {rule.source_rule_id}",
+            )
+            if actual != value:
+                raise RuntimeError(
+                    f"post-apply mismatch for {rule.source_rule_id}: "
+                    f"{actual} != {value}"
+                )
+
+        changed = changed_value_cells + changed_projection_modes
+        if changed:
+            workbook.save(temp_path)
+            workbook.close()
+            os.replace(temp_path, workbook_path)
+        else:
+            workbook.close()
+        return {
+            "status": "PASS",
+            "scenario": scenario,
+            "input_dir": str(directory),
+            "workbook": str(workbook_path),
+            "rules_csv": str(rules_path),
+            "rules_sha256": _sha256(rules_path),
+            "canonical_source_rules_sha256": CANONICAL_SOURCE_RULES_SHA256,
+            "rules_loaded": len(all_rules),
+            "rules_applied": len(rules),
+            "workbook_rows_matched": len(rules_by_row),
+            "zero_rules": zero_cells,
+            "positive_rules": positive_cells,
+            "changed_value_cells": changed_value_cells,
+            "changed_projection_modes": changed_projection_modes,
+            "saved": bool(changed),
+            "backup_dir": str(backup) if backup is not None else None,
+        }
     finally:
-        wb.close()
-    if backup is not None:
-        p = backup.parent / f"{backup.name}_CHANGES.json"
-        p.write_text(json.dumps(log, indent=2, default=str))
-        log["log_path"] = str(p)
-    return log
+        try:
+            workbook.close()
+        finally:
+            if temp_path.exists():
+                temp_path.unlink()
 
 
-def print_summary(log):
-    print("=" * 70)
-    print(f"apply_base_year_pin  years={log['years']}")
-    print("=" * 70)
-    print(f"  activity ref techs : {log['activity_techs']}   newbuild ref techs: {log['newbuild_techs']}")
-    print(f"  activity pin cells : {log['pin_cells']}")
-    print(f"  new-build pin cells: {log['build_cells']}")
-    print(f"  maxcap relax cells : {log['relax_cells']}")
-    print(f"  proj-mode flips    : {log['pm_flips']}")
-    print(f"  interconnector rows skipped (excluded): {log['ic_rows_skipped']}")
-    print(f"  backup             : {log.get('backup_dir', '(skipped)')}")
+def run(
+    input_dir: Path | str,
+    scenario: str,
+    rules_csv: Path | str = RULES_CSV,
+    *,
+    skip_backup: bool = False,
+) -> dict[str, object]:
+    """Compatibility wrapper around :func:`apply_pin_rules`."""
+    return apply_pin_rules(
+        input_dir,
+        scenario,
+        rules_csv,
+        skip_backup=skip_backup,
+    )
 
 
-def run_self_test() -> int:
-    import tempfile
-    print("=" * 70); print("apply_base_year_pin.py SELF-TEST"); print("=" * 70)
-    ok = True
-    with tempfile.TemporaryDirectory() as td:
-        td = Path(td)
-        sd = td / "Outputs"; sd.mkdir()
-        (sd / ACTIVITY_CSV).write_text(
-            "REGION,TECHNOLOGY,YEAR,VALUE\n"
-            "R,PWRCOAINDWE,2023,100\nR,PWRCOAINDWE,2024,110\nR,PWRCOAINDWE,2027,999\n"
-            "R,PWRSPVINDWE,2024,50\n"
-            "R,TRNINDNOINDWE,2024,500\n"   # interconnector ref (must be IGNORED — excluded)
-            "R,PWRTRNINDWE,2024,300\n", encoding="utf-8")  # internal-tx ref (must be PINNED)
-        (sd / NEWCAP_CSV).write_text(
-            "REGION,TECHNOLOGY,YEAR,VALUE\n"
-            "R,PWRCOAINDWE,2023,7\nR,PWRCOAINDWE,2024,3\n"
-            "R,PWRSPVINDWE,2024,20\n"
-            "R,TRNINDNOINDWE,2024,9\n"     # interconnector build ref (must be IGNORED)
-            "R,PWRTRNINDWE,2024,4\n", encoding="utf-8")   # internal-tx build ref (must be PINNED)
-        tech_csv = td / "TECHNOLOGY.csv"
-        # TRNINDNOINDWE + PWRTRNINDWE are valid techs; ELC* fuel deliberately absent
-        tech_csv.write_text("VALUE\nPWRCOAINDWE\nPWRSPVINDWE\nTRNINDNOINDWE\nPWRTRNINDWE\n", encoding="utf-8")
-        idir = td / "A1_Outputs_X"; idir.mkdir()
-        wb = Workbook(); ws = wb.active; ws.title = "Secondary Techs"
-        for c, hh in enumerate(["Tech", "Parameter", 2023, 2024, 2025, 2026, 2027, "Projection.Mode"], 1):
-            ws.cell(row=1, column=c, value=hh)
-        rows = [
-            ("PWRCOAINDWE", P_UPPER, None, None, None, None, None, "EMPTY"),
-            ("PWRCOAINDWE", P_LOWER, None, None, None, None, None, "EMPTY"),
-            ("PWRCOAINDWE", P_MAXCAPINV, 9999, 9999, 9999, 9999, 9999, "EMPTY"),
-            ("PWRCOAINDWE", P_MINCAPINV, 0, 0, 0, 0, 0, "EMPTY"),
-            ("PWRCOAINDWE", P_MAXCAP, 5, 5, 5, 5, 5, "EMPTY"),
-            ("PWRSPVINDWE", P_UPPER, 2, 2, 2, 2, 2, "User defined"),  # C-style tight cap
-            ("PWRSPVINDWE", P_MAXCAPINV, 1, 1, 1, 1, 1, "User defined"),
-            ("PWRSPVINDWE", P_MINCAPINV, None, None, None, None, None, "EMPTY"),
-            ("ELCBGDXX01", P_MAXCAPINV, None, None, None, None, None, "EMPTY"),  # FUEL row: must stay untouched
-            ("ELCBGDXX01", P_UPPER, None, None, None, None, None, "EMPTY"),
-            # interconnector: EXCLUDED -> activity/build/maxcap must all stay untouched
-            ("TRNINDNOINDWE", P_UPPER, None, None, None, None, None, "EMPTY"),
-            ("TRNINDNOINDWE", P_MINCAPINV, 0, 0, 0, 0, 0, "EMPTY"),
-            ("TRNINDNOINDWE", P_MAXCAP, 36, 36, 36, 36, 36, "EMPTY"),
-            # internal-tx: NOT excluded -> gets the full activity + build pin
-            ("PWRTRNINDWE", P_UPPER, None, None, None, None, None, "EMPTY"),
-            ("PWRTRNINDWE", P_MINCAPINV, None, None, None, None, None, "EMPTY"),
-        ]
-        for ri, row in enumerate(rows, 2):
-            for c, v in enumerate(row, 1):
-                ws.cell(row=ri, column=c, value=v)
-        wb.save(idir / PARAM_FILE); wb.close()
-
-        run(idir, sd, tech_csv=tech_csv, years=(2023, 2024, 2025, 2026), skip_backup=True)
-
-        chk = load_workbook(idir / PARAM_FILE, data_only=True).active
-        g = {}; gpm = {}
-        for r in range(2, chk.max_row + 1):
-            k = (chk.cell(row=r, column=1).value, chk.cell(row=r, column=2).value)
-            g[k] = [chk.cell(row=r, column=c).value for c in (3, 4, 5, 6, 7)]  # 2023..2027
-            gpm[k] = chk.cell(row=r, column=8).value
-
-        def ck(cond, label):
-            nonlocal ok; print(("  PASS " if cond else "  FAIL ") + label); ok = ok and cond
-        ck(g[("PWRCOAINDWE", P_UPPER)][:4] == [100, 110, 0, 0], "COA activity Upper pinned 100/110/0/0")
-        ck(g[("PWRCOAINDWE", P_LOWER)][:4] == [100, 110, 0, 0], "COA activity Lower == Upper")
-        ck(g[("PWRCOAINDWE", P_MAXCAPINV)][:4] == [7, 3, 0, 0], "COA new-build MaxInv pinned 7/3/0/0")
-        ck(g[("PWRCOAINDWE", P_MINCAPINV)][:4] == [7, 3, 0, 0], "COA new-build MinInv == MaxInv (forced)")
-        ck(g[("PWRCOAINDWE", P_MAXCAP)][:4] == [9999, 9999, 9999, 9999], "COA MaxCapacity ceiling relaxed")
-        ck(g[("PWRCOAINDWE", P_MAXCAP)][4] == 5, "2027 (outside window) untouched")
-        ck(g[("PWRSPVINDWE", P_UPPER)][:4] == [0, 50, 0, 0], "SPV activity pinned 0/50/0/0 (overrides tight cap)")
-        ck(g[("PWRSPVINDWE", P_MAXCAPINV)][:4] == [0, 20, 0, 0], "SPV new-build pinned 0/20/0/0")
-        ck(gpm[("PWRCOAINDWE", P_UPPER)] == "User defined", "PM EMPTY->User defined on pinned row")
-        ck(gpm[("ELCBGDXX01", P_MAXCAPINV)] == "EMPTY", "FUEL row Projection.Mode NOT flipped (stays EMPTY)")
-        ck(g[("ELCBGDXX01", P_MAXCAPINV)][:4] == [None, None, None, None], "FUEL row values untouched")
-        # interconnector excluded entirely (activity ref 500 & build ref 9 both ignored)
-        ck(g[("TRNINDNOINDWE", P_UPPER)][:4] == [None, None, None, None], "INTERCONNECTOR activity NOT pinned (excluded)")
-        ck(g[("TRNINDNOINDWE", P_MINCAPINV)][:4] == [0, 0, 0, 0], "INTERCONNECTOR build NOT forced (excluded)")
-        ck(g[("TRNINDNOINDWE", P_MAXCAP)][:4] == [36, 36, 36, 36], "INTERCONNECTOR MaxCapacity NOT relaxed (excluded)")
-        ck(gpm[("TRNINDNOINDWE", P_UPPER)] == "EMPTY", "INTERCONNECTOR Projection.Mode NOT flipped")
-        # internal-tx pinned normally (activity 0/300/0/0, build 0/4/0/0)
-        ck(g[("PWRTRNINDWE", P_UPPER)][:4] == [0, 300, 0, 0], "INTERNAL-TX activity pinned 0/300/0/0")
-        ck(g[("PWRTRNINDWE", P_MINCAPINV)][:4] == [0, 4, 0, 0], "INTERNAL-TX build pinned 0/4/0/0")
-        log2 = run(idir, sd, tech_csv=tech_csv, skip_backup=True)
-        ck(log2["pin_cells"] == 0 and log2["build_cells"] == 0 and log2["relax_cells"] == 0
-           and log2["pm_flips"] == 0, "idempotent (2nd run 0 changes)")
-    print("=" * 70); print("SELF-TEST", "PASSED" if ok else "FAILED"); print("=" * 70)
-    return 0 if ok else 1
+def print_summary(log: dict[str, object]) -> None:
+    print(
+        "apply_base_year_pin "
+        f"scenario={log['scenario']} status={log['status']} "
+        f"rules={log['rules_applied']} rows={log['workbook_rows_matched']} "
+        f"value_changes={log['changed_value_cells']} "
+        f"projection_mode_changes={log['changed_projection_modes']}"
+    )
 
 
 def main() -> int:
-    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--input-dir", type=Path, default=None)
-    p.add_argument("--from-solve-dir", type=Path, default=None,
-                   help="reference solve Outputs dir (has TotalTechnologyAnnualActivity.csv + NewCapacity.csv)")
-    p.add_argument("--tech-csv", type=Path, default=None,
-                   help="TECHNOLOGY.csv (valid tech set); the pin only touches these, never fuel/template rows")
-    p.add_argument("--years", type=int, nargs="+", default=list(DEFAULT_YEARS))
-    p.add_argument("--skip-backup", action="store_true")
-    p.add_argument("--band", type=float, default=0.0,
-                   help="pin as +/-band bands instead of exact equality (e.g. 0.002 = 0.2 pct); "
-                        "lower limits x(1-band), upper limits x(1+band); avoids knife-edge infeasibility.")
-    p.add_argument("--self-test", action="store_true")
-    p.add_argument("--restore", action="store_true")
-    p.add_argument("--restore-from", type=Path, default=None)
-    a = p.parse_args()
-    if a.self_test:
-        return run_self_test()
-    if a.restore or a.restore_from is not None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--input-dir", type=Path)
+    parser.add_argument("--scenario")
+    parser.add_argument("--rules-csv", type=Path, default=RULES_CSV)
+    parser.add_argument("--skip-backup", action="store_true")
+    parser.add_argument("--restore", action="store_true")
+    parser.add_argument("--restore-from", type=Path)
+    args = parser.parse_args()
+    if args.restore or args.restore_from is not None:
+        if args.input_dir is None:
+            parser.error("--input-dir is required for restore")
         try:
-            used = restore(a.input_dir, a.restore_from)
-        except Exception as e:
-            print(f"ERROR: {e}", file=sys.stderr); return 1
-        print(f"Restored {a.input_dir} from {used}"); return 0
-    if not a.input_dir or not a.from_solve_dir:
-        print("ERROR: --input-dir and --from-solve-dir are required", file=sys.stderr); return 1
+            source = restore(args.input_dir, args.restore_from)
+        except Exception as error:
+            print(f"ERROR: {error}", file=sys.stderr)
+            return 1
+        print(f"Restored {args.input_dir} from {source}")
+        return 0
+    if args.input_dir is None or args.scenario is None:
+        parser.error("--input-dir and --scenario are required")
     try:
-        log = run(a.input_dir, a.from_solve_dir, a.tech_csv, tuple(a.years), a.skip_backup, band=a.band)
-    except Exception as e:
-        print(f"ERROR: {e}", file=sys.stderr); return 1
+        log = apply_pin_rules(
+            args.input_dir,
+            args.scenario,
+            args.rules_csv,
+            skip_backup=args.skip_backup,
+        )
+    except Exception as error:
+        print(f"ERROR: {error}", file=sys.stderr)
+        return 1
     print_summary(log)
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())
