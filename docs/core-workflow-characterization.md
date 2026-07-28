@@ -63,9 +63,9 @@ the former callable helper surface and delegates explicitly to that module.
 
 `t1_confection/A3_process.py` remains the public A3 CLI and retains its callable
 stage/helper surface. The protected planning and effect sequence now lives in
-`t1_confection/a3_orchestrator.py`; the entrypoint binds the existing helpers to
-that module explicitly, without importing or rewriting any computational
-transformation.
+`t1_confection/a3_orchestrator.py`; the entrypoint binds its explicit effect
+seams, including the authorized root-gated `stage_ws4_pwr_min_pin`. The static
+transformer and its frozen allowlist remain under `A3_process/rules_scripts/`.
 
 The following are optional model-writing entrypoints. They are core/protected even
 though `run.py` does not call them:
@@ -135,11 +135,19 @@ is built. The frozen stage path is
 `stage_2_and_2_5` -> `stage_3_fix_2` -> `stage_4_consolidate` ->
 `stage_4_5_apply_inherited_restrictions` -> `stage_5_rules_scripts` ->
 `stage_ws3_interconnector_costs` -> `stage_ws3_internal_transmission` ->
-`stage_ws3_internal_tx_losses` -> `stage_6_sync_og_to_ts20` ->
+`stage_ws3_internal_tx_losses` -> `stage_ws4_pwr_min_pin` ->
+`stage_6_sync_og_to_ts20` ->
 `stage_6_persist_restrictions` -> `deliver_outputs`. A scenario-specific rules YAML
 takes precedence over the default rules YAML. Helper failure is fail-fast through
 `run_subproc`; work-directory and environment cleanup currently occur only after the
 ordered path succeeds.
+
+`stage_ws4_pwr_min_pin` is an exact-root-only seam for `A_Calibrated_BAU`,
+`B_Optimised_VRE`, and `C_Target_VRE`. It validates and applies a static audited
+2023--2026 PWR/MIN allowlist after the general WS3 transformations and before
+Stage 6. It neither depends on solver results nor contributes a generic
+`*_CHANGES.json`; descendants inherit the corrected root through the existing
+sensitivity-expansion path.
 
 `B2_Executing_OG_Model.py` retains the public entrypoint and computational helpers;
 `t1_confection/b2_orchestrator.py` now owns explicit argument/scenario resolution,
@@ -175,10 +183,12 @@ topologically ordered active list and does not add prerequisites. The other 16
 protected scenario definitions are downstream/post-A3 configurations, not inactive
 Control rows, and are not promoted into the A3 loop.
 
-`A3Dependencies` is the explicit effect boundary. It receives the unchanged
-materializer, workdir builder, 13 ordered stage helpers, delivery helper, snapshot
-copy/remove operations, environment mapping, clocks, banner, and output emitter.
-`execute_plan` first checks the BAU snapshot, then preserves the predecessor order:
+`A3Dependencies` is the explicit effect boundary. It receives the materializer,
+workdir builder, 14 ordered stage helpers, delivery helper, snapshot copy/remove
+operations, environment mapping, clocks, banner, and output emitter.
+`execute_plan` first checks the BAU snapshot, then preserves the predecessor order
+while inserting the authorized static pin after internal-transmission losses and
+before either Stage-6 operation:
 plan banner -> input deletion/restore -> workdir construction -> optional scenario
 materialization and `OSTRAM_TEMPLATE_PATH` assignment -> four input copies -> the
 frozen stage chain -> four-file delivery -> optional workdir deletion -> environment
@@ -383,8 +393,11 @@ Temporary fixtures cover B1 CLI/filter/order behavior, command construction,
 compiler-error continuation, every safely testable restoration route, A3 rules YAML
 precedence, and the shared country-config loader's script-relative path, sorted
 country accessor, preserved configured order, and cache. Mocked launcher tests prove
-stage/scenario propagation without starting a child process. AST checks cover the
-isolated B1 boundaries and guarded B2 and A3 orchestration paths.
+stage/scenario propagation without starting a child process. They also cover exact
+root-only pin dispatch, rejection of `BAU` and every registered descendant,
+static-asset/CLI binding, fail-closed behavior, and the
+losses -> pin -> Stage 6 -> delivery order. AST checks cover the isolated B1
+boundaries and guarded B2 and A3 orchestration paths.
 
 For this phase, `tests/regression/` is the maintained no-solver-safe path. AST
 inspection rejects process-launch APIs there except the regression harness's single

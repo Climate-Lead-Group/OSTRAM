@@ -15,6 +15,11 @@ from pathlib import Path
 from typing import Callable, MutableMapping, Sequence
 
 
+PWR_MIN_PIN_ROOT_SCENARIOS = frozenset(
+    {"A_Calibrated_BAU", "B_Optimised_VRE", "C_Target_VRE"}
+)
+
+
 @dataclass(frozen=True)
 class A3Paths:
     """Script-anchored filesystem roots used by one A3 invocation."""
@@ -74,6 +79,7 @@ class A3Dependencies:
     ]
     stage_ws3_internal_transmission: Callable[[Path], object]
     stage_ws3_internal_tx_losses: Callable[[Path], object]
+    stage_ws4_pwr_min_pin: Callable[[Path, str], object]
     stage_6_sync_og_to_ts20: Callable[[Path, Path], object]
     stage_6_persist_restrictions: Callable[
         [Path, Path, str, list[str]], object
@@ -248,6 +254,8 @@ def execute_plan(
     )
     dependencies.stage_ws3_internal_transmission(stage5)
     dependencies.stage_ws3_internal_tx_losses(stage5)
+    if plan.scenario in PWR_MIN_PIN_ROOT_SCENARIOS:
+        dependencies.stage_ws4_pwr_min_pin(stage5, plan.scenario)
     dependencies.stage_6_sync_og_to_ts20(workdir, stage1)
     dependencies.stage_6_persist_restrictions(
         stage5,

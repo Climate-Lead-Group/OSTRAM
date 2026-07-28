@@ -216,7 +216,7 @@ The script assigns fuel codes for the energy flow:
 
 **Script:** `t1_confection/A3_process.py`, orchestrating scripts under `t1_confection/A3_process/`
 
-This is the primary scenario-creation mechanism. It always restores its input from the post-A2 `BAU` snapshot (never the current scenario folder), then layers a chain of automated fixes and scenario-specific rule scripts before delivering the finished workbook set to `A1_Outputs/A1_Outputs_<scenario>/`. `run.py` calls it once per active scenario, in dependency order.
+This is the primary scenario-creation mechanism. It always restores its input from the post-A2 `BAU` snapshot (never the current scenario folder), then layers automated fixes, Stage-5 scenario rules, late WS3/WS4 transmission transformations, and--for the three canonical roots only--the static non-Maldives 2023--2026 PWR/MIN pin before delivering the finished workbook set to `A1_Outputs/A1_Outputs_<scenario>/`. `run.py` calls it once per active scenario, in dependency order.
 
 ### Usage
 
@@ -231,7 +231,7 @@ python t1_confection/A3_process.py --scenario B_Optimised_VRE
 |------|---------|-------------|
 | `--scenario` | `BAU` | Scenario name. Must exist in the SOASIA v18 `Control` sheet. |
 | `--soasia` | `A3_process/SOASIA_OSeMOSYS_Template_v18.xlsx` | Override the template path (useful for testing new scenarios without touching the canonical file). |
-| `--rules-script` | From `Control` sheet | Override the scenario's rule-script chain. An empty string skips the rule-script stage entirely. |
+| `--rules-script` | From `Control` sheet | Override the scenario's rule-script chain. An empty string skips Stage 5 only; it does not disable the root-gated late-WS4 pin. |
 | `--inherit-from` | From `Control` sheet | Override `inherit_restrictions_from` (comma-separated scenario names). |
 | `--input-dir` | `A1_Outputs/A1_Outputs_<scenario>` | Override the input workbook directory. |
 | `--output-dir` | Same as `--input-dir` | Override the delivery directory. |
@@ -273,16 +273,28 @@ For a single `--scenario` invocation, `A3_process.py` runs:
 8. Stage 4: consolidate the 4 final workbooks.
 9. Stage 4.5: apply inherited Restrictions from inherit_restrictions_from (skipped if empty).
 10. Stage 5: run the scenario's rules_script chain, each against the consolidated workbooks.
-11. Stage 6: 6_sync_og_to_ts20.py -- sync OG_csvs_inputs/Config_MOMF_T1_A.yaml to the
+11. Late WS3/WS4: apply interconnector costs, internal-transmission calibration,
+    and internal-transmission losses.
+12. Late WS4: for the exact A_Calibrated_BAU, B_Optimised_VRE, and C_Target_VRE
+    roots only, validate and apply pwr_min_2023_2026_pin.csv to its explicit
+    2023--2026 PWR/MIN workbook cells. BAU is untouched; descendants inherit the
+    corrected root before their sensitivity patches.
+13. Stage 6: 6_sync_og_to_ts20.py -- sync OG_csvs_inputs/Config_MOMF_T1_A.yaml to the
     20-timeslice fabric; persist each rule script's CHANGES.json into the SOASIA
     v18 Restrictions sheet.
-12. Deliver the final workbook set to A1_Outputs/A1_Outputs_<scenario>/; remove the
+14. Deliver the final workbook set to A1_Outputs/A1_Outputs_<scenario>/; remove the
     workdir unless --keep-workdir.
 ```
 
 ### Scenario Rule Scripts
 
-All live under `t1_confection/A3_process/rules_scripts/`, each reading a scenario-specific YAML from `rules_scripts/configs/<Scenario>/`. Every rule script writes a timestamped backup and a `*_CHANGES.json` change log before/after modifying the workbook, and accepts `--input-dir`, `--sheets`, `--skip-backup`, `--yaml`; most (all except `add_max_cap_investment_lid_rule.py`) also accept `--self-test`, `--restore`, `--restore-from`.
+The scenario-configured scripts live under `t1_confection/A3_process/rules_scripts/`, each reading a scenario-specific YAML from `rules_scripts/configs/<Scenario>/`. Those scripts normally write a timestamped backup and a `*_CHANGES.json` change log before/after modifying the workbook, and accept `--input-dir`, `--sheets`, `--skip-backup`, `--yaml`; most (all except `add_max_cap_investment_lid_rule.py`) also accept `--self-test`, `--restore`, `--restore-from`.
+
+`apply_base_year_pin.py` is a dedicated late-WS4 transformer, not a
+scenario-configured Stage 5 rule. It validates the embedded production-allowlist
+digest, accepts the exact root scenario explicitly, reads no solver output, and
+emits no generic `*_CHANGES.json`, so Stage 6 cannot persist it as a competing
+Restrictions authority.
 
 | Script | What it does |
 |--------|---------------|
@@ -291,6 +303,7 @@ All live under `t1_confection/A3_process/rules_scripts/`, each reading a scenari
 | `relax_interconnectors.py` | Opens `TotalAnnualMaxCapacityInvestment` (and, where overridden, `TotalAnnualMaxCapacity`) for TRN interconnectors beyond their residual capacity, via a uniform headroom factor or explicit per-corridor overrides. |
 | `set_min_capacity_floors.py` | Applies exogenous min/max capacity or activity floors/ceilings from a curated YAML (national plans, CCDRs/IRPs), matched by technology pattern and country-region. |
 | `set_vre_targets.py` | Sets renewable generation/capacity floors per country-region and technology as a percentage of a prior scenario's solved `ProductionByTechnology.csv` (typically `A_Calibrated_BAU`), with optional capacity-envelope bounding. |
+| `apply_base_year_pin.py` | Applies the audited static 2023--2026 PWR/MIN allowlist to exact canonical roots after WS3; it is solver-independent and leaves excluded cells unchanged. |
 
 ### Current Scenarios
 
@@ -300,6 +313,10 @@ All live under `t1_confection/A3_process/rules_scripts/`, each reading a scenari
 | `A_Calibrated_BAU` | `set_retirement_schedule`, `add_max_cap_investment_lid_rule`, `set_min_capacity_floors`, `relax_interconnectors` | Calibration/validation scenario: reproduces BAU proportions with a flat (non-relaxing) investment lid and no interconnector headroom. Its solved output feeds `set_vre_targets.py` for `C_Target_VRE`. |
 | `B_Optimised_VRE` | `set_retirement_schedule`, `add_max_cap_investment_lid_rule`, `relax_interconnectors`, `add_storage_min_investment` | Least-cost VRE-optimized scenario: investment lids relax sharply over time (up to 25x by 2050) for non-locked technologies, interconnector caps get 1.5x headroom plus evidence-based per-corridor overrides, and storage gets small seed investment floors. Solved independently from the BAU snapshot (no inheritance). |
 | `C_Target_VRE` | `set_retirement_schedule`, `add_max_cap_investment_lid_rule`, `set_vre_targets`, `relax_interconnectors`, `add_storage_min_investment` | NDC-target-driven VRE scenario: layers explicit country/region renewable-generation floors (from NDC pledges, pinned near target) on top of the same relaxed-lid/loose-interconnector machinery as `B_Optimised_VRE`. |
+
+The static pin is independent of each scenario's Stage-5 rule chain. It dispatches
+only for `A_Calibrated_BAU`, `B_Optimised_VRE`, and `C_Target_VRE`; `BAU` and
+derived scenarios are never direct pin targets.
 
 :::{warning}
 `set_vre_targets.py` (used by `C_Target_VRE`) requires a solved `A_Calibrated_BAU` run to already exist under `Executables/` -- run/solve `A_Calibrated_BAU` through B1/B2 before generating `C_Target_VRE`.

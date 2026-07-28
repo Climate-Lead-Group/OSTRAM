@@ -67,6 +67,12 @@ default_capacity_factor: 0.10    # fallback yield (× c2a) if CalBAU never built
 pin_generation_to_target: true
 pin_slack: 0.01                  # upper limit sits 1% above the floor (a narrow range, not an exact lower==upper equality)
 
+## Approved target-side 2027 boundary exception. The canonical A-dependent
+## value is retained in the change log as raw_derived_value before this cap.
+activity_lower_caps:
+  - {region: GLOBAL, technology: PWRWONINDWE, year: 2027, maximum: 227.414}
+  - {region: GLOBAL, technology: PWRWONINDWE, year: 2028, maximum: 255.078}
+
 targets:
 
   # =========================================================================
