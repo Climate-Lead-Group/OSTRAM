@@ -18,6 +18,14 @@ seeds alone do not guarantee numerical identity across solver versions or platfo
 - **Performance Monitoring**: Built-in timer for tracking execution times
 - **Automatic Environment Management**: Automatic creation and update of the Conda environment
 
+**Accepted baseline (2026-07-28):** correction `d295dcc` is merged in the
+pinned `origin/main` reference. The canonical 15 compiled inputs and their
+source-bound solver results are identified by protected manifest SHA-256
+`778b4706522bc2b29911e74d5b31d24355c84cbe4c0c7d11d1c9680b2ddc9916`
+and the portable
+[`accepted_compiled_solver_baseline_15.json`](tests/regression/reports/accepted_compiled_solver_baseline_15.json).
+Future housekeeping validation remains no-solver and byte-exact.
+
 ## System Requirements
 
 - Windows 10 or higher
@@ -65,6 +73,10 @@ The `run` command can handle:
 > configured solver. Inspect the live configuration before running it. It does not call
 > `dvc repro`. The tracked `dvc.yaml` and `dvc.lock` describe older partial state and are
 > not the canonical all-scenario execution path.
+>
+> **Regression and housekeeping:** do not invoke `run.py`. Follow the guarded
+> [no-solver byte-identity contract](docs/regression.md#maintained-no-solver-byte-identity-contract)
+> and independently verify that the YAML safety values are real booleans.
 
 The repository preserves 20 scenario snapshots. A normal `run`/`run.py` pass discovers only
 the active scenarios in the SOASIA v18 `Control` sheet. A `--scenarios` list containing

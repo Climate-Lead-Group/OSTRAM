@@ -1,10 +1,15 @@
 # Refactor preservation validation: 15 decision scenarios
 
+> **Historical checkpoint:** This record preserves the no-solver evidence available
+> at commit `87c3ce7`. Current authority is the portable
+> [accepted compiled-input baseline](../../../tests/regression/reports/accepted_compiled_solver_baseline_15.json)
+> derived from the protected final manifest.
+>
 ## Conclusion
 
 **PASS.** Commit `87c3ce7cbfe04015f7b3e976d5838aa7e85165eb` preserves the accepted pre-refactor behavior and generated no-solver inputs for the 15 decision-relevant scenarios. The candidate produced all 15 canonical solver-consumed TXT files byte-for-byte and normalized-exact against the accepted reference, with zero parameter or set drift and zero duplicate declarations, keys, or memberships.
 
-No solver, matrix, solution, result, DVC, batch, MOSOX, or unrestricted top-level pipeline execution occurred. Solver-output equivalence remains intentionally deferred to `validation/solver-baseline-15`.
+No solver, matrix, solution, result, DVC, batch, MOSOX, or unrestricted top-level pipeline execution occurred at this checkpoint. Solver-output equivalence was then intentionally deferred to `validation/solver-baseline-15`; the later accepted final baseline is identified above without changing this checkpoint's claim.
 
 ## Candidate and tree identity
 
@@ -33,7 +38,8 @@ The accepted final-input lineage is:
 
 - Verified source commit: `41a54e51fd5a0776569b4900c44c624f09cc1f09`
 - Source tree: `54f9e174fde266013ee9a20ff89f618140077c26`
-- Committed final-equivalence report: `tests/regression/reports/final_compiled_input_equivalence_15.json`
+- Committed pre-correction equivalence report:
+  `tests/regression/reports/pre_correction_41a54e5_compiled_input_equivalence_15.json`
 - Report SHA-256: `85c8489e65e8028dd5955dbbf204f2222796799d132ba979cf238e60008b8286`
 - Read-only reference checkout: `OSTRAM_mainredo`, branch `ws3-phaseb-cleanredo`, commit `f1db168c8db0b61d03898f68cef2a7f28eccc80a`, tree `800103e866c4ce7f119f5887bdfd037bd46a310b`
 - External B1 comparison report SHA-256: `c9773ac0dbf6e983ad5aa712b46144af078fc8d1a07bdd5ac6b1a76bd807dcb3`

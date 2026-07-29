@@ -60,8 +60,11 @@ format-normalized exact matches, missing evidence, file-set drift, and normalize
 2. **Available historical-output evidence** records normalized hashes for direct
    `Executables/<scenario>_0/Outputs/*.csv` files found in the read-only reference repo.
    Its coverage and provenance limitations are explicit in `coverage.csv`.
-3. **Full solver-backed behavioral equivalence** is not established by this harness.
-   It remains pending a coherent, source-bound CPLEX baseline for the accepted scope.
+3. **Source-bound solver baseline:** the current accepted 15-scenario source
+   baseline is solver-backed and recorded by protected manifest SHA-256
+   `778b4706522bc2b29911e74d5b31d24355c84cbe4c0c7d11d1c9680b2ddc9916`.
+   This offline harness does not rerun it and cannot extend that solver claim
+   to a future candidate.
 
 Missing artifacts are evidence, not an invitation to fabricate coverage. A candidate
 column remains empty until a safely regenerated candidate actually exists.
@@ -72,13 +75,19 @@ column remains empty until a safely regenerated candidate actually exists.
 - **Static cleanup acceptance:** 16 non-superseded scenarios must have working and
   reference A1, config, A2, and otoole evidence with exact or normalized-exact static
   comparisons.
-- **Final compiled-input equivalence:** 15 decision-relevant scenarios must have
-  byte-exact final solver-consumed `.txt` files. Plain `BAU` remains under preservation
-  and static cleanup acceptance but is excluded from this final-compiled decision scope.
-  The compact hashes are recorded in
-  `reports/final_compiled_input_equivalence_15.json`.
+- **Accepted compiled-input identity:** 15 decision-relevant scenarios must
+  have byte-exact final solver-consumed `.txt` files. Plain `BAU` remains under
+  preservation and static cleanup acceptance but is excluded from this
+  decision scope. The current portable identities are recorded in
+  [`reports/accepted_compiled_solver_baseline_15.json`](reports/accepted_compiled_solver_baseline_15.json).
+  The byte-preserved `41a54e5` predecessor remains historical evidence in
+  [`reports/pre_correction_41a54e5_compiled_input_equivalence_15.json`](reports/pre_correction_41a54e5_compiled_input_equivalence_15.json).
 - **Excluded but protected:** `B_Opt_LinkFreeze`, `B_Opt_SolarHi10`,
   `B_Opt_TradeCap30`, and `B_Opt_TradeCap50` are not inferred passes and are not deleted.
 
-Passing the cleanup gate authorizes only offline-safe repository organization. It does
-not establish solver or numerical equivalence.
+Passing a housekeeping gate requires the maintained no-solver protocol in
+[`docs/regression.md`](../../docs/regression.md): reproduce all 15 raw compiled
+inputs in isolated worktrees and compare exact paths, filenames, sizes, hashes,
+and bytes. No normalization or solver rerun is part of that gate. Passing it
+authorizes only offline-safe repository organization; it does not establish a
+new solver or numerical-equivalence claim.

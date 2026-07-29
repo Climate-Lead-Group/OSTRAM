@@ -1,6 +1,11 @@
 <!-- CLG / OSTRAM -->
 # OSTRAM Phase-B Sensitivity Analysis — Methodology, Results & Implications
 
+> **Historical 13-scenario result set:** This record predates the accepted WS3/WS4
+> 15-scenario baseline and must not be read as the current scenario inventory or an
+> execution instruction. `B_Opt_SolarCapexSpike` was not part of this checkpoint; it
+> was implemented later and is included in the accepted final baseline.
+>
 **CLG · OSTRAM** — 10-node OSeMOSYS South Asia model (BGD, BTN, IND×5, LKA, MDV, NPL).
 Comprehensive record of the Phase-B sensitivity set: what was run, how, what it shows, and
 why each lever matters. Companion to the build-side paper trail in

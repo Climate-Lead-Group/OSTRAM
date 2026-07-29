@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-test_strip_storage.py - Run strip_storage.py + validate the output in one shot.
+test_strip_storage_cli.py - Run strip_storage.py + validate the output in one shot.
 
 Takes the same args as strip_storage.py. Runs the strip as a subprocess, then
 walks the output file structurally (set blocks + parameter blocks) and verifies:
@@ -14,17 +14,18 @@ walks the output file structurally (set blocks + parameter blocks) and verifies:
     6. Every TECH_MIN_PARAMS block has zero rows for the disabled techs
        (this is the NCC2 contradiction guard).
     7. No bare PWRSDS / PWRLDS phantom tech anywhere (Codex regression check).
-    8. Whole-file scan: zero residual mentions of any disabled storage facility.
+    8. Whole-file scan: residual mentions are limited to zero-valued
+       StorageBuildAllowed rows (the explicit no-build marker).
 
 Exit code 0 if all pass, 1 if any fail.
 
 Usage (same args as strip_storage.py, plus --strip-script if it lives elsewhere):
 
-    python test_strip_storage.py Pre_processed_BAU_0.txt \
+    python tests/validation/test_strip_storage_cli.py Pre_processed_BAU_0.txt \
         -o Pre_processed_BAU_0_NoLKASDS.txt \
         --mode tech --targets SDSLKAXX01
 
-    python test_strip_storage.py Pre_processed_BAU_0.txt \
+    python tests/validation/test_strip_storage_cli.py Pre_processed_BAU_0.txt \
         -o Pre_processed_BAU_0_NoStorage.txt \
         --mode all
 """
@@ -35,6 +36,9 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_STRIP_SCRIPT = REPO_ROOT / "t1_confection" / "strip_storage.py"
 
 
 def count_param_block_rows(lines, param_name, key_col_1indexed, key_set):
@@ -83,13 +87,15 @@ def main():
     ap.add_argument("-o", "--output", required=True)
     ap.add_argument("--mode", choices=["tech", "class", "all"], required=True)
     ap.add_argument("--targets", nargs="+", default=[])
-    ap.add_argument("--strip-script", default="strip_storage.py",
-                    help="Path to strip_storage.py (default: ./strip_storage.py)")
+    ap.add_argument("--strip-script", default=str(DEFAULT_STRIP_SCRIPT),
+                    help="Path to strip_storage.py (default: repository production script)")
     args = ap.parse_args()
 
     in_path = Path(args.input)
     out_path = Path(args.output)
-    strip_path = Path(args.strip_script).resolve()
+    strip_path = Path(args.strip_script).expanduser()
+    if not strip_path.is_absolute():
+        strip_path = (Path.cwd() / strip_path).resolve()
 
     if not in_path.exists():
         sys.exit(f"Input not found: {in_path}")
@@ -225,12 +231,43 @@ def main():
           0, len(bare_hits),
           detail=f"hits: {bare_hits[:3]}")
 
-    # 8. Whole-file scan for any residual reference to disabled storages
-    print("\n(8) Whole-file residual mentions of disabled storage facilities")
+    # 8. Whole-file scan: only explicit zero-valued StorageBuildAllowed rows
+    # may retain the disabled facility name.
+    print("\n(8) Residual mentions of disabled storage facilities")
     for s in disabled_storages:
         pat = re.compile(rf"(?<!\w){re.escape(s)}(?!\w)")
-        hits = sum(1 for line in out_lines if pat.search(line))
-        check(f"  {s}: residual mentions", 0, hits)
+        in_build_allowed = False
+        safe_hits = []
+        unsafe_hits = []
+        for ln, line in enumerate(out_lines, 1):
+            if line.lstrip().startswith("param"):
+                in_build_allowed = bool(
+                    re.match(r"^\s*param\s+StorageBuildAllowed\s*:=", line)
+                )
+            if line.lstrip().startswith(";"):
+                in_build_allowed = False
+            if not pat.search(line):
+                continue
+            tokens = line.split()
+            is_safe = (
+                in_build_allowed
+                and len(tokens) >= 4
+                and tokens[1] == s
+                and float(tokens[-1]) == 0.0
+            )
+            (safe_hits if is_safe else unsafe_hits).append(
+                f"line {ln}: {line.rstrip()}"
+            )
+        check(
+            f"  {s}: unsafe residual mentions",
+            0,
+            len(unsafe_hits),
+            detail=f"unsafe hits: {unsafe_hits[:3]}",
+        )
+        print(
+            f"         accepted explicit StorageBuildAllowed=0 rows: "
+            f"{len(safe_hits)}"
+        )
 
     print()
     print("=" * 72)
@@ -241,7 +278,7 @@ def main():
         print("=" * 72)
         sys.exit(1)
     else:
-        print("OVERALL: PASS — output is ready for B2.py / glpsol")
+        print("OVERALL: PASS — stripped output passed structural validation")
         print("=" * 72)
         sys.exit(0)
 

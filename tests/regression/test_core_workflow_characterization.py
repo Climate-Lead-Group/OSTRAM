@@ -17,7 +17,11 @@ TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
 CHARACTERIZATION_DOC = REPO_ROOT / "docs" / "core-workflow-characterization.md"
 SCENARIO_INVENTORY = TEST_ROOT / "scenarios.yaml"
-COMPILED_REPORT = TEST_ROOT / "reports" / "final_compiled_input_equivalence_15.json"
+COMPILED_REPORT = (
+    TEST_ROOT
+    / "reports"
+    / "pre_correction_41a54e5_compiled_input_equivalence_15.json"
+)
 
 PRIMARY_CORE_ENTRYPOINTS = (
     "run.py",

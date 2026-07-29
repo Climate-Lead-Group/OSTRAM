@@ -24,12 +24,14 @@ workstreams: **WS-3** (transmission cost/parameter calibration), **WS-4** (model
 **Phase-B** (the sensitivity study), plus a literature-grounded solar-cost stress. It records the *what*,
 the *why*, the *mechanism*, and the *verification*, so the work is reproducible and report-ready.
 
-**Status note (read first).** The **foundation** (WS-3 + WS-4) is implemented, solved, and verified — its
-three baseline anchors are final. The **Phase-B sensitivity results** in §4–§7 were computed on the *pre-WS-3*
-foundation. The combined **15-scenario re-solve on the WS-3/WS-4 foundation is now done — 15/15 CPLEX-optimal,
-zero base-year backstop** — with new anchors, the base-year-pin infeasibility fix, and the WACC test in **§8-C**.
-As expected, the **absolute numbers shift up ~+100k while the behavioural story (signs & ranking) holds**; read the
-§4–§7 magnitudes as pre-WS-3 and use §8-C for the current foundation.
+**Status note (read first).** The current canonical 15-scenario baseline was
+completed and accepted on 2026-07-28. Its source-bound final record is identified
+by manifest SHA-256
+`778b4706522bc2b29911e74d5b31d24355c84cbe4c0c7d11d1c9680b2ddc9916`
+and correction `d295dcc`. It records all 15 scenarios as primal feasible with
+accepted optimal CPLEX termination status. The Phase-B figures in §4–§7 and the
+2026-07-12 cleanredo figures in §8-C are historical checkpoints, not current
+acceptance authority.
 
 ---
 
@@ -85,20 +87,23 @@ This is a **high-leverage** parameter — it taxes *all* throughput — and alon
 **+4.1% (~$91B)**, dwarfing the interconnector/D5 effects. It is retained as a parameterised knob (a
 candidate sensitivity axis).
 
-### 2.2 Base-year lock (2023–2026 identical across scenarios)
+### 2.2 Static base-year lock (2023–2026)
 The three pathways diverged slightly in 2023–2026 because their policy caps bite from year 1; but the near
-term is calibrated history and should be identical across scenarios, with divergence only from 2027. WS-4
-pins every scenario's 2023–2026 to the calibrated `A_Calibrated_BAU` solve:
-- Pin **both** dispatch and build — `TotalTechnologyAnnualActivityLower/UpperLimit` **and**
-  `TotalAnnualMin/MaxCapacityInvestment` — as **±0.2% bands** (exact-equality pins put CPLEX on a numerical
-  knife-edge; a tight band gives clean feasibility while holding the base years identical to within 0.2%).
-- Applied to **generation + mining + storage only**. **All transmission is excluded** — interconnectors are
-  frozen to residual (already identical across scenarios) and internal transmission is set identically by
-  D5, so they need no pin; forcing build on them collided with the interconnector residual invariant
-  (`MaxCapacity ≥ Residual + Σ MinCapInvest`) and broke the pre-solve check. Excluding transmission cleared it.
-- Tool: `apply_base_year_pin.py` (references the solved A-with-loss run; gated to the ~384 real technologies).
-- **Verified:** all three scenarios pass GLPK `--check`, solve CPLEX-optimal, base-year backstop = 0, and
-  2023–2026 generation *and* capacity are identical across A/B/C within the band.
+term is calibrated history and should remain controlled before divergence from
+2027. The current pin is static and solver-independent:
+
+- `apply_base_year_pin.py` writes exact allowlisted 2023–2026 PWR/MIN activity
+  and investment values for the three canonical roots
+  (`A_Calibrated_BAU`, `B_Optimised_VRE`, and `C_Target_VRE`).
+- The key-complete production allowlist is
+  `pwr_min_2023_2026_pin.csv`, SHA-256
+  `cdcb0aeb570486b40ab96be68f6db031af54afa3ac02e4832a456522ca73a17c`.
+  The transformer validates that embedded digest and reads no solver output.
+- Exclusions remain exact, including the Maldives rules and all excluded
+  transmission cells.
+
+The former solver-derived `--band 0.002` recipe is historical and must not be
+used as the current method.
 
 ### 2.3 C_Target build-ahead cliff relax
 On C_Target, two near-term VRE floors exceeded what the model could physically build in time
@@ -107,16 +112,46 @@ limits). The floors were lowered to **0.98 × the buildable maximum** (2027: 237
 260.745→**255.078**), cross-checked with the CPLEX conflict refiner. This clears the infeasibility while
 keeping the floors non-binding at essentially their physical ceiling (the 2% headroom cost zero realised ambition).
 
-### 2.4 Foundation anchors (WS-3 + WS-4, final — validated)
+### 2.4 2026-07-12 cleanredo historical foundation anchors
 | Pathway | Final system cost (Σ TotalDiscountedCost, M USD) |
 |---|--:|
 | A_Calibrated_BAU | **2,314,332** |
 | B_Optimised_VRE | **2,215,073** |
 | C_Target_VRE | **2,257,995** |
 
-Cost ranking A > C > B holds: BAU is dearest, the VRE-optimised pathway cheapest, the target pathway in
-between. Caveat: base-year "identical" means within the 0.2% band, not byte-exact; and internal-transmission
-per-corridor routing is degenerate (annual totals match; individual lines may differ).
+These values preserve the 2026-07-12 cleanredo result and its cost ranking; they
+are not the 2026-07-28 acceptance authority. The checkpoint used the former
+±0.2% band recipe. Current base-year pinning is the static exact allowlist
+described above.
+
+### 2.5 Accepted 2026-07-28 final baseline
+
+The protected final manifest records the following raw solver objectives and
+termination statuses. These are raw manifest fields, not
+Σ-`TotalDiscountedCost` system-cost values.
+
+| Scenario | Raw solver objective | Termination status |
+|---|---:|---|
+| A_Calibrated_BAU | 2148526.8396765944 | optimal |
+| A_Calibrated_BAU_Clipped | 2148876.9462511912 | optimal |
+| B_Optimised_VRE | 2049837.7893340178 | optimal |
+| B_Opt_Clipped | 2050750.8360718098 | optimal |
+| B_Opt_DirBidir | 2050750.8360718098 | optimal |
+| B_Opt_DirContractual | 2059248.8210943788 | optimal |
+| B_Opt_IndiaCosts | 2016593.0862686839 | optimal with unscaled infeasibilities |
+| B_Opt_IndiaCostsFuel | 2016593.0862686839 | optimal with unscaled infeasibilities |
+| B_Opt_SolarCapex130 | 2072470.3885963412 | optimal with unscaled infeasibilities |
+| B_Opt_SolarCapexHi | 2057994.1354089291 | optimal |
+| B_Opt_SolarCapexSpike | 2055637.2571800672 | optimal with unscaled infeasibilities |
+| B_Opt_TradeCap15 | 2058896.5045127384 | optimal with unscaled infeasibilities |
+| B_Opt_TxCap150 | 2074305.7189468499 | optimal |
+| C_Target_VRE | 2093472.4534030464 | optimal |
+| C_Target_VRE_Clipped | 2080913.3467860776 | optimal |
+
+All 15 are recorded as primal feasible. The portable compiled-input identity
+is in
+`tests/regression/reports/accepted_compiled_solver_baseline_15.json`; future
+housekeeping validation is no-solver and raw-byte exact.
 
 ---
 
@@ -202,26 +237,34 @@ All 15 inherit the WS-3+WS-4 foundation (transmission costs, losses, base-year p
 ## 7. Reproducibility & verification
 
 - **Anchor definition:** Σ `Outputs/TotalDiscountedCost.csv` (not the raw `.sol`; constant offset ~165,245 post-loss).
-- **No-solve reproduction evidence:** compile a scenario's datafile without solving (`execute_model:False`),
-  normalize supported line-ending differences, and compare it with the corresponding historical input.
-  A zero diff establishes exact pre-solver input equivalence; it does not guarantee numerical identity
-  across solver versions or replace a CPLEX-backed behavioral baseline.
-- **Hero repos (read-only oracles):** `OSTRAM_latest` (pre-WS-3), `OSTRAM_ws3_workcopy_D5` (WS-3),
-  `OSTRAM_ws4_workcopy` (WS-4 final + cumulative source).
+- **No-solver housekeeping evidence:** follow the monitored contract in
+  `docs/regression.md`, regenerate the exact canonical 15, and compare raw
+  bytes. Normalization, tolerance, matrix creation, and solver execution are
+  not permitted.
+- **Current immutable anchors:** reference `origin/main` at
+  `8dd3361` (tree-identical to correction `d295dcc`); protected final evidence
+  `cfinal-e7f99ab54fda-20260728T180804Z-a40768`; protected preserved-13/A-seed
+  lineage `s15-e7f99ab54fda-20260728T052124Z-9ccc09`; and read-only benchmark
+  `OSTRAM_mainredo`.
+- **Historical lineage only:** `OSTRAM_latest`, `OSTRAM_ws3_workcopy_D5`, and
+  `OSTRAM_ws4_workcopy` remain useful for their named checkpoints but are not
+  current acceptance anchors.
 - **Clean-room rebuild:** the canonical repo is reconstructed from source in `OSTRAM_mainredo`, verified by
   byte-diff at each layer, with a self-checking test harness and per-step checkpoint commits
   (see `docs/archive/cleanroom/CLEANROOM_FINALPROMPT.md`). The CPLEX solves are staged as a batch, not run inline.
-- **Solve settings:** CPLEX 22.1.2, StorageDelayN5 variant, `cplex_threads: 4`; every reported solve is
-  CPLEX-optimal with zero base-year backstop generation.
+- **Accepted solve record:** the 2026-07-28 protected manifest is the
+  source-bound authority for the canonical 15. Earlier solve settings and
+  cleanroom results are historical claims tied to their records.
 
 ---
 
 ## 8. Gaps & what to bring for an expanded report
 
-### A. Must resolve before publishing final sensitivity numbers
-1. **Combined 15-scenario re-solve on the WS-3/WS-4 foundation is pending.** The Phase-B magnitudes in §4
-   are from the *pre-WS-3* solve. The report's headline sensitivity numbers must come from the clean-redo
-   batch solve (staged in `docs/archive/cleanroom/CLEANROOM_FINALPROMPT.md`). Expect the *story* to hold, the *numbers* to move.
+### A. Final-baseline status
+1. **Combined 15-scenario baseline completed and accepted on 2026-07-28.**
+   The protected manifest SHA-256 is `778b...9916`. The Phase-B magnitudes in
+   §4 and the 2026-07-12 cleanredo figures in §8-C remain historical and must
+   not be presented as the current accepted values.
 2. **Unclipped-B_Opt Capital(NPV) concat glitch.** That one cell reads ~6.89M (≈10× the others); it is an
    aggregation artefact and must be fixed before any capital-vs-opex breakdown is published. System-cost
    anchors are unaffected (benchmarked against clean values).
@@ -238,32 +281,39 @@ model's own documentation, which lives in the v18 template / upstream OSTRAM doc
 9. **Emissions accounting** — emission factors and whether any carbon price/constraint is applied (results cite CO₂).
 
 ### C. Would strengthen the report
-10. **WACC / discount-rate sensitivity** — flagged but not run; high-value given the India-cost finding. A ±300–400 bps sweep would complement the solar-CapEx stress.
+10. **WACC / discount-rate sensitivity** — a WACC diagnostic was completed and
+    remains archived; it is not part of the canonical 15.
 11. **External-benchmark validation** — compare baseline capacity/generation to national plans (India CEA/LTGEP, Bangladesh IEPMP, etc.) to evidence credibility.
 12. **Figures** — an anchor "waterfall" (pre-WS3 → +interconnector → +D5 → +loss → final), a Bangladesh self-sufficiency-vs-cost scatter across the levers, capacity-mix stacked bars, and a corridor-flow/direction map. I can generate these on request.
 13. **Market-specific cost uplifts** — smaller markets (BGD/NPL/LKA/BTN/MDV) have thin published CapEx data (flagged by WS-3 and the solar review); consider node-specific uplifts and state the caveat.
 
 ### D. Known limitations to state honestly
-14. **Base-year "identical" = within the ±0.2% pin band**, not byte-exact.
+14. **Base-year pin authority:** the current method is the audited static,
+    solver-independent exact allowlist. The former ±0.2% band statement applies
+    only to the historical cleanredo checkpoint.
 15. **Internal-transmission routing is degenerate** — annual totals match across scenarios; individual corridor flows may differ.
 16. **TxCap150 blocks zero-residual corridors** (BTN→BGD, IND-S→LKA) that B_Opt used; a softer "pipeline-floor" variant is noted but not built.
 17. **Two Maldives corridors are conceptual** — directions inferred, non-binding (no committed project).
 18. **Node-mapping** — Dhalkebar–Muzaffarpur physically lands in India's Eastern region; a mapping review is open (non-binding, both bidirectional).
-19. **Transient solar spike** needs a per-year CapEx multiply (a small patcher extension) — not yet built.
+19. **Transient solar spike:** implemented and accepted as
+    `B_Opt_SolarCapexSpike`.
 
 ---
 
-## 8-C. Clean-redo results — WS-3/WS-4 re-solve, the 2027+ infeasibility fix, and the WACC test
+## 8-C. 2026-07-12 cleanredo historical results
 
-*(Session 2, 2026-07-12, branch `ws3-phaseb-cleanredo`. This section supersedes the "pending re-solve"
-caveat in §8-A.1 and the "WACC flagged but not run" note in §8-C.10 above: the combined 15-scenario solve on
-the WS-3/WS-4 foundation is now **done — 15/15 CPLEX-optimal, zero base-year backstop generation** — and the
-WACC mechanism is proven.)*
+*Historical checkpoint: Session 2, 2026-07-12, branch
+`ws3-phaseb-cleanredo`. The measurements and WACC mechanism proof below are
+preserved as recorded. They were subsequently superseded as current authority
+by correction `d295dcc` and protected final manifest SHA-256
+`778b...9916`.*
 
 ### 8-C.1 Method
-All 15 scenarios were rebuilt on the WS-3/WS-4 foundation (`apply_base_year_pin.py --band 0.002` baked into the
-pin) and solved with CPLEX 22.1.2, **dual simplex, feasopt-off** (barrier was tried and reverted — 3–4× slower on
-this LP). System cost = Σ`TotalDiscountedCost`. Sensitivities branch from the pinned B_Optimised_VRE A-O via
+At this historical checkpoint, all 15 scenarios were rebuilt on the WS-3/WS-4
+foundation with the former `apply_base_year_pin.py --band 0.002` recipe and
+solved with CPLEX 22.1.2, **dual simplex, feasopt-off** (barrier was tried and
+reverted — 3–4× slower on this LP). That band recipe must not be used as the
+current method. System cost = Σ`TotalDiscountedCost`. Sensitivities branch from the pinned B_Optimised_VRE A-O via
 `apply_patches.py`; the Dir scenarios overlay `set_interconnector_direction.py`. Each scenario compiled with
 `glpsol --check` clean before solving; every solve is Optimal with **backstop generation = 0**.
 
@@ -357,11 +407,15 @@ backstop 0).
 - **VRE-ceiling inputs and provenance:** `t1_confection/sensitivity_expansion/reference/vre_ceilings_base.json` is the operational source of truth consumed by `apply_patches.py`. `t1_confection/sensitivity_expansion/reference/vre_ceilings.csv` is a documentary mirror of the same 20 ceiling values, with B_Opt, clip, atlas/source-label, confidence, and metadata columns. Read the CSV together with `t1_confection/sensitivity_expansion/reference/vre_ceiling_provenance.md`, which records source support, caveats, the India-only validity of the NISE/NIWE labels, and remaining citation gaps. A root `reference/` directory and root `reference/vre_ceilings.csv` never existed in available Git history; the old methodology wording was stale shorthand, not evidence of a former root path. Generated workbooks, compiled CSVs, change manifests, validation reports, and sensitivity tables are derived evidence, not primary provenance.
 - **Rebuild recipe:** `docs/archive/cleanroom/CLEANROOM_FINALPROMPT.md`.
 - **Pre-WS-3 analysis outputs:** `t1_confection/sensitivity_report.txt` and `t1_confection/sensitivity_comparison.csv`. Narrative tables are also embedded in `t1_confection/sensitivity_expansion/PHASE_B_METHODOLOGY_AND_RESULTS.md`.
-- **Solved anchors:** hero repos `OSTRAM_latest`, `OSTRAM_ws3_workcopy_D5`, `OSTRAM_ws4_workcopy`.
+- **Current accepted anchors:** `8dd3361`/`d295dcc`, protected final evidence
+  `cfinal-e7f99ab54fda-20260728T180804Z-a40768`, protected preserved-13/A-seed
+  lineage `s15-e7f99ab54fda-20260728T052124Z-9ccc09`, and read-only benchmark
+  `OSTRAM_mainredo`. Older hero/workcopy names in this document are historical
+  lineage only.
 
-*Prepared as report-feeding methodology documentation. Foundation anchors are validated; the §4–§7 sensitivity
-magnitudes are pre-WS-3, and the WS-3/WS-4 re-solve (15/15 optimal), the base-year-pin infeasibility fix, and the
-WACC test are confirmed in §8-C.*
+*Prepared as report-feeding methodology documentation. The §4–§7 sensitivity
+magnitudes are pre-WS-3 and §8-C is a 2026-07-12 checkpoint. The current
+accepted baseline is the source-bound 2026-07-28 manifest identified above.*
 
 ## 10. Provenance & citations update (2026-07-12 research pass)
 

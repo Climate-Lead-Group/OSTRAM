@@ -83,6 +83,13 @@ python -m ostram run --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --skip-b2
 This example still runs A3 and B1. `--skip-b2` prevents optimizer execution but does not
 make `run.py` read-only.
 
+This convenience example is not the housekeeping acceptance guard. B2 has
+independent matrix, solver, result-conversion, and concatenation routes; changing
+one toggle is insufficient. Housekeeping must follow the monitored
+[no-solver byte-identity contract](regression.md#maintained-no-solver-byte-identity-contract),
+with YAML booleans independently parsed, both configs restored byte-for-byte,
+and all 15 final text inputs newly generated in disposable worktrees.
+
 ### Scenario scope
 
 The preservation inventory contains 20 scenario snapshots under both `A1_Outputs/` and

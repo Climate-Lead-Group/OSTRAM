@@ -1,7 +1,11 @@
 # Next-phase script and workflow refactor plan
 
+> **Historical plan:** Execution status is superseded by the accepted final
+> 15-scenario baseline. The tables remain design rationale, not current
+> authorization. See the maintained [regression policy](../../regression.md).
+>
 All branches and PRs proposed here must follow the
-[`cleanup and refactor governance rules`](refactor-rules.md).
+[`cleanup and refactor governance rules`](../../refactor-rules.md).
 
 ## Status and evidence boundary
 
@@ -27,7 +31,7 @@ Plain `BAU` remains retained support evidence, but it is not part of the
 decision-relevant 15-scenario comparison. None of these offline results is a
 solver-backed equivalence claim. Core workflow changes therefore require a future,
 separately authorized solver-backed branch before they can be accepted. See
-[`regression.md`](regression.md) for the current scenario and evidence policy.
+[`regression.md`](../../regression.md) for the current scenario and evidence policy.
 
 ## Classification rules
 
@@ -74,9 +78,9 @@ orchestration:
 
 - `tests/regression/` and its discovery, gate, protected-tree, and strict-compare
   commands;
-- `t1_confection/test_strip_storage.py`;
-- `t1_confection/A3_process/_test_scenarios_lite.py` and
-  `_xlsx_validation_core.py`;
+- `tests/validation/test_strip_storage_cli.py`;
+- `tests/validation/test_scenarios_lite.py` and the retained production helper
+  `t1_confection/A3_process/_xlsx_validation_core.py`;
 - `t1_confection/Z_validate_country_data.py`;
 - `t1_confection/sensitivity_expansion/desk_check.py` and
   `validate_sensitivity_configs.py`;
@@ -135,7 +139,7 @@ common offline gate:
 
 1. `python -m unittest discover -s tests/regression -p "test_*.py" -v`;
 2. the preservation and cleanup-acceptance discovery commands documented in
-   `regression.md`;
+   `docs/regression.md`;
 3. the committed-evidence gate;
 4. the protected-tree verification;
 5. strict baseline self-comparison;
