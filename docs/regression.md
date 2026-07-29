@@ -122,6 +122,35 @@ Resolve that full source path, require exactly one matching filename, verify its
 size and hash, and copy it into each disposable worktree. Never edit or remove
 the protected source.
 
+The accepted 15-scenario outputs also depend on two frozen external,
+scenario-specific post-A3 validation workbooks. They are validation inputs,
+not replacements for the repository's production source-of-truth files, and
+must not be added to Git:
+
+- `A_Calibrated_BAU`:
+  `C:\Users\luisfernando\Desktop\OSeMOSYS\G\g15-e7f99ab54fda-20260727T133603Z-3e7150\source\t1_confection\A1_Outputs\A1_Outputs_A_Calibrated_BAU\A-O_Parametrization.xlsx`;
+  450,758 bytes; SHA-256
+  `44b147d83bd13b287faa5ec722bd059d6ddd74b240a0f501827cf347925a54c9`.
+- `B_Optimised_VRE`:
+  `C:\Users\luisfernando\Desktop\OSeMOSYS\G\g15-e7f99ab54fda-20260727T133603Z-3e7150\source\t1_confection\A1_Outputs\A1_Outputs_B_Optimised_VRE\A-O_Parametrization.xlsx`;
+  450,427 bytes; SHA-256
+  `300cca3541a9caddbe2700092e3325342f5fbd69aa0f0fbaacb2861f36d7ff1e`.
+
+Stage these two workbooks only inside each disposable validation worktree,
+immediately before B1, and verify both identities after copying. Leave every
+other A1 file and the other thirteen scenario directories unchanged. Do not
+rerun A3 for A or B; A3 remains required only for `C_Target_VRE`, using the
+immutable accepted A-result seed above.
+
+A clean `8dd3361a1fc7f2c9ea4df51d5b2d0e50e0ce8554` checkout alone contains
+older tracked A/B snapshots. Without the two external validation workbooks it
+compiles the known alternate A hash
+`63c5f0745269f695648d0ee4e1ae0bd583f2fba77c8921d697d2c21e5982267f`
+and B hash
+`5e1a313b87725c422360b55c2eb8eae09240c20328f6f75f71f88f3c3bb7af72`.
+This validation-input correction changes no accepted output hash, scenario,
+modelling decision, or production model input.
+
 ### Barriers and generation
 
 Before generation, install and monitor process barriers that fail closed on:
@@ -143,31 +172,36 @@ For each detached worktree:
    & $Py -u t1_confection\A3_process.py --scenario C_Target_VRE
    ```
 
-2. Run B1 for the exact literal 15:
+2. Immediately before B1, copy the two hash-bound external post-A3
+   `A-O_Parametrization.xlsx` validation workbooks above into their
+   corresponding A/B scenario directories. Verify the staged sizes and
+   SHA-256 values. Do not run A3 for A or B.
+3. Run B1 for the exact literal 15:
 
    ```powershell
    & $Py -u -m ostram compile-inputs --scenarios "A_Calibrated_BAU,A_Calibrated_BAU_Clipped,B_Optimised_VRE,B_Opt_Clipped,B_Opt_DirBidir,B_Opt_DirContractual,B_Opt_IndiaCosts,B_Opt_IndiaCostsFuel,B_Opt_SolarCapex130,B_Opt_SolarCapexHi,B_Opt_SolarCapexSpike,B_Opt_TradeCap15,B_Opt_TxCap150,C_Target_VRE,C_Target_VRE_Clipped"
    ```
 
-3. Before B2, require every exact final target listed by the accepted record to
+4. Before B2, require every exact final target listed by the accepted record to
    be absent. Use an empty isolated output root where supported; otherwise
    remove only those exact 15 target `.txt` files inside the disposable
    worktree. Record each as absent. Never remove from a primary, benchmark, or
    protected evidence location.
-4. Parse `Config_MOMF_T1_AB.yaml` with a YAML-aware driver and set real YAML
+5. Parse `Config_MOMF_T1_AB.yaml` with a YAML-aware driver and set real YAML
    booleans: `execute_model: false`, `create_matrix: false`,
    `concat_otoole_csv: false`, `concat_scenarios_csv: false`, and
    `parallel: false`; retain `A2_otoole_outputs: true` and
    `write_txt_model: true`. Redirect storage-delay/runtime outputs to a
    disposable validation folder. Parse the file again and independently assert
    those values and types.
-5. Run guarded compile-only B2 with the same full literal list:
+6. Run guarded compile-only B2 with the same full literal list:
 
    ```powershell
    & $Py -u t1_confection\B2_Executing_OG_Model.py --scenarios "A_Calibrated_BAU,A_Calibrated_BAU_Clipped,B_Optimised_VRE,B_Opt_Clipped,B_Opt_DirBidir,B_Opt_DirContractual,B_Opt_IndiaCosts,B_Opt_IndiaCostsFuel,B_Opt_SolarCapex130,B_Opt_SolarCapexHi,B_Opt_SolarCapexSpike,B_Opt_TradeCap15,B_Opt_TxCap150,C_Target_VRE,C_Target_VRE_Clipped"
    ```
 
-6. Restore temporary config bytes in `finally`. Require every final target to
+7. Restore the two original tracked workbook files and all temporary config
+   bytes in `finally`. Require every final target to
    exist and record that it was newly created by this run.
 
 ### Exact comparison and stop conditions
