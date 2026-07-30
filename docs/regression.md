@@ -5,9 +5,15 @@ It does not rerun CPLEX or infer numerical equivalence from normalized files.
 
 ## Accepted decision scenarios
 
-The authoritative portable record is
-[`accepted_compiled_solver_baseline_15.json`](../tests/regression/reports/accepted_compiled_solver_baseline_15.json).
-Its exact ordered scenarios are:
+The governed Stage 2 comparator manifest is
+`STAGE_2_GOVERNED_COMPARATOR_MANIFEST.csv` in the authenticated Run 3 evidence
+directory. It binds each current root-plus-declared-rule output by SHA-256,
+byte size, and line count. The earlier
+[`accepted_compiled_solver_baseline_15.json`](../tests/regression/reports/accepted_compiled_solver_baseline_15.json)
+and its derived comparator files remain historical source-bound evidence; they
+are not current numerical acceptance authority for derived scenarios.
+
+The governed manifest's exact ordered scenarios are:
 
 1. `A_Calibrated_BAU`
 2. `A_Calibrated_BAU_Clipped`
@@ -39,11 +45,21 @@ dependencies.
 
 ## Maintained checks
 
-Validate the portable record without invoking a solver:
+Validate the historical portable record without invoking a solver:
 
 ```powershell
 $Py = 'C:\Users\luisfernando\anaconda3\envs\OSTRAM-env\python.exe'
 & $Py tests\regression\accepted_baseline.py
+```
+
+Stages 8 and 14 must validate freshly generated outputs against the governed
+external manifest:
+
+```powershell
+$Evidence = '<authenticated Run 3 evidence directory>'
+& $Py tests\regression\accepted_baseline.py `
+  --governed-manifest "$Evidence\STAGE_2_GOVERNED_COMPARATOR_MANIFEST.csv" `
+  --outputs-root '<disposable regeneration root>'
 ```
 
 Run the current unit suite:
@@ -66,11 +82,13 @@ The final cleanup acceptance run must:
 3. use the external A seed only for the declared C dependency;
 4. compile without a solver or matrix/result route;
 5. require all 15 expected target files to be newly generated;
-6. compare exact relative paths, filenames, sizes, SHA-256 values, and raw
-   bytes against the frozen external comparator;
-7. run the separate BAU smoke check;
-8. verify authoritative workbooks are byte-unchanged; and
-9. finish with only expected ignored runtime products.
+6. compare exact relative paths, filenames, sizes, SHA-256 values, and line
+   counts against the governed Stage 2 manifest;
+7. require the three decision roots to remain byte-identical to their frozen
+   Stage 0 comparators;
+8. run the separate BAU smoke check;
+9. verify authoritative workbooks are byte-unchanged; and
+10. finish with only expected ignored runtime products.
 
 Any missing, extra, inherited, reordered, resized, or rehashed target is a
 failure. Normalization, tolerance, waivers, and solver reruns are not permitted

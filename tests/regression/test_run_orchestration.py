@@ -89,13 +89,41 @@ class LauncherHarness:
     def _dvc_command(self, env_name: str, args: str) -> None:
         self._record("dvc_command", env_name, args)
 
-    def _snapshot(self, path: Path) -> bool:
-        self._record("snapshot_exists", path)
+    def _snapshot(self, path: Path, roots: tuple[str, ...]) -> bool:
+        self._record("snapshot_exists", path, roots)
         return self.snapshot_exists
 
-    def _enumerate(self, env_name: str) -> list[str]:
-        self._record("enumerate_active", env_name)
-        return list(self.active_scenarios)
+    def _load_registry(self):
+        active = tuple(self.active_scenarios)
+
+        class Registry:
+            def select(self, requested):
+                if requested is None or requested == "":
+                    return active
+                names = [
+                    name.strip()
+                    for name in requested.split(",")
+                    if name.strip()
+                ]
+                duplicates = sorted(
+                    {name for name in names if names.count(name) > 1}
+                )
+                if duplicates:
+                    raise ValueError(
+                        f"duplicate scenario selection: {duplicates}"
+                    )
+                unknown = [name for name in names if name not in active]
+                if unknown:
+                    raise ValueError(
+                        f"unknown scenario selection: {unknown}"
+                    )
+                selected = set(names)
+                return tuple(name for name in active if name in selected)
+
+            def required_roots(self, selected):
+                return tuple(selected)
+
+        return Registry()
 
     def _pipeline(self, env_name: str, script: Path, extra_args: str = "") -> None:
         self._record("pipeline", env_name, script, extra_args)
@@ -104,8 +132,15 @@ class LauncherHarness:
                 self.pipeline_failure[1], f"recorded {script.name}"
             )
 
-    def _a3(self, env_name: str, script: Path, scenario: str) -> None:
-        self._record("a3", env_name, script, scenario)
+    def _a3(
+        self,
+        env_name: str,
+        script: Path,
+        scenarios: list[str],
+        seed: str | None,
+    ) -> None:
+        for scenario in scenarios:
+            self._record("a3", env_name, script, scenario, seed)
 
     def __enter__(self):
         replacements = {
@@ -116,10 +151,11 @@ class LauncherHarness:
             "ensure_dvc_repo": self._ensure_dvc,
             "has_dvc_remote": self._has_remote,
             "dvc_command": self._dvc_command,
-            "post_a2_snapshot_exists": self._snapshot,
-            "enumerate_active_scenarios": self._enumerate,
+            "root_snapshots_exist": self._snapshot,
+            "load_registry": self._load_registry,
+            "ensure_root_output_directories": lambda *_: None,
             "run_pipeline_script": self._pipeline,
-            "run_a3_for_scenario": self._a3,
+            "run_a3_for_scenarios": self._a3,
         }
         self.patches = [
             mock.patch.object(self.launcher, name, replacement)
@@ -188,6 +224,8 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
                 "skip_b1": False,
                 "skip_b2": False,
                 "scenarios": None,
+                "a_result_seed": None,
+                "compile_only": False,
             },
         )
         self.assertEqual(
@@ -201,6 +239,8 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
                 "skip_b1": True,
                 "skip_b2": True,
                 "scenarios": " C , A, C ",
+                "a_result_seed": None,
+                "compile_only": False,
             },
         )
 
@@ -252,7 +292,12 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
         )
         self.assertEqual(
             harness.events[-1],
-            ("snapshot_exists", cwd / "t1_confection" / "A1_Outputs", cwd),
+            (
+                "snapshot_exists",
+                cwd / "t1_confection" / "A1_Outputs",
+                ("A", "B", "C"),
+                cwd,
+            ),
         )
         output = stdout.getvalue()
         self.assertIn("Using environment: custom env", output)
@@ -339,7 +384,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                 ]
                 expected: list[str] = []
                 if not skip_a3:
-                    expected.extend(["enumerate_active", "a3", "a3"])
+                    expected.extend(["a3", "a3"])
                 if not skip_b1:
                     expected.append("pipeline")
                 if not skip_b2:
@@ -381,12 +426,12 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                 ]
                 self.assertEqual(scripts, expected_scripts)
 
-    def test_scenario_filter_uses_active_order_for_a3_but_original_order_for_b1_b2(self) -> None:
+    def test_scenario_filter_uses_one_canonical_order_for_a3_b1_and_b2(self) -> None:
         launcher = _load_launcher("scenario_order")
         with (
             LauncherHarness(launcher, active_scenarios=("A", "B", "C")) as harness,
             mock.patch.object(
-                sys, "argv", ["run.py", "--skip-pull", "--scenarios", " C , A, C "]
+                sys, "argv", ["run.py", "--skip-pull", "--scenarios", " C , A "]
             ),
             redirect_stdout(io.StringIO()),
         ):
@@ -397,7 +442,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
         )
         self.assertEqual(
             [event[3] for event in harness.events if event[0] == "pipeline"],
-            ['--scenarios "C,A,C"', '--scenarios "C,A,C"'],
+            ['--scenarios "A,C"', '--scenarios "A,C"'],
         )
 
     def test_a3_filter_does_not_auto_add_the_bau_prerequisite(self) -> None:
@@ -429,7 +474,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
             ["A_Calibrated_BAU"],
         )
 
-    def test_unknown_scenario_diagnostics_preserve_order_and_duplicates(self) -> None:
+    def test_duplicate_scenario_selection_fails_before_any_stage(self) -> None:
         launcher = _load_launcher("unknown_duplicates")
         with (
             LauncherHarness(launcher, active_scenarios=("BAU", "A")) as harness,
@@ -447,7 +492,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(
                 RuntimeError,
-                r"\['Missing', 'Missing', 'Other'\]",
+                r"duplicate scenario selection: \['Missing'\]",
             ):
                 launcher.main()
 
@@ -457,7 +502,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
             [],
         )
 
-    def test_empty_scenario_filter_runs_no_a3_but_forwards_no_b1_b2_option(self) -> None:
+    def test_empty_scenario_filter_fails_before_all_pipeline_stages(self) -> None:
         launcher = _load_launcher("empty_scenarios")
         with (
             LauncherHarness(launcher, active_scenarios=("A", "B")) as harness,
@@ -466,16 +511,20 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
             ),
             redirect_stdout(io.StringIO()),
         ):
-            launcher.main()
+            with self.assertRaisesRegex(RuntimeError, "selected no"):
+                launcher.main()
 
         self.assertEqual([event for event in harness.events if event[0] == "a3"], [])
         self.assertEqual(
-            [event[3] for event in harness.events if event[0] == "pipeline"], ["", ""]
+            [event for event in harness.events if event[0] == "pipeline"], []
         )
 
-    def test_explicit_empty_string_is_no_filter_but_whitespace_selects_nothing(self) -> None:
+    def test_explicit_empty_string_uses_default_but_whitespace_fails(self) -> None:
         launcher = _load_launcher("empty_string_distinction")
-        for raw, expected_a3 in (("", ["A", "B"]), ("   ", [])):
+        for raw, expected_a3, should_fail in (
+            ("", ["A", "B"], False),
+            ("   ", [], True),
+        ):
             with self.subTest(raw=raw):
                 with (
                     LauncherHarness(
@@ -489,7 +538,11 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                     ),
                     redirect_stdout(io.StringIO()),
                 ):
-                    launcher.main()
+                    if should_fail:
+                        with self.assertRaisesRegex(RuntimeError, "selected no"):
+                            launcher.main()
+                    else:
+                        launcher.main()
 
                 self.assertEqual(
                     [event[3] for event in harness.events if event[0] == "a3"],
@@ -497,10 +550,10 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                 )
                 self.assertEqual(
                     [event[3] for event in harness.events if event[0] == "pipeline"],
-                    ["", ""],
+                    [] if should_fail else ['--scenarios "A,B"', '--scenarios "A,B"'],
                 )
 
-    def test_unknown_scenario_is_rejected_after_a1_a2_and_before_a3_b1_b2(self) -> None:
+    def test_unknown_scenario_is_rejected_before_a1_a2_a3_b1_b2(self) -> None:
         launcher = _load_launcher("unknown_scenario")
         with (
             LauncherHarness(
@@ -511,18 +564,16 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
             ),
             redirect_stdout(io.StringIO()),
         ):
-            with self.assertRaisesRegex(RuntimeError, "names not in active scenarios"):
+            with self.assertRaisesRegex(RuntimeError, "unknown scenario selection"):
                 launcher.main()
 
         pipeline_names = [
             event[2].name for event in harness.events if event[0] == "pipeline"
         ]
-        self.assertEqual(
-            pipeline_names, ["A1_Pre_processing_OG_csvs.py", "A2_AddTx.py"]
-        )
+        self.assertEqual(pipeline_names, [])
         self.assertEqual([event for event in harness.events if event[0] == "a3"], [])
 
-    def test_skip_a3_bypasses_scenario_validation_and_forwards_unknown_name(self) -> None:
+    def test_skip_a3_still_validates_the_shared_scenario_contract(self) -> None:
         launcher = _load_launcher("skip_a3_validation")
         with (
             LauncherHarness(launcher, active_scenarios=("A", "B")) as harness,
@@ -533,12 +584,13 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
             ),
             redirect_stdout(io.StringIO()),
         ):
-            launcher.main()
+            with self.assertRaisesRegex(RuntimeError, "unknown scenario selection"):
+                launcher.main()
 
         self.assertNotIn("enumerate_active", _event_names(harness.events))
         self.assertEqual(
-            [event[3] for event in harness.events if event[0] == "pipeline"],
-            ['--scenarios "Missing"', '--scenarios "Missing"'],
+            [event for event in harness.events if event[0] == "pipeline"],
+            [],
         )
 
     def test_dvc_remote_check_and_pull_selection(self) -> None:
@@ -604,7 +656,11 @@ class CommandBoundaryCharacterizationTests(unittest.TestCase):
         check_call.assert_called_once_with(
             "tool --flag value",
             shell=True,
-            env={"EXISTING": "kept", "PYTHONHASHSEED": "0"},
+            env={
+                "EXISTING": "kept",
+                "PYTHONHASHSEED": "0",
+                "PYTHONDONTWRITEBYTECODE": "1",
+            },
         )
         self.assertEqual(Path.cwd(), cwd)
 
@@ -642,7 +698,7 @@ class CommandBoundaryCharacterizationTests(unittest.TestCase):
                 ),
                 (
                     f'conda run -n Env Name python -u "{a3_script}" '
-                    '--scenario "Scenario A"',
+                    '--scenarios "Scenario A"',
                     cwd,
                 ),
             ],

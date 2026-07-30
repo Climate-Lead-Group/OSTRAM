@@ -3,7 +3,8 @@
 This directory contains solver-free tests for the maintained runtime and the
 portable accepted compiled-input contract.
 
-The authoritative scenario inventory is `scenarios.yaml`. The exact accepted
+The authoritative scenario inventory is
+`../../t1_confection/scenario_registry.json`. The exact accepted
 decision-scenario identities are recorded in
 `reports/accepted_compiled_solver_baseline_15.json`; plain `BAU` remains a
 separate support scenario.

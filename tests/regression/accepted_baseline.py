@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
 import re
@@ -14,7 +15,7 @@ from typing import Any
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[1]
 BASELINE_PATH = HERE / "reports" / "accepted_compiled_solver_baseline_15.json"
-INVENTORY_PATH = HERE / "scenarios.yaml"
+INVENTORY_PATH = REPO_ROOT / "t1_confection" / "scenario_registry.json"
 PRE_CORRECTION_REPORT = (
     HERE / "reports" / "pre_correction_41a54e5_compiled_input_equivalence_15.json"
 )
@@ -37,6 +38,19 @@ EXPECTED_MANIFEST_SHA256 = (
 EXPECTED_IGNORE_RULES = (
     "t1_confection/Executables/**/*_output.log",
     "t1_confection/Executables/**/_validation_report.csv",
+)
+GOVERNED_MANIFEST_COLUMNS = (
+    "Scenario",
+    "AuthorityClass",
+    "SHA256",
+    "ByteSize",
+    "LineCount",
+    "Provenance",
+)
+GOVERNED_ROOT_AUTHORITY = "RETAINED_FROZEN_ROOT_IDENTITY"
+GOVERNED_DERIVED_AUTHORITY = "GOVERNED_ROOT_PLUS_DECLARED_RULES"
+DECISION_ROOTS = frozenset(
+    {"A_Calibrated_BAU", "B_Optimised_VRE", "C_Target_VRE"}
 )
 
 # Scenario, byte count, SHA-256. Filenames and paths are derived exactly from
@@ -90,13 +104,12 @@ def _load_json(path: Path) -> dict[str, Any]:
 
 def canonical_scenarios(inventory_path: Path = INVENTORY_PATH) -> tuple[str, ...]:
     inventory = _load_json(inventory_path)
-    scenarios = inventory.get("scenarios")
-    _require(isinstance(scenarios, list), "scenario inventory must contain a list")
-    return tuple(
-        item["name"]
-        for item in scenarios
-        if item.get("cleanup_acceptance") is True and item.get("name") != "BAU"
+    scenarios = inventory.get("decision_scenarios")
+    _require(
+        isinstance(scenarios, list),
+        "scenario registry must contain decision_scenarios",
     )
+    return tuple(scenarios)
 
 
 def validate_record(
@@ -179,6 +192,70 @@ def load_accepted_record(
     return record
 
 
+def load_governed_manifest(
+    path: Path,
+    *,
+    inventory_path: Path = INVENTORY_PATH,
+) -> tuple[dict[str, Any], ...]:
+    """Load the compact post-reconciliation acceptance authority."""
+    _require(path.is_file(), f"governed comparator manifest is missing: {path}")
+    try:
+        with path.open("r", encoding="utf-8-sig", newline="") as stream:
+            reader = csv.DictReader(stream)
+            _require(
+                tuple(reader.fieldnames or ()) == GOVERNED_MANIFEST_COLUMNS,
+                "unexpected governed comparator manifest columns",
+            )
+            raw_rows = list(reader)
+    except (OSError, csv.Error) as exc:
+        raise BaselineValidationError(f"cannot load {path}: {exc}") from exc
+
+    expected_names = canonical_scenarios(inventory_path)
+    _require(len(raw_rows) == 15, "governed manifest must contain exactly 15 rows")
+    _require(
+        tuple(row["Scenario"] for row in raw_rows) == expected_names,
+        "governed scenario order or membership drift",
+    )
+
+    rows: list[dict[str, Any]] = []
+    for row in raw_rows:
+        scenario = row["Scenario"]
+        expected_authority = (
+            GOVERNED_ROOT_AUTHORITY
+            if scenario in DECISION_ROOTS
+            else GOVERNED_DERIVED_AUTHORITY
+        )
+        _require(
+            row["AuthorityClass"] == expected_authority,
+            f"{scenario}: authority class drift",
+        )
+        _require(
+            SHA256_RE.fullmatch(row["SHA256"]) is not None,
+            f"{scenario}: invalid SHA-256",
+        )
+        try:
+            byte_size = int(row["ByteSize"])
+            line_count = int(row["LineCount"])
+        except ValueError as exc:
+            raise BaselineValidationError(
+                f"{scenario}: byte size and line count must be integers"
+            ) from exc
+        _require(byte_size > 0, f"{scenario}: byte size must be positive")
+        _require(line_count > 0, f"{scenario}: line count must be positive")
+        _require(bool(row["Provenance"].strip()), f"{scenario}: provenance is required")
+        rows.append(
+            {
+                "scenario": scenario,
+                "authority_class": row["AuthorityClass"],
+                "sha256": row["SHA256"],
+                "byte_size": byte_size,
+                "line_count": line_count,
+                "provenance": row["Provenance"],
+            }
+        )
+    return tuple(rows)
+
+
 def validate_report_lineage(
     repo_root: Path = REPO_ROOT,
     record: dict[str, Any] | None = None,
@@ -240,6 +317,35 @@ def validate_output_files(
     return tuple(matched)
 
 
+def validate_governed_output_files(
+    output_root: Path,
+    manifest_rows: tuple[dict[str, Any], ...],
+) -> tuple[Path, ...]:
+    """Require generated decision inputs to match the governed compact manifest."""
+    matched: list[Path] = []
+    for item in manifest_rows:
+        scenario = item["scenario"]
+        filename = (
+            f"Pre_processed_{scenario}_0_"
+            "StorageDelayN5_OpenBCK_RMCarefulXLSX.txt"
+        )
+        path = (
+            output_root
+            / "t1_confection"
+            / "Executables"
+            / f"{scenario}_0"
+            / filename
+        )
+        _require(path.is_file(), f"governed output is missing: {path}")
+        _require(path.stat().st_size == item["byte_size"], f"size drift: {path}")
+        _require(sha256_file(path) == item["sha256"], f"SHA-256 drift: {path}")
+        with path.open("rb") as stream:
+            line_count = sum(1 for _ in stream)
+        _require(line_count == item["line_count"], f"line-count drift: {path}")
+        matched.append(path)
+    return tuple(matched)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -247,9 +353,26 @@ def main() -> int:
         type=Path,
         help="Optionally verify the exact 15 generated targets under this root.",
     )
+    parser.add_argument(
+        "--governed-manifest",
+        type=Path,
+        help=(
+            "Use the post-reconciliation governed CSV manifest. When combined "
+            "with --outputs-root, validates all 15 freshly generated targets."
+        ),
+    )
     args = parser.parse_args()
     result = validate_repository()
-    if args.outputs_root is not None:
+    if args.governed_manifest is not None:
+        rows = load_governed_manifest(args.governed_manifest)
+        result["governed_manifest_sha256"] = sha256_file(args.governed_manifest)
+        result["governed_scenario_count"] = len(rows)
+        if args.outputs_root is not None:
+            result["matched_output_files"] = len(
+                validate_governed_output_files(args.outputs_root, rows)
+            )
+    elif args.outputs_root is not None:
+        # The legacy JSON remains available only for historical-source checks.
         result["matched_output_files"] = len(validate_output_files(args.outputs_root))
     print(json.dumps(result, indent=2))
     return 0

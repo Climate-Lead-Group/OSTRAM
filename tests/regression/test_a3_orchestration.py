@@ -24,7 +24,9 @@ REPO_ROOT = TEST_ROOT.parents[1]
 A3_ENTRYPOINT = REPO_ROOT / "t1_confection" / "A3_process.py"
 A3_ORCHESTRATOR = REPO_ROOT / "t1_confection" / "a3_orchestrator.py"
 SCENARIO_HELPER = REPO_ROOT / "t1_confection" / "A3_process" / "_scenarios.py"
-SCENARIO_REGISTRY = TEST_ROOT / "scenarios.yaml"
+SCENARIO_REGISTRY = (
+    REPO_ROOT / "t1_confection" / "scenario_registry.json"
+)
 
 ACTIVE_SCENARIOS = (
     "BAU",
@@ -102,10 +104,24 @@ class A3TraceHarness:
         self.rules_dir.mkdir()
         self.soasia = self.caller / "scenario-template.xlsx"
         self.soasia.write_bytes(b"fixture template marker")
-        self.snapshot = self.t1 / "A1_Outputs" / "_post_a2_snapshot_BAU"
-        self.snapshot.mkdir(parents=True)
-        for name in INPUT_FILES:
-            (self.snapshot / name).write_bytes(f"snapshot:{name}".encode("utf-8"))
+        payload = json.loads(SCENARIO_REGISTRY.read_text(encoding="utf-8"))
+        scenario_names = (
+            payload["support_scenarios"] + payload["decision_scenarios"]
+        )
+        self.snapshots = {}
+        for scenario_name in scenario_names:
+            snapshot = (
+                self.t1
+                / "A1_Outputs"
+                / f"_post_a2_snapshot_{scenario_name}"
+            )
+            snapshot.mkdir(parents=True)
+            for name in INPUT_FILES:
+                (snapshot / name).write_bytes(
+                    f"snapshot:{name}".encode("utf-8")
+                )
+            self.snapshots[scenario_name] = snapshot
+        self.snapshot = self.snapshots["A_Calibrated_BAU"]
         self.input_dir = self.t1 / "relative-input"
         self.input_dir.mkdir()
         (self.input_dir / "stale.txt").write_text("stale", encoding="utf-8")
@@ -762,7 +778,7 @@ class A3IsolatedBoundaryTests(unittest.TestCase):
         self.assertEqual(plan.output_dir, t1 / "output override")
         self.assertEqual(
             plan.snapshot_dir,
-            t1 / "A1_Outputs" / "_post_a2_snapshot_BAU",
+            t1 / "A1_Outputs" / "_post_a2_snapshot_Scenario_A",
         )
         self.assertEqual(plan.workdir_base, process_dir)
         self.assertTrue(plan.keep_workdir)
@@ -927,7 +943,9 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
 
     def test_static_pin_dispatches_only_for_exact_canonical_roots(self) -> None:
         payload = json.loads(SCENARIO_REGISTRY.read_text(encoding="utf-8"))
-        scenarios = [item["name"] for item in payload["scenarios"]]
+        scenarios = (
+            payload["support_scenarios"] + payload["decision_scenarios"]
+        )
         expected_roots = {
             "A_Calibrated_BAU",
             "B_Optimised_VRE",

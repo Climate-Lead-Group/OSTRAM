@@ -18,4 +18,6 @@ Scenario-specific patch files remain under
 
 This helper does not run A3, B1, B2, or a solver. Canonical derived-scenario
 selection, dependency handling, base selection, and direction overlays are
-the responsibility of the Stage 2 scenario-automation work.
+owned by `../scenario_registry.json` and applied by
+`../scenario_materializer.py`. The materializer always honors the declared
+`base_scenario`; it never assumes that a sensitivity is based on B.

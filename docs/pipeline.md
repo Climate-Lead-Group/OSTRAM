@@ -198,7 +198,9 @@ The script assigns fuel codes for the energy flow:
 4. Adds transmission technology entries (RNWTRN, PWRTRN, etc.) to the **Demand Techs** sheets, converting `ELC*00`/`ELC*01` into `ELC*02`.
 5. Adds the `DSPTRN` dispatch technology (Mode 1: `ELC*02` → `ELC*03`; Mode 2: `ELC*04` → `ELC*03`) to the **Demand Techs** sheets.
 6. Adds parameter entries to `A-O_Parametrization.xlsx` (sheets: **Fixed Horizon Parameters**, **Demand Techs**), using the per-technology defaults from `Config_country_codes.yaml` (`RNWTRN`, `PWRTRN`, `DSPTRN`, etc.).
-7. Copies the finished `A1_Outputs_BAU/` folder to `_post_a2_snapshot_BAU/`, replacing any previous snapshot.
+7. Processes only the four maintained roots (`BAU`, `A_Calibrated_BAU`,
+   `B_Optimised_VRE`, and `C_Target_VRE`) and creates a root-specific
+   `_post_a2_snapshot_<root>/` for each one.
 
 ### Command-Line Options
 
@@ -214,22 +216,32 @@ The script assigns fuel codes for the energy flow:
 
 ## Stage A3: Scenario Generation
 
-**Script:** `t1_confection/A3_process.py`, orchestrating scripts under `t1_confection/A3_process/`
+**Scripts:** `t1_confection/scenario_materializer.py` and
+`t1_confection/A3_process.py`, orchestrating scripts under
+`t1_confection/A3_process/`
 
-This is the primary scenario-creation mechanism. It always restores its input from the post-A2 `BAU` snapshot (never the current scenario folder), then layers automated fixes, Stage-5 scenario rules, late WS3/WS4 transmission transformations, and--for the three canonical roots only--the static non-Maldives 2023--2026 PWR/MIN pin before delivering the finished workbook set to `A1_Outputs/A1_Outputs_<scenario>/`. `run.py` calls it once per active scenario, in dependency order.
+`scenario_registry.json` is the canonical runtime inventory. The workbook
+`Control` sheet contains only the four maintained roots; derived scenarios
+are declared in the registry with their exact base root, patch, and optional
+direction overlay. The materializer resolves the selected roots and the
+accepted C-on-A result dependency, runs A3 from each root's own post-A2
+snapshot, and then derives sensitivities without relying on pre-existing
+sensitivity folders. `run.py` sends the same registry-ordered selection to
+the materializer, B1, and B2.
 
 ### Usage
 
 ```bash
-python t1_confection/A3_process.py --scenario BAU
-python t1_confection/A3_process.py --scenario B_Optimised_VRE
+python t1_confection/scenario_materializer.py --scenarios BAU
+python t1_confection/scenario_materializer.py --scenarios A_Calibrated_BAU,C_Target_VRE --a-result-seed path/to/A_result.csv
+python t1_confection/B2_Executing_OG_Model.py --scenarios A_Calibrated_BAU,C_Target_VRE --compile-only
 ```
 
 ### Command-Line Options
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--scenario` | `BAU` | Scenario name. Must exist in the SOASIA v18 `Control` sheet. |
+| `--scenario` | `BAU` | Root scenario name. Must exist in the SOASIA v18 `Control` sheet. |
 | `--soasia` | `A3_process/SOASIA_OSeMOSYS_Template_v18.xlsx` | Override the template path (useful for testing new scenarios without touching the canonical file). |
 | `--rules-script` | From `Control` sheet | Override the scenario's rule-script chain. An empty string skips Stage 5 only; it does not disable the root-gated late-WS4 pin. |
 | `--inherit-from` | From `Control` sheet | Override `inherit_restrictions_from` (comma-separated scenario names). |
@@ -249,14 +261,17 @@ Scenarios are declared as rows in the `Control` sheet of `SOASIA_OSeMOSYS_Templa
 | `inherit_restrictions_from` | Comma-separated scenario names whose persisted `Restrictions` rows this scenario reads (creates a dependency edge) |
 | `notes` | Free-text |
 
-To add a new scenario: add a `Control` row, create scenario-tagged override rows in the template's parametric sheets if needed, and create `t1_confection/A3_process/rules_scripts/configs/<Scenario>/` with the YAML files the chosen rule scripts expect.
+Do not add derived sensitivities to `Control`. A new maintained root requires a
+governed Control and registry change. A new derived scenario belongs in
+`scenario_registry.json`, with a declared base root and tracked patch/overlay
+configuration.
 
 ### Execution Order
 
 For a single `--scenario` invocation, `A3_process.py` runs:
 
 ```text
-0. Restore input from _post_a2_snapshot_BAU (always, regardless of scenario).
+0. Restore input from `_post_a2_snapshot_<root>` for the requested root.
 1. Build a temporary workdir: t1_confection/A3_process/_run_<timestamp>/.
 2. Stage 0: materialize the SOASIA v18 scenario template (_scenarios.py).
 3. Stage 0.5: fix_rnwbio_restore.py -- restore RNWBIO reference rows.

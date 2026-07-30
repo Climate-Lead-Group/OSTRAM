@@ -10,9 +10,9 @@ Features:
 - Installs missing dependencies into the existing environment.
 - Initializes the DVC repository if it does not exist.
 - Runs `dvc pull` only when a remote is configured.
-- If no post-A2 snapshot exists in `t1_confection/A1_Outputs/`, runs A1 + A2 as a
-  combo first (A2 creates the snapshot on success). Then always runs A3 (which
-  restores the snapshot before processing), B1, and B2.
+- If any required canonical root lacks a post-A2 snapshot, runs A1 + A2 as a
+  combo first. Then materializes one exact registry-selected scenario set and
+  routes that same ordered set through B1 and B2.
 """
 
 import argparse
@@ -23,6 +23,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+from t1_confection.scenario_registry import (
+    ensure_root_output_directories,
+    load_registry,
+    root_snapshots_exist,
+)
+
 # ---------- Default config ----------
 ENV_NAME_DEFAULT = "OSTRAM-env"
 ENV_FILE_DEFAULT = "environment.yaml"
@@ -30,7 +36,7 @@ DVC_FILE_DEFAULT = "dvc.yaml"
 T1_DIR = Path("t1_confection")
 A1_SCRIPT_DEFAULT = T1_DIR / "A1_Pre_processing_OG_csvs.py"
 A2_SCRIPT_DEFAULT = T1_DIR / "A2_AddTx.py"
-A3_SCRIPT_DEFAULT = T1_DIR / "A3_process.py"
+A3_SCRIPT_DEFAULT = T1_DIR / "scenario_materializer.py"
 B1_SCRIPT_DEFAULT = T1_DIR / "B1_Run_Compiler.py"
 B2_SCRIPT_DEFAULT = T1_DIR / "B2_Executing_OG_Model.py"
 A1_OUTPUTS_DIR = T1_DIR / "A1_Outputs"
@@ -55,6 +61,7 @@ PIP_DEPS = {
 def run(cmd: str) -> None:
     env = os.environ.copy()
     env["PYTHONHASHSEED"] = "0"
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
     subprocess.check_call(cmd, shell=True, env=env)
 
 
@@ -219,43 +226,46 @@ def run_pipeline_script(env_name: str, script_path: Path,
     run(f'conda run -n {env_name} python -u "{script_path}"{suffix}')
 
 
-def enumerate_active_scenarios(env_name: str) -> list[str]:
-    """Ask t1_confection/A3_process/_scenarios.py for the list of active
-    scenarios in topological order (one per line on stdout).
+def enumerate_active_scenarios(env_name: str | None = None) -> list[str]:
+    """Return BAU plus the frozen decision set from the runtime registry."""
 
-    Falls back to ['BAU'] if SOASIA v18 is absent (legacy single-scenario mode)
-    — the helper itself prints 'BAU' in that case.
-    """
-    helper = (T1_DIR / "A3_process" / "_scenarios.py").resolve()
-    if not helper.is_file():
-        return ["BAU"]
-    try:
-        out = subprocess.check_output(
-            f'conda run -n {env_name} python -u "{helper}" list-active',
-            shell=True, text=True,
-        )
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(
-            f"Failed to enumerate scenarios from {helper.name}: {e}"
-        ) from e
-    names = [line.strip() for line in out.splitlines() if line.strip()]
-    # conda run sometimes prepends activation noise; keep only valid identifier-like lines.
-    names = [n for n in names if not n.startswith(("Loading", "## "))]
-    if not names:
-        raise RuntimeError(
-            f"{helper.name} list-active returned no scenarios. Output was:\n{out}"
-        )
-    return names
+    del env_name  # retained for compatibility with existing callers
+    return list(load_registry().select(None))
 
 
 def run_a3_for_scenario(env_name: str, script_path: Path, scenario: str) -> None:
-    """Invoke A3_process.py for a specific scenario."""
+    """Compatibility helper: materialize one canonical scenario."""
     if not script_path.is_file():
-        raise FileNotFoundError(f"A3 script not found: {script_path}")
+        raise FileNotFoundError(f"scenario materializer not found: {script_path}")
     print(f"Running A3 for scenario '{scenario}'...")
     run(
         f'conda run -n {env_name} python -u "{script_path}" '
-        f'--scenario "{scenario}"'
+        f'--scenarios "{scenario}"'
+    )
+
+
+def run_a3_for_scenarios(
+    env_name: str,
+    script_path: Path,
+    scenarios: list[str],
+    a_result_seed: str | None = None,
+) -> None:
+    """Invoke the canonical materializer once for one exact ordered set."""
+
+    if not script_path.is_file():
+        raise FileNotFoundError(f"scenario materializer not found: {script_path}")
+    if not scenarios:
+        raise ValueError("scenario selection is empty")
+    selected = ",".join(scenarios)
+    seed_arg = (
+        f' --a-result-seed "{Path(a_result_seed).resolve()}"'
+        if a_result_seed
+        else ""
+    )
+    print(f"Materializing scenarios in canonical order: {scenarios}")
+    run(
+        f'conda run -n {env_name} python -u "{script_path}" '
+        f'--scenarios "{selected}"{seed_arg}'
     )
 
 
@@ -309,6 +319,22 @@ def parse_args(argv=None):
              "'B_Optimised_VRE,C_Target_VRE'). When omitted, runs all active "
              "scenarios. Filter is propagated to A3, B1 and B2.",
     )
+    parser.add_argument(
+        "--a-result-seed",
+        default=None,
+        help=(
+            "Read-only A_Calibrated_BAU result CSV or directory used only "
+            "for the declared C_Target_VRE dependency."
+        ),
+    )
+    parser.add_argument(
+        "--compile-only",
+        action="store_true",
+        help=(
+            "Run A3, B1, and B2 input compilation but stop before every "
+            "matrix/solver/output boundary."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -338,46 +364,43 @@ def main() -> None:
 
     start_time = dt.datetime.now()
 
-    # A1 + A2 are a combo: only run them when no post-A2 snapshot exists.
-    # A2 creates the snapshot at the end; A3 restores from it on every run.
-    if post_a2_snapshot_exists(A1_OUTPUTS_DIR.resolve()):
+    registry = load_registry()
+    try:
+        scenarios = list(registry.select(args.scenarios))
+    except ValueError as error:
+        raise RuntimeError(str(error)) from error
+    if not scenarios:
+        raise RuntimeError("--scenarios selected no canonical scenarios")
+    required_roots = registry.required_roots(scenarios)
+
+    # A1 + A2 are a combo: every requested root must have its own post-A2
+    # snapshot. A1 creates only the four root output directories; A2 snapshots
+    # only those roots.
+    if root_snapshots_exist(A1_OUTPUTS_DIR.resolve(), required_roots):
         print(
-            f"Post-A2 snapshot detected in {A1_OUTPUTS_DIR}/. "
-            "Skipping A1 + A2 (A3 will restore from snapshot)."
+            f"All required post-A2 root snapshots exist in {A1_OUTPUTS_DIR}/: "
+            f"{list(required_roots)}. Skipping A1 + A2."
         )
     else:
         print(
-            f"No post-A2 snapshot found in {A1_OUTPUTS_DIR}/. "
-            "Running A1 + A2 combo (A2 will create the snapshot)."
+            f"One or more required post-A2 root snapshots are absent in "
+            f"{A1_OUTPUTS_DIR}/. Running A1 + A2 for the four roots."
         )
+        ensure_root_output_directories(A1_OUTPUTS_DIR.resolve(), registry)
         run_pipeline_script(env_name, A1_SCRIPT_DEFAULT.resolve())
         run_pipeline_script(env_name, A2_SCRIPT_DEFAULT.resolve())
-
-    scenarios_filter: list[str] | None = None
-    if args.scenarios:
-        scenarios_filter = [s.strip() for s in args.scenarios.split(",") if s.strip()]
 
     if args.skip_a3:
         print("Skipping A3 pre-process stage by request.")
     else:
-        scenarios = enumerate_active_scenarios(env_name)
-        print(f"\nActive scenarios (topo order): {scenarios}")
-        if scenarios_filter is not None:
-            unknown = [s for s in scenarios_filter if s not in scenarios]
-            if unknown:
-                raise RuntimeError(
-                    f"--scenarios contains names not in active scenarios: "
-                    f"{unknown}. Active: {scenarios}"
-                )
-            scenarios = [s for s in scenarios if s in scenarios_filter]
-            print(f"Scenario filter active: {scenarios}")
-        for scen in scenarios:
-            run_a3_for_scenario(env_name, A3_SCRIPT_DEFAULT.resolve(), scen)
+        run_a3_for_scenarios(
+            env_name,
+            A3_SCRIPT_DEFAULT.resolve(),
+            scenarios,
+            args.a_result_seed,
+        )
 
-    scenarios_arg = (
-        f'--scenarios "{",".join(scenarios_filter)}"'
-        if scenarios_filter else ""
-    )
+    scenarios_arg = f'--scenarios "{",".join(scenarios)}"'
 
     if args.skip_b1:
         print("Skipping B1 compiler stage by request.")
@@ -387,7 +410,12 @@ def main() -> None:
     if args.skip_b2:
         print("Skipping B2 execution stage by request.")
     else:
-        run_pipeline_script(env_name, B2_SCRIPT_DEFAULT.resolve(), scenarios_arg)
+        b2_args = (
+            f"{scenarios_arg} --compile-only"
+            if args.compile_only
+            else scenarios_arg
+        )
+        run_pipeline_script(env_name, B2_SCRIPT_DEFAULT.resolve(), b2_args)
 
     end_time = dt.datetime.now()
     print(f"Pipeline completed in {format_duration(start_time, end_time)}.")

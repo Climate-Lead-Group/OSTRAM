@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import copy
+import csv
+import hashlib
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -66,6 +69,68 @@ class AcceptedBaselineTests(unittest.TestCase):
             baseline.BaselineValidationError, "byte-count drift"
         ):
             baseline.validate_record(changed)
+
+    def test_governed_manifest_binds_root_and_derived_outputs(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            manifest = root / "STAGE_2_GOVERNED_COMPARATOR_MANIFEST.csv"
+            rows = []
+            for index, scenario in enumerate(
+                baseline.canonical_scenarios(), start=1
+            ):
+                payload = f"{scenario} value {index}\n".encode("utf-8")
+                filename = (
+                    f"Pre_processed_{scenario}_0_"
+                    "StorageDelayN5_OpenBCK_RMCarefulXLSX.txt"
+                )
+                output = (
+                    root
+                    / "t1_confection"
+                    / "Executables"
+                    / f"{scenario}_0"
+                    / filename
+                )
+                output.parent.mkdir(parents=True)
+                output.write_bytes(payload)
+                rows.append(
+                    {
+                        "Scenario": scenario,
+                        "AuthorityClass": (
+                            baseline.GOVERNED_ROOT_AUTHORITY
+                            if scenario in baseline.DECISION_ROOTS
+                            else baseline.GOVERNED_DERIVED_AUTHORITY
+                        ),
+                        "SHA256": hashlib.sha256(payload).hexdigest(),
+                        "ByteSize": len(payload),
+                        "LineCount": 1,
+                        "Provenance": "fixture root plus declared rules",
+                    }
+                )
+            with manifest.open("w", encoding="utf-8", newline="") as stream:
+                writer = csv.DictWriter(
+                    stream, fieldnames=baseline.GOVERNED_MANIFEST_COLUMNS
+                )
+                writer.writeheader()
+                writer.writerows(rows)
+
+            loaded = baseline.load_governed_manifest(manifest)
+            self.assertEqual(len(loaded), 15)
+            self.assertEqual(
+                len(baseline.validate_governed_output_files(root, loaded)),
+                15,
+            )
+
+            rows[1]["AuthorityClass"] = baseline.GOVERNED_ROOT_AUTHORITY
+            with manifest.open("w", encoding="utf-8", newline="") as stream:
+                writer = csv.DictWriter(
+                    stream, fieldnames=baseline.GOVERNED_MANIFEST_COLUMNS
+                )
+                writer.writeheader()
+                writer.writerows(rows)
+            with self.assertRaisesRegex(
+                baseline.BaselineValidationError, "authority class drift"
+            ):
+                baseline.load_governed_manifest(manifest)
 
     def test_report_lineage_is_distinct_and_byte_preserved(self) -> None:
         baseline.validate_report_lineage(REPO_ROOT)

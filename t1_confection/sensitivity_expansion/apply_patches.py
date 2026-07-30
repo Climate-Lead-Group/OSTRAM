@@ -3,7 +3,8 @@ apply_patches.py  --  OSTRAM sensitivity post-A3 patcher   (CLG / OSTRAM)
 ========================================================================
 
 Builds a sensitivity scenario's A-O_Parametrization.xlsx by branching from
-the validated B_Optimised_VRE A-O and applying, in order:
+the ``base_scenario`` declared by its canonical registry/patch contract and
+applying, in order:
 
     1. the SHARED VRE physical-potential ceiling layer
        (sensitivity_expansion/reference/vre_ceilings_base.json)
@@ -11,7 +12,7 @@ the validated B_Optimised_VRE A-O and applying, in order:
        A3_process/rules_scripts/configs/<scenario>/patches.json
 
 Design (patterned on the rules_scripts):
-  * Non-destructive to the SOURCE: the validated B_Opt A-O is never mutated.
+  * Non-destructive to the SOURCE: the declared root A-O is never mutated.
   * Idempotent: every run rebuilds the target folder from a FRESH copy of the
     source A1_Outputs folder, so the result depends only on (source + patches),
     never on a prior patched state.
@@ -541,8 +542,9 @@ def scale_activity_to_ceiling(ws, col_map, year_cols, tech, ceil, maxcap_orig, l
         flip_proj_mode(ws, col_map, r)
 
 
-def apply_ceiling_layer(wb, log):
-    base = json.loads(CEIL_BASE.read_text(encoding="utf-8"))
+def apply_ceiling_layer(wb, log, ceiling_path=CEIL_BASE):
+    ceiling_path = Path(ceiling_path)
+    base = json.loads(ceiling_path.read_text(encoding="utf-8"))
     sheet, param = base["sheet"], base["param"]
     ceilings = base["ceilings_gw"]
     ws = wb[sheet]
@@ -560,7 +562,10 @@ def apply_ceiling_layer(wb, log):
         # coherence: an activity floor sized above the ceiling is unproducible
         # once MaxCap is clipped (C_Target NDC cap_envelope) -> scale it down.
         scale_activity_to_ceiling(ws, col_map, year_cols, tech, ceil, maxcap_orig, log)
-    log["ceiling_layer"] = {"n_techs": len(ceilings), "source": str(CEIL_BASE)}
+    log["ceiling_layer"] = {
+        "n_techs": len(ceilings),
+        "source": str(ceiling_path),
+    }
 
 
 def apply_run_patches(wb, patches, log, minimum_boundaries=None):
@@ -590,17 +595,49 @@ def validate_patch_authorities(patches, authority_path=None):
 # --------------------------------------------------------------------------
 # Orchestration
 # --------------------------------------------------------------------------
-def build_scenario(scenario, source="B_Optimised_VRE", skip_backup=False):
-    src_dir = A1_OUTPUTS / f"A1_Outputs_{source}"
-    tgt_dir = A1_OUTPUTS / f"A1_Outputs_{scenario}"
-    patches_path = CONFIGS / scenario / "patches.json"
+def build_scenario(
+    scenario,
+    source=None,
+    skip_backup=False,
+    *,
+    a1_outputs=A1_OUTPUTS,
+    configs=CONFIGS,
+    ceiling_path=CEIL_BASE,
+    authority_path=SOASIA_V18,
+):
+    """Rebuild one derived scenario from its explicitly declared root.
 
-    if not (src_dir / PARAM_FILE).is_file():
-        raise FileNotFoundError(f"source A-O not found: {src_dir/PARAM_FILE}")
+    ``source`` is retained as a fail-closed compatibility override.  When it
+    is supplied it must equal ``patches.json::base_scenario``; omitting it uses
+    the declaration directly.  Injectable path roots support pristine,
+    disposable materialization proofs without touching the live worktree.
+    """
+
+    a1_outputs = Path(a1_outputs)
+    configs = Path(configs)
+    patches_path = configs / scenario / "patches.json"
     if not patches_path.is_file():
         raise FileNotFoundError(f"patches.json not found: {patches_path}")
     patches = json.loads(patches_path.read_text(encoding="utf-8"))
-    minimum_boundaries = validate_patch_authorities(patches)
+    declared_source = patches.get("base_scenario")
+    if not declared_source:
+        raise ValueError(f"{patches_path} does not declare base_scenario")
+    if source is not None and source != declared_source:
+        raise ValueError(
+            f"source override {source!r} conflicts with "
+            f"{patches_path.name}::base_scenario={declared_source!r}"
+        )
+    source = declared_source
+
+    src_dir = a1_outputs / f"A1_Outputs_{source}"
+    tgt_dir = a1_outputs / f"A1_Outputs_{scenario}"
+
+    if not (src_dir / PARAM_FILE).is_file():
+        raise FileNotFoundError(f"source A-O not found: {src_dir/PARAM_FILE}")
+    minimum_boundaries = validate_patch_authorities(
+        patches,
+        authority_path=authority_path,
+    )
 
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     # Backup any pre-existing target, then rebuild from a FRESH source copy.
@@ -619,7 +656,7 @@ def build_scenario(scenario, source="B_Optimised_VRE", skip_backup=False):
 
     wb = load_workbook(tgt_dir / PARAM_FILE)
     if patches.get("apply_vre_ceiling_layer", True):
-        apply_ceiling_layer(wb, log)
+        apply_ceiling_layer(wb, log, ceiling_path=ceiling_path)
     apply_run_patches(
         wb,
         patches,
@@ -720,7 +757,14 @@ def self_test():
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--scenario", help="scenario name (config folder under configs/)")
-    ap.add_argument("--source-scenario", default="B_Optimised_VRE")
+    ap.add_argument(
+        "--source-scenario",
+        default=None,
+        help=(
+            "Fail-closed compatibility override; must match the "
+            "patches.json base_scenario declaration."
+        ),
+    )
     ap.add_argument("--self-test", action="store_true")
     ap.add_argument("--restore", action="store_true")
     ap.add_argument("--skip-backup", action="store_true")

@@ -137,7 +137,7 @@ def resolve_plan(
         snapshot_dir=(
             paths.t1_confection
             / "A1_Outputs"
-            / "_post_a2_snapshot_BAU"
+            / f"_post_a2_snapshot_{scenario}"
         ),
         workdir_base=paths.process_dir,
         keep_workdir=cli_args.keep_workdir,

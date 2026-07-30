@@ -24,7 +24,9 @@ A3_SCRIPT = T1_ROOT / "A3_process.py"
 PATCH_SCRIPT = T1_ROOT / "sensitivity_expansion" / "apply_patches.py"
 TXCAP_CONFIG = T1_ROOT / "A3_process" / "rules_scripts" / "configs" / "B_Opt_TxCap150" / "patches.json"
 LINKFREEZE_CONFIG = T1_ROOT / "A3_process" / "rules_scripts" / "configs" / "B_Opt_LinkFreeze" / "patches.json"
-SCENARIO_REGISTRY = TEST_ROOT / "scenarios.yaml"
+SCENARIO_REGISTRY = (
+    REPO_ROOT / "t1_confection" / "scenario_registry.json"
+)
 
 YEARS = tuple(range(2023, 2051))
 STUDY_YEARS = tuple(range(2027, 2051))
@@ -690,30 +692,13 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
             ),
         )
         registry = json.loads(SCENARIO_REGISTRY.read_text(encoding="utf-8"))
-        scenarios = {entry["name"]: entry for entry in registry["scenarios"]}
+        scenarios = {
+            entry["name"]: entry for entry in registry["derived_scenarios"]
+        }
+        self.assertNotIn("B_Opt_LinkFreeze", scenarios)
         self.assertEqual(
-            scenarios["B_Opt_LinkFreeze"],
-            {
-                "name": "B_Opt_LinkFreeze",
-                "tier": "superseded-protected",
-                "source_scenario": "B_Optimised_VRE",
-                "recipe": "link-freeze",
-                "cleanup_acceptance": False,
-                "cleanup_exclusion_reason": (
-                    "superseded provenance scenario; no A2, otoole, compiled, "
-                    "or direct output evidence"
-                ),
-            },
-        )
-        self.assertEqual(
-            scenarios["B_Opt_TxCap150"],
-            {
-                "name": "B_Opt_TxCap150",
-                "tier": "final",
-                "source_scenario": "B_Optimised_VRE",
-                "recipe": "transmission-capex-150",
-                "cleanup_acceptance": True,
-            },
+            scenarios["B_Opt_TxCap150"]["base_scenario"],
+            "B_Optimised_VRE",
         )
         linkfreeze = json.loads(LINKFREEZE_CONFIG.read_text(encoding="utf-8"))
         self.assertEqual(linkfreeze["base_scenario"], "B_Optimised_VRE")

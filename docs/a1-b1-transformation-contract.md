@@ -1,10 +1,12 @@
 # A1/A2-to-B1 transformation contract
 
 > **Historical transformation contract:** The branch-scoped no-solver evidence and
-> claims below are preserved as recorded. Current acceptance authority is the
-> [portable final 15-scenario baseline](../tests/regression/reports/accepted_compiled_solver_baseline_15.json),
-> derived from accepted correction `d295dcc` and protected manifest SHA-256
-> `778b4706522bc2b29911e74d5b31d24355c84cbe4c0c7d11d1c9680b2ddc9916`.
+> claims below are preserved as recorded. The portable
+> [final 15-scenario baseline](../tests/regression/reports/accepted_compiled_solver_baseline_15.json)
+> is historical source-bound evidence. Current acceptance authority for
+> derived identities is the authenticated external Run 3
+> `STAGE_2_GOVERNED_COMPARATOR_MANIFEST.csv`, generated from current maintained
+> roots plus declared rules.
 >
 This document freezes the transformation boundary exercised by
 `refactor/a1-b1-transforms`. It supplements the
@@ -263,7 +265,7 @@ The three scopes are deliberately different:
 
 | Scope | Required count | Membership rule |
 |---|---:|---|
-| Preservation discovery | 20/20 | Every definition in `tests/regression/scenarios.yaml`, matching both A1 snapshots and A3 rule/config directories. |
+| Scenario registry | 16/16 | BAU plus the frozen accepted decision set in `t1_confection/scenario_registry.json`; only the four roots are prepared by A1/A2. |
 | Static cleanup acceptance | 16/16 | Plain `BAU` plus the 15 decision-relevant scenarios. |
 | Compiled-input equivalence | 15/15 | The decision scenarios below; plain `BAU` is excluded. |
 

@@ -95,8 +95,10 @@ and all 15 final text inputs newly generated in disposable worktrees.
 The preservation inventory contains 20 scenario snapshots under both `A1_Outputs/` and
 `A3_process/rules_scripts/configs/`. Only four are active Control scenarios (BAU, A, B,
 and C); derived and superseded-but-protected scenarios are not a plain `run.py` pass.
-Use the solver-free accepted-baseline validator to inspect the current
-decision-scenario contract:
+Use the solver-free validator to inspect the historical portable record. The
+current derived-scenario acceptance authority is the authenticated external
+`STAGE_2_GOVERNED_COMPARATOR_MANIFEST.csv`; Stages 8 and 14 pass that file with
+`--governed-manifest` and a disposable regeneration root with `--outputs-root`.
 
 ```bash
 python tests/regression/accepted_baseline.py

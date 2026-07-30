@@ -16,7 +16,9 @@ from unittest import mock
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
 CHARACTERIZATION_DOC = REPO_ROOT / "docs" / "core-workflow-characterization.md"
-SCENARIO_INVENTORY = TEST_ROOT / "scenarios.yaml"
+SCENARIO_INVENTORY = (
+    REPO_ROOT / "t1_confection" / "scenario_registry.json"
+)
 COMPILED_REPORT = (
     TEST_ROOT
     / "reports"
@@ -202,23 +204,25 @@ class EntrypointClassificationTests(unittest.TestCase):
 
 
 class ScenarioPolicyTests(unittest.TestCase):
-    def test_inventory_preserves_the_exact_twenty_scenario_definitions(self) -> None:
+    def test_registry_contains_only_bau_and_the_accepted_decision_scope(self) -> None:
         payload = json.loads(SCENARIO_INVENTORY.read_text(encoding="utf-8"))
-        names = tuple(item["name"] for item in payload["scenarios"])
-        self.assertEqual(names, PRESERVED_SCENARIOS)
-        self.assertEqual(len(names), 20)
-        self.assertEqual(len(set(names)), 20)
+        names = tuple(
+            payload["support_scenarios"] + payload["decision_scenarios"]
+        )
+        self.assertEqual(set(names), DECISION_RELEVANT_SCENARIOS | {"BAU"})
+        self.assertEqual(len(names), 16)
+        self.assertEqual(len(set(names)), 16)
 
     def test_static_cleanup_scope_is_exactly_bau_plus_the_decision_scope(self) -> None:
         payload = json.loads(SCENARIO_INVENTORY.read_text(encoding="utf-8"))
-        accepted = {
-            item["name"]
-            for item in payload["scenarios"]
-            if item["cleanup_acceptance"]
-        }
+        accepted = set(
+            payload["support_scenarios"] + payload["decision_scenarios"]
+        )
         self.assertEqual(accepted, DECISION_RELEVANT_SCENARIOS | {"BAU"})
         self.assertEqual(len(accepted), 16)
-        self.assertEqual(set(PRESERVED_SCENARIOS) - accepted, SUPERSEDED_PROTECTED_SCENARIOS)
+        self.assertTrue(
+            SUPERSEDED_PROTECTED_SCENARIOS.isdisjoint(accepted)
+        )
 
     def test_compiled_input_report_is_the_exact_decision_relevant_fifteen(self) -> None:
         report = json.loads(COMPILED_REPORT.read_text(encoding="utf-8"))
@@ -271,7 +275,7 @@ class DiscoveryCharacterizationTests(unittest.TestCase):
 
             self.assertEqual(self.b1.list_scenario_suffixes(root), list(included))
 
-    def test_b1_filter_preserves_discovery_order_and_restores_config_on_failure(self) -> None:
+    def test_b1_filter_preserves_requested_order_and_restores_config_on_failure(self) -> None:
         with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
             script_dir = Path(temp)
             (script_dir / "B1_Run_Compiler.py").write_text("", encoding="utf-8")
@@ -313,38 +317,22 @@ class DiscoveryCharacterizationTests(unittest.TestCase):
 
             self.assertEqual(
                 events,
-                [("update", "A"), ("compile", "A"), ("update", "C"), ("compile", "C")],
+                [("update", "C"), ("compile", "C")],
             )
             self.assertEqual(yaml_path.read_bytes(), original)
             self.assertFalse(yaml_path.with_suffix(".yaml.bak").exists())
 
-    def test_run_scenario_enumeration_uses_helper_output_without_launching_it(self) -> None:
-        with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
-            t1_dir = Path(temp)
-            helper = t1_dir / "A3_process" / "_scenarios.py"
-            helper.parent.mkdir()
-            helper.write_text("# fixture only\n", encoding="utf-8")
-            with (
-                mock.patch.object(self.launcher, "T1_DIR", t1_dir),
-                mock.patch.object(
-                    self.launcher.subprocess,
-                    "check_output",
-                    return_value="Loading environment\nBAU\nB_Optimised_VRE\n",
-                ) as check_output,
-            ):
-                result = self.launcher.enumerate_active_scenarios("OSTRAM-env")
+    def test_run_scenario_enumeration_uses_the_runtime_registry_only(self) -> None:
+        inventory = json.loads(SCENARIO_INVENTORY.read_text(encoding="utf-8"))
+        expected = ["BAU", *inventory["decision_scenarios"]]
+        with mock.patch.object(
+            self.launcher.subprocess,
+            "check_output",
+            side_effect=AssertionError("legacy scenario helper was launched"),
+        ):
+            result = self.launcher.enumerate_active_scenarios("OSTRAM-env")
 
-            self.assertEqual(result, ["BAU", "B_Optimised_VRE"])
-            command = check_output.call_args.args[0]
-            self.assertIn(str(helper.resolve()), command)
-            self.assertIn("list-active", command)
-
-    def test_run_scenario_enumeration_falls_back_to_bau_when_helper_is_absent(self) -> None:
-        with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
-            with mock.patch.object(self.launcher, "T1_DIR", Path(temp)):
-                self.assertEqual(
-                    self.launcher.enumerate_active_scenarios("OSTRAM-env"), ["BAU"]
-                )
+        self.assertEqual(result, expected)
 
     def test_a3_rule_yaml_resolution_prefers_scenario_override_then_default(self) -> None:
         with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
@@ -398,22 +386,30 @@ class CallPathBoundaryTests(unittest.TestCase):
         def pipeline(_env: str, script: Path, extra: str = "") -> None:
             events.append((script.name, extra))
 
-        def a3(_env: str, _script: Path, scenario: str) -> None:
-            events.append(("A3", scenario))
+        def a3(
+            _env: str,
+            _script: Path,
+            scenarios: list[str],
+            _seed: str | None,
+        ) -> None:
+            events.append(("A3", ",".join(scenarios)))
 
-        argv = ["run.py", "--skip-pull", "--scenarios", "C,A"]
+        argv = [
+            "run.py",
+            "--skip-pull",
+            "--scenarios",
+            "C_Target_VRE,A_Calibrated_BAU",
+        ]
         with (
             mock.patch.object(sys, "argv", argv),
             mock.patch.object(launcher, "check_tool_available"),
             mock.patch.object(launcher, "create_env_if_missing"),
             mock.patch.object(launcher, "ensure_deps"),
             mock.patch.object(launcher, "ensure_dvc_repo"),
-            mock.patch.object(launcher, "post_a2_snapshot_exists", return_value=False),
-            mock.patch.object(
-                launcher, "enumerate_active_scenarios", return_value=["A", "B", "C"]
-            ),
+            mock.patch.object(launcher, "root_snapshots_exist", return_value=False),
+            mock.patch.object(launcher, "ensure_root_output_directories"),
             mock.patch.object(launcher, "run_pipeline_script", side_effect=pipeline),
-            mock.patch.object(launcher, "run_a3_for_scenario", side_effect=a3),
+            mock.patch.object(launcher, "run_a3_for_scenarios", side_effect=a3),
             redirect_stdout(io.StringIO()),
         ):
             launcher.main()
@@ -423,10 +419,15 @@ class CallPathBoundaryTests(unittest.TestCase):
             [
                 ("A1_Pre_processing_OG_csvs.py", ""),
                 ("A2_AddTx.py", ""),
-                ("A3", "A"),
-                ("A3", "C"),
-                ("B1_Run_Compiler.py", '--scenarios "C,A"'),
-                ("B2_Executing_OG_Model.py", '--scenarios "C,A"'),
+                ("A3", "A_Calibrated_BAU,C_Target_VRE"),
+                (
+                    "B1_Run_Compiler.py",
+                    '--scenarios "A_Calibrated_BAU,C_Target_VRE"',
+                ),
+                (
+                    "B2_Executing_OG_Model.py",
+                    '--scenarios "A_Calibrated_BAU,C_Target_VRE"',
+                ),
             ],
         )
 
@@ -548,7 +549,7 @@ class CallPathBoundaryTests(unittest.TestCase):
         execute_source = ast.get_source_segment(
             _source("t1_confection/a3_orchestrator.py"), execute
         )
-        self.assertIn('"_post_a2_snapshot_BAU"', plan_source)
+        self.assertIn('f"_post_a2_snapshot_{scenario}"', plan_source)
         self.assertLess(
             execute_source.index("dependencies.copy_tree("),
             execute_source.index("dependencies.build_workdir("),
@@ -571,7 +572,7 @@ class CallPathBoundaryTests(unittest.TestCase):
             _source("t1_confection/b2_orchestrator.py"), resolution
         )
         self.assertIn(
-            "scenarios = [scenario for scenario in scenarios if scenario in requested]",
+            "scenario for scenario in requested_unique if scenario in discovered",
             resolution_source,
         )
         self.assertIn(
