@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -11,7 +12,18 @@ REPO_ROOT = TEST_ROOT.parents[1]
 sys.path.insert(0, str(TEST_ROOT))
 
 import accepted_baseline as baseline
-import ostram_regression as regression
+
+
+def _git(*args: str) -> str | None:
+    result = subprocess.run(
+        ["git", "-C", str(REPO_ROOT), *args],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode not in (0, 1):
+        raise AssertionError(result.stderr)
+    return result.stdout if result.stdout else None
 
 
 class AcceptedBaselineTests(unittest.TestCase):
@@ -68,8 +80,7 @@ class AcceptedBaselineTests(unittest.TestCase):
             "t1_confection/Config_MOMF_T1_A.yaml",
             "tests/regression/reports/accepted_compiled_solver_baseline_15.json",
         )
-        output = regression._git(
-            REPO_ROOT,
+        output = _git(
             "check-ignore",
             "-v",
             "--no-index",

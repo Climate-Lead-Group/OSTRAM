@@ -629,23 +629,27 @@ class A3ScenarioPlanningCharacterizationTests(unittest.TestCase):
             ),
         )
 
-    def test_legacy_and_unknown_scenario_failures_keep_system_exit_messages(self) -> None:
+    def test_missing_v18_and_unknown_scenario_failures_keep_system_exit_messages(self) -> None:
         args = argparse.Namespace(
             scenario="Not_BAU",
             rules_script=None,
             inherit_from=None,
         )
         with mock.patch.object(Path, "is_file", return_value=False):
-            with self.assertRaisesRegex(SystemExit, "scenario 'Not_BAU' != 'BAU'"):
+            with self.assertRaisesRegex(
+                SystemExit,
+                "required SOASIA v18 workbook not found",
+            ):
                 self.a3._resolve_scenario_config(args, Path("missing.xlsx"))
 
         args.scenario = "BAU"
         args.rules_script = ""
         with mock.patch.object(Path, "is_file", return_value=False):
-            self.assertEqual(
-                self.a3._resolve_scenario_config(args, Path("missing.xlsx")),
-                ("BAU", [], []),
-            )
+            with self.assertRaisesRegex(
+                SystemExit,
+                "required SOASIA v18 workbook not found",
+            ):
+                self.a3._resolve_scenario_config(args, Path("missing.xlsx"))
 
 
 class A3IsolatedBoundaryTests(unittest.TestCase):

@@ -35,8 +35,8 @@ Usage:
     python A3_process.py --scenario NDC          # runs NDC scenario
     python A3_process.py --keep-workdir          # debug: preserve intermediates
 
-Without SOASIA_OSeMOSYS_Template_v18.xlsx present, the script falls back to
-the legacy single-scenario BAU behavior.
+SOASIA_OSeMOSYS_Template_v18.xlsx is required. Each run materializes a
+scenario-specific working template from that maintained authority.
 """
 from __future__ import annotations
 
@@ -66,10 +66,6 @@ PIN_ROOT_SCENARIOS = _orchestrator.PWR_MIN_PIN_ROOT_SCENARIOS
 # USER CONFIGURATION — defaults; can be overridden via CLI
 # =============================================================================
 DEFAULT_SCENARIO = "BAU"
-
-# When SOASIA v18 is absent and we fall back to legacy single-scenario mode,
-# this is the rules_script invoked at stage 5.
-LEGACY_RULES_SCRIPT = "add_max_cap_investment_lid_rule.py"
 
 # Don't auto-clean the runtime workdir (A3_process/_run_<ts>/) — useful for debugging.
 KEEP_WORKDIR_DEFAULT = False
@@ -235,14 +231,11 @@ def build_workdir(
     s3 = wd / "stage3";   s3.mkdir()
     s5 = wd / "stage5";   s5.mkdir()
 
-    # Stage 1: scripts + asset templates. SOASIA_OSeMOSYS_Template_v17.xlsx is
-    # kept as a fallback for standalone Spyder runs of script 1; the orchestrator
-    # overrides it via OSTRAM_TEMPLATE_PATH env var pointing at the materialized
-    # per-scenario template.
+    # Stage 1: scripts + asset templates. Script 1 reads the materialized
+    # per-scenario template through OSTRAM_TEMPLATE_PATH.
     for f in ("1_merge_timeslices_into_WV.py", "2_extract_ao_extensions.py",
               "3_update_ao_from_extensions.py", "4_apply_manual_fixes.py",
               "5_propagate_timeslice_fabric.py",
-              "SOASIA_OSeMOSYS_Template_v17.xlsx",
               "OSTRAM_Timeslice_Outputs.xlsx",
               "OSTRAM_AO_Extensions_FILLED.xlsx"):
         shutil.copy(A3_PROCESS_DIR / f, s1 / f)
@@ -737,8 +730,7 @@ def _resolve_scenario_config(
     `--rules-script "set_retirement_schedule.py, set_min_capacity_floors.py"`).
     An explicit empty string means "skip stage 5".
 
-    When SOASIA v18 is absent, fall back to legacy BAU-only behavior with
-    LEGACY_RULES_SCRIPT (singleton chain) and no inheritance.
+    SOASIA v18 is the required scenario authority.
     """
     scenario = args.scenario
 
@@ -746,17 +738,7 @@ def _resolve_scenario_config(
         return [s.strip() for s in val.replace("\n", ",").split(",") if s.strip()]
 
     if not soasia.is_file():
-        if scenario != DEFAULT_SCENARIO:
-            sys.exit(
-                f"ERROR: SOASIA v18 not found at {soasia} and scenario "
-                f"'{scenario}' != '{DEFAULT_SCENARIO}'. Build v18 first via "
-                f"_build_v18_from_v17.py."
-            )
-        if args.rules_script is not None:
-            rules_scripts = _parse_csv(args.rules_script)
-        else:
-            rules_scripts = [LEGACY_RULES_SCRIPT] if LEGACY_RULES_SCRIPT else []
-        return scenario, rules_scripts, []
+        sys.exit(f"ERROR: required SOASIA v18 workbook not found at {soasia}")
 
     sys.path.insert(0, str(A3_PROCESS_DIR))
     try:

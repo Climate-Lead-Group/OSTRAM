@@ -2,7 +2,7 @@
 ## Updated: 2026-05-26
 ##
 ## Same evidence-based corridor overrides as B_Optimised_VRE (these
-## represent the actual project pipeline from Interconnectors.xlsx),
+## represent the project pipeline from the maintained v18 Interconnectors sheet),
 ## but with headroom_factor: 1.0 (no slack beyond the pipeline data).
 ##
 ## B_Opt uses 1.5× on the 3 India-internal corridors without project

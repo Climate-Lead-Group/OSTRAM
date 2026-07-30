@@ -30,8 +30,6 @@ Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
    configuration
    data-reference
    regression
-   archive/refactor/refactor-plan
-   archive/index
 
 
 Indices and tables

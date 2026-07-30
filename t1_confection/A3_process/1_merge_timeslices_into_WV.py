@@ -1,29 +1,31 @@
 # -*- coding: utf-8 -*-
 """
-merge_timeslices_into_WV.py  (v17)
+merge_timeslices_into_WV.py
 
 Reads OSTRAM_Timeslice_Outputs.xlsx and produces SOASIA_OSeMOSYS_WV.xlsx, a
-working copy of SOASIA_OSeMOSYS_Template_v17.xlsx with the four timeslice-
-related sheets rebuilt (tabs flipped from RED -> PINK) and two audit sheets
-appended (tabs in LIGHT YELLOW):
+working copy of the scenario template supplied through OSTRAM_TEMPLATE_PATH,
+with the four timeslice-related sheets rebuilt (tabs flipped from RED -> PINK)
+and two audit sheets appended (tabs in LIGHT YELLOW):
 
   Pink (rebuilt from Timeslice Outputs):
     Yearsplit_Template   <- TS YearSplit                      (broadcast across 2023-2050)
     DaySplit             <- derived from TS Config dayparts   (hours / 8760)
     Demand_Profiles      <- TS {region}_Dem, one block per region
-                           (entities sourced from v17 Demand_Profiles, codes ELC<REGION>03)
+                           (entities sourced from the materialized template,
+                           codes ELC<REGION>03)
     Capacities_CF        <- TS {region}_CF, driven by Secondary_Techs PWR roster
 
   Light yellow (auto-generated audit sheets):
-    Tech_Universe        Canonical roster of every PWR/MIN/RNW/TRN tech in v17,
-                         with tick-marks per source sheet, NeedsCF flag and CF_Status.
+    Tech_Universe        Canonical roster of every PWR/MIN/RNW/TRN tech in the
+                         materialized template, with tick-marks per source sheet,
+                         NeedsCF flag and CF_Status.
     CF_Provenance        Per-tech CF resolution: parsed category/region, TS sheet
                          used, TS tech_type matched, TS column used, Approximation_Flag,
                          and Resolution bucket (TS_MATCH / TS_DEFAULT / NO_TS_SOURCE / UNRESOLVED).
 
-The source v17 Template is NEVER modified (Setup-A: copy first, write to copy only).
+The source materialized template is NEVER modified (copy first, write to copy only).
 
-Run in Spyder with F5. Paths and mappings are in USER CONFIGURATION below.
+The A3 orchestrator supplies the required template path.
 """
 
 import os
@@ -40,15 +42,13 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 
 WORK_DIR = str(Path(__file__).resolve().parent)  # auto-detect (was hardcoded for Spyder)
 
-# Filenames carry no version suffix in-script; rename externally on version bumps.
-# OSTRAM_TEMPLATE_PATH overrides V17_TEMPLATE when the A3 orchestrator wants
-# this script to read a scenario-materialized template (produced by
-# _scenarios.materialize_scenario_template) instead of the raw v17 file.
-# Leaving the env var unset preserves standalone Spyder usage on v17.
-V17_TEMPLATE   = os.environ.get(
-    "OSTRAM_TEMPLATE_PATH",
-    WORK_DIR + "/SOASIA_OSeMOSYS_Template_v17.xlsx",
-)
+# The A3 orchestrator materializes the selected scenario from the maintained
+# v18 workbook and supplies that disposable template explicitly.
+TEMPLATE_PATH = os.environ.get("OSTRAM_TEMPLATE_PATH")
+if not TEMPLATE_PATH:
+    raise RuntimeError(
+        "OSTRAM_TEMPLATE_PATH is required; run this stage through A3_process.py"
+    )
 TIMESLICE_FILE = WORK_DIR + "/OSTRAM_Timeslice_Outputs.xlsx"
 WV_FILE        = WORK_DIR + "/SOASIA_OSeMOSYS_WV.xlsx"
 
@@ -194,13 +194,13 @@ print("=" * 72)
 print("STEP 1 -- Copy v17 Template -> WV")
 print("=" * 72)
 
-if not os.path.exists(V17_TEMPLATE):
-    raise RuntimeError(f"v17 template not found: {V17_TEMPLATE}")
+if not os.path.exists(TEMPLATE_PATH):
+    raise RuntimeError(f"materialized template not found: {TEMPLATE_PATH}")
 if not os.path.exists(TIMESLICE_FILE):
     raise RuntimeError(f"Timeslice file not found: {TIMESLICE_FILE}")
 
-shutil.copy(V17_TEMPLATE, WV_FILE)
-print(f"  source: {V17_TEMPLATE}")
+shutil.copy(TEMPLATE_PATH, WV_FILE)
+print(f"  source: {TEMPLATE_PATH}")
 print(f"  target: {WV_FILE}")
 
 wb = load_workbook(WV_FILE)
@@ -295,7 +295,7 @@ print("\n" + "=" * 72)
 print("STEP 4 -- Demand_Profiles")
 print("=" * 72)
 
-dp_v17 = pd.read_excel(V17_TEMPLATE, sheet_name="Demand_Profiles")
+dp_v17 = pd.read_excel(TEMPLATE_PATH, sheet_name="Demand_Profiles")
 dp_v17 = dp_v17.dropna(subset=["Timeslices", "Fuel/Tech"]).reset_index(drop=True)
 
 # Carry over the entity-defining columns from v17 (Fuel/Tech, Name, Demand/Share, Refs)
@@ -345,7 +345,7 @@ print("\n" + "=" * 72)
 print("STEP 5 -- Capacities_CF (driven by Secondary_Techs PWR roster)")
 print("=" * 72)
 
-st_v17 = pd.read_excel(V17_TEMPLATE, sheet_name="Secondary_Techs")
+st_v17 = pd.read_excel(TEMPLATE_PATH, sheet_name="Secondary_Techs")
 st_v17 = st_v17.dropna(subset=["Tech"]).copy()
 
 # Unique PWR codes -> first non-null (Tech.ID, Tech.Name)
@@ -508,7 +508,7 @@ canon_name = {}   # tech -> canonical Tech.Name (first non-null encountered)
 
 for sheet in V17_TECH_SHEETS:
     # BUG-1 FIX: Capacities_CF was rebuilt in-memory by Step 5 (df_cf).
-    # Re-reading it from V17_TEMPLATE would return the OLD rows (WON/WOF only),
+    # Re-reading it from TEMPLATE_PATH would return the OLD rows (WON/WOF only),
     # causing every other PWR tech that gained CF rows in Step 5 to stay
     # unmarked in Tech_Universe.  Use df_cf directly for this sheet; all other
     # sheets are untouched by Script 1 and the template read remains correct.
@@ -516,7 +516,7 @@ for sheet in V17_TECH_SHEETS:
         df = df_cf.copy()
     else:
         try:
-            df = pd.read_excel(V17_TEMPLATE, sheet_name=sheet)
+            df = pd.read_excel(TEMPLATE_PATH, sheet_name=sheet)
         except Exception as e:
             print(f"  (skipping '{sheet}': {e})")
             continue
@@ -614,7 +614,7 @@ def check(name, cond, detail=""):
 wb2 = load_workbook(WV_FILE)
 
 # (a) v17 source untouched
-check("v17 source file still exists", os.path.exists(V17_TEMPLATE))
+check("materialized source file still exists", os.path.exists(TEMPLATE_PATH))
 
 # (b) 4 pink sheets present + correct color
 for s in ["Yearsplit_Template", "Capacities_CF", "Demand_Profiles", "DaySplit"]:

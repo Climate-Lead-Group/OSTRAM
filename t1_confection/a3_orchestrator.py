@@ -163,10 +163,7 @@ def execute_plan(
     dependencies.emit(f"  input-dir         : {plan.input_dir}")
     dependencies.emit(f"  output-dir        : {plan.output_dir}")
     dependencies.emit(f"  snapshot (source) : {plan.snapshot_dir}")
-    dependencies.emit(
-        f"  SOASIA v18        : "
-        f"{plan.soasia if plan.soasia.is_file() else '(legacy mode, v18 absent)'}"
-    )
+    dependencies.emit(f"  SOASIA v18        : {plan.soasia}")
     dependencies.emit(
         f"  rules_scripts     : {list(plan.rules_scripts) or '(none)'}"
     )

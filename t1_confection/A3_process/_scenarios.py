@@ -245,7 +245,7 @@ def read_control_sheet(
     if CONTROL_SHEET not in wb.sheetnames:
         raise ValueError(
             f"Workbook {path.name} has no '{CONTROL_SHEET}' sheet. "
-            f"Was it built with _build_v18_from_v17.py?"
+            "Use the maintained v18 scenario workbook."
         )
     ws = wb[CONTROL_SHEET]
 

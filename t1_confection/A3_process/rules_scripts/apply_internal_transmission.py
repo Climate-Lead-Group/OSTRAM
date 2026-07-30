@@ -38,8 +38,8 @@ Values applied
         RNWTRN<node> = residuals[node].RNWTRN   (RE available at peak x margin)
         PWRTRN<node> = residuals[node].PWRTRN   (peak x margin - RE x margin)
         RNWNLI/RNWRPO/TRNNLI/TRNRPO = 0          (new-build / repower mechanisms)
-    Per-node values come from the frozen `internal_tx_residuals.csv`
-    (compute_internal_tx_residuals.py, peak x 1.2, desk-checked).
+    Per-node values come from the frozen, desk-checked
+    `internal_tx_residuals.csv` (peak x 1.2).
   * CapitalCost / FixedCost (uniform across nodes — intra-node tx is accounting;
     the study is about interties):
         non-RE (PWRTRN/TRNNLI/TRNRPO) = base_capital_cost / base_fixed_cost

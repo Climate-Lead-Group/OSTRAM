@@ -8,11 +8,8 @@
 >
 This document freezes the transformation boundary exercised by
 `refactor/a1-b1-transforms`. It supplements the
-[cleanup and refactor rules](refactor-rules.md), the
-[archived refactor plan](archive/refactor/refactor-plan.md), the
-[core workflow characterization](core-workflow-characterization.md), and the
-[offline regression policy](regression.md). Those documents remain authoritative
-when this note is silent.
+[core workflow characterization](core-workflow-characterization.md) and the
+[offline regression policy](regression.md).
 
 This is a behavior-preserving Tier 3 structural refactor. Its purpose is to make
 the established transformation plan, pure table operations, I/O effects,
@@ -332,8 +329,8 @@ target set.
 This migration must not change TRN costs, operational life,
 `ResidualCapacity`, `FUTURE` classification, `TotalAnnualMaxCapacity`,
 `TotalAnnualMaxCapacityInvestment`, or `relax_interconnectors` behavior.
-`SOASIA_v18_REFS.xlsx` remains auxiliary evidence and is not a runtime authority.
-The retired NATY workbook has no production, configuration, or test fallback.
+Historical citation workbooks are not runtime authorities. The retired NATY
+workbook has no production, configuration, or test fallback.
 
 Any candidate compiled-input difference is a blocker here. It must not be
 allowlisted or normalized away. Validation on this branch is compile-only and

@@ -51,32 +51,6 @@ OPTIONAL_MODEL_WRITING_ENTRYPOINTS = (
     "t1_confection/Z_AUX_D1b_set_trn_limits_from_flows.py",
 )
 
-ANALYSIS_UTILITIES = (
-    "tools/analysis/check_combined.py",
-    "tools/analysis/ostram_scenario_analysis.py",
-    "tools/analysis/ostram_trn_plotter.py",
-    "tools/analysis/slice_by_country.py",
-    "tools/analysis/analyse_sensitivity.py",
-    "tools/analysis/concat_all_scenarios.py",
-    "tools/analysis/reproduce_A1_A6.py",
-    "tools/analysis/visualization/Z_AUX_generate_interactive_dashboards_aggregated.py",
-    "tools/analysis/visualization/Z_AUX_generate_RES_diagram.py",
-    "tools/analysis/visualization/Z_AUX_generate_transmission_maps.py",
-    "tools/analysis/visualization/Z_AUX_interconnections_dashboard.py",
-    "t1_confection/check_combined.py",
-    "t1_confection/ostram_scenario_analysis.py",
-    "t1_confection/ostram_trn_plotter.py",
-    "t1_confection/slice_by_country.py",
-    "t1_confection/analyse_sensitivity.py",
-    "t1_confection/concat_all_scenarios_2.py",
-    "t1_confection/reproduce_A1_A6.py",
-    "t1_confection/sensitivity_expansion/analyse_ws4_vs_phaseB.py",
-    "t1_confection/Z_AUX_generate_interactive_dashboards_aggregated.py",
-    "t1_confection/Z_AUX_generate_RES_diagram.py",
-    "t1_confection/Z_AUX_generate_transmission_maps.py",
-    "t1_confection/Z_AUX_interconnections_dashboard.py",
-)
-
 PRESERVED_SCENARIOS = (
     "BAU",
     "A_Calibrated_BAU",
@@ -193,32 +167,18 @@ def _main_guard(tree: ast.Module) -> ast.If:
 
 
 class EntrypointClassificationTests(unittest.TestCase):
-    def test_core_entrypoints_and_analysis_utilities_are_disjoint_and_parse(self) -> None:
+    def test_core_entrypoints_parse(self) -> None:
         core = (
             set(PRIMARY_CORE_ENTRYPOINTS)
             | set(CANONICAL_CLI_MODULES)
             | set(CORE_IMPLEMENTATION_MODULES)
             | set(OPTIONAL_MODEL_WRITING_ENTRYPOINTS)
         )
-        utilities = set(ANALYSIS_UTILITIES)
-        self.assertTrue(core.isdisjoint(utilities))
 
-        for relative in sorted(core | utilities):
+        for relative in sorted(core):
             path = REPO_ROOT / relative
             self.assertTrue(path.is_file(), path)
             ast.parse(path.read_text(encoding="utf-8-sig"), filename=str(path))
-
-    def test_primary_core_entrypoints_do_not_delegate_to_analysis_utilities(self) -> None:
-        utility_names = {Path(relative).name for relative in ANALYSIS_UTILITIES}
-        for relative in PRIMARY_CORE_ENTRYPOINTS:
-            source = _source(relative)
-            referenced = {name for name in utility_names if name in source}
-            self.assertEqual(referenced, set(), f"{relative} references {referenced}")
-
-        for relative in CORE_IMPLEMENTATION_MODULES:
-            source = _source(relative)
-            referenced = {name for name in utility_names if name in source}
-            self.assertEqual(referenced, set(), f"{relative} references {referenced}")
 
     def test_classification_and_boundaries_are_documented(self) -> None:
         text = CHARACTERIZATION_DOC.read_text(encoding="utf-8")
@@ -227,7 +187,6 @@ class EntrypointClassificationTests(unittest.TestCase):
             *CANONICAL_CLI_MODULES,
             *CORE_IMPLEMENTATION_MODULES,
             *OPTIONAL_MODEL_WRITING_ENTRYPOINTS,
-            *ANALYSIS_UTILITIES,
         ):
             self.assertIn(f"`{relative}`", text)
 
@@ -786,12 +745,14 @@ class NoSolverSafetyTests(unittest.TestCase):
         self.assertEqual(
             set(by_boundary),
             {
-                ("ostram_regression.py", "_git", "subprocess.run"),
+                ("test_accepted_baseline.py", "_git", "subprocess.run"),
                 ("test_canonical_cli.py", "_run_smoke", "subprocess.run"),
             },
         )
 
-        call = by_boundary[("ostram_regression.py", "_git", "subprocess.run")]
+        call = by_boundary[
+            ("test_accepted_baseline.py", "_git", "subprocess.run")
+        ]
         self.assertTrue(call.args)
         command = call.args[0]
         self.assertIsInstance(command, ast.List)

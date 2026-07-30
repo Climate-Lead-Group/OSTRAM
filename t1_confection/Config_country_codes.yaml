@@ -330,8 +330,8 @@ TRNNLI:
 #   * re_capex_multiplier is the WS-1 slider (per-kW RE tx premium ~1.5-2.3x,
 #     LBNL 2019; default 2.0). Set 1.5 / 1.8 / 2.0 / 3.0 to sensitise.
 #   * OperationalLife applies to all 6 families (fixes the 50/20 drift).
-#   * Per-node ResidualCapacity comes from rules_scripts/internal_tx_residuals.csv
-#     (compute_internal_tx_residuals.py, peak x residual_margin; NLI/RPO = 0).
+#   * Per-node ResidualCapacity comes from the maintained, desk-checked
+#     rules_scripts/internal_tx_residuals.csv (peak x residual_margin; NLI/RPO = 0).
 internal_transmission:
   base_capital_cost: 100        # non-RE $/kW
   base_fixed_cost: 4            # non-RE $/kW/yr (4% of CapEx)

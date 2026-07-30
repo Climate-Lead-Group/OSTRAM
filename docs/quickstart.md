@@ -95,10 +95,11 @@ and all 15 final text inputs newly generated in disposable worktrees.
 The preservation inventory contains 20 scenario snapshots under both `A1_Outputs/` and
 `A3_process/rules_scripts/configs/`. Only four are active Control scenarios (BAU, A, B,
 and C); derived and superseded-but-protected scenarios are not a plain `run.py` pass.
-Use the solver-free regression inventory to inspect coverage:
+Use the solver-free accepted-baseline validator to inspect the current
+decision-scenario contract:
 
 ```bash
-python tests/regression/ostram_regression.py discover --repo . --scope regression
+python tests/regression/accepted_baseline.py
 ```
 
 ## 2. Pipeline Stages Invoked by `run.py`
@@ -167,16 +168,13 @@ OSTRAM/
 ├── run.py                          # Main launcher (A1/A2 → A3 → B1 → B2)
 ├── dvc.yaml                        # DVC data-versioning (not used to orchestrate execution)
 ├── environment.yaml                # Conda environment spec
-├── docs/archive/audits/TECHNICAL_INVENTORY.md  # Historical generated inventory
 ├── concatenate_files/
 │   └── concatenate_ostram.py       # Result concatenation, invoked by B2
-├── tools/analysis/                 # Standalone result analysis; no solver execution
 └── t1_confection/                  # Core model directory
     ├── Config_MOMF_T1_A.yaml       # Compiler configuration (years, timeslices, sheet/param lists)
     ├── Config_MOMF_T1_AB.yaml      # Execution configuration (solver, patch chain toggles)
     ├── Config_country_codes.yaml   # Country, technology & transmission-tech definitions
     ├── Config_region_consolidation.yaml
-    ├── Config_tech_equivalences.yaml   # Reference mapping from the old LATAM/RELAC model (not read by the active pipeline)
     ├── OG_csvs_inputs/             # Raw OSeMOSYS CSV inputs
     ├── A1_Outputs/                 # Excel model files (per scenario)
     │   ├── _post_a2_snapshot_BAU/  # Snapshot A3 restores from for every scenario
@@ -192,7 +190,6 @@ OSTRAM/
     ├── A2_Output_Params/            # B1-compiled parameter CSVs (per scenario)
     ├── A2_Outputs_Params_otoole/    # otoole-format CSVs for the solver
     ├── Executables/                 # Solver data files, LP/.sol, per-scenario result CSVs
-    ├── Figures/                     # HTML outputs from the Z_AUX_* visualization scripts
     ├── Miscellaneous/               # Templates, GMPL model file, otoole schema, preprocessing script
     ├── Tech_Country_Matrix.xlsx     # Technology-country config
     ├── Secondary_Techs_Editor.xlsx  # Manual parameter editor (D1/D2)
@@ -221,6 +218,7 @@ A typical modeling workflow follows these steps. All terminal commands must be r
 5. **Run A3** for each scenario (`python run.py --skip-b1 --skip-b2`, or `A3_process.py --scenario <name>` directly) to materialize the scenario workbooks.
 6. **Optional manual touch-ups** with the Secondary Techs Editor (`D1` + manual editing + `D2`) for one-off parameter overrides, interconnection ON/OFF toggles, or OSTRAM-source data integration not covered by a rule script. This step is independent of A3 and can be applied to any scenario's workbook set afterward.
 7. **Run the full pipeline** with `python run.py` (or `--skip-a3` if you only need to recompile/re-execute an already-processed scenario set).
-8. **Analyze results** using the output CSVs, or the interactive HTML dashboards produced by the `Z_AUX_generate_*`/`Z_AUX_*_dashboard.py` scripts (see {doc}`auxiliary-tools`).
+8. **Analyze results** using the generated output CSVs and your chosen
+   downstream reporting environment.
 
 See {doc}`pipeline` for a detailed walkthrough of each stage.

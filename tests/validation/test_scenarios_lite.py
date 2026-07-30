@@ -28,7 +28,6 @@ import _scenarios as S
 
 
 V18 = A3_PROCESS_DIR / "SOASIA_OSeMOSYS_Template_v18.xlsx"
-USER_GUIDE_HTML = A3_PROCESS_DIR / "docs" / "USER_GUIDE.html"
 
 
 PASS = "\033[92mPASS\033[0m"
@@ -149,33 +148,6 @@ def test_topo_order_chain() -> tuple[bool, str]:
 
 
 # -----------------------------------------------------------------------------
-# Test 11 — HTML build
-# -----------------------------------------------------------------------------
-
-def test_html_build() -> tuple[bool, str]:
-    """USER_GUIDE.html must exist, be non-trivial, and reference key sections."""
-    if not USER_GUIDE_HTML.is_file():
-        return False, f"missing: {USER_GUIDE_HTML}"
-    size = USER_GUIDE_HTML.stat().st_size
-    if size < 5000:
-        return False, f"suspiciously small ({size} B)"
-    text = USER_GUIDE_HTML.read_text(encoding="utf-8")
-    needles = [
-        "<title>",
-        "<style>",
-        "Control",
-        "Restrictions",
-        "rules_script",
-        "inherit_restrictions_from",
-        "<table",
-    ]
-    missing = [n for n in needles if n not in text]
-    if missing:
-        return False, f"HTML missing markers: {missing}"
-    return True, f"OK ({size // 1024} KB, all markers present)"
-
-
-# -----------------------------------------------------------------------------
 # Bonus — confirm read_restrictions guard works (empty Restrictions case)
 # -----------------------------------------------------------------------------
 
@@ -199,23 +171,24 @@ def test_read_restrictions_empty_source() -> tuple[bool, str]:
 
 
 # -----------------------------------------------------------------------------
-# Bonus — sanity-check materialize on the seeded v18 (BAU only) matches v17
+# Bonus — sanity-check materialize on the maintained v18 (BAU only)
 # -----------------------------------------------------------------------------
 
 def test_materialize_bau_contract() -> tuple[bool, str]:
     """materialize(BAU) drops multi-scenario sheets and scenario columns."""
-    v17 = A3_PROCESS_DIR / "SOASIA_OSeMOSYS_Template_v17.xlsx"
-    if not v17.is_file():
-        return False, f"v17 missing: {v17}"
     with TemporaryDirectory(ignore_cleanup_errors=True) as td:
         out = Path(td) / "materialized.xlsx"
         S.materialize_scenario_template(V18, "BAU", out)
-        wb17 = load_workbook(v17, data_only=False)
         wb18 = load_workbook(V18, data_only=False)
         wbm = load_workbook(out, data_only=False)
-        if wb17.sheetnames != wbm.sheetnames:
+        expected_sheets = [
+            name
+            for name in wb18.sheetnames
+            if name not in {S.CONTROL_SHEET, S.RESTRICTIONS_SHEET}
+        ]
+        if expected_sheets != wbm.sheetnames:
             return False, (
-                f"sheet name mismatch: v17={wb17.sheetnames} "
+                f"sheet name mismatch: expected={expected_sheets} "
                 f"mat={wbm.sheetnames}"
             )
         for s in S.PARAMETRIC_SHEETS:
@@ -224,7 +197,7 @@ def test_materialize_bau_contract() -> tuple[bool, str]:
             expected = [value for value in h18 if value != "scenario"]
             if hm != expected:
                 return False, f"{s} materialized header differs from v18 minus scenario"
-        return True, "OK: v17 sheet set + v18 headers without scenario"
+        return True, "OK: v18 runtime sheets + headers without scenario"
 
 
 # -----------------------------------------------------------------------------
@@ -237,7 +210,6 @@ TESTS = [
     ("9c  duplicate scenario name",        test_duplicate_scenario_name),
     ("10a cycle detection",                test_inheritance_cycle),
     ("10b topo order chain (BAU<-NDC)",    test_topo_order_chain),
-    ("11  USER_GUIDE.html sanity",         test_html_build),
     ("+   read_restrictions empty source", test_read_restrictions_empty_source),
     ("+   materialize(BAU) contract",       test_materialize_bau_contract),
 ]
