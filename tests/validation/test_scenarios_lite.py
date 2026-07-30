@@ -27,7 +27,7 @@ sys.path.insert(0, str(A3_PROCESS_DIR))
 import _scenarios as S
 
 
-V18 = A3_PROCESS_DIR / "SOASIA_OSeMOSYS_Template_v18.xlsx"
+V18 = A3_PROCESS_DIR / "OSTRAM_Scenario_Inputs.xlsx"
 
 
 PASS = "\033[92mPASS\033[0m"

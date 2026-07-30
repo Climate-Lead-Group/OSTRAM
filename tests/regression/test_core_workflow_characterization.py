@@ -197,7 +197,7 @@ class EntrypointClassificationTests(unittest.TestCase):
             "`list_scenario_suffixes` once, then `update_main_scenario` ->",
             "run_otoole_conversion` -> `run_preprocessing_script` -> "
             "`run_days_in_day_type_patcher`",
-            "stage_0_5_rnwbio` -> `stage_1_scripts_1_to_5` -> `stage_1b`",
+            "stage_1_scripts_1_to_5` -> `stage_1b`",
         )
         for marker in boundary_markers:
             self.assertIn(marker, text)
@@ -503,7 +503,6 @@ class CallPathBoundaryTests(unittest.TestCase):
             "dependencies.copy_tree",
             "dependencies.build_workdir",
             "dependencies.materialize_scenario_template",
-            "dependencies.stage_0_5_rnwbio",
             "dependencies.stage_1_scripts_1_to_5",
             "dependencies.stage_1b",
             "dependencies.stage_2_and_2_5",
@@ -525,7 +524,6 @@ class CallPathBoundaryTests(unittest.TestCase):
                 "dependencies.copy_tree",
                 "dependencies.build_workdir",
                 "dependencies.materialize_scenario_template",
-                "dependencies.stage_0_5_rnwbio",
                 "dependencies.stage_1_scripts_1_to_5",
                 "dependencies.stage_1b",
                 "dependencies.stage_2_and_2_5",

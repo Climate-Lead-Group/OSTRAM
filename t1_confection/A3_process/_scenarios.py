@@ -47,7 +47,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_SOASIA = SCRIPT_DIR / "SOASIA_OSeMOSYS_Template_v18.xlsx"
+DEFAULT_SOASIA = SCRIPT_DIR / "OSTRAM_Scenario_Inputs.xlsx"
 RULES_SCRIPTS_DIR = SCRIPT_DIR / "rules_scripts"
 
 CONTROL_SHEET = "Control"

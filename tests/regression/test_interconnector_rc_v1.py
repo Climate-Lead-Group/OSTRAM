@@ -17,7 +17,7 @@ from openpyxl import Workbook, load_workbook
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
 T1_ROOT = REPO_ROOT / "t1_confection"
-TEMPLATE = T1_ROOT / "A3_process" / "SOASIA_OSeMOSYS_Template_v18.xlsx"
+TEMPLATE = T1_ROOT / "A3_process" / "OSTRAM_Scenario_Inputs.xlsx"
 FIX_SCRIPT = T1_ROOT / "A3_process" / "fix_trn_residuals.py"
 AUTHORITY_SCRIPT = T1_ROOT / "A3_process" / "interconnector_authority.py"
 A3_SCRIPT = T1_ROOT / "A3_process.py"

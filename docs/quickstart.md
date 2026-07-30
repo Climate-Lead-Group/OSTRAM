@@ -72,7 +72,7 @@ Unlike older versions of this pipeline, `run.py` does **not** call `dvc repro`. 
 | `--skip-a3` | off | Skip the A3 scenario-processing stage |
 | `--skip-b1` | off | Skip the B1 compiler stage |
 | `--skip-b2` | off | Skip the B2 execution stage |
-| `--scenarios` | all active scenarios | Comma-separated subset. With A3 enabled, every name must be active in the SOASIA v18 `Control` sheet. With `--skip-a3`, existing derived snapshot names can be passed to B1/B2. |
+| `--scenarios` | all active scenarios | Comma-separated subset. With A3 enabled, every root name must be active in `OSTRAM_Scenario_Inputs.xlsx::Control`; derived names come from the canonical registry. With `--skip-a3`, existing derived snapshot names can be passed to B1/B2. |
 
 Example running only two scenarios, skipping the solver stage:
 
@@ -185,7 +185,8 @@ OSTRAM/
     │   ├── A1_Outputs_B_Optimised_VRE/
     │   └── A1_Outputs_C_Target_VRE/
     ├── A3_process/                 # A3 scenario-processing engine (see Stage A3 below)
-    │   ├── SOASIA_OSeMOSYS_Template_v18.xlsx   # Control/Restrictions + scenario template
+    │   ├── OSTRAM_Scenario_Inputs.xlsx   # Maintained scenario/AO-decision authority
+    │   ├── OSTRAM_Timeslice_Inputs.xlsx  # Maintained timeslice authority
     │   └── rules_scripts/
     │       └── configs/            # Rule/config snapshots for the full protected 20-scenario inventory
     ├── A2_Extra_Inputs/             # Extra inputs (storage, emissions, projections, battery replacement)
@@ -216,7 +217,7 @@ A typical modeling workflow follows these steps. All terminal commands must be r
 1. **Configure countries and technologies** in `Config_country_codes.yaml`.
 2. **Generate the Tech-Country Matrix** (`A0`).
 3. **Preprocess raw CSVs into Excel model files** (`A1`) and **add transmission technologies** (`A2`) -- or just run `python run.py`, which does this automatically the first time.
-4. **Define scenarios** in the SOASIA v18 template's `Control` sheet (scenario name, `rules_script` chain, optional `inherit_restrictions_from`), and add the corresponding YAML files under `t1_confection/A3_process/rules_scripts/configs/<Scenario>/`. This is the primary mechanism for creating a new scenario -- see {doc}`pipeline` (Stage A3) for the full YAML anatomy (retirement schedules, investment lids, VRE targets, interconnector relaxation, capacity floors).
+4. **Define maintained roots** in `OSTRAM_Scenario_Inputs.xlsx::Control` (scenario name, `rules_script` chain, optional `inherit_restrictions_from`), and add the corresponding YAML files under `t1_confection/A3_process/rules_scripts/configs/<Scenario>/`. Define derived scenarios in `scenario_registry.json` instead of adding Control rows. See {doc}`pipeline` (Stage A3) for the full YAML anatomy (retirement schedules, investment lids, VRE targets, interconnector relaxation, capacity floors).
 5. **Run A3** for each scenario (`python run.py --skip-b1 --skip-b2`, or `A3_process.py --scenario <name>` directly) to materialize the scenario workbooks.
 6. **Optional manual touch-ups** with the Secondary Techs Editor (`D1` + manual editing + `D2`) for one-off parameter overrides, interconnection ON/OFF toggles, or OSTRAM-source data integration not covered by a rule script. This step is independent of A3 and can be applied to any scenario's workbook set afterward.
 7. **Run the full pipeline** with `python run.py` (or `--skip-a3` if you only need to recompile/re-execute an already-processed scenario set).

@@ -153,7 +153,7 @@ t1_confection/Executables/*/*_0.txt
 # copies beside their target. Regenerable safety nets — keep them local, never in the repo.
 t1_confection/A1_Outputs/*_PREPATCH_*
 t1_confection/A1_Outputs/*_PRE_*
-t1_confection/A3_process/SOASIA_OSeMOSYS_Template_v18_PRE_*.xlsx
+t1_confection/A3_process/OSTRAM_Scenario_Inputs_PRE_*.xlsx
 
 # Timestamped sensitivity patch audit records are reproducible. Existing
 # tracked records remain historical evidence; ignore only new generated ones.

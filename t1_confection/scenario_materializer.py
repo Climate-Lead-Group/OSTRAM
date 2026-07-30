@@ -39,7 +39,7 @@ T1_CONFECTION = Path(__file__).resolve().parent
 A1_OUTPUTS = T1_CONFECTION / "A1_Outputs"
 A3_ENTRYPOINT = T1_CONFECTION / "A3_process.py"
 A3_PROCESS = T1_CONFECTION / "A3_process"
-DEFAULT_SOASIA = A3_PROCESS / "SOASIA_OSeMOSYS_Template_v18.xlsx"
+DEFAULT_SOASIA = A3_PROCESS / "OSTRAM_Scenario_Inputs.xlsx"
 PROVENANCE_FILE = "_scenario_materialization.json"
 REQUIRED_AO_FILES = (
     "A-O_Parametrization.xlsx",

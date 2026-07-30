@@ -6,13 +6,13 @@ Transforms the 4 fresh A1 outputs in `A1_Outputs/A1_Outputs_<scenario>/` into
 their final form by chaining the sequential operations bundled in
 `t1_confection/A3_process/`. The source snapshot is ALWAYS the BAU one
 (`_post_a2_snapshot_BAU`); other scenarios diverge from BAU only through
-SOASIA_OSeMOSYS_Template_v18.xlsx overrides, optional inherited restrictions
+  OSTRAM_Scenario_Inputs.xlsx overrides, optional inherited restrictions
 from previous runs, and the rules_script assigned to the scenario.
 
 Pipeline:
   Stage 0    materialize scenario template  v18 -> flat v17-shaped per scenario
-  Stage 0.5  fix_rnwbio_restore             input fix (RNWBIO rows)
-  Stage 1    scripts 1-5                    AO/WV alignment pipeline
+  Stage 1    scripts 1-5                    AO/WV alignment pipeline, with
+                                            maintained AO decision overlay
   Stage 1b   A0_insert_reserve_margin       adds System Parameters sheet
              add_max OLD (8ee8056)          fills 9999 / zeroes
              add_max NEW (2be1616)          flips Projection.Mode
@@ -28,14 +28,15 @@ Pipeline:
   Stage 5    <rules_script>                 applies the scenario's rules
   Late WS-4  apply_base_year_pin            exact audited 2023-2026 PWR/MIN
                                             keys on the three canonical roots
-  Stage 6    persist_run_restrictions       write CHANGES.json into v18
+  Stage 6    persist_run_restrictions       write CHANGES.json into a
+                                            disposable scenario-state copy
 
 Usage:
     python A3_process.py                         # runs BAU (default)
     python A3_process.py --scenario NDC          # runs NDC scenario
     python A3_process.py --keep-workdir          # debug: preserve intermediates
 
-SOASIA_OSeMOSYS_Template_v18.xlsx is required. Each run materializes a
+OSTRAM_Scenario_Inputs.xlsx is required. Each run materializes a
 scenario-specific working template from that maintained authority.
 """
 from __future__ import annotations
@@ -59,7 +60,7 @@ except ModuleNotFoundError as error:
 T1_CONFECTION = Path(__file__).resolve().parent
 A3_PROCESS_DIR = T1_CONFECTION / "A3_process"
 RULES_SCRIPTS_DIR = A3_PROCESS_DIR / "rules_scripts"
-SOASIA_V18 = A3_PROCESS_DIR / "SOASIA_OSeMOSYS_Template_v18.xlsx"
+SOASIA_V18 = A3_PROCESS_DIR / "OSTRAM_Scenario_Inputs.xlsx"
 PIN_ROOT_SCENARIOS = _orchestrator.PWR_MIN_PIN_ROOT_SCENARIOS
 
 # =============================================================================
@@ -95,11 +96,11 @@ def parse_cli_args() -> argparse.Namespace:
     p.add_argument(
         "--scenario", default=DEFAULT_SCENARIO,
         help=f"Scenario name (default: {DEFAULT_SCENARIO}). Must be present in "
-             f"SOASIA v18 Control sheet when v18 exists.",
+             f"OSTRAM scenario-input Control sheet.",
     )
     p.add_argument(
         "--soasia", default=None, type=Path,
-        help=f"Path to SOASIA v18 (default: {SOASIA_V18}). Pass an alternative "
+        help=f"Path to scenario inputs (default: {SOASIA_V18}). Pass an alternative "
              f"to test scenarios without touching the canonical file.",
     )
     p.add_argument(
@@ -231,13 +232,13 @@ def build_workdir(
     s3 = wd / "stage3";   s3.mkdir()
     s5 = wd / "stage5";   s5.mkdir()
 
-    # Stage 1: scripts + asset templates. Script 1 reads the materialized
-    # per-scenario template through OSTRAM_TEMPLATE_PATH.
+    # Stage 1: scripts + asset templates. Script 1 and the decision overlay
+    # read the materialized per-scenario template through OSTRAM_TEMPLATE_PATH.
     for f in ("1_merge_timeslices_into_WV.py", "2_extract_ao_extensions.py",
+              "apply_ao_extension_decisions.py",
               "3_update_ao_from_extensions.py", "4_apply_manual_fixes.py",
               "5_propagate_timeslice_fabric.py",
-              "OSTRAM_Timeslice_Outputs.xlsx",
-              "OSTRAM_AO_Extensions_FILLED.xlsx"):
+              "OSTRAM_Timeslice_Inputs.xlsx"):
         shutil.copy(A3_PROCESS_DIR / f, s1 / f)
 
     # Stage 2: patch_ao_c2a + TECH_TYPES
@@ -256,9 +257,8 @@ def build_workdir(
         "add_max_capacity_investment_rule_NEW_2be1616.py",
         "B1b_Pre_solver_validation.py", "_xlsx_validation_core.py",
         "Config_MOMF_T1_A.yaml", "TECH_TYPES.csv",
-        "fix_rnwbio_restore.py", "fix_pwrpet_clear.py", "fix_elc_pmode_revert.py",
+        "fix_pwrpet_clear.py", "fix_elc_pmode_revert.py",
         "6_sync_og_to_ts20.py",
-        "A-O_Parametrization_REFERENCE_with_RNWBIO.xlsx",
     ):
         shutil.copy(A3_PROCESS_DIR / f, wd / f)
 
@@ -306,9 +306,16 @@ def stage_1_scripts_1_to_5(s1: Path) -> None:
     banner("Stage 1 — scripts 1-5 (AO/WV alignment pipeline)")
     run_subproc([PYTHON, s1 / "1_merge_timeslices_into_WV.py"], cwd=s1, label="1_merge_timeslices_into_WV.py")
     run_subproc([PYTHON, s1 / "2_extract_ao_extensions.py"], cwd=s1, label="2_extract_ao_extensions.py")
-    # Script 3 reads OSTRAM_AO_Extensions.xlsx — we have to overwrite it with the FILLED version
-    shutil.copy(s1 / "OSTRAM_AO_Extensions_FILLED.xlsx", s1 / "OSTRAM_AO_Extensions.xlsx")
-    print("    (OSTRAM_AO_Extensions.xlsx <- OSTRAM_AO_Extensions_FILLED.xlsx)")
+    run_subproc(
+        [
+            PYTHON,
+            s1 / "apply_ao_extension_decisions.py",
+            "--extensions",
+            s1 / "OSTRAM_AO_Extensions.xlsx",
+        ],
+        cwd=s1,
+        label="apply_ao_extension_decisions.py",
+    )
     run_subproc([PYTHON, s1 / "3_update_ao_from_extensions.py"], cwd=s1, label="3_update_ao_from_extensions.py")
     run_subproc([PYTHON, s1 / "4_apply_manual_fixes.py"], cwd=s1, label="4_apply_manual_fixes.py")
     run_subproc([PYTHON, s1 / "5_propagate_timeslice_fabric.py"], cwd=s1, label="5_propagate_timeslice_fabric.py")
@@ -643,19 +650,20 @@ def stage_6_persist_restrictions(
     scenario: str,
     rules_scripts: list[str],
 ) -> None:
-    """Stage 6: persist all rules_scripts CHANGES.json into v18.Restrictions.
+    """Persist rule change logs into the supplied disposable state workbook.
 
     Each script in the chain writes its change log as a sibling of the input
     dir (e.g. `<s5.name>_PRE_<TAG>_<ts>_CHANGES.json` in s5.parent). We collect
     ALL of them and persist as a single clear-and-write so the Restrictions
     rows for this scenario reflect the full chain output. Rows belonging to
-    other scenarios stay untouched.
+    other scenarios stay untouched. The orchestrator always supplies a
+    workdir-local copy; this helper must never receive the maintained input.
     """
     if not rules_scripts:
         return
     if not soasia.is_file():
         return
-    banner("Stage 6 — persist run restrictions to SOASIA v18 Restrictions sheet")
+    banner("Stage 6 — persist run restrictions to disposable scenario state")
     search_dir = s5.parent
     candidates = sorted(
         search_dir.glob(f"{s5.name}_PRE_*_CHANGES.json"),
@@ -730,7 +738,7 @@ def _resolve_scenario_config(
     `--rules-script "set_retirement_schedule.py, set_min_capacity_floors.py"`).
     An explicit empty string means "skip stage 5".
 
-    SOASIA v18 is the required scenario authority.
+    OSTRAM_Scenario_Inputs.xlsx is the required scenario authority.
     """
     scenario = args.scenario
 
@@ -738,7 +746,7 @@ def _resolve_scenario_config(
         return [s.strip() for s in val.replace("\n", ",").split(",") if s.strip()]
 
     if not soasia.is_file():
-        sys.exit(f"ERROR: required SOASIA v18 workbook not found at {soasia}")
+        sys.exit(f"ERROR: required scenario-input workbook not found at {soasia}")
 
     sys.path.insert(0, str(A3_PROCESS_DIR))
     try:
@@ -794,7 +802,6 @@ def _orchestration_dependencies() -> _orchestrator.A3Dependencies:
         resolve_path=_resolve,
         build_workdir=build_workdir,
         materialize_scenario_template=_materialize_scenario_template,
-        stage_0_5_rnwbio=stage_0_5_rnwbio,
         stage_1_scripts_1_to_5=stage_1_scripts_1_to_5,
         stage_1b=stage_1b,
         stage_2_and_2_5=stage_2_and_2_5,

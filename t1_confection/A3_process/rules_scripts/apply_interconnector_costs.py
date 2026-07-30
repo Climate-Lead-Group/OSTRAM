@@ -30,7 +30,7 @@ interconnector costs are a one-row add to Interconnector_Params — no change he
 Source of the Interconnector_Params values (priority order):
   1. --template <path>
   2. $OSTRAM_TEMPLATE_PATH   (A3 stage 0 sets this to the materialized template)
-  3. <script_dir>/../SOASIA_OSeMOSYS_Template_v18.xlsx   (canonical fallback)
+  3. <script_dir>/../OSTRAM_Scenario_Inputs.xlsx   (canonical fallback)
 
 OUTPUT
 ------
@@ -63,7 +63,7 @@ from openpyxl import load_workbook, Workbook
 DEFAULT_TARGET_SHEETS = ["Secondary Techs", "Fixed Horizon Parameters"]
 PARAM_FILE_NAME = "A-O_Parametrization.xlsx"
 IC_SHEET = "Interconnector_Params"
-TEMPLATE_NAME = "SOASIA_OSeMOSYS_Template_v18.xlsx"
+TEMPLATE_NAME = "OSTRAM_Scenario_Inputs.xlsx"
 
 APPLIED_PARAMS = ("CapitalCost", "FixedCost", "OperationalLife")
 

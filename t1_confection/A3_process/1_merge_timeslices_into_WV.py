@@ -2,12 +2,12 @@
 """
 merge_timeslices_into_WV.py
 
-Reads OSTRAM_Timeslice_Outputs.xlsx and produces SOASIA_OSeMOSYS_WV.xlsx, a
+Reads OSTRAM_Timeslice_Inputs.xlsx and produces SOASIA_OSeMOSYS_WV.xlsx, a
 working copy of the scenario template supplied through OSTRAM_TEMPLATE_PATH,
 with the four timeslice-related sheets rebuilt (tabs flipped from RED -> PINK)
 and two audit sheets appended (tabs in LIGHT YELLOW):
 
-  Pink (rebuilt from Timeslice Outputs):
+  Pink (rebuilt from Timeslice Inputs):
     Yearsplit_Template   <- TS YearSplit                      (broadcast across 2023-2050)
     DaySplit             <- derived from TS Config dayparts   (hours / 8760)
     Demand_Profiles      <- TS {region}_Dem, one block per region
@@ -49,7 +49,7 @@ if not TEMPLATE_PATH:
     raise RuntimeError(
         "OSTRAM_TEMPLATE_PATH is required; run this stage through A3_process.py"
     )
-TIMESLICE_FILE = WORK_DIR + "/OSTRAM_Timeslice_Outputs.xlsx"
+TIMESLICE_FILE = WORK_DIR + "/OSTRAM_Timeslice_Inputs.xlsx"
 WV_FILE        = WORK_DIR + "/SOASIA_OSeMOSYS_WV.xlsx"
 
 YEAR_START = 2023

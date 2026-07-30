@@ -83,7 +83,7 @@ A1_OUTPUTS = REPO / "A1_Outputs"
 A3_PROCESS_DIR = REPO / "A3_process"
 CONFIGS = A3_PROCESS_DIR / "rules_scripts" / "configs"
 CEIL_BASE = SCRIPT_DIR / "reference" / "vre_ceilings_base.json"
-SOASIA_V18 = A3_PROCESS_DIR / "SOASIA_OSeMOSYS_Template_v18.xlsx"
+SOASIA_V18 = A3_PROCESS_DIR / "OSTRAM_Scenario_Inputs.xlsx"
 MINIMUM_BOUNDARY_SOURCE = "minimum_investment_boundary"
 
 # ``apply_patches.py`` is also executed directly, with only

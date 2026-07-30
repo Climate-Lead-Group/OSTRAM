@@ -16,7 +16,7 @@ OSTRAM processes energy system data through a multi-stage pipeline. This page do
 ├──────────────────────────────────────────────────────────────────────┤
 │                    SCENARIO GENERATION (A3)                          │
 │                                                                      │
-│  For each active scenario declared in the SOASIA v18 Control sheet:  │
+│  For each selected root declared in the scenario-input Control sheet:│
 │    1. Restore the post-A2 BAU snapshot                               │
 │    2. Merge 20-timeslice fabric, apply template extensions/fixes     │
 │    3. Run automatic pre-solver validation (auto-fix)                 │
@@ -241,17 +241,17 @@ python t1_confection/B2_Executing_OG_Model.py --scenarios A_Calibrated_BAU,C_Tar
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--scenario` | `BAU` | Root scenario name. Must exist in the SOASIA v18 `Control` sheet. |
-| `--soasia` | `A3_process/SOASIA_OSeMOSYS_Template_v18.xlsx` | Override the template path (useful for testing new scenarios without touching the canonical file). |
+| `--scenario` | `BAU` | Root scenario name. Must exist in the scenario-input `Control` sheet. |
+| `--soasia` | `A3_process/OSTRAM_Scenario_Inputs.xlsx` | Override the scenario-input path (useful for testing new scenarios without touching the canonical file). |
 | `--rules-script` | From `Control` sheet | Override the scenario's rule-script chain. An empty string skips Stage 5 only; it does not disable the root-gated late-WS4 pin. |
 | `--inherit-from` | From `Control` sheet | Override `inherit_restrictions_from` (comma-separated scenario names). |
 | `--input-dir` | `A1_Outputs/A1_Outputs_<scenario>` | Override the input workbook directory. |
 | `--output-dir` | Same as `--input-dir` | Override the delivery directory. |
 | `--keep-workdir` | off | Preserve the `_run_<timestamp>/` working directory for debugging instead of deleting it. |
 
-### Scenario Definition (SOASIA v18 `Control` Sheet)
+### Scenario Definition (`OSTRAM_Scenario_Inputs.xlsx`)
 
-Scenarios are declared as rows in the `Control` sheet of `SOASIA_OSeMOSYS_Template_v18.xlsx`, with columns:
+Scenarios are declared as rows in the `Control` sheet of `OSTRAM_Scenario_Inputs.xlsx`, with columns:
 
 | Column | Meaning |
 |--------|---------|
@@ -273,31 +273,31 @@ For a single `--scenario` invocation, `A3_process.py` runs:
 ```text
 0. Restore input from `_post_a2_snapshot_<root>` for the requested root.
 1. Build a temporary workdir: t1_confection/A3_process/_run_<timestamp>/.
-2. Stage 0: materialize the SOASIA v18 scenario template (_scenarios.py).
-3. Stage 0.5: fix_rnwbio_restore.py -- restore RNWBIO reference rows.
-4. Stage 1: 1_merge_timeslices_into_WV.py, 2_extract_ao_extensions.py,
+2. Stage 0: materialize the maintained scenario-input workbook (_scenarios.py).
+3. Stage 1: 1_merge_timeslices_into_WV.py, 2_extract_ao_extensions.py,
+   apply_ao_extension_decisions.py,
    3_update_ao_from_extensions.py, 4_apply_manual_fixes.py,
    5_propagate_timeslice_fabric.py.
-5. Stage 1b: A0_insert_reserve_margin.py, add_max_capacity_investment_rule_OLD_8ee8056.py,
+4. Stage 1b: A0_insert_reserve_margin.py, add_max_capacity_investment_rule_OLD_8ee8056.py,
    add_max_capacity_investment_rule_NEW_2be1616.py, fix_elc_pmode_revert.py,
    B1b_Pre_solver_validation.py --auto-fix-all (auto-fixes infeasible
    Min/Max capacity investment and activity-limit combinations).
-6. Stage 2/2.5: patch_ao_c2a.py, fix_pwrpet_clear.py.
-7. Stage 3: fix_trn_residuals.py --mode min --cutoff-year 2023,
+5. Stage 2/2.5: patch_ao_c2a.py, fix_pwrpet_clear.py.
+6. Stage 3: fix_trn_residuals.py --mode min --cutoff-year 2023,
    clear_stale_unbinding_caps.py, cap_trn_to_residual.py.
-8. Stage 4: consolidate the 4 final workbooks.
-9. Stage 4.5: apply inherited Restrictions from inherit_restrictions_from (skipped if empty).
-10. Stage 5: run the scenario's rules_script chain, each against the consolidated workbooks.
-11. Late WS3/WS4: apply interconnector costs, internal-transmission calibration,
+7. Stage 4: consolidate the 4 final workbooks.
+8. Stage 4.5: apply inherited Restrictions from inherit_restrictions_from (skipped if empty).
+9. Stage 5: run the scenario's rules_script chain, each against the consolidated workbooks.
+10. Late WS3/WS4: apply interconnector costs, internal-transmission calibration,
     and internal-transmission losses.
-12. Late WS4: for the exact A_Calibrated_BAU, B_Optimised_VRE, and C_Target_VRE
+11. Late WS4: for the exact A_Calibrated_BAU, B_Optimised_VRE, and C_Target_VRE
     roots only, validate and apply pwr_min_2023_2026_pin.csv to its explicit
     2023--2026 PWR/MIN workbook cells. BAU is untouched; descendants inherit the
     corrected root before their sensitivity patches.
-13. Stage 6: 6_sync_og_to_ts20.py -- sync OG_csvs_inputs/Config_MOMF_T1_A.yaml to the
-    20-timeslice fabric; persist each rule script's CHANGES.json into the SOASIA
-    v18 Restrictions sheet.
-14. Deliver the final workbook set to A1_Outputs/A1_Outputs_<scenario>/; remove the
+12. Stage 6: 6_sync_og_to_ts20.py -- sync OG_csvs_inputs/Config_MOMF_T1_A.yaml to the
+    20-timeslice fabric; persist each rule script's CHANGES.json only into a
+    disposable scenario-state copy of the input workbook.
+13. Deliver the final workbook set to A1_Outputs/A1_Outputs_<scenario>/; remove the
     workdir unless --keep-workdir.
 ```
 

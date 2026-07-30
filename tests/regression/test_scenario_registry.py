@@ -190,7 +190,7 @@ class ScenarioRegistryTests(unittest.TestCase):
                 soasia=(
                     T1_CONFECTION
                     / "A3_process"
-                    / "SOASIA_OSeMOSYS_Template_v18.xlsx"
+                    / "OSTRAM_Scenario_Inputs.xlsx"
                 ),
             )
 

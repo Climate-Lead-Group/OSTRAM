@@ -84,7 +84,7 @@ remain unchanged even where they are awkward.
 [`a3_orchestrator.py`](../t1_confection/a3_orchestrator.py) retain the characterized
 stage sequence:
 
-`stage_0_5_rnwbio` -> `stage_1_scripts_1_to_5` -> `stage_1b` ->
+`stage_1_scripts_1_to_5` -> `stage_1b` ->
 `stage_2_and_2_5` -> `stage_3_fix_2` -> `stage_4_consolidate` ->
 `stage_4_5_apply_inherited_restrictions` -> `stage_5_rules_scripts` ->
 `stage_ws3_interconnector_costs` -> `stage_ws3_internal_transmission` ->

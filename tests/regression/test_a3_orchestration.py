@@ -4,6 +4,7 @@ import argparse
 import ast
 import builtins
 import importlib.util
+import inspect
 import io
 import json
 import os
@@ -257,7 +258,6 @@ class A3TraceHarness:
         fake_scenarios.materialize_scenario_template = materialize
         stage3_result = self.paths["s3"] / "post-trn-cap.xlsx"
         stage_replacements = {
-            "stage_0_5_rnwbio": inert_stage("stage_0_5_rnwbio"),
             "stage_1_scripts_1_to_5": inert_stage("stage_1_scripts_1_to_5"),
             "stage_1b": inert_stage("stage_1b"),
             "stage_2_and_2_5": inert_stage("stage_2_and_2_5"),
@@ -426,6 +426,23 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
             [name for name in expected if not callable(getattr(module, name, None))],
             [],
         )
+
+    def test_runtime_assets_use_authorities_without_staging_retired_machinery(
+        self,
+    ) -> None:
+        module = _load_a3("runtime_authority_assets")
+        build_source = inspect.getsource(module.build_workdir)
+        stage1_source = inspect.getsource(module.stage_1_scripts_1_to_5)
+        self.assertIn("OSTRAM_Timeslice_Inputs.xlsx", build_source)
+        self.assertIn("apply_ao_extension_decisions.py", build_source)
+        self.assertNotIn("OSTRAM_AO_Extensions_FILLED.xlsx", build_source)
+        self.assertNotIn(
+            "A-O_Parametrization_REFERENCE_with_RNWBIO.xlsx",
+            build_source,
+        )
+        self.assertNotIn("fix_rnwbio_restore.py", build_source)
+        self.assertIn("apply_ao_extension_decisions.py", stage1_source)
+        self.assertNotIn("OSTRAM_AO_Extensions_FILLED.xlsx", stage1_source)
 
     def test_cli_defaults_and_explicit_values_match_predecessor(self) -> None:
         module = _load_a3("cli_values")
@@ -654,7 +671,7 @@ class A3ScenarioPlanningCharacterizationTests(unittest.TestCase):
         with mock.patch.object(Path, "is_file", return_value=False):
             with self.assertRaisesRegex(
                 SystemExit,
-                "required SOASIA v18 workbook not found",
+                "required scenario-input workbook not found",
             ):
                 self.a3._resolve_scenario_config(args, Path("missing.xlsx"))
 
@@ -663,7 +680,7 @@ class A3ScenarioPlanningCharacterizationTests(unittest.TestCase):
         with mock.patch.object(Path, "is_file", return_value=False):
             with self.assertRaisesRegex(
                 SystemExit,
-                "required SOASIA v18 workbook not found",
+                "required scenario-input workbook not found",
             ):
                 self.a3._resolve_scenario_config(args, Path("missing.xlsx"))
 
@@ -734,7 +751,7 @@ class A3IsolatedBoundaryTests(unittest.TestCase):
                     t1_confection=t1,
                     process_dir=process_dir,
                     default_soasia=(
-                        process_dir / "SOASIA_OSeMOSYS_Template_v18.xlsx"
+                        process_dir / "OSTRAM_Scenario_Inputs.xlsx"
                     ),
                 ),
             )
@@ -853,7 +870,6 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
             template_value = str(materialized)
             expected.extend(
                 [
-                    ("stage_0_5_rnwbio", harness.workdir, harness.paths["s1"], template_value, harness.caller),
                     ("stage_1_scripts_1_to_5", harness.paths["s1"], template_value, harness.caller),
                     ("stage_1b", harness.workdir, harness.paths["s1"], harness.paths["s1b"], template_value, harness.caller),
                     ("stage_2_and_2_5", harness.workdir, harness.paths["s1b"], harness.paths["s2"], template_value, harness.caller),
@@ -902,9 +918,16 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                     ),
                     ("stage_6_sync_og_to_ts20", harness.workdir, harness.paths["s1"], template_value, harness.caller),
                     (
+                        "copy",
+                        harness.soasia,
+                        harness.workdir
+                        / "_scenario_run_state_A_Calibrated_BAU.xlsx",
+                    ),
+                    (
                         "stage_6_persist_restrictions",
                         harness.paths["s5"],
-                        harness.soasia,
+                        harness.workdir
+                        / "_scenario_run_state_A_Calibrated_BAU.xlsx",
                         "A_Calibrated_BAU",
                         ["set_retirement_schedule.py", "set_min_capacity_floors.py"],
                         template_value,

@@ -107,7 +107,7 @@ directory.
 `a3_orchestrator.py`, while retaining all existing stage helpers. Every selected
 input directory is restored from `_post_a2_snapshot_BAU` before the work directory
 is built. The frozen stage path is
-`stage_0_5_rnwbio` -> `stage_1_scripts_1_to_5` -> `stage_1b` ->
+`stage_1_scripts_1_to_5` -> `stage_1b` ->
 `stage_2_and_2_5` -> `stage_3_fix_2` -> `stage_4_consolidate` ->
 `stage_4_5_apply_inherited_restrictions` -> `stage_5_rules_scripts` ->
 `stage_ws3_interconnector_costs` -> `stage_ws3_internal_transmission` ->
