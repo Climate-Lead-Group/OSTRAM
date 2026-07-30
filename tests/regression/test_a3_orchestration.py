@@ -404,7 +404,6 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
             "_read_script_yaml_name",
             "_resolve_script_yaml",
             "build_workdir",
-            "stage_0_5_rnwbio",
             "stage_1_scripts_1_to_5",
             "stage_1b",
             "stage_2_and_2_5",
@@ -426,6 +425,7 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
             [name for name in expected if not callable(getattr(module, name, None))],
             [],
         )
+        self.assertFalse(hasattr(module, "stage_0_5_rnwbio"))
 
     def test_runtime_assets_use_authorities_without_staging_retired_machinery(
         self,

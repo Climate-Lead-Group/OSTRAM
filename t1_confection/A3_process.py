@@ -293,15 +293,6 @@ def build_workdir(
 # ---------------------------------------------------------------------------
 # Pipeline stages
 # ---------------------------------------------------------------------------
-def stage_0_5_rnwbio(wd: Path, s1: Path) -> None:
-    banner("Stage 0.5 — fix_rnwbio_restore")
-    run_subproc([
-        PYTHON, wd / "fix_rnwbio_restore.py",
-        "--input", s1 / "A-O_Parametrization.xlsx",
-        "--source", wd / "A-O_Parametrization_REFERENCE_with_RNWBIO.xlsx",
-    ], label="fix_rnwbio_restore.py")
-
-
 def stage_1_scripts_1_to_5(s1: Path) -> None:
     banner("Stage 1 — scripts 1-5 (AO/WV alignment pipeline)")
     run_subproc([PYTHON, s1 / "1_merge_timeslices_into_WV.py"], cwd=s1, label="1_merge_timeslices_into_WV.py")

@@ -5,12 +5,13 @@ from pathlib import Path
 
 Reads SOASIA_OSeMOSYS_WV.xlsx (output of stage 1) and the four A-O
 parametrization workbooks; writes OSTRAM_AO_Extensions.xlsx -- the
-review file that drives stage 3.
+freshly generated review file that receives the maintained decision overlay
+before it drives stage 3.
 
 Pipeline:
   1_merge_timeslices_into_WV.py    v17 + timeslices       -> WV
   2_extract_ao_extensions.py       WV  + A-O              -> Extensions xlsx
-  -- human fills Include / Add_To_* / Override_* / Notes --
+  apply_ao_extension_decisions.py  maintained decisions   -> overlaid Extensions
   3_update_ao_from_extensions.py   Extensions xlsx + A-O  -> updated A-O
 
 Output: OSTRAM_AO_Extensions.xlsx
