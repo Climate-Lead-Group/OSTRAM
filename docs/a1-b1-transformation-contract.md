@@ -1,17 +1,15 @@
 # A1/A2-to-B1 transformation contract
 
 > **Historical transformation contract:** The branch-scoped no-solver evidence and
-> claims below are preserved as recorded. The portable
-> [final 15-scenario baseline](../tests/regression/reports/accepted_compiled_solver_baseline_15.json)
-> is historical source-bound evidence. Current acceptance authority for
-> derived identities is the authenticated external Run 3
+> claims below are preserved as recorded. Current acceptance authority for
+> compiled identities is the authenticated external Run 3
 > `STAGE_2_GOVERNED_COMPARATOR_MANIFEST.csv`, generated from current maintained
-> roots plus declared rules.
+> roots plus declared rules. See the current
+> [runtime and data lineage](lineage.md) before using this historical detail.
 >
 This document freezes the transformation boundary exercised by
-`refactor/a1-b1-transforms`. It supplements the
-[core workflow characterization](core-workflow-characterization.md) and the
-[offline regression policy](regression.md).
+`refactor/a1-b1-transforms`. It supplements the current
+[regression policy](regression.md).
 
 This is a behavior-preserving Tier 3 structural refactor. Its purpose is to make
 the established transformation plan, pure table operations, I/O effects,

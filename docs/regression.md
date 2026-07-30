@@ -8,10 +8,9 @@ It does not rerun CPLEX or infer numerical equivalence from normalized files.
 The governed Stage 2 comparator manifest is
 `STAGE_2_GOVERNED_COMPARATOR_MANIFEST.csv` in the authenticated Run 3 evidence
 directory. It binds each current root-plus-declared-rule output by SHA-256,
-byte size, and line count. The earlier
-[`accepted_compiled_solver_baseline_15.json`](../tests/regression/reports/accepted_compiled_solver_baseline_15.json)
-and its derived comparator files remain historical source-bound evidence; they
-are not current numerical acceptance authority for derived scenarios.
+byte size, and line count. It is the only compiled-input acceptance authority
+used by the maintained comparator utility. Earlier source-bound capture reports
+are historical external evidence, not tracked runtime or test inputs.
 
 The governed manifest's exact ordered scenarios are:
 
@@ -45,11 +44,12 @@ dependencies.
 
 ## Maintained checks
 
-Validate the historical portable record without invoking a solver:
+Validate the repository-side scenario and generated/ignored contract without
+invoking a solver:
 
 ```powershell
 $Py = 'C:\Users\luisfernando\anaconda3\envs\OSTRAM-env\python.exe'
-& $Py tests\regression\accepted_baseline.py
+& $Py -B tests\regression\accepted_baseline.py
 ```
 
 Stages 8 and 14 must validate freshly generated outputs against the governed
@@ -57,7 +57,7 @@ external manifest:
 
 ```powershell
 $Evidence = '<authenticated Run 3 evidence directory>'
-& $Py tests\regression\accepted_baseline.py `
+& $Py -B tests\regression\accepted_baseline.py `
   --governed-manifest "$Evidence\STAGE_2_GOVERNED_COMPARATOR_MANIFEST.csv" `
   --outputs-root '<disposable regeneration root>'
 ```
@@ -65,7 +65,7 @@ $Evidence = '<authenticated Run 3 evidence directory>'
 Run the current unit suite:
 
 ```powershell
-& $Py -m unittest discover -s tests\regression -p 'test_*.py' -v
+& $Py -B -m unittest discover -s tests\regression -p 'test_*.py' -v
 ```
 
 Focused A3 orchestration coverage uses disposable fixtures and in-process
@@ -73,7 +73,7 @@ doubles. It checks CLI behavior, scenario/dependency resolution, ordered stage
 dispatch, path and environment boundaries, and failure propagation without
 running A3 transformations, B1, B2, a matrix writer, or a solver.
 
-## Final byte-identity gate
+## Maintained no-solver byte-identity contract
 
 The final cleanup acceptance run must:
 

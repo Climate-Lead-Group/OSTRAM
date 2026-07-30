@@ -1,6 +1,8 @@
 # Pipeline Workflow
 
 OSTRAM processes energy system data through a multi-stage pipeline. This page documents each stage in detail, including its inputs, outputs, and configuration.
+For the current authority, scenario-dependency, generated/tracked, and
+input-to-result ownership map, start with {doc}`lineage`.
 
 ## Pipeline Overview
 

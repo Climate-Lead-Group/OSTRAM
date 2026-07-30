@@ -95,14 +95,20 @@ and all 15 final text inputs newly generated in disposable worktrees.
 Materialized scenario folders under `A1_Outputs/` are generated runtime state and are not
 tracked. Only four scenarios are active `Control` roots (BAU, A, B, and C); accepted
 derived scenarios are declared by the canonical registry and materialized on demand.
-Use the solver-free validator to inspect the historical portable record. The
-current derived-scenario acceptance authority is the authenticated external
-`STAGE_2_GOVERNED_COMPARATOR_MANIFEST.csv`; Stages 8 and 14 pass that file with
-`--governed-manifest` and a disposable regeneration root with `--outputs-root`.
+Use the solver-free validator to inspect the maintained repository contract. The
+repository-side check validates the four roots, exact 15-scenario registry,
+and generated/ignored contract. The current compiled-input acceptance authority
+is the authenticated external `STAGE_2_GOVERNED_COMPARATOR_MANIFEST.csv`;
+Stages 8 and 14 pass that file with `--governed-manifest` and a disposable
+regeneration root with `--outputs-root`.
 
 ```bash
 python tests/regression/accepted_baseline.py
 ```
+
+See {doc}`lineage` for the derived-scenario table, the required two-pass
+production pattern for `C_Target_VRE`, and the complete authority-to-result
+lineage.
 
 ## 2. Pipeline Stages Invoked by `run.py`
 
@@ -188,7 +194,7 @@ OSTRAM/
     │   ├── OSTRAM_Scenario_Inputs.xlsx   # Maintained scenario/AO-decision authority
     │   ├── OSTRAM_Timeslice_Inputs.xlsx  # Maintained timeslice authority
     │   └── rules_scripts/
-    │       └── configs/            # Rule/config snapshots for the full protected 20-scenario inventory
+    │       └── configs/            # Rule/patch inputs; registry membership defines production scenarios
     ├── A2_Extra_Inputs/             # Extra inputs (storage, emissions, projections, battery replacement)
     ├── A2_Output_Params/            # B1-compiled parameter CSVs (per scenario)
     ├── A2_Outputs_Params_otoole/    # otoole-format CSVs for the solver

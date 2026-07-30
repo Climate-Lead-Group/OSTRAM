@@ -6,9 +6,11 @@ from pathlib import Path
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 
 from openpyxl import Workbook
 
+from t1_confection import Z_AUX_config_loader as country_config
 from t1_confection.scenario_materializer import (
     MaterializationPaths,
     REQUIRED_AO_FILES,
@@ -29,6 +31,42 @@ T1_CONFECTION = REPO_ROOT / "t1_confection"
 
 
 class ScenarioRegistryTests(unittest.TestCase):
+    def test_country_yaml_loader_is_script_anchored_sorted_and_cached(self) -> None:
+        original_cache = country_config._cached_config
+        self.addCleanup(
+            setattr,
+            country_config,
+            "_cached_config",
+            original_cache,
+        )
+        with tempfile.TemporaryDirectory() as temp:
+            config_path = Path(temp) / "Config_country_codes.yaml"
+            config_path.write_text(
+                "country_data:\n"
+                "  ZZZ: {english_name: Zed, ostram_name: Zeta}\n"
+                "  AAA: {english_name: Aye, ostram_name: Alfa}\n"
+                "countries: [ZZZ, AAA]\n",
+                encoding="utf-8",
+            )
+            with mock.patch.object(country_config, "CONFIG_PATH", config_path):
+                country_config._cached_config = None
+                self.assertEqual(country_config.get_countries(), ["AAA", "ZZZ"])
+                self.assertEqual(
+                    country_config.get_model_countries_list(),
+                    ["ZZZ", "AAA"],
+                )
+
+                config_path.write_text("country_data: {BBB: {}}\n", encoding="utf-8")
+                self.assertEqual(country_config.get_countries(), ["AAA", "ZZZ"])
+                country_config._cached_config = None
+                self.assertEqual(country_config.get_countries(), ["BBB"])
+
+        country_config._cached_config = None
+        self.assertEqual(
+            country_config.CONFIG_PATH,
+            T1_CONFECTION / "Config_country_codes.yaml",
+        )
+
     def test_exact_roots_decision_order_bases_and_overlays(self) -> None:
         registry = load_registry()
         self.assertEqual(registry.root_names, ROOT_SCENARIOS)
