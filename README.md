@@ -6,8 +6,9 @@ Energy system optimization modeling based on OSeMOSYS.
 
 This project implements a staged pipeline for preparing and running OSeMOSYS energy
 system models. It supports GLPK, CBC, CPLEX, and Gurobi. Reproducibility depends on the
-tracked scenario snapshots, configuration, exact toolchain, and solver settings; random
-seeds alone do not guarantee numerical identity across solver versions or platforms.
+tracked authoritative inputs, configuration, code, exact toolchain, and solver settings;
+generated scenario snapshots and runtime products are recreated on demand and remain
+outside Git.
 
 ## Key Features
 
@@ -78,10 +79,9 @@ The `run` command can handle:
 > [no-solver byte-identity contract](docs/regression.md#maintained-no-solver-byte-identity-contract)
 > and independently verify that the YAML safety values are real booleans.
 
-The repository preserves 20 scenario snapshots. A normal `run`/`run.py` pass discovers only
-the active scenarios in the SOASIA v18 `Control` sheet. A `--scenarios` list containing
-derived or superseded snapshots is rejected by A3 unless `--skip-a3` is used. Do not
-assume that plain `run.py` is an all-20 command.
+The repository materializes the four active `Control` roots and registry-derived scenarios
+on demand; their A1/A2 trees are generated and ignored. A `--scenarios` list containing
+unknown or superseded scenario names is rejected by A3 unless `--skip-a3` is used.
 
 ## Documentation
 

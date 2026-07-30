@@ -36,8 +36,11 @@ EXPECTED_MANIFEST_SHA256 = (
     "778b4706522bc2b29911e74d5b31d24355c84cbe4c0c7d11d1c9680b2ddc9916"
 )
 EXPECTED_IGNORE_RULES = (
-    "t1_confection/Executables/**/*_output.log",
-    "t1_confection/Executables/**/_validation_report.csv",
+    "/t1_confection/A1_Outputs/",
+    "/t1_confection/A2_Output_Params/",
+    "/t1_confection/A2_Outputs_Params_otoole/",
+    "/t1_confection/Executables/",
+    "/t1_confection/Outputs/",
 )
 GOVERNED_MANIFEST_COLUMNS = (
     "Scenario",

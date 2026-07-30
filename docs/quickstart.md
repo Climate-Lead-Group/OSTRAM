@@ -53,7 +53,7 @@ The `run.py` launcher automatically:
 
 1. Creates the Conda environment (`OSTRAM-env`) if it does not exist, and installs any missing dependencies into it.
 2. Initializes the DVC repository if it does not exist yet (`dvc init`), and runs `dvc pull` if a DVC remote is configured.
-3. Runs **A1 + A2** as a combo, but only if no `_post_a2_snapshot_*` folder exists yet in `t1_confection/A1_Outputs/` (A2 creates the snapshot at the end of its run). If a snapshot already exists, A1/A2 are skipped and A3 restores from it instead. The tracked snapshot is protected because the complete raw-input rebuild is not yet automated; do not delete it merely to force a rebuild.
+3. Runs **A1 + A2** as a combo, but only if no `_post_a2_snapshot_*` folder exists yet in `t1_confection/A1_Outputs/` (A2 creates the snapshot at the end of its run). If a snapshot already exists, A1/A2 are skipped and A3 restores from it instead. A1/A2 outputs and snapshots are generated, ignored runtime state; a clean checkout begins without them and the pipeline creates them on demand.
 4. Discovers the active scenarios (via `t1_confection/A3_process/_scenarios.py list-active`, in dependency order) and runs **A3** once per scenario.
 5. Runs **B1** (`B1_Run_Compiler.py`) and then **B2** (`B2_Executing_OG_Model.py`), passing the same scenario filter to both. B1/B2 filter their alphabetically discovered folder lists, so comma-list order is not execution order.
 
@@ -92,9 +92,9 @@ and all 15 final text inputs newly generated in disposable worktrees.
 
 ### Scenario scope
 
-The preservation inventory contains 20 scenario snapshots under both `A1_Outputs/` and
-`A3_process/rules_scripts/configs/`. Only four are active Control scenarios (BAU, A, B,
-and C); derived and superseded-but-protected scenarios are not a plain `run.py` pass.
+Materialized scenario folders under `A1_Outputs/` are generated runtime state and are not
+tracked. Only four scenarios are active `Control` roots (BAU, A, B, and C); accepted
+derived scenarios are declared by the canonical registry and materialized on demand.
 Use the solver-free validator to inspect the historical portable record. The
 current derived-scenario acceptance authority is the authenticated external
 `STAGE_2_GOVERNED_COMPARATOR_MANIFEST.csv`; Stages 8 and 14 pass that file with

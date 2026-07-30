@@ -138,10 +138,11 @@ class AcceptedBaselineTests(unittest.TestCase):
     def test_narrow_ignore_rules_and_scope(self) -> None:
         baseline.validate_ignore_rules(REPO_ROOT)
         probes = (
-            "t1_confection/Executables/Probe_0/run_output.log",
-            "t1_confection/Executables/Probe_0/_validation_report.csv",
+            "t1_confection/A1_Outputs/Probe/A-O_Demand.xlsx",
+            "t1_confection/A2_Output_Params/Probe/VariableCost.csv",
+            "t1_confection/A2_Outputs_Params_otoole/Probe/VariableCost.csv",
             "t1_confection/Executables/Probe_0/arbitrary.log",
-            "t1_confection/Executables/Probe_0/Pre_processed_Probe_0.txt",
+            "t1_confection/Outputs/Probe.csv",
             "t1_confection/Config_MOMF_T1_A.yaml",
             "tests/regression/reports/accepted_compiled_solver_baseline_15.json",
         )
@@ -158,18 +159,10 @@ class AcceptedBaselineTests(unittest.TestCase):
             pattern = source.rsplit(":", 1)[-1]
             matched[path.replace("\\", "/")] = pattern
 
-        self.assertEqual(
-            matched[probes[0]], baseline.EXPECTED_IGNORE_RULES[0]
-        )
-        self.assertEqual(
-            matched[probes[1]], baseline.EXPECTED_IGNORE_RULES[1]
-        )
-        for probe in probes[2:]:
-            self.assertNotIn(
-                matched.get(probe),
-                baseline.EXPECTED_IGNORE_RULES,
-                probe,
-            )
+        for probe, rule in zip(probes[:5], baseline.EXPECTED_IGNORE_RULES):
+            self.assertEqual(matched[probe], rule)
+        for probe in probes[5:]:
+            self.assertNotIn(probe, matched)
 
 
 if __name__ == "__main__":

@@ -280,9 +280,9 @@ baseline.
 Plain `BAU` remains protected, discovered, and part of static acceptance, but it is
 non-decision support evidence. The four superseded definitions --
 `B_Opt_LinkFreeze`, `B_Opt_SolarHi10`, `B_Opt_TradeCap30`, and
-`B_Opt_TradeCap50` -- remain protected and preservation-visible; their exclusion
-from the 16- and 15-scenario scopes does not permit deletion, regeneration, or
-promotion.
+`B_Opt_TradeCap50` -- are not accepted runtime scenarios. Their former A1/A2
+materializations are generated products, not maintained source authority, and are
+not tracked or eligible for promotion.
 
 ## A-derived validation lineage
 
