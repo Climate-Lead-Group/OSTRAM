@@ -20,6 +20,16 @@ from Z_AUX_config_loader import (
     get_first_year, get_add_missing_countries_from_ostram, get_pwr_cleanup_mode,
     get_force_empty_max_capacity_investment_pwr, get_enable_dsptrn
 )
+try:
+    from .scenario_registry import (
+        ensure_root_output_directories,
+        load_registry,
+    )
+except ImportError:  # direct-script execution
+    from scenario_registry import (
+        ensure_root_output_directories,
+        load_registry,
+    )
 
 def list_scenario_suffixes(base_dir: Path) -> List[str]:
     """Return list like ['BAU_NoRPO','NDC','NDC+ELC'] from folders 'A1_Outputs_*'."""
@@ -3508,7 +3518,9 @@ def main():
     else:
         print("[Info] PWR technology cleanup is disabled (pwr_cleanup_mode = false).")
 
-    scenario_suffixes = list_scenario_suffixes(OUTPUT_FOLDER)
+    registry = load_registry()
+    ensure_root_output_directories(OUTPUT_FOLDER, registry)
+    scenario_suffixes = list(registry.root_names)
     for scen in scenario_suffixes:
         print('\nScenario process: ',scen)
         # File A-O_Demand.xlsx

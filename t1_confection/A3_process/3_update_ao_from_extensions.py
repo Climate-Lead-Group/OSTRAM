@@ -2,9 +2,9 @@
 """
 3_update_ao_from_extensions.py  (v18 / pipeline stage 3)
 
-Reads OSTRAM_AO_Extensions.xlsx (the human-filled review file from stage 2)
-and the four A-O parametrization workbooks, then writes "_wvaligned" copies
-of each A-O workbook. Each output combines:
+Reads the freshly generated, maintained-decision-overlaid
+OSTRAM_AO_Extensions.xlsx and the four A-O parametrization workbooks, then
+writes "_wvaligned" copies of each A-O workbook. Each output combines:
   * new technology rows appended for every Tab 1 Include=Y entry  (Step 3)
   * refreshed Demand_Projection year-cell values drawn from WV    (Step 2b)
   * a wholesale-replaced Profiles sheet drawn from WV             (Step 2c)
@@ -12,7 +12,7 @@ of each A-O workbook. Each output combines:
 Pipeline:
   1_merge_timeslices_into_WV.py    timeslices source     -> WV
   2_extract_ao_extensions.py       WV  + A-O             -> Extensions xlsx
-  -- human fills Include / Add_To_* / Override_* / Notes --
+  apply_ao_extension_decisions.py  maintained decisions  -> overlaid Extensions
   3_update_ao_from_extensions.py   Extensions + A-O      -> *_wvaligned    <- THIS
   4_apply_manual_fixes.py          *_wvaligned           -> *_wvaligned_v2
 
@@ -985,8 +985,9 @@ for ao_sheet, wv_sheet, key_cols, kind, scalar_col in STEP_2D_PLAN:
     # -------------------------------------------------------------------------
     # Append WV-only rows for VariableCost.
     # -------------------------------------------------------------------------
-    # Step 3's additive pass only appends rows for techs listed in
-    # OSTRAM_AO_Extensions_FILLED with Include=Y. Pure WV-only fuel-supply
+    # Step 3's additive pass only appends rows for techs listed in the fresh,
+    # decision-overlaid OSTRAM_AO_Extensions.xlsx with Include=Y. Pure WV-only
+    # fuel-supply
     # techs (e.g. the RNWBIO* biomass-supply techs that A1 drops because
     # OG_csvs_inputs/VariableCost.csv has no rows for them) are absent from
     # both AO and Extensions, so without this pass their WV.VariableCost

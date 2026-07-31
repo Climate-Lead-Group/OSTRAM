@@ -586,14 +586,6 @@ Defines how parameters are combined when merging sub-regions:
 
 ---
 
-## Config_tech_equivalences.yaml
-
-**Location:** `t1_confection/Config_tech_equivalences.yaml`
-
-A reference/migration mapping dating from the model's earlier LATAM (RELAC) phase -- old code to new code equivalences (suffix removal, CCG+OCG unification into NGS, per-country mappings for Argentina/Bolivia/Brazil/etc.). It documents the historical migration from RELAC v1.x to v2.x naming and **is not read by any script in the current A0-B2 pipeline** (no import/reference found outside this file). Kept for historical/audit purposes; safe to ignore for day-to-day work on the current South/Southeast Asia model.
-
----
-
 ## A3 Scenario Rule YAMLs
 
 **Location:** `t1_confection/A3_process/rules_scripts/configs/<Scenario>/`

@@ -6,25 +6,22 @@ Energy system optimization modeling based on OSeMOSYS.
 
 This project implements a staged pipeline for preparing and running OSeMOSYS energy
 system models. It supports GLPK, CBC, CPLEX, and Gurobi. Reproducibility depends on the
-tracked scenario snapshots, configuration, exact toolchain, and solver settings; random
-seeds alone do not guarantee numerical identity across solver versions or platforms.
+tracked authoritative inputs, configuration, code, exact toolchain, and solver settings;
+generated scenario snapshots and runtime products are recreated on demand and remain
+outside Git.
 
 ## Key Features
 
 - **Staged Pipeline**: A platform-neutral `python -m ostram` command hierarchy,
-  with every historical script entrypoint still supported
+  with the documented direct script entrypoints retained
 - **Multiple Solvers**: Support for GLPK, CBC, CPLEX, and Gurobi
 - **Regression Evidence**: Solver-free all-scenario inventory and static/hash comparisons
 - **Performance Monitoring**: Built-in timer for tracking execution times
 - **Automatic Environment Management**: Automatic creation and update of the Conda environment
 
-**Accepted baseline (2026-07-28):** correction `d295dcc` is merged in the
-pinned `origin/main` reference. The canonical 15 compiled inputs and their
-source-bound solver results are identified by protected manifest SHA-256
-`778b4706522bc2b29911e74d5b31d24355c84cbe4c0c7d11d1c9680b2ddc9916`
-and the portable
-[`accepted_compiled_solver_baseline_15.json`](tests/regression/reports/accepted_compiled_solver_baseline_15.json).
-Future housekeeping validation remains no-solver and byte-exact.
+Production is reconstructed from maintained repository inputs. Housekeeping
+validation uses an authenticated external governed manifest and remains
+solver-free and byte-exact; that comparator is not a production dependency.
 
 ## System Requirements
 
@@ -78,10 +75,9 @@ The `run` command can handle:
 > [no-solver byte-identity contract](docs/regression.md#maintained-no-solver-byte-identity-contract)
 > and independently verify that the YAML safety values are real booleans.
 
-The repository preserves 20 scenario snapshots. A normal `run`/`run.py` pass discovers only
-the active scenarios in the SOASIA v18 `Control` sheet. A `--scenarios` list containing
-derived or superseded snapshots is rejected by A3 unless `--skip-a3` is used. Do not
-assume that plain `run.py` is an all-20 command.
+The repository materializes the four active `Control` roots and registry-derived scenarios
+on demand; their A1/A2 trees are generated and ignored. A `--scenarios` list containing
+unknown or superseded scenario names is rejected by A3 unless `--skip-a3` is used.
 
 ## Documentation
 
@@ -89,8 +85,9 @@ For detailed instructions, see:
 
 - [Installation](docs/installation.md)
 - [Quick start](docs/quickstart.md)
+- [Runtime, scenario, and data lineage](docs/lineage.md)
 - [Pipeline workflow](docs/pipeline.md)
-- [Offline regression evidence](tests/regression/README.md)
+- [Regression and cleanup acceptance](docs/regression.md)
 
 ## Output File Structure
 
@@ -101,7 +98,9 @@ Results are generated in `t1_confection/`. Their prefix is selected by
   `OSTRAM_Combined_Inputs_Outputs.csv`, plus dated copies;
 - storage delay on: the corresponding `OSTRAM_StorageDelay_*` files.
 
-The main preprocessed solver datafile is also exported at repository root as `OSTRAM_data.txt`.
+The main preprocessed solver datafile is also exported at repository root as
+`OSTRAM_data.txt`, or as `OSTRAM_data_storage_delay.txt` when storage delay is
+active.
 
 Date-stamped files maintain a complete execution history.
 

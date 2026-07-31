@@ -585,7 +585,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             template = str(fixture.root / "Miscellaneous" / "templates")
             base_output = str(fixture.root / "A2_Outputs_Params_otoole")
             expected: list[tuple[object, ...]] = []
-            for scenario in ("A", "C"):
+            for scenario in ("C", "A"):
                 expected.extend(
                     [
                         ("process", base_input, template, base_output, scenario),
@@ -608,8 +608,8 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             expected.extend(
                 [
                     ("export", fixture.root, "A", None),
-                    ("solver_boundary", "A", fixture.root),
                     ("solver_boundary", "C", fixture.root),
+                    ("solver_boundary", "A", fixture.root),
                     ("concat_scenarios", fixture.root),
                 ]
             )
@@ -623,13 +623,73 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
 
             markers = (
                 "[INFO] Working dir ->",
-                "[INFO] Scenario filter active: ['A', 'C']",
+                "[INFO] Scenario filter active: ['C', 'A']",
                 "Started linear executions",
                 "Inputs and outputs concatenated for all scenarios successfully",
                 "For all effects, we have finished the work of this script",
             )
             positions = [harness.stdout.index(marker) for marker in markers]
             self.assertEqual(positions, sorted(positions))
+
+    def test_compile_only_stops_before_every_solver_and_result_boundary(self) -> None:
+        module = _load_b2_guard_as_callable("compile_only_gate")
+        with B2Fixture(
+            "A",
+            execute_model=True,
+            create_matrix=True,
+            concat_otoole_csv=True,
+            concat_scenarios_csv=True,
+            annualize_capital=True,
+            del_files=True,
+        ) as fixture:
+            harness = GuardHarness(module, fixture)
+            harness.run(
+                [
+                    "B2_Executing_OG_Model.py",
+                    "--scenarios",
+                    "A",
+                    "--compile-only",
+                ]
+            )
+
+            self.assertEqual(
+                [event[0] for event in harness.events],
+                [
+                    "process",
+                    "convert",
+                    "preprocess",
+                    "days",
+                    "storage_delay",
+                    "strip_storage",
+                    "open_pwrbck",
+                    "reserve_margin",
+                    "reserve_margin_xlsx",
+                    "combined",
+                    "export",
+                ],
+            )
+            self.assertNotIn(
+                "solver_boundary", [event[0] for event in harness.events]
+            )
+            self.assertNotIn(
+                "concat_scenarios", [event[0] for event in harness.events]
+            )
+            params = next(item for item in harness.params_seen if item)
+            for key in (
+                "execute_model",
+                "create_matrix",
+                "reuse_existing_sol",
+                "concat_otoole_csv",
+                "concat_scenarios_csv",
+                "annualize_capital",
+                "del_files",
+            ):
+                self.assertFalse(params[key], key)
+            self.assertIn("Compile-only gate complete", harness.stdout)
+            self.assertNotIn(
+                "For all effects, we have finished the work of this script",
+                harness.stdout,
+            )
 
     def test_unknowns_preserve_duplicates_and_abort_before_any_stage(self) -> None:
         module = _load_b2_guard_as_callable("unknown_scenarios")

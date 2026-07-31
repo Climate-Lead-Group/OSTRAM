@@ -47,6 +47,7 @@ from __future__ import annotations
 import argparse
 import gc
 import json
+import os
 import shutil
 import sys
 import tempfile
@@ -138,7 +139,10 @@ def load_config(yaml_path: Path) -> dict:
     if cfg is None:
         cfg = {}
 
-    bau_results_path = cfg.get("bau_results_path", "")
+    bau_results_path = os.environ.get(
+        "OSTRAM_A_CALIBRATED_BAU_RESULT",
+        cfg.get("bau_results_path", ""),
+    )
     constraint_type = cfg.get("constraint_type", "activity")
     if constraint_type not in ("activity", "capacity", "both"):
         raise ValueError(

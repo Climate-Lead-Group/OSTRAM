@@ -210,7 +210,7 @@ class B1ScenarioCharacterizationTests(unittest.TestCase):
             self.assertEqual(len([event for event in events if event[0] == "compile"]), 3)
             self.assertNotIn("Scenario filter active", stdout.getvalue())
 
-    def test_filter_uses_discovery_order_and_collapses_requested_duplicates(self) -> None:
+    def test_filter_uses_requested_order_and_collapses_requested_duplicates(self) -> None:
         with _b1_fixture("C", "A", "B") as fixture:
             scenarios: list[str] = []
 
@@ -231,9 +231,9 @@ class B1ScenarioCharacterizationTests(unittest.TestCase):
             ):
                 self.runner.main()
 
-            self.assertEqual(scenarios, ["A", "C"])
+            self.assertEqual(scenarios, ["C", "A"])
             self.assertEqual(compiler.call_count, 2)
-            self.assertIn("[INFO] Scenario filter active: ['A', 'C']", stdout.getvalue())
+            self.assertIn("[INFO] Scenario filter active: ['C', 'A']", stdout.getvalue())
 
     def test_unknown_filter_preserves_unknown_order_and_duplicates_and_exits_one(self) -> None:
         with _b1_fixture("A", "B") as fixture:
@@ -410,7 +410,7 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
         self.assertEqual(default.selected, ("A", "B", "C"))
         self.assertEqual(default.requested, ())
         self.assertFalse(default.filter_active)
-        self.assertEqual(explicit.selected, ("A", "C"))
+        self.assertEqual(explicit.selected, ("C", "A"))
         self.assertEqual(
             explicit.requested, ("C", "Missing", "A", "C", "Missing")
         )
@@ -553,9 +553,9 @@ class B1ConfigurationAndFailureCharacterizationTests(unittest.TestCase):
                 events,
                 [
                     ("copy2", fixture.config, fixture.backup),
-                    ("update", fixture.config, "A"),
-                    ("compile", fixture.script_dir),
                     ("update", fixture.config, "C"),
+                    ("compile", fixture.script_dir),
+                    ("update", fixture.config, "A"),
                     ("compile", fixture.script_dir),
                     ("move", str(fixture.backup), str(fixture.config)),
                 ],
@@ -565,10 +565,10 @@ class B1ConfigurationAndFailureCharacterizationTests(unittest.TestCase):
                 "Scenario filter active",
                 "Scenarios discovered",
                 "Backup created",
-                "Running scenario: A",
-                "completed successfully for scenario 'A'",
                 "Running scenario: C",
                 "completed successfully for scenario 'C'",
+                "Running scenario: A",
+                "completed successfully for scenario 'A'",
                 "Restored original YAML",
                 "All done",
             )

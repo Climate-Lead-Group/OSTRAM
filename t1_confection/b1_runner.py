@@ -98,7 +98,7 @@ def list_scenario_suffixes(base_dir: Path) -> List[str]:
 def resolve_scenarios(
     discovered: Sequence[str], raw_filter: Optional[str]
 ) -> ScenarioSelection:
-    """Resolve the CLI filter without changing discovery-order semantics."""
+    """Resolve a CLI filter in its exact requested canonical order."""
     discovered_list = list(discovered)
     if not raw_filter:
         return ScenarioSelection(
@@ -111,11 +111,14 @@ def resolve_scenarios(
     requested = tuple(
         scenario.strip() for scenario in raw_filter.split(",") if scenario.strip()
     )
+    requested_unique = tuple(dict.fromkeys(requested))
     discovered_set = set(discovered_list)
     unknown = tuple(
         scenario for scenario in requested if scenario not in discovered_set
     )
-    selected = tuple(scenario for scenario in discovered_list if scenario in requested)
+    selected = tuple(
+        scenario for scenario in requested_unique if scenario in discovered_set
+    )
     return ScenarioSelection(
         selected=selected,
         requested=requested,

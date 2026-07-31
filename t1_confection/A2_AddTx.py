@@ -633,8 +633,18 @@ def main():
 
     script_dir = Path(__file__).resolve().parent
     OUTPUT_FOLDER = script_dir / "A1_Outputs"
-    scenario_suffixes = list_scenario_suffixes(OUTPUT_FOLDER)
+    try:
+        from .scenario_registry import load_registry
+    except ImportError:  # direct-script execution
+        from scenario_registry import load_registry
+    scenario_suffixes = list(load_registry().root_names)
     for scen in scenario_suffixes:
+        scenario_dir = OUTPUT_FOLDER / f"A1_Outputs_{scen}"
+        if not scenario_dir.is_dir():
+            raise FileNotFoundError(
+                f"canonical A1 root output missing: {scenario_dir}. "
+                "Run A1 before A2."
+            )
     
     
         defaults = {
@@ -670,7 +680,6 @@ def main():
         process_demand(args.demand, enable_dsptrn=enable_dsptrn)
 
         # Post-A2 snapshot: canonical state that A3 restores at startup (idempotency).
-        scenario_dir = OUTPUT_FOLDER / f"A1_Outputs_{scen}"
         snapshot_dir = OUTPUT_FOLDER / f"_post_a2_snapshot_{scen}"
         if snapshot_dir.exists():
             shutil.rmtree(snapshot_dir)

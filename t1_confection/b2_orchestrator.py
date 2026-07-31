@@ -58,6 +58,7 @@ class B2RunPlan:
     base_input_path: str
     template_path: str
     base_output_path: str
+    compile_only: bool = False
 
 
 def build_cli_parser() -> argparse.ArgumentParser:
@@ -71,6 +72,15 @@ def build_cli_parser() -> argparse.ArgumentParser:
             "Comma-separated list of scenario names to run (e.g. "
             "'B_Optimised_VRE,C_Target_VRE'). When omitted, runs all "
             "scenarios found in the A2 output directory."
+        ),
+    )
+    parser.add_argument(
+        "--compile-only",
+        action="store_true",
+        help=(
+            "Generate the final preprocessed and patched text inputs, then "
+            "stop before matrix creation, every solver adapter, cleanup, and "
+            "result post-processing."
         ),
     )
     return parser
@@ -121,6 +131,18 @@ def apply_configuration_overrides(params: dict[str, Any]) -> None:
         )
 
 
+def apply_compile_only_overrides(params: dict[str, Any]) -> None:
+    """Disable every matrix, solver, cleanup, and result boundary."""
+
+    params["execute_model"] = False
+    params["create_matrix"] = False
+    params["reuse_existing_sol"] = False
+    params["concat_otoole_csv"] = False
+    params["concat_scenarios_csv"] = False
+    params["annualize_capital"] = False
+    params["del_files"] = False
+
+
 def resolve_scenarios(
     base_input_path: str,
     params: dict[str, Any],
@@ -145,6 +167,7 @@ def resolve_scenarios(
             for scenario in scenario_filter.split(",")
             if scenario.strip()
         ]
+        requested_unique = list(dict.fromkeys(requested))
         discovered = set(scenarios)
         unknown = [scenario for scenario in requested if scenario not in discovered]
         if unknown:
@@ -153,7 +176,9 @@ def resolve_scenarios(
                 f"{base_input_path}: {unknown}. Discovered: {scenarios}"
             )
             raise SystemExit(1)
-        scenarios = [scenario for scenario in scenarios if scenario in requested]
+        scenarios = [
+            scenario for scenario in requested_unique if scenario in discovered
+        ]
         print(f"[INFO] Scenario filter active: {scenarios}")
 
     return scenarios
@@ -164,6 +189,7 @@ def build_run_plan(
     scenario_filter: str | None,
     *,
     yaml_safe_load: Callable[..., Any],
+    compile_only: bool = False,
 ) -> B2RunPlan:
     """Load configuration and resolve the complete non-executing B2 plan."""
 
@@ -171,6 +197,8 @@ def build_run_plan(
         params = yaml_safe_load(config_file)
 
     apply_configuration_overrides(params)
+    if compile_only:
+        apply_compile_only_overrides(params)
 
     with open("Config_MOMF_T1_A.yaml", "r") as config_file:
         params_a2 = yaml_safe_load(config_file)
@@ -196,6 +224,7 @@ def build_run_plan(
         base_input_path=base_input_path,
         template_path=template_path,
         base_output_path=base_output_path,
+        compile_only=compile_only,
     )
 
 
@@ -448,8 +477,15 @@ def orchestrate_b2(
         here,
         cli_args.scenarios,
         yaml_safe_load=dependencies.yaml_safe_load,
+        compile_only=cli_args.compile_only,
     )
     run_compiled_input_stage(plan, dependencies)
+    if plan.compile_only:
+        print(
+            "[INFO] Compile-only gate complete; matrix, solver, cleanup, "
+            "and result stages were not invoked."
+        )
+        return
     run_execution_stage(plan, dependencies)
     run_cleanup_stage(plan, dependencies)
 

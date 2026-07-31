@@ -21,9 +21,7 @@ cd OSTRAM
 ```
 
 Use a local, non-synchronized working directory for large model artifacts and generated
-workbooks. The retired standalone instructions are preserved in the
-[legacy Git setup guide](archive/legacy/OSTRAM_Git_Setup_Guide.html) for historical
-context; this page is the maintained setup guide.
+workbooks. This page is the maintained setup guide.
 
 ## Conda Environment
 

@@ -287,7 +287,7 @@ class CanonicalCliImportAndHelpTests(unittest.TestCase):
         for relative in (
             "README.md",
             "docs/quickstart.md",
-            "docs/core-workflow-characterization.md",
+            "docs/lineage.md",
         ):
             with self.subTest(relative=relative):
                 text = (REPO_ROOT / relative).read_text(encoding="utf-8")

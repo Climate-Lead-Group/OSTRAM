@@ -1,18 +1,15 @@
 # A1/A2-to-B1 transformation contract
 
 > **Historical transformation contract:** The branch-scoped no-solver evidence and
-> claims below are preserved as recorded. Current acceptance authority is the
-> [portable final 15-scenario baseline](../tests/regression/reports/accepted_compiled_solver_baseline_15.json),
-> derived from accepted correction `d295dcc` and protected manifest SHA-256
-> `778b4706522bc2b29911e74d5b31d24355c84cbe4c0c7d11d1c9680b2ddc9916`.
+> claims below are preserved as recorded. Current acceptance authority for
+> compiled identities is the authenticated external Run 3
+> `STAGE_2_GOVERNED_COMPARATOR_MANIFEST.csv`, generated from current maintained
+> roots plus declared rules. See the current
+> [runtime and data lineage](lineage.md) before using this historical detail.
 >
 This document freezes the transformation boundary exercised by
-`refactor/a1-b1-transforms`. It supplements the
-[cleanup and refactor rules](refactor-rules.md), the
-[archived refactor plan](archive/refactor/refactor-plan.md), the
-[core workflow characterization](core-workflow-characterization.md), and the
-[offline regression policy](regression.md). Those documents remain authoritative
-when this note is silent.
+`refactor/a1-b1-transforms`. It supplements the current
+[regression policy](regression.md).
 
 This is a behavior-preserving Tier 3 structural refactor. Its purpose is to make
 the established transformation plan, pure table operations, I/O effects,
@@ -85,7 +82,7 @@ remain unchanged even where they are awkward.
 [`a3_orchestrator.py`](../t1_confection/a3_orchestrator.py) retain the characterized
 stage sequence:
 
-`stage_0_5_rnwbio` -> `stage_1_scripts_1_to_5` -> `stage_1b` ->
+`stage_1_scripts_1_to_5` -> `stage_1b` ->
 `stage_2_and_2_5` -> `stage_3_fix_2` -> `stage_4_consolidate` ->
 `stage_4_5_apply_inherited_restrictions` -> `stage_5_rules_scripts` ->
 `stage_ws3_interconnector_costs` -> `stage_ws3_internal_transmission` ->
@@ -266,7 +263,7 @@ The three scopes are deliberately different:
 
 | Scope | Required count | Membership rule |
 |---|---:|---|
-| Preservation discovery | 20/20 | Every definition in `tests/regression/scenarios.yaml`, matching both A1 snapshots and A3 rule/config directories. |
+| Scenario registry | 16/16 | BAU plus the frozen accepted decision set in `t1_confection/scenario_registry.json`; only the four roots are prepared by A1/A2. |
 | Static cleanup acceptance | 16/16 | Plain `BAU` plus the 15 decision-relevant scenarios. |
 | Compiled-input equivalence | 15/15 | The decision scenarios below; plain `BAU` is excluded. |
 
@@ -281,9 +278,9 @@ baseline.
 Plain `BAU` remains protected, discovered, and part of static acceptance, but it is
 non-decision support evidence. The four superseded definitions --
 `B_Opt_LinkFreeze`, `B_Opt_SolarHi10`, `B_Opt_TradeCap30`, and
-`B_Opt_TradeCap50` -- remain protected and preservation-visible; their exclusion
-from the 16- and 15-scenario scopes does not permit deletion, regeneration, or
-promotion.
+`B_Opt_TradeCap50` -- are not accepted runtime scenarios. Their former A1/A2
+materializations are generated products, not maintained source authority, and are
+not tracked or eligible for promotion.
 
 ## A-derived validation lineage
 
@@ -332,8 +329,8 @@ target set.
 This migration must not change TRN costs, operational life,
 `ResidualCapacity`, `FUTURE` classification, `TotalAnnualMaxCapacity`,
 `TotalAnnualMaxCapacityInvestment`, or `relax_interconnectors` behavior.
-`SOASIA_v18_REFS.xlsx` remains auxiliary evidence and is not a runtime authority.
-The retired NATY workbook has no production, configuration, or test fallback.
+Historical citation workbooks are not runtime authorities. The retired NATY
+workbook has no production, configuration, or test fallback.
 
 Any candidate compiled-input difference is a blocker here. It must not be
 allowlisted or normalized away. Validation on this branch is compile-only and

@@ -4,6 +4,7 @@ import argparse
 import ast
 import builtins
 import importlib.util
+import inspect
 import io
 import json
 import os
@@ -24,7 +25,9 @@ REPO_ROOT = TEST_ROOT.parents[1]
 A3_ENTRYPOINT = REPO_ROOT / "t1_confection" / "A3_process.py"
 A3_ORCHESTRATOR = REPO_ROOT / "t1_confection" / "a3_orchestrator.py"
 SCENARIO_HELPER = REPO_ROOT / "t1_confection" / "A3_process" / "_scenarios.py"
-SCENARIO_REGISTRY = TEST_ROOT / "scenarios.yaml"
+SCENARIO_REGISTRY = (
+    REPO_ROOT / "t1_confection" / "scenario_registry.json"
+)
 
 ACTIVE_SCENARIOS = (
     "BAU",
@@ -102,10 +105,24 @@ class A3TraceHarness:
         self.rules_dir.mkdir()
         self.soasia = self.caller / "scenario-template.xlsx"
         self.soasia.write_bytes(b"fixture template marker")
-        self.snapshot = self.t1 / "A1_Outputs" / "_post_a2_snapshot_BAU"
-        self.snapshot.mkdir(parents=True)
-        for name in INPUT_FILES:
-            (self.snapshot / name).write_bytes(f"snapshot:{name}".encode("utf-8"))
+        payload = json.loads(SCENARIO_REGISTRY.read_text(encoding="utf-8"))
+        scenario_names = (
+            payload["support_scenarios"] + payload["decision_scenarios"]
+        )
+        self.snapshots = {}
+        for scenario_name in scenario_names:
+            snapshot = (
+                self.t1
+                / "A1_Outputs"
+                / f"_post_a2_snapshot_{scenario_name}"
+            )
+            snapshot.mkdir(parents=True)
+            for name in INPUT_FILES:
+                (snapshot / name).write_bytes(
+                    f"snapshot:{name}".encode("utf-8")
+                )
+            self.snapshots[scenario_name] = snapshot
+        self.snapshot = self.snapshots["A_Calibrated_BAU"]
         self.input_dir = self.t1 / "relative-input"
         self.input_dir.mkdir()
         (self.input_dir / "stale.txt").write_text("stale", encoding="utf-8")
@@ -241,7 +258,6 @@ class A3TraceHarness:
         fake_scenarios.materialize_scenario_template = materialize
         stage3_result = self.paths["s3"] / "post-trn-cap.xlsx"
         stage_replacements = {
-            "stage_0_5_rnwbio": inert_stage("stage_0_5_rnwbio"),
             "stage_1_scripts_1_to_5": inert_stage("stage_1_scripts_1_to_5"),
             "stage_1b": inert_stage("stage_1b"),
             "stage_2_and_2_5": inert_stage("stage_2_and_2_5"),
@@ -388,7 +404,6 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
             "_read_script_yaml_name",
             "_resolve_script_yaml",
             "build_workdir",
-            "stage_0_5_rnwbio",
             "stage_1_scripts_1_to_5",
             "stage_1b",
             "stage_2_and_2_5",
@@ -410,6 +425,24 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
             [name for name in expected if not callable(getattr(module, name, None))],
             [],
         )
+        self.assertFalse(hasattr(module, "stage_0_5_rnwbio"))
+
+    def test_runtime_assets_use_authorities_without_staging_retired_machinery(
+        self,
+    ) -> None:
+        module = _load_a3("runtime_authority_assets")
+        build_source = inspect.getsource(module.build_workdir)
+        stage1_source = inspect.getsource(module.stage_1_scripts_1_to_5)
+        self.assertIn("OSTRAM_Timeslice_Inputs.xlsx", build_source)
+        self.assertIn("apply_ao_extension_decisions.py", build_source)
+        self.assertNotIn("OSTRAM_AO_Extensions_FILLED.xlsx", build_source)
+        self.assertNotIn(
+            "A-O_Parametrization_REFERENCE_with_RNWBIO.xlsx",
+            build_source,
+        )
+        self.assertNotIn("fix_rnwbio_restore.py", build_source)
+        self.assertIn("apply_ao_extension_decisions.py", stage1_source)
+        self.assertNotIn("OSTRAM_AO_Extensions_FILLED.xlsx", stage1_source)
 
     def test_cli_defaults_and_explicit_values_match_predecessor(self) -> None:
         module = _load_a3("cli_values")
@@ -629,23 +662,27 @@ class A3ScenarioPlanningCharacterizationTests(unittest.TestCase):
             ),
         )
 
-    def test_legacy_and_unknown_scenario_failures_keep_system_exit_messages(self) -> None:
+    def test_missing_v18_and_unknown_scenario_failures_keep_system_exit_messages(self) -> None:
         args = argparse.Namespace(
             scenario="Not_BAU",
             rules_script=None,
             inherit_from=None,
         )
         with mock.patch.object(Path, "is_file", return_value=False):
-            with self.assertRaisesRegex(SystemExit, "scenario 'Not_BAU' != 'BAU'"):
+            with self.assertRaisesRegex(
+                SystemExit,
+                "required scenario-input workbook not found",
+            ):
                 self.a3._resolve_scenario_config(args, Path("missing.xlsx"))
 
         args.scenario = "BAU"
         args.rules_script = ""
         with mock.patch.object(Path, "is_file", return_value=False):
-            self.assertEqual(
-                self.a3._resolve_scenario_config(args, Path("missing.xlsx")),
-                ("BAU", [], []),
-            )
+            with self.assertRaisesRegex(
+                SystemExit,
+                "required scenario-input workbook not found",
+            ):
+                self.a3._resolve_scenario_config(args, Path("missing.xlsx"))
 
 
 class A3IsolatedBoundaryTests(unittest.TestCase):
@@ -714,7 +751,7 @@ class A3IsolatedBoundaryTests(unittest.TestCase):
                     t1_confection=t1,
                     process_dir=process_dir,
                     default_soasia=(
-                        process_dir / "SOASIA_OSeMOSYS_Template_v18.xlsx"
+                        process_dir / "OSTRAM_Scenario_Inputs.xlsx"
                     ),
                 ),
             )
@@ -758,7 +795,7 @@ class A3IsolatedBoundaryTests(unittest.TestCase):
         self.assertEqual(plan.output_dir, t1 / "output override")
         self.assertEqual(
             plan.snapshot_dir,
-            t1 / "A1_Outputs" / "_post_a2_snapshot_BAU",
+            t1 / "A1_Outputs" / "_post_a2_snapshot_Scenario_A",
         )
         self.assertEqual(plan.workdir_base, process_dir)
         self.assertTrue(plan.keep_workdir)
@@ -833,7 +870,6 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
             template_value = str(materialized)
             expected.extend(
                 [
-                    ("stage_0_5_rnwbio", harness.workdir, harness.paths["s1"], template_value, harness.caller),
                     ("stage_1_scripts_1_to_5", harness.paths["s1"], template_value, harness.caller),
                     ("stage_1b", harness.workdir, harness.paths["s1"], harness.paths["s1b"], template_value, harness.caller),
                     ("stage_2_and_2_5", harness.workdir, harness.paths["s1b"], harness.paths["s2"], template_value, harness.caller),
@@ -882,9 +918,16 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                     ),
                     ("stage_6_sync_og_to_ts20", harness.workdir, harness.paths["s1"], template_value, harness.caller),
                     (
+                        "copy",
+                        harness.soasia,
+                        harness.workdir
+                        / "_scenario_run_state_A_Calibrated_BAU.xlsx",
+                    ),
+                    (
                         "stage_6_persist_restrictions",
                         harness.paths["s5"],
-                        harness.soasia,
+                        harness.workdir
+                        / "_scenario_run_state_A_Calibrated_BAU.xlsx",
                         "A_Calibrated_BAU",
                         ["set_retirement_schedule.py", "set_min_capacity_floors.py"],
                         template_value,
@@ -923,7 +966,9 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
 
     def test_static_pin_dispatches_only_for_exact_canonical_roots(self) -> None:
         payload = json.loads(SCENARIO_REGISTRY.read_text(encoding="utf-8"))
-        scenarios = [item["name"] for item in payload["scenarios"]]
+        scenarios = (
+            payload["support_scenarios"] + payload["decision_scenarios"]
+        )
         expected_roots = {
             "A_Calibrated_BAU",
             "B_Optimised_VRE",

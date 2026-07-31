@@ -47,7 +47,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_SOASIA = SCRIPT_DIR / "SOASIA_OSeMOSYS_Template_v18.xlsx"
+DEFAULT_SOASIA = SCRIPT_DIR / "OSTRAM_Scenario_Inputs.xlsx"
 RULES_SCRIPTS_DIR = SCRIPT_DIR / "rules_scripts"
 
 CONTROL_SHEET = "Control"
@@ -245,7 +245,7 @@ def read_control_sheet(
     if CONTROL_SHEET not in wb.sheetnames:
         raise ValueError(
             f"Workbook {path.name} has no '{CONTROL_SHEET}' sheet. "
-            f"Was it built with _build_v18_from_v17.py?"
+            "Use the maintained v18 scenario workbook."
         )
     ws = wb[CONTROL_SHEET]
 

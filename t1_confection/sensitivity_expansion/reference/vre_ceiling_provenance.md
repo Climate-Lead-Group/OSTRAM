@@ -1,5 +1,5 @@
 # OSTRAM — VRE-ceiling & key-assumption provenance / citations
-### Deep-research verification pass, 2026-07-12 (companion to OSTRAM_METHODOLOGY.md)
+### Deep-research verification pass, 2026-07-12
 
 **Scope & status.** Provenance for the study's load-bearing, previously-uncited assumptions — the per-node
 VRE resource ceilings, the internal-transmission loss, the discount rate/WACC, storage cost — plus a
@@ -115,7 +115,7 @@ Lead with the **Global Solar/Wind Atlas** as the uniform baseline for the 5 non-
 6. **WACC 10%** — no SA-specific single source; defended via IRENA rest-of-world (conservative).
 7. All cross-study comparisons are **directional only** (different horizons, discount rates, resolutions). CBET → lower cost / higher RE share is robustly corroborated in *direction*.
 
-*Provenance pass 2026-07-12. No ceiling or model value changed. Companion to `OSTRAM_METHODOLOGY.md` §3 and the gaps in §8.*
+*Provenance pass 2026-07-12. No ceiling or model value changed.*
 
 ---
 

@@ -185,7 +185,3 @@ python t1_confection/D2_update_secondary_techs.py
 | `Shares_PET_OIL_Split.xlsx` | Petroleum/oil split proportions per scenario |
 | `Shares_Power_Generation_Technologies.xlsx` | Power generation technology shares |
 | `flujos_energia_estimados_optimizacion.xlsx` (`Matriz Balance energético/`) | Bilateral trade-balance and interconnection flow data (GWh → PJ), used by `TradeBalanceDemandAdjustment` and by `Z_AUX_D1b_set_trn_limits_from_flows.py` |
-
-:::{note}
-`CapacityAndDistances.xlsx` and `RateGrowthDemand_RenovabilityGoals.xlsx` also exist at `t1_confection/` root but are not currently read by D1, D2, or any other script -- they appear to be staged data for future use, not active inputs.
-:::

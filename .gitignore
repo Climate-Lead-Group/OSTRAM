@@ -1,7 +1,9 @@
-# folders
-# Track branch snapshot outputs.
-# t1_confection/A2_Output_Params
-# t1_confection/Executables
+# Generated runtime state (recreated on demand; never tracked)
+/t1_confection/A1_Outputs/
+/t1_confection/A2_Output_Params/
+/t1_confection/A2_Outputs_Params_otoole/
+/t1_confection/Executables/
+/t1_confection/Outputs/
 
 # Excel files
 t1_confection/_GDP_Ref.xlsx
@@ -48,8 +50,8 @@ t1_confection/secondary_techs_update_log_*.txt
 t1_confection/A1_Outputs/secondary_techs_update_log_*.txt
 
 # Log files (by extension only, to avoid matching "Technology" etc.)
-# Keep specific noisy root logs ignored above, but allow run logs in
-# t1_confection/Executables to be tracked in branch snapshots.
+# Keep specific noisy root logs ignored above; per-scenario run logs are
+# covered by the generated Executables directory rule.
 # *.log
 # *.Log
 # *.LOG
@@ -104,8 +106,8 @@ desktop.ini
 .venv/
 venv/
 
-# Solver artifacts (generated during B2 runs)
-# Track solver artifacts in branch snapshots.
+# Solver artifacts generated during B2 runs are covered by the generated
+# Executables directory rule.
 # *.glp
 # *.lp
 # *.sol
@@ -153,10 +155,9 @@ t1_confection/Executables/*/*_0.txt
 # copies beside their target. Regenerable safety nets — keep them local, never in the repo.
 t1_confection/A1_Outputs/*_PREPATCH_*
 t1_confection/A1_Outputs/*_PRE_*
-t1_confection/A3_process/SOASIA_OSeMOSYS_Template_v18_PRE_*.xlsx
+t1_confection/A3_process/OSTRAM_Scenario_Inputs_PRE_*.xlsx
 
-# Timestamped sensitivity patch audit records are reproducible. Existing
-# tracked records remain historical evidence; ignore only new generated ones.
+# Timestamped sensitivity patch audit records are reproducible runtime products.
 t1_confection/A1_Outputs/**/apply_patches_CHANGES_*.json
 
 # Raw/candidate regression artifacts stay outside Git; compact baselines under

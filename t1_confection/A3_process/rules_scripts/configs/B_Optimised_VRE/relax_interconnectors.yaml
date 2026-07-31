@@ -1,7 +1,7 @@
 ## relax_interconnectors.yaml — B_Optimised_VRE
 ##
 ## Evidence-based interconnector expansion caps derived from the project
-## pipeline in Interconnectors.xlsx (Zixuan v3 + IEPMP 2023 + BPC PDB
+## pipeline in the maintained v18 Interconnectors sheet (Zixuan v3 + IEPMP 2023 + BPC PDB
 ## 2024 + NEA Annual 2024/25 + NEP Vol.II + LTGEP 2025-2044).
 ##
 ## Default mode: multiplicative with a conservative 1.5× factor for

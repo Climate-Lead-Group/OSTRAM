@@ -35,7 +35,7 @@ class A3Paths:
         return cls(
             t1_confection=t1_confection,
             process_dir=process_dir,
-            default_soasia=process_dir / "SOASIA_OSeMOSYS_Template_v18.xlsx",
+            default_soasia=process_dir / "OSTRAM_Scenario_Inputs.xlsx",
         )
 
 
@@ -64,7 +64,6 @@ class A3Dependencies:
     resolve_path: Callable[[Path | str], Path]
     build_workdir: Callable[[Path, str, list[str], str], dict[str, Path]]
     materialize_scenario_template: Callable[[Path, str, Path], object]
-    stage_0_5_rnwbio: Callable[[Path, Path], object]
     stage_1_scripts_1_to_5: Callable[[Path], object]
     stage_1b: Callable[[Path, Path, Path], object]
     stage_2_and_2_5: Callable[[Path, Path, Path], object]
@@ -137,7 +136,7 @@ def resolve_plan(
         snapshot_dir=(
             paths.t1_confection
             / "A1_Outputs"
-            / "_post_a2_snapshot_BAU"
+            / f"_post_a2_snapshot_{scenario}"
         ),
         workdir_base=paths.process_dir,
         keep_workdir=cli_args.keep_workdir,
@@ -163,10 +162,7 @@ def execute_plan(
     dependencies.emit(f"  input-dir         : {plan.input_dir}")
     dependencies.emit(f"  output-dir        : {plan.output_dir}")
     dependencies.emit(f"  snapshot (source) : {plan.snapshot_dir}")
-    dependencies.emit(
-        f"  SOASIA v18        : "
-        f"{plan.soasia if plan.soasia.is_file() else '(legacy mode, v18 absent)'}"
-    )
+    dependencies.emit(f"  scenario inputs   : {plan.soasia}")
     dependencies.emit(
         f"  rules_scripts     : {list(plan.rules_scripts) or '(none)'}"
     )
@@ -226,7 +222,6 @@ def execute_plan(
             raise SystemExit(f"ERROR: input file missing: {source}")
         dependencies.copy_file(source, stage1 / filename)
 
-    dependencies.stage_0_5_rnwbio(workdir, stage1)
     dependencies.stage_1_scripts_1_to_5(stage1)
     dependencies.stage_1b(workdir, stage1, stage1b)
     dependencies.stage_2_and_2_5(workdir, stage1b, stage2)
@@ -257,9 +252,17 @@ def execute_plan(
     if plan.scenario in PWR_MIN_PIN_ROOT_SCENARIOS:
         dependencies.stage_ws4_pwr_min_pin(stage5, plan.scenario)
     dependencies.stage_6_sync_og_to_ts20(workdir, stage1)
+    scenario_run_state = (
+        workdir / f"_scenario_run_state_{plan.scenario}.xlsx"
+    )
+    dependencies.copy_file(plan.soasia, scenario_run_state)
+    dependencies.emit(
+        "    generated Restrictions will be written only to "
+        f"{scenario_run_state.name}"
+    )
     dependencies.stage_6_persist_restrictions(
         stage5,
-        plan.soasia,
+        scenario_run_state,
         plan.scenario,
         rules_scripts,
     )

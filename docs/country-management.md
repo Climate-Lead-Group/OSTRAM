@@ -219,5 +219,6 @@ When enabled, region consolidation runs as part of Stage A1 preprocessing. It:
 4. Removes internal interconnections that become self-loops after merging.
 
 :::{note}
-A legacy, hardcoded Brazil-specific consolidation script is preserved at `docs/archive/legacy-tools/Z_AUX_united_regions.py` from the model's earlier LATAM phase. It is genuinely dead code today -- not imported or invoked anywhere in the active pipeline -- and is unrelated to the generic mechanism described above. See {doc}`auxiliary-tools`.
+The earlier hardcoded Brazil-specific consolidation helper is retired. It is
+unrelated to the generic maintained mechanism described above.
 :::
