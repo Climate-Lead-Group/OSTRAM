@@ -286,7 +286,7 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
             (
                 "create_env",
                 "custom env",
-                "config/custom environment.yaml",
+                REPO_ROOT / "config" / "custom environment.yaml",
                 cwd,
             ),
         )
@@ -294,14 +294,17 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
             harness.events[-1],
             (
                 "snapshot_exists",
-                cwd / "t1_confection" / "A1_Outputs",
+                REPO_ROOT / "t1_confection" / "A1_Outputs",
                 ("A", "B", "C"),
                 cwd,
             ),
         )
         output = stdout.getvalue()
         self.assertIn("Using environment: custom env", output)
-        self.assertIn(f"DVC config: {cwd / 'config' / 'custom dvc.yaml'}", output)
+        self.assertIn(
+            f"DVC config: {REPO_ROOT / 'config' / 'custom dvc.yaml'}",
+            output,
+        )
         self.assertIn("Skipping `dvc pull` by request.", output)
 
     def test_default_environment_resolution_order(self) -> None:
@@ -319,8 +322,14 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
                 ):
                     launcher.main()
 
-                self.assertEqual(harness.events[0][0:2], ("guess_env", "environment.yaml"))
-                self.assertEqual(harness.events[2][0:3], ("create_env", expected, "environment.yaml"))
+                self.assertEqual(
+                    harness.events[0][0:2],
+                    ("guess_env", REPO_ROOT / "environment.yaml"),
+                )
+                self.assertEqual(
+                    harness.events[2][0:3],
+                    ("create_env", expected, REPO_ROOT / "environment.yaml"),
+                )
 
     def test_unknown_option_and_help_use_argparse_exit_codes_before_setup(self) -> None:
         launcher = _load_launcher("argparse_exits")
@@ -442,7 +451,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
         )
         self.assertEqual(
             [event[3] for event in harness.events if event[0] == "pipeline"],
-            ['--scenarios "A,C"', '--scenarios "A,C"'],
+            [["--scenarios", "A,C"], ["--scenarios", "A,C"]],
         )
 
     def test_a3_filter_does_not_auto_add_the_bau_prerequisite(self) -> None:
@@ -550,7 +559,9 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                 )
                 self.assertEqual(
                     [event[3] for event in harness.events if event[0] == "pipeline"],
-                    [] if should_fail else ['--scenarios "A,B"', '--scenarios "A,B"'],
+                    []
+                    if should_fail
+                    else [["--scenarios", "A,B"], ["--scenarios", "A,B"]],
                 )
 
     def test_unknown_scenario_is_rejected_before_a1_a2_a3_b1_b2(self) -> None:
@@ -654,8 +665,8 @@ class CommandBoundaryCharacterizationTests(unittest.TestCase):
 
         self.assertIsNone(result)
         check_call.assert_called_once_with(
-            "tool --flag value",
-            shell=True,
+            ["tool", "--flag", "value"],
+            cwd=None,
             env={
                 "EXISTING": "kept",
                 "PYTHONHASHSEED": "0",
@@ -664,7 +675,7 @@ class CommandBoundaryCharacterizationTests(unittest.TestCase):
         )
         self.assertEqual(Path.cwd(), cwd)
 
-    def test_run_pipeline_and_a3_construct_exact_shell_commands(self) -> None:
+    def test_run_pipeline_and_a3_construct_module_commands(self) -> None:
         launcher = _load_launcher("command_strings")
         with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
             cwd = Path(temp).resolve()
@@ -673,14 +684,22 @@ class CommandBoundaryCharacterizationTests(unittest.TestCase):
             pipeline_script.write_text("# fixture only\n", encoding="utf-8")
             a3_script = pipeline_script.with_name("A3_process.py")
             a3_script.write_text("# fixture only\n", encoding="utf-8")
-            commands: list[tuple[str, Path]] = []
+            commands: list[tuple[list[str], Path, Path | None]] = []
 
-            def record(command: str) -> None:
-                commands.append((command, Path.cwd()))
+            def record(command, *, cwd=None) -> None:
+                commands.append((list(command), Path.cwd(), cwd))
+
+            path_fixture = mock.Mock(
+                project_root=cwd,
+                legacy_runtime_root=cwd / "t1_confection",
+            )
 
             with (
                 _working_directory(cwd),
                 mock.patch.object(launcher, "run", side_effect=record),
+                mock.patch.object(
+                    launcher, "resolve_paths", return_value=path_fixture
+                ),
                 redirect_stdout(io.StringIO()),
             ):
                 launcher.run_pipeline_script(
@@ -692,19 +711,33 @@ class CommandBoundaryCharacterizationTests(unittest.TestCase):
             commands,
             [
                 (
-                    f'conda run -n Env Name python -u "{pipeline_script}" '
-                    '--scenarios "C,A"',
+                    [
+                        sys.executable,
+                        "-B",
+                        "-m",
+                        "t1_confection.B1_Run_Compiler",
+                        "--scenarios",
+                        "C,A",
+                    ],
                     cwd,
+                    cwd / "t1_confection",
                 ),
                 (
-                    f'conda run -n Env Name python -u "{a3_script}" '
-                    '--scenarios "Scenario A"',
+                    [
+                        sys.executable,
+                        "-B",
+                        "-m",
+                        "t1_confection.A3_process",
+                        "--scenarios",
+                        "Scenario A",
+                    ],
                     cwd,
+                    cwd / "t1_confection",
                 ),
             ],
         )
 
-    def test_pipeline_display_requires_script_to_be_below_current_directory(self) -> None:
+    def test_pipeline_resolution_does_not_depend_on_caller_directory(self) -> None:
         launcher = _load_launcher("relative_display")
         with tempfile.TemporaryDirectory(dir=TEST_ROOT) as script_temp:
             script = Path(script_temp).resolve() / "stage.py"
@@ -715,9 +748,8 @@ class CommandBoundaryCharacterizationTests(unittest.TestCase):
                     mock.patch.object(launcher, "run") as process_boundary,
                     redirect_stdout(io.StringIO()),
                 ):
-                    with self.assertRaises(ValueError):
-                        launcher.run_pipeline_script("env", script)
-            process_boundary.assert_not_called()
+                    launcher.run_pipeline_script("env", script)
+            process_boundary.assert_called_once()
 
     def test_missing_stage_files_fail_before_command_execution(self) -> None:
         launcher = _load_launcher("missing_scripts")

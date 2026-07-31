@@ -33,7 +33,6 @@ import argparse
 import csv
 import hashlib
 import math
-import sys
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -41,17 +40,17 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
+from ostram._legacy_import import load_file_module
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
-if str(_SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(_SCRIPT_DIR))
-
-from interconnector_authority import (  # noqa: E402
-    MINIMUM_CONTRIBUTION_TECHS,
-    load_minimum_boundary_authority,
-    load_minimum_contribution_authority,
-    validate_minimum_contribution_authority,
+_authority = load_file_module(
+    "_ostram_stage11_interconnector_authority",
+    _SCRIPT_DIR / "interconnector_authority.py",
 )
+MINIMUM_CONTRIBUTION_TECHS = _authority.MINIMUM_CONTRIBUTION_TECHS
+load_minimum_boundary_authority = _authority.load_minimum_boundary_authority
+load_minimum_contribution_authority = _authority.load_minimum_contribution_authority
+validate_minimum_contribution_authority = _authority.validate_minimum_contribution_authority
 
 # ------------------------------------------------------------------ constants
 SHEET_NAME = "Secondary Techs"

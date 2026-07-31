@@ -19,6 +19,8 @@ import subprocess
 import sys
 from typing import Callable, Mapping, MutableMapping, Sequence
 
+from ostram.paths import resolve_paths
+
 try:
     from .scenario_registry import (
         ScenarioRegistry,
@@ -35,7 +37,8 @@ except ImportError:  # direct-script execution
     from sensitivity_expansion import apply_patches
 
 
-T1_CONFECTION = Path(__file__).resolve().parent
+_PROJECT_PATHS = resolve_paths()
+T1_CONFECTION = _PROJECT_PATHS.legacy_runtime_root
 A1_OUTPUTS = T1_CONFECTION / "A1_Outputs"
 A3_ENTRYPOINT = T1_CONFECTION / "A3_process.py"
 A3_PROCESS = T1_CONFECTION / "A3_process"
@@ -59,12 +62,15 @@ class MaterializationPaths:
 
     @classmethod
     def defaults(cls) -> "MaterializationPaths":
+        paths = resolve_paths()
+        t1_confection = paths.legacy_runtime_root
+        a3_process = t1_confection / "A3_process"
         return cls(
-            t1_confection=T1_CONFECTION,
-            a1_outputs=A1_OUTPUTS,
-            a3_entrypoint=A3_ENTRYPOINT,
-            a3_process=A3_PROCESS,
-            soasia=DEFAULT_SOASIA,
+            t1_confection=t1_confection,
+            a1_outputs=t1_confection / "A1_Outputs",
+            a3_entrypoint=t1_confection / "A3_process.py",
+            a3_process=a3_process,
+            soasia=paths.scenario_workbook,
         )
 
 
@@ -110,7 +116,8 @@ def _default_root_materializer(
         command = [
             sys.executable,
             "-B",
-            str(paths.a3_entrypoint),
+            "-m",
+            "t1_confection.A3_process",
             "--scenario",
             root,
             "--soasia",

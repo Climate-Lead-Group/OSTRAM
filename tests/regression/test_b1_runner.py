@@ -348,7 +348,8 @@ class B1CommandBoundaryCharacterizationTests(unittest.TestCase):
 
             self.assertEqual(result, 7)
             process_run.assert_called_once_with(
-                [interpreter, str(fixture.compiler)], cwd=str(fixture.script_dir)
+                [interpreter, "-B", "-m", "t1_confection.B1_Compiler"],
+                cwd=str(fixture.script_dir),
             )
             self.assertNotIn("env", process_run.call_args.kwargs)
             self.assertNotIn("shell", process_run.call_args.kwargs)
@@ -442,10 +443,26 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
             command, command_runner=fake_runner
         )
 
-        self.assertEqual(command.argv, ("chosen-python", str(compiler)))
-        self.assertEqual(command.cwd, cwd)
+        self.assertEqual(
+            command.argv,
+            ("chosen-python", "-B", "-m", "t1_confection.B1_Compiler"),
+        )
+        self.assertEqual(command.cwd, cwd.resolve())
         self.assertEqual(return_code, 6)
-        self.assertEqual(calls, [(["chosen-python", str(compiler)], str(cwd))])
+        self.assertEqual(
+            calls,
+            [
+                (
+                    [
+                        "chosen-python",
+                        "-B",
+                        "-m",
+                        "t1_confection.B1_Compiler",
+                    ],
+                    str(cwd.resolve()),
+                )
+            ],
+        )
 
     def test_configuration_scope_exposes_backup_and_restores_on_body_exception(self) -> None:
         config = Path("Config_MOMF_T1_A.yaml")

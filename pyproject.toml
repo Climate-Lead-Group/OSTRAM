@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ostram"
+version = "0.0.0"
+description = "OSTRAM energy-system scenario preparation and compilation"
+requires-python = ">=3.11"
+
+[tool.setuptools]
+py-modules = ["run"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ostram*", "t1_confection*"]
+namespaces = true

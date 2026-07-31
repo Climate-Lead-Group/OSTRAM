@@ -400,7 +400,6 @@ class B2AstBoundaryCharacterizationTests(unittest.TestCase):
             _selected_calls(
                 top_level,
                 {
-                    "os.chdir",
                     "build_run_plan",
                     "run_compiled_input_stage",
                     "run_execution_stage",
@@ -409,7 +408,6 @@ class B2AstBoundaryCharacterizationTests(unittest.TestCase):
                 },
             ),
             [
-                "os.chdir",
                 "build_run_plan",
                 "run_compiled_input_stage",
                 "run_execution_stage",
@@ -556,13 +554,10 @@ class B2AstBoundaryCharacterizationTests(unittest.TestCase):
             process_call = next(
                 item for item in ast.walk(boundary) if isinstance(item, ast.Call)
             )
-            self.assertEqual(
-                [
-                    (keyword.arg, keyword.value.value)
-                    for keyword in process_call.keywords
-                ],
-                [("shell", True), ("check", True)],
-            )
+            keyword_names = [keyword.arg for keyword in process_call.keywords]
+            self.assertEqual(keyword_names, ["cwd", "check"])
+            self.assertIsInstance(process_call.keywords[0].value, ast.Call)
+            self.assertIs(process_call.keywords[1].value.value, True)
 
 
 class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
@@ -577,6 +572,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             concat_scenarios_csv=True,
         ) as fixture:
             harness = GuardHarness(module, fixture)
+            caller_cwd = Path.cwd()
             harness.run(
                 ["B2_Executing_OG_Model.py", "--scenarios", " C, A, C "]
             )
@@ -619,10 +615,9 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             self.assertTrue(all(item is first_params for item in harness.params_seen if item))
             self.assertEqual(first_params["execute_model"], True)
             self.assertEqual(first_params["create_matrix"], False)
-            self.assertEqual(harness.cwd_after, fixture.root)
+            self.assertEqual(harness.cwd_after, caller_cwd)
 
             markers = (
-                "[INFO] Working dir ->",
                 "[INFO] Scenario filter active: ['C', 'A']",
                 "Started linear executions",
                 "Inputs and outputs concatenated for all scenarios successfully",
@@ -1079,24 +1074,26 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
             data_file = os.path.join(folder, "Pre_processed_A_0")
             output_file = os.path.join(folder, "Pre_processed_A_0_output")
             expected = {
-                "glpk": (
-                    f"glpsol -m osemosys_fast_preprocessed.txt -d {data_file}.txt "
-                    f"--wglp {output_file}.glp --write {output_file}.sol"
-                ),
-                "cbc": (
-                    f"cbc {output_file}.lp randomSeed 12345 randomCbcSeed 12345 "
-                    f"-seconds 20000 solve -solu {output_file}.sol"
-                ),
-                "cplex": (
-                    f'cplex -c "set logfile {output_file}.cplex.log" '
-                    f'"read {output_file}.lp" "set threads 4" '
-                    f'"set randomseed 12345" "set parallel 1" "optimize" '
-                    f'"write {output_file}.sol"'
-                ),
-                "gurobi": (
-                    f"gurobi_cl Threads=3 Seed=12345 "
-                    f"ResultFile={output_file}.sol {output_file}.lp"
-                ),
+                "glpk": [
+                    "glpsol", "-m", "osemosys_fast_preprocessed.txt",
+                    "-d", f"{data_file}.txt", "--wglp", f"{output_file}.glp",
+                    "--write", f"{output_file}.sol",
+                ],
+                "cbc": [
+                    "cbc", f"{output_file}.lp", "randomSeed", "12345",
+                    "randomCbcSeed", "12345", "-seconds", "20000",
+                    "solve", "-solu", f"{output_file}.sol",
+                ],
+                "cplex": [
+                    "cplex", "-c", f"set logfile {output_file}.cplex.log",
+                    f"read {output_file}.lp", "set threads 4",
+                    "set randomseed 12345", "set parallel 1", "optimize",
+                    f"write {output_file}.sol",
+                ],
+                "gurobi": [
+                    "gurobi_cl", "Threads=3", "Seed=12345",
+                    f"ResultFile={output_file}.sol", f"{output_file}.lp",
+                ],
             }
             environment_name = {
                 "glpk": "glpsol",
@@ -1118,9 +1115,9 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
                     self.assertEqual(commands[0], expected_command)
                     self.assertEqual(len(commands), 2)
                     for recorded in result.runner.call_args_list:
-                        self.assertEqual(
-                            recorded.kwargs, {"shell": True, "check": True}
-                        )
+                        self.assertTrue(recorded.kwargs["check"])
+                        self.assertNotIn("shell", recorded.kwargs)
+                        self.assertTrue(Path(recorded.kwargs["cwd"]).is_absolute())
                     result.check_environment.assert_called_once_with(
                         environment_name[solver]
                     )
@@ -1149,33 +1146,34 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
                 str(here.parent), "concatenate_files", "concatenate_ostram.py"
             )
             expected_commands = [
-                (
-                    f"glpsol -m osemosys_fast_preprocessed.txt -d {data_file}.txt "
-                    f"--wlp {output_file}.lp --check"
-                ),
-                (
-                    f'cplex -c "set logfile {output_file}.cplex.log" '
-                    f'"read {output_file}.lp" "set threads 4" '
-                    f'"set randomseed 12345" "set parallel 1" "optimize" '
-                    f'"write {output_file}.sol"'
-                ),
-                (
-                    f'"ENV-otoole" results cplex csv "{output_file}.sol" '
-                    f'"{outputs}" csv "{template}" "{conversion}" 2> '
-                    f'"{output_file}.log"'
-                ),
-                (
-                    f'"{sys.executable}" -u "{concat_script}" "{outputs}" '
-                    f'"{output_file}"'
-                ),
+                [
+                    "glpsol", "-m", "osemosys_fast_preprocessed.txt",
+                    "-d", f"{data_file}.txt", "--wlp", f"{output_file}.lp",
+                    "--check",
+                ],
+                [
+                    "cplex", "-c", f"set logfile {output_file}.cplex.log",
+                    f"read {output_file}.lp", "set threads 4",
+                    "set randomseed 12345", "set parallel 1", "optimize",
+                    f"write {output_file}.sol",
+                ],
+                [
+                    "ENV-otoole", "results", "cplex", "csv",
+                    f"{output_file}.sol", outputs, "csv", template, conversion,
+                ],
+                [
+                    sys.executable, "-B", "-m", "ostram._legacy_script",
+                    "--script", concat_script, "--", outputs, output_file,
+                ],
             ]
             self.assertEqual(
                 [call.args[0] for call in result.runner.call_args_list],
                 expected_commands,
             )
             for recorded in result.runner.call_args_list:
-                self.assertEqual(recorded.kwargs, {"shell": True, "check": True})
-                self.assertNotIn("cwd", recorded.kwargs)
+                self.assertTrue(recorded.kwargs["check"])
+                self.assertNotIn("shell", recorded.kwargs)
+                self.assertTrue(Path(recorded.kwargs["cwd"]).is_absolute())
                 self.assertNotIn("env", recorded.kwargs)
             self.assertEqual(
                 result.removed,

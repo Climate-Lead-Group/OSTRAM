@@ -127,19 +127,6 @@ def build_structure_tables(
         "" for _ in range(maximum_length - lengths[10])
     ]
 
-    table = pd.DataFrame(columns=params["columns4"])
-    table["YEAR"] = structure_year
-    table["TECHNOLOGY"] = structure_technology
-    table["TIMESLICE"] = structure_timeslice
-    table["FUEL"] = structure_fuel
-    table["EMISSION"] = structure_emission
-    table["MODE_OF_OPERATION"] = structure_mode
-    table["REGION"] = structure_region
-    table["DAYTYPE"] = structure_daytype
-    table["DAILYTIMEBRACKET"] = structure_daily_time_bracket
-    table["SEASON"] = structure_season
-    table["STORAGE"] = structure_storage
-
     values = {
         "YEAR": structure_year,
         "TECHNOLOGY": structure_technology,
@@ -153,4 +140,14 @@ def build_structure_tables(
         "SEASON": structure_season,
         "STORAGE": structure_storage,
     }
+    # Pandas 3 may infer its nullable StringDtype for string-only columns.
+    # The compiler's supported contract is the predecessor's object dtype,
+    # which also keeps mixed integer/blank padding stable across versions.
+    table = pd.DataFrame(
+        {
+            name: pd.Series(values[name], dtype=object)
+            for name in params["columns4"]
+        },
+        columns=params["columns4"],
+    )
     return StructureTables(table=table, values=values)

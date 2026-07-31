@@ -19,9 +19,13 @@ import argparse
 import datetime as dt
 import json
 import os
+import shlex
 import subprocess
 import sys
 from pathlib import Path
+from typing import Sequence
+
+from ostram.paths import ProjectPaths, resolve_paths
 
 from t1_confection.scenario_registry import (
     ensure_root_output_directories,
@@ -33,7 +37,8 @@ from t1_confection.scenario_registry import (
 ENV_NAME_DEFAULT = "OSTRAM-env"
 ENV_FILE_DEFAULT = "environment.yaml"
 DVC_FILE_DEFAULT = "dvc.yaml"
-T1_DIR = Path("t1_confection")
+_DEFAULT_PATHS = resolve_paths()
+T1_DIR = _DEFAULT_PATHS.legacy_runtime_root
 A1_SCRIPT_DEFAULT = T1_DIR / "A1_Pre_processing_OG_csvs.py"
 A2_SCRIPT_DEFAULT = T1_DIR / "A2_AddTx.py"
 A3_SCRIPT_DEFAULT = T1_DIR / "scenario_materializer.py"
@@ -58,18 +63,22 @@ PIP_DEPS = {
 
 
 # ---------- Shell utilities ----------
-def run(cmd: str) -> None:
+def run(cmd: Sequence[str | Path], *, cwd: Path | None = None) -> None:
     env = os.environ.copy()
     env["PYTHONHASHSEED"] = "0"
     env["PYTHONDONTWRITEBYTECODE"] = "1"
-    subprocess.check_call(cmd, shell=True, env=env)
+    tokens = shlex.split(cmd) if isinstance(cmd, str) else list(cmd)
+    subprocess.check_call(
+        [str(token) for token in tokens],
+        cwd=str(cwd.resolve()) if cwd is not None else None,
+        env=env,
+    )
 
 
 def check_tool_available(tool: str) -> None:
     try:
         subprocess.check_call(
-            f"{tool} --version",
-            shell=True,
+            [tool, "--version"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
@@ -114,7 +123,7 @@ def env_exists(name: str) -> bool:
         return False
 
 
-def guess_env_name_from_yaml(env_file: str) -> str | None:
+def guess_env_name_from_yaml(env_file: str | Path) -> str | None:
     p = Path(env_file)
     if not p.exists():
         return None
@@ -129,20 +138,20 @@ def guess_env_name_from_yaml(env_file: str) -> str | None:
     return None
 
 
-def create_env_if_missing(env_name: str, env_file: str) -> None:
+def create_env_if_missing(env_name: str, env_file: str | Path) -> None:
     if env_exists(env_name):
         print(f"Conda environment '{env_name}' already exists. Skipping recreation.")
         return
     print(f"Creating Conda environment '{env_name}' from {env_file}...")
-    run(f"conda env create -n {env_name} -f {env_file} -y")
+    run(["conda", "env", "create", "-n", env_name, "-f", Path(env_file), "-y"])
 
 
 def ensure_pip_available(env_name: str) -> None:
     try:
-        run(f"conda run -n {env_name} python -m pip --version")
+        run(["conda", "run", "-n", env_name, "python", "-m", "pip", "--version"])
     except subprocess.CalledProcessError:
         print("pip not found in the environment. Installing 'pip' in the environment...")
-        run(f"conda install -n {env_name} pip -y")
+        run(["conda", "install", "-n", env_name, "pip", "-y"])
 
 
 def module_present(env_name: str, module: str) -> bool:
@@ -151,7 +160,7 @@ def module_present(env_name: str, module: str) -> bool:
         f"sys.exit(0) if importlib.util.find_spec('{module}') else sys.exit(1)"
     )
     try:
-        run(f'conda run -n {env_name} python -c "{code}"')
+        run(["conda", "run", "-n", env_name, "python", "-c", code])
         return True
     except subprocess.CalledProcessError:
         return False
@@ -164,47 +173,50 @@ def ensure_deps(env_name: str) -> None:
 
     missing_conda = [pkg for mod, pkg in CONDA_DEPS.items() if not module_present(env_name, mod)]
     if missing_conda:
-        pkgs = " ".join(missing_conda)
         print(f"Installing missing conda dependencies: {missing_conda}")
-        run(f"conda install -n {env_name} -c conda-forge -y {pkgs}")
+        run(["conda", "install", "-n", env_name, "-c", "conda-forge", "-y", *missing_conda])
 
     missing_pip = [pkg for mod, pkg in PIP_DEPS.items() if not module_present(env_name, mod)]
     if missing_pip:
         for spec in missing_pip:
             print(f"Installing missing pip dependency: {spec}")
-            run(f"conda run -n {env_name} python -m pip install -U {spec}")
+            run(["conda", "run", "-n", env_name, "python", "-m", "pip", "install", "-U", spec])
 
 
 # ---------- DVC ----------
-def is_dvc_repo() -> bool:
-    return Path(".dvc").is_dir()
+def is_dvc_repo(project_root: Path | None = None) -> bool:
+    root = resolve_paths().project_root if project_root is None else project_root
+    return (root / ".dvc").is_dir()
 
 
-def is_git_repo() -> bool:
-    return Path(".git").is_dir()
+def is_git_repo(project_root: Path | None = None) -> bool:
+    root = resolve_paths().project_root if project_root is None else project_root
+    return (root / ".git").exists()
 
 
-def ensure_dvc_repo(env_name: str) -> None:
-    if is_dvc_repo():
+def ensure_dvc_repo(env_name: str, project_root: Path | None = None) -> None:
+    root = resolve_paths().project_root if project_root is None else project_root.resolve()
+    if is_dvc_repo(root):
         print("DVC repository detected (.dvc/ found).")
         return
 
-    if is_git_repo():
+    if is_git_repo(root):
         print("DVC repo not found. Running `dvc init`...")
-        run(f"conda run -n {env_name} dvc init")
+        run(["conda", "run", "-n", env_name, "dvc", "init"], cwd=root)
     else:
         print("Git repo not found. Running `dvc init --no-scm`...")
-        run(f"conda run -n {env_name} dvc init --no-scm")
+        run(["conda", "run", "-n", env_name, "dvc", "init", "--no-scm"], cwd=root)
 
-    if not is_dvc_repo():
+    if not is_dvc_repo(root):
         raise RuntimeError("Failed to initialize DVC (.dvc was not created).")
 
 
-def has_dvc_remote(env_name: str) -> bool:
+def has_dvc_remote(env_name: str, project_root: Path | None = None) -> bool:
+    root = resolve_paths().project_root if project_root is None else project_root.resolve()
     try:
         out = subprocess.check_output(
-            f"conda run -n {env_name} dvc remote list",
-            shell=True,
+            ["conda", "run", "-n", env_name, "dvc", "remote", "list"],
+            cwd=str(root),
             stderr=subprocess.STDOUT,
         )
         return bool(out.decode("utf-8", errors="ignore").strip())
@@ -212,18 +224,39 @@ def has_dvc_remote(env_name: str) -> bool:
         return False
 
 
-def dvc_command(env_name: str, args: str) -> None:
-    run(f"conda run -n {env_name} dvc {args}")
+def dvc_command(
+    env_name: str,
+    args: Sequence[str] | str,
+    project_root: Path | None = None,
+) -> None:
+    root = resolve_paths().project_root if project_root is None else project_root.resolve()
+    tokens = shlex.split(args) if isinstance(args, str) else list(args)
+    run(["conda", "run", "-n", env_name, "dvc", *tokens], cwd=root)
 
 
-def run_pipeline_script(env_name: str, script_path: Path,
-                        extra_args: str = "") -> None:
+def _module_for_script(script_path: Path, paths: ProjectPaths) -> str:
+    relative = script_path.resolve().relative_to(paths.project_root)
+    return ".".join(relative.with_suffix("").parts)
+
+
+def run_pipeline_script(
+    env_name: str,
+    script_path: Path,
+    extra_args: Sequence[str] | str = (),
+    *,
+    paths: ProjectPaths | None = None,
+) -> None:
+    del env_name  # the active interpreter is the supported package environment
+    active_paths = resolve_paths() if paths is None else paths
     if not script_path.is_file():
         raise FileNotFoundError(f"Pipeline script not found: {script_path}")
-
-    print(f"Running {script_path.relative_to(Path.cwd())}...")
-    suffix = f" {extra_args}" if extra_args else ""
-    run(f'conda run -n {env_name} python -u "{script_path}"{suffix}')
+    arguments = shlex.split(extra_args) if isinstance(extra_args, str) else list(extra_args)
+    module = _module_for_script(script_path, active_paths)
+    print(f"Running {module} from {active_paths.legacy_runtime_root}...")
+    run(
+        [sys.executable, "-B", "-m", module, *arguments],
+        cwd=active_paths.legacy_runtime_root,
+    )
 
 
 def enumerate_active_scenarios(env_name: str | None = None) -> list[str]:
@@ -238,9 +271,10 @@ def run_a3_for_scenario(env_name: str, script_path: Path, scenario: str) -> None
     if not script_path.is_file():
         raise FileNotFoundError(f"scenario materializer not found: {script_path}")
     print(f"Running A3 for scenario '{scenario}'...")
-    run(
-        f'conda run -n {env_name} python -u "{script_path}" '
-        f'--scenarios "{scenario}"'
+    run_pipeline_script(
+        env_name,
+        script_path,
+        ["--scenarios", scenario],
     )
 
 
@@ -257,16 +291,11 @@ def run_a3_for_scenarios(
     if not scenarios:
         raise ValueError("scenario selection is empty")
     selected = ",".join(scenarios)
-    seed_arg = (
-        f' --a-result-seed "{Path(a_result_seed).resolve()}"'
-        if a_result_seed
-        else ""
-    )
+    arguments = ["--scenarios", selected]
+    if a_result_seed:
+        arguments.extend(["--a-result-seed", str(Path(a_result_seed).resolve())])
     print(f"Materializing scenarios in canonical order: {scenarios}")
-    run(
-        f'conda run -n {env_name} python -u "{script_path}" '
-        f'--scenarios "{selected}"{seed_arg}'
-    )
+    run_pipeline_script(env_name, script_path, arguments)
 
 
 def post_a2_snapshot_exists(a1_outputs_dir: Path) -> bool:
@@ -340,10 +369,10 @@ def parse_args(argv=None):
 
 def main() -> None:
     args = parse_args()
-
-    env_name = args.env_name or guess_env_name_from_yaml(args.env_file) or ENV_NAME_DEFAULT
-    env_file = args.env_file
-    dvc_file = Path(args.dvc_file).resolve()
+    paths = resolve_paths()
+    env_file = paths.resolve_project_file(args.env_file)
+    dvc_file = paths.resolve_project_file(args.dvc_file)
+    env_name = args.env_name or guess_env_name_from_yaml(env_file) or ENV_NAME_DEFAULT
 
     print(f"Using environment: {env_name}")
     print(f"DVC config: {dvc_file}")
@@ -376,7 +405,8 @@ def main() -> None:
     # A1 + A2 are a combo: every requested root must have its own post-A2
     # snapshot. A1 creates only the four root output directories; A2 snapshots
     # only those roots.
-    if root_snapshots_exist(A1_OUTPUTS_DIR.resolve(), required_roots):
+    a1_outputs_dir = paths.legacy_runtime_root / "A1_Outputs"
+    if root_snapshots_exist(a1_outputs_dir, required_roots):
         print(
             f"All required post-A2 root snapshots exist in {A1_OUTPUTS_DIR}/: "
             f"{list(required_roots)}. Skipping A1 + A2."
@@ -386,36 +416,32 @@ def main() -> None:
             f"One or more required post-A2 root snapshots are absent in "
             f"{A1_OUTPUTS_DIR}/. Running A1 + A2 for the four roots."
         )
-        ensure_root_output_directories(A1_OUTPUTS_DIR.resolve(), registry)
-        run_pipeline_script(env_name, A1_SCRIPT_DEFAULT.resolve())
-        run_pipeline_script(env_name, A2_SCRIPT_DEFAULT.resolve())
+        ensure_root_output_directories(a1_outputs_dir, registry)
+        run_pipeline_script(env_name, paths.legacy_runtime_root / A1_SCRIPT_DEFAULT.name)
+        run_pipeline_script(env_name, paths.legacy_runtime_root / A2_SCRIPT_DEFAULT.name)
 
     if args.skip_a3:
         print("Skipping A3 pre-process stage by request.")
     else:
         run_a3_for_scenarios(
             env_name,
-            A3_SCRIPT_DEFAULT.resolve(),
+            paths.legacy_runtime_root / A3_SCRIPT_DEFAULT.name,
             scenarios,
             args.a_result_seed,
         )
 
-    scenarios_arg = f'--scenarios "{",".join(scenarios)}"'
+    scenarios_arg = ["--scenarios", ",".join(scenarios)]
 
     if args.skip_b1:
         print("Skipping B1 compiler stage by request.")
     else:
-        run_pipeline_script(env_name, B1_SCRIPT_DEFAULT.resolve(), scenarios_arg)
+        run_pipeline_script(env_name, paths.legacy_runtime_root / B1_SCRIPT_DEFAULT.name, scenarios_arg)
 
     if args.skip_b2:
         print("Skipping B2 execution stage by request.")
     else:
-        b2_args = (
-            f"{scenarios_arg} --compile-only"
-            if args.compile_only
-            else scenarios_arg
-        )
-        run_pipeline_script(env_name, B2_SCRIPT_DEFAULT.resolve(), b2_args)
+        b2_args = [*scenarios_arg, *( ["--compile-only"] if args.compile_only else [])]
+        run_pipeline_script(env_name, paths.legacy_runtime_root / B2_SCRIPT_DEFAULT.name, b2_args)
 
     end_time = dt.datetime.now()
     print(f"Pipeline completed in {format_duration(start_time, end_time)}.")

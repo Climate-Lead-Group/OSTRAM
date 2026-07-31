@@ -186,9 +186,10 @@ class CanonicalCliImportAndHelpTests(unittest.TestCase):
         self.assertIn("run", help_text)
         self.assertIn("transform", help_text)
         self.assertIn("compile-inputs", help_text)
+        self.assertIn("inspect-resources", help_text)
         self.assertNotIn("prepare-model", help_text)
         self.assertNotIn("solve", help_text)
-        self.assertIn("historical", help_text.lower())
+        self.assertIn("project-root", help_text)
 
     def test_unknown_deferred_and_malformed_top_level_commands_exit_two(self) -> None:
         cli = _load_cli("top_errors")
@@ -424,7 +425,14 @@ class CanonicalCliDispatchTests(unittest.TestCase):
                 self.assertEqual(len(events), 1)
                 self.assertEqual(events[0][1], (route.program, *raw))
                 self.assertEqual(events[0][2], Path.cwd())
-                self.assertEqual(events[0][3], {"OSTRAM_SENTINEL": "kept"})
+                self.assertEqual(events[0][3]["OSTRAM_SENTINEL"], "kept")
+                self.assertEqual(
+                    Path(events[0][3]["OSTRAM_PROJECT_ROOT"]), REPO_ROOT
+                )
+                self.assertEqual(
+                    Path(events[0][3]["OSTRAM_WORKSPACE"]),
+                    REPO_ROOT / "workspace",
+                )
                 self.assertIs(sys.argv, original_argv)
                 expected_result = 23 if route.exit_policy == "main-result" else 0
                 self.assertEqual(result, expected_result)
@@ -681,7 +689,18 @@ class CanonicalCliDispatchTests(unittest.TestCase):
                             observed[0][1],
                             (route.program, "--value", "argument with spaces"),
                         )
-                        self.assertEqual(observed[0][2], environment)
+                        self.assertEqual(
+                            observed[0][2]["PATH_WITH_SPACES"],
+                            environment["PATH_WITH_SPACES"],
+                        )
+                        self.assertEqual(
+                            Path(observed[0][2]["OSTRAM_PROJECT_ROOT"]),
+                            REPO_ROOT,
+                        )
+                        self.assertEqual(
+                            Path(observed[0][2]["OSTRAM_WORKSPACE"]),
+                            REPO_ROOT / "workspace",
+                        )
                         self.assertIs(sys.argv, original_argv)
             finally:
                 os.chdir(starting_cwd)

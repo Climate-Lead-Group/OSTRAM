@@ -212,7 +212,12 @@ def build_compiler_command(
     *, interpreter: str, compiler_path: Path, cwd: Path
 ) -> CompilerCommand:
     """Build the exact tokenized compiler command without executing it."""
-    return CompilerCommand(argv=(interpreter, str(compiler_path)), cwd=cwd)
+    if compiler_path.name != "B1_Compiler.py":
+        raise ValueError(f"unsupported compiler module target: {compiler_path}")
+    return CompilerCommand(
+        argv=(interpreter, "-B", "-m", "t1_confection.B1_Compiler"),
+        cwd=cwd.resolve(),
+    )
 
 
 def execute_command(

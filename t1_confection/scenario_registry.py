@@ -14,9 +14,11 @@ import os
 from pathlib import Path
 from typing import Iterable, Mapping, Sequence
 
+from ostram.paths import resolve_paths
 
-T1_CONFECTION = Path(__file__).resolve().parent
-DEFAULT_REGISTRY = T1_CONFECTION / "scenario_registry.json"
+_PROJECT_PATHS = resolve_paths()
+T1_CONFECTION = _PROJECT_PATHS.legacy_runtime_root
+DEFAULT_REGISTRY = _PROJECT_PATHS.scenario_registry
 
 SUPPORT_SCENARIOS = ("BAU",)
 ROOT_SCENARIOS = (

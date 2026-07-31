@@ -106,6 +106,9 @@ desktop.ini
 .venv/
 venv/
 
+# Central mutable runtime and validation state (created lazily by ostram.paths).
+/workspace/
+
 # Solver artifacts generated during B2 runs are covered by the generated
 # Executables directory rule.
 # *.glp

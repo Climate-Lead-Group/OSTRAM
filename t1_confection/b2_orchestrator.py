@@ -18,6 +18,8 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Callable
 
+from ostram.paths import resolve_paths
+
 
 _MISSING_MODULE_FILE = object()
 
@@ -101,7 +103,8 @@ def resolve_here(
         return Path(module_file).resolve().parent
     if main_module_file is not None:
         return Path(main_module_file).resolve().parent
-    return (cwd or Path.cwd()).resolve()
+    del cwd
+    return resolve_paths().legacy_runtime_root
 
 
 def apply_configuration_overrides(params: dict[str, Any]) -> None:
@@ -193,14 +196,34 @@ def build_run_plan(
 ) -> B2RunPlan:
     """Load configuration and resolve the complete non-executing B2 plan."""
 
-    with open("Config_MOMF_T1_AB.yaml", "r") as config_file:
+    with (here / "Config_MOMF_T1_AB.yaml").open(
+        "r", encoding="utf-8"
+    ) as config_file:
         params = yaml_safe_load(config_file)
 
     apply_configuration_overrides(params)
     if compile_only:
         apply_compile_only_overrides(params)
 
-    with open("Config_MOMF_T1_A.yaml", "r") as config_file:
+    for key in (
+        "A2_output",
+        "A2_output_otoole",
+        "Miscellaneous",
+        "executables",
+        "osemosys_model",
+        "concatenate_folder",
+        "reserve_margin_xlsx_workbook",
+    ):
+        value = params.get(key)
+        if value:
+            path = Path(str(value)).expanduser()
+            params[key] = str(
+                path.resolve() if path.is_absolute() else (here / path).resolve()
+            )
+
+    with (here / "Config_MOMF_T1_A.yaml").open(
+        "r", encoding="utf-8"
+    ) as config_file:
         params_a2 = yaml_safe_load(config_file)
 
     base_input_path = os.path.join(here, params["A2_output"])
@@ -468,10 +491,6 @@ def orchestrate_b2(
     here = resolve_here(module_file, main_module_file)
     set_here(here)
 
-    if Path.cwd() != here:
-        os.chdir(here)
-        print(f"[INFO] Working dir -> {here}")
-
     dependencies = dependency_factory()
     plan = build_run_plan(
         here,
@@ -668,33 +687,42 @@ def build_matrix_command(
     solver: str,
     paths: ScenarioExecutionPaths,
     reuse_solution: bool,
-) -> str | None:
+) -> list[str] | None:
     """Plan GLPSOL matrix preparation without invoking a process."""
 
     if solver != "glpk" and params["create_matrix"] and not reuse_solution:
-        return (
-            f"glpsol -m {params['osemosys_model']} "
-            f"-d {paths.data_file}.txt --wlp {paths.output_file}.lp --check"
-        )
+        return [
+            "glpsol", "-m", str(params["osemosys_model"]),
+            "-d", f"{paths.data_file}.txt",
+            "--wlp", f"{paths.output_file}.lp", "--check",
+        ]
     return None
 
 
 def run_matrix_preparation(
-    command: str,
+    command: list[str],
     process_runner: Callable[..., Any],
 ) -> None:
     """The distinct, injectable matrix process boundary."""
 
-    process_runner(command, shell=True, check=True)
+    process_runner(
+        command,
+        cwd=str(resolve_paths().stage_workspace("execution", create=True)),
+        check=True,
+    )
 
 
 def invoke_solver_command(
-    command: str,
+    command: list[str],
     process_runner: Callable[..., Any],
 ) -> None:
     """The named external solver invocation boundary."""
 
-    process_runner(command, shell=True, check=True)
+    process_runner(
+        command,
+        cwd=str(resolve_paths().stage_workspace("execution", create=True)),
+        check=True,
+    )
 
 
 class SolverAdapter:
@@ -708,16 +736,17 @@ class SolverAdapter:
         solver: str,
         params: dict[str, Any],
         paths: ScenarioExecutionPaths,
-    ) -> str | None:
+    ) -> list[str] | None:
         """Preserve solver-specific preparation order before matrix execution."""
 
         if solver == "glpk":
             self.dependencies.check_environment("glpsol")
-            return (
-                f"glpsol -m {params['osemosys_model']} "
-                f"-d {paths.data_file}.txt --wglp {paths.output_file}.glp "
-                f"--write {paths.output_file}.sol"
-            )
+            return [
+                "glpsol", "-m", str(params["osemosys_model"]),
+                "-d", f"{paths.data_file}.txt",
+                "--wglp", f"{paths.output_file}.glp",
+                "--write", f"{paths.output_file}.sol",
+            ]
 
         if solver == "cbc":
             solution_file = paths.output_file + ".sol"
@@ -725,12 +754,13 @@ class SolverAdapter:
                 self.dependencies.remove_file(solution_file)
             self.dependencies.check_environment("cbc")
             cbc_random_seed = params.get("cbc_random_seed", 12345)
-            return (
-                f"cbc {paths.output_file}.lp randomSeed {cbc_random_seed} "
-                f"randomCbcSeed {cbc_random_seed} "
-                f"-seconds {params['iteration_time']} solve "
-                f"-solu {paths.output_file}.sol"
-            )
+            return [
+                "cbc", f"{paths.output_file}.lp",
+                "randomSeed", str(cbc_random_seed),
+                "randomCbcSeed", str(cbc_random_seed),
+                "-seconds", str(params["iteration_time"]),
+                "solve", "-solu", f"{paths.output_file}.sol",
+            ]
 
         if solver == "cplex":
             for solution_file in (
@@ -742,16 +772,15 @@ class SolverAdapter:
             cplex_threads = params["cplex_threads"]
             cplex_random_seed = params.get("cplex_random_seed", 12345)
             self.dependencies.check_environment("cplex")
-            return (
-                f"cplex -c "
-                f'"set logfile {paths.output_file}.cplex.log" '
-                f'"read {paths.output_file}.lp" '
-                f'"set threads {cplex_threads}" '
-                f'"set randomseed {cplex_random_seed}" '
-                f'"set parallel 1" '
-                f'"optimize" '
-                f'"write {paths.output_file}.sol"'
-            )
+            return [
+                "cplex", "-c",
+                f"set logfile {paths.output_file}.cplex.log",
+                f"read {paths.output_file}.lp",
+                f"set threads {cplex_threads}",
+                f"set randomseed {cplex_random_seed}",
+                "set parallel 1", "optimize",
+                f"write {paths.output_file}.sol",
+            ]
 
         if solver == "gurobi":
             solution_file = paths.output_file + ".sol"
@@ -760,14 +789,16 @@ class SolverAdapter:
             gurobi_threads = params["gurobi_threads"]
             gurobi_seed = params.get("gurobi_seed", 12345)
             self.dependencies.check_environment("gurobi_cl")
-            return (
-                f"gurobi_cl Threads={gurobi_threads} Seed={gurobi_seed} "
-                f"ResultFile={paths.output_file}.sol {paths.output_file}.lp"
-            )
+            return [
+                "gurobi_cl", f"Threads={gurobi_threads}",
+                f"Seed={gurobi_seed}",
+                f"ResultFile={paths.output_file}.sol",
+                f"{paths.output_file}.lp",
+            ]
 
         return None
 
-    def invoke(self, command: str) -> None:
+    def invoke(self, command: list[str]) -> None:
         invoke_solver_command(command, self.dependencies.run_process)
 
 
@@ -803,29 +834,28 @@ def run_scenario_output_stage(
     )
 
     if solver == "glpk" and params["glpk_option"] == "new":
-        output_command = (
-            f'"{dependencies.get_executable("otoole")}" results {solver} csv '
-            f'"{paths.output_file}.sol" "{file_path_outputs}" datafile '
-            f'"{paths.data_file}.txt" "{file_path_conv_format}" '
-            f'--glpk_model "{paths.output_file}.glp"'
-        )
+        output_command = [
+            dependencies.get_executable("otoole"), "results", solver, "csv",
+            f"{paths.output_file}.sol", file_path_outputs, "datafile",
+            f"{paths.data_file}.txt", file_path_conv_format,
+            "--glpk_model", f"{paths.output_file}.glp",
+        ]
         if params["execute_model"]:
             dependencies.run_process(
                 output_command,
-                shell=True,
+                cwd=paths.folder_scenario,
                 check=True,
             )
     elif solver in ["cbc", "cplex", "gurobi"]:
-        output_command = (
-            f'"{dependencies.get_executable("otoole")}" results {solver} csv '
-            f'"{paths.output_file}.sol" "{file_path_outputs}" csv '
-            f'"{file_path_template}" "{file_path_conv_format}" 2> '
-            f'"{paths.output_file}.log"'
-        )
+        output_command = [
+            dependencies.get_executable("otoole"), "results", solver, "csv",
+            f"{paths.output_file}.sol", file_path_outputs, "csv",
+            file_path_template, file_path_conv_format,
+        ]
         if params["execute_model"]:
             dependencies.run_process(
                 output_command,
-                shell=True,
+                cwd=paths.folder_scenario,
                 check=True,
             )
 
@@ -838,15 +868,15 @@ def run_scenario_output_stage(
             concatenate_folder,
             params["concat_csvs"],
         )
-        concatenate_command = (
-            f'"{dependencies.python_executable}" -u '
-            f'"{concatenate_script}" "{file_path_outputs}" '
-            f'"{paths.output_file}"'
-        )
+        concatenate_command = [
+            dependencies.python_executable, "-B", "-m", "ostram._legacy_script",
+            "--script", concatenate_script, "--",
+            file_path_outputs, paths.output_file,
+        ]
         if params["concat_otoole_csv"]:
             dependencies.run_process(
                 concatenate_command,
-                shell=True,
+                cwd=paths.folder_scenario,
                 check=True,
             )
         print(
@@ -866,7 +896,7 @@ def execute_scenario(
     dependencies: ScenarioExecutionDependencies,
     *,
     solver_adapter: SolverAdapter | None = None,
-    matrix_runner: Callable[[str, Callable[..., Any]], None] | None = None,
+    matrix_runner: Callable[[list[str], Callable[..., Any]], None] | None = None,
 ) -> None:
     """Plan and execute one scenario through explicit matrix/solver seams."""
 

@@ -1082,7 +1082,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                 )
         process_run.assert_called_once_with(
             ["python", "transform.py", "--flag", "value"],
-            cwd="fixture-cwd",
+            cwd=str(Path("fixture-cwd").resolve()),
             capture_output=True,
             text=True,
         )

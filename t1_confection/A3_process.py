@@ -42,6 +42,7 @@ scenario-specific working template from that maintained authority.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import os
 import shutil
 import subprocess
@@ -50,6 +51,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+from ostram.paths import resolve_paths
+
 try:
     from t1_confection import a3_orchestrator as _orchestrator
 except ModuleNotFoundError as error:
@@ -57,10 +60,11 @@ except ModuleNotFoundError as error:
         raise
     import a3_orchestrator as _orchestrator
 
-T1_CONFECTION = Path(__file__).resolve().parent
+_PROJECT_PATHS = resolve_paths()
+T1_CONFECTION = _PROJECT_PATHS.legacy_runtime_root
 A3_PROCESS_DIR = T1_CONFECTION / "A3_process"
 RULES_SCRIPTS_DIR = A3_PROCESS_DIR / "rules_scripts"
-SOASIA_V18 = A3_PROCESS_DIR / "OSTRAM_Scenario_Inputs.xlsx"
+SOASIA_V18 = _PROJECT_PATHS.scenario_workbook
 PIN_ROOT_SCENARIOS = _orchestrator.PWR_MIN_PIN_ROOT_SCENARIOS
 
 # =============================================================================
@@ -128,6 +132,30 @@ def parse_cli_args() -> argparse.Namespace:
 PYTHON = sys.executable
 
 
+def _load_scenarios_module():
+    """Load the staged helper without modifying the interpreter import path."""
+
+    injected = sys.modules.get("_scenarios")
+    if injected is not None:
+        return injected
+    name = "_ostram_stage11_scenarios"
+    existing = sys.modules.get(name)
+    if existing is not None:
+        return existing
+    module_path = A3_PROCESS_DIR / "_scenarios.py"
+    spec = importlib.util.spec_from_file_location(name, module_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"cannot load scenario helper: {module_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    try:
+        spec.loader.exec_module(module)
+    except Exception:
+        sys.modules.pop(name, None)
+        raise
+    return module
+
+
 # ---------------------------------------------------------------------------
 # CLI helpers
 # ---------------------------------------------------------------------------
@@ -144,10 +172,31 @@ def run_subproc(cmd: list, cwd: Path | None = None, label: str | None = None) ->
     """Run a subprocess; abort on non-zero. Returns stdout."""
     if label:
         step(label)
-    cmd_str = " ".join(str(c) for c in cmd)
-    print(f"    $ {cmd_str}" + (f"  (cwd={cwd.name})" if cwd else ""))
+    command = [str(c) for c in cmd]
+    effective_cwd = cwd.resolve() if cwd is not None else T1_CONFECTION
+    if (
+        len(command) >= 2
+        and Path(command[0]).resolve() == Path(sys.executable).resolve()
+        and Path(command[1]).suffix.lower() == ".py"
+    ):
+        script = Path(command[1]).resolve()
+        command = [
+            sys.executable,
+            "-B",
+            "-m",
+            "ostram._legacy_script",
+            "--script",
+            str(script),
+            "--",
+            *command[2:],
+        ]
+        if cwd is None:
+            effective_cwd = script.parent
+    cmd_str = " ".join(command)
+    print(f"    $ {cmd_str}  (cwd={effective_cwd.name})")
     res = subprocess.run(
-        [str(c) for c in cmd], cwd=str(cwd) if cwd else None,
+        command,
+        cwd=str(effective_cwd),
         capture_output=True, text=True,
     )
     if res.returncode != 0:
@@ -479,11 +528,7 @@ def stage_4_5_apply_inherited_restrictions(
     banner(
         f"Stage 4.5 — apply inherited restrictions from {', '.join(inherit_from)}"
     )
-    sys.path.insert(0, str(A3_PROCESS_DIR))
-    try:
-        import _scenarios
-    finally:
-        sys.path.pop(0)
+    _scenarios = _load_scenarios_module()
 
     restrictions = _scenarios.read_restrictions(soasia, inherit_from)
     if not restrictions:
@@ -676,11 +721,7 @@ def stage_6_persist_restrictions(
     print(f"    Found {len(candidates)} change-log file(s):")
     for p in candidates:
         print(f"      - {p.name}")
-    sys.path.insert(0, str(A3_PROCESS_DIR))
-    try:
-        import _scenarios
-    finally:
-        sys.path.pop(0)
+    _scenarios = _load_scenarios_module()
     n = _scenarios.persist_run_restrictions(soasia, scenario, candidates)
     print(f"    Persisted {n} restriction row(s) to {soasia.name}::Restrictions"
           f" (scenario={scenario})")
@@ -739,11 +780,7 @@ def _resolve_scenario_config(
     if not soasia.is_file():
         sys.exit(f"ERROR: required scenario-input workbook not found at {soasia}")
 
-    sys.path.insert(0, str(A3_PROCESS_DIR))
-    try:
-        import _scenarios
-    finally:
-        sys.path.pop(0)
+    _scenarios = _load_scenarios_module()
     configs = _scenarios.read_control_sheet(soasia)
     cfg = next((c for c in configs if c.scenario == scenario), None)
     if cfg is None:
@@ -769,11 +806,7 @@ def _materialize_scenario_template(
     output_path: Path,
 ) -> None:
     """Load the existing scenario helper only when materialization is needed."""
-    sys.path.insert(0, str(A3_PROCESS_DIR))
-    try:
-        import _scenarios
-    finally:
-        sys.path.pop(0)
+    _scenarios = _load_scenarios_module()
     _scenarios.materialize_scenario_template(soasia, scenario, output_path)
 
 

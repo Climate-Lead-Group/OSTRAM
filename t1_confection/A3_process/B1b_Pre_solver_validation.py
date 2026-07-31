@@ -35,14 +35,22 @@ from datetime import datetime
 from pathlib import Path
 
 import openpyxl
+from ostram._legacy_import import load_file_module
 
-sys.path.insert(0, str(Path(__file__).parent))
-from _xlsx_validation_core import (  # noqa: E402
-    AF_PARAM, ACT_LOWER_PARAM, ACT_LOWER_HAIRCUT, MAX_MULTIPLIER,
-    consistency_sweep, index_target_sheet, load_capacity_to_activity_unit,
-    load_operational_life, load_yearsplit,
-    validate_activity_lower_limit,
+_validation_core = load_file_module(
+    "_ostram_stage11_xlsx_validation_core",
+    Path(__file__).resolve().with_name("_xlsx_validation_core.py"),
 )
+AF_PARAM = _validation_core.AF_PARAM
+ACT_LOWER_PARAM = _validation_core.ACT_LOWER_PARAM
+ACT_LOWER_HAIRCUT = _validation_core.ACT_LOWER_HAIRCUT
+MAX_MULTIPLIER = _validation_core.MAX_MULTIPLIER
+consistency_sweep = _validation_core.consistency_sweep
+index_target_sheet = _validation_core.index_target_sheet
+load_capacity_to_activity_unit = _validation_core.load_capacity_to_activity_unit
+load_operational_life = _validation_core.load_operational_life
+load_yearsplit = _validation_core.load_yearsplit
+validate_activity_lower_limit = _validation_core.validate_activity_lower_limit
 
 TARGET_SHEETS = ("Secondary Techs", "Demand Techs")
 

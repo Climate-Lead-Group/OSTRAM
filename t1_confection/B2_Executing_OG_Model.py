@@ -21,6 +21,8 @@ from typing import List, Any
 from pathlib import Path
 import numpy as np
 
+from ostram.paths import resolve_paths
+
 try:
     from t1_confection import b2_orchestrator
 except ModuleNotFoundError as error:  # Direct execution from inside t1_confection.
@@ -29,6 +31,23 @@ except ModuleNotFoundError as error:  # Direct execution from inside t1_confecti
     import b2_orchestrator
 
 ########################################################################################
+def _python_module_command(script_path, *arguments):
+    path = Path(script_path).expanduser().resolve()
+    project = resolve_paths()
+    relative = path.relative_to(project.project_root)
+    module = ".".join(relative.with_suffix("").parts)
+    return [sys.executable, "-B", "-m", module, *[str(arg) for arg in arguments]]
+
+
+def _run_stage_command(command):
+    return subprocess.run(
+        [str(token) for token in command],
+        cwd=str(resolve_paths().legacy_runtime_root),
+        capture_output=True,
+        text=True,
+    )
+
+
 def ensure_env_tool_paths():
     """Expose the active Python environment's executable folders to subprocesses."""
     env_root = Path(sys.executable).resolve().parent
@@ -197,7 +216,7 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
     print(f"Running command: {' '.join(command)}")
 
     # Step 4: Run the command
-    result = subprocess.run(command, capture_output=True, text=True)
+    result = _run_stage_command(command)
 
     # Step 5: Handle output
     if result.returncode != 0:
@@ -226,10 +245,10 @@ def run_days_in_day_type_patcher(params, scenario_name):
         scenario_name + '_0',
         f"{params['preprocess_data_name']}{scenario_name}_0.txt",
     )
-    command = [sys.executable, script_path, target_file]
+    command = _python_module_command(script_path, target_file)
     print(f"Patching DaysInDayType for '{scenario_name}_0':")
     print(' '.join(command))
-    result = subprocess.run(command, capture_output=True, text=True)
+    result = _run_stage_command(command)
     if result.returncode != 0:
         print(f"❌ DaysInDayType patcher failed for '{scenario_name}':\n{result.stderr}")
     else:
@@ -271,13 +290,15 @@ def run_strip_storage_patcher(params, scenario_name):
     in_file = os.path.join(params['executables'], scenario_name + '_0', f"{base}.txt")
     out_file = os.path.join(params['executables'], scenario_name + '_0', f"{base}_{suffix}.txt")
 
-    command = [sys.executable, script_path, in_file, '-o', out_file, '--mode', mode]
+    command = _python_module_command(
+        script_path, in_file, '-o', out_file, '--mode', mode
+    )
     if mode != 'all' and targets:
         command += ['--targets'] + list(targets)
 
     print(f"Stripping storage for '{scenario_name}_0' (mode={mode}, suffix={suffix}):")
     print(' '.join(command))
-    result = subprocess.run(command, capture_output=True, text=True)
+    result = _run_stage_command(command)
     if result.returncode != 0:
         print(f"❌ strip_storage patcher failed for '{scenario_name}':\n{result.stderr}")
     else:
@@ -334,8 +355,7 @@ def run_storage_delay_patcher(params, scenario_name):
         params.get('storage_delay_model_output', 'osemosys_fast_preprocessed_storage_delay.txt')
     )
 
-    command = [
-        sys.executable,
+    command = _python_module_command(
         script_path,
         in_file,
         '-o',
@@ -348,7 +368,7 @@ def run_storage_delay_patcher(params, scenario_name):
         str(first_n_years),
         '--allowed-value',
         str(allowed_value),
-    ]
+    )
     if exact_storages:
         command += ['--storages'] + list(exact_storages)
     elif storage_prefixes:
@@ -356,7 +376,7 @@ def run_storage_delay_patcher(params, scenario_name):
 
     print(f"Applying storage-delay patch for '{scenario_name}_0' (N={first_n_years}, suffix={suffix}):")
     print(' '.join(command))
-    result = subprocess.run(command, capture_output=True, text=True)
+    result = _run_stage_command(command)
     if result.returncode != 0:
         print(f"[ERROR] storage_delay patcher failed for '{scenario_name}':\n{result.stderr}")
         raise RuntimeError(f"storage_delay patcher failed for '{scenario_name}'")
@@ -414,12 +434,14 @@ def run_open_pwrbck_patcher(params, scenario_name):
     in_file  = os.path.join(params['executables'], scenario_name + '_0', f"{in_base}.txt")
     out_file = os.path.join(params['executables'], scenario_name + '_0', f"{out_base}.txt")
 
-    command = [sys.executable, script_path, in_file, '-o', out_file,
-               '--pattern', pattern, '--value', str(value)]
+    command = _python_module_command(
+        script_path, in_file, '-o', out_file,
+        '--pattern', pattern, '--value', str(value)
+    )
 
     print(f"Opening PWRBCK caps for '{scenario_name}_0' (pattern={pattern}, value={value}):")
     print(' '.join(command))
-    result = subprocess.run(command, capture_output=True, text=True)
+    result = _run_stage_command(command)
     if result.returncode != 0:
         print(f"❌ open_pwrbck patcher failed for '{scenario_name}':\n{result.stderr}")
     else:
@@ -470,8 +492,7 @@ def run_reserve_margin_repair_patcher(params, scenario_name):
     in_file = os.path.join(params['executables'], scenario_name + '_0', f"{in_base}.txt")
     out_file = os.path.join(params['executables'], scenario_name + '_0', f"{out_base}.txt")
 
-    command = [
-        sys.executable,
+    command = _python_module_command(
         script_path,
         in_file,
         '-o',
@@ -482,7 +503,7 @@ def run_reserve_margin_repair_patcher(params, scenario_name):
         str(params.get('reserve_margin_ccs_credit', 0.9)),
         '--open-capacity-value',
         str(params.get('reserve_margin_open_capacity_value', 9999)),
-    ]
+    )
 
     open_prefixes = params.get(
         'reserve_margin_open_capacity_prefixes',
@@ -499,7 +520,7 @@ def run_reserve_margin_repair_patcher(params, scenario_name):
 
     print(f"Repairing reserve margin data for '{scenario_name}_0' (suffix={suffix}):")
     print(' '.join(command))
-    result = subprocess.run(command, capture_output=True, text=True)
+    result = _run_stage_command(command)
     if result.returncode != 0:
         print(f"[ERROR] reserve_margin_repair patcher failed for '{scenario_name}':\n{result.stderr}")
     else:
@@ -557,8 +578,7 @@ def run_reserve_margin_xlsx_patcher(params, scenario_name):
     out_file = os.path.join(params['executables'], scenario_name + '_0', f"{out_base}.txt")
     warnings_file = os.path.join(params['executables'], scenario_name + '_0', f"{out_base}.warnings.txt")
 
-    command = [
-        sys.executable,
+    command = _python_module_command(
         script_path,
         in_file,
         '-o',
@@ -571,7 +591,7 @@ def run_reserve_margin_xlsx_patcher(params, scenario_name):
         str(params.get('reserve_margin_xlsx_ccs_credit', 0.9)),
         '--warnings-file',
         warnings_file,
-    ]
+    )
 
     xlsx_sheet = params.get('reserve_margin_xlsx_sheet')
     if xlsx_sheet:
@@ -593,7 +613,7 @@ def run_reserve_margin_xlsx_patcher(params, scenario_name):
 
     print(f"Repairing reserve margin data from XLSX for '{scenario_name}_0' (suffix={suffix}):")
     print(' '.join(command))
-    result = subprocess.run(command, capture_output=True, text=True)
+    result = _run_stage_command(command)
     if result.returncode != 0:
         print(f"[ERROR] reserve_margin_xlsx patcher failed for '{scenario_name}':\n{result.stderr}")
     else:
@@ -616,13 +636,13 @@ def run_preprocessing_script(params, scenario_name):
     output_file = os.path.join(params['executables'], scenario_name + '_0', f"{params['preprocess_data_name']}{scenario_name}_0.txt")
 
     # Step 2: Build command
-    command = [sys.executable, script_path, input_file, output_file]
+    command = _python_module_command(script_path, input_file, output_file)
 
     print(f"Running preprocessing script for scenario '{scenario_name}_0':")
     print(' '.join(command))
 
     # Step 3: Run the script
-    result = subprocess.run(command, capture_output=True, text=True)
+    result = _run_stage_command(command)
 
     # Step 4: Output result
     if result.returncode != 0:

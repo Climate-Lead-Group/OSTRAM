@@ -66,6 +66,7 @@ from datetime import datetime
 from pathlib import Path
 
 from openpyxl import load_workbook, Workbook
+from ostram._legacy_import import load_file_module
 
 # --------------------------------------------------------------------------
 # Constants / paths
@@ -86,16 +87,12 @@ CEIL_BASE = SCRIPT_DIR / "reference" / "vre_ceilings_base.json"
 SOASIA_V18 = A3_PROCESS_DIR / "OSTRAM_Scenario_Inputs.xlsx"
 MINIMUM_BOUNDARY_SOURCE = "minimum_investment_boundary"
 
-# ``apply_patches.py`` is also executed directly, with only
-# ``sensitivity_expansion/`` on sys.path. Make the sibling Stage-3 authority
-# module importable without creating a second implementation or data fallback.
-if str(A3_PROCESS_DIR) not in sys.path:
-    sys.path.insert(0, str(A3_PROCESS_DIR))
-
-from interconnector_authority import (  # noqa: E402
-    MINIMUM_BOUNDARY_PARAMETER,
-    load_minimum_boundary_authority,
+_authority = load_file_module(
+    "_ostram_stage11_interconnector_authority",
+    A3_PROCESS_DIR / "interconnector_authority.py",
 )
+MINIMUM_BOUNDARY_PARAMETER = _authority.MINIMUM_BOUNDARY_PARAMETER
+load_minimum_boundary_authority = _authority.load_minimum_boundary_authority
 
 
 # --------------------------------------------------------------------------
