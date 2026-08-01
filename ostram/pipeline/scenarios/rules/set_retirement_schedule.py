@@ -44,6 +44,7 @@ from math import exp
 from pathlib import Path
 
 import pandas as pd
+from ostram.paths import resolve_paths
 from openpyxl import load_workbook, Workbook
 
 try:
@@ -511,8 +512,7 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
         )
     config = load_config(yaml_path)
 
-    script_dir = Path(__file__).resolve().parent
-    tech_types_path = script_dir.parent / TECH_TYPES_FILE
+    tech_types_path = resolve_paths().scenario_config_root / "technology_types.csv"
     gen_techs = load_generation_techs(tech_types_path)
 
     backup_dir = None if skip_backup else make_backup(input_dir)

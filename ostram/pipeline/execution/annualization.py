@@ -524,7 +524,7 @@ def annualize_capital_investment(
     # Step 1: Validate input file exists
     input_path = Path(input_file_path)
     if not input_path.exists():
-        error_msg = f"Input file '{input_file_path}' not found! Current directory: {Path.cwd()}"
+        error_msg = f"Input file '{input_path.resolve()}' not found"
         if verbose:
             print(f"\n❌ ERROR: {error_msg}")
         raise FileNotFoundError(error_msg)

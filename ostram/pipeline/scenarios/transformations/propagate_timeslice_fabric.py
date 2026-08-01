@@ -38,6 +38,7 @@ Output:
 """
 
 from pathlib import Path
+import os
 import shutil
 import sys
 
@@ -47,7 +48,7 @@ import pandas as pd
 # -----------------------------------------------------------------------------
 # Paths
 # -----------------------------------------------------------------------------
-SCRIPT_DIR  = Path(__file__).resolve().parent  # auto-detect
+SCRIPT_DIR = Path(os.environ["OSTRAM_STAGE_WORKDIR"]).resolve()
 
 WV_FILE     = SCRIPT_DIR / "SOASIA_OSeMOSYS_WV.xlsx"
 AO_IN       = SCRIPT_DIR / "wvaligned_outputs_v2" / "A-O_Parametrization_wvaligned_v2.xlsx"

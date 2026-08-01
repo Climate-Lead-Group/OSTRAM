@@ -4,8 +4,7 @@ Generate Secondary Techs Editor Template
 This script reads all A-O_Parametrization.xlsx files and generates
 a user-friendly Excel template for editing Secondary Techs data.
 
-Usage:
-    python t1_confection/generate_editor_template.py
+Invoked as part of ``python -m ostram run``.
 
 Author: Climate Lead Group, Andrey Salazar-Vargas
 """
@@ -817,7 +816,7 @@ def create_editor_template(data, output_path):
         ["   - Year values: Enter numeric values for each year (leave empty to keep current value)", ""],
         ["", ""],
         ["4. Save and close this file", ""],
-        ["5. Run: python t1_confection/D2_update_secondary_techs.py", ""],
+        ["5. Run the canonical pipeline: python -m ostram run", ""],
         ["", ""],
         ["OSTRAM INTEGRATION:", ""],
         ["- If ResidualCapacitiesFromOSTRAM = YES in OSTRAM_Config sheet:", ""],
@@ -1632,10 +1631,10 @@ def main():
         print("=" * 80)
         print()
         # print("Next steps:")
-        # print("1. Open t1_confection/Secondary_Techs_Editor.xlsx")
+        # print("1. Open the generated Secondary_Techs_Editor.xlsx")
         # print("2. Fill in the 'Editor' sheet with your changes")
         # print("3. Save and close the file")
-        # print("4. Run: python t1_confection/update_secondary_techs.py")
+        # print("4. Run the canonical pipeline: python -m ostram run")
         print()
 
         return 0

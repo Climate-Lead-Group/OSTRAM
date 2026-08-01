@@ -10,7 +10,6 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
-import sys
 import time
 import traceback
 from dataclasses import dataclass
@@ -19,9 +18,6 @@ from pathlib import Path
 from typing import Any, Callable
 
 from ostram.paths import resolve_paths
-
-
-_MISSING_MODULE_FILE = object()
 
 
 @dataclass(frozen=True)
@@ -92,22 +88,10 @@ def parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
     return build_cli_parser().parse_args(argv)
 
 
-def resolve_here(
-    module_file: object,
-    main_module_file: str | None,
-    cwd: Path | None = None,
-) -> Path:
-    """Preserve B2's script/IDE/interactive HERE resolution precedence."""
+def resolve_here() -> Path:
+    """Return the explicit mutable execution workspace."""
 
-    if module_file is not _MISSING_MODULE_FILE:
-        module_path = Path(module_file).resolve()
-        if module_path == Path(__file__).with_name("runner.py").resolve():
-            return resolve_paths().stage_workspace("execution", create=True)
-        return module_path.parent
-    if main_module_file is not None:
-        return Path(main_module_file).resolve().parent
-    del cwd
-    return resolve_paths().legacy_runtime_root
+    return resolve_paths().stage_workspace("execution", create=True)
 
 
 def apply_configuration_overrides(params: dict[str, Any]) -> None:
@@ -228,7 +212,6 @@ def build_run_plan(
             "Miscellaneous",
             "executables",
             "osemosys_model",
-            "concatenate_folder",
             "reserve_margin_xlsx_workbook",
         ):
             value = params.get(key)
@@ -246,7 +229,6 @@ def build_run_plan(
                 "executables": str(project.executables),
                 "outputs": str(project.outputs),
                 "osemosys_model": str(project.maintained_model),
-                "concatenate_folder": str(Path(__file__).resolve().parent),
                 "preprocess_data": str(Path(__file__).with_name("preprocess.py")),
                 "reserve_margin_xlsx_workbook": str(
                     project.execution_inputs / "firm_capacity_fallbacks_by_cr.xlsx"
@@ -511,7 +493,6 @@ def orchestrate_b2(
     dependency_factory: Callable[[], B2Dependencies],
     *,
     argv: list[str] | None = None,
-    module_file: str | None,
     set_here: Callable[[Path], None],
 ) -> None:
     """Top-level B2 orchestration with no work performed at import time."""
@@ -519,9 +500,7 @@ def orchestrate_b2(
     start1 = time.time()
     cli_args = parse_arguments(argv)
 
-    main_module = sys.modules.get("__main__")
-    main_module_file = getattr(main_module, "__file__", None)
-    here = resolve_here(module_file, main_module_file)
+    here = resolve_here()
     set_here(here)
 
     dependencies = dependency_factory()
@@ -577,7 +556,6 @@ class ScenarioExecutionDependencies:
     run_process: Callable[..., Any]
     check_environment: Callable[[str], Any]
     get_executable: Callable[[str], str]
-    get_config_main_path: Callable[[Any, str], str]
     path_exists: Callable[[str], bool]
     remove_file: Callable[[str], Any]
     python_executable: str
@@ -893,17 +871,11 @@ def run_scenario_output_stage(
             )
 
     if solver in ["glpk", "cbc", "cplex", "gurobi"]:
-        concatenate_folder = dependencies.get_config_main_path(
-            here,
-            params["concatenate_folder"],
-        )
-        concatenate_script = os.path.join(
-            concatenate_folder,
-            params["concat_csvs"],
-        )
         concatenate_command = [
-            dependencies.python_executable, "-B", "-m", "ostram._legacy_script",
-            "--script", concatenate_script, "--",
+            dependencies.python_executable,
+            "-B",
+            "-m",
+            "ostram.pipeline.execution.concatenate",
             file_path_outputs, paths.output_file,
         ]
         if params["concat_otoole_csv"]:

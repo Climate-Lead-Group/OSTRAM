@@ -295,8 +295,10 @@ class CanonicalCliImportAndHelpTests(unittest.TestCase):
                 self.assertIn("python -m ostram run", text)
                 self.assertIn("python -m ostram transform", text)
                 self.assertIn("python -m ostram compile-inputs", text)
-                self.assertIn("prepare-model", text)
+                self.assertIn("inspect-resources", text)
                 self.assertIn("solve", text)
+                self.assertNotIn("run.py", text)
+                self.assertNotIn("t1_confection", text)
 
 
 class CanonicalCliSubprocessSmokeTests(unittest.TestCase):
@@ -348,7 +350,7 @@ class CanonicalCliSubprocessSmokeTests(unittest.TestCase):
 
 
 class CanonicalCliDispatchTests(unittest.TestCase):
-    def test_route_registry_maps_exact_historical_modules_and_defers_b2(self) -> None:
+    def test_route_registry_maps_canonical_package_modules_and_defers_b2(self) -> None:
         cli = _load_cli("registry")
         self.assertEqual(
             {
@@ -356,15 +358,19 @@ class CanonicalCliDispatchTests(unittest.TestCase):
                 for name, route in cli.ROUTES.items()
             },
             {
-                "run": ("run", "run.py", "run-guard"),
+                "run": (
+                    "ostram.pipeline.orchestration",
+                    "python -m ostram run",
+                    "run-guard",
+                ),
                 "transform": (
                     "ostram.pipeline.scenarios.transform",
-                    "A3_process.py",
+                    "python -m ostram transform",
                     "main-result",
                 ),
                 "compile-inputs": (
                     "ostram.pipeline.compilation.runner",
-                    "B1_Run_Compiler.py",
+                    "python -m ostram compile-inputs",
                     "natural-zero",
                 ),
             },
@@ -599,7 +605,7 @@ class CanonicalCliDispatchTests(unittest.TestCase):
         cli = _load_cli("no_downstream_arguments")
         original_argv = sys.argv
 
-        run_module = importlib.import_module("run")
+        run_module = importlib.import_module("ostram.pipeline.orchestration")
         with mock.patch.object(
             run_module,
             "check_tool_available",

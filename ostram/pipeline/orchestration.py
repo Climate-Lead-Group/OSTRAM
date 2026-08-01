@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Top-level runner for OSTRAM on Windows with Conda environment management.
+Canonical pipeline orchestration for OSTRAM with Conda environment management.
 
 Author: Climate Lead Group, Andrey Salazar-Vargas
 

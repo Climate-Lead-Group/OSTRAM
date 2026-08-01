@@ -56,6 +56,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+from ostram.paths import resolve_paths
 from openpyxl import load_workbook, Workbook
 
 try:
@@ -1029,8 +1030,7 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
 
     # Load TECH_TYPES.csv — needed both to gate target tech matching and to
     # filter the BAU production aggregate to electricity generation only.
-    script_dir = Path(__file__).resolve().parent
-    tech_types_path = script_dir.parent / TECH_TYPES_FILE
+    tech_types_path = resolve_paths().scenario_config_root / "technology_types.csv"
     gen_techs = load_generation_techs(tech_types_path)
 
     # Load BAU total production (HARD DEPENDENCY)

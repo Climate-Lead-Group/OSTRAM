@@ -672,17 +672,11 @@ def check_enviro_variables(solver_command):
         print(f"'{solver_command}' was not found on the system.")
     #
 
-def get_config_main_path(here, base_folder):
-    # Navigate to the repository root (parent of t1_confection)
-    repo_root = Path(here).parent
-    return str(repo_root / base_folder)
-
 def main_executer(params, scenario_name, HERE):
     execution_dependencies = b2_orchestrator.ScenarioExecutionDependencies(
         run_process=subprocess.run,
         check_environment=check_enviro_variables,
         get_executable=get_env_executable,
-        get_config_main_path=get_config_main_path,
         path_exists=os.path.exists,
         remove_file=os.remove,
         python_executable=sys.executable,
@@ -786,8 +780,8 @@ def generate_combined_input_file(input_folder, output_folder, scenario_name):
 
 def export_root_datafile(here, params, scenario_name, export_name=None):
     """
-    Copy the preprocessed main-scenario datafile to the repository root so the
-    user has a single easy-to-find model datafile next to `t1_confection/`.
+    Copy the preprocessed main-scenario datafile to the project root so the
+    user has a single easy-to-find model datafile.
 
     When patchers (storage_delay, strip_storage, open_pwrbck, reserve_margin_*)
     are active, exports the final patched sibling — not the vanilla preprocessed
@@ -1106,9 +1100,6 @@ def main(argv=None):
     return b2_orchestrator.orchestrate_b2(
         _orchestration_dependencies,
         argv=argv,
-        module_file=globals().get(
-            "__file__", b2_orchestrator._MISSING_MODULE_FILE
-        ),
         set_here=_set_here,
     )
 

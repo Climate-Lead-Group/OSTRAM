@@ -1191,7 +1191,7 @@ class B1TransformProcessSafetyTests(unittest.TestCase):
                     identifiers,
                 )
                 for forbidden in (
-                    "B2_Executing_OG_Model.py",
+                    "python -m ostram run",
                     "glpsol",
                     "gurobi_cl",
                     "cplex",

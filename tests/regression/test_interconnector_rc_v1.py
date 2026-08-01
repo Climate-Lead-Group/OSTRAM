@@ -515,9 +515,15 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
         stage_source = ast.get_source_segment(source, stage)
         self.assertIsNotNone(stage_source)
         assert stage_source is not None
-        fix_at = stage_source.index('label="fix_trn_residuals.py"')
-        clear_at = stage_source.index('label="clear_stale_unbinding_caps.py"')
-        cap_at = stage_source.index('label="cap_trn_to_residual.py"')
+        fix_at = stage_source.index(
+            '"ostram.pipeline.scenarios.transformations.fix_trn_residuals"'
+        )
+        clear_at = stage_source.index(
+            '"ostram.pipeline.scenarios.transformations.clear_stale_unbinding_caps"'
+        )
+        cap_at = stage_source.index(
+            '"ostram.pipeline.scenarios.transformations.cap_trn_to_residual"'
+        )
         self.assertLess(fix_at, clear_at)
         self.assertLess(clear_at, cap_at)
         self.assertIn('os.environ.get("OSTRAM_TEMPLATE_PATH")', stage_source)
@@ -527,7 +533,7 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
         ) + ".xlsx"
         self.assertNotIn(retired_token, source)
         self.assertNotIn("--" + "reference", stage_source)
-        self.assertIn('"interconnector_authority.py"', source)
+        self.assertNotIn("_legacy_import", source)
 
         module = _load_module(FIX_SCRIPT, "runtime_route")
         run_source = inspect.getsource(module.run_fix)

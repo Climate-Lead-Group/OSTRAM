@@ -28,45 +28,33 @@ class B1Paths:
     scenarios_root: Path
 
     @classmethod
-    def from_entrypoint(cls, entrypoint: str | Path) -> "B1Paths":
-        entrypoint_path = Path(entrypoint).resolve()
-        script_dir = entrypoint_path.parent
-        if (
-            entrypoint_path.name == "runner.py"
-            and script_dir.name == "compilation"
-            and script_dir.parent.name == "pipeline"
-        ):
-            import yaml
+    def defaults(cls) -> "B1Paths":
+        import yaml
 
-            project = resolve_paths()
-            runtime_root = project.stage_workspace("compilation", create=True)
-            runtime_config = runtime_root / "Config_MOMF_T1_A.yaml"
-            if not runtime_config.exists():
-                shutil.copy2(project.compilation_config, runtime_config)
-            data = yaml.safe_load(runtime_config.read_text(encoding="utf-8"))
-            data.update(
-                {
-                    "A1_outputs": str(project.a1_outputs),
-                    "A2_extra_inputs": str(project.generated_extra_inputs),
-                    "A2_output": str(project.compiled_parameters),
-                    "A2_output_main_scen": str(project.compiled_parameters),
-                }
-            )
-            runtime_config.write_text(
-                yaml.safe_dump(data, sort_keys=False, allow_unicode=True),
-                encoding="utf-8",
-            )
-            return cls(
-                script_dir=runtime_root,
-                config_path=runtime_config,
-                compiler_path=script_dir / "compiler.py",
-                scenarios_root=project.a1_outputs,
-            )
+        project = resolve_paths()
+        runtime_root = project.stage_workspace("compilation", create=True)
+        runtime_config = runtime_root / "Config_MOMF_T1_A.yaml"
+        if not runtime_config.exists():
+            shutil.copy2(project.compilation_config, runtime_config)
+        data = yaml.safe_load(runtime_config.read_text(encoding="utf-8"))
+        data.update(
+            {
+                "A1_outputs": str(project.a1_outputs),
+                "A2_extra_inputs": str(project.generated_extra_inputs),
+                "A2_output": str(project.compiled_parameters),
+                "A2_output_main_scen": str(project.compiled_parameters),
+            }
+        )
+        runtime_config.write_text(
+            yaml.safe_dump(data, sort_keys=False, allow_unicode=True),
+            encoding="utf-8",
+        )
+        script_dir = Path(__file__).resolve().parent
         return cls(
-            script_dir=script_dir,
-            config_path=script_dir / "Config_MOMF_T1_A.yaml",
+            script_dir=runtime_root,
+            config_path=runtime_config,
             compiler_path=script_dir / "compiler.py",
-            scenarios_root=script_dir / "A1_Outputs",
+            scenarios_root=project.a1_outputs,
         )
 
 
@@ -415,4 +403,4 @@ def orchestrate(
 
 
 def main() -> None:
-    return orchestrate(parse_cli_args(), B1Paths.from_entrypoint(__file__))
+    return orchestrate(parse_cli_args(), B1Paths.defaults())

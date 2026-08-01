@@ -2,8 +2,6 @@
 
 Authoritative project content is resolved from an explicit project bundle;
 caller current-working-directory is never used as an implicit resource root.
-The resolver understands the temporary Stage 11 legacy layout and the final
-Python-project layout so callers do not need to encode either tree.
 """
 
 from __future__ import annotations
@@ -34,17 +32,12 @@ def _source_anchor() -> Path:
 
 
 def _layout_at(root: Path) -> str | None:
-    common = (
+    valid = (
         (root / "ostram" / "__init__.py").is_file()
         and (root / "environment.yaml").is_file()
+        and all((root / name).is_dir() for name in ("inputs", "config", "model"))
     )
-    if not common:
-        return None
-    if all((root / name).is_dir() for name in ("inputs", "config", "model")):
-        return "project"
-    if (root / "t1_confection").is_dir() and (root / "run.py").is_file():
-        return "legacy"
-    return None
+    return "project" if valid else None
 
 
 def _validated_root(candidate: str | os.PathLike[str], source: str) -> Path:
@@ -53,8 +46,8 @@ def _validated_root(candidate: str | os.PathLike[str], source: str) -> Path:
     if layout is None:
         raise ProjectResolutionError(
             f"{source} does not identify a valid OSTRAM project bundle: {root}. "
-            "Expected the package and environment marker plus either the "
-            "Stage 11 legacy resources or inputs/, config/, and model/."
+            "Expected the package and environment marker plus inputs/, "
+            "config/, and model/."
         )
     return root
 
@@ -111,78 +104,48 @@ class ProjectPaths:
         return (self.project_root / "ostram").resolve()
 
     @property
-    def legacy_runtime_root(self) -> Path:
-        """Stage 11 compatibility anchor; final-layout state lives in workspace."""
-
-        if self.layout == "project":
-            return self.workspace
-        return (self.project_root / "t1_confection").resolve()
-
-    @property
     def inputs_root(self) -> Path:
-        if self.layout == "project":
-            return (self.project_root / "inputs").resolve()
-        return (self.legacy_runtime_root / "OG_csvs_inputs").resolve()
+        return (self.project_root / "inputs").resolve()
 
     @property
     def osemosys_inputs(self) -> Path:
-        if self.layout == "project":
-            return (self.inputs_root / "osemosys_global").resolve()
-        return self.inputs_root
+        return (self.inputs_root / "osemosys_global").resolve()
 
     @property
     def preparation_inputs(self) -> Path:
-        if self.layout == "project":
-            return (self.inputs_root / "preparation").resolve()
-        return (self.legacy_runtime_root / "A2_Extra_Inputs").resolve()
+        return (self.inputs_root / "preparation").resolve()
 
     @property
     def preparation_templates(self) -> Path:
-        if self.layout == "project":
-            return (self.preparation_inputs / "workbook_templates").resolve()
-        return (self.legacy_runtime_root / "Miscellaneous").resolve()
+        return (self.preparation_inputs / "workbook_templates").resolve()
 
     @property
     def secondary_technology_inputs(self) -> Path:
-        if self.layout == "project":
-            return (self.preparation_inputs / "secondary_technologies").resolve()
-        return self.legacy_runtime_root
+        return (self.preparation_inputs / "secondary_technologies").resolve()
 
     @property
     def scenario_inputs(self) -> Path:
-        if self.layout == "project":
-            return (self.inputs_root / "scenarios").resolve()
-        return (self.legacy_runtime_root / "A3_process").resolve()
+        return (self.inputs_root / "scenarios").resolve()
 
     @property
     def execution_inputs(self) -> Path:
-        if self.layout == "project":
-            return (self.inputs_root / "execution").resolve()
-        return self.legacy_runtime_root
+        return (self.inputs_root / "execution").resolve()
 
     @property
     def config_root(self) -> Path:
-        if self.layout == "project":
-            return (self.project_root / "config").resolve()
-        return self.legacy_runtime_root
+        return (self.project_root / "config").resolve()
 
     @property
     def scenario_config_root(self) -> Path:
-        if self.layout == "project":
-            return (self.config_root / "scenarios").resolve()
-        return (self.legacy_runtime_root / "A3_process" / "rules_scripts").resolve()
+        return (self.config_root / "scenarios").resolve()
 
     @property
     def preparation_config(self) -> Path:
-        if self.layout == "project":
-            return (self.config_root / "preparation").resolve()
-        return self.config_root
+        return (self.config_root / "preparation").resolve()
 
     @property
     def model_root(self) -> Path:
-        if self.layout == "project":
-            return (self.project_root / "model").resolve()
-        return self.legacy_runtime_root
+        return (self.project_root / "model").resolve()
 
     @property
     def maintained_model(self) -> Path:
@@ -190,27 +153,19 @@ class ProjectPaths:
 
     @property
     def package_resources_root(self) -> Path:
-        if self.layout == "project":
-            return (self.package_root / "resources").resolve()
-        return (self.legacy_runtime_root / "Miscellaneous" / "templates").resolve()
+        return (self.package_root / "resources").resolve()
 
     @property
     def compilation_resources(self) -> Path:
-        if self.layout == "project":
-            return (self.package_resources_root / "compilation").resolve()
-        return (self.legacy_runtime_root / "Miscellaneous").resolve()
+        return (self.package_resources_root / "compilation").resolve()
 
     @property
     def preparation_resources(self) -> Path:
-        if self.layout == "project":
-            return (self.package_resources_root / "preparation").resolve()
-        return (self.legacy_runtime_root / "templates").resolve()
+        return (self.package_resources_root / "preparation").resolve()
 
     @property
     def scenario_registry(self) -> Path:
-        if self.layout == "project":
-            return (self.config_root / "scenarios" / "registry.json").resolve()
-        return (self.legacy_runtime_root / "scenario_registry.json").resolve()
+        return (self.config_root / "scenarios" / "registry.json").resolve()
 
     @property
     def scenario_workbook(self) -> Path:
@@ -222,15 +177,11 @@ class ProjectPaths:
 
     @property
     def execution_config(self) -> Path:
-        if self.layout == "project":
-            return (self.config_root / "execution" / "Config_MOMF_T1_AB.yaml").resolve()
-        return (self.config_root / "Config_MOMF_T1_AB.yaml").resolve()
+        return (self.config_root / "execution" / "Config_MOMF_T1_AB.yaml").resolve()
 
     @property
     def compilation_config(self) -> Path:
-        if self.layout == "project":
-            return (self.config_root / "compilation" / "Config_MOMF_T1_A.yaml").resolve()
-        return (self.config_root / "Config_MOMF_T1_A.yaml").resolve()
+        return (self.config_root / "compilation" / "Config_MOMF_T1_A.yaml").resolve()
 
     @property
     def preparation_workspace(self) -> Path:

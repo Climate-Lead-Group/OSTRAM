@@ -53,7 +53,7 @@ from openpyxl.styles import PatternFill
 # USER CONFIGURATION
 # =============================================================================
 
-WORK_DIR = str(Path(__file__).resolve().parent)  # auto-detect (was hardcoded for Spyder)
+WORK_DIR = str(Path(os.environ["OSTRAM_STAGE_WORKDIR"]).resolve())
 
 # Stage 3 outputs (read-only inputs to this stage)
 INPUT_SUBDIR  = "wvaligned_outputs"

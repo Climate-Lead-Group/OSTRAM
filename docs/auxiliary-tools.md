@@ -1,59 +1,32 @@
 # Auxiliary tools
 
-OSTRAM retains a small set of utilities used by the maintained data and
-execution flows. Historical A1-A6/result-analysis and visualization programs
-are not part of the maintained product.
+Auxiliary implementations live inside `ostram.pipeline` and are called by the
+canonical pipeline. They are not separate public script entrypoints.
 
-## Configuration loader
+## Configuration and deterministic CSV handling
 
-**Script:** `t1_confection/Z_AUX_config_loader.py`
+`ostram.pipeline.preparation.configuration` provides cached access to
+`config/preparation/Config_country_codes.yaml`. Preparation stages consume its
+country, region, technology, year, renewable-fuel, and transmission settings.
 
-This importable module provides cached access to
-`Config_country_codes.yaml`. It centralizes country and region codes,
-technology mappings, the model start year, renewable fuels, transmission
-settings, and related configuration consumed by maintained scripts.
-
-Example:
-
-```python
-from Z_AUX_config_loader import get_countries, get_first_year
-
-countries = get_countries()
-year = get_first_year()
-```
-
-## CSV sorter
-
-**Script:** `t1_confection/Z_AUX_sort_csv.py`
-
-This utility sorts CSV files by their columns to produce deterministic file
-ordering. It can be run interactively:
-
-```bash
-python t1_confection/Z_AUX_sort_csv.py
-```
-
-It can also be imported:
-
-```python
-from Z_AUX_sort_csv import sort_csv_files_in_folder
-
-sort_csv_files_in_folder("path/to/csv/folder")
-```
+`ostram.pipeline.preparation.sort_csv` supplies deterministic CSV ordering for
+maintained preparation operations.
 
 ## Capital annualization
 
-**Script:** `t1_confection/Z_AUX_capital_annualization_script.py`
+`ostram.pipeline.execution.annualization` is reached by B2 when
+`annualize_capital: true` in
+`config/execution/Config_MOMF_T1_AB.yaml`. It converts lump-sum capital
+investment into an annualized stream and writes the
+`CapitalInvestmentAnnualized` result into the combined output.
 
-B2 invokes this post-processing helper when `annualize_capital: true` in
-`Config_MOMF_T1_AB.yaml`. It converts lump-sum capital investment into an
-annualized cost stream using a capital recovery factor and writes the
-`CapitalInvestmentAnnualized` result into the combined output file.
+## Secondary-technology helpers
 
-## Interconnection limits from flows
+The modules under `ostram.pipeline.preparation.secondary_techs` create and
+apply editor workbooks and can pre-fill transmission activity limits. Their
+inputs are governed by the preparation configuration and selected workspace;
+they do not search caller CWD.
 
-**Script:** `t1_confection/Z_AUX_D1b_set_trn_limits_from_flows.py`
-
-This helper pre-fills TRN interconnection activity limits in
-`Secondary_Techs_Editor.xlsx` from historical bilateral flow data. It belongs
-to the D1/D2 manual editing workflow; see {doc}`secondary-techs-editor`.
+Use `python -m ostram run` for supported workflow execution. Import these
+modules only when extending or testing the package; do not launch their source
+files by path.

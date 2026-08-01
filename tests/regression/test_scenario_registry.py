@@ -145,7 +145,7 @@ class ScenarioRegistryTests(unittest.TestCase):
             }
             dependencies = registry.result_dependencies(
                 ("C_Target_VRE",),
-                t1_confection=Path(temp),
+                execution_workspace=Path(temp),
                 environment=environment,
             )
             self.assertEqual(
@@ -221,7 +221,7 @@ class ScenarioRegistryTests(unittest.TestCase):
                 (snapshot / filename).write_bytes(b"fixture")
 
             paths = MaterializationPaths(
-                t1_confection=PREPARATION_WORKSPACE,
+                preparation_workspace=PREPARATION_WORKSPACE,
                 a1_outputs=outputs,
                 a3_entrypoint=(
                     REPO_ROOT / "ostram" / "pipeline" / "scenarios" / "transform.py"

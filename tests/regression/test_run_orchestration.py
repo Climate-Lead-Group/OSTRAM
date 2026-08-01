@@ -16,7 +16,7 @@ from unittest import mock
 
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
-RUN_PATH = REPO_ROOT / "run.py"
+RUN_PATH = REPO_ROOT / "ostram" / "pipeline" / "orchestration.py"
 
 
 def _load_launcher(label: str):
@@ -194,7 +194,7 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
 
     def test_parse_args_accepts_explicit_argv_and_preserves_cli_contract(self) -> None:
         launcher = _load_launcher("parse_args")
-        with mock.patch.object(sys, "argv", ["run.py", "--not-an-option"]):
+        with mock.patch.object(sys, "argv", ["python -m ostram run", "--not-an-option"]):
             defaults = launcher.parse_args([])
             explicit = launcher.parse_args(
                 [
@@ -247,7 +247,7 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
     def test_defaults_and_free_form_cli_values_are_forwarded_exactly(self) -> None:
         launcher = _load_launcher("cli_values")
         argv = [
-            "run.py",
+            "python -m ostram run",
             "--env-name",
             "custom env",
             "--env-file",
@@ -317,7 +317,7 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
             with self.subTest(guessed=guessed):
                 with (
                     LauncherHarness(launcher, guessed_env=guessed) as harness,
-                    mock.patch.object(sys, "argv", ["run.py", "--skip-pull", "--skip-a3", "--skip-b1", "--skip-b2"]),
+                    mock.patch.object(sys, "argv", ["python -m ostram run", "--skip-pull", "--skip-a3", "--skip-b1", "--skip-b2"]),
                     redirect_stdout(io.StringIO()),
                 ):
                     launcher.main()
@@ -333,7 +333,7 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
 
     def test_unknown_option_and_help_use_argparse_exit_codes_before_setup(self) -> None:
         launcher = _load_launcher("argparse_exits")
-        cases = ((["run.py", "--not-an-option"], 2), (["run.py", "--help"], 0))
+        cases = ((["python -m ostram run", "--not-an-option"], 2), (["python -m ostram run", "--help"], 0))
         for argv, expected_code in cases:
             with self.subTest(argv=argv):
                 with (
@@ -348,7 +348,7 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
                 check_tool.assert_not_called()
 
     def test_main_guard_maps_process_and_other_failures_to_current_exit_codes(self) -> None:
-        tree = ast.parse(RUN_PATH.read_text(encoding="utf-8-sig"), filename="run.py")
+        tree = ast.parse(RUN_PATH.read_text(encoding="utf-8-sig"), filename="python -m ostram run")
         guard = next(
             node
             for node in tree.body
@@ -372,7 +372,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
         launcher = _load_launcher("skip_matrix")
         for skip_a3, skip_b1, skip_b2 in product((False, True), repeat=3):
             with self.subTest(skip_a3=skip_a3, skip_b1=skip_b1, skip_b2=skip_b2):
-                argv = ["run.py", "--skip-pull"]
+                argv = ["python -m ostram run", "--skip-pull"]
                 if skip_a3:
                     argv.append("--skip-a3")
                 if skip_b1:
@@ -413,7 +413,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
     def test_a1_a2_snapshot_gate_is_independent_of_all_skip_flags(self) -> None:
         launcher = _load_launcher("snapshot_gate")
         argv = [
-            "run.py",
+            "python -m ostram run",
             "--skip-pull",
             "--skip-a3",
             "--skip-b1",
@@ -440,7 +440,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
         with (
             LauncherHarness(launcher, active_scenarios=("A", "B", "C")) as harness,
             mock.patch.object(
-                sys, "argv", ["run.py", "--skip-pull", "--scenarios", " C , A "]
+                sys, "argv", ["python -m ostram run", "--skip-pull", "--scenarios", " C , A "]
             ),
             redirect_stdout(io.StringIO()),
         ):
@@ -468,7 +468,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                 sys,
                 "argv",
                 [
-                    "run.py",
+                    "python -m ostram run",
                     "--skip-pull",
                     "--scenarios",
                     "A_Calibrated_BAU",
@@ -491,7 +491,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                 sys,
                 "argv",
                 [
-                    "run.py",
+                    "python -m ostram run",
                     "--skip-pull",
                     "--scenarios",
                     "Missing,A,Missing,Other",
@@ -516,7 +516,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
         with (
             LauncherHarness(launcher, active_scenarios=("A", "B")) as harness,
             mock.patch.object(
-                sys, "argv", ["run.py", "--skip-pull", "--scenarios", ", , "]
+                sys, "argv", ["python -m ostram run", "--skip-pull", "--scenarios", ", , "]
             ),
             redirect_stdout(io.StringIO()),
         ):
@@ -543,7 +543,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                     mock.patch.object(
                         sys,
                         "argv",
-                        ["run.py", "--skip-pull", "--scenarios", raw],
+                        ["python -m ostram run", "--skip-pull", "--scenarios", raw],
                     ),
                     redirect_stdout(io.StringIO()),
                 ):
@@ -571,7 +571,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                 launcher, snapshot_exists=False, active_scenarios=("A", "B")
             ) as harness,
             mock.patch.object(
-                sys, "argv", ["run.py", "--skip-pull", "--scenarios", "Missing"]
+                sys, "argv", ["python -m ostram run", "--skip-pull", "--scenarios", "Missing"]
             ),
             redirect_stdout(io.StringIO()),
         ):
@@ -591,7 +591,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
             mock.patch.object(
                 sys,
                 "argv",
-                ["run.py", "--skip-pull", "--skip-a3", "--scenarios", "Missing"],
+                ["python -m ostram run", "--skip-pull", "--skip-a3", "--scenarios", "Missing"],
             ),
             redirect_stdout(io.StringIO()),
         ):
@@ -611,7 +611,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
             (True, ["has_dvc_remote", "dvc_command"]),
         ):
             with self.subTest(remote=remote):
-                argv = ["run.py", "--skip-a3", "--skip-b1", "--skip-b2"]
+                argv = ["python -m ostram run", "--skip-a3", "--skip-b1", "--skip-b2"]
                 with (
                     LauncherHarness(launcher, dvc_remote=remote) as harness,
                     mock.patch.object(sys, "argv", argv),
@@ -635,7 +635,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
             LauncherHarness(
                 launcher, snapshot_exists=False, pipeline_failure=failure
             ) as harness,
-            mock.patch.object(sys, "argv", ["run.py", "--skip-pull"]),
+            mock.patch.object(sys, "argv", ["python -m ostram run", "--skip-pull"]),
             redirect_stdout(io.StringIO()),
         ):
             with self.assertRaises(subprocess.CalledProcessError) as raised:

@@ -18,7 +18,7 @@ from ostram.paths import PROJECT_ROOT_ENV, WORKSPACE_ENV, ProjectPaths, resolve_
 
 @dataclass(frozen=True)
 class Route:
-    """One canonical name mapped to an unchanged Stage 11 entrypoint."""
+    """One canonical command mapped to its package implementation."""
 
     module_name: str
     program: str
@@ -28,20 +28,20 @@ class Route:
 
 ROUTES = {
     "run": Route(
-        module_name="run",
-        program="run.py",
+        module_name="ostram.pipeline.orchestration",
+        program="python -m ostram run",
         help="Run the established A1/A2/A3/B1/B2 orchestration.",
         exit_policy="run-guard",
     ),
     "transform": Route(
         module_name="ostram.pipeline.scenarios.transform",
-        program="A3_process.py",
+        program="python -m ostram transform",
         help="Run the established A3 transformation for one scenario.",
         exit_policy="main-result",
     ),
     "compile-inputs": Route(
         module_name="ostram.pipeline.compilation.runner",
-        program="B1_Run_Compiler.py",
+        program="python -m ostram compile-inputs",
         help="Run the established B1 multi-scenario compiler runner.",
         exit_policy="natural-zero",
     ),

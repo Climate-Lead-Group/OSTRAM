@@ -4,7 +4,7 @@ test_scenarios_lite.py — fast pre-pipeline checks for SOASIA v18 multi-scenari
 
 Covers plan tests #9 (bad config errors), #10 (cycle detection) and #11 (HTML
 build). The expensive tests #1-#8 require running the full A3 pipeline and
-should be exercised separately via `python run.py`.
+should be exercised separately via `python -m ostram run`.
 
 Run:
     python tests/validation/test_scenarios_lite.py

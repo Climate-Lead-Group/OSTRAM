@@ -7,14 +7,12 @@ Miscellaneous: 'Miscellaneous'
 templates: 'templates'
 executables: 'Executables'
 outputs: 'Outputs'
-concatenate_folder: 'concatenate_files'
 
 # Files
 otoole_config: 'conversion_format.yaml'
 preprocess_data: 'preprocess_data.py'
 osemosys_model: 'osemosys_fast_preprocessed.txt'
 conv_format: 'conversion_format.yaml'
-concat_csvs: 'concatenate_ostram.py'
 inputs_file: 'Inputs.csv'
 outputs_file: 'Outputs.csv'
 

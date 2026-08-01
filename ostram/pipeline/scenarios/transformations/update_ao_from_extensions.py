@@ -65,7 +65,7 @@ from openpyxl.styles import PatternFill
 # USER CONFIGURATION
 # =============================================================================
 
-WORK_DIR = str(Path(__file__).resolve().parent)  # auto-detect (was hardcoded for Spyder)
+WORK_DIR = str(Path(os.environ["OSTRAM_STAGE_WORKDIR"]).resolve())
 
 EXTENSIONS_FILE = WORK_DIR + "/OSTRAM_AO_Extensions.xlsx"
 WV_FILE         = WORK_DIR + "/SOASIA_OSeMOSYS_WV.xlsx"

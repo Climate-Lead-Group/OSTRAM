@@ -1,10 +1,10 @@
-"""A3_process.py
-==============
+"""Scenario transformation pipeline
+================================
 Orchestrator for the A3 modification workflow, multi-scenario aware.
 
 Transforms the 4 fresh A1 outputs in `A1_Outputs/A1_Outputs_<scenario>/` into
 their final form by chaining the sequential operations bundled in
-`t1_confection/A3_process/`. The source snapshot is ALWAYS the BAU one
+the packaged scenario transformation modules. The source snapshot is ALWAYS the BAU one
 (`_post_a2_snapshot_BAU`); other scenarios diverge from BAU only through
   OSTRAM_Scenario_Inputs.xlsx overrides, optional inherited restrictions
 from previous runs, and the rules_script assigned to the scenario.
@@ -32,9 +32,9 @@ Pipeline:
                                             disposable scenario-state copy
 
 Usage:
-    python A3_process.py                         # runs BAU (default)
-    python A3_process.py --scenario NDC          # runs NDC scenario
-    python A3_process.py --keep-workdir          # debug: preserve intermediates
+    python -m ostram transform                         # runs BAU (default)
+    python -m ostram transform --scenario NDC          # runs NDC scenario
+    python -m ostram transform --keep-workdir          # preserve intermediates
 
 OSTRAM_Scenario_Inputs.xlsx is required. Each run materializes a
 scenario-specific working template from that maintained authority.
@@ -56,8 +56,7 @@ from ostram.paths import resolve_paths
 from . import orchestrator as _orchestrator
 
 _PROJECT_PATHS = resolve_paths()
-T1_CONFECTION = _PROJECT_PATHS.preparation_workspace
-A3_PROCESS_DIR = Path(__file__).with_name("transformations")
+PREPARATION_WORKSPACE = _PROJECT_PATHS.preparation_workspace
 RULES_SCRIPTS_DIR = Path(__file__).with_name("rules")
 SCENARIO_CONFIG_DIR = _PROJECT_PATHS.scenario_config_root
 SCENARIO_RULE_DATA = SCENARIO_CONFIG_DIR / "rules"
@@ -76,9 +75,9 @@ KEEP_WORKDIR_DEFAULT = False
 
 
 def _resolve(p):
-    """Resolve a config path: absolute as-is, relative to T1_CONFECTION."""
+    """Resolve a config path against the explicit preparation workspace."""
     p = Path(p)
-    return p if p.is_absolute() else (T1_CONFECTION / p)
+    return p if p.is_absolute() else (PREPARATION_WORKSPACE / p)
 
 
 INPUT_FILES = (
@@ -91,7 +90,7 @@ INPUT_FILES = (
 
 def parse_cli_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        prog="A3_process.py",
+        prog="python -m ostram transform",
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -127,9 +126,6 @@ def parse_cli_args() -> argparse.Namespace:
     )
     return p.parse_args()
 
-PYTHON = sys.executable
-
-
 def _load_scenarios_module():
     """Load the staged helper without modifying the interpreter import path."""
 
@@ -157,35 +153,33 @@ def step(label: str) -> None:
     print(f"\n>>> {label}")
 
 
-def run_subproc(cmd: list, cwd: Path | None = None, label: str | None = None) -> str:
-    """Run a subprocess; abort on non-zero. Returns stdout."""
+def run_subproc(
+    module: str,
+    arguments: list[object] | None = None,
+    cwd: Path | None = None,
+    label: str | None = None,
+) -> str:
+    """Run one installed package module; abort on non-zero and return stdout."""
     if label:
         step(label)
-    command = [str(c) for c in cmd]
-    effective_cwd = cwd.resolve() if cwd is not None else T1_CONFECTION
-    if (
-        len(command) >= 2
-        and Path(command[0]).resolve() == Path(sys.executable).resolve()
-        and Path(command[1]).suffix.lower() == ".py"
-    ):
-        script = Path(command[1]).resolve()
-        command = [
-            sys.executable,
-            "-B",
-            "-m",
-            "ostram._legacy_script",
-            "--script",
-            str(script),
-            "--",
-            *command[2:],
-        ]
-        if cwd is None:
-            effective_cwd = script.parent
+    effective_cwd = (
+        cwd.resolve() if cwd is not None else _PROJECT_PATHS.scenarios_workspace
+    )
+    command = [
+        sys.executable,
+        "-B",
+        "-m",
+        module,
+        *[str(value) for value in (arguments or [])],
+    ]
     cmd_str = " ".join(command)
     print(f"    $ {cmd_str}  (cwd={effective_cwd.name})")
+    environment = os.environ.copy()
+    environment["OSTRAM_STAGE_WORKDIR"] = str(effective_cwd)
     res = subprocess.run(
         command,
         cwd=str(effective_cwd),
+        env=environment,
         capture_output=True, text=True,
     )
     if res.returncode != 0:
@@ -248,13 +242,11 @@ def build_workdir(
     rules_scripts: list[str],
     scenario: str,
 ) -> dict:
-    """Create runtime workdir with stage subfolders + copies of all scripts/assets.
+    """Create the runtime workdir and stage its mutable input assets.
 
-    Each name in `rules_scripts` is copied from `rules_scripts/` into
-    `wd/rules_scripts/` so stage 5 can invoke it. Each script's YAML config
-    (when declared via `YAML_FILE_NAME` at module level) is also staged into
-    `wd/rules_scripts/`, resolved from `configs/<scenario>/` when present,
-    otherwise from the default location next to the script.
+    Python code always executes from installed package modules. A selected
+    rule's YAML config is copied into ``wd/rules_scripts/`` so each run has an
+    explicit, disposable configuration input.
 
     Empty list -> stage 5 is skipped.
 
@@ -270,48 +262,19 @@ def build_workdir(
     s3 = wd / "stage3";   s3.mkdir()
     s5 = wd / "stage5";   s5.mkdir()
 
-    # Stage 1: scripts + asset templates. Script 1 and the decision overlay
+    # Stage 1 assets. The merge module and decision overlay
     # read the materialized per-scenario template through OSTRAM_TEMPLATE_PATH.
-    stage1_sources = {
-        "1_merge_timeslices_into_WV.py": "merge_timeslices.py",
-        "2_extract_ao_extensions.py": "extract_ao_extensions.py",
-        "apply_ao_extension_decisions.py": "ao_extension_decisions.py",
-        "3_update_ao_from_extensions.py": "update_ao_from_extensions.py",
-        "4_apply_manual_fixes.py": "apply_manual_fixes.py",
-        "5_propagate_timeslice_fabric.py": "propagate_timeslice_fabric.py",
-    }
-    for destination, source in stage1_sources.items():
-        shutil.copy(A3_PROCESS_DIR / source, s1 / destination)
     shutil.copy(
         _PROJECT_PATHS.timeslice_workbook,
         s1 / "OSTRAM_Timeslice_Inputs.xlsx",
     )
 
-    # Stage 2: patch_ao_c2a + TECH_TYPES
-    shutil.copy(A3_PROCESS_DIR / "patch_ao_c2a.py", s2)
+    # Stage 2 inputs.
     shutil.copy(
         SCENARIO_CONFIG_DIR / "technology_types.csv",
         s2 / "TECH_TYPES.csv",
     )
 
-    # Stage 3: FIX_2 scripts + shared v18 authority loader
-    for f in ("fix_trn_residuals.py", "clear_stale_unbinding_caps.py",
-              "cap_trn_to_residual.py", "interconnector_authority.py"):
-        shutil.copy(A3_PROCESS_DIR / f, s3)
-
-    # Workdir-level scripts (run from `wd`, operate on subdirs via --input args)
-    workdir_sources = {
-        "A0_insert_reserve_margin.py": "insert_reserve_margin.py",
-        "add_max_capacity_investment_rule_OLD_8ee8056.py": "add_max_capacity_investment_rule_OLD_8ee8056.py",
-        "add_max_capacity_investment_rule_NEW_2be1616.py": "add_max_capacity_investment_rule_NEW_2be1616.py",
-        "B1b_Pre_solver_validation.py": "pre_solver_validation.py",
-        "_xlsx_validation_core.py": "xlsx_validation.py",
-        "fix_pwrpet_clear.py": "fix_pwrpet_clear.py",
-        "fix_elc_pmode_revert.py": "fix_elc_pmode_revert.py",
-        "6_sync_og_to_ts20.py": "sync_og_to_ts20.py",
-    }
-    for destination, source in workdir_sources.items():
-        shutil.copy(A3_PROCESS_DIR / source, wd / destination)
     runtime_config = (
         _PROJECT_PATHS.compilation_workspace / "Config_MOMF_T1_A.yaml"
     )
@@ -326,12 +289,7 @@ def build_workdir(
         wd / "TECH_TYPES.csv",
     )
 
-    # Per-scenario rules_scripts chain (each lives under rules_scripts/).
-    # Each script + its YAML are copied into wd/rules_scripts/ so stage 5 can
-    # invoke them with cwd=wd. TECH_TYPES.csv is already copied above and the
-    # scripts resolve it via ../TECH_TYPES.csv -> wd/TECH_TYPES.csv. YAML is
-    # resolved from rules_scripts/configs/<scenario>/ when present, otherwise
-    # from the default next to the source script.
+    # Per-scenario rule configuration. Code stays in the installed package.
     if rules_scripts:
         rs_wd = wd / "rules_scripts"
         rs_wd.mkdir()
@@ -343,7 +301,9 @@ def build_workdir(
                     f"rules_script '{script}' not found at {src}. "
                     f"Available: {sorted(available)}"
                 )
-            shutil.copy(src, rs_wd / script)
+            if script == "relax_interconnectors.py":
+                shutil.copy(RULES_SCRIPTS_DIR / "__init__.py", rs_wd / "__init__.py")
+                shutil.copy(src, rs_wd / script)
             yaml_path = _resolve_script_yaml(script, scenario)
             if yaml_path is not None:
                 yaml_name = yaml_path.name
@@ -359,21 +319,20 @@ def build_workdir(
 # ---------------------------------------------------------------------------
 def stage_1_scripts_1_to_5(s1: Path) -> None:
     banner("Stage 1 — scripts 1-5 (AO/WV alignment pipeline)")
-    run_subproc([PYTHON, s1 / "1_merge_timeslices_into_WV.py"], cwd=s1, label="1_merge_timeslices_into_WV.py")
-    run_subproc([PYTHON, s1 / "2_extract_ao_extensions.py"], cwd=s1, label="2_extract_ao_extensions.py")
+    run_subproc("ostram.pipeline.scenarios.transformations.merge_timeslices", cwd=s1, label="merge timeslices")
+    run_subproc("ostram.pipeline.scenarios.transformations.extract_ao_extensions", cwd=s1, label="extract AO extensions")
     run_subproc(
+        "ostram.pipeline.scenarios.transformations.ao_extension_decisions",
         [
-            PYTHON,
-            s1 / "apply_ao_extension_decisions.py",
             "--extensions",
             s1 / "OSTRAM_AO_Extensions.xlsx",
         ],
         cwd=s1,
-        label="apply_ao_extension_decisions.py",
+        label="apply AO extension decisions",
     )
-    run_subproc([PYTHON, s1 / "3_update_ao_from_extensions.py"], cwd=s1, label="3_update_ao_from_extensions.py")
-    run_subproc([PYTHON, s1 / "4_apply_manual_fixes.py"], cwd=s1, label="4_apply_manual_fixes.py")
-    run_subproc([PYTHON, s1 / "5_propagate_timeslice_fabric.py"], cwd=s1, label="5_propagate_timeslice_fabric.py")
+    run_subproc("ostram.pipeline.scenarios.transformations.update_ao_from_extensions", cwd=s1, label="update AO from extensions")
+    run_subproc("ostram.pipeline.scenarios.transformations.apply_manual_fixes", cwd=s1, label="apply manual fixes")
+    run_subproc("ostram.pipeline.scenarios.transformations.propagate_timeslice_fabric", cwd=s1, label="propagate timeslice fabric")
 
 
 def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
@@ -392,35 +351,30 @@ def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
     print("    (Stage 1 outputs copied into stage1b/)")
 
     # 1) A0
-    run_subproc([
-        PYTHON, wd / "A0_insert_reserve_margin.py",
+    run_subproc("ostram.pipeline.scenarios.transformations.insert_reserve_margin", [
         "--input", s1b / "A-O_Parametrization.xlsx",
-    ], label="A0_insert_reserve_margin.py")
+    ], label="insert reserve margin")
 
     # 2) add_max OLD (commit 8ee8056) — cell value changes
-    run_subproc([
-        PYTHON, wd / "add_max_capacity_investment_rule_OLD_8ee8056.py",
+    run_subproc("ostram.pipeline.scenarios.transformations.add_max_capacity_investment_rule_OLD_8ee8056", [
         "--input-dir", s1b,
     ], cwd=wd, label="add_max_capacity_investment_rule (OLD 8ee8056)")
 
     # 3) add_max NEW (commit 2be1616) — Projection.Mode flips
-    run_subproc([
-        PYTHON, wd / "add_max_capacity_investment_rule_NEW_2be1616.py",
+    run_subproc("ostram.pipeline.scenarios.transformations.add_max_capacity_investment_rule_NEW_2be1616", [
         "--input-dir", s1b,
     ], cwd=wd, label="add_max_capacity_investment_rule (NEW 2be1616)")
 
     # 4) fix_elc_pmode_revert — manual ELC*01 revert
-    run_subproc([
-        PYTHON, wd / "fix_elc_pmode_revert.py",
+    run_subproc("ostram.pipeline.scenarios.transformations.fix_elc_pmode_revert", [
         "--input", s1b / "A-O_Parametrization.xlsx",
-    ], label="fix_elc_pmode_revert.py")
+    ], label="fix ELC projection mode")
 
     # 5) B1b validation (V2 fix on PWRHYDLKAXX)
-    run_subproc([
-        PYTHON, wd / "B1b_Pre_solver_validation.py",
+    run_subproc("ostram.pipeline.scenarios.transformations.pre_solver_validation", [
         "--xlsx", s1b / "A-O_Parametrization.xlsx",
         "--auto-fix-all",
-    ], cwd=wd, label="B1b_Pre_solver_validation.py")
+    ], cwd=wd, label="pre-solver workbook validation")
 
 
 def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
@@ -430,12 +384,11 @@ def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
     shutil.copy(s1b / "A-O_Parametrization.xlsx", s2 / "A-O_Parametrization_ORIGINAL.xlsx")
 
     # patch_ao_c2a (output: A-O_Parametrization_c2a_patched.xlsx in s2)
-    run_subproc([
-        PYTHON, s2 / "patch_ao_c2a.py",
+    run_subproc("ostram.pipeline.scenarios.transformations.patch_ao_c2a", [
         "--src", "A-O_Parametrization_ORIGINAL.xlsx",
         "--tax", "TECH_TYPES.csv",
         "--out", "A-O_Parametrization_c2a_patched.xlsx",
-    ], cwd=s2, label="patch_ao_c2a.py")
+    ], cwd=s2, label="patch capacity-to-activity units")
 
     # Fallback: when there's nothing to patch (target techs aren't present),
     # patch_ao_c2a doesn't write the output file. Copy the original so
@@ -447,10 +400,9 @@ def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
               "to *_c2a_patched.xlsx so pipeline can continue.")
 
     # fix_pwrpet_clear — the manual edit Luis did
-    run_subproc([
-        PYTHON, wd / "fix_pwrpet_clear.py",
+    run_subproc("ostram.pipeline.scenarios.transformations.fix_pwrpet_clear", [
         "--input", s2 / "A-O_Parametrization_c2a_patched.xlsx",
-    ], label="fix_pwrpet_clear.py")
+    ], label="clear PWRPET values")
 
 
 def stage_3_fix_2(s2: Path, s3: Path) -> Path:
@@ -472,8 +424,7 @@ def stage_3_fix_2(s2: Path, s3: Path) -> Path:
                 s3 / "A-O_Parametrization_c2a_patched.xlsx")
 
     # fix_trn_residuals
-    run_subproc([
-        PYTHON, s3 / "fix_trn_residuals.py",
+    run_subproc("ostram.pipeline.scenarios.transformations.fix_trn_residuals", [
         "--input", "A-O_Parametrization_c2a_patched.xlsx",
         "--output", "A-O_Parametrization_c2a_patched_FIXED.xlsx",
         "--authority", authority_path,
@@ -481,13 +432,12 @@ def stage_3_fix_2(s2: Path, s3: Path) -> Path:
         "--diff-md", "diff_log.md",
         "--mode", "min",
         "--cutoff-year", "2023",
-    ], cwd=s3, label="fix_trn_residuals.py")
+    ], cwd=s3, label="fix transmission residuals")
 
     # clear_stale_unbinding_caps
-    run_subproc([
-        PYTHON, s3 / "clear_stale_unbinding_caps.py",
+    run_subproc("ostram.pipeline.scenarios.transformations.clear_stale_unbinding_caps", [
         "--input", "A-O_Parametrization_c2a_patched_FIXED.xlsx",
-    ], cwd=s3, label="clear_stale_unbinding_caps.py")
+    ], cwd=s3, label="clear stale unbinding caps")
 
     # Find the auto-timestamped POST_CAP_RESET file
     post_cap_reset = sorted(
@@ -497,10 +447,9 @@ def stage_3_fix_2(s2: Path, s3: Path) -> Path:
     print(f"    POST_CAP_RESET: {post_cap_reset.name}")
 
     # cap_trn_to_residual
-    run_subproc([
-        PYTHON, s3 / "cap_trn_to_residual.py",
+    run_subproc("ostram.pipeline.scenarios.transformations.cap_trn_to_residual", [
         "--input", post_cap_reset.name,
-    ], cwd=s3, label="cap_trn_to_residual.py")
+    ], cwd=s3, label="cap transmission to residual")
 
     post_trn_cap = sorted(
         s3.glob("A-O_Parametrization_c2a_patched_FIXED_POST_CAP_RESET_*_POST_TRN_CAP_*.xlsx"),
@@ -571,12 +520,22 @@ def stage_5_rules_scripts(
         return
     banner(f"Stage 5 — rules_scripts chain ({len(rules_scripts)} script(s))")
     for i, script in enumerate(rules_scripts, start=1):
-        rs_path = wd / "rules_scripts" / script
-        if not rs_path.is_file():
-            sys.exit(f"ERROR: rules_script not staged at {rs_path}")
+        source = RULES_SCRIPTS_DIR / script
+        if not source.is_file():
+            sys.exit(f"ERROR: packaged rule module not found at {source}")
+        arguments: list[object] = ["--input-dir", s5]
+        yaml_name = _read_script_yaml_name(source)
+        if yaml_name:
+            arguments.extend(["--yaml", wd / "rules_scripts" / yaml_name])
         step(f"[{i}/{len(rules_scripts)}] {script}")
+        module = (
+            "rules_scripts.relax_interconnectors"
+            if script == "relax_interconnectors.py"
+            else f"ostram.pipeline.scenarios.rules.{source.stem}"
+        )
         run_subproc(
-            [PYTHON, rs_path, "--input-dir", s5],
+            module,
+            arguments,
             cwd=wd, label=script,
         )
 
@@ -589,13 +548,13 @@ def stage_ws3_interconnector_costs(
     """WS-3: wire v18 Interconnector_Params cost columns into the model.
 
     Interconnector CapitalCost/FixedCost historically came from the OG_csvs base
-    (distance-computed legacy values) and the sourced Interconnector_Params sheet
+    (distance-computed predecessor values) and the sourced Interconnector_Params sheet
     was never consumed. This stage makes that sheet the source of truth: it
     applies Interconnector_Params -> Secondary Techs (CapitalCost, FixedCost) and
     Fixed Horizon Parameters (OperationalLife), reading the per-scenario
     materialized template so any scenario override flows through. Residuals/caps
     (owned by fix_trn_residuals / relax_interconnectors) and losses are untouched.
-    Skipped in legacy mode (no v18 template).
+    Skipped when no v18 scenario-input workbook is available.
     """
     if not soasia.is_file():
         return
@@ -603,10 +562,14 @@ def stage_ws3_interconnector_costs(
     if not script.is_file():
         sys.exit(f"ERROR: apply_interconnector_costs.py not found at {script}")
     banner("WS-3 — apply v18 Interconnector_Params costs (CapitalCost / FixedCost / OperationalLife)")
-    cmd = [PYTHON, script, "--input-dir", s5, "--skip-backup"]
+    arguments: list[object] = ["--input-dir", s5, "--skip-backup"]
     if materialized_template is not None:
-        cmd += ["--template", materialized_template]
-    run_subproc(cmd, label="apply_interconnector_costs.py")
+        arguments += ["--template", materialized_template]
+    run_subproc(
+        "ostram.pipeline.scenarios.rules.apply_interconnector_costs",
+        arguments,
+        label="apply interconnector costs",
+    )
 
 
 def stage_ws3_internal_transmission(s5: Path) -> None:
@@ -632,10 +595,10 @@ def stage_ws3_internal_transmission(s5: Path) -> None:
         print("    [SKIP] internal-transmission stage: script/config/residuals missing")
         return
     banner("WS-3 — calibrate internal transmission (per-node ResidualCapacity / RE CapEx / OperationalLife=40)")
-    run_subproc([
-        PYTHON, script, "--input-dir", s5, "--skip-backup",
+    run_subproc("ostram.pipeline.scenarios.rules.apply_internal_transmission", [
+        "--input-dir", s5, "--skip-backup",
         "--config", config, "--residuals", residuals,
-    ], label="apply_internal_transmission.py")
+    ], label="apply internal transmission")
 
 
 def stage_ws3_internal_tx_losses(s5: Path) -> None:
@@ -654,9 +617,9 @@ def stage_ws3_internal_tx_losses(s5: Path) -> None:
         print("    [SKIP] internal-tx losses stage: script/config missing")
         return
     banner("WS-4 — internal transmission losses (OutputActivityRatio = 1 - loss)")
-    run_subproc([
-        PYTHON, script, "--input-dir", s5, "--skip-backup", "--config", config,
-    ], label="apply_internal_tx_losses.py")
+    run_subproc("ostram.pipeline.scenarios.rules.apply_internal_tx_losses", [
+        "--input-dir", s5, "--skip-backup", "--config", config,
+    ], label="apply internal transmission losses")
 
 
 def stage_ws4_pwr_min_pin(s5: Path, scenario: str) -> None:
@@ -680,9 +643,8 @@ def stage_ws4_pwr_min_pin(s5: Path, scenario: str) -> None:
         "WS-4 — restore audited non-Maldives 2023-2026 PWR/MIN calibration"
     )
     run_subproc(
+        "ostram.pipeline.scenarios.rules.apply_base_year_pin",
         [
-            PYTHON,
-            script,
             "--input-dir",
             s5,
             "--scenario",
@@ -691,7 +653,7 @@ def stage_ws4_pwr_min_pin(s5: Path, scenario: str) -> None:
             rules_csv,
             "--skip-backup",
         ],
-        label="apply_base_year_pin.py",
+        label="apply base-year pin",
     )
 
 
@@ -753,12 +715,11 @@ def stage_6_sync_og_to_ts20(wd: Path, s1: Path) -> None:
     if not wv_file.is_file():
         print(f"    [SKIP] WV file not found at {wv_file}; sync stage skipped.")
         return
-    run_subproc([
-        PYTHON, wd / "6_sync_og_to_ts20.py",
+    run_subproc("ostram.pipeline.scenarios.transformations.sync_og_to_ts20", [
         "--wv", wv_file,
         "--og-csvs-dir", og_csvs_dir,
         "--yaml", yaml_file,
-    ], cwd=wd, label="6_sync_og_to_ts20.py")
+    ], cwd=wd, label="sync OSeMOSYS inputs to 20 timeslices")
 
 
 def deliver_outputs(s5: Path, output_dir: Path) -> None:
@@ -826,10 +787,10 @@ def _materialize_scenario_template(
 
 
 def _orchestration_paths() -> _orchestrator.A3Paths:
-    """Expose script-anchored A3 paths as one immutable plan input."""
+    """Expose resolved A3 paths as one immutable plan input."""
     A3_WORKSPACE.mkdir(parents=True, exist_ok=True)
     return _orchestrator.A3Paths(
-        t1_confection=T1_CONFECTION,
+        preparation_workspace=PREPARATION_WORKSPACE,
         process_dir=A3_WORKSPACE,
         default_soasia=SOASIA_V18,
     )

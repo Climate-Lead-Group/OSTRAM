@@ -1,6 +1,8 @@
 # Configuration Reference
 
-OSTRAM uses five YAML configuration files at `t1_confection/` root, a family of per-scenario rule YAMLs under `t1_confection/A3_process/rules_scripts/configs/`, and two Excel-based configuration files. This page documents every option.
+OSTRAM keeps maintained YAML under `config/preparation/`, `config/scenarios/`,
+`config/compilation/`, and `config/execution/`. Scenario and timeslice workbook
+authorities live under `inputs/scenarios/`. This page documents their options.
 
 :::{warning}
 All data entered in the configuration files (technologies, years, countries, codes) **must match values that exist in the model**. Using technology codes, country codes, year ranges, or any other identifiers that are not present in the model data can cause the pipeline to fail during execution.
@@ -8,7 +10,7 @@ All data entered in the configuration files (technologies, years, countries, cod
 
 ## Config_country_codes.yaml
 
-**Location:** `t1_confection/Config_country_codes.yaml`
+**Location:** `config/preparation/Config_country_codes.yaml`
 
 The single source of truth for all country, region, and technology definitions. Used by most scripts in the project.
 
@@ -293,15 +295,9 @@ template_generation:
 
 The only entry actually active in the current YAML is the single MDV-from-LKA example above; MMR/PAK/CHN are documentation-only illustrations.
 
-The script also accepts command-line overrides (which take precedence over YAML values). From an **Anaconda Prompt** (with the `OSTRAM-env` environment activated):
-
-```bash
-# Read all entries from YAML
-python t1_confection/Z_generate_country_template.py
-
-# Override with CLI arguments (single country)
-python t1_confection/Z_generate_country_template.py --new MDV --ref LKA -i LKA --lat 1.92 --lon 73.40
-```
+The package implementation consumes these entries through the preparation
+workflow. Run it with `python -m ostram run`; source files under `ostram/` are
+not public script entrypoints.
 
 | CLI Flag | Description |
 |----------|-------------|
@@ -363,7 +359,7 @@ enable_dsptrn: true
 
 ## Config_MOMF_T1_A.yaml
 
-**Location:** `t1_confection/Config_MOMF_T1_A.yaml`
+**Location:** `config/compilation/Config_MOMF_T1_A.yaml`
 
 The primary compiler configuration. Defines the data model for the Excel-to-OSeMOSYS compilation step.
 
@@ -398,7 +394,9 @@ The model uses **20 timeslices** (4 seasons x 5 daily time brackets), a single r
 
 ### Directory and File Paths
 
-The configuration defines all input/output paths and Excel file names used by the compiler. These are relative to `t1_confection/`:
+The configuration retains logical input/output names used by the compiler.
+`ostram.paths` maps maintained inputs to the project bundle and mutable outputs
+to the selected compilation workspace:
 
 - `A1_inputs` / `A1_outputs`: Stage A1 directories
 - `A2_extra_inputs` / `A2_output`: Stage A2 directories
@@ -417,7 +415,7 @@ The file lists all OSeMOSYS parameters organized by technology category:
 
 ## Config_MOMF_T1_AB.yaml
 
-**Location:** `t1_confection/Config_MOMF_T1_AB.yaml`
+**Location:** `config/execution/Config_MOMF_T1_AB.yaml`
 
 The execution/runtime configuration for the model solver.
 
@@ -539,7 +537,7 @@ reserve_margin_xlsx_sentinel_values: [0, 9999]
 
 ## Config_region_consolidation.yaml
 
-**Location:** `t1_confection/Config_region_consolidation.yaml`
+**Location:** `config/preparation/Config_region_consolidation.yaml`
 
 Controls optional consolidation of sub-regional data into unified country-level data. This is relevant when a country is modeled with multiple sub-regions (e.g., India with 5 regions in the current model).
 
@@ -588,7 +586,7 @@ Defines how parameters are combined when merging sub-regions:
 
 ## A3 Scenario Rule YAMLs
 
-**Location:** `t1_confection/A3_process/rules_scripts/configs/<Scenario>/`
+**Location:** `config/scenarios/<Scenario>/`
 
 Each active scenario (`A_Calibrated_BAU`, `B_Optimised_VRE`, `C_Target_VRE`) has its own subfolder with the YAML files its rule-script chain consumes. See {doc}`pipeline` (Stage A3) for which rule scripts each scenario runs and a plain-English summary of what each scenario represents. The main YAML anatomy:
 

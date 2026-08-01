@@ -4,8 +4,7 @@ Update Secondary Techs from Editor Template
 This script reads the Secondary_Techs_Editor.xlsx file and applies
 the changes to the corresponding A-O_Parametrization.xlsx files.
 
-Usage:
-    python t1_confection/D2_update_secondary_techs.py
+Invoked as part of ``python -m ostram run``.
 
 Author: Climate Lead Group, Andrey Salazar-Vargas
 """

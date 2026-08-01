@@ -176,7 +176,7 @@ class B2Fixture:
     ) -> None:
         self._temp = tempfile.TemporaryDirectory()
         self.root = Path(self._temp.name).resolve()
-        self.entrypoint = self.root / "B2_Executing_OG_Model.py"
+        self.entrypoint = self.root / "python -m ostram run"
         self.entrypoint.write_text("# fixture anchor only\n", encoding="utf-8")
         self.params = _base_params(**overrides)
         self.main_scenario = main_scenario
@@ -305,7 +305,11 @@ class GuardHarness:
                         mock.patch.object(self.module, name, replacement)
                     )
                 stack.enter_context(
-                    mock.patch.object(self.module, "__file__", str(self.fixture.entrypoint))
+                    mock.patch.object(
+                        self.module.b2_orchestrator,
+                        "resolve_here",
+                        return_value=self.fixture.root,
+                    )
                 )
                 stack.enter_context(
                     mock.patch.object(
@@ -351,9 +355,9 @@ class B2ImportAndCliCharacterizationTests(unittest.TestCase):
 
     def test_help_unknown_option_and_missing_value_keep_argparse_contract(self) -> None:
         cases = (
-            (["B2_Executing_OG_Model.py", "--help"], 0),
-            (["B2_Executing_OG_Model.py", "--unknown"], 2),
-            (["B2_Executing_OG_Model.py", "--scenarios"], 2),
+            (["python -m ostram run", "--help"], 0),
+            (["python -m ostram run", "--unknown"], 2),
+            (["python -m ostram run", "--scenarios"], 2),
         )
         for index, (argv, expected_code) in enumerate(cases):
             with self.subTest(argv=argv):
@@ -574,7 +578,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             harness = GuardHarness(module, fixture)
             caller_cwd = Path.cwd()
             harness.run(
-                ["B2_Executing_OG_Model.py", "--scenarios", " C, A, C "]
+                ["python -m ostram run", "--scenarios", " C, A, C "]
             )
 
             base_input = str(fixture.root / "A2_Output_Params")
@@ -640,7 +644,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             harness = GuardHarness(module, fixture)
             harness.run(
                 [
-                    "B2_Executing_OG_Model.py",
+                    "python -m ostram run",
                     "--scenarios",
                     "A",
                     "--compile-only",
@@ -693,7 +697,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             with self.assertRaises(SystemExit) as raised:
                 harness.run(
                     [
-                        "B2_Executing_OG_Model.py",
+                        "python -m ostram run",
                         "--scenarios",
                         "Missing,A,Missing,Other",
                     ]
@@ -708,7 +712,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
         module = _load_b2_guard_as_callable("truthy_empty")
         with B2Fixture("B", "Default", "A") as fixture:
             harness = GuardHarness(module, fixture)
-            harness.run(["B2_Executing_OG_Model.py", "--scenarios", " , , "])
+            harness.run(["python -m ostram run", "--scenarios", " , , "])
 
             self.assertEqual(harness.events, [])
             self.assertIn("[INFO] Scenario filter active: []", harness.stdout)
@@ -723,7 +727,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             "A", "B", "Default", main_scenario="B", only_main_scenario=True
         ) as fixture:
             selected = GuardHarness(module, fixture)
-            selected.run(["B2_Executing_OG_Model.py"])
+            selected.run(["python -m ostram run"])
             self.assertEqual(
                 [event[-1] for event in selected.events if event[0] == "process"],
                 ["B"],
@@ -736,7 +740,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             rejected = GuardHarness(module, fixture)
             with self.assertRaises(SystemExit) as raised:
                 rejected.run(
-                    ["B2_Executing_OG_Model.py", "--scenarios", "A"]
+                    ["python -m ostram run", "--scenarios", "A"]
                 )
             self.assertEqual(raised.exception.code, 1)
             self.assertIn("Discovered: ['B']", rejected.stdout)
@@ -748,7 +752,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             "Default", "A", "Z_file", file_entries=("Z_file",)
         ) as fixture:
             harness = GuardHarness(module, fixture)
-            harness.run(["B2_Executing_OG_Model.py"])
+            harness.run(["python -m ostram run"])
 
             self.assertEqual(
                 [event[-1] for event in harness.events if event[0] == "process"],
@@ -759,7 +763,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
         module = _load_b2_guard_as_callable("conversion_continue")
         with B2Fixture("A", "B", main_scenario="A") as fixture:
             harness = GuardHarness(module, fixture, conversions={"A": False})
-            harness.run(["B2_Executing_OG_Model.py"])
+            harness.run(["python -m ostram run"])
 
             names_by_scenario = [
                 (event[0], event[-1])
@@ -847,7 +851,7 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
                     harness = GuardHarness(
                         module, fixture, solver_boundary=dispatch
                     )
-                    harness.run(["B2_Executing_OG_Model.py"])
+                    harness.run(["python -m ostram run"])
 
                 expected_dispatch: list[str] = []
                 if execute_model or create_matrix:
@@ -888,14 +892,11 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
             run_process=reject_process,
             check_environment=lambda solver: None,
             get_executable=lambda executable: f"fixture-{executable}",
-            get_config_main_path=lambda here, folder: str(
-                Path(here).parent / folder
-            ),
             path_exists=lambda path: False,
             remove_file=lambda path: None,
             python_executable=sys.executable,
         )
-        root = Path("C:/fixture/t1_confection")
+        root = Path("C:/fixture/execution_workspace")
         sentinel = SentinelSolverAdapter()
 
         with redirect_stdout(io.StringIO()):
@@ -970,7 +971,7 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
         ) as fixture:
             harness = GuardHarness(module, fixture)
             with mock.patch.object(module.mp, "Process", FakeProcess):
-                harness.run(["B2_Executing_OG_Model.py"])
+                harness.run(["python -m ostram run"])
 
             self.assertEqual(
                 process_events,
@@ -1011,7 +1012,7 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
         ) as fixture:
             harness = GuardHarness(module, fixture, solver_boundary=fail_first)
             with self.assertRaisesRegex(RuntimeError, "solver boundary failure"):
-                harness.run(["B2_Executing_OG_Model.py"])
+                harness.run(["python -m ostram run"])
 
             self.assertEqual(solver_calls, ["A"])
             self.assertNotIn(
@@ -1069,7 +1070,7 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
     def test_exact_solver_command_for_every_supported_solver(self) -> None:
         module = _load_b2("solver_commands")
         with tempfile.TemporaryDirectory() as temp:
-            here = Path(temp).resolve() / "t1_confection"
+            here = Path(temp).resolve() / "execution_workspace"
             folder = os.path.join(str(here), "Executables", "A_0")
             data_file = os.path.join(folder, "Pre_processed_A_0")
             output_file = os.path.join(folder, "Pre_processed_A_0_output")
@@ -1125,7 +1126,7 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
     def test_cplex_matrix_solve_results_and_concat_commands_keep_exact_order(self) -> None:
         module = _load_b2("cplex_full_chain")
         with tempfile.TemporaryDirectory() as temp:
-            here = Path(temp).resolve() / "t1_confection"
+            here = Path(temp).resolve() / "execution_workspace"
             params = _base_params(
                 solver="cplex",
                 execute_model=True,
@@ -1141,9 +1142,6 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
             template = os.path.join(str(here), "A2_Outputs_Params_otoole", "A")
             conversion = os.path.join(
                 str(here), "Miscellaneous", "conversion_format.yaml"
-            )
-            concat_script = os.path.join(
-                str(here.parent), "concatenate_files", "concatenate_ostram.py"
             )
             expected_commands = [
                 [
@@ -1162,8 +1160,12 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
                     f"{output_file}.sol", outputs, "csv", template, conversion,
                 ],
                 [
-                    sys.executable, "-B", "-m", "ostram._legacy_script",
-                    "--script", concat_script, "--", outputs, output_file,
+                    sys.executable,
+                    "-B",
+                    "-m",
+                    "ostram.pipeline.execution.concatenate",
+                    outputs,
+                    output_file,
                 ],
             ]
             self.assertEqual(
@@ -1186,7 +1188,7 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
     def test_command_failure_propagates_before_success_and_postprocessing(self) -> None:
         module = _load_b2("command_failure")
         with tempfile.TemporaryDirectory() as temp:
-            here = Path(temp).resolve() / "t1_confection"
+            here = Path(temp).resolve() / "execution_workspace"
             params = _base_params(
                 solver="cplex",
                 execute_model=False,
@@ -1206,7 +1208,7 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
     def test_missing_expected_solution_raises_before_results_or_concat(self) -> None:
         module = _load_b2("missing_solution")
         with tempfile.TemporaryDirectory() as temp:
-            here = Path(temp).resolve() / "t1_confection"
+            here = Path(temp).resolve() / "execution_workspace"
             params = _base_params(
                 solver="cplex",
                 execute_model=True,

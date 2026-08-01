@@ -40,17 +40,12 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
-from ostram._legacy_import import load_file_module
-
-_SCRIPT_DIR = Path(__file__).resolve().parent
-_authority = load_file_module(
-    "_ostram_stage11_interconnector_authority",
-    _SCRIPT_DIR / "interconnector_authority.py",
+from .interconnector_authority import (
+    MINIMUM_CONTRIBUTION_TECHS,
+    load_minimum_boundary_authority,
+    load_minimum_contribution_authority,
+    validate_minimum_contribution_authority,
 )
-MINIMUM_CONTRIBUTION_TECHS = _authority.MINIMUM_CONTRIBUTION_TECHS
-load_minimum_boundary_authority = _authority.load_minimum_boundary_authority
-load_minimum_contribution_authority = _authority.load_minimum_contribution_authority
-validate_minimum_contribution_authority = _authority.validate_minimum_contribution_authority
 
 # ------------------------------------------------------------------ constants
 SHEET_NAME = "Secondary Techs"

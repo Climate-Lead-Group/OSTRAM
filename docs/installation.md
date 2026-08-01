@@ -1,132 +1,77 @@
 # Installation
 
-This guide covers the full setup process for running OSTRAM on a Windows machine.
+## Supported environment
 
-## System Requirements
+OSTRAM requires Python 3.10 or newer. The maintained Conda definition is
+`environment.yaml`; Python package requirements are also declared in
+`pyproject.toml`.
 
-- **Operating System:** Windows 10 or higher
-- **Git:** [Git for Windows](https://gitforwindows.org/) (version 2.40+)
-- **Python distribution:** [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [Anaconda](https://www.anaconda.com/download)
-- **Solver:** At least one of the following LP/MIP solvers:
-  - [GLPK](https://www.gnu.org/software/glpk/) (open source, included in conda-forge)
-  - [CBC](https://github.com/coin-or/Cbc) (open source)
-  - [CPLEX](https://www.ibm.com/products/ilog-cplex-optimization-studio) (commercial, IBM)
-  - [Gurobi](https://www.gurobi.com/) (commercial, free academic license)
-
-## Clone the Repository
-
-```bash
-git clone https://github.com/Climate-Lead-Group/OSTRAM.git
-cd OSTRAM
-```
-
-Use a local, non-synchronized working directory for large model artifacts and generated
-workbooks. This page is the maintained setup guide.
-
-## Conda Environment
-
-OSTRAM uses a Conda environment defined in `environment.yaml`. The `run.py` launcher
-creates it if it does not exist and installs missing dependencies into an existing
-environment. For a controlled setup, create it manually:
-
-```bash
+```powershell
 conda env create -f environment.yaml
 conda activate OSTRAM-env
+python -m pip install -e .
 ```
 
-### Environment Dependencies
+For an existing environment:
 
-The environment installs the following packages:
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| Python | 3.10 | Runtime |
-| pandas | >= 2.1 | Data manipulation |
-| numpy | >= 1.26 | Numerical computation |
-| openpyxl | >= 3.1 | Excel file reading |
-| xlsxwriter | >= 3.2.4 | Excel file writing |
-| pyyaml | >= 6.0 | YAML configuration parsing |
-| git | >= 2.40 | Version control |
-| dvc | latest | Data Version Control (init/pull only -- see note below) |
-| otoole | >= 1.1.1 | OSeMOSYS data format conversion |
-
-`run.py` also installs `ruamel.yaml` automatically if missing (used by `B1_Run_Compiler.py` to rewrite `Config_MOMF_T1_A.yaml`'s `Main_Scenario` in place); it is not listed in `environment.yaml` itself.
-
-## Solver Setup
-
-### GLPK (simplest option)
-
-GLPK can be installed directly via conda:
-
-```bash
-conda activate OSTRAM-env
-conda install -c conda-forge glpk
+```powershell
+conda env update -f environment.yaml --prune
+python -m pip install -e .
 ```
 
-### CBC
+The editable install is important: it makes `ostram` and its package data
+import-addressable from any current directory while project authorities remain
+in the checkout.
 
-CBC can also be installed via conda:
+## Verify the installation
 
-```bash
-conda activate OSTRAM-env
-conda install -c conda-forge coin-or-cbc
+```powershell
+python -m ostram --help
+python -m ostram inspect-resources
+python -B -m unittest discover -s tests -p "test_*.py"
 ```
 
-### CPLEX
+From outside the checkout, supply the bundle explicitly:
 
-1. Install IBM ILOG CPLEX Optimization Studio from the [IBM website](https://www.ibm.com/products/ilog-cplex-optimization-studio).
-2. Ensure the `cplex` binary is available on your system `PATH`.
-3. Set `solver: 'cplex'` in `t1_confection/Config_MOMF_T1_AB.yaml`.
-
-### Gurobi
-
-1. Install Gurobi from the [Gurobi website](https://www.gurobi.com/downloads/).
-2. Activate your license (`grbgetkey <license-key>`).
-3. Ensure the `gurobi` binary is available on your system `PATH`.
-4. Set `solver: 'gurobi'` in `t1_confection/Config_MOMF_T1_AB.yaml`.
-
-## Verify Installation
-
-After setup, verify that the environment works:
-
-```bash
-conda activate OSTRAM-env
-python -c "import pandas; import numpy; import openpyxl; import yaml; print('All dependencies OK')"
+```powershell
+python -m ostram --project-root C:\path\to\OSTRAM inspect-resources
 ```
 
-To verify your solver:
+Use `--workspace` or `OSTRAM_WORKSPACE` to place mutable state elsewhere.
+Explicit command-line values override environment variables. Inspection is
+read-only and does not create the workspace.
 
-```bash
-# For GLPK
+## Solvers
+
+`environment.yaml` installs GLPK and CBC. CPLEX and Gurobi require their vendor
+installations and licenses. Select the solver in
+`config/execution/Config_MOMF_T1_AB.yaml`.
+
+Verify an external solver before a production run:
+
+```powershell
 glpsol --version
-
-# For CBC
-cbc --version
-
-# For CPLEX
-cplex -c "quit"
-
-# For Gurobi
-gurobi_cl --version
+cbc -stop
 ```
 
-## DVC State (Optional and Legacy)
+Use the compile-only route when validating without a solver:
 
-`run.py` initializes `.dvc/` when it is absent and performs `dvc pull` only when a DVC
-remote is configured. It does **not** call `dvc repro`; A1/A2, A3, B1, and B2 are invoked
-directly as subprocesses.
+```powershell
+python -m ostram run --skip-pull --compile-only
+```
 
-The tracked `dvc.yaml` and `dvc.lock` are retained as historical/partial pipeline state.
-The lock contains older output names and does not represent the current 20-scenario
-inventory. Do not use `dvc repro` as a current execution recipe or rebuild the lock until
-data ownership and the canonical all-scenario command are defined.
+## DVC
 
-The `run.py --dvc-file` option currently resolves and prints the supplied path, but it
-does not select DVC stages or change what `dvc pull` retrieves.
+DVC is a package dependency and `dvc.yaml` uses only canonical package commands
+and workspace paths. The OSTRAM runner initializes local DVC metadata when
+needed and pulls only when a remote is configured. It does not use caller CWD
+to locate project data.
 
-## Launcher Side Effects
+```powershell
+dvc remote list
+python -m ostram run --skip-pull --compile-only
+```
 
-Before running `python run.py`, note that it can create or update a Conda environment,
-initialize DVC metadata, restore/materialize scenario workbooks through A3, compile B1
-inputs, and launch the solver in B2. For inspection-only or regression work, use the
-solver-free commands in {doc}`regression` instead.
+Generated DVC cache/tmp state and the central workspace are ignored. Maintained
+inputs, configuration, model files, and package resources remain tracked and
+must not be replaced with generated copies.

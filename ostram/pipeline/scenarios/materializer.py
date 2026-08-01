@@ -25,7 +25,6 @@ from . import apply_patches
 
 
 _PROJECT_PATHS = resolve_paths()
-T1_CONFECTION = _PROJECT_PATHS.preparation_workspace
 A1_OUTPUTS = _PROJECT_PATHS.a1_outputs
 A3_ENTRYPOINT = Path(__file__).with_name("transform.py")
 A3_PROCESS = Path(__file__).with_name("transformations")
@@ -41,7 +40,7 @@ REQUIRED_AO_FILES = (
 
 @dataclass(frozen=True)
 class MaterializationPaths:
-    t1_confection: Path
+    preparation_workspace: Path
     a1_outputs: Path
     a3_entrypoint: Path
     a3_process: Path
@@ -50,10 +49,9 @@ class MaterializationPaths:
     @classmethod
     def defaults(cls) -> "MaterializationPaths":
         paths = resolve_paths()
-        t1_confection = paths.preparation_workspace
         a3_process = Path(__file__).with_name("transformations")
         return cls(
-            t1_confection=t1_confection,
+            preparation_workspace=paths.preparation_workspace,
             a1_outputs=paths.a1_outputs,
             a3_entrypoint=Path(__file__).with_name("transform.py"),
             a3_process=a3_process,
@@ -177,7 +175,7 @@ def materialize_scenarios(
     )
     resolved_dependencies = active_registry.result_dependencies(
         roots,
-        t1_confection=resolve_paths().execution_workspace,
+        execution_workspace=resolve_paths().execution_workspace,
         environment=process_environment,
     )
     process_environment.update(

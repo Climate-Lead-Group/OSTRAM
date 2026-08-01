@@ -121,7 +121,7 @@ OUTPUT
 
 USAGE
 -----
-    # From the t1_confection directory:
+    # From the explicit scenario workspace:
     python add_max_cap_investment_lid_rule.py
 
     # Override defaults:
@@ -149,6 +149,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+from ostram.paths import resolve_paths
 from openpyxl import load_workbook
 
 try:
@@ -167,7 +168,7 @@ except ImportError:
 DEFAULT_TARGET_SHEETS = ["Secondary Techs"]
 PARAM_FILE_NAME = "A-O_Parametrization.xlsx"
 
-# Optional YAML override. The orchestrator (A3_process.py) detects this
+# Optional YAML override. The scenario orchestrator detects this
 # constant and stages the matching YAML from rules_scripts/configs/<scenario>/
 # alongside this script when the scenario provides one. When present, its
 # values override the module-level constants below for the lifetime of this
@@ -1432,8 +1433,7 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
     generation_techs = None
     tech_types_path = None
     if RESTRICT_TO_GENERATION:
-        script_dir = Path(__file__).resolve().parent
-        tech_types_path = script_dir.parent / TECH_TYPES_FILE
+        tech_types_path = resolve_paths().scenario_config_root / "technology_types.csv"
         generation_techs = load_generation_techs(tech_types_path)
 
     # Load the per-cr demand multipliers (from the input dir).

@@ -14,16 +14,8 @@ Validations:
                      where max_activity = max_capacity × AvailabilityFactor × CapacityToActivityUnit × Σ(CF·YS)
                      => ActivityLowerLimit(y) = max_activity(y) * 0.99
 
-Usage:
-    # Standalone CLI
-    python t1_confection/B1b_Pre_solver_validation.py --scenario BAU
-    python t1_confection/B1b_Pre_solver_validation.py --scenario BAU --report-only
-    python t1_confection/B1b_Pre_solver_validation.py --scenario BAU --auto-fix-all
-    python t1_confection/B1b_Pre_solver_validation.py --xlsx path/to/A-O_Parametrization.xlsx
-
-    # Imported from B1_Compiler.py
-    from B1b_Pre_solver_validation import run as pre_solver_validate
-    any_fix, abort = pre_solver_validate(scenario, xlsx_path, interactive=True)
+Invoke through the package transformation pipeline; ``--xlsx`` remains
+available for focused validation of a materialized workbook.
 """
 import argparse
 import csv
@@ -35,22 +27,19 @@ from datetime import datetime
 from pathlib import Path
 
 import openpyxl
-from ostram._legacy_import import load_file_module
-
-_validation_core = load_file_module(
-    "_ostram_stage11_xlsx_validation_core",
-    Path(__file__).resolve().with_name("_xlsx_validation_core.py"),
+from ostram.paths import resolve_paths
+from .xlsx_validation import (
+    ACT_LOWER_HAIRCUT,
+    ACT_LOWER_PARAM,
+    AF_PARAM,
+    MAX_MULTIPLIER,
+    consistency_sweep,
+    index_target_sheet,
+    load_capacity_to_activity_unit,
+    load_operational_life,
+    load_yearsplit,
+    validate_activity_lower_limit,
 )
-AF_PARAM = _validation_core.AF_PARAM
-ACT_LOWER_PARAM = _validation_core.ACT_LOWER_PARAM
-ACT_LOWER_HAIRCUT = _validation_core.ACT_LOWER_HAIRCUT
-MAX_MULTIPLIER = _validation_core.MAX_MULTIPLIER
-consistency_sweep = _validation_core.consistency_sweep
-index_target_sheet = _validation_core.index_target_sheet
-load_capacity_to_activity_unit = _validation_core.load_capacity_to_activity_unit
-load_operational_life = _validation_core.load_operational_life
-load_yearsplit = _validation_core.load_yearsplit
-validate_activity_lower_limit = _validation_core.validate_activity_lower_limit
 
 TARGET_SHEETS = ("Secondary Techs", "Demand Techs")
 
@@ -60,12 +49,12 @@ TARGET_SHEETS = ("Secondary Techs", "Demand Techs")
 # -------------------------------------------------------------------
 def default_xlsx_for_scenario(scenario):
     """Return the conventional path for A-O_Parametrization.xlsx of a scenario."""
-    return Path(__file__).parent / "A1_Outputs" / f"A1_Outputs_{scenario}" / "A-O_Parametrization.xlsx"
+    return resolve_paths().a1_outputs / f"A1_Outputs_{scenario}" / "A-O_Parametrization.xlsx"
 
 
 def read_base_year_from_config():
     """Best-effort: read base_year from Config_MOMF_T1_A.yaml. Returns int or None."""
-    cfg = Path(__file__).parent / "Config_MOMF_T1_A.yaml"
+    cfg = resolve_paths().compilation_config
     if not cfg.exists():
         return None
     try:
@@ -197,7 +186,7 @@ def _proj_mode_col(workbook_sheet_ctx, sheet_name):
 # CSV report
 # -------------------------------------------------------------------
 def _write_report(scenario, all_records, applied_groups):
-    out_dir = Path(__file__).parent / "Executables" / f"{scenario}_0"
+    out_dir = resolve_paths().executables / f"{scenario}_0"
     out_dir.mkdir(parents=True, exist_ok=True)
     out = out_dir / "_validation_report.csv"
     fieldnames = [

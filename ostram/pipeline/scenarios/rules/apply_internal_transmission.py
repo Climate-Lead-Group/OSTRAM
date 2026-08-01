@@ -141,7 +141,7 @@ def resolve_config(explicit: Path | None) -> Path:
     env = os.environ.get("OSTRAM_CONFIG_PATH")
     if env:
         candidates.append(Path(env))
-    # rules_scripts/ -> A3_process/ -> t1_confection/Config_country_codes.yaml
+    # Package rule module -> project preparation configuration.
     candidates.append(Path(__file__).resolve().parent.parent.parent / CONFIG_NAME)
     for c in candidates:
         if c and c.is_file():

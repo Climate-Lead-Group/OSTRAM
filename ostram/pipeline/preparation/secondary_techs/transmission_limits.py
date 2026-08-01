@@ -9,8 +9,7 @@ and writes Lower/Upper activity limits into Secondary_Techs_Editor.xlsx.
 - Years 2023-2025: actual flow data
 - Years 2026-2050: flat projection from 2025 value
 
-Usage:
-    python t1_confection/D1b_set_trn_limits_from_flows.py
+Invoked as part of ``python -m ostram run``.
 
 Author: Climate Lead Group, Andrey Salazar-Vargas
 """

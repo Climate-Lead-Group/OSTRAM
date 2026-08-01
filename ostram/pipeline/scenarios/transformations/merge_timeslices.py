@@ -40,14 +40,14 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 # USER CONFIGURATION
 # =============================================================================
 
-WORK_DIR = str(Path(__file__).resolve().parent)  # auto-detect (was hardcoded for Spyder)
+WORK_DIR = str(Path(os.environ["OSTRAM_STAGE_WORKDIR"]).resolve())
 
 # The A3 orchestrator materializes the selected scenario from the maintained
 # v18 workbook and supplies that disposable template explicitly.
 TEMPLATE_PATH = os.environ.get("OSTRAM_TEMPLATE_PATH")
 if not TEMPLATE_PATH:
     raise RuntimeError(
-        "OSTRAM_TEMPLATE_PATH is required; run this stage through A3_process.py"
+        "OSTRAM_TEMPLATE_PATH is required; run through python -m ostram transform"
     )
 TIMESLICE_FILE = WORK_DIR + "/OSTRAM_Timeslice_Inputs.xlsx"
 WV_FILE        = WORK_DIR + "/SOASIA_OSeMOSYS_WV.xlsx"

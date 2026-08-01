@@ -1,7 +1,7 @@
 """Behavior-preserving planning and effect sequencing for Stage A3.
 
-The public command remains ``t1_confection/A3_process.py``.  This module owns
-only orchestration: path/scenario planning, snapshot restoration, ordered stage
+The public command is ``python -m ostram transform``. This module owns only
+orchestration: path/scenario planning, snapshot restoration, ordered stage
 dispatch, delivery, and the predecessor cleanup boundary.  Workbook and model
 transformations remain in their existing helpers and are supplied explicitly
 through :class:`A3Dependencies`.
@@ -22,21 +22,11 @@ PWR_MIN_PIN_ROOT_SCENARIOS = frozenset(
 
 @dataclass(frozen=True)
 class A3Paths:
-    """Script-anchored filesystem roots used by one A3 invocation."""
+    """Resolved filesystem roots used by one A3 invocation."""
 
-    t1_confection: Path
+    preparation_workspace: Path
     process_dir: Path
     default_soasia: Path
-
-    @classmethod
-    def from_entrypoint(cls, entrypoint: str | Path) -> "A3Paths":
-        t1_confection = Path(entrypoint).resolve().parent
-        process_dir = t1_confection / "A3_process"
-        return cls(
-            t1_confection=t1_confection,
-            process_dir=process_dir,
-            default_soasia=process_dir / "OSTRAM_Scenario_Inputs.xlsx",
-        )
 
 
 @dataclass(frozen=True)
@@ -116,7 +106,7 @@ def resolve_plan(
         input_dir = dependencies.resolve_path(cli_args.input_dir)
     else:
         input_dir = (
-            paths.t1_confection
+            paths.preparation_workspace
             / "A1_Outputs"
             / f"A1_Outputs_{scenario}"
         )
@@ -134,7 +124,7 @@ def resolve_plan(
         input_dir=input_dir,
         output_dir=output_dir,
         snapshot_dir=(
-            paths.t1_confection
+            paths.preparation_workspace
             / "A1_Outputs"
             / f"_post_a2_snapshot_{scenario}"
         ),

@@ -53,66 +53,66 @@
     {
       "name": "A_Calibrated_BAU_Clipped",
       "base_scenario": "A_Calibrated_BAU",
-      "patches": "A3_process/rules_scripts/configs/A_Calibrated_BAU_Clipped/patches.json"
+      "patches": "A_Calibrated_BAU_Clipped/patches.json"
     },
     {
       "name": "B_Opt_Clipped",
       "base_scenario": "B_Optimised_VRE",
-      "patches": "A3_process/rules_scripts/configs/B_Opt_Clipped/patches.json"
+      "patches": "B_Opt_Clipped/patches.json"
     },
     {
       "name": "B_Opt_DirBidir",
       "base_scenario": "B_Optimised_VRE",
-      "patches": "A3_process/rules_scripts/configs/B_Opt_DirBidir/patches.json",
-      "direction_overlay": "A3_process/rules_scripts/configs/B_Opt_DirBidir/set_interconnector_direction.yaml",
+      "patches": "B_Opt_DirBidir/patches.json",
+      "direction_overlay": "B_Opt_DirBidir/set_interconnector_direction.yaml",
       "direction_study_start_year": 2027
     },
     {
       "name": "B_Opt_DirContractual",
       "base_scenario": "B_Optimised_VRE",
-      "patches": "A3_process/rules_scripts/configs/B_Opt_DirContractual/patches.json",
-      "direction_overlay": "A3_process/rules_scripts/configs/B_Opt_DirContractual/set_interconnector_direction.yaml",
+      "patches": "B_Opt_DirContractual/patches.json",
+      "direction_overlay": "B_Opt_DirContractual/set_interconnector_direction.yaml",
       "direction_study_start_year": 2027
     },
     {
       "name": "B_Opt_IndiaCosts",
       "base_scenario": "B_Optimised_VRE",
-      "patches": "A3_process/rules_scripts/configs/B_Opt_IndiaCosts/patches.json"
+      "patches": "B_Opt_IndiaCosts/patches.json"
     },
     {
       "name": "B_Opt_IndiaCostsFuel",
       "base_scenario": "B_Optimised_VRE",
-      "patches": "A3_process/rules_scripts/configs/B_Opt_IndiaCostsFuel/patches.json"
+      "patches": "B_Opt_IndiaCostsFuel/patches.json"
     },
     {
       "name": "B_Opt_SolarCapex130",
       "base_scenario": "B_Optimised_VRE",
-      "patches": "A3_process/rules_scripts/configs/B_Opt_SolarCapex130/patches.json"
+      "patches": "B_Opt_SolarCapex130/patches.json"
     },
     {
       "name": "B_Opt_SolarCapexHi",
       "base_scenario": "B_Optimised_VRE",
-      "patches": "A3_process/rules_scripts/configs/B_Opt_SolarCapexHi/patches.json"
+      "patches": "B_Opt_SolarCapexHi/patches.json"
     },
     {
       "name": "B_Opt_SolarCapexSpike",
       "base_scenario": "B_Optimised_VRE",
-      "patches": "A3_process/rules_scripts/configs/B_Opt_SolarCapexSpike/patches.json"
+      "patches": "B_Opt_SolarCapexSpike/patches.json"
     },
     {
       "name": "B_Opt_TradeCap15",
       "base_scenario": "B_Optimised_VRE",
-      "patches": "A3_process/rules_scripts/configs/B_Opt_TradeCap15/patches.json"
+      "patches": "B_Opt_TradeCap15/patches.json"
     },
     {
       "name": "B_Opt_TxCap150",
       "base_scenario": "B_Optimised_VRE",
-      "patches": "A3_process/rules_scripts/configs/B_Opt_TxCap150/patches.json"
+      "patches": "B_Opt_TxCap150/patches.json"
     },
     {
       "name": "C_Target_VRE_Clipped",
       "base_scenario": "C_Target_VRE",
-      "patches": "A3_process/rules_scripts/configs/C_Target_VRE_Clipped/patches.json"
+      "patches": "C_Target_VRE_Clipped/patches.json"
     }
   ]
 }

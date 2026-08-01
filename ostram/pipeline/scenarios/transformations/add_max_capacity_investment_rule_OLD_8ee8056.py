@@ -47,7 +47,7 @@ OUTPUT
 
 USAGE
 -----
-    # From the t1_confection directory:
+    # From the explicit scenario workspace:
     python add_max_capacity_investment_rule.py
 
     # Override defaults:

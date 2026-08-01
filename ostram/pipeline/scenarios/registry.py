@@ -17,7 +17,6 @@ from typing import Iterable, Mapping, Sequence
 from ostram.paths import resolve_paths
 
 _PROJECT_PATHS = resolve_paths()
-T1_CONFECTION = _PROJECT_PATHS.execution_workspace
 DEFAULT_REGISTRY = _PROJECT_PATHS.scenario_registry
 
 SUPPORT_SCENARIOS = ("BAU",)
@@ -146,12 +145,17 @@ class ScenarioRegistry:
         self,
         roots: Iterable[str],
         *,
-        t1_confection: Path = T1_CONFECTION,
+        execution_workspace: Path | None = None,
         environment: Mapping[str, str] | None = None,
     ) -> dict[str, Path]:
         """Resolve declared result dependencies without changing their source."""
 
         environ = os.environ if environment is None else environment
+        workspace = (
+            resolve_paths().execution_workspace
+            if execution_workspace is None
+            else execution_workspace
+        )
         resolved: dict[str, Path] = {}
         roots_by_name = self.roots_by_name
         for root_name in roots:
@@ -161,7 +165,7 @@ class ScenarioRegistry:
                 path = (
                     Path(override).expanduser().resolve()
                     if override
-                    else (t1_confection / dependency.default_path).resolve()
+                    else (workspace / dependency.default_path).resolve()
                 )
                 if not path.exists():
                     raise FileNotFoundError(
@@ -219,30 +223,14 @@ def load_registry(
     derived: list[DerivedScenario] = []
     for entry in raw.get("derived_scenarios", ()):
         overlay = entry.get("direction_overlay")
-        legacy_patches = (base / str(entry["patches"])).resolve()
-        project_patches = (
-            _PROJECT_PATHS.scenario_config_root
-            / str(entry["name"])
-            / Path(str(entry["patches"])).name
-        ).resolve()
-        legacy_overlay = (base / str(overlay)).resolve() if overlay else None
-        project_overlay = (
-            _PROJECT_PATHS.scenario_config_root
-            / str(entry["name"])
-            / Path(str(overlay)).name
-        ).resolve() if overlay else None
+        patches = (base / str(entry["patches"])).resolve()
+        direction_overlay = (base / str(overlay)).resolve() if overlay else None
         derived.append(
             DerivedScenario(
                 name=str(entry["name"]),
                 base_scenario=str(entry["base_scenario"]),
-                patches=(
-                    legacy_patches if legacy_patches.is_file() else project_patches
-                ),
-                direction_overlay=(
-                    legacy_overlay
-                    if legacy_overlay is not None and legacy_overlay.is_file()
-                    else project_overlay
-                ),
+                patches=patches,
+                direction_overlay=direction_overlay,
                 direction_study_start_year=entry.get(
                     "direction_study_start_year"
                 ),

@@ -716,8 +716,8 @@ def available_rules_scripts(a3_process_dir: Path | str | None = None) -> list[st
 def _cli_list_active(args) -> int:
     """Print active scenarios in topological order, one per line.
 
-    Used by run.py to discover the per-scenario loop without importing this
-    module inside its own Python (run.py orchestrates conda invocations).
+    Used by the canonical orchestration command to discover the per-scenario
+    loop without importing this module in a worker interpreter.
     Pass --soasia to point at a non-default v18 path; otherwise the default
     SOASIA next to this script is used.
     """
@@ -777,7 +777,7 @@ def topological_order(
 
 
 # =============================================================================
-# CLI entry point — used by run.py to enumerate active scenarios
+# Internal module entry point used by canonical orchestration.
 # =============================================================================
 
 if __name__ == "__main__":

@@ -73,6 +73,16 @@ def _fixture_update(events: list[tuple[object, ...]]):
     return update
 
 
+def _patch_fixture_paths(runner, fixture):
+    paths = runner.B1Paths(
+        script_dir=fixture.script_dir,
+        config_path=fixture.config,
+        compiler_path=fixture.compiler,
+        scenarios_root=fixture.scenario_root,
+    )
+    return mock.patch.object(runner.B1Paths, "defaults", return_value=paths)
+
+
 class B1ImportAndCliCharacterizationTests(unittest.TestCase):
     def test_import_is_silent_and_does_not_cross_process_or_file_boundaries(self) -> None:
         with (
@@ -93,12 +103,12 @@ class B1ImportAndCliCharacterizationTests(unittest.TestCase):
 
     def test_cli_defaults_and_explicit_filter_are_unchanged(self) -> None:
         runner = _implementation(_load_b1("cli_values"))
-        with mock.patch.object(sys, "argv", ["B1_Run_Compiler.py"]):
+        with mock.patch.object(sys, "argv", ["python -m ostram compile-inputs"]):
             defaults = runner.parse_cli_args()
         with mock.patch.object(
             sys,
             "argv",
-            ["B1_Run_Compiler.py", "--scenarios", " C , A, C "],
+            ["python -m ostram compile-inputs", "--scenarios", " C , A, C "],
         ):
             explicit = runner.parse_cli_args()
 
@@ -108,13 +118,18 @@ class B1ImportAndCliCharacterizationTests(unittest.TestCase):
     def test_public_wrapper_forwards_explicit_orchestration_seams(self) -> None:
         module = _load_b1("wrapper_forwarding")
         cli_args = argparse.Namespace(scenarios="A")
-        paths = module._impl.B1Paths.from_entrypoint(B1_ENTRYPOINT)
+        paths = module._impl.B1Paths(
+            script_dir=B1_ENTRYPOINT.parent,
+            config_path=B1_ENTRYPOINT.with_name("Config_MOMF_T1_A.yaml"),
+            compiler_path=B1_ENTRYPOINT.with_name("compiler.py"),
+            scenarios_root=B1_ENTRYPOINT.parent / "A1_Outputs",
+        )
 
         with (
             mock.patch.object(module, "parse_cli_args", return_value=cli_args) as parse,
             mock.patch.object(
                 module._impl.B1Paths,
-                "from_entrypoint",
+                "defaults",
                 return_value=paths,
             ) as resolve_paths,
             mock.patch.object(
@@ -125,7 +140,7 @@ class B1ImportAndCliCharacterizationTests(unittest.TestCase):
 
         self.assertIsNone(result)
         parse.assert_called_once_with()
-        resolve_paths.assert_called_once_with(module.__file__)
+        resolve_paths.assert_called_once_with()
         orchestrate.assert_called_once_with(
             cli_args,
             paths,
@@ -137,9 +152,9 @@ class B1ImportAndCliCharacterizationTests(unittest.TestCase):
     def test_help_unknown_option_and_missing_value_keep_argparse_exit_codes(self) -> None:
         runner = _implementation(_load_b1("cli_exits"))
         cases = (
-            (["B1_Run_Compiler.py", "--help"], 0),
-            (["B1_Run_Compiler.py", "--unknown"], 2),
-            (["B1_Run_Compiler.py", "--scenarios"], 2),
+            (["python -m ostram compile-inputs", "--help"], 0),
+            (["python -m ostram compile-inputs", "--unknown"], 2),
+            (["python -m ostram compile-inputs", "--scenarios"], 2),
         )
         for argv, expected in cases:
             with self.subTest(argv=argv):
@@ -183,7 +198,7 @@ class B1ScenarioCharacterizationTests(unittest.TestCase):
         with _b1_fixture("C", "A", "B") as fixture:
             events: list[tuple[object, ...]] = []
             with (
-                mock.patch.object(self.runner, "__file__", str(fixture.entrypoint)),
+                _patch_fixture_paths(self.runner, fixture),
                 mock.patch.object(
                     self.runner,
                     "parse_cli_args",
@@ -220,7 +235,7 @@ class B1ScenarioCharacterizationTests(unittest.TestCase):
                 path.write_text(f"scenario: {scenario}\n", encoding="utf-8")
 
             with (
-                mock.patch.object(self.runner, "__file__", str(fixture.entrypoint)),
+                _patch_fixture_paths(self.runner, fixture),
                 mock.patch.object(
                     self.runner,
                     "parse_cli_args",
@@ -239,7 +254,7 @@ class B1ScenarioCharacterizationTests(unittest.TestCase):
     def test_unknown_filter_preserves_unknown_order_and_duplicates_and_exits_one(self) -> None:
         with _b1_fixture("A", "B") as fixture:
             with (
-                mock.patch.object(self.runner, "__file__", str(fixture.entrypoint)),
+                _patch_fixture_paths(self.runner, fixture),
                 mock.patch.object(
                     self.runner,
                     "parse_cli_args",
@@ -264,7 +279,7 @@ class B1ScenarioCharacterizationTests(unittest.TestCase):
     def test_truthy_empty_filter_runs_nothing_but_still_backs_up_and_restores(self) -> None:
         with _b1_fixture("A", "B") as fixture:
             with (
-                mock.patch.object(self.runner, "__file__", str(fixture.entrypoint)),
+                _patch_fixture_paths(self.runner, fixture),
                 mock.patch.object(
                     self.runner,
                     "parse_cli_args",
@@ -288,7 +303,7 @@ class B1ScenarioCharacterizationTests(unittest.TestCase):
         with _b1_fixture("B", "A") as fixture:
             events: list[tuple[object, ...]] = []
             with (
-                mock.patch.object(self.runner, "__file__", str(fixture.entrypoint)),
+                _patch_fixture_paths(self.runner, fixture),
                 mock.patch.object(
                     self.runner,
                     "parse_cli_args",
@@ -311,7 +326,7 @@ class B1ScenarioCharacterizationTests(unittest.TestCase):
     def test_no_discovery_exits_zero_before_filter_validation_or_backup(self) -> None:
         with _b1_fixture() as fixture:
             with (
-                mock.patch.object(self.runner, "__file__", str(fixture.entrypoint)),
+                _patch_fixture_paths(self.runner, fixture),
                 mock.patch.object(
                     self.runner,
                     "parse_cli_args",
@@ -370,7 +385,7 @@ class B1CommandBoundaryCharacterizationTests(unittest.TestCase):
             with self.subTest(missing=missing), _b1_fixture("A") as fixture:
                 (fixture.config if missing == "config" else fixture.compiler).unlink()
                 with (
-                    mock.patch.object(self.runner, "__file__", str(fixture.entrypoint)),
+                    _patch_fixture_paths(self.runner, fixture),
                     mock.patch.object(
                         self.runner,
                         "parse_cli_args",
@@ -390,11 +405,15 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
     def setUp(self) -> None:
         self.runner = _implementation(_load_b1(self.id().rsplit(".", 1)[-1]))
 
-    def test_entrypoint_paths_are_resolved_once_and_explicit(self) -> None:
+    def test_explicit_paths_are_stored_without_caller_cwd_lookup(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
-            entrypoint = Path(temp) / "nested" / "runner.py"
-            expected_root = entrypoint.resolve().parent
-            paths = self.runner.B1Paths.from_entrypoint(entrypoint)
+            expected_root = (Path(temp) / "nested").resolve()
+            paths = self.runner.B1Paths(
+                script_dir=expected_root,
+                config_path=expected_root / "Config_MOMF_T1_A.yaml",
+                compiler_path=expected_root / "compiler.py",
+                scenarios_root=expected_root / "A1_Outputs",
+            )
 
         self.assertEqual(paths.script_dir, expected_root)
         self.assertEqual(paths.config_path, expected_root / "Config_MOMF_T1_A.yaml")
@@ -508,7 +527,7 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
         self.assertIn('script_dir / "compiler.py"', helper_source)
         self.assertIn("runner(list(command.argv), cwd=str(command.cwd))", helper_source)
         for forbidden in (
-            "B2_Executing_OG_Model.py",
+            "python -m ostram run",
             "main_executer",
             "glpsol",
             "gurobi_cl",
@@ -524,8 +543,18 @@ class B1ConfigurationAndFailureCharacterizationTests(unittest.TestCase):
 
     @contextmanager
     def _main_context(self, fixture, scenarios: str | None):
+        paths = self.runner.B1Paths(
+            script_dir=fixture.script_dir,
+            config_path=fixture.config,
+            compiler_path=fixture.compiler,
+            scenarios_root=fixture.scenario_root,
+        )
         with (
-            mock.patch.object(self.runner, "__file__", str(fixture.entrypoint)),
+            mock.patch.object(
+                self.runner.B1Paths,
+                "defaults",
+                return_value=paths,
+            ),
             mock.patch.object(
                 self.runner,
                 "parse_cli_args",

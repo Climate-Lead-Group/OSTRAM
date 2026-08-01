@@ -23,7 +23,7 @@ parse_cli_args = _impl.parse_cli_args
 def main() -> None:
     return _impl.orchestrate(
         parse_cli_args(),
-        _impl.B1Paths.from_entrypoint(__file__),
+        _impl.B1Paths.defaults(),
         scenario_discoverer=list_scenario_suffixes,
         scenario_updater=update_main_scenario,
         compiler_runner=run_compiler,
