@@ -174,6 +174,17 @@ def _event_names(events: list[tuple[object, ...]]) -> list[str]:
     return [str(event[0]) for event in events]
 
 
+def _tree_state(root: Path) -> tuple[tuple[str, str, bytes | None], ...]:
+    entries: list[tuple[str, str, bytes | None]] = []
+    for path in sorted(root.rglob("*"), key=lambda item: item.relative_to(root).as_posix()):
+        relative = path.relative_to(root).as_posix()
+        if path.is_dir():
+            entries.append((relative, "directory", None))
+        elif path.is_file():
+            entries.append((relative, "file", path.read_bytes()))
+    return tuple(entries)
+
+
 class ImportAndCliCharacterizationTests(unittest.TestCase):
     def test_import_has_no_process_or_pipeline_side_effects(self) -> None:
         with (
@@ -276,7 +287,6 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
                 "check_tool",
                 "create_env",
                 "ensure_deps",
-                "ensure_dvc",
                 "snapshot_exists",
             ],
         )
@@ -305,7 +315,10 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
             f"DVC config: {REPO_ROOT / 'config' / 'custom dvc.yaml'}",
             output,
         )
-        self.assertIn("Skipping `dvc pull` by request.", output)
+        self.assertIn(
+            "Skipping DVC repository setup and `dvc pull` by request.",
+            output,
+        )
 
     def test_default_environment_resolution_order(self) -> None:
         launcher = _load_launcher("env_defaults")
@@ -604,11 +617,126 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
             [],
         )
 
+    def test_skip_pull_actual_route_keeps_fresh_explicit_project_dvc_free(self) -> None:
+        import ostram.__main__ as canonical_cli
+
+        with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
+            fixture_root = Path(temp).resolve()
+            project_root = fixture_root / "fresh project"
+            external_workspace = fixture_root / "external workspace"
+            caller_cwd = fixture_root / "caller cwd"
+            invalid_project_root = fixture_root / "invalid environment project"
+            invalid_workspace = fixture_root / "invalid environment workspace"
+
+            for directory in (
+                project_root / ".git",
+                project_root / "ostram",
+                project_root / "inputs",
+                project_root / "config",
+                project_root / "model",
+                caller_cwd,
+            ):
+                directory.mkdir(parents=True, exist_ok=True)
+            (project_root / "ostram" / "__init__.py").write_text(
+                '"""Fresh project fixture."""\n',
+                encoding="utf-8",
+            )
+            (project_root / "environment.yaml").write_text(
+                "name: fixture-env\n",
+                encoding="utf-8",
+            )
+            (project_root / "dvc.yaml").write_text("stages: {}\n", encoding="utf-8")
+
+            self.assertFalse((project_root / ".dvc").exists())
+            self.assertFalse(external_workspace.exists())
+            project_before = _tree_state(project_root)
+
+            with mock.patch.dict(
+                os.environ,
+                {
+                    "OSTRAM_PROJECT_ROOT": str(project_root),
+                    "OSTRAM_WORKSPACE": str(external_workspace),
+                },
+                clear=False,
+            ):
+                launcher = _load_launcher("fresh_explicit_skip_pull")
+
+            with (
+                _working_directory(caller_cwd),
+                LauncherHarness(
+                    launcher,
+                    active_scenarios=("BAU",),
+                ) as harness,
+                mock.patch.dict(
+                    os.environ,
+                    {
+                        "OSTRAM_PROJECT_ROOT": str(invalid_project_root),
+                        "OSTRAM_WORKSPACE": str(invalid_workspace),
+                    },
+                    clear=False,
+                ),
+                mock.patch.object(
+                    canonical_cli,
+                    "_load_route_module",
+                    return_value=launcher,
+                ),
+                mock.patch.object(launcher.subprocess, "check_call") as check_call,
+                mock.patch.object(launcher.subprocess, "check_output") as check_output,
+                redirect_stdout(io.StringIO()) as stdout,
+            ):
+                result = canonical_cli.main(
+                    [
+                        "--project-root",
+                        str(project_root),
+                        "--workspace",
+                        str(external_workspace),
+                        "run",
+                        "--skip-pull",
+                        "--skip-b2",
+                        "--scenarios",
+                        "BAU",
+                    ]
+                )
+
+            self.assertEqual(result, 0)
+            self.assertNotIn("ensure_dvc", _event_names(harness.events))
+            self.assertNotIn("has_dvc_remote", _event_names(harness.events))
+            self.assertNotIn("dvc_command", _event_names(harness.events))
+            check_call.assert_not_called()
+            check_output.assert_not_called()
+
+            create_env = next(event for event in harness.events if event[0] == "create_env")
+            self.assertEqual(create_env[2], project_root / "environment.yaml")
+            snapshot = next(event for event in harness.events if event[0] == "snapshot_exists")
+            self.assertEqual(
+                snapshot[1],
+                external_workspace / "preparation" / "A1_Outputs",
+            )
+            self.assertEqual(
+                [event[0] for event in harness.events if event[0] in {"a3", "pipeline"}],
+                ["a3", "pipeline"],
+            )
+            self.assertEqual(
+                next(event for event in harness.events if event[0] == "a3")[2],
+                project_root / "ostram" / "pipeline" / "scenarios" / "materializer.py",
+            )
+            self.assertEqual(
+                next(event for event in harness.events if event[0] == "pipeline")[2],
+                project_root / "ostram" / "pipeline" / "compilation" / "runner.py",
+            )
+            self.assertIn(
+                "Skipping DVC repository setup and `dvc pull` by request.",
+                stdout.getvalue(),
+            )
+            self.assertEqual(_tree_state(project_root), project_before)
+            self.assertFalse((project_root / ".dvc").exists())
+            self.assertFalse(external_workspace.exists())
+
     def test_dvc_remote_check_and_pull_selection(self) -> None:
         launcher = _load_launcher("dvc_pull")
         for remote, expected_tail in (
-            (False, ["has_dvc_remote"]),
-            (True, ["has_dvc_remote", "dvc_command"]),
+            (False, ["ensure_dvc", "has_dvc_remote"]),
+            (True, ["ensure_dvc", "has_dvc_remote", "dvc_command"]),
         ):
             with self.subTest(remote=remote):
                 argv = ["python -m ostram run", "--skip-a3", "--skip-b1", "--skip-b2"]
@@ -621,7 +749,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                 dvc_events = [
                     name
                     for name in _event_names(harness.events)
-                    if name in {"has_dvc_remote", "dvc_command"}
+                    if name in {"ensure_dvc", "has_dvc_remote", "dvc_command"}
                 ]
                 self.assertEqual(dvc_events, expected_tail)
                 if remote:

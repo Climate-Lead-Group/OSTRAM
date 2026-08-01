@@ -63,9 +63,10 @@ python -m ostram run --skip-pull --compile-only
 ## DVC
 
 DVC is a package dependency and `dvc.yaml` uses only canonical package commands
-and workspace paths. The OSTRAM runner initializes local DVC metadata when
-needed and pulls only when a remote is configured. It does not use caller CWD
-to locate project data.
+and workspace paths. Without `--skip-pull`, the OSTRAM runner initializes local
+DVC metadata when needed and pulls only when a remote is configured. With
+`--skip-pull`, it performs neither DVC initialization nor a pull. It does not
+use caller CWD to locate project data.
 
 ```powershell
 dvc remote list

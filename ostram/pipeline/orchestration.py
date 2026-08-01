@@ -7,7 +7,8 @@ Author: Climate Lead Group, Andrey Salazar-Vargas
 Features:
 - Reuses the Conda environment if it already exists.
 - Installs missing dependencies into the existing environment.
-- Initializes the DVC repository if it does not exist.
+- Initializes the DVC repository if it does not exist unless `--skip-pull` is
+  selected.
 - Runs `dvc pull` only when a remote is configured.
 - If any required canonical root lacks a post-A2 snapshot, runs A1 + A2 as a
   combo first. Then materializes one exact registry-selected scenario set and
@@ -339,7 +340,11 @@ def parse_args(argv=None):
         default=DVC_FILE_DEFAULT,
         help="Path to dvc.yaml used for optional DVC pull checks.",
     )
-    parser.add_argument("--skip-pull", action="store_true", help="Skip `dvc pull` even if a DVC remote is configured.")
+    parser.add_argument(
+        "--skip-pull",
+        action="store_true",
+        help="Skip DVC repository setup and `dvc pull`.",
+    )
     parser.add_argument("--skip-a3", action="store_true", help="Skip A3 scenario materialization.")
     parser.add_argument("--skip-b1", action="store_true", help="Skip B1 input compilation.")
     parser.add_argument("--skip-b2", action="store_true", help="Skip B2 execution preparation.")
@@ -383,15 +388,16 @@ def main() -> None:
 
     create_env_if_missing(env_name, env_file)
     ensure_deps(env_name)
-    ensure_dvc_repo(env_name)
 
     if args.skip_pull:
-        print("Skipping `dvc pull` by request.")
-    elif has_dvc_remote(env_name):
-        print("Pulling DVC data...")
-        dvc_command(env_name, "pull")
+        print("Skipping DVC repository setup and `dvc pull` by request.")
     else:
-        print("No DVC remote configured. Skipping `dvc pull`.")
+        ensure_dvc_repo(env_name)
+        if has_dvc_remote(env_name):
+            print("Pulling DVC data...")
+            dvc_command(env_name, "pull")
+        else:
+            print("No DVC remote configured. Skipping `dvc pull`.")
 
     start_time = dt.datetime.now()
 
