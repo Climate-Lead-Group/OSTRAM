@@ -294,7 +294,7 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
             harness.events[-1],
             (
                 "snapshot_exists",
-                REPO_ROOT / "t1_confection" / "A1_Outputs",
+                REPO_ROOT / "workspace" / "preparation" / "A1_Outputs",
                 ("A", "B", "C"),
                 cwd,
             ),
@@ -405,9 +405,9 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                 ]
                 expected_names: list[str] = []
                 if not skip_b1:
-                    expected_names.append("B1_Run_Compiler.py")
+                    expected_names.append("runner.py")
                 if not skip_b2:
-                    expected_names.append("B2_Executing_OG_Model.py")
+                    expected_names.append("runner.py")
                 self.assertEqual(pipeline_names, expected_names)
 
     def test_a1_a2_snapshot_gate_is_independent_of_all_skip_flags(self) -> None:
@@ -421,7 +421,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
         ]
         for snapshot_exists, expected_scripts in (
             (True, []),
-            (False, ["A1_Pre_processing_OG_csvs.py", "A2_AddTx.py"]),
+            (False, ["base_inputs.py", "transmission.py"]),
         ):
             with self.subTest(snapshot_exists=snapshot_exists):
                 with (
@@ -630,7 +630,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
 
     def test_pipeline_failure_propagates_exactly_and_stops_later_stages(self) -> None:
         launcher = _load_launcher("failure_stop")
-        failure = ("A2_AddTx.py", 7)
+        failure = ("transmission.py", 7)
         with (
             LauncherHarness(
                 launcher, snapshot_exists=False, pipeline_failure=failure
@@ -644,7 +644,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
         self.assertEqual(raised.exception.returncode, 7)
         self.assertEqual(
             [event[2].name for event in harness.events if event[0] == "pipeline"],
-            ["A1_Pre_processing_OG_csvs.py", "A2_AddTx.py"],
+            ["base_inputs.py", "transmission.py"],
         )
         self.assertNotIn("enumerate_active", _event_names(harness.events))
 
@@ -679,19 +679,20 @@ class CommandBoundaryCharacterizationTests(unittest.TestCase):
         launcher = _load_launcher("command_strings")
         with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
             cwd = Path(temp).resolve()
-            pipeline_script = cwd / "t1_confection" / "B1_Run_Compiler.py"
-            pipeline_script.parent.mkdir()
+            pipeline_script = cwd / "ostram" / "pipeline" / "compilation" / "runner.py"
+            pipeline_script.parent.mkdir(parents=True)
             pipeline_script.write_text("# fixture only\n", encoding="utf-8")
-            a3_script = pipeline_script.with_name("A3_process.py")
+            a3_script = cwd / "ostram" / "pipeline" / "scenarios" / "materializer.py"
+            a3_script.parent.mkdir(parents=True)
             a3_script.write_text("# fixture only\n", encoding="utf-8")
             commands: list[tuple[list[str], Path, Path | None]] = []
 
             def record(command, *, cwd=None) -> None:
                 commands.append((list(command), Path.cwd(), cwd))
 
-            path_fixture = mock.Mock(
-                project_root=cwd,
-                legacy_runtime_root=cwd / "t1_confection",
+            path_fixture = mock.Mock(project_root=cwd)
+            path_fixture.stage_workspace.side_effect = (
+                lambda stage, create=False: cwd / "workspace" / stage
             )
 
             with (
@@ -715,24 +716,24 @@ class CommandBoundaryCharacterizationTests(unittest.TestCase):
                         sys.executable,
                         "-B",
                         "-m",
-                        "t1_confection.B1_Run_Compiler",
+                        "ostram.pipeline.compilation.runner",
                         "--scenarios",
                         "C,A",
                     ],
                     cwd,
-                    cwd / "t1_confection",
+                    cwd / "workspace" / "compilation",
                 ),
                 (
                     [
                         sys.executable,
                         "-B",
                         "-m",
-                        "t1_confection.A3_process",
+                        "ostram.pipeline.scenarios.materializer",
                         "--scenarios",
                         "Scenario A",
                     ],
                     cwd,
-                    cwd / "t1_confection",
+                    cwd / "workspace" / "scenarios",
                 ),
             ],
         )

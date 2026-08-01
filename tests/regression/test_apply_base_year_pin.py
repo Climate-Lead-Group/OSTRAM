@@ -16,12 +16,13 @@ from openpyxl import Workbook, load_workbook
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = (
     REPO_ROOT
-    / "t1_confection"
-    / "A3_process"
-    / "rules_scripts"
+    / "ostram"
+    / "pipeline"
+    / "scenarios"
+    / "rules"
     / "apply_base_year_pin.py"
 )
-PRODUCTION_RULES = SCRIPT.with_name("pwr_min_2023_2026_pin.csv")
+PRODUCTION_RULES = REPO_ROOT / "config" / "scenarios" / "rules" / "pwr_min_2023_2026_pin.csv"
 
 
 def _load_module():

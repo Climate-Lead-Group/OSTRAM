@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import os
+from importlib.resources import files
 from pathlib import Path
 import tempfile
 import unittest
 import uuid
 from unittest import mock
+
+import yaml
 
 from ostram import paths as path_module
 
@@ -100,6 +103,35 @@ class ProjectPathResolutionTests(unittest.TestCase):
             "package_resources",
         ):
             self.assertTrue(Path(str(record[key])).is_absolute(), key)
+
+    def test_migrated_package_resource_is_read_only_and_import_addressable(self) -> None:
+        resource = files("ostram").joinpath(
+            "resources", "compilation", "conversion_format.yaml"
+        )
+        text = resource.read_text(encoding="utf-8")
+        conversion_format = yaml.safe_load(text)
+        self.assertIsInstance(conversion_format, dict)
+        self.assertTrue(conversion_format)
+        self.assertIn("AccumulatedAnnualDemand", conversion_format)
+        accumulated_annual_demand = conversion_format["AccumulatedAnnualDemand"]
+        self.assertEqual(
+            accumulated_annual_demand,
+            {
+                "indices": ["REGION", "FUEL", "YEAR"],
+                "type": "param",
+                "dtype": "float",
+                "default": 0,
+            },
+        )
+        resolved = path_module.resolve_paths(project_root=REPO_ROOT, environ={})
+        self.assertEqual(
+            resolved.compilation_resources / "conversion_format.yaml",
+            REPO_ROOT
+            / "ostram"
+            / "resources"
+            / "compilation"
+            / "conversion_format.yaml",
+        )
 
 
 if __name__ == "__main__":

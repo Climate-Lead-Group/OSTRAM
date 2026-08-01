@@ -13,5 +13,5 @@ py-modules = ["run"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["ostram*", "t1_confection*"]
+include = ["ostram*"]
 namespaces = true

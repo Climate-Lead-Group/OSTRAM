@@ -34,13 +34,13 @@ ROUTES = {
         exit_policy="run-guard",
     ),
     "transform": Route(
-        module_name="t1_confection.A3_process",
+        module_name="ostram.pipeline.scenarios.transform",
         program="A3_process.py",
         help="Run the established A3 transformation for one scenario.",
         exit_policy="main-result",
     ),
     "compile-inputs": Route(
-        module_name="t1_confection.B1_Run_Compiler",
+        module_name="ostram.pipeline.compilation.runner",
         program="B1_Run_Compiler.py",
         help="Run the established B1 multi-scenario compiler runner.",
         exit_policy="natural-zero",

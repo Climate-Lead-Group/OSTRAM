@@ -37,8 +37,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+from ostram.pipeline.execution.patches import strip_storage as ss
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_STRIP_SCRIPT = REPO_ROOT / "t1_confection" / "strip_storage.py"
+DEFAULT_STRIP_SCRIPT = (
+    REPO_ROOT / "ostram" / "pipeline" / "execution" / "patches" / "strip_storage.py"
+)
 
 
 def count_param_block_rows(lines, param_name, key_col_1indexed, key_set):
@@ -102,9 +106,8 @@ def main():
     if not strip_path.exists():
         sys.exit(f"strip_storage.py not found at: {strip_path}")
 
-    # Import config + helpers from the strip script we're testing
-    sys.path.insert(0, str(strip_path.parent))
-    import strip_storage as ss
+    if strip_path.resolve() != DEFAULT_STRIP_SCRIPT.resolve():
+        sys.exit("--strip-script overrides are not supported by the package-layout gate")
 
     # Read input first so we know the YEAR set + initial STORAGE membership
     in_lines = ss.read_lines(in_path)
@@ -112,7 +115,7 @@ def main():
     _, _, in_storages = ss.find_storage_set(in_lines)
 
     # --- Run strip_storage.py as a subprocess ---
-    cmd = [sys.executable, str(strip_path), str(in_path),
+    cmd = [sys.executable, "-B", "-m", "ostram.pipeline.execution.patches.strip_storage", str(in_path),
            "-o", str(out_path), "--mode", args.mode]
     if args.targets:
         cmd += ["--targets", *args.targets]

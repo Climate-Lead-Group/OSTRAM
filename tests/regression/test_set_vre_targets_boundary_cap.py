@@ -11,14 +11,16 @@ from openpyxl import Workbook
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = (
     REPO_ROOT
-    / "t1_confection"
-    / "A3_process"
-    / "rules_scripts"
+    / "ostram"
+    / "pipeline"
+    / "scenarios"
+    / "rules"
     / "set_vre_targets.py"
 )
 PRODUCTION_CONFIG = (
-    SCRIPT.parent
-    / "configs"
+    REPO_ROOT
+    / "config"
+    / "scenarios"
     / "C_Target_VRE"
     / "set_vre_targets.yaml"
 )

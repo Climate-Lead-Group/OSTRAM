@@ -21,8 +21,8 @@ from unittest import mock
 
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
-B2_ENTRYPOINT = REPO_ROOT / "t1_confection" / "B2_Executing_OG_Model.py"
-B2_ORCHESTRATOR = REPO_ROOT / "t1_confection" / "b2_orchestrator.py"
+B2_ENTRYPOINT = REPO_ROOT / "ostram" / "pipeline" / "execution" / "runner.py"
+B2_ORCHESTRATOR = REPO_ROOT / "ostram" / "pipeline" / "execution" / "orchestrator.py"
 
 
 def _source() -> str:
@@ -68,7 +68,7 @@ def _function(tree: ast.Module, name: str) -> ast.FunctionDef:
 
 
 def _load_b2(label: str):
-    module_name = f"_ostram_b2_characterization_{label}"
+    module_name = f"ostram.pipeline.execution._characterization_{label}"
     spec = importlib.util.spec_from_file_location(module_name, B2_ENTRYPOINT)
     if spec is None or spec.loader is None:
         raise AssertionError(f"could not load module spec for {B2_ENTRYPOINT}")
@@ -105,10 +105,10 @@ def _load_b2_guard_as_callable(label: str):
     tree.body[guard_index] = callable_guard
     ast.fix_missing_locations(tree)
 
-    module_name = f"_ostram_b2_guard_characterization_{label}"
+    module_name = f"ostram.pipeline.execution._guard_characterization_{label}"
     module = types.ModuleType(module_name)
     module.__file__ = str(B2_ENTRYPOINT)
-    module.__package__ = ""
+    module.__package__ = "ostram.pipeline.execution"
     sys.modules[module_name] = module
     try:
         exec(compile(tree, str(B2_ENTRYPOINT), "exec"), module.__dict__)

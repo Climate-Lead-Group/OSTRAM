@@ -21,8 +21,8 @@ from pandas.testing import assert_frame_equal
 
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
-B1_COMPILER = REPO_ROOT / "t1_confection" / "B1_Compiler.py"
-TRANSFORM_PACKAGE = "t1_confection.a1_b1_transforms"
+B1_COMPILER = REPO_ROOT / "ostram" / "pipeline" / "compilation" / "compiler.py"
+TRANSFORM_PACKAGE = "ostram.pipeline.compilation.transforms"
 TRANSFORM_MODULES = (
     "planning",
     "tables",
@@ -430,118 +430,19 @@ class B1CandidateImportSafetyTests(unittest.TestCase):
         self.assertEqual(stderr.getvalue(), "")
         self.assertEqual(os.getcwd(), cwd_before)
 
-    def test_b1_import_node_resolves_fallback_in_direct_script_context(self) -> None:
+    def test_b1_import_node_uses_only_package_relative_transforms(self) -> None:
         import_nodes = [
             node
             for node in _tree().body
-            if isinstance(node, ast.Try)
-            and any(
-                isinstance(child, ast.ImportFrom)
-                and child.module is not None
-                and child.module.endswith("a1_b1_transforms")
-                for child in ast.walk(node)
-            )
+            if isinstance(node, ast.ImportFrom)
+            and node.level == 1
+            and node.module == "transforms"
         ]
-        self.assertEqual(len(import_nodes), 1)
-
-        module_prefixes = ("t1_confection", "a1_b1_transforms")
-        saved_modules = {
-            name: module
-            for name, module in list(sys.modules.items())
-            if any(
-                name == prefix or name.startswith(prefix + ".")
-                for prefix in module_prefixes
-            )
-        }
-        for name in saved_modules:
-            sys.modules.pop(name, None)
-
-        original_sys_path = sys.path.copy()
-        cwd_before = os.getcwd()
-        direct_script_root = REPO_ROOT / "t1_confection"
-
-        def is_workspace_path(entry: str) -> bool:
-            if entry == "":
-                resolved = Path.cwd().resolve()
-            else:
-                try:
-                    resolved = Path(entry).resolve()
-                except (OSError, RuntimeError):
-                    return False
-            return resolved == REPO_ROOT or REPO_ROOT in resolved.parents
-
-        external_paths = [
-            entry for entry in original_sys_path if not is_workspace_path(entry)
-        ]
-        isolated_sys_path = [str(direct_script_root), *external_paths]
-        stdout = io.StringIO()
-        stderr = io.StringIO()
-        patches = (
-            mock.patch.object(builtins, "open", side_effect=AssertionError("open")),
-            mock.patch.object(pd, "ExcelFile", side_effect=AssertionError("ExcelFile")),
-            mock.patch.object(
-                pd, "ExcelWriter", side_effect=AssertionError("ExcelWriter")
-            ),
-            mock.patch.object(pd, "read_csv", side_effect=AssertionError("read_csv")),
-            mock.patch.object(
-                pd.DataFrame, "to_excel", side_effect=AssertionError("to_excel")
-            ),
-            mock.patch.object(
-                pd.DataFrame, "to_csv", side_effect=AssertionError("to_csv")
-            ),
-            mock.patch.object(os, "makedirs", side_effect=AssertionError("makedirs")),
-            mock.patch.object(os, "chdir", side_effect=AssertionError("chdir")),
-            mock.patch.object(pickle, "load", side_effect=AssertionError("pickle")),
-            mock.patch.object(
-                subprocess, "run", side_effect=AssertionError("subprocess.run")
-            ),
-            mock.patch.object(
-                subprocess, "Popen", side_effect=AssertionError("subprocess.Popen")
-            ),
+        self.assertEqual(len(import_nodes), 5)
+        self.assertEqual(
+            [node.names[0].asname for node in import_nodes],
+            ["_delivery", "_effects", "_planning", "_tables", "_validation"],
         )
-        started: list[object] = []
-        namespace: dict[str, object] = {}
-        try:
-            sys.path[:] = isolated_sys_path
-            self.assertEqual(Path(sys.path[0]).resolve(), direct_script_root.resolve())
-            self.assertFalse(
-                any(
-                    (Path(entry).resolve() if entry else Path.cwd().resolve())
-                    == REPO_ROOT
-                    for entry in sys.path
-                )
-            )
-            for patcher in patches:
-                patcher.start()
-                started.append(patcher)
-            with redirect_stdout(stdout), redirect_stderr(stderr):
-                _execute_nodes(import_nodes, namespace)
-        finally:
-            for patcher in reversed(started):
-                patcher.stop()
-            sys.path[:] = original_sys_path
-            for name in list(sys.modules):
-                if any(
-                    name == prefix or name.startswith(prefix + ".")
-                    for prefix in module_prefixes
-                ):
-                    sys.modules.pop(name, None)
-            sys.modules.update(saved_modules)
-
-        for alias, module_name in (
-            ("_planning", "planning"),
-            ("_tables", "tables"),
-            ("_effects", "effects"),
-            ("_validation", "validation"),
-            ("_delivery", "delivery"),
-        ):
-            self.assertEqual(
-                namespace[alias].__name__, f"a1_b1_transforms.{module_name}"
-            )
-        self.assertEqual(stdout.getvalue(), "")
-        self.assertEqual(stderr.getvalue(), "")
-        self.assertEqual(os.getcwd(), cwd_before)
-        self.assertEqual(sys.path, original_sys_path)
 
 
 class B1CompilerExtractionContractTests(unittest.TestCase):
@@ -598,10 +499,10 @@ class B1CompilerExtractionContractTests(unittest.TestCase):
         aliases = {
             alias.asname
             for node in tree.body
-            if isinstance(node, ast.Try)
-            for branch_node in ast.walk(node)
-            if isinstance(branch_node, ast.ImportFrom)
-            for alias in branch_node.names
+            if isinstance(node, ast.ImportFrom)
+            and node.level == 1
+            and node.module == "transforms"
+            for alias in node.names
         }
         self.assertTrue(
             {"_planning", "_tables", "_effects", "_validation", "_delivery"}
@@ -763,7 +664,10 @@ class B1ConfigurationAndSourcePathCharacterizationTests(unittest.TestCase):
                     ),
                 ),
                 ("excel", "EXTRA/Emissions.xlsx"),
-                ("csv", os.path.join("OG_csvs_inputs", "EMISSION.csv")),
+                (
+                    "csv",
+                    str(REPO_ROOT / "inputs" / "osemosys_global" / "EMISSION.csv"),
+                ),
                 ("excel", "EXTRA/Storage.xlsx"),
             ],
         )
@@ -1249,8 +1153,8 @@ class B1OutputDeliveryCharacterizationTests(unittest.TestCase):
 
 class B1TransformProcessSafetyTests(unittest.TestCase):
     def test_compiler_source_has_no_b2_matrix_solver_or_process_boundary(self) -> None:
-        sources = {"B1_Compiler.py": _source()}
-        package_root = REPO_ROOT / "t1_confection" / "a1_b1_transforms"
+        sources = {"compiler.py": _source()}
+        package_root = REPO_ROOT / "ostram" / "pipeline" / "compilation" / "transforms"
         for module_name in ("__init__", *TRANSFORM_MODULES):
             path = package_root / f"{module_name}.py"
             sources[path.name] = path.read_text(encoding="utf-8")

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 import importlib.util
 import io
 import os
@@ -16,11 +17,11 @@ from unittest import mock
 
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
-B1_ENTRYPOINT = REPO_ROOT / "t1_confection" / "B1_Run_Compiler.py"
+B1_ENTRYPOINT = REPO_ROOT / "ostram" / "pipeline" / "compilation" / "runner.py"
 
 
 def _load_b1(label: str):
-    module_name = f"_ostram_b1_characterization_{label}"
+    module_name = f"ostram.pipeline.compilation._characterization_{label}"
     spec = importlib.util.spec_from_file_location(module_name, B1_ENTRYPOINT)
     if spec is None or spec.loader is None:
         raise AssertionError(f"could not load module spec for {B1_ENTRYPOINT}")
@@ -42,9 +43,9 @@ def _implementation(module):
 def _b1_fixture(*scenarios: str):
     with tempfile.TemporaryDirectory() as temp:
         script_dir = Path(temp).resolve()
-        entrypoint = script_dir / "B1_Run_Compiler.py"
+        entrypoint = script_dir / "runner.py"
         entrypoint.write_text("# fixture only\n", encoding="utf-8")
-        compiler = script_dir / "B1_Compiler.py"
+        compiler = script_dir / "compiler.py"
         compiler.write_text("# never executed\n", encoding="utf-8")
         config = script_dir / "Config_MOMF_T1_A.yaml"
         original = b"xtra_scen:\r\n  Main_Scenario: ORIGINAL\r\n"
@@ -348,7 +349,7 @@ class B1CommandBoundaryCharacterizationTests(unittest.TestCase):
 
             self.assertEqual(result, 7)
             process_run.assert_called_once_with(
-                [interpreter, "-B", "-m", "t1_confection.B1_Compiler"],
+                [interpreter, "-B", "-m", "ostram.pipeline.compilation.compiler"],
                 cwd=str(fixture.script_dir),
             )
             self.assertNotIn("env", process_run.call_args.kwargs)
@@ -391,13 +392,13 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
 
     def test_entrypoint_paths_are_resolved_once_and_explicit(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
-            entrypoint = Path(temp) / "nested" / "B1_Run_Compiler.py"
+            entrypoint = Path(temp) / "nested" / "runner.py"
             expected_root = entrypoint.resolve().parent
             paths = self.runner.B1Paths.from_entrypoint(entrypoint)
 
         self.assertEqual(paths.script_dir, expected_root)
         self.assertEqual(paths.config_path, expected_root / "Config_MOMF_T1_A.yaml")
-        self.assertEqual(paths.compiler_path, expected_root / "B1_Compiler.py")
+        self.assertEqual(paths.compiler_path, expected_root / "compiler.py")
         self.assertEqual(paths.scenarios_root, expected_root / "A1_Outputs")
 
     def test_scenario_resolution_is_pure_and_retains_diagnostics(self) -> None:
@@ -428,7 +429,7 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
         )
 
     def test_command_plan_and_injected_runner_are_separate(self) -> None:
-        compiler = Path("root") / "B1_Compiler.py"
+        compiler = Path("root") / "compiler.py"
         cwd = Path("root")
         command = self.runner.build_compiler_command(
             interpreter="chosen-python", compiler_path=compiler, cwd=cwd
@@ -445,7 +446,7 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
 
         self.assertEqual(
             command.argv,
-            ("chosen-python", "-B", "-m", "t1_confection.B1_Compiler"),
+            ("chosen-python", "-B", "-m", "ostram.pipeline.compilation.compiler"),
         )
         self.assertEqual(command.cwd, cwd.resolve())
         self.assertEqual(return_code, 6)
@@ -457,7 +458,7 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
                         "chosen-python",
                         "-B",
                         "-m",
-                        "t1_confection.B1_Compiler",
+                        "ostram.pipeline.compilation.compiler",
                     ],
                     str(cwd.resolve()),
                 )
@@ -499,12 +500,12 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
 
     def test_b1_production_path_has_only_the_compiler_process_boundary(self) -> None:
         wrapper_source = B1_ENTRYPOINT.read_text(encoding="utf-8-sig")
-        helper_source = (B1_ENTRYPOINT.parent / "b1_runner.py").read_text(
+        helper_source = (B1_ENTRYPOINT.parent / "orchestrator.py").read_text(
             encoding="utf-8-sig"
         )
         combined = wrapper_source + helper_source
 
-        self.assertIn('script_dir / "B1_Compiler.py"', helper_source)
+        self.assertIn('script_dir / "compiler.py"', helper_source)
         self.assertIn("runner(list(command.argv), cwd=str(command.cwd))", helper_source)
         for forbidden in (
             "B2_Executing_OG_Model.py",

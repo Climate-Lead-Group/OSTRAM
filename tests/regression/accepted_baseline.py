@@ -14,7 +14,7 @@ from typing import Any
 
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[1]
-INVENTORY_PATH = REPO_ROOT / "t1_confection" / "scenario_registry.json"
+INVENTORY_PATH = REPO_ROOT / "config" / "scenarios" / "registry.json"
 
 EXPECTED_ROOT_SCENARIOS = (
     "BAU",
@@ -39,13 +39,7 @@ EXPECTED_DECISION_SCENARIOS = (
     "C_Target_VRE",
     "C_Target_VRE_Clipped",
 )
-EXPECTED_IGNORE_RULES = (
-    "/t1_confection/A1_Outputs/",
-    "/t1_confection/A2_Output_Params/",
-    "/t1_confection/A2_Outputs_Params_otoole/",
-    "/t1_confection/Executables/",
-    "/t1_confection/Outputs/",
-)
+EXPECTED_IGNORE_RULES = ("/workspace/",)
 GOVERNED_MANIFEST_COLUMNS = (
     "Scenario",
     "AuthorityClass",
@@ -215,7 +209,8 @@ def validate_governed_output_files(
         )
         path = (
             output_root
-            / "t1_confection"
+            / "workspace"
+            / "execution"
             / "Executables"
             / f"{scenario}_0"
             / filename

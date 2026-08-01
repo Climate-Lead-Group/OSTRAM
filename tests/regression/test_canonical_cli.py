@@ -113,10 +113,10 @@ class CanonicalCliImportAndHelpTests(unittest.TestCase):
         package_names = ("ostram", "ostram.__main__")
         historical_names = (
             "run",
-            "t1_confection.A3_process",
-            "t1_confection.B1_Run_Compiler",
-            "t1_confection.B1_Compiler",
-            "t1_confection.B2_Executing_OG_Model",
+            "ostram.pipeline.scenarios.transform",
+            "ostram.pipeline.compilation.runner",
+            "ostram.pipeline.compilation.compiler",
+            "ostram.pipeline.execution.runner",
         )
         saved_packages = {
             name: sys.modules.pop(name)
@@ -358,12 +358,12 @@ class CanonicalCliDispatchTests(unittest.TestCase):
             {
                 "run": ("run", "run.py", "run-guard"),
                 "transform": (
-                    "t1_confection.A3_process",
+                    "ostram.pipeline.scenarios.transform",
                     "A3_process.py",
                     "main-result",
                 ),
                 "compile-inputs": (
-                    "t1_confection.B1_Run_Compiler",
+                    "ostram.pipeline.compilation.runner",
                     "B1_Run_Compiler.py",
                     "natural-zero",
                 ),
@@ -614,7 +614,7 @@ class CanonicalCliDispatchTests(unittest.TestCase):
         run_boundary.assert_called_once_with("conda")
 
         transform_module = importlib.import_module(
-            "t1_confection.A3_process"
+            "ostram.pipeline.scenarios.transform"
         )
         with mock.patch.object(
             transform_module._orchestrator,
@@ -630,7 +630,7 @@ class CanonicalCliDispatchTests(unittest.TestCase):
         self.assertFalse(transform_args.keep_workdir)
 
         compile_module = importlib.import_module(
-            "t1_confection.B1_Run_Compiler"
+            "ostram.pipeline.compilation.runner"
         )
         with mock.patch.object(
             compile_module._impl,

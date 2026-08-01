@@ -27,7 +27,7 @@ from typing import Sequence
 
 from ostram.paths import ProjectPaths, resolve_paths
 
-from t1_confection.scenario_registry import (
+from ostram.pipeline.scenarios.registry import (
     ensure_root_output_directories,
     load_registry,
     root_snapshots_exist,
@@ -38,13 +38,13 @@ ENV_NAME_DEFAULT = "OSTRAM-env"
 ENV_FILE_DEFAULT = "environment.yaml"
 DVC_FILE_DEFAULT = "dvc.yaml"
 _DEFAULT_PATHS = resolve_paths()
-T1_DIR = _DEFAULT_PATHS.legacy_runtime_root
-A1_SCRIPT_DEFAULT = T1_DIR / "A1_Pre_processing_OG_csvs.py"
-A2_SCRIPT_DEFAULT = T1_DIR / "A2_AddTx.py"
-A3_SCRIPT_DEFAULT = T1_DIR / "scenario_materializer.py"
-B1_SCRIPT_DEFAULT = T1_DIR / "B1_Run_Compiler.py"
-B2_SCRIPT_DEFAULT = T1_DIR / "B2_Executing_OG_Model.py"
-A1_OUTPUTS_DIR = T1_DIR / "A1_Outputs"
+PIPELINE_DIR = _DEFAULT_PATHS.package_root / "pipeline"
+A1_SCRIPT_DEFAULT = PIPELINE_DIR / "preparation" / "base_inputs.py"
+A2_SCRIPT_DEFAULT = PIPELINE_DIR / "preparation" / "transmission.py"
+A3_SCRIPT_DEFAULT = PIPELINE_DIR / "scenarios" / "materializer.py"
+B1_SCRIPT_DEFAULT = PIPELINE_DIR / "compilation" / "runner.py"
+B2_SCRIPT_DEFAULT = PIPELINE_DIR / "execution" / "runner.py"
+A1_OUTPUTS_DIR = _DEFAULT_PATHS.a1_outputs
 SNAPSHOT_PREFIX = "_post_a2_snapshot_"
 
 # Dependencies to check/install
@@ -252,10 +252,13 @@ def run_pipeline_script(
         raise FileNotFoundError(f"Pipeline script not found: {script_path}")
     arguments = shlex.split(extra_args) if isinstance(extra_args, str) else list(extra_args)
     module = _module_for_script(script_path, active_paths)
-    print(f"Running {module} from {active_paths.legacy_runtime_root}...")
+    relative = script_path.resolve().relative_to(active_paths.project_root)
+    stage = relative.parts[2] if len(relative.parts) > 2 else "pipeline"
+    stage_cwd = active_paths.stage_workspace(stage, create=True)
+    print(f"Running {module} from {stage_cwd}...")
     run(
         [sys.executable, "-B", "-m", module, *arguments],
-        cwd=active_paths.legacy_runtime_root,
+        cwd=stage_cwd,
     )
 
 
@@ -338,9 +341,9 @@ def parse_args(argv=None):
         help="Path to dvc.yaml used for optional DVC pull checks.",
     )
     parser.add_argument("--skip-pull", action="store_true", help="Skip `dvc pull` even if a DVC remote is configured.")
-    parser.add_argument("--skip-a3", action="store_true", help="Skip `t1_confection/A3_process.py` (pre-process A1 outputs).")
-    parser.add_argument("--skip-b1", action="store_true", help="Skip `t1_confection/B1_Run_Compiler.py`.")
-    parser.add_argument("--skip-b2", action="store_true", help="Skip `t1_confection/B2_Executing_OG_Model.py`.")
+    parser.add_argument("--skip-a3", action="store_true", help="Skip A3 scenario materialization.")
+    parser.add_argument("--skip-b1", action="store_true", help="Skip B1 input compilation.")
+    parser.add_argument("--skip-b2", action="store_true", help="Skip B2 execution preparation.")
     parser.add_argument(
         "--scenarios",
         default=None,
@@ -405,7 +408,7 @@ def main() -> None:
     # A1 + A2 are a combo: every requested root must have its own post-A2
     # snapshot. A1 creates only the four root output directories; A2 snapshots
     # only those roots.
-    a1_outputs_dir = paths.legacy_runtime_root / "A1_Outputs"
+    a1_outputs_dir = paths.a1_outputs
     if root_snapshots_exist(a1_outputs_dir, required_roots):
         print(
             f"All required post-A2 root snapshots exist in {A1_OUTPUTS_DIR}/: "
@@ -417,15 +420,15 @@ def main() -> None:
             f"{A1_OUTPUTS_DIR}/. Running A1 + A2 for the four roots."
         )
         ensure_root_output_directories(a1_outputs_dir, registry)
-        run_pipeline_script(env_name, paths.legacy_runtime_root / A1_SCRIPT_DEFAULT.name)
-        run_pipeline_script(env_name, paths.legacy_runtime_root / A2_SCRIPT_DEFAULT.name)
+        run_pipeline_script(env_name, A1_SCRIPT_DEFAULT)
+        run_pipeline_script(env_name, A2_SCRIPT_DEFAULT)
 
     if args.skip_a3:
         print("Skipping A3 pre-process stage by request.")
     else:
         run_a3_for_scenarios(
             env_name,
-            paths.legacy_runtime_root / A3_SCRIPT_DEFAULT.name,
+            A3_SCRIPT_DEFAULT,
             scenarios,
             args.a_result_seed,
         )
@@ -435,13 +438,13 @@ def main() -> None:
     if args.skip_b1:
         print("Skipping B1 compiler stage by request.")
     else:
-        run_pipeline_script(env_name, paths.legacy_runtime_root / B1_SCRIPT_DEFAULT.name, scenarios_arg)
+        run_pipeline_script(env_name, B1_SCRIPT_DEFAULT, scenarios_arg)
 
     if args.skip_b2:
         print("Skipping B2 execution stage by request.")
     else:
         b2_args = [*scenarios_arg, *( ["--compile-only"] if args.compile_only else [])]
-        run_pipeline_script(env_name, paths.legacy_runtime_root / B2_SCRIPT_DEFAULT.name, b2_args)
+        run_pipeline_script(env_name, B2_SCRIPT_DEFAULT, b2_args)
 
     end_time = dt.datetime.now()
     print(f"Pipeline completed in {format_duration(start_time, end_time)}.")

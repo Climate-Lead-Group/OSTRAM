@@ -22,12 +22,11 @@ from unittest import mock
 
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
-A3_ENTRYPOINT = REPO_ROOT / "t1_confection" / "A3_process.py"
-A3_ORCHESTRATOR = REPO_ROOT / "t1_confection" / "a3_orchestrator.py"
-SCENARIO_HELPER = REPO_ROOT / "t1_confection" / "A3_process" / "_scenarios.py"
-SCENARIO_REGISTRY = (
-    REPO_ROOT / "t1_confection" / "scenario_registry.json"
-)
+SCENARIO_PACKAGE = REPO_ROOT / "ostram" / "pipeline" / "scenarios"
+A3_ENTRYPOINT = SCENARIO_PACKAGE / "transform.py"
+A3_ORCHESTRATOR = SCENARIO_PACKAGE / "orchestrator.py"
+SCENARIO_HELPER = SCENARIO_PACKAGE / "transformations" / "scenario_workbooks.py"
+SCENARIO_REGISTRY = REPO_ROOT / "config" / "scenarios" / "registry.json"
 
 ACTIVE_SCENARIOS = (
     "BAU",
@@ -45,7 +44,12 @@ INPUT_FILES = (
 
 
 def _load_module(path: Path, label: str):
-    module_name = f"_ostram_a3_characterization_{label}"
+    parent = (
+        "ostram.pipeline.scenarios.transformations"
+        if path == SCENARIO_HELPER
+        else "ostram.pipeline.scenarios"
+    )
+    module_name = f"{parent}._characterization_{label}"
     spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
         raise AssertionError(f"could not load module spec for {path}")
@@ -292,6 +296,7 @@ class A3TraceHarness:
             mock.patch.object(module, "T1_CONFECTION", self.t1),
             mock.patch.object(module, "A3_PROCESS_DIR", self.process_dir),
             mock.patch.object(module, "RULES_SCRIPTS_DIR", self.rules_dir),
+            mock.patch.object(module, "A3_WORKSPACE", self.process_dir),
             mock.patch.object(module, "SOASIA_V18", self.soasia),
             mock.patch.object(
                 module,
@@ -360,38 +365,21 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
         self.assertEqual(stderr.getvalue(), "")
         self.assertTrue(callable(module.main))
 
-    def test_direct_script_import_fallback_is_silent_and_import_safe(self) -> None:
-        real_import = builtins.__import__
-
-        def without_namespace_package(name, globals=None, locals=None, fromlist=(), level=0):
-            if name == "t1_confection":
-                raise ModuleNotFoundError(
-                    "No module named 't1_confection'",
-                    name="t1_confection",
-                )
-            return real_import(name, globals, locals, fromlist, level)
-
-        sys.modules.pop("a3_orchestrator", None)
-        try:
-            with (
-                mock.patch.object(
-                    sys,
-                    "path",
-                    [str(A3_ENTRYPOINT.parent), *sys.path],
-                ),
-                mock.patch.object(builtins, "__import__", side_effect=without_namespace_package),
-                mock.patch.object(subprocess, "run") as process_run,
-                redirect_stdout(io.StringIO()) as stdout,
-                redirect_stderr(io.StringIO()) as stderr,
-            ):
-                module = _load_a3("direct_script_fallback")
-        finally:
-            sys.modules.pop("a3_orchestrator", None)
+    def test_package_relative_orchestrator_import_is_silent_and_import_safe(self) -> None:
+        with (
+            mock.patch.object(subprocess, "run") as process_run,
+            redirect_stdout(io.StringIO()) as stdout,
+            redirect_stderr(io.StringIO()) as stderr,
+        ):
+            module = _load_a3("package_relative_import")
 
         process_run.assert_not_called()
         self.assertEqual(stdout.getvalue(), "")
         self.assertEqual(stderr.getvalue(), "")
-        self.assertTrue(callable(module.main))
+        self.assertEqual(
+            module._orchestrator.__name__,
+            "ostram.pipeline.scenarios.orchestrator",
+        )
 
     def test_existing_callable_helper_surface_remains_available(self) -> None:
         module = _load_a3("callable_surface")
@@ -1008,6 +996,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                 with self.subTest(scenario=scenario):
                     with (
                         mock.patch.object(module, "RULES_SCRIPTS_DIR", rules_dir),
+                        mock.patch.object(module, "SCENARIO_RULE_DATA", rules_dir),
                         mock.patch.object(module, "banner"),
                         mock.patch.object(module, "run_subproc") as run_subproc,
                     ):

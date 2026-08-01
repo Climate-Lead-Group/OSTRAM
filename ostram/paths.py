@@ -40,10 +40,10 @@ def _layout_at(root: Path) -> str | None:
     )
     if not common:
         return None
-    if (root / "t1_confection").is_dir() and (root / "run.py").is_file():
-        return "legacy"
     if all((root / name).is_dir() for name in ("inputs", "config", "model")):
         return "project"
+    if (root / "t1_confection").is_dir() and (root / "run.py").is_file():
+        return "legacy"
     return None
 
 
@@ -112,6 +112,10 @@ class ProjectPaths:
 
     @property
     def legacy_runtime_root(self) -> Path:
+        """Stage 11 compatibility anchor; final-layout state lives in workspace."""
+
+        if self.layout == "project":
+            return self.workspace
         return (self.project_root / "t1_confection").resolve()
 
     @property
@@ -121,10 +125,28 @@ class ProjectPaths:
         return (self.legacy_runtime_root / "OG_csvs_inputs").resolve()
 
     @property
+    def osemosys_inputs(self) -> Path:
+        if self.layout == "project":
+            return (self.inputs_root / "osemosys_global").resolve()
+        return self.inputs_root
+
+    @property
     def preparation_inputs(self) -> Path:
         if self.layout == "project":
             return (self.inputs_root / "preparation").resolve()
         return (self.legacy_runtime_root / "A2_Extra_Inputs").resolve()
+
+    @property
+    def preparation_templates(self) -> Path:
+        if self.layout == "project":
+            return (self.preparation_inputs / "workbook_templates").resolve()
+        return (self.legacy_runtime_root / "Miscellaneous").resolve()
+
+    @property
+    def secondary_technology_inputs(self) -> Path:
+        if self.layout == "project":
+            return (self.preparation_inputs / "secondary_technologies").resolve()
+        return self.legacy_runtime_root
 
     @property
     def scenario_inputs(self) -> Path:
@@ -151,6 +173,12 @@ class ProjectPaths:
         return (self.legacy_runtime_root / "A3_process" / "rules_scripts").resolve()
 
     @property
+    def preparation_config(self) -> Path:
+        if self.layout == "project":
+            return (self.config_root / "preparation").resolve()
+        return self.config_root
+
+    @property
     def model_root(self) -> Path:
         if self.layout == "project":
             return (self.project_root / "model").resolve()
@@ -167,9 +195,21 @@ class ProjectPaths:
         return (self.legacy_runtime_root / "Miscellaneous" / "templates").resolve()
 
     @property
+    def compilation_resources(self) -> Path:
+        if self.layout == "project":
+            return (self.package_resources_root / "compilation").resolve()
+        return (self.legacy_runtime_root / "Miscellaneous").resolve()
+
+    @property
+    def preparation_resources(self) -> Path:
+        if self.layout == "project":
+            return (self.package_resources_root / "preparation").resolve()
+        return (self.legacy_runtime_root / "templates").resolve()
+
+    @property
     def scenario_registry(self) -> Path:
         if self.layout == "project":
-            return (self.config_root / "scenarios" / "scenario_registry.json").resolve()
+            return (self.config_root / "scenarios" / "registry.json").resolve()
         return (self.legacy_runtime_root / "scenario_registry.json").resolve()
 
     @property
@@ -191,6 +231,46 @@ class ProjectPaths:
         if self.layout == "project":
             return (self.config_root / "compilation" / "Config_MOMF_T1_A.yaml").resolve()
         return (self.config_root / "Config_MOMF_T1_A.yaml").resolve()
+
+    @property
+    def preparation_workspace(self) -> Path:
+        return self.stage_workspace("preparation")
+
+    @property
+    def a1_outputs(self) -> Path:
+        return (self.preparation_workspace / "A1_Outputs").resolve()
+
+    @property
+    def generated_extra_inputs(self) -> Path:
+        return (self.preparation_workspace / "extra_inputs").resolve()
+
+    @property
+    def scenarios_workspace(self) -> Path:
+        return self.stage_workspace("scenarios")
+
+    @property
+    def compilation_workspace(self) -> Path:
+        return self.stage_workspace("compilation")
+
+    @property
+    def compiled_parameters(self) -> Path:
+        return (self.compilation_workspace / "A2_Output_Params").resolve()
+
+    @property
+    def execution_workspace(self) -> Path:
+        return self.stage_workspace("execution")
+
+    @property
+    def otoole_outputs(self) -> Path:
+        return (self.execution_workspace / "A2_Outputs_Params_otoole").resolve()
+
+    @property
+    def executables(self) -> Path:
+        return (self.execution_workspace / "Executables").resolve()
+
+    @property
+    def outputs(self) -> Path:
+        return (self.execution_workspace / "Outputs").resolve()
 
     @property
     def environment_file(self) -> Path:
