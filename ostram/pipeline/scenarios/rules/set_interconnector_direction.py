@@ -54,6 +54,8 @@ from pathlib import Path
 import pandas as pd
 from openpyxl import load_workbook
 
+from ostram.paths import resolve_paths
+
 try:
     import yaml as _yaml
     def _load_yaml(path: Path) -> dict:
@@ -86,7 +88,7 @@ COL_BASE_VALUE_I = "Value.Fuel.I"
 COL_BASE_FUEL_O = "Fuel.O"
 COL_BASE_VALUE_O = "Value.Fuel.O"
 
-TECH_TYPES_FILE = "TECH_TYPES.csv"
+TECH_TYPES_FILE = "technology_types.csv"
 TECH_TYPES_CATEGORY_COL = "Technology (PWR)"
 TECH_TYPES_TECH_COL = "Technology"
 INTERCONNECTOR_CATEGORY = "INTERCONNECTORS"
@@ -128,7 +130,7 @@ def load_interconnector_techs(tech_types_path: Path) -> set:
     tech_types_path = Path(tech_types_path)
     if not tech_types_path.is_file():
         raise FileNotFoundError(
-            f"TECH_TYPES.csv not found at {tech_types_path}."
+            f"Authoritative technology taxonomy not found at {tech_types_path}."
         )
     df = pd.read_csv(tech_types_path)
     return set(
@@ -472,8 +474,7 @@ def run(input_dir, skip_backup: bool = False,
         print("No direction overrides configured -- nothing to do.")
         return {"skipped": True}
 
-    script_dir = Path(__file__).resolve().parent
-    tech_types_path = script_dir.parent / TECH_TYPES_FILE
+    tech_types_path = resolve_paths().scenario_config_root / TECH_TYPES_FILE
     trn_techs = load_interconnector_techs(tech_types_path)
 
     backup_dir = None if skip_backup else make_backup(input_dir)
