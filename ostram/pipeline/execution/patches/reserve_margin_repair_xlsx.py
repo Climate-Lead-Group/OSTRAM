@@ -8,10 +8,18 @@ values, by default 0 and 9999.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import os
 import sys
 from pathlib import Path
 
 from openpyxl import load_workbook
+
+from ostram.paths import (
+    WINDOWS_SAFE_ABSOLUTE_PATH_BUDGET,
+    WorkspacePathBudgetError,
+    windows_path_units,
+)
 
 from .reserve_margin_repair import (
     FLOW_PARAM,
@@ -29,6 +37,54 @@ from .reserve_margin_repair import (
     stock_flow_warnings,
     techs_with_any_min_investment,
 )
+
+
+_WARNING_PATH_DIGEST_LENGTH = 32
+_WARNING_PATH_PREFIX = "RMCarefulXLSX"
+
+
+def bounded_warnings_path(
+    desired_path: str | os.PathLike[str],
+    *,
+    budget: int = WINDOWS_SAFE_ABSOLUTE_PATH_BUDGET,
+) -> Path:
+    """Return the supplied warning path, compacting only long absolute names.
+
+    Relative paths remain relative so this ephemeral-output correction never
+    infers a workspace from the current working directory.  Long absolute
+    paths retain their supplied parent and use a digest of the complete desired
+    path to keep independently generated warning files distinct.
+    """
+
+    desired = Path(desired_path)
+    if budget <= 0:
+        raise ValueError(f"path budget must be positive, got {budget}")
+    if windows_path_units(desired) < budget:
+        return desired
+    if not desired.is_absolute():
+        raise WorkspacePathBudgetError(
+            "over-budget reserve-margin warning paths must be absolute; "
+            "refusing to infer an output root from the current working directory"
+        )
+
+    normalized = os.path.normcase(os.fspath(desired))
+    digest = hashlib.sha256(normalized.encode("utf-8")).hexdigest()[
+        :_WARNING_PATH_DIGEST_LENGTH
+    ]
+    compact_name = f"{_WARNING_PATH_PREFIX}_{digest}.warnings.txt"
+    compact = desired.with_name(compact_name)
+    compact_units = windows_path_units(compact)
+    if compact_units >= budget:
+        parent_units = windows_path_units(desired.parent)
+        available = budget - parent_units - 2
+        raise WorkspacePathBudgetError(
+            "reserve-margin warnings parent leaves no Windows-safe filename "
+            f"budget: parent={desired.parent!s} parent_length={parent_units} "
+            f"budget={budget} available_filename_units={max(0, available)} "
+            f"required_filename={compact_name!r}. The absolute warning path "
+            f"must be shorter than {budget} UTF-16 code units."
+        )
+    return compact
 
 
 def normalize_header(value: object) -> str:
@@ -222,7 +278,10 @@ def main() -> int:
             print(f"[WARN] {warning}", file=sys.stderr)
     if args.warnings_file:
         warning_text = "\n".join(warnings) + "\n" if warnings else "No warnings.\n"
-        Path(args.warnings_file).write_text(warning_text, encoding="utf-8")
+        bounded_warnings_path(args.warnings_file).write_text(
+            warning_text,
+            encoding="utf-8",
+        )
 
     print(f"Wrote patched datafile: {output_path}")
     print(f"Fallback workbook: {Path(args.fallback_xlsx)}")
