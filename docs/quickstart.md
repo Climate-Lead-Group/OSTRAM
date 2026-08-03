@@ -30,6 +30,17 @@ The equivalent environment variables are `OSTRAM_PROJECT_ROOT` and
 `OSTRAM_WORKSPACE`. Command-line values take precedence. All resolved paths are
 absolute, and the caller's current directory is never searched for resources.
 
+### Supported Windows locations
+
+Use a local, nonsynchronised location for both the project and workspace.
+Unicode and spaces are supported. Before a governed run, the final-output
+preflight must predict every final path at no more than 240 UTF-16 code units.
+
+Deeply nested roots, network-mounted roots, and cloud-synchronised roots,
+including OneDrive, are unsupported. If the preflight fails, choose a shorter
+local root. The application must not silently truncate final governed output
+names.
+
 ## 3. Run a solver-free preparation gate
 
 ```powershell
