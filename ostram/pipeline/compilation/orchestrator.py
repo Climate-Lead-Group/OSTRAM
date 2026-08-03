@@ -393,6 +393,10 @@ def orchestrate(
                     f"[ERROR] B1_Compiler.py exited with code {return_code} "
                     f"for scenario '{scenario}'"
                 )
+                raise subprocess.CalledProcessError(
+                    return_code,
+                    str(paths.compiler_path),
+                )
             else:
                 emit(
                     f"[INFO] B1_Compiler.py completed successfully for scenario "

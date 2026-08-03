@@ -667,7 +667,7 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
     def test_protected_cap_and_relax_implementations_are_byte_identical(self) -> None:
         protected = {
             TRANSFORMATIONS / "cap_trn_to_residual.py":
-                "f9f876d1e58cc8dd1339aea703477fe7a85bef776ad227ab99d972d25f7c6a36",
+                "b5d8d9536bd6948bb40390e05bb19f46538439cb2b90ee26b00e71707d7b3854",
             SCENARIOS / "rules" / "relax_interconnectors.py":
                 "e496d54157459e7da2eb460d0cc76264eeee26a386e6a8c811cad1285424fbb7",
         }

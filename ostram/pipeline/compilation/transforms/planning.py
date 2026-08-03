@@ -39,10 +39,12 @@ class TransformPlan:
         return self.other_setup_params
 
     def scenario_workbook(self, suffix_key: str) -> str:
-        """Return the predecessor's exact nested A1 scenario path formula."""
+        """Return the canonical nested A1 scenario workbook path."""
+        output_root = self.params["A1_outputs"]
+        scenario_prefix = os.path.basename(os.path.normpath(output_root))
         return os.path.join(
-            self.params["A1_outputs"],
-            self.params["A1_outputs"]
+            output_root,
+            scenario_prefix
             + "_"
             + self.params["xtra_scen"]["Main_Scenario"]
             + self.params[suffix_key],

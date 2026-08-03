@@ -343,31 +343,6 @@ df_SpecDemandProfile = pd.DataFrame( columns = Wide_Param_Header )
 #
 
 
-Projections = _effects.open_workbook(transform_plan.extra_input('Xtra_Proj'))
-Projections_sheet = normalize_year_like_columns(Projections.parse( Projections.sheet_names[0] )) # see all sheet names
-Projections_control = normalize_year_like_columns(Projections.parse( Projections.sheet_names[1] ))
-Projection_Driver_Vars = Projections_control[ 'Variable' ].tolist()
-Projection_Mode_per_Driver = Projections_control[ 'Projection Mode' ].tolist()
-for n in range( len( Projection_Driver_Vars ) ):
-    this_col_header = Projection_Driver_Vars[ n ]
-    if Projection_Mode_per_Driver[n] == params['inter_final_value']:
-        # Projections_sheet[ this_col_header ].interpolate(method ='linear', limit_direction ='forward', inplace = True)
-        Projections_sheet[this_col_header] = Projections_sheet[this_col_header].interpolate(
-            method='linear', limit_direction='forward'
-        )
-
-    if Projection_Mode_per_Driver[n] == params['flat']:
-        # Projections_sheet[ this_col_header ].interpolate(method ='linear', limit_direction ='forward', inplace = True)
-        Projections_sheet[this_col_header] = Projections_sheet[this_col_header].interpolate(
-            method='linear', limit_direction='forward'
-        )
-    if Projection_Mode_per_Driver[n] == params['flat_aft_last_year']:
-        # Projections_sheet[ this_col_header ].interpolate(method ='linear', limit_direction ='forward', inplace = True)
-        Projections_sheet[this_col_header] = Projections_sheet[this_col_header].interpolate(
-            method='linear', limit_direction='forward'
-        )
-
-
 #
 demand_headers = params['demand_headers']
 #
@@ -392,35 +367,18 @@ for s in range( len( param_sheets ) ):
             Fuels_techs_2_dems.update( { list_fuel_or_tech[i]:list_fuel_or_tech[Fuel_dem_index] } )
     #
     list_projection_mode = Demand_df[ 'Projection.Mode' ].tolist()
-    list_projection_param = Demand_df[ 'Projection.Parameter' ].tolist()
 
     for m in range( len( list_demand_or_share ) ):
-        # This is the case for *Passenger* transport:
         if params['gdp'] in list_projection_mode[m]:
-            this_tech = list_fuel_or_tech[m]
-            other_value_BY = 0
-            if params['joint'] in list_projection_mode[m]:
-                other_tech = list_projection_mode[m].split(' ')[-1]
-                other_tech_index = list_fuel_or_tech.index( other_tech )
-                other_value_BY = Demand_df.loc[ other_tech_index, params['initial_year_gdp'] ]
-            this_value_BY = Demand_df.loc[ m, params['initial_year_gdp'] ]
-            #
-            this_net_value_BY = this_value_BY + other_value_BY
-            #
-            demand_trajectory = [ this_net_value_BY ]
-            for y in range( len( Projections_sheet['Year'].tolist() ) ):
-    
-                if params['passenger'] in list_projection_param[m]:
-                    demand_trajectory.append( demand_trajectory[-1]*( 1 + Projections_sheet['e_Passenger'].tolist()[y]*Projections_sheet['Variation_GDP'].tolist()[y]/100 ) )
-                if params['freight_column'] in list_projection_param[m]:
-                    demand_trajectory.append( demand_trajectory[-1]*( 1 + Projections_sheet['e_Freight'].tolist()[y]*Projections_sheet['Variation_GDP'].tolist()[y]/100 ) )
-                Demand_df.loc[ m, Projections_sheet['Year'].tolist()[y] ] = round( demand_trajectory[-1]*( this_value_BY/( this_value_BY + other_value_BY ) ), 4 )
-            #
+            raise RuntimeError(
+                "legacy GDP demand projection mode is not supported by the "
+                "current explicit demand trajectories"
+            )
         #
         if 'Flat' == list_projection_mode[m]:                                               
             this_value_BY = Demand_df.loc[ m, params['initial_year'] ]
-            for y in range(len(Projections_sheet['Year'].tolist())):
-                Demand_df.loc[ m, Projections_sheet['Year'].tolist()[y] ] = round(this_value_BY, 4)
+            for year in time_range_vector:
+                Demand_df.loc[ m, str(year) ] = round(this_value_BY, 4)
         #
         # Appending to df_SpecAnnualDemand and df_SpecDemandProfile
         if Demand_df['Demand/Share'].tolist()[m] == 'Demand' and param_sheets[s] == 'Demand_Projection':
@@ -513,9 +471,6 @@ print('5 - Parameterize technologies.')
 # HERE WE HAVE A FUNCTIONING DEMAND *DF* // still have to add the wide format
 # ------------------------------------------------------------------------------
 # THIS SECTION ONLY PARAMETERIZES TECHNOLOGIES:
-
-Battery_Replacement = _effects.open_workbook(transform_plan.extra_input('Xtra_Battery'))
-Battery_Replacement_df = Battery_Replacement.parse( Battery_Replacement.sheet_names[0] ) # see all sheet names
 
 if params['Use_Transport']:
     Fleet = _effects.open_workbook(transform_plan.scenario_workbook('Print_Fleet'))
@@ -795,31 +750,10 @@ for s in range( len( param_sheets ) ):
                     # print( n, this_tech, ref_km )
                     
                     if type( ref_km ) == float or type( ref_km ) == int:
-                        #
-                        if params['freight'] not in this_group:
-                            this_km_list_change = Projections_sheet['Variation_km_Passenger'].tolist()
-                        else:
-                            this_km_list_change = Projections_sheet['Variation_km_Freight'].tolist()
-                        #
-                        this_km_list = [ ref_km ]
-                        for y in range( len( this_km_list_change ) ):
-                            this_km_list.append( round( this_km_list[-1]*( 1+this_km_list_change[y]/100 ), 4 ) ) # this should be added to a dataframe
-                        #
-                        Fleet_Groups_Distance.update( { this_tech:this_km_list } )
-                        #
-    
-                        if params['Gvkm'] in this_unit_target and ( params['veh'] in this_unit_introduced or params['relative'] in this_unit_introduced ): # this acts on the cost parameters
-    
-                            for y in range( len( time_range_vector ) ): # we employ a conversion of units
-                                this_df_new_2.loc[ n, time_range_vector[y] ] = round( 1000*this_df_new.loc[ n, time_range_vector[y] ]/this_km_list[y] , 4 )
-                            this_df_new_2.loc[ n, 'Unit.Introduced' ] = this_df_new.loc[ n, 'Unit' ]
-                        #
-                        if params['Gvkm'] in this_unit_target and params['vehs'] in this_unit_introduced: # this acts on the capacity parameters
-                            # print( 'got here' )
-                            for y in range( len( time_range_vector ) ): # we employ a conversion of units
-                                this_df_new_2.loc[ n, time_range_vector[y] ] = round( this_df_new.loc[ n, time_range_vector[y] ]*this_km_list[y]/(1e9), 4 )
-                            this_df_new_2.loc[ n, 'Unit.Introduced' ] = this_df_new.loc[ n, 'Unit' ]
-                        #
+                        raise RuntimeError(
+                            "legacy transport-distance projection mode is not "
+                            "supported by the current explicit trajectories"
+                        )
                     #
                 #
                 if this_param == 'TotalAnnualMaxCapacity' or this_param == 'TotalTechnologyAnnualActivityLowerLimit':

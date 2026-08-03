@@ -7,6 +7,7 @@ import itertools
 import json
 import multiprocessing
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -217,11 +218,15 @@ class GuardHarness:
         *,
         conversions: dict[str, bool] | None = None,
         solver_boundary=None,
+        stage_failures: dict[str, int] | None = None,
     ) -> None:
         self.module = module
         self.fixture = fixture
         self.conversions = {} if conversions is None else dict(conversions)
         self.solver_boundary = solver_boundary
+        self.stage_failures = (
+            {} if stage_failures is None else dict(stage_failures)
+        )
         self.events: list[tuple[object, ...]] = []
         self.params_seen: list[dict[str, object]] = []
         self.stdout = ""
@@ -254,6 +259,13 @@ class GuardHarness:
         def run(params, scenario_name) -> None:
             self._remember(params)
             self.events.append((name, scenario_name))
+            if name in self.stage_failures:
+                raise subprocess.CalledProcessError(
+                    self.stage_failures[name],
+                    f"fixture-{name}",
+                    output=f"{name} stdout",
+                    stderr=f"{name} stderr",
+                )
 
         return run
 
@@ -352,6 +364,44 @@ class B2ImportAndCliCharacterizationTests(unittest.TestCase):
         self.assertEqual(stdout.getvalue(), "")
         self.assertEqual(stderr.getvalue(), "")
         self.assertTrue(callable(module.main_executer))
+
+    def test_canonical_compile_only_patch_modules_import_from_external_cwd(
+        self,
+    ) -> None:
+        module_names = (
+            "ostram.pipeline.execution.preprocess",
+            "ostram.pipeline.execution.patches.days_in_day_type",
+            "ostram.pipeline.execution.patches.storage_delay",
+            "ostram.pipeline.execution.patches.open_pwrbck_caps",
+            "ostram.pipeline.execution.patches.reserve_margin_repair_xlsx",
+        )
+        import_script = (
+            "import importlib; "
+            f"names={module_names!r}; "
+            "[importlib.import_module(name) for name in names]; "
+            "print('\\n'.join(names))"
+        )
+        environment = os.environ.copy()
+        environment.pop("PYTHONPATH", None)
+        with tempfile.TemporaryDirectory() as temp:
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-X",
+                    "utf8",
+                    "-I",
+                    "-B",
+                    "-c",
+                    import_script,
+                ],
+                cwd=temp,
+                env=environment,
+                capture_output=True,
+                text=True,
+            )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(completed.stdout.splitlines(), list(module_names))
 
     def test_help_unknown_option_and_missing_value_keep_argparse_contract(self) -> None:
         cases = (
@@ -690,6 +740,95 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
                 harness.stdout,
             )
 
+    def test_required_patch_child_failure_propagates_before_all_success_boundaries(
+        self,
+    ) -> None:
+        runner_module = _load_b2("required_patch_child_exit")
+        child_result = SimpleNamespace(
+            returncode=7,
+            stdout="reserve child stdout",
+            stderr="reserve child stderr",
+        )
+        with (
+            mock.patch.object(
+                runner_module,
+                "_python_module_command",
+                return_value=[
+                    sys.executable,
+                    "-m",
+                    "ostram.pipeline.execution.patches.reserve_margin_repair_xlsx",
+                ],
+            ),
+            mock.patch.object(
+                runner_module,
+                "_run_stage_command",
+                return_value=child_result,
+            ),
+            redirect_stdout(io.StringIO()) as child_stdout,
+            redirect_stderr(io.StringIO()) as child_stderr,
+            self.assertRaises(subprocess.CalledProcessError) as child_failure,
+        ):
+            runner_module.run_reserve_margin_xlsx_patcher(
+                _base_params(reserve_margin_xlsx_active=True),
+                "A",
+            )
+
+        self.assertEqual(child_failure.exception.returncode, 7)
+        self.assertEqual(child_failure.exception.output, "reserve child stdout")
+        self.assertEqual(child_failure.exception.stderr, "reserve child stderr")
+        self.assertIn("exited with code 7", child_stdout.getvalue())
+        self.assertIn("reserve child stdout", child_stdout.getvalue())
+        self.assertIn("reserve child stderr", child_stderr.getvalue())
+
+        module = _load_b2_guard_as_callable("required_patch_failure")
+        with B2Fixture(
+            "A",
+            execute_model=True,
+            create_matrix=True,
+            concat_otoole_csv=True,
+            concat_scenarios_csv=True,
+        ) as fixture:
+            harness = GuardHarness(
+                module,
+                fixture,
+                stage_failures={"reserve_margin_xlsx": 7},
+                solver_boundary=lambda *_args: self.fail(
+                    "solver boundary followed a required patch failure"
+                ),
+            )
+            with self.assertRaises(subprocess.CalledProcessError) as raised:
+                harness.run(
+                    [
+                        "python -m ostram run",
+                        "--scenarios",
+                        "A",
+                        "--compile-only",
+                    ]
+                )
+
+            self.assertEqual(raised.exception.returncode, 7)
+            self.assertEqual(
+                [event[0] for event in harness.events],
+                [
+                    "process",
+                    "convert",
+                    "preprocess",
+                    "days",
+                    "storage_delay",
+                    "strip_storage",
+                    "open_pwrbck",
+                    "reserve_margin",
+                    "reserve_margin_xlsx",
+                ],
+            )
+            self.assertNotIn("combined", [event[0] for event in harness.events])
+            self.assertNotIn("export", [event[0] for event in harness.events])
+            self.assertNotIn(
+                "solver_boundary", [event[0] for event in harness.events]
+            )
+            self.assertNotIn("Compile-only gate complete", harness.stdout)
+            self.assertNotIn("Pipeline completed", harness.stdout)
+
     def test_unknowns_preserve_duplicates_and_abort_before_any_stage(self) -> None:
         module = _load_b2_guard_as_callable("unknown_scenarios")
         with B2Fixture("B", "Default", "A") as fixture:
@@ -807,6 +946,178 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
 
 
 class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
+    def test_b2_model_inputs_resolve_only_through_canonical_project_model_root(
+        self,
+    ) -> None:
+        module = _load_b2("canonical_model_inputs")
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            model_root = root / "project" / "model"
+            model_root.mkdir(parents=True)
+            (model_root / "storage.txt").write_text("storage\n", encoding="utf-8")
+            (model_root / "base.txt").write_text("base\n", encoding="utf-8")
+            absolute_model = root / "absolute-model.txt"
+            absolute_model.write_text("absolute\n", encoding="utf-8")
+            project_paths = SimpleNamespace(
+                model_root=model_root,
+                project_root=REPO_ROOT,
+                package_root=REPO_ROOT / "ostram",
+                executables=root / "external workspace" / "Executables",
+            )
+
+            cases = (
+                (
+                    "storage_delay_model_input",
+                    _base_params(
+                        storage_delay_active=True,
+                        storage_delay_model_input="storage.txt",
+                    ),
+                    model_root / "storage.txt",
+                ),
+                (
+                    "osemosys_model",
+                    _base_params(
+                        storage_delay_active=True,
+                        osemosys_model="base.txt",
+                    ),
+                    model_root / "base.txt",
+                ),
+                (
+                    "absolute",
+                    _base_params(
+                        storage_delay_active=True,
+                        storage_delay_model_input=str(absolute_model),
+                    ),
+                    absolute_model,
+                ),
+            )
+
+            with mock.patch.object(module, "resolve_paths", return_value=project_paths):
+                for label, params, expected in cases:
+                    with self.subTest(label=label):
+                        stage_runner = mock.Mock(
+                            return_value=SimpleNamespace(
+                                returncode=0,
+                                stdout="",
+                                stderr="",
+                            )
+                        )
+                        with mock.patch.object(
+                            module,
+                            "_run_stage_command",
+                            stage_runner,
+                        ):
+                            module.run_storage_delay_patcher(params, "A")
+
+                        command = stage_runner.call_args.args[0]
+                        resolved = command[command.index("--model-input") + 1]
+                        self.assertEqual(resolved, str(expected))
+                        self.assertNotEqual(
+                            Path(resolved).parent,
+                            B2_ENTRYPOINT.parent,
+                        )
+
+                missing = (model_root / "missing.txt").resolve()
+                missing_runner = mock.Mock()
+                with (
+                    mock.patch.object(
+                        module,
+                        "_run_stage_command",
+                        missing_runner,
+                    ),
+                    self.assertRaisesRegex(
+                        FileNotFoundError,
+                        re.escape(str(missing)),
+                    ),
+                ):
+                    module.run_storage_delay_patcher(
+                        _base_params(
+                            storage_delay_active=True,
+                            storage_delay_model_input="missing.txt",
+                        ),
+                        "A",
+                    )
+                missing_runner.assert_not_called()
+
+    def test_storage_delay_model_output_is_external_and_forwarded(self) -> None:
+        module = _load_b2("external_storage_delay_model")
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            project_root = REPO_ROOT
+            model_root = project_root / "model"
+            package_root = project_root / "ostram"
+            executables = root / "external Unicode workspace ✓" / "Executables"
+            executables.mkdir(parents=True)
+            maintained_model = model_root / "osemosys_fast_preprocessed.txt"
+            project_paths = SimpleNamespace(
+                project_root=project_root,
+                model_root=model_root,
+                package_root=package_root,
+                executables=executables,
+            )
+            params = _base_params(
+                executables=str(executables),
+                storage_delay_active=True,
+                storage_delay_model_input=str(maintained_model),
+                storage_delay_model_output=(
+                    package_root
+                    / "pipeline"
+                    / "execution"
+                    / "osemosys_fast_preprocessed_storage_delay.txt"
+                ),
+                open_pwrbck_active=True,
+                reserve_margin_xlsx_active=True,
+            )
+            stage_runner = mock.Mock(
+                return_value=SimpleNamespace(
+                    returncode=0,
+                    stdout="storage delay complete",
+                    stderr="",
+                )
+            )
+
+            with (
+                mock.patch.object(module, "resolve_paths", return_value=project_paths),
+                mock.patch.object(module, "_run_stage_command", stage_runner),
+            ):
+                module.run_storage_delay_patcher(params, "A_Calibrated_BAU")
+                module.run_open_pwrbck_patcher(params, "A_Calibrated_BAU")
+                module.run_reserve_margin_xlsx_patcher(
+                    params, "A_Calibrated_BAU"
+                )
+
+            storage_command, open_command, reserve_command = [
+                call.args[0] for call in stage_runner.call_args_list
+            ]
+            model_output = Path(
+                storage_command[storage_command.index("--model-output") + 1]
+            )
+            expected = (
+                executables
+                / "A_Calibrated_BAU_0"
+                / "osemosys_fast_preprocessed_storage_delay.txt"
+            ).resolve()
+            self.assertEqual(model_output, expected)
+            self.assertEqual(Path(params["osemosys_model"]), expected)
+            self.assertEqual(Path(params["storage_delay_model_output"]), expected)
+            with self.assertRaises(ValueError):
+                model_output.relative_to(package_root)
+            with self.assertRaises(ValueError):
+                model_output.relative_to(model_root)
+            self.assertEqual(
+                model_output.name,
+                "osemosys_fast_preprocessed_storage_delay.txt",
+            )
+            self.assertIn("open_pwrbck_caps", " ".join(open_command))
+            final_output = Path(
+                reserve_command[reserve_command.index("-o") + 1]
+            )
+            self.assertEqual(
+                final_output.name,
+                "Pre_processed_A_Calibrated_BAU_0_StorageDelayN5_"
+                "OpenBCK_RMCarefulXLSX.txt",
+            )
+
     def test_all_sixteen_execution_and_concatenation_combinations(self) -> None:
         for execute_model, create_matrix, concat_otoole, concat_scenarios in itertools.product(
             (False, True), repeat=4

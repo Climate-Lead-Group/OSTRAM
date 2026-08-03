@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import ast
 import importlib.util
 import io
@@ -12,6 +13,8 @@ from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from itertools import product
 from pathlib import Path
 from unittest import mock
+
+from ostram.pipeline.compilation import orchestrator as b1_orchestrator
 
 
 TEST_ROOT = Path(__file__).resolve().parent
@@ -775,6 +778,87 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
             ["base_inputs.py", "transmission.py"],
         )
         self.assertNotIn("enumerate_active", _event_names(harness.events))
+
+    def test_canonical_outer_route_propagates_b1_child_failure_and_skips_b2(
+        self,
+    ) -> None:
+        import ostram.__main__ as canonical_cli
+
+        launcher = _load_launcher("b1_child_failure")
+        with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
+            fixture_root = Path(temp).resolve()
+            workspace = fixture_root / "workspace"
+            script_dir = fixture_root / "compilation"
+            scenario_root = fixture_root / "A1_Outputs"
+            scenario_root.mkdir(parents=True)
+            (scenario_root / "A1_Outputs_A").mkdir()
+            script_dir.mkdir()
+            config = script_dir / "Config_MOMF_T1_A.yaml"
+            original_config = b"xtra_scen:\r\n  Main_Scenario: ORIGINAL\r\n"
+            config.write_bytes(original_config)
+            compiler = script_dir / "compiler.py"
+            compiler.write_text("# controlled compiler fixture\n", encoding="utf-8")
+            b1_paths = b1_orchestrator.B1Paths(
+                script_dir=script_dir,
+                config_path=config,
+                compiler_path=compiler,
+                scenarios_root=scenario_root,
+            )
+            stage_calls: list[Path] = []
+
+            def run_stage(_env_name, script, _extra_args=()):
+                stage_calls.append(script)
+                if script == launcher.B1_SCRIPT_DEFAULT:
+                    return b1_orchestrator.orchestrate(
+                        argparse.Namespace(scenarios="A"),
+                        b1_paths,
+                        compiler_runner=lambda _path: 1,
+                    )
+                raise AssertionError(f"B2 was called after B1 failed: {script}")
+
+            with (
+                LauncherHarness(
+                    launcher,
+                    active_scenarios=("A",),
+                ),
+                mock.patch.object(
+                    launcher,
+                    "run_pipeline_script",
+                    side_effect=run_stage,
+                ),
+                mock.patch.object(
+                    canonical_cli,
+                    "_load_route_module",
+                    return_value=launcher,
+                ),
+                redirect_stdout(io.StringIO()) as stdout,
+                redirect_stderr(io.StringIO()) as stderr,
+            ):
+                result = canonical_cli.main(
+                    [
+                        "--project-root",
+                        str(REPO_ROOT),
+                        "--workspace",
+                        str(workspace),
+                        "run",
+                        "--skip-pull",
+                        "--skip-a3",
+                        "--scenarios",
+                        "A",
+                    ]
+                )
+
+            self.assertEqual(result, 1)
+            self.assertEqual(stage_calls, [launcher.B1_SCRIPT_DEFAULT])
+            self.assertNotIn(launcher.B2_SCRIPT_DEFAULT, stage_calls)
+            self.assertIn(
+                "B1_Compiler.py exited with code 1 for scenario 'A'",
+                stdout.getvalue(),
+            )
+            self.assertNotIn("Pipeline completed", stdout.getvalue())
+            self.assertIn("Command failed (exit 1)", stderr.getvalue())
+            self.assertIn(str(compiler), stderr.getvalue())
+            self.assertEqual(config.read_bytes(), original_config)
 
 
 class CommandBoundaryCharacterizationTests(unittest.TestCase):

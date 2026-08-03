@@ -43,6 +43,58 @@ def _run_stage_command(command):
     )
 
 
+def _require_stage_success(result, command, stage_name, scenario_name):
+    """Propagate one required B2 child failure with its captured diagnostics."""
+    if result.returncode == 0:
+        return
+    print(
+        f"[ERROR] {stage_name} exited with code {result.returncode} "
+        f"for scenario '{scenario_name}'"
+    )
+    if result.stdout:
+        print(result.stdout)
+    if result.stderr:
+        print(result.stderr, file=sys.stderr)
+    raise subprocess.CalledProcessError(
+        result.returncode,
+        [str(token) for token in command],
+        output=result.stdout,
+        stderr=result.stderr,
+    )
+
+
+def _resolve_model_input_path(value):
+    """Resolve one B2 model input through the canonical project model root."""
+    path = Path(str(value)).expanduser()
+    resolved = (
+        path
+        if path.is_absolute()
+        else (resolve_paths().model_root / path).resolve()
+    )
+    if not resolved.is_file():
+        raise FileNotFoundError(f"B2 model input file not found: {resolved}")
+    return resolved
+
+
+def _resolve_storage_delay_model_output_path(value, scenario_name):
+    """Route the generated model to the canonical scenario execution workspace."""
+    project = resolve_paths()
+    filename = Path(str(value)).name
+    if not filename or filename in {".", ".."}:
+        raise ValueError(f"invalid storage-delay model output name: {value!r}")
+    resolved = (project.executables / f"{scenario_name}_0" / filename).resolve()
+    for protected_root in (project.package_root, project.model_root):
+        try:
+            resolved.relative_to(protected_root)
+        except ValueError:
+            continue
+        raise ValueError(
+            "storage-delay model output must remain outside maintained source "
+            f"directories: {resolved}"
+        )
+    return resolved
+
+
 def ensure_env_tool_paths():
     """Expose the active Python environment's executable folders to subprocesses."""
     env_root = Path(sys.executable).resolve().parent
@@ -212,16 +264,12 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
 
     # Step 4: Run the command
     result = _run_stage_command(command)
+    _require_stage_success(result, command, "otoole conversion", scenario_name)
 
     # Step 5: Handle output
-    if result.returncode != 0:
-        print(f"❌ Error converting scenario '{scenario_name}':\n{result.stderr}")
-        print('#------------------------------------------------------------------------------#')
-        return False
-    else:
-        print(f"✅ Scenario '{scenario_name}' converted successfully.\n{result.stdout}")
-        print('#------------------------------------------------------------------------------#')
-        return True
+    print(f"✅ Scenario '{scenario_name}' converted successfully.\n{result.stdout}")
+    print('#------------------------------------------------------------------------------#')
+    return True
 
 def run_days_in_day_type_patcher(params, scenario_name):
     """
@@ -245,10 +293,8 @@ def run_days_in_day_type_patcher(params, scenario_name):
     print(f"Patching DaysInDayType for '{scenario_name}_0':")
     print(' '.join(command))
     result = _run_stage_command(command)
-    if result.returncode != 0:
-        print(f"❌ DaysInDayType patcher failed for '{scenario_name}':\n{result.stderr}")
-    else:
-        print(result.stdout)
+    _require_stage_success(result, command, "DaysInDayType patcher", scenario_name)
+    print(result.stdout)
     print('#------------------------------------------------------------------------------#')
 
 def run_strip_storage_patcher(params, scenario_name):
@@ -296,10 +342,8 @@ def run_strip_storage_patcher(params, scenario_name):
     print(f"Stripping storage for '{scenario_name}_0' (mode={mode}, suffix={suffix}):")
     print(' '.join(command))
     result = _run_stage_command(command)
-    if result.returncode != 0:
-        print(f"❌ strip_storage patcher failed for '{scenario_name}':\n{result.stderr}")
-    else:
-        print(result.stdout)
+    _require_stage_success(result, command, "strip_storage patcher", scenario_name)
+    print(result.stdout)
     print('#------------------------------------------------------------------------------#')
 
 def run_storage_delay_patcher(params, scenario_name):
@@ -341,15 +385,19 @@ def run_storage_delay_patcher(params, scenario_name):
     in_file = os.path.join(params['executables'], scenario_name + '_0', f"{base}.txt")
     out_file = os.path.join(params['executables'], scenario_name + '_0', f"{base}_{suffix}.txt")
 
-    def _b2_local_path(value):
-        path = Path(value)
-        return str(path if path.is_absolute() else Path(here) / path)
-
-    model_input = _b2_local_path(
-        params.get('storage_delay_model_input', params['osemosys_model'])
+    model_input = str(
+        _resolve_model_input_path(
+            params.get('storage_delay_model_input', params['osemosys_model'])
+        )
     )
-    model_output = _b2_local_path(
-        params.get('storage_delay_model_output', 'osemosys_fast_preprocessed_storage_delay.txt')
+    model_output = str(
+        _resolve_storage_delay_model_output_path(
+            params.get(
+                'storage_delay_model_output',
+                'osemosys_fast_preprocessed_storage_delay.txt',
+            ),
+            scenario_name,
+        )
     )
 
     command = _python_module_command(
@@ -374,9 +422,9 @@ def run_storage_delay_patcher(params, scenario_name):
     print(f"Applying storage-delay patch for '{scenario_name}_0' (N={first_n_years}, suffix={suffix}):")
     print(' '.join(command))
     result = _run_stage_command(command)
-    if result.returncode != 0:
-        print(f"[ERROR] storage_delay patcher failed for '{scenario_name}':\n{result.stderr}")
-        raise RuntimeError(f"storage_delay patcher failed for '{scenario_name}'")
+    _require_stage_success(result, command, "storage_delay patcher", scenario_name)
+    params['storage_delay_model_output'] = model_output
+    params['osemosys_model'] = model_output
     print(result.stdout)
     if result.stderr:
         print(result.stderr)
@@ -440,10 +488,8 @@ def run_open_pwrbck_patcher(params, scenario_name):
     print(f"Opening PWRBCK caps for '{scenario_name}_0' (pattern={pattern}, value={value}):")
     print(' '.join(command))
     result = _run_stage_command(command)
-    if result.returncode != 0:
-        print(f"❌ open_pwrbck patcher failed for '{scenario_name}':\n{result.stderr}")
-    else:
-        print(result.stdout)
+    _require_stage_success(result, command, "open_pwrbck patcher", scenario_name)
+    print(result.stdout)
     print('#------------------------------------------------------------------------------#')
 
 def run_reserve_margin_repair_patcher(params, scenario_name):
@@ -520,10 +566,10 @@ def run_reserve_margin_repair_patcher(params, scenario_name):
     print(f"Repairing reserve margin data for '{scenario_name}_0' (suffix={suffix}):")
     print(' '.join(command))
     result = _run_stage_command(command)
-    if result.returncode != 0:
-        print(f"[ERROR] reserve_margin_repair patcher failed for '{scenario_name}':\n{result.stderr}")
-    else:
-        print(result.stdout)
+    _require_stage_success(
+        result, command, "reserve_margin_repair patcher", scenario_name
+    )
+    print(result.stdout)
     print('#------------------------------------------------------------------------------#')
 
 def run_reserve_margin_xlsx_patcher(params, scenario_name):
@@ -613,12 +659,12 @@ def run_reserve_margin_xlsx_patcher(params, scenario_name):
     print(f"Repairing reserve margin data from XLSX for '{scenario_name}_0' (suffix={suffix}):")
     print(' '.join(command))
     result = _run_stage_command(command)
-    if result.returncode != 0:
-        print(f"[ERROR] reserve_margin_xlsx patcher failed for '{scenario_name}':\n{result.stderr}")
-    else:
-        print(result.stdout)
-        if result.stderr:
-            print(result.stderr)
+    _require_stage_success(
+        result, command, "reserve_margin_xlsx patcher", scenario_name
+    )
+    print(result.stdout)
+    if result.stderr:
+        print(result.stderr)
     print('#------------------------------------------------------------------------------#')
 
 def run_preprocessing_script(params, scenario_name):
@@ -642,14 +688,11 @@ def run_preprocessing_script(params, scenario_name):
 
     # Step 3: Run the script
     result = _run_stage_command(command)
+    _require_stage_success(result, command, "preprocessing", scenario_name)
 
     # Step 4: Output result
-    if result.returncode != 0:
-        print(f"❌ Error during preprocessing of scenario '{scenario_name}':\n{result.stderr}")
-        print('#------------------------------------------------------------------------------#')
-    else:
-        print(f"✅ Preprocessing completed for scenario '{scenario_name}':\n{result.stdout}")
-        print('#------------------------------------------------------------------------------#')
+    print(f"✅ Preprocessing completed for scenario '{scenario_name}':\n{result.stdout}")
+    print('#------------------------------------------------------------------------------#')
 
 def check_enviro_variables(solver_command):
     ensure_env_tool_paths()

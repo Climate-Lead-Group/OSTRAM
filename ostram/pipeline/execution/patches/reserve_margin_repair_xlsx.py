@@ -13,7 +13,7 @@ from pathlib import Path
 
 from openpyxl import load_workbook
 
-from patch_reserve_margin_repair_careful import (
+from .reserve_margin_repair import (
     FLOW_PARAM,
     STOCK_PARAM,
     CapFallback,

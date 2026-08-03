@@ -51,13 +51,11 @@ Print_Fleet: /A-O_Fleet.xlsx
 Cali_Fleet: Calibration_Fleet
 Pickle_Fleet_Groups: /A-O_Fleet_Groups.pickle
 log_file_A1: /Log.txt
-Xtra_Proj: /A-Xtra_Projections.xlsx
 variable: Variable
 dem_slash_share: Demand/Share
 fuel_slash_tech: Fuel/Tech
 proj_mode: Projection.Mode
 proj_param: Projection.Parameter
-Xtra_Battery: /A-Xtra_Battery_Replacement.xlsx
 parameter: Parameter
 Xtra_Emi: /A-Xtra_Emissions.xlsx
 GHGs: GHGs

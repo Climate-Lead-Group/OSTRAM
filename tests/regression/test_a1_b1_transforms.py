@@ -619,8 +619,6 @@ class B1ConfigurationAndSourcePathCharacterizationTests(unittest.TestCase):
             "Print_Proj": "/Projection.xlsx",
             "Print_Demand": "/Demand.xlsx",
             "A2_extra_inputs": "EXTRA",
-            "Xtra_Proj": "/ExtraProjection.xlsx",
-            "Xtra_Battery": "/Battery.xlsx",
             "Print_Paramet": "/Parametrization.xlsx",
             "Xtra_Emi": "/Emissions.xlsx",
             "Use_OG_module": True,
@@ -636,8 +634,6 @@ class B1ConfigurationAndSourcePathCharacterizationTests(unittest.TestCase):
         effects.open_workbook(
             plan.scenario_workbook("Print_Demand"), factory=excel_file
         )
-        effects.open_workbook(plan.extra_input("Xtra_Proj"), factory=excel_file)
-        effects.open_workbook(plan.extra_input("Xtra_Battery"), factory=excel_file)
         effects.open_workbook(
             plan.scenario_workbook("Print_Paramet"), factory=excel_file
         )
@@ -655,8 +651,6 @@ class B1ConfigurationAndSourcePathCharacterizationTests(unittest.TestCase):
                     os.path.join("A1ROOT", scenario_root + "/Projection.xlsx"),
                 ),
                 ("excel", os.path.join("A1ROOT", scenario_root + "/Demand.xlsx")),
-                ("excel", "EXTRA/ExtraProjection.xlsx"),
-                ("excel", "EXTRA/Battery.xlsx"),
                 (
                     "excel",
                     os.path.join(

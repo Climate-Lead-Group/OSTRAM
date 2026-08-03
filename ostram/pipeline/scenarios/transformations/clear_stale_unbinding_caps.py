@@ -58,8 +58,9 @@ Does NOT touch:
 
 Output
 ------
-- Patched workbook written as a sibling with `_POST_CAP_RESET_<timestamp>`
-  appended to the stem. The input file is left untouched.
+- Patched workbook written as a sibling with `_POST_CAP_RESET` appended to the
+  stem. Long mutable-workspace paths are deterministically compacted while
+  retaining that stage identity. The input file is left untouched.
 - Per-tech summary printed to stdout.
 - The lid script should be pointed at the new POST_CAP_RESET file.
 
@@ -69,19 +70,19 @@ Usage
     python clear_stale_unbinding_caps.py --input path/to/A-O_Parametrization.xlsx
     python clear_stale_unbinding_caps.py --dry-run
 
-The input file is never modified. A new file with `_POST_CAP_RESET_<timestamp>`
-is created next to it. Point the lid script at the new file. Re-running on
-the same input is safe -- it produces a fresh POST_CAP_RESET file each time.
+The input file is never modified. A deterministic `_POST_CAP_RESET` sibling is
+created next to it. The containing A3 run directory already provides run-level
+isolation.
 """
 
 from __future__ import annotations
 import argparse
-import shutil
 import sys
-from datetime import datetime
 from pathlib import Path
 
 from openpyxl import load_workbook
+
+from ostram.paths import bounded_workspace_workbook_path
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -122,14 +123,20 @@ TECHS_TO_PATCH = {
 # Implementation
 # ---------------------------------------------------------------------------
 def make_output_path(input_path: Path) -> Path:
-    """Return a timestamped POST_CAP_RESET sibling path. Does not create it."""
-    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    return input_path.with_name(
-        f"{input_path.stem}_POST_CAP_RESET_{stamp}{input_path.suffix}"
+    """Return the bounded POST_CAP_RESET sibling path. Does not create it."""
+    return bounded_workspace_workbook_path(
+        input_path.with_name(
+            f"{input_path.stem}_POST_CAP_RESET{input_path.suffix}"
+        ),
+        stage_identity="POST_CAP_RESET",
     )
 
 
-def patch_workbook(input_path: Path, dry_run: bool) -> None:
+def patch_workbook(
+    input_path: Path,
+    dry_run: bool,
+    output_path: Path | None = None,
+) -> Path | None:
     if not input_path.is_file():
         sys.exit(f"ERROR: input file not found: {input_path}")
 
@@ -142,7 +149,14 @@ def patch_workbook(input_path: Path, dry_run: bool) -> None:
     print()
 
     if not dry_run:
-        output_path = make_output_path(input_path)
+        output_path = (
+            make_output_path(input_path)
+            if output_path is None
+            else bounded_workspace_workbook_path(
+                output_path,
+                stage_identity="POST_CAP_RESET",
+            )
+        )
         print(f"Output will be written to: {output_path.name}")
         print()
 
@@ -242,12 +256,14 @@ def patch_workbook(input_path: Path, dry_run: bool) -> None:
     if dry_run:
         print()
         print("DRY RUN -- no changes written.")
-        return
+        return None
 
+    assert output_path is not None
     wb.save(output_path)
     print()
     print(f"Saved: {output_path}")
     print(f"Input file untouched: {input_path}")
+    return output_path
 
 
 def main() -> None:
@@ -260,8 +276,12 @@ def main() -> None:
         "--dry-run", action="store_true",
         help="Print what would change but do not write",
     )
+    p.add_argument(
+        "--output", type=Path, default=None,
+        help="Explicit mutable-workspace workbook output path",
+    )
     args = p.parse_args()
-    patch_workbook(args.input, args.dry_run)
+    patch_workbook(args.input, args.dry_run, args.output)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ caller current-working-directory is never used as an implicit resource root.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -16,15 +17,77 @@ from typing import Mapping
 
 PROJECT_ROOT_ENV = "OSTRAM_PROJECT_ROOT"
 WORKSPACE_ENV = "OSTRAM_WORKSPACE"
+WINDOWS_SAFE_ABSOLUTE_PATH_BUDGET = 240
+_WORKBOOK_PATH_DIGEST_LENGTH = 16
 _SAFE_COMPONENT = re.compile(r"^[^./\\][^/\\]*$")
+_SAFE_STAGE_IDENTITY = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
 
 
 class ProjectResolutionError(RuntimeError):
     """Raised when no valid OSTRAM project bundle can be resolved."""
 
 
+class WorkspacePathBudgetError(ValueError):
+    """Raised when an ephemeral workbook cannot fit the safe path budget."""
+
+
 def _absolute(path: str | os.PathLike[str]) -> Path:
     return Path(path).expanduser().resolve()
+
+
+def windows_path_units(path: str | os.PathLike[str]) -> int:
+    """Return the Windows path length in UTF-16 code units."""
+
+    return len(os.fspath(path).encode("utf-16-le")) // 2
+
+
+def bounded_workspace_workbook_path(
+    desired_path: str | os.PathLike[str],
+    *,
+    stage_identity: str,
+    budget: int = WINDOWS_SAFE_ABSOLUTE_PATH_BUDGET,
+) -> Path:
+    """Return a deterministic, Windows-safe path for a mutable workbook.
+
+    Safe desired paths are returned unchanged after absolute resolution.  A
+    path at or above ``budget`` is reduced to a meaningful final-stage label
+    plus a digest of the complete desired absolute path.  The digest prevents
+    two distinct over-budget desired names in the same workspace from being
+    silently mapped to the same filename.
+    """
+
+    desired = _absolute(desired_path)
+    if desired.suffix.lower() != ".xlsx":
+        raise ValueError(
+            "mutable workbook output must preserve the .xlsx extension: "
+            f"{desired}"
+        )
+    if not _SAFE_STAGE_IDENTITY.fullmatch(stage_identity):
+        raise ValueError(f"unsafe workbook stage identity: {stage_identity!r}")
+    if budget <= 0:
+        raise ValueError(f"path budget must be positive, got {budget}")
+    if windows_path_units(desired) < budget:
+        return desired
+
+    normalized = os.path.normcase(os.fspath(desired))
+    digest = hashlib.sha256(normalized.encode("utf-8")).hexdigest()[
+        :_WORKBOOK_PATH_DIGEST_LENGTH
+    ]
+    compact_name = f"{stage_identity}_{digest}{desired.suffix}"
+    compact = desired.with_name(compact_name)
+    compact_units = windows_path_units(compact)
+    if compact_units >= budget:
+        parent_units = windows_path_units(desired.parent)
+        available = budget - parent_units - 2
+        raise WorkspacePathBudgetError(
+            "mutable workspace parent leaves no Windows-safe workbook "
+            f"filename budget: parent={desired.parent!s} "
+            f"parent_length={parent_units} budget={budget} "
+            f"available_filename_units={max(0, available)} "
+            f"required_filename={compact_name!r}. The absolute output path "
+            f"must be shorter than {budget} UTF-16 code units."
+        )
+    return compact
 
 
 def _source_anchor() -> Path:

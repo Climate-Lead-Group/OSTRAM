@@ -51,7 +51,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from ostram.paths import resolve_paths
+from ostram.paths import bounded_workspace_workbook_path, resolve_paths
 
 from . import orchestrator as _orchestrator
 
@@ -262,6 +262,15 @@ def build_workdir(
     s3 = wd / "stage3";   s3.mkdir()
     s5 = wd / "stage5";   s5.mkdir()
 
+    # Fail before any workbook transformation if this parent cannot hold even
+    # the compact final Stage-3 workbook name. The same deterministic helper
+    # returns the concrete path consumed later by stage_3_fix_2.
+    bounded_workspace_workbook_path(
+        s3
+        / "A-O_Parametrization_c2a_patched_FIXED_POST_CAP_RESET_POST_TRN_CAP.xlsx",
+        stage_identity="POST_TRN_CAP",
+    )
+
     # Stage 1 assets. The merge module and decision overlay
     # read the materialized per-scenario template through OSTRAM_TEMPLATE_PATH.
     shutil.copy(
@@ -419,6 +428,17 @@ def stage_3_fix_2(s2: Path, s3: Path) -> Path:
             f"RC Authority V1 materialized workbook not found: {authority_path}"
         )
 
+    post_cap_reset = bounded_workspace_workbook_path(
+        s3 / "A-O_Parametrization_c2a_patched_FIXED_POST_CAP_RESET.xlsx",
+        stage_identity="POST_CAP_RESET",
+    )
+    post_trn_cap = bounded_workspace_workbook_path(
+        post_cap_reset.with_name(
+            f"{post_cap_reset.stem}_POST_TRN_CAP{post_cap_reset.suffix}"
+        ),
+        stage_identity="POST_TRN_CAP",
+    )
+
     # Move Stage 2.5 output into stage3/
     shutil.copy(s2 / "A-O_Parametrization_c2a_patched.xlsx",
                 s3 / "A-O_Parametrization_c2a_patched.xlsx")
@@ -437,24 +457,15 @@ def stage_3_fix_2(s2: Path, s3: Path) -> Path:
     # clear_stale_unbinding_caps
     run_subproc("ostram.pipeline.scenarios.transformations.clear_stale_unbinding_caps", [
         "--input", "A-O_Parametrization_c2a_patched_FIXED.xlsx",
+        "--output", post_cap_reset,
     ], cwd=s3, label="clear stale unbinding caps")
-
-    # Find the auto-timestamped POST_CAP_RESET file
-    post_cap_reset = sorted(
-        s3.glob("A-O_Parametrization_c2a_patched_FIXED_POST_CAP_RESET_*.xlsx"),
-        key=lambda p: p.stat().st_mtime, reverse=True,
-    )[0]
     print(f"    POST_CAP_RESET: {post_cap_reset.name}")
 
     # cap_trn_to_residual
     run_subproc("ostram.pipeline.scenarios.transformations.cap_trn_to_residual", [
         "--input", post_cap_reset.name,
+        "--output", post_trn_cap,
     ], cwd=s3, label="cap transmission to residual")
-
-    post_trn_cap = sorted(
-        s3.glob("A-O_Parametrization_c2a_patched_FIXED_POST_CAP_RESET_*_POST_TRN_CAP_*.xlsx"),
-        key=lambda p: p.stat().st_mtime, reverse=True,
-    )[0]
     print(f"    POST_TRN_CAP:   {post_trn_cap.name}")
     return post_trn_cap
 
