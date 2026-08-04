@@ -301,15 +301,12 @@ def run_compiled_input_stage(
                     params, scenario_name
                 )
             else:
-                print(
-                    f"❌ Skipping preprocessing for '{scenario_name}' because "
-                    "the otoole conversion failed."
+                message = (
+                    f"otoole conversion failed for scenario '{scenario_name}'; "
+                    "B2 cannot report overall success"
                 )
-                print(
-                    "#---------------------------------------------------------------"
-                    "---------------#"
-                )
-                continue
+                print(f"[FAILED] {message}")
+                raise RuntimeError(message)
 
         input_folder = os.path.join(
             plan.here, plan.base_output_path, scenario_name
@@ -355,10 +352,22 @@ def run_execution_stage(
                         target=dependencies.main_executer,
                         args=(params, scenario_name, plan.here),
                     )
-                    processes.append(process)
+                    processes.append((scenario_name, process))
                     process.start()
-                for process in processes:
+                for _scenario_name, process in processes:
                     process.join()
+                failures = [
+                    (scenario_name, process.exitcode)
+                    for scenario_name, process in processes
+                    if process.exitcode not in (0, None)
+                ]
+                if failures:
+                    detail = ", ".join(
+                        f"{scenario} (exit {exitcode})"
+                        for scenario, exitcode in failures
+                    )
+                    print(f"[FAILED] Parallel B2 worker failure: {detail}")
+                    raise SystemExit(failures[0][1])
         else:
             print("Started linear executions")
             for scenario_name in plan.scenarios:
@@ -823,7 +832,15 @@ def run_scenario_output_stage(
 ) -> None:
     """Convert and concatenate one scenario's solver outputs."""
 
-    print(f"✅ Scenario {scenario_name}_0 solved successfully.")
+    if params["execute_model"]:
+        print(f"Scenario {scenario_name}_0 solved successfully.")
+    elif params["create_matrix"]:
+        print(f"Scenario {scenario_name}_0 matrix preparation completed successfully.")
+    else:
+        print(
+            f"Scenario {scenario_name}_0 output stage SKIPPED; "
+            "matrix and solver execution were disabled."
+        )
     print(
         "\n#------------------------------------------------------------------"
         "------------#"
@@ -884,14 +901,14 @@ def run_scenario_output_stage(
                 cwd=paths.folder_scenario,
                 check=True,
             )
-        print(
-            f"✅ Outputs concatenated to "
-            f"{scenario_name}_0_Output.csv successfully."
-        )
-        print(
-            "\n#---------------------------------------------------------------"
-            "---------------#"
-        )
+            print(
+                f"Outputs concatenated to "
+                f"{scenario_name}_0_Output.csv successfully."
+            )
+            print(
+                "\n#---------------------------------------------------------------"
+                "---------------#"
+            )
 
 
 def execute_scenario(

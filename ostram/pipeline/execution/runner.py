@@ -22,6 +22,7 @@ from pathlib import Path
 import numpy as np
 
 from ostram.paths import resolve_paths
+from ostram.terminal import safe_print
 
 from . import orchestrator as b2_orchestrator
 
@@ -291,7 +292,7 @@ def run_days_in_day_type_patcher(params, scenario_name):
     )
     command = _python_module_command(script_path, target_file)
     print(f"Patching DaysInDayType for '{scenario_name}_0':")
-    print(' '.join(command))
+    safe_print(' '.join(command))
     result = _run_stage_command(command)
     _require_stage_success(result, command, "DaysInDayType patcher", scenario_name)
     print(result.stdout)
@@ -340,7 +341,7 @@ def run_strip_storage_patcher(params, scenario_name):
         command += ['--targets'] + list(targets)
 
     print(f"Stripping storage for '{scenario_name}_0' (mode={mode}, suffix={suffix}):")
-    print(' '.join(command))
+    safe_print(' '.join(command))
     result = _run_stage_command(command)
     _require_stage_success(result, command, "strip_storage patcher", scenario_name)
     print(result.stdout)
@@ -419,8 +420,11 @@ def run_storage_delay_patcher(params, scenario_name):
     elif storage_prefixes:
         command += ['--storage-prefixes'] + list(storage_prefixes)
 
-    print(f"Applying storage-delay patch for '{scenario_name}_0' (N={first_n_years}, suffix={suffix}):")
-    print(' '.join(command))
+    safe_print(
+        f"Applying storage-delay patch for '{scenario_name}_0' "
+        f"(N={first_n_years}, suffix={suffix}):"
+    )
+    safe_print(' '.join(command))
     result = _run_stage_command(command)
     _require_stage_success(result, command, "storage_delay patcher", scenario_name)
     params['storage_delay_model_output'] = model_output
@@ -486,7 +490,7 @@ def run_open_pwrbck_patcher(params, scenario_name):
     )
 
     print(f"Opening PWRBCK caps for '{scenario_name}_0' (pattern={pattern}, value={value}):")
-    print(' '.join(command))
+    safe_print(' '.join(command))
     result = _run_stage_command(command)
     _require_stage_success(result, command, "open_pwrbck patcher", scenario_name)
     print(result.stdout)
@@ -564,7 +568,7 @@ def run_reserve_margin_repair_patcher(params, scenario_name):
         command.append('--skip-capacity-opening')
 
     print(f"Repairing reserve margin data for '{scenario_name}_0' (suffix={suffix}):")
-    print(' '.join(command))
+    safe_print(' '.join(command))
     result = _run_stage_command(command)
     _require_stage_success(
         result, command, "reserve_margin_repair patcher", scenario_name
@@ -657,7 +661,7 @@ def run_reserve_margin_xlsx_patcher(params, scenario_name):
         command.append('--skip-ccs-credit')
 
     print(f"Repairing reserve margin data from XLSX for '{scenario_name}_0' (suffix={suffix}):")
-    print(' '.join(command))
+    safe_print(' '.join(command))
     result = _run_stage_command(command)
     _require_stage_success(
         result, command, "reserve_margin_xlsx patcher", scenario_name
@@ -684,7 +688,7 @@ def run_preprocessing_script(params, scenario_name):
     command = _python_module_command(script_path, input_file, output_file)
 
     print(f"Running preprocessing script for scenario '{scenario_name}_0':")
-    print(' '.join(command))
+    safe_print(' '.join(command))
 
     # Step 3: Run the script
     result = _run_stage_command(command)

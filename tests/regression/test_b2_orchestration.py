@@ -898,11 +898,12 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
                 ["A", "Z_file"],
             )
 
-    def test_failed_conversion_skips_remaining_scenario_work_but_continues(self) -> None:
+    def test_failed_conversion_prevents_later_work_and_overall_success(self) -> None:
         module = _load_b2_guard_as_callable("conversion_continue")
         with B2Fixture("A", "B", main_scenario="A") as fixture:
             harness = GuardHarness(module, fixture, conversions={"A": False})
-            harness.run(["python -m ostram run"])
+            with self.assertRaisesRegex(RuntimeError, "cannot report overall success"):
+                harness.run(["python -m ostram run"])
 
             names_by_scenario = [
                 (event[0], event[-1])
@@ -922,27 +923,13 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             ]
             self.assertEqual(
                 names_by_scenario,
-                [
-                    ("process", "A"),
-                    ("convert", "A"),
-                    ("process", "B"),
-                    ("convert", "B"),
-                    ("preprocess", "B"),
-                    ("days", "B"),
-                    ("storage_delay", "B"),
-                    ("strip_storage", "B"),
-                    ("open_pwrbck", "B"),
-                    ("reserve_margin", "B"),
-                    ("reserve_margin_xlsx", "B"),
-                ],
+                [("process", "A"), ("convert", "A")],
             )
             self.assertNotIn(
                 "A_0", [event[-1] for event in harness.events if event[0] == "combined"]
             )
-            self.assertIn(
-                ("export", fixture.root, "A", None), harness.events
-            )
-            self.assertIn("Skipping preprocessing for 'A'", harness.stdout)
+            self.assertNotIn("export", [event[0] for event in harness.events])
+            self.assertIn("[FAILED] otoole conversion failed for scenario 'A'", harness.stdout)
 
 
 class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
@@ -1210,7 +1197,7 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
         root = Path("C:/fixture/execution_workspace")
         sentinel = SentinelSolverAdapter()
 
-        with redirect_stdout(io.StringIO()):
+        with redirect_stdout(io.StringIO()) as skipped_output:
             orchestrator.execute_scenario(
                 _base_params(
                     solver="cplex",
@@ -1224,6 +1211,9 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
                 solver_adapter=sentinel,
                 matrix_runner=reject_process,
             )
+        self.assertIn("output stage SKIPPED", skipped_output.getvalue())
+        self.assertNotIn("solved", skipped_output.getvalue().lower())
+        self.assertNotIn("Outputs concatenated", skipped_output.getvalue())
 
         matrix_commands: list[str] = []
 
@@ -1231,7 +1221,7 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
             self.assertIs(process_runner, reject_process)
             matrix_commands.append(command)
 
-        with redirect_stdout(io.StringIO()):
+        with redirect_stdout(io.StringIO()) as matrix_output:
             orchestrator.execute_scenario(
                 _base_params(
                     solver="cplex",
@@ -1249,8 +1239,11 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
         self.assertEqual(len(matrix_commands), 1)
         self.assertIn("glpsol", matrix_commands[0])
         self.assertIn("--check", matrix_commands[0])
+        self.assertIn("matrix preparation completed successfully", matrix_output.getvalue())
+        self.assertNotIn("solved", matrix_output.getvalue().lower())
+        self.assertNotIn("Outputs concatenated", matrix_output.getvalue())
 
-    def test_parallel_route_batches_process_targets_and_ignores_child_exitcodes(self) -> None:
+    def test_parallel_worker_exitcode_prevents_cleanup_and_postprocessing(self) -> None:
         module = _load_b2_guard_as_callable("parallel_route")
         process_events: list[tuple[str, str]] = []
 
@@ -1282,7 +1275,10 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
         ) as fixture:
             harness = GuardHarness(module, fixture)
             with mock.patch.object(module.mp, "Process", FakeProcess):
-                harness.run(["python -m ostram run"])
+                with self.assertRaises(SystemExit) as raised:
+                    harness.run(["python -m ostram run"])
+
+            self.assertEqual(raised.exception.code, 9)
 
             self.assertEqual(
                 process_events,
@@ -1293,17 +1289,15 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
                     ("start", "B"),
                     ("join", "A"),
                     ("join", "B"),
-                    ("construct", "C"),
-                    ("start", "C"),
-                    ("join", "C"),
                 ],
             )
             self.assertEqual(
                 [event[1] for event in harness.events if event[0] == "solver_boundary"],
-                ["A", "B", "C"],
+                ["A", "B"],
             )
-            self.assertEqual(harness.events[-1], ("concat_scenarios", fixture.root))
+            self.assertNotIn("concat_scenarios", [event[0] for event in harness.events])
             self.assertIn("Started parallelization of model execution", harness.stdout)
+            self.assertIn("Parallel B2 worker failure", harness.stdout)
 
     def test_linear_solver_failure_propagates_and_stops_cleanup_and_postprocessing(self) -> None:
         module = _load_b2_guard_as_callable("linear_failure")

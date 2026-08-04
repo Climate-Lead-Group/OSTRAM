@@ -1,14 +1,33 @@
 # Pipeline
 
-The canonical workflow is:
+```mermaid
+flowchart TB
+    subgraph MAIN["GitHub main · tracked and reproducible"]
+        direction LR
+        CLI["python -m ostram"] --> A1["Prepare the base model<br/>(A1)"]
+        I["Authoritative inputs"] --> A1
+        A1 --> A2["Add the transmission network<br/>(A2)"]
+        A2 --> A3["Build scenarios<br/>(A3)"]
+        A3 --> B1["Compile model inputs<br/>(B1)"]
+        B1 --> B2["Run the model and collect results<br/>(B2)"]
+    end
 
-```text
-A1 base-input preparation
-  -> A2 transmission enrichment and root snapshots
-  -> A3 root transformation and derived-scenario materialization
-  -> B1 OSeMOSYS input compilation
-  -> B2 preprocessing, optional matrix/solve, and results
+    subgraph LOCAL["Local workspace · generated and ignored by Git"]
+        W["Prepared models → scenarios → compiled inputs<br/>→ solver files, logs and results"]
+    end
+
+    subgraph RELEASE["Optional downloadable solved run"]
+        R["Manifest + selected outputs + checksums"]
+    end
+
+    B2 --> W
+    W -. selected artifacts .-> R
 ```
+
+GitHub `main` contains the maintained, reproducible source and authoritative
+inputs. Generated inputs, solver files, logs, and results belong in the ignored
+local workspace. An optional downloadable solved run is a distinct later
+concern; OSTRAM does not build the `RELEASE` box in the current workflow.
 
 Run it with:
 
@@ -16,7 +35,29 @@ Run it with:
 python -m ostram run [options]
 ```
 
-## A1 and A2: preparation
+## Run terminal and detailed log
+
+An interactive terminal shows a compact live status on stderr for all five
+stages, including the active scenario where available, elapsed time, recent
+status, and completed, failed, or skipped state. Redirected output uses stable
+append-only status lines without cursor-control sequences. `--verbose` disables
+the moving display and streams complete child stdout/stderr plus tokenized
+command and working-directory diagnostics.
+
+Every actual run writes a UTF-8 log to:
+
+```text
+<workspace>/logs/<run-id>/run.log
+```
+
+The log records run and stage timing, selected scenarios, child commands and
+working directories, complete child output, child exit codes, interruptions or
+exceptions, the final outcome, and the final process exit code. Help, malformed
+arguments, imports, and `inspect-resources` do not create a workspace or log.
+Terminal text safely degrades when the active stream encoding cannot represent
+a path or character; the detailed log retains the original Unicode.
+
+## Prepare the base model (A1) and add the transmission network (A2)
 
 A1 reads the maintained CSV authorities in `inputs/osemosys_global/`, the
 preparation configuration in `config/preparation/`, and workbook assets in
@@ -27,7 +68,7 @@ The full runner treats A1+A2 as a pair. If every selected root already has its
 post-A2 snapshot, the pair is skipped; otherwise the root preparation is
 rebuilt before A3.
 
-## A3: scenario materialization
+## Build selected scenarios (A3)
 
 The maintained authorities are:
 
@@ -57,7 +98,7 @@ its final semantic stage plus a short digest; the `.xlsx` extension and the
 actual returned path are preserved for downstream stages. A workspace parent
 that cannot hold even the compact name fails before workbook transformation.
 
-## B1: compilation
+## Compile model inputs (B1)
 
 B1 consumes the explicit trajectories already present in the current scenario
 workbooks. It does not load the retired `A-Xtra_Projections.xlsx` transport
@@ -79,7 +120,7 @@ python -m ostram compile-inputs --scenarios "BAU,B_Optimised_VRE"
 
 The maintained `config/compilation/Config_MOMF_T1_A.yaml` is not mutated.
 
-## B2: execution boundary
+## Run the model and collect results (B2)
 
 B2 reads:
 

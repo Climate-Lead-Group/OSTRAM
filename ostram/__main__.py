@@ -14,6 +14,7 @@ from types import ModuleType
 from typing import Iterator, Sequence
 
 from ostram.paths import PROJECT_ROOT_ENV, WORKSPACE_ENV, ProjectPaths, resolve_paths
+from ostram.terminal import safe_print
 
 
 @dataclass(frozen=True)
@@ -30,7 +31,11 @@ ROUTES = {
     "run": Route(
         module_name="ostram.pipeline.orchestration",
         program="python -m ostram run",
-        help="Run the established A1/A2/A3/B1/B2 orchestration.",
+        help=(
+            "Prepare the base model (A1), add the transmission network (A2), "
+            "build scenarios (A3), compile inputs (B1), and run/collect "
+            "results (B2)."
+        ),
         exit_policy="run-guard",
     ),
     "transform": Route(
@@ -123,17 +128,20 @@ def _load_route_module(route: Route) -> ModuleType:
 
 def _invoke_run_guard(module: ModuleType) -> int:
     try:
-        module.main()
+        result = module.main()
+    except KeyboardInterrupt:
+        safe_print("\nOSTRAM run interrupted", file=sys.stderr)
+        return 130
     except subprocess.CalledProcessError as error:
-        print(
+        safe_print(
             f"\nCommand failed (exit {error.returncode}): {error.cmd}",
             file=sys.stderr,
         )
         return error.returncode
     except Exception as error:
-        print(f"\nError: {error}", file=sys.stderr)
+        safe_print(f"\nError: {error}", file=sys.stderr)
         return 1
-    return 0
+    return result if isinstance(result, int) else 0
 
 
 def _invoke_route(route: Route, arguments: Sequence[str]) -> int | None:

@@ -547,7 +547,10 @@ class B1ConfigurationAndSourcePathCharacterizationTests(unittest.TestCase):
         )
         plan = planning.build_transform_plan(params)
 
-        self.assertEqual(opened, [("Config_MOMF_T1_A.yaml", "r", {})])
+        self.assertEqual(
+            opened,
+            [("Config_MOMF_T1_A.yaml", "r", {"encoding": "utf-8"})],
+        )
         self.assertEqual(os.getcwd(), cwd_before)
         self.assertEqual(plan.time_range_vector, [2023, 2024, 2025])
         self.assertEqual(plan.wide_param_header, ["PARAMETER", "Value"])
@@ -566,6 +569,29 @@ class B1ConfigurationAndSourcePathCharacterizationTests(unittest.TestCase):
         self.assertIs(
             plan.other_setup_params["Timeslices"],
             loaded["xtra_scen"]["Timeslices"],
+        )
+
+    def test_config_preserves_unicode_workspace_path_under_cp1252(self) -> None:
+        effects = _candidate_modules()["effects"]
+        workspace = "C:/validation/caf\u00e9 \u03a9/workspace/A1_Outputs"
+        payload = f"A1_outputs: '{workspace}'\n"
+
+        class Cp1252DefaultOpen:
+            def __init__(self) -> None:
+                self.calls: list[tuple[object, ...]] = []
+
+            def __call__(self, *args, **kwargs):
+                self.calls.append((*args, kwargs))
+                encoding = kwargs.get("encoding", "cp1252")
+                return io.StringIO(payload.encode("utf-8").decode(encoding))
+
+        opener = Cp1252DefaultOpen()
+        loaded = effects.read_config("Config_MOMF_T1_A.yaml", opener=opener)
+
+        self.assertEqual(loaded["A1_outputs"], workspace)
+        self.assertEqual(
+            opener.calls,
+            [("Config_MOMF_T1_A.yaml", "r", {"encoding": "utf-8"})],
         )
 
     def test_config_and_plan_failures_propagate_without_recovery(self) -> None:

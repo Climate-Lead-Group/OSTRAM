@@ -10,7 +10,7 @@ import sys
 import tempfile
 import types
 import unittest
-from contextlib import redirect_stderr, redirect_stdout
+from contextlib import nullcontext, redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest import mock
 
@@ -18,6 +18,12 @@ from unittest import mock
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
 CLI_PATH = REPO_ROOT / "ostram" / "__main__.py"
+
+
+def _null_run_reporter():
+    reporter = mock.Mock()
+    reporter.capture_output.return_value = nullcontext()
+    return reporter
 
 
 def _load_cli(label: str):
@@ -440,7 +446,11 @@ class CanonicalCliDispatchTests(unittest.TestCase):
                     REPO_ROOT / "workspace",
                 )
                 self.assertIs(sys.argv, original_argv)
-                expected_result = 23 if route.exit_policy == "main-result" else 0
+                expected_result = (
+                    23
+                    if route.exit_policy in {"main-result", "run-guard"}
+                    else 0
+                )
                 self.assertEqual(result, expected_result)
 
     def test_mocked_canonical_and_historical_dispatch_traces_are_identical(self) -> None:
@@ -529,6 +539,11 @@ class CanonicalCliDispatchTests(unittest.TestCase):
                     boundary_patch = mock.patch.object(
                         module, "check_tool_available", side_effect=boundary
                     )
+                    reporter_patch = mock.patch.object(
+                        module,
+                        "_create_run_reporter",
+                        return_value=_null_run_reporter(),
+                    )
                 elif command == "transform":
                     def boundary(cli_args, paths, dependencies, input_files):
                         events.append(
@@ -549,6 +564,7 @@ class CanonicalCliDispatchTests(unittest.TestCase):
                         "orchestrate_a3",
                         side_effect=boundary,
                     )
+                    reporter_patch = nullcontext()
                 else:
                     def boundary(cli_args, paths, **kwargs):
                         events.append(
@@ -567,6 +583,7 @@ class CanonicalCliDispatchTests(unittest.TestCase):
                     boundary_patch = mock.patch.object(
                         module._impl, "orchestrate", side_effect=boundary
                     )
+                    reporter_patch = nullcontext()
 
                 def direct():
                     with mock.patch.object(
@@ -578,6 +595,7 @@ class CanonicalCliDispatchTests(unittest.TestCase):
 
                 with (
                     boundary_patch as patched_boundary,
+                    reporter_patch,
                     mock.patch.dict(
                         os.environ,
                         {"ACTUAL_TRACE_SENTINEL": "preserved"},
@@ -606,11 +624,18 @@ class CanonicalCliDispatchTests(unittest.TestCase):
         original_argv = sys.argv
 
         run_module = importlib.import_module("ostram.pipeline.orchestration")
-        with mock.patch.object(
-            run_module,
-            "check_tool_available",
-            side_effect=RuntimeError("fixture stopped at first run effect"),
-        ) as run_boundary:
+        with (
+            mock.patch.object(
+                run_module,
+                "check_tool_available",
+                side_effect=RuntimeError("fixture stopped at first run effect"),
+            ) as run_boundary,
+            mock.patch.object(
+                run_module,
+                "_create_run_reporter",
+                return_value=_null_run_reporter(),
+            ),
+        ):
             run_result = _capture_exit(lambda: cli.main(["run"]))
         self.assertEqual(run_result[0], 1)
         self.assertIn("Using environment:", run_result[1])
@@ -713,19 +738,27 @@ class CanonicalCliDispatchTests(unittest.TestCase):
 
     def test_sys_argv_is_restored_for_all_exit_and_interruption_routes(self) -> None:
         cli = _load_cli("argv_restore")
-        failures = (
-            SystemExit(17),
-            KeyboardInterrupt(),
-        )
         for command in cli.ROUTES:
-            for failure in failures:
-                with self.subTest(command=command, failure=type(failure).__name__):
-                    fake = types.SimpleNamespace(main=mock.Mock(side_effect=failure))
-                    original_argv = sys.argv
-                    with mock.patch.object(cli, "_load_route_module", return_value=fake):
-                        with self.assertRaises(type(failure)):
+            failure = SystemExit(17)
+            with self.subTest(command=command, failure=type(failure).__name__):
+                fake = types.SimpleNamespace(main=mock.Mock(side_effect=failure))
+                original_argv = sys.argv
+                with mock.patch.object(cli, "_load_route_module", return_value=fake):
+                    with self.assertRaises(SystemExit):
+                        cli.main([command, "--sentinel"])
+                self.assertIs(sys.argv, original_argv)
+
+        for command in cli.ROUTES:
+            with self.subTest(command=command, failure="KeyboardInterrupt"):
+                fake = types.SimpleNamespace(main=mock.Mock(side_effect=KeyboardInterrupt()))
+                original_argv = sys.argv
+                with mock.patch.object(cli, "_load_route_module", return_value=fake):
+                    if command == "run":
+                        self.assertEqual(cli.main([command, "--sentinel"]), 130)
+                    else:
+                        with self.assertRaises(KeyboardInterrupt):
                             cli.main([command, "--sentinel"])
-                    self.assertIs(sys.argv, original_argv)
+                self.assertIs(sys.argv, original_argv)
 
         for command in ("transform", "compile-inputs"):
             for failure in (

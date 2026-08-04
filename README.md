@@ -25,6 +25,7 @@ All supported commands begin with `python -m ostram`:
 python -m ostram --help
 python -m ostram inspect-resources
 python -m ostram run --skip-pull --compile-only
+python -m ostram run --verbose
 python -m ostram transform --scenario BAU
 python -m ostram compile-inputs --scenarios "BAU,B_Optimised_VRE"
 ```
@@ -42,6 +43,13 @@ python -m ostram `
 `OSTRAM_WORKSPACE`. Without either, an editable checkout supplies the project
 root and `<project-root>/workspace` is selected lazily. Caller CWD is never a
 resource root.
+
+An actual run reports live progress through preparing the base model (A1),
+adding the transmission network (A2), building scenarios (A3), compiling model
+inputs (B1), and running the model/collecting results (B2). Redirected output is
+plain and append-only. `--verbose` streams complete child output and command
+diagnostics. Every mode retains a detailed UTF-8 log at
+`<workspace>/logs/<run-id>/run.log`; help and resource inspection create no log.
 
 ## Layout
 
