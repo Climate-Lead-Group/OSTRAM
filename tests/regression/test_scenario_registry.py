@@ -10,24 +10,24 @@ from unittest import mock
 
 from openpyxl import Workbook
 
-from t1_confection import Z_AUX_config_loader as country_config
-from t1_confection.scenario_materializer import (
+from ostram.pipeline.preparation import configuration as country_config
+from ostram.pipeline.scenarios.materializer import (
     MaterializationPaths,
     REQUIRED_AO_FILES,
     materialize_scenarios,
 )
-from t1_confection.scenario_registry import (
+from ostram.pipeline.scenarios.registry import (
     CANONICAL_SCENARIOS,
     DECISION_SCENARIOS,
     ROOT_SCENARIOS,
     ensure_root_output_directories,
     load_registry,
 )
-from t1_confection.sensitivity_expansion import apply_patches
+from ostram.pipeline.scenarios import apply_patches
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-T1_CONFECTION = REPO_ROOT / "t1_confection"
+PREPARATION_WORKSPACE = REPO_ROOT / "workspace" / "preparation"
 
 
 class ScenarioRegistryTests(unittest.TestCase):
@@ -64,7 +64,7 @@ class ScenarioRegistryTests(unittest.TestCase):
         country_config._cached_config = None
         self.assertEqual(
             country_config.CONFIG_PATH,
-            T1_CONFECTION / "Config_country_codes.yaml",
+            REPO_ROOT / "config" / "preparation" / "Config_country_codes.yaml",
         )
 
     def test_exact_roots_decision_order_bases_and_overlays(self) -> None:
@@ -145,7 +145,7 @@ class ScenarioRegistryTests(unittest.TestCase):
             }
             dependencies = registry.result_dependencies(
                 ("C_Target_VRE",),
-                t1_confection=Path(temp),
+                execution_workspace=Path(temp),
                 environment=environment,
             )
             self.assertEqual(
@@ -221,15 +221,15 @@ class ScenarioRegistryTests(unittest.TestCase):
                 (snapshot / filename).write_bytes(b"fixture")
 
             paths = MaterializationPaths(
-                t1_confection=T1_CONFECTION,
+                preparation_workspace=PREPARATION_WORKSPACE,
                 a1_outputs=outputs,
-                a3_entrypoint=T1_CONFECTION / "A3_process.py",
-                a3_process=T1_CONFECTION / "A3_process",
-                soasia=(
-                    T1_CONFECTION
-                    / "A3_process"
-                    / "OSTRAM_Scenario_Inputs.xlsx"
+                a3_entrypoint=(
+                    REPO_ROOT / "ostram" / "pipeline" / "scenarios" / "transform.py"
                 ),
+                a3_process=(
+                    REPO_ROOT / "ostram" / "pipeline" / "scenarios" / "transformations"
+                ),
+                soasia=REPO_ROOT / "inputs" / "scenarios" / "OSTRAM_Scenario_Inputs.xlsx",
             )
 
             def materialize_root(

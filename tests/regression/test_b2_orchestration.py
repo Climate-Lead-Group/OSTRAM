@@ -7,6 +7,7 @@ import itertools
 import json
 import multiprocessing
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -21,8 +22,8 @@ from unittest import mock
 
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
-B2_ENTRYPOINT = REPO_ROOT / "t1_confection" / "B2_Executing_OG_Model.py"
-B2_ORCHESTRATOR = REPO_ROOT / "t1_confection" / "b2_orchestrator.py"
+B2_ENTRYPOINT = REPO_ROOT / "ostram" / "pipeline" / "execution" / "runner.py"
+B2_ORCHESTRATOR = REPO_ROOT / "ostram" / "pipeline" / "execution" / "orchestrator.py"
 
 
 def _source() -> str:
@@ -68,7 +69,7 @@ def _function(tree: ast.Module, name: str) -> ast.FunctionDef:
 
 
 def _load_b2(label: str):
-    module_name = f"_ostram_b2_characterization_{label}"
+    module_name = f"ostram.pipeline.execution._characterization_{label}"
     spec = importlib.util.spec_from_file_location(module_name, B2_ENTRYPOINT)
     if spec is None or spec.loader is None:
         raise AssertionError(f"could not load module spec for {B2_ENTRYPOINT}")
@@ -105,10 +106,10 @@ def _load_b2_guard_as_callable(label: str):
     tree.body[guard_index] = callable_guard
     ast.fix_missing_locations(tree)
 
-    module_name = f"_ostram_b2_guard_characterization_{label}"
+    module_name = f"ostram.pipeline.execution._guard_characterization_{label}"
     module = types.ModuleType(module_name)
     module.__file__ = str(B2_ENTRYPOINT)
-    module.__package__ = ""
+    module.__package__ = "ostram.pipeline.execution"
     sys.modules[module_name] = module
     try:
         exec(compile(tree, str(B2_ENTRYPOINT), "exec"), module.__dict__)
@@ -176,7 +177,7 @@ class B2Fixture:
     ) -> None:
         self._temp = tempfile.TemporaryDirectory()
         self.root = Path(self._temp.name).resolve()
-        self.entrypoint = self.root / "B2_Executing_OG_Model.py"
+        self.entrypoint = self.root / "python -m ostram run"
         self.entrypoint.write_text("# fixture anchor only\n", encoding="utf-8")
         self.params = _base_params(**overrides)
         self.main_scenario = main_scenario
@@ -217,11 +218,15 @@ class GuardHarness:
         *,
         conversions: dict[str, bool] | None = None,
         solver_boundary=None,
+        stage_failures: dict[str, int] | None = None,
     ) -> None:
         self.module = module
         self.fixture = fixture
         self.conversions = {} if conversions is None else dict(conversions)
         self.solver_boundary = solver_boundary
+        self.stage_failures = (
+            {} if stage_failures is None else dict(stage_failures)
+        )
         self.events: list[tuple[object, ...]] = []
         self.params_seen: list[dict[str, object]] = []
         self.stdout = ""
@@ -254,6 +259,13 @@ class GuardHarness:
         def run(params, scenario_name) -> None:
             self._remember(params)
             self.events.append((name, scenario_name))
+            if name in self.stage_failures:
+                raise subprocess.CalledProcessError(
+                    self.stage_failures[name],
+                    f"fixture-{name}",
+                    output=f"{name} stdout",
+                    stderr=f"{name} stderr",
+                )
 
         return run
 
@@ -305,7 +317,11 @@ class GuardHarness:
                         mock.patch.object(self.module, name, replacement)
                     )
                 stack.enter_context(
-                    mock.patch.object(self.module, "__file__", str(self.fixture.entrypoint))
+                    mock.patch.object(
+                        self.module.b2_orchestrator,
+                        "resolve_here",
+                        return_value=self.fixture.root,
+                    )
                 )
                 stack.enter_context(
                     mock.patch.object(
@@ -349,11 +365,49 @@ class B2ImportAndCliCharacterizationTests(unittest.TestCase):
         self.assertEqual(stderr.getvalue(), "")
         self.assertTrue(callable(module.main_executer))
 
+    def test_canonical_compile_only_patch_modules_import_from_external_cwd(
+        self,
+    ) -> None:
+        module_names = (
+            "ostram.pipeline.execution.preprocess",
+            "ostram.pipeline.execution.patches.days_in_day_type",
+            "ostram.pipeline.execution.patches.storage_delay",
+            "ostram.pipeline.execution.patches.open_pwrbck_caps",
+            "ostram.pipeline.execution.patches.reserve_margin_repair_xlsx",
+        )
+        import_script = (
+            "import importlib; "
+            f"names={module_names!r}; "
+            "[importlib.import_module(name) for name in names]; "
+            "print('\\n'.join(names))"
+        )
+        environment = os.environ.copy()
+        environment.pop("PYTHONPATH", None)
+        with tempfile.TemporaryDirectory() as temp:
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-X",
+                    "utf8",
+                    "-I",
+                    "-B",
+                    "-c",
+                    import_script,
+                ],
+                cwd=temp,
+                env=environment,
+                capture_output=True,
+                text=True,
+            )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(completed.stdout.splitlines(), list(module_names))
+
     def test_help_unknown_option_and_missing_value_keep_argparse_contract(self) -> None:
         cases = (
-            (["B2_Executing_OG_Model.py", "--help"], 0),
-            (["B2_Executing_OG_Model.py", "--unknown"], 2),
-            (["B2_Executing_OG_Model.py", "--scenarios"], 2),
+            (["python -m ostram run", "--help"], 0),
+            (["python -m ostram run", "--unknown"], 2),
+            (["python -m ostram run", "--scenarios"], 2),
         )
         for index, (argv, expected_code) in enumerate(cases):
             with self.subTest(argv=argv):
@@ -400,7 +454,6 @@ class B2AstBoundaryCharacterizationTests(unittest.TestCase):
             _selected_calls(
                 top_level,
                 {
-                    "os.chdir",
                     "build_run_plan",
                     "run_compiled_input_stage",
                     "run_execution_stage",
@@ -409,7 +462,6 @@ class B2AstBoundaryCharacterizationTests(unittest.TestCase):
                 },
             ),
             [
-                "os.chdir",
                 "build_run_plan",
                 "run_compiled_input_stage",
                 "run_execution_stage",
@@ -556,13 +608,10 @@ class B2AstBoundaryCharacterizationTests(unittest.TestCase):
             process_call = next(
                 item for item in ast.walk(boundary) if isinstance(item, ast.Call)
             )
-            self.assertEqual(
-                [
-                    (keyword.arg, keyword.value.value)
-                    for keyword in process_call.keywords
-                ],
-                [("shell", True), ("check", True)],
-            )
+            keyword_names = [keyword.arg for keyword in process_call.keywords]
+            self.assertEqual(keyword_names, ["cwd", "check"])
+            self.assertIsInstance(process_call.keywords[0].value, ast.Call)
+            self.assertIs(process_call.keywords[1].value.value, True)
 
 
 class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
@@ -577,8 +626,9 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             concat_scenarios_csv=True,
         ) as fixture:
             harness = GuardHarness(module, fixture)
+            caller_cwd = Path.cwd()
             harness.run(
-                ["B2_Executing_OG_Model.py", "--scenarios", " C, A, C "]
+                ["python -m ostram run", "--scenarios", " C, A, C "]
             )
 
             base_input = str(fixture.root / "A2_Output_Params")
@@ -619,10 +669,9 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             self.assertTrue(all(item is first_params for item in harness.params_seen if item))
             self.assertEqual(first_params["execute_model"], True)
             self.assertEqual(first_params["create_matrix"], False)
-            self.assertEqual(harness.cwd_after, fixture.root)
+            self.assertEqual(harness.cwd_after, caller_cwd)
 
             markers = (
-                "[INFO] Working dir ->",
                 "[INFO] Scenario filter active: ['C', 'A']",
                 "Started linear executions",
                 "Inputs and outputs concatenated for all scenarios successfully",
@@ -645,7 +694,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             harness = GuardHarness(module, fixture)
             harness.run(
                 [
-                    "B2_Executing_OG_Model.py",
+                    "python -m ostram run",
                     "--scenarios",
                     "A",
                     "--compile-only",
@@ -691,6 +740,95 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
                 harness.stdout,
             )
 
+    def test_required_patch_child_failure_propagates_before_all_success_boundaries(
+        self,
+    ) -> None:
+        runner_module = _load_b2("required_patch_child_exit")
+        child_result = SimpleNamespace(
+            returncode=7,
+            stdout="reserve child stdout",
+            stderr="reserve child stderr",
+        )
+        with (
+            mock.patch.object(
+                runner_module,
+                "_python_module_command",
+                return_value=[
+                    sys.executable,
+                    "-m",
+                    "ostram.pipeline.execution.patches.reserve_margin_repair_xlsx",
+                ],
+            ),
+            mock.patch.object(
+                runner_module,
+                "_run_stage_command",
+                return_value=child_result,
+            ),
+            redirect_stdout(io.StringIO()) as child_stdout,
+            redirect_stderr(io.StringIO()) as child_stderr,
+            self.assertRaises(subprocess.CalledProcessError) as child_failure,
+        ):
+            runner_module.run_reserve_margin_xlsx_patcher(
+                _base_params(reserve_margin_xlsx_active=True),
+                "A",
+            )
+
+        self.assertEqual(child_failure.exception.returncode, 7)
+        self.assertEqual(child_failure.exception.output, "reserve child stdout")
+        self.assertEqual(child_failure.exception.stderr, "reserve child stderr")
+        self.assertIn("exited with code 7", child_stdout.getvalue())
+        self.assertIn("reserve child stdout", child_stdout.getvalue())
+        self.assertIn("reserve child stderr", child_stderr.getvalue())
+
+        module = _load_b2_guard_as_callable("required_patch_failure")
+        with B2Fixture(
+            "A",
+            execute_model=True,
+            create_matrix=True,
+            concat_otoole_csv=True,
+            concat_scenarios_csv=True,
+        ) as fixture:
+            harness = GuardHarness(
+                module,
+                fixture,
+                stage_failures={"reserve_margin_xlsx": 7},
+                solver_boundary=lambda *_args: self.fail(
+                    "solver boundary followed a required patch failure"
+                ),
+            )
+            with self.assertRaises(subprocess.CalledProcessError) as raised:
+                harness.run(
+                    [
+                        "python -m ostram run",
+                        "--scenarios",
+                        "A",
+                        "--compile-only",
+                    ]
+                )
+
+            self.assertEqual(raised.exception.returncode, 7)
+            self.assertEqual(
+                [event[0] for event in harness.events],
+                [
+                    "process",
+                    "convert",
+                    "preprocess",
+                    "days",
+                    "storage_delay",
+                    "strip_storage",
+                    "open_pwrbck",
+                    "reserve_margin",
+                    "reserve_margin_xlsx",
+                ],
+            )
+            self.assertNotIn("combined", [event[0] for event in harness.events])
+            self.assertNotIn("export", [event[0] for event in harness.events])
+            self.assertNotIn(
+                "solver_boundary", [event[0] for event in harness.events]
+            )
+            self.assertNotIn("Compile-only gate complete", harness.stdout)
+            self.assertNotIn("Pipeline completed", harness.stdout)
+
     def test_unknowns_preserve_duplicates_and_abort_before_any_stage(self) -> None:
         module = _load_b2_guard_as_callable("unknown_scenarios")
         with B2Fixture("B", "Default", "A") as fixture:
@@ -698,7 +836,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             with self.assertRaises(SystemExit) as raised:
                 harness.run(
                     [
-                        "B2_Executing_OG_Model.py",
+                        "python -m ostram run",
                         "--scenarios",
                         "Missing,A,Missing,Other",
                     ]
@@ -713,7 +851,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
         module = _load_b2_guard_as_callable("truthy_empty")
         with B2Fixture("B", "Default", "A") as fixture:
             harness = GuardHarness(module, fixture)
-            harness.run(["B2_Executing_OG_Model.py", "--scenarios", " , , "])
+            harness.run(["python -m ostram run", "--scenarios", " , , "])
 
             self.assertEqual(harness.events, [])
             self.assertIn("[INFO] Scenario filter active: []", harness.stdout)
@@ -728,7 +866,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             "A", "B", "Default", main_scenario="B", only_main_scenario=True
         ) as fixture:
             selected = GuardHarness(module, fixture)
-            selected.run(["B2_Executing_OG_Model.py"])
+            selected.run(["python -m ostram run"])
             self.assertEqual(
                 [event[-1] for event in selected.events if event[0] == "process"],
                 ["B"],
@@ -741,7 +879,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             rejected = GuardHarness(module, fixture)
             with self.assertRaises(SystemExit) as raised:
                 rejected.run(
-                    ["B2_Executing_OG_Model.py", "--scenarios", "A"]
+                    ["python -m ostram run", "--scenarios", "A"]
                 )
             self.assertEqual(raised.exception.code, 1)
             self.assertIn("Discovered: ['B']", rejected.stdout)
@@ -753,7 +891,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             "Default", "A", "Z_file", file_entries=("Z_file",)
         ) as fixture:
             harness = GuardHarness(module, fixture)
-            harness.run(["B2_Executing_OG_Model.py"])
+            harness.run(["python -m ostram run"])
 
             self.assertEqual(
                 [event[-1] for event in harness.events if event[0] == "process"],
@@ -764,7 +902,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
         module = _load_b2_guard_as_callable("conversion_continue")
         with B2Fixture("A", "B", main_scenario="A") as fixture:
             harness = GuardHarness(module, fixture, conversions={"A": False})
-            harness.run(["B2_Executing_OG_Model.py"])
+            harness.run(["python -m ostram run"])
 
             names_by_scenario = [
                 (event[0], event[-1])
@@ -808,6 +946,178 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
 
 
 class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
+    def test_b2_model_inputs_resolve_only_through_canonical_project_model_root(
+        self,
+    ) -> None:
+        module = _load_b2("canonical_model_inputs")
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            model_root = root / "project" / "model"
+            model_root.mkdir(parents=True)
+            (model_root / "storage.txt").write_text("storage\n", encoding="utf-8")
+            (model_root / "base.txt").write_text("base\n", encoding="utf-8")
+            absolute_model = root / "absolute-model.txt"
+            absolute_model.write_text("absolute\n", encoding="utf-8")
+            project_paths = SimpleNamespace(
+                model_root=model_root,
+                project_root=REPO_ROOT,
+                package_root=REPO_ROOT / "ostram",
+                executables=root / "external workspace" / "Executables",
+            )
+
+            cases = (
+                (
+                    "storage_delay_model_input",
+                    _base_params(
+                        storage_delay_active=True,
+                        storage_delay_model_input="storage.txt",
+                    ),
+                    model_root / "storage.txt",
+                ),
+                (
+                    "osemosys_model",
+                    _base_params(
+                        storage_delay_active=True,
+                        osemosys_model="base.txt",
+                    ),
+                    model_root / "base.txt",
+                ),
+                (
+                    "absolute",
+                    _base_params(
+                        storage_delay_active=True,
+                        storage_delay_model_input=str(absolute_model),
+                    ),
+                    absolute_model,
+                ),
+            )
+
+            with mock.patch.object(module, "resolve_paths", return_value=project_paths):
+                for label, params, expected in cases:
+                    with self.subTest(label=label):
+                        stage_runner = mock.Mock(
+                            return_value=SimpleNamespace(
+                                returncode=0,
+                                stdout="",
+                                stderr="",
+                            )
+                        )
+                        with mock.patch.object(
+                            module,
+                            "_run_stage_command",
+                            stage_runner,
+                        ):
+                            module.run_storage_delay_patcher(params, "A")
+
+                        command = stage_runner.call_args.args[0]
+                        resolved = command[command.index("--model-input") + 1]
+                        self.assertEqual(resolved, str(expected))
+                        self.assertNotEqual(
+                            Path(resolved).parent,
+                            B2_ENTRYPOINT.parent,
+                        )
+
+                missing = (model_root / "missing.txt").resolve()
+                missing_runner = mock.Mock()
+                with (
+                    mock.patch.object(
+                        module,
+                        "_run_stage_command",
+                        missing_runner,
+                    ),
+                    self.assertRaisesRegex(
+                        FileNotFoundError,
+                        re.escape(str(missing)),
+                    ),
+                ):
+                    module.run_storage_delay_patcher(
+                        _base_params(
+                            storage_delay_active=True,
+                            storage_delay_model_input="missing.txt",
+                        ),
+                        "A",
+                    )
+                missing_runner.assert_not_called()
+
+    def test_storage_delay_model_output_is_external_and_forwarded(self) -> None:
+        module = _load_b2("external_storage_delay_model")
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            project_root = REPO_ROOT
+            model_root = project_root / "model"
+            package_root = project_root / "ostram"
+            executables = root / "external Unicode workspace ✓" / "Executables"
+            executables.mkdir(parents=True)
+            maintained_model = model_root / "osemosys_fast_preprocessed.txt"
+            project_paths = SimpleNamespace(
+                project_root=project_root,
+                model_root=model_root,
+                package_root=package_root,
+                executables=executables,
+            )
+            params = _base_params(
+                executables=str(executables),
+                storage_delay_active=True,
+                storage_delay_model_input=str(maintained_model),
+                storage_delay_model_output=(
+                    package_root
+                    / "pipeline"
+                    / "execution"
+                    / "osemosys_fast_preprocessed_storage_delay.txt"
+                ),
+                open_pwrbck_active=True,
+                reserve_margin_xlsx_active=True,
+            )
+            stage_runner = mock.Mock(
+                return_value=SimpleNamespace(
+                    returncode=0,
+                    stdout="storage delay complete",
+                    stderr="",
+                )
+            )
+
+            with (
+                mock.patch.object(module, "resolve_paths", return_value=project_paths),
+                mock.patch.object(module, "_run_stage_command", stage_runner),
+            ):
+                module.run_storage_delay_patcher(params, "A_Calibrated_BAU")
+                module.run_open_pwrbck_patcher(params, "A_Calibrated_BAU")
+                module.run_reserve_margin_xlsx_patcher(
+                    params, "A_Calibrated_BAU"
+                )
+
+            storage_command, open_command, reserve_command = [
+                call.args[0] for call in stage_runner.call_args_list
+            ]
+            model_output = Path(
+                storage_command[storage_command.index("--model-output") + 1]
+            )
+            expected = (
+                executables
+                / "A_Calibrated_BAU_0"
+                / "osemosys_fast_preprocessed_storage_delay.txt"
+            ).resolve()
+            self.assertEqual(model_output, expected)
+            self.assertEqual(Path(params["osemosys_model"]), expected)
+            self.assertEqual(Path(params["storage_delay_model_output"]), expected)
+            with self.assertRaises(ValueError):
+                model_output.relative_to(package_root)
+            with self.assertRaises(ValueError):
+                model_output.relative_to(model_root)
+            self.assertEqual(
+                model_output.name,
+                "osemosys_fast_preprocessed_storage_delay.txt",
+            )
+            self.assertIn("open_pwrbck_caps", " ".join(open_command))
+            final_output = Path(
+                reserve_command[reserve_command.index("-o") + 1]
+            )
+            self.assertEqual(
+                final_output.name,
+                "Pre_processed_A_Calibrated_BAU_0_StorageDelayN5_"
+                "OpenBCK_RMCarefulXLSX.txt",
+            )
+
     def test_all_sixteen_execution_and_concatenation_combinations(self) -> None:
         for execute_model, create_matrix, concat_otoole, concat_scenarios in itertools.product(
             (False, True), repeat=4
@@ -852,7 +1162,7 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
                     harness = GuardHarness(
                         module, fixture, solver_boundary=dispatch
                     )
-                    harness.run(["B2_Executing_OG_Model.py"])
+                    harness.run(["python -m ostram run"])
 
                 expected_dispatch: list[str] = []
                 if execute_model or create_matrix:
@@ -893,14 +1203,11 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
             run_process=reject_process,
             check_environment=lambda solver: None,
             get_executable=lambda executable: f"fixture-{executable}",
-            get_config_main_path=lambda here, folder: str(
-                Path(here).parent / folder
-            ),
             path_exists=lambda path: False,
             remove_file=lambda path: None,
             python_executable=sys.executable,
         )
-        root = Path("C:/fixture/t1_confection")
+        root = Path("C:/fixture/execution_workspace")
         sentinel = SentinelSolverAdapter()
 
         with redirect_stdout(io.StringIO()):
@@ -975,7 +1282,7 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
         ) as fixture:
             harness = GuardHarness(module, fixture)
             with mock.patch.object(module.mp, "Process", FakeProcess):
-                harness.run(["B2_Executing_OG_Model.py"])
+                harness.run(["python -m ostram run"])
 
             self.assertEqual(
                 process_events,
@@ -1016,7 +1323,7 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
         ) as fixture:
             harness = GuardHarness(module, fixture, solver_boundary=fail_first)
             with self.assertRaisesRegex(RuntimeError, "solver boundary failure"):
-                harness.run(["B2_Executing_OG_Model.py"])
+                harness.run(["python -m ostram run"])
 
             self.assertEqual(solver_calls, ["A"])
             self.assertNotIn(
@@ -1074,29 +1381,31 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
     def test_exact_solver_command_for_every_supported_solver(self) -> None:
         module = _load_b2("solver_commands")
         with tempfile.TemporaryDirectory() as temp:
-            here = Path(temp).resolve() / "t1_confection"
+            here = Path(temp).resolve() / "execution_workspace"
             folder = os.path.join(str(here), "Executables", "A_0")
             data_file = os.path.join(folder, "Pre_processed_A_0")
             output_file = os.path.join(folder, "Pre_processed_A_0_output")
             expected = {
-                "glpk": (
-                    f"glpsol -m osemosys_fast_preprocessed.txt -d {data_file}.txt "
-                    f"--wglp {output_file}.glp --write {output_file}.sol"
-                ),
-                "cbc": (
-                    f"cbc {output_file}.lp randomSeed 12345 randomCbcSeed 12345 "
-                    f"-seconds 20000 solve -solu {output_file}.sol"
-                ),
-                "cplex": (
-                    f'cplex -c "set logfile {output_file}.cplex.log" '
-                    f'"read {output_file}.lp" "set threads 4" '
-                    f'"set randomseed 12345" "set parallel 1" "optimize" '
-                    f'"write {output_file}.sol"'
-                ),
-                "gurobi": (
-                    f"gurobi_cl Threads=3 Seed=12345 "
-                    f"ResultFile={output_file}.sol {output_file}.lp"
-                ),
+                "glpk": [
+                    "glpsol", "-m", "osemosys_fast_preprocessed.txt",
+                    "-d", f"{data_file}.txt", "--wglp", f"{output_file}.glp",
+                    "--write", f"{output_file}.sol",
+                ],
+                "cbc": [
+                    "cbc", f"{output_file}.lp", "randomSeed", "12345",
+                    "randomCbcSeed", "12345", "-seconds", "20000",
+                    "solve", "-solu", f"{output_file}.sol",
+                ],
+                "cplex": [
+                    "cplex", "-c", f"set logfile {output_file}.cplex.log",
+                    f"read {output_file}.lp", "set threads 4",
+                    "set randomseed 12345", "set parallel 1", "optimize",
+                    f"write {output_file}.sol",
+                ],
+                "gurobi": [
+                    "gurobi_cl", "Threads=3", "Seed=12345",
+                    f"ResultFile={output_file}.sol", f"{output_file}.lp",
+                ],
             }
             environment_name = {
                 "glpk": "glpsol",
@@ -1118,9 +1427,9 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
                     self.assertEqual(commands[0], expected_command)
                     self.assertEqual(len(commands), 2)
                     for recorded in result.runner.call_args_list:
-                        self.assertEqual(
-                            recorded.kwargs, {"shell": True, "check": True}
-                        )
+                        self.assertTrue(recorded.kwargs["check"])
+                        self.assertNotIn("shell", recorded.kwargs)
+                        self.assertTrue(Path(recorded.kwargs["cwd"]).is_absolute())
                     result.check_environment.assert_called_once_with(
                         environment_name[solver]
                     )
@@ -1128,7 +1437,7 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
     def test_cplex_matrix_solve_results_and_concat_commands_keep_exact_order(self) -> None:
         module = _load_b2("cplex_full_chain")
         with tempfile.TemporaryDirectory() as temp:
-            here = Path(temp).resolve() / "t1_confection"
+            here = Path(temp).resolve() / "execution_workspace"
             params = _base_params(
                 solver="cplex",
                 execute_model=True,
@@ -1145,37 +1454,39 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
             conversion = os.path.join(
                 str(here), "Miscellaneous", "conversion_format.yaml"
             )
-            concat_script = os.path.join(
-                str(here.parent), "concatenate_files", "concatenate_ostram.py"
-            )
             expected_commands = [
-                (
-                    f"glpsol -m osemosys_fast_preprocessed.txt -d {data_file}.txt "
-                    f"--wlp {output_file}.lp --check"
-                ),
-                (
-                    f'cplex -c "set logfile {output_file}.cplex.log" '
-                    f'"read {output_file}.lp" "set threads 4" '
-                    f'"set randomseed 12345" "set parallel 1" "optimize" '
-                    f'"write {output_file}.sol"'
-                ),
-                (
-                    f'"ENV-otoole" results cplex csv "{output_file}.sol" '
-                    f'"{outputs}" csv "{template}" "{conversion}" 2> '
-                    f'"{output_file}.log"'
-                ),
-                (
-                    f'"{sys.executable}" -u "{concat_script}" "{outputs}" '
-                    f'"{output_file}"'
-                ),
+                [
+                    "glpsol", "-m", "osemosys_fast_preprocessed.txt",
+                    "-d", f"{data_file}.txt", "--wlp", f"{output_file}.lp",
+                    "--check",
+                ],
+                [
+                    "cplex", "-c", f"set logfile {output_file}.cplex.log",
+                    f"read {output_file}.lp", "set threads 4",
+                    "set randomseed 12345", "set parallel 1", "optimize",
+                    f"write {output_file}.sol",
+                ],
+                [
+                    "ENV-otoole", "results", "cplex", "csv",
+                    f"{output_file}.sol", outputs, "csv", template, conversion,
+                ],
+                [
+                    sys.executable,
+                    "-B",
+                    "-m",
+                    "ostram.pipeline.execution.concatenate",
+                    outputs,
+                    output_file,
+                ],
             ]
             self.assertEqual(
                 [call.args[0] for call in result.runner.call_args_list],
                 expected_commands,
             )
             for recorded in result.runner.call_args_list:
-                self.assertEqual(recorded.kwargs, {"shell": True, "check": True})
-                self.assertNotIn("cwd", recorded.kwargs)
+                self.assertTrue(recorded.kwargs["check"])
+                self.assertNotIn("shell", recorded.kwargs)
+                self.assertTrue(Path(recorded.kwargs["cwd"]).is_absolute())
                 self.assertNotIn("env", recorded.kwargs)
             self.assertEqual(
                 result.removed,
@@ -1188,7 +1499,7 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
     def test_command_failure_propagates_before_success_and_postprocessing(self) -> None:
         module = _load_b2("command_failure")
         with tempfile.TemporaryDirectory() as temp:
-            here = Path(temp).resolve() / "t1_confection"
+            here = Path(temp).resolve() / "execution_workspace"
             params = _base_params(
                 solver="cplex",
                 execute_model=False,
@@ -1208,7 +1519,7 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
     def test_missing_expected_solution_raises_before_results_or_concat(self) -> None:
         module = _load_b2("missing_solution")
         with tempfile.TemporaryDirectory() as temp:
-            here = Path(temp).resolve() / "t1_confection"
+            here = Path(temp).resolve() / "execution_workspace"
             params = _base_params(
                 solver="cplex",
                 execute_model=True,

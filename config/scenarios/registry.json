@@ -1,0 +1,118 @@
+{
+  "schema": "ostram-scenario-registry-v1",
+  "support_scenarios": [
+    "BAU"
+  ],
+  "root_scenarios": [
+    {
+      "name": "BAU",
+      "role": "support",
+      "dependencies": []
+    },
+    {
+      "name": "A_Calibrated_BAU",
+      "role": "decision",
+      "dependencies": []
+    },
+    {
+      "name": "B_Optimised_VRE",
+      "role": "decision",
+      "dependencies": []
+    },
+    {
+      "name": "C_Target_VRE",
+      "role": "decision",
+      "dependencies": [
+        {
+          "type": "result",
+          "scenario": "A_Calibrated_BAU",
+          "environment": "OSTRAM_A_CALIBRATED_BAU_RESULT",
+          "default_path": "Executables/A_Calibrated_BAU_0"
+        }
+      ]
+    }
+  ],
+  "decision_scenarios": [
+    "A_Calibrated_BAU",
+    "A_Calibrated_BAU_Clipped",
+    "B_Optimised_VRE",
+    "B_Opt_Clipped",
+    "B_Opt_DirBidir",
+    "B_Opt_DirContractual",
+    "B_Opt_IndiaCosts",
+    "B_Opt_IndiaCostsFuel",
+    "B_Opt_SolarCapex130",
+    "B_Opt_SolarCapexHi",
+    "B_Opt_SolarCapexSpike",
+    "B_Opt_TradeCap15",
+    "B_Opt_TxCap150",
+    "C_Target_VRE",
+    "C_Target_VRE_Clipped"
+  ],
+  "derived_scenarios": [
+    {
+      "name": "A_Calibrated_BAU_Clipped",
+      "base_scenario": "A_Calibrated_BAU",
+      "patches": "A_Calibrated_BAU_Clipped/patches.json"
+    },
+    {
+      "name": "B_Opt_Clipped",
+      "base_scenario": "B_Optimised_VRE",
+      "patches": "B_Opt_Clipped/patches.json"
+    },
+    {
+      "name": "B_Opt_DirBidir",
+      "base_scenario": "B_Optimised_VRE",
+      "patches": "B_Opt_DirBidir/patches.json",
+      "direction_overlay": "B_Opt_DirBidir/set_interconnector_direction.yaml",
+      "direction_study_start_year": 2027
+    },
+    {
+      "name": "B_Opt_DirContractual",
+      "base_scenario": "B_Optimised_VRE",
+      "patches": "B_Opt_DirContractual/patches.json",
+      "direction_overlay": "B_Opt_DirContractual/set_interconnector_direction.yaml",
+      "direction_study_start_year": 2027
+    },
+    {
+      "name": "B_Opt_IndiaCosts",
+      "base_scenario": "B_Optimised_VRE",
+      "patches": "B_Opt_IndiaCosts/patches.json"
+    },
+    {
+      "name": "B_Opt_IndiaCostsFuel",
+      "base_scenario": "B_Optimised_VRE",
+      "patches": "B_Opt_IndiaCostsFuel/patches.json"
+    },
+    {
+      "name": "B_Opt_SolarCapex130",
+      "base_scenario": "B_Optimised_VRE",
+      "patches": "B_Opt_SolarCapex130/patches.json"
+    },
+    {
+      "name": "B_Opt_SolarCapexHi",
+      "base_scenario": "B_Optimised_VRE",
+      "patches": "B_Opt_SolarCapexHi/patches.json"
+    },
+    {
+      "name": "B_Opt_SolarCapexSpike",
+      "base_scenario": "B_Optimised_VRE",
+      "patches": "B_Opt_SolarCapexSpike/patches.json"
+    },
+    {
+      "name": "B_Opt_TradeCap15",
+      "base_scenario": "B_Optimised_VRE",
+      "patches": "B_Opt_TradeCap15/patches.json"
+    },
+    {
+      "name": "B_Opt_TxCap150",
+      "base_scenario": "B_Optimised_VRE",
+      "patches": "B_Opt_TxCap150/patches.json"
+    },
+    {
+      "name": "C_Target_VRE_Clipped",
+      "base_scenario": "C_Target_VRE",
+      "patches": "C_Target_VRE_Clipped/patches.json"
+    }
+  ]
+}

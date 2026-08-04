@@ -11,9 +11,11 @@ from openpyxl import Workbook, load_workbook
 ROOT = Path(__file__).resolve().parents[2]
 HELPER = (
     ROOT
-    / "t1_confection"
-    / "A3_process"
-    / "apply_ao_extension_decisions.py"
+    / "ostram"
+    / "pipeline"
+    / "scenarios"
+    / "transformations"
+    / "ao_extension_decisions.py"
 )
 
 

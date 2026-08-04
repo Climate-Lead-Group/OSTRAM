@@ -1,5 +1,5 @@
-"""OSTRAM's repository-local canonical command package.
+"""OSTRAM's installable canonical command package.
 
-Run commands from the repository root with ``python -m ostram``.  Importing this
-package does not import or execute any historical workflow entrypoint.
+Importing this package performs no pipeline work. Project resources are
+resolved explicitly by :mod:`ostram.paths`, independently of caller CWD.
 """

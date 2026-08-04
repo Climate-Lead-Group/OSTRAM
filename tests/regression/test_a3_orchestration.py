@@ -22,12 +22,11 @@ from unittest import mock
 
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
-A3_ENTRYPOINT = REPO_ROOT / "t1_confection" / "A3_process.py"
-A3_ORCHESTRATOR = REPO_ROOT / "t1_confection" / "a3_orchestrator.py"
-SCENARIO_HELPER = REPO_ROOT / "t1_confection" / "A3_process" / "_scenarios.py"
-SCENARIO_REGISTRY = (
-    REPO_ROOT / "t1_confection" / "scenario_registry.json"
-)
+SCENARIO_PACKAGE = REPO_ROOT / "ostram" / "pipeline" / "scenarios"
+A3_ENTRYPOINT = SCENARIO_PACKAGE / "transform.py"
+A3_ORCHESTRATOR = SCENARIO_PACKAGE / "orchestrator.py"
+SCENARIO_HELPER = SCENARIO_PACKAGE / "transformations" / "scenario_workbooks.py"
+SCENARIO_REGISTRY = REPO_ROOT / "config" / "scenarios" / "registry.json"
 
 ACTIVE_SCENARIOS = (
     "BAU",
@@ -45,7 +44,12 @@ INPUT_FILES = (
 
 
 def _load_module(path: Path, label: str):
-    module_name = f"_ostram_a3_characterization_{label}"
+    parent = (
+        "ostram.pipeline.scenarios.transformations"
+        if path == SCENARIO_HELPER
+        else "ostram.pipeline.scenarios"
+    )
+    module_name = f"{parent}._characterization_{label}"
     spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
         raise AssertionError(f"could not load module spec for {path}")
@@ -98,8 +102,8 @@ class A3TraceHarness:
         self.root = Path(self._temp.name).resolve()
         self.caller = self.root / "caller"
         self.caller.mkdir()
-        self.t1 = self.root / "t1_confection"
-        self.process_dir = self.t1 / "A3_process"
+        self.preparation_workspace = self.root / "preparation_workspace"
+        self.process_dir = self.preparation_workspace / "scenarios"
         self.process_dir.mkdir(parents=True)
         self.rules_dir = self.process_dir / "rules_scripts"
         self.rules_dir.mkdir()
@@ -112,7 +116,7 @@ class A3TraceHarness:
         self.snapshots = {}
         for scenario_name in scenario_names:
             snapshot = (
-                self.t1
+                self.preparation_workspace
                 / "A1_Outputs"
                 / f"_post_a2_snapshot_{scenario_name}"
             )
@@ -123,10 +127,10 @@ class A3TraceHarness:
                 )
             self.snapshots[scenario_name] = snapshot
         self.snapshot = self.snapshots["A_Calibrated_BAU"]
-        self.input_dir = self.t1 / "relative-input"
+        self.input_dir = self.preparation_workspace / "relative-input"
         self.input_dir.mkdir()
         (self.input_dir / "stale.txt").write_text("stale", encoding="utf-8")
-        self.output_dir = self.t1 / "relative-output"
+        self.output_dir = self.preparation_workspace / "relative-output"
         self.workdir = self.process_dir / "_run_20260716_120000"
         self.paths = {
             "wd": self.workdir,
@@ -289,9 +293,13 @@ class A3TraceHarness:
         stderr = io.StringIO()
         previous_template = os.environ.pop("OSTRAM_TEMPLATE_PATH", None)
         patches = [
-            mock.patch.object(module, "T1_CONFECTION", self.t1),
-            mock.patch.object(module, "A3_PROCESS_DIR", self.process_dir),
+            mock.patch.object(
+                module,
+                "PREPARATION_WORKSPACE",
+                self.preparation_workspace,
+            ),
             mock.patch.object(module, "RULES_SCRIPTS_DIR", self.rules_dir),
+            mock.patch.object(module, "A3_WORKSPACE", self.process_dir),
             mock.patch.object(module, "SOASIA_V18", self.soasia),
             mock.patch.object(
                 module,
@@ -360,38 +368,21 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
         self.assertEqual(stderr.getvalue(), "")
         self.assertTrue(callable(module.main))
 
-    def test_direct_script_import_fallback_is_silent_and_import_safe(self) -> None:
-        real_import = builtins.__import__
-
-        def without_namespace_package(name, globals=None, locals=None, fromlist=(), level=0):
-            if name == "t1_confection":
-                raise ModuleNotFoundError(
-                    "No module named 't1_confection'",
-                    name="t1_confection",
-                )
-            return real_import(name, globals, locals, fromlist, level)
-
-        sys.modules.pop("a3_orchestrator", None)
-        try:
-            with (
-                mock.patch.object(
-                    sys,
-                    "path",
-                    [str(A3_ENTRYPOINT.parent), *sys.path],
-                ),
-                mock.patch.object(builtins, "__import__", side_effect=without_namespace_package),
-                mock.patch.object(subprocess, "run") as process_run,
-                redirect_stdout(io.StringIO()) as stdout,
-                redirect_stderr(io.StringIO()) as stderr,
-            ):
-                module = _load_a3("direct_script_fallback")
-        finally:
-            sys.modules.pop("a3_orchestrator", None)
+    def test_package_relative_orchestrator_import_is_silent_and_import_safe(self) -> None:
+        with (
+            mock.patch.object(subprocess, "run") as process_run,
+            redirect_stdout(io.StringIO()) as stdout,
+            redirect_stderr(io.StringIO()) as stderr,
+        ):
+            module = _load_a3("package_relative_import")
 
         process_run.assert_not_called()
         self.assertEqual(stdout.getvalue(), "")
         self.assertEqual(stderr.getvalue(), "")
-        self.assertTrue(callable(module.main))
+        self.assertEqual(
+            module._orchestrator.__name__,
+            "ostram.pipeline.scenarios.orchestrator",
+        )
 
     def test_existing_callable_helper_surface_remains_available(self) -> None:
         module = _load_a3("callable_surface")
@@ -434,19 +425,23 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
         build_source = inspect.getsource(module.build_workdir)
         stage1_source = inspect.getsource(module.stage_1_scripts_1_to_5)
         self.assertIn("OSTRAM_Timeslice_Inputs.xlsx", build_source)
-        self.assertIn("apply_ao_extension_decisions.py", build_source)
+        self.assertIn('script == "relax_interconnectors.py"', build_source)
+        self.assertNotIn("stage1_sources", build_source)
         self.assertNotIn("OSTRAM_AO_Extensions_FILLED.xlsx", build_source)
         self.assertNotIn(
             "A-O_Parametrization_REFERENCE_with_RNWBIO.xlsx",
             build_source,
         )
         self.assertNotIn("fix_rnwbio_restore.py", build_source)
-        self.assertIn("apply_ao_extension_decisions.py", stage1_source)
+        self.assertIn(
+            "ostram.pipeline.scenarios.transformations.ao_extension_decisions",
+            stage1_source,
+        )
         self.assertNotIn("OSTRAM_AO_Extensions_FILLED.xlsx", stage1_source)
 
     def test_cli_defaults_and_explicit_values_match_predecessor(self) -> None:
         module = _load_a3("cli_values")
-        with mock.patch.object(sys, "argv", ["A3_process.py"]):
+        with mock.patch.object(sys, "argv", ["python -m ostram transform"]):
             defaults = module.parse_cli_args()
         self.assertEqual(
             vars(defaults),
@@ -462,7 +457,7 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
         )
 
         argv = [
-            "A3_process.py",
+            "python -m ostram transform",
             "--scenario",
             "Scenario X",
             "--soasia",
@@ -490,14 +485,14 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
     def test_help_unknown_options_and_missing_values_keep_argparse_exit_codes(self) -> None:
         module = _load_a3("argparse_exits")
         cases = (
-            (["A3_process.py", "--help"], 0),
-            (["A3_process.py", "--unknown"], 2),
-            (["A3_process.py", "--scenario"], 2),
-            (["A3_process.py", "--soasia"], 2),
-            (["A3_process.py", "--rules-script"], 2),
-            (["A3_process.py", "--inherit-from"], 2),
-            (["A3_process.py", "--input-dir"], 2),
-            (["A3_process.py", "--output-dir"], 2),
+            (["python -m ostram transform", "--help"], 0),
+            (["python -m ostram transform", "--unknown"], 2),
+            (["python -m ostram transform", "--scenario"], 2),
+            (["python -m ostram transform", "--soasia"], 2),
+            (["python -m ostram transform", "--rules-script"], 2),
+            (["python -m ostram transform", "--inherit-from"], 2),
+            (["python -m ostram transform", "--input-dir"], 2),
+            (["python -m ostram transform", "--output-dir"], 2),
         )
         for argv, code in cases:
             with self.subTest(argv=argv):
@@ -526,7 +521,7 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
                 orchestrate.assert_not_called()
                 if code == 0:
                     help_text = stdout.getvalue()
-                    self.assertIn("A3_process.py", help_text)
+                    self.assertIn("python -m ostram transform", help_text)
                     for option in (
                         "--scenario",
                         "--soasia",
@@ -736,24 +731,17 @@ class A3IsolatedBoundaryTests(unittest.TestCase):
             module.INPUT_FILES,
         )
 
-    def test_entrypoint_path_resolution_and_run_planning_are_pure(self) -> None:
+    def test_resolved_path_run_planning_is_pure(self) -> None:
         orchestrator = _load_orchestrator("pure_plan")
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp).resolve()
-            t1 = root / "t1_confection"
-            process_dir = t1 / "A3_process"
+            preparation_workspace = root / "preparation_workspace"
+            process_dir = preparation_workspace / "scenarios"
             process_dir.mkdir(parents=True)
-            entrypoint = t1 / "A3_process.py"
-            paths = orchestrator.A3Paths.from_entrypoint(entrypoint)
-            self.assertEqual(
-                paths,
-                orchestrator.A3Paths(
-                    t1_confection=t1,
-                    process_dir=process_dir,
-                    default_soasia=(
-                        process_dir / "OSTRAM_Scenario_Inputs.xlsx"
-                    ),
-                ),
+            paths = orchestrator.A3Paths(
+                preparation_workspace=preparation_workspace,
+                process_dir=process_dir,
+                default_soasia=process_dir / "OSTRAM_Scenario_Inputs.xlsx",
             )
 
             events: list[tuple[object, ...]] = []
@@ -764,7 +752,7 @@ class A3IsolatedBoundaryTests(unittest.TestCase):
 
             def resolve_path(value):
                 events.append(("resolve_path", value))
-                return t1 / Path(value)
+                return preparation_workspace / Path(value)
 
             dependencies = SimpleNamespace(
                 resolve_scenario_config=resolve_config,
@@ -791,11 +779,11 @@ class A3IsolatedBoundaryTests(unittest.TestCase):
         self.assertEqual(plan.rules_scripts, ("one.py", "two.py"))
         self.assertEqual(plan.inherit_from, ("BAU",))
         self.assertEqual(plan.soasia, Path("caller-relative.xlsx"))
-        self.assertEqual(plan.input_dir, t1 / "input override")
-        self.assertEqual(plan.output_dir, t1 / "output override")
+        self.assertEqual(plan.input_dir, preparation_workspace / "input override")
+        self.assertEqual(plan.output_dir, preparation_workspace / "output override")
         self.assertEqual(
             plan.snapshot_dir,
-            t1 / "A1_Outputs" / "_post_a2_snapshot_Scenario_A",
+            preparation_workspace / "A1_Outputs" / "_post_a2_snapshot_Scenario_A",
         )
         self.assertEqual(plan.workdir_base, process_dir)
         self.assertTrue(plan.keep_workdir)
@@ -808,7 +796,7 @@ class A3IsolatedBoundaryTests(unittest.TestCase):
             process_dir.mkdir()
             default_soasia = process_dir / "template.xlsx"
             paths = orchestrator.A3Paths(
-                t1_confection=root,
+                preparation_workspace=root,
                 process_dir=process_dir,
                 default_soasia=default_soasia,
             )
@@ -1008,14 +996,14 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                 with self.subTest(scenario=scenario):
                     with (
                         mock.patch.object(module, "RULES_SCRIPTS_DIR", rules_dir),
+                        mock.patch.object(module, "SCENARIO_RULE_DATA", rules_dir),
                         mock.patch.object(module, "banner"),
                         mock.patch.object(module, "run_subproc") as run_subproc,
                     ):
                         module.stage_ws4_pwr_min_pin(stage5, scenario)
                     run_subproc.assert_called_once_with(
+                        "ostram.pipeline.scenarios.rules.apply_base_year_pin",
                         [
-                            module.PYTHON,
-                            script,
                             "--input-dir",
                             stage5,
                             "--scenario",
@@ -1024,7 +1012,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                             rules,
                             "--skip-backup",
                         ],
-                        label="apply_base_year_pin.py",
+                        label="apply base-year pin",
                     )
 
     def test_static_pin_wrapper_fails_closed_on_scenario_or_missing_asset(self):
@@ -1076,13 +1064,22 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(SystemExit, "FAILED: fixture stage"):
                 module.run_subproc(
-                    [Path("python"), Path("transform.py"), "--flag", "value"],
+                    "ostram.pipeline.fixture",
+                    ["--flag", "value"],
                     cwd=Path("fixture-cwd"),
                     label="fixture stage",
                 )
         process_run.assert_called_once_with(
-            ["python", "transform.py", "--flag", "value"],
-            cwd="fixture-cwd",
+            [
+                sys.executable,
+                "-B",
+                "-m",
+                "ostram.pipeline.fixture",
+                "--flag",
+                "value",
+            ],
+            cwd=str(Path("fixture-cwd").resolve()),
+            env=mock.ANY,
             capture_output=True,
             text=True,
         )

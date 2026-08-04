@@ -4,7 +4,7 @@ test_scenarios_lite.py — fast pre-pipeline checks for SOASIA v18 multi-scenari
 
 Covers plan tests #9 (bad config errors), #10 (cycle detection) and #11 (HTML
 build). The expensive tests #1-#8 require running the full A3 pipeline and
-should be exercised separately via `python run.py`.
+should be exercised separately via `python -m ostram run`.
 
 Run:
     python tests/validation/test_scenarios_lite.py
@@ -21,13 +21,10 @@ from tempfile import TemporaryDirectory
 from openpyxl import load_workbook
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-A3_PROCESS_DIR = REPO_ROOT / "t1_confection" / "A3_process"
-sys.path.insert(0, str(A3_PROCESS_DIR))
-
-import _scenarios as S
+from ostram.pipeline.scenarios.transformations import scenario_workbooks as S
 
 
-V18 = A3_PROCESS_DIR / "OSTRAM_Scenario_Inputs.xlsx"
+V18 = REPO_ROOT / "inputs" / "scenarios" / "OSTRAM_Scenario_Inputs.xlsx"
 
 
 PASS = "\033[92mPASS\033[0m"

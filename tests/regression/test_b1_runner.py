@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 import importlib.util
 import io
+import json
 import os
 import subprocess
 import sys
@@ -13,14 +15,20 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
+import yaml
+
+from ostram.paths import ProjectPaths
+from ostram.pipeline.compilation.transforms import effects as b1_effects
+from ostram.pipeline.compilation.transforms import planning as b1_planning
+
 
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
-B1_ENTRYPOINT = REPO_ROOT / "t1_confection" / "B1_Run_Compiler.py"
+B1_ENTRYPOINT = REPO_ROOT / "ostram" / "pipeline" / "compilation" / "runner.py"
 
 
 def _load_b1(label: str):
-    module_name = f"_ostram_b1_characterization_{label}"
+    module_name = f"ostram.pipeline.compilation._characterization_{label}"
     spec = importlib.util.spec_from_file_location(module_name, B1_ENTRYPOINT)
     if spec is None or spec.loader is None:
         raise AssertionError(f"could not load module spec for {B1_ENTRYPOINT}")
@@ -42,9 +50,9 @@ def _implementation(module):
 def _b1_fixture(*scenarios: str):
     with tempfile.TemporaryDirectory() as temp:
         script_dir = Path(temp).resolve()
-        entrypoint = script_dir / "B1_Run_Compiler.py"
+        entrypoint = script_dir / "runner.py"
         entrypoint.write_text("# fixture only\n", encoding="utf-8")
-        compiler = script_dir / "B1_Compiler.py"
+        compiler = script_dir / "compiler.py"
         compiler.write_text("# never executed\n", encoding="utf-8")
         config = script_dir / "Config_MOMF_T1_A.yaml"
         original = b"xtra_scen:\r\n  Main_Scenario: ORIGINAL\r\n"
@@ -72,6 +80,16 @@ def _fixture_update(events: list[tuple[object, ...]]):
     return update
 
 
+def _patch_fixture_paths(runner, fixture):
+    paths = runner.B1Paths(
+        script_dir=fixture.script_dir,
+        config_path=fixture.config,
+        compiler_path=fixture.compiler,
+        scenarios_root=fixture.scenario_root,
+    )
+    return mock.patch.object(runner.B1Paths, "defaults", return_value=paths)
+
+
 class B1ImportAndCliCharacterizationTests(unittest.TestCase):
     def test_import_is_silent_and_does_not_cross_process_or_file_boundaries(self) -> None:
         with (
@@ -92,12 +110,12 @@ class B1ImportAndCliCharacterizationTests(unittest.TestCase):
 
     def test_cli_defaults_and_explicit_filter_are_unchanged(self) -> None:
         runner = _implementation(_load_b1("cli_values"))
-        with mock.patch.object(sys, "argv", ["B1_Run_Compiler.py"]):
+        with mock.patch.object(sys, "argv", ["python -m ostram compile-inputs"]):
             defaults = runner.parse_cli_args()
         with mock.patch.object(
             sys,
             "argv",
-            ["B1_Run_Compiler.py", "--scenarios", " C , A, C "],
+            ["python -m ostram compile-inputs", "--scenarios", " C , A, C "],
         ):
             explicit = runner.parse_cli_args()
 
@@ -107,13 +125,18 @@ class B1ImportAndCliCharacterizationTests(unittest.TestCase):
     def test_public_wrapper_forwards_explicit_orchestration_seams(self) -> None:
         module = _load_b1("wrapper_forwarding")
         cli_args = argparse.Namespace(scenarios="A")
-        paths = module._impl.B1Paths.from_entrypoint(B1_ENTRYPOINT)
+        paths = module._impl.B1Paths(
+            script_dir=B1_ENTRYPOINT.parent,
+            config_path=B1_ENTRYPOINT.with_name("Config_MOMF_T1_A.yaml"),
+            compiler_path=B1_ENTRYPOINT.with_name("compiler.py"),
+            scenarios_root=B1_ENTRYPOINT.parent / "A1_Outputs",
+        )
 
         with (
             mock.patch.object(module, "parse_cli_args", return_value=cli_args) as parse,
             mock.patch.object(
                 module._impl.B1Paths,
-                "from_entrypoint",
+                "defaults",
                 return_value=paths,
             ) as resolve_paths,
             mock.patch.object(
@@ -124,7 +147,7 @@ class B1ImportAndCliCharacterizationTests(unittest.TestCase):
 
         self.assertIsNone(result)
         parse.assert_called_once_with()
-        resolve_paths.assert_called_once_with(module.__file__)
+        resolve_paths.assert_called_once_with()
         orchestrate.assert_called_once_with(
             cli_args,
             paths,
@@ -136,9 +159,9 @@ class B1ImportAndCliCharacterizationTests(unittest.TestCase):
     def test_help_unknown_option_and_missing_value_keep_argparse_exit_codes(self) -> None:
         runner = _implementation(_load_b1("cli_exits"))
         cases = (
-            (["B1_Run_Compiler.py", "--help"], 0),
-            (["B1_Run_Compiler.py", "--unknown"], 2),
-            (["B1_Run_Compiler.py", "--scenarios"], 2),
+            (["python -m ostram compile-inputs", "--help"], 0),
+            (["python -m ostram compile-inputs", "--unknown"], 2),
+            (["python -m ostram compile-inputs", "--scenarios"], 2),
         )
         for argv, expected in cases:
             with self.subTest(argv=argv):
@@ -182,7 +205,7 @@ class B1ScenarioCharacterizationTests(unittest.TestCase):
         with _b1_fixture("C", "A", "B") as fixture:
             events: list[tuple[object, ...]] = []
             with (
-                mock.patch.object(self.runner, "__file__", str(fixture.entrypoint)),
+                _patch_fixture_paths(self.runner, fixture),
                 mock.patch.object(
                     self.runner,
                     "parse_cli_args",
@@ -219,7 +242,7 @@ class B1ScenarioCharacterizationTests(unittest.TestCase):
                 path.write_text(f"scenario: {scenario}\n", encoding="utf-8")
 
             with (
-                mock.patch.object(self.runner, "__file__", str(fixture.entrypoint)),
+                _patch_fixture_paths(self.runner, fixture),
                 mock.patch.object(
                     self.runner,
                     "parse_cli_args",
@@ -238,7 +261,7 @@ class B1ScenarioCharacterizationTests(unittest.TestCase):
     def test_unknown_filter_preserves_unknown_order_and_duplicates_and_exits_one(self) -> None:
         with _b1_fixture("A", "B") as fixture:
             with (
-                mock.patch.object(self.runner, "__file__", str(fixture.entrypoint)),
+                _patch_fixture_paths(self.runner, fixture),
                 mock.patch.object(
                     self.runner,
                     "parse_cli_args",
@@ -263,7 +286,7 @@ class B1ScenarioCharacterizationTests(unittest.TestCase):
     def test_truthy_empty_filter_runs_nothing_but_still_backs_up_and_restores(self) -> None:
         with _b1_fixture("A", "B") as fixture:
             with (
-                mock.patch.object(self.runner, "__file__", str(fixture.entrypoint)),
+                _patch_fixture_paths(self.runner, fixture),
                 mock.patch.object(
                     self.runner,
                     "parse_cli_args",
@@ -287,7 +310,7 @@ class B1ScenarioCharacterizationTests(unittest.TestCase):
         with _b1_fixture("B", "A") as fixture:
             events: list[tuple[object, ...]] = []
             with (
-                mock.patch.object(self.runner, "__file__", str(fixture.entrypoint)),
+                _patch_fixture_paths(self.runner, fixture),
                 mock.patch.object(
                     self.runner,
                     "parse_cli_args",
@@ -310,7 +333,7 @@ class B1ScenarioCharacterizationTests(unittest.TestCase):
     def test_no_discovery_exits_zero_before_filter_validation_or_backup(self) -> None:
         with _b1_fixture() as fixture:
             with (
-                mock.patch.object(self.runner, "__file__", str(fixture.entrypoint)),
+                _patch_fixture_paths(self.runner, fixture),
                 mock.patch.object(
                     self.runner,
                     "parse_cli_args",
@@ -348,7 +371,8 @@ class B1CommandBoundaryCharacterizationTests(unittest.TestCase):
 
             self.assertEqual(result, 7)
             process_run.assert_called_once_with(
-                [interpreter, str(fixture.compiler)], cwd=str(fixture.script_dir)
+                [interpreter, "-B", "-m", "ostram.pipeline.compilation.compiler"],
+                cwd=str(fixture.script_dir),
             )
             self.assertNotIn("env", process_run.call_args.kwargs)
             self.assertNotIn("shell", process_run.call_args.kwargs)
@@ -368,7 +392,7 @@ class B1CommandBoundaryCharacterizationTests(unittest.TestCase):
             with self.subTest(missing=missing), _b1_fixture("A") as fixture:
                 (fixture.config if missing == "config" else fixture.compiler).unlink()
                 with (
-                    mock.patch.object(self.runner, "__file__", str(fixture.entrypoint)),
+                    _patch_fixture_paths(self.runner, fixture),
                     mock.patch.object(
                         self.runner,
                         "parse_cli_args",
@@ -388,16 +412,70 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
     def setUp(self) -> None:
         self.runner = _implementation(_load_b1(self.id().rsplit(".", 1)[-1]))
 
-    def test_entrypoint_paths_are_resolved_once_and_explicit(self) -> None:
+    def test_explicit_paths_are_stored_without_caller_cwd_lookup(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
-            entrypoint = Path(temp) / "nested" / "B1_Run_Compiler.py"
-            expected_root = entrypoint.resolve().parent
-            paths = self.runner.B1Paths.from_entrypoint(entrypoint)
+            expected_root = (Path(temp) / "nested").resolve()
+            paths = self.runner.B1Paths(
+                script_dir=expected_root,
+                config_path=expected_root / "Config_MOMF_T1_A.yaml",
+                compiler_path=expected_root / "compiler.py",
+                scenarios_root=expected_root / "A1_Outputs",
+            )
 
         self.assertEqual(paths.script_dir, expected_root)
         self.assertEqual(paths.config_path, expected_root / "Config_MOMF_T1_A.yaml")
-        self.assertEqual(paths.compiler_path, expected_root / "B1_Compiler.py")
+        self.assertEqual(paths.compiler_path, expected_root / "compiler.py")
         self.assertEqual(paths.scenarios_root, expected_root / "A1_Outputs")
+
+    def test_canonical_materialized_directory_handoff_uses_nested_a1_outputs(
+        self,
+    ) -> None:
+        scenario = "A_Calibrated_BAU"
+        workbook_name = "A-O_AR_Model_Base_Year.xlsx"
+        with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
+            project = ProjectPaths(
+                project_root=REPO_ROOT,
+                workspace=(Path(temp) / "workspace").resolve(),
+                layout="project",
+            )
+            expected_directory = (
+                project.a1_outputs / f"A1_Outputs_{scenario}"
+            )
+            expected_directory.mkdir(parents=True)
+            expected_workbook = expected_directory / workbook_name
+            expected_workbook.write_bytes(b"materialized workbook fixture")
+
+            with mock.patch.object(
+                self.runner,
+                "resolve_paths",
+                return_value=project,
+            ):
+                paths = self.runner.B1Paths.defaults()
+
+            params = yaml.safe_load(paths.config_path.read_text(encoding="utf-8"))
+            params["xtra_scen"]["Main_Scenario"] = scenario
+            plan = b1_planning.TransformPlan(
+                params=params,
+                base_year=params["base_year"],
+                final_year=params["final_year"],
+                time_range_vector=[],
+                wide_param_header=params["sets"],
+                other_setup_params=params["xtra_scen"],
+                other_setup_params_timeslices=[],
+            )
+            selected_workbook = Path(
+                plan.scenario_workbook("Print_Base_Year")
+            ).resolve()
+
+            self.assertEqual(paths.scenarios_root, project.a1_outputs)
+            self.assertEqual(selected_workbook, expected_workbook)
+            self.assertTrue(selected_workbook.is_file())
+            self.assertEqual(selected_workbook.parent.parent, project.a1_outputs)
+            self.assertEqual(selected_workbook.parts.count("A1_Outputs"), 1)
+            self.assertEqual(
+                selected_workbook.parent.name,
+                f"A1_Outputs_{scenario}",
+            )
 
     def test_scenario_resolution_is_pure_and_retains_diagnostics(self) -> None:
         discovered = ["A", "B", "C"]
@@ -427,7 +505,7 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
         )
 
     def test_command_plan_and_injected_runner_are_separate(self) -> None:
-        compiler = Path("root") / "B1_Compiler.py"
+        compiler = Path("root") / "compiler.py"
         cwd = Path("root")
         command = self.runner.build_compiler_command(
             interpreter="chosen-python", compiler_path=compiler, cwd=cwd
@@ -442,10 +520,26 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
             command, command_runner=fake_runner
         )
 
-        self.assertEqual(command.argv, ("chosen-python", str(compiler)))
-        self.assertEqual(command.cwd, cwd)
+        self.assertEqual(
+            command.argv,
+            ("chosen-python", "-B", "-m", "ostram.pipeline.compilation.compiler"),
+        )
+        self.assertEqual(command.cwd, cwd.resolve())
         self.assertEqual(return_code, 6)
-        self.assertEqual(calls, [(["chosen-python", str(compiler)], str(cwd))])
+        self.assertEqual(
+            calls,
+            [
+                (
+                    [
+                        "chosen-python",
+                        "-B",
+                        "-m",
+                        "ostram.pipeline.compilation.compiler",
+                    ],
+                    str(cwd.resolve()),
+                )
+            ],
+        )
 
     def test_configuration_scope_exposes_backup_and_restores_on_body_exception(self) -> None:
         config = Path("Config_MOMF_T1_A.yaml")
@@ -482,15 +576,29 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
 
     def test_b1_production_path_has_only_the_compiler_process_boundary(self) -> None:
         wrapper_source = B1_ENTRYPOINT.read_text(encoding="utf-8-sig")
-        helper_source = (B1_ENTRYPOINT.parent / "b1_runner.py").read_text(
+        helper_source = (B1_ENTRYPOINT.parent / "orchestrator.py").read_text(
             encoding="utf-8-sig"
         )
+        compiler_source = (B1_ENTRYPOINT.parent / "compiler.py").read_text(
+            encoding="utf-8-sig"
+        )
+        config_source = (
+            REPO_ROOT / "config" / "compilation" / "Config_MOMF_T1_A.yaml"
+        ).read_text(encoding="utf-8-sig")
         combined = wrapper_source + helper_source
 
-        self.assertIn('script_dir / "B1_Compiler.py"', helper_source)
+        self.assertIn('script_dir / "compiler.py"', helper_source)
         self.assertIn("runner(list(command.argv), cwd=str(command.cwd))", helper_source)
+        for retired_projection_dependency in (
+            "Xtra_Proj",
+            "A-Xtra_Projections.xlsx",
+            "Projections_sheet",
+            "Projections_control",
+        ):
+            self.assertNotIn(retired_projection_dependency, compiler_source)
+            self.assertNotIn(retired_projection_dependency, config_source)
         for forbidden in (
-            "B2_Executing_OG_Model.py",
+            "python -m ostram run",
             "main_executer",
             "glpsol",
             "gurobi_cl",
@@ -499,6 +607,128 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, combined)
 
+    def test_fresh_b1_extra_input_contract_contains_only_live_dependencies(
+        self,
+    ) -> None:
+        compiler_path = B1_ENTRYPOINT.parent / "compiler.py"
+        config_path = (
+            REPO_ROOT / "config" / "compilation" / "Config_MOMF_T1_A.yaml"
+        )
+        producer_path = (
+            REPO_ROOT / "ostram" / "pipeline" / "preparation" / "base_inputs.py"
+        )
+        effects_path = B1_ENTRYPOINT.parent / "transforms" / "effects.py"
+        registry_path = REPO_ROOT / "config" / "scenarios" / "registry.json"
+        templates = REPO_ROOT / "inputs" / "preparation" / "workbook_templates"
+
+        compiler_source = compiler_path.read_text(encoding="utf-8-sig")
+        config_source = config_path.read_text(encoding="utf-8-sig")
+        producer_source = producer_path.read_text(encoding="utf-8-sig")
+        effects_source = effects_path.read_text(encoding="utf-8-sig")
+        params = yaml.safe_load(config_source)
+        configured = {
+            key: value
+            for key, value in params.items()
+            if str(key).startswith("Xtra_")
+        }
+
+        live_contract = {
+            "Xtra_Emi": {
+                "filename": "/A-Xtra_Emissions.xlsx",
+                "template": "A-Xtra_Emissions.xlsx",
+                "parsed": ("Emissions_ghg_df", "Emissions_ext_df"),
+            },
+            "Xtra_Storage": {
+                "filename": "/A-Xtra_Storage.xlsx",
+                "template": "A-Xtra_Storage.xlsx",
+                "parsed": (
+                    "xtra_storage_fixed_hori_param",
+                    "xtra_storage_capitalcost",
+                    "xtra_storage_technology_sto",
+                ),
+            },
+        }
+        self.assertEqual(
+            configured,
+            {
+                key: contract["filename"]
+                for key, contract in live_contract.items()
+            },
+        )
+
+        retired_contract = {
+            "Xtra_Proj": (
+                "A-Xtra_Projections.xlsx",
+                "Projections_sheet",
+                "Projections_control",
+            ),
+            "Xtra_Battery": (
+                "A-Xtra_Battery_Replacement.xlsx",
+                "Battery_Replacement",
+                "Battery_Replacement_df",
+            ),
+        }
+        for key, retired_tokens in retired_contract.items():
+            self.assertNotIn(key, configured)
+            self.assertNotIn(key, config_source)
+            self.assertNotIn(key, compiler_source)
+            for token in retired_tokens:
+                self.assertNotIn(token, config_source)
+                self.assertNotIn(token, compiler_source)
+
+        for key, contract in live_contract.items():
+            filename = str(contract["template"])
+            self.assertIn(f"extra_input('{key}')", compiler_source)
+            self.assertIn(filename, producer_source)
+            self.assertTrue((templates / filename).is_file())
+            for parsed_object in contract["parsed"]:
+                self.assertIn(parsed_object, compiler_source)
+
+        self.assertNotIn("except FileNotFoundError", compiler_source)
+        self.assertNotIn("except FileNotFoundError", effects_source)
+        self.assertIn("return factory(path)", effects_source)
+        with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
+            missing_root = Path(temp) / "fresh-extra-inputs"
+            plan = b1_planning.TransformPlan(
+                params={"A2_extra_inputs": str(missing_root), **configured},
+                base_year=2023,
+                final_year=2050,
+                time_range_vector=[],
+                wide_param_header=[],
+                other_setup_params={},
+                other_setup_params_timeslices=[],
+            )
+            for key in live_contract:
+                with self.subTest(missing_active_key=key):
+                    with self.assertRaises(FileNotFoundError):
+                        b1_effects.open_workbook(plan.extra_input(key))
+
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        self.assertEqual(len(registry["decision_scenarios"]), 15)
+        governed_sources = []
+        for path in registry_path.parent.rglob("*"):
+            if path.is_file() and path.suffix.lower() in {
+                ".json",
+                ".yaml",
+                ".yml",
+                ".csv",
+            }:
+                governed_sources.append(path.read_text(encoding="utf-8-sig"))
+        combined_governed_source = "\n".join(governed_sources)
+        for retired_or_legacy_token in (
+            "Xtra_Proj",
+            "A-Xtra_Projections.xlsx",
+            "Xtra_Battery",
+            "A-Xtra_Battery_Replacement.xlsx",
+            "Projection.Mode",
+            "Projection.Parameter",
+            "Ref.km.BY",
+        ):
+            self.assertNotIn(retired_or_legacy_token, combined_governed_source)
+        self.assertIn('"Projection.Mode": "User defined"', producer_source)
+        self.assertIn('"Ref.km.BY": "not needed"', producer_source)
+        self.assertFalse(params["Use_Transport"])
+
 
 class B1ConfigurationAndFailureCharacterizationTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -506,8 +736,18 @@ class B1ConfigurationAndFailureCharacterizationTests(unittest.TestCase):
 
     @contextmanager
     def _main_context(self, fixture, scenarios: str | None):
+        paths = self.runner.B1Paths(
+            script_dir=fixture.script_dir,
+            config_path=fixture.config,
+            compiler_path=fixture.compiler,
+            scenarios_root=fixture.scenario_root,
+        )
         with (
-            mock.patch.object(self.runner, "__file__", str(fixture.entrypoint)),
+            mock.patch.object(
+                self.runner.B1Paths,
+                "defaults",
+                return_value=paths,
+            ),
             mock.patch.object(
                 self.runner,
                 "parse_cli_args",
@@ -590,19 +830,20 @@ class B1ConfigurationAndFailureCharacterizationTests(unittest.TestCase):
                 ),
                 mock.patch.object(self.runner, "run_compiler", side_effect=return_codes),
                 redirect_stdout(io.StringIO()) as stdout,
+                self.assertRaises(subprocess.CalledProcessError) as raised,
             ):
-                result = self.runner.main()
+                self.runner.main()
 
-            self.assertIsNone(result)
+            self.assertEqual(raised.exception.returncode, 4)
             self.assertEqual(
                 [event[2] for event in events if event[0] == "update"],
-                ["A", "B", "C"],
+                ["A"],
             )
             output = stdout.getvalue()
             self.assertIn("exited with code 4 for scenario 'A'", output)
-            self.assertIn("completed successfully for scenario 'B'", output)
-            self.assertIn("exited with code 9 for scenario 'C'", output)
-            self.assertIn("[INFO] All done.", output)
+            self.assertNotIn("Running scenario: B", output)
+            self.assertNotIn("Running scenario: C", output)
+            self.assertNotIn("[INFO] All done.", output)
             self.assertEqual(fixture.config.read_bytes(), fixture.original)
 
     def test_update_error_skips_only_that_compiler_and_continues(self) -> None:

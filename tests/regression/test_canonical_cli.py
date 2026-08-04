@@ -113,10 +113,10 @@ class CanonicalCliImportAndHelpTests(unittest.TestCase):
         package_names = ("ostram", "ostram.__main__")
         historical_names = (
             "run",
-            "t1_confection.A3_process",
-            "t1_confection.B1_Run_Compiler",
-            "t1_confection.B1_Compiler",
-            "t1_confection.B2_Executing_OG_Model",
+            "ostram.pipeline.scenarios.transform",
+            "ostram.pipeline.compilation.runner",
+            "ostram.pipeline.compilation.compiler",
+            "ostram.pipeline.execution.runner",
         )
         saved_packages = {
             name: sys.modules.pop(name)
@@ -186,9 +186,10 @@ class CanonicalCliImportAndHelpTests(unittest.TestCase):
         self.assertIn("run", help_text)
         self.assertIn("transform", help_text)
         self.assertIn("compile-inputs", help_text)
+        self.assertIn("inspect-resources", help_text)
         self.assertNotIn("prepare-model", help_text)
         self.assertNotIn("solve", help_text)
-        self.assertIn("historical", help_text.lower())
+        self.assertIn("project-root", help_text)
 
     def test_unknown_deferred_and_malformed_top_level_commands_exit_two(self) -> None:
         cli = _load_cli("top_errors")
@@ -294,8 +295,10 @@ class CanonicalCliImportAndHelpTests(unittest.TestCase):
                 self.assertIn("python -m ostram run", text)
                 self.assertIn("python -m ostram transform", text)
                 self.assertIn("python -m ostram compile-inputs", text)
-                self.assertIn("prepare-model", text)
+                self.assertIn("inspect-resources", text)
                 self.assertIn("solve", text)
+                self.assertNotIn("run.py", text)
+                self.assertNotIn("t1_confection", text)
 
 
 class CanonicalCliSubprocessSmokeTests(unittest.TestCase):
@@ -347,7 +350,7 @@ class CanonicalCliSubprocessSmokeTests(unittest.TestCase):
 
 
 class CanonicalCliDispatchTests(unittest.TestCase):
-    def test_route_registry_maps_exact_historical_modules_and_defers_b2(self) -> None:
+    def test_route_registry_maps_canonical_package_modules_and_defers_b2(self) -> None:
         cli = _load_cli("registry")
         self.assertEqual(
             {
@@ -355,15 +358,19 @@ class CanonicalCliDispatchTests(unittest.TestCase):
                 for name, route in cli.ROUTES.items()
             },
             {
-                "run": ("run", "run.py", "run-guard"),
+                "run": (
+                    "ostram.pipeline.orchestration",
+                    "python -m ostram run",
+                    "run-guard",
+                ),
                 "transform": (
-                    "t1_confection.A3_process",
-                    "A3_process.py",
+                    "ostram.pipeline.scenarios.transform",
+                    "python -m ostram transform",
                     "main-result",
                 ),
                 "compile-inputs": (
-                    "t1_confection.B1_Run_Compiler",
-                    "B1_Run_Compiler.py",
+                    "ostram.pipeline.compilation.runner",
+                    "python -m ostram compile-inputs",
                     "natural-zero",
                 ),
             },
@@ -424,7 +431,14 @@ class CanonicalCliDispatchTests(unittest.TestCase):
                 self.assertEqual(len(events), 1)
                 self.assertEqual(events[0][1], (route.program, *raw))
                 self.assertEqual(events[0][2], Path.cwd())
-                self.assertEqual(events[0][3], {"OSTRAM_SENTINEL": "kept"})
+                self.assertEqual(events[0][3]["OSTRAM_SENTINEL"], "kept")
+                self.assertEqual(
+                    Path(events[0][3]["OSTRAM_PROJECT_ROOT"]), REPO_ROOT
+                )
+                self.assertEqual(
+                    Path(events[0][3]["OSTRAM_WORKSPACE"]),
+                    REPO_ROOT / "workspace",
+                )
                 self.assertIs(sys.argv, original_argv)
                 expected_result = 23 if route.exit_policy == "main-result" else 0
                 self.assertEqual(result, expected_result)
@@ -591,7 +605,7 @@ class CanonicalCliDispatchTests(unittest.TestCase):
         cli = _load_cli("no_downstream_arguments")
         original_argv = sys.argv
 
-        run_module = importlib.import_module("run")
+        run_module = importlib.import_module("ostram.pipeline.orchestration")
         with mock.patch.object(
             run_module,
             "check_tool_available",
@@ -606,7 +620,7 @@ class CanonicalCliDispatchTests(unittest.TestCase):
         run_boundary.assert_called_once_with("conda")
 
         transform_module = importlib.import_module(
-            "t1_confection.A3_process"
+            "ostram.pipeline.scenarios.transform"
         )
         with mock.patch.object(
             transform_module._orchestrator,
@@ -622,7 +636,7 @@ class CanonicalCliDispatchTests(unittest.TestCase):
         self.assertFalse(transform_args.keep_workdir)
 
         compile_module = importlib.import_module(
-            "t1_confection.B1_Run_Compiler"
+            "ostram.pipeline.compilation.runner"
         )
         with mock.patch.object(
             compile_module._impl,
@@ -681,7 +695,18 @@ class CanonicalCliDispatchTests(unittest.TestCase):
                             observed[0][1],
                             (route.program, "--value", "argument with spaces"),
                         )
-                        self.assertEqual(observed[0][2], environment)
+                        self.assertEqual(
+                            observed[0][2]["PATH_WITH_SPACES"],
+                            environment["PATH_WITH_SPACES"],
+                        )
+                        self.assertEqual(
+                            Path(observed[0][2]["OSTRAM_PROJECT_ROOT"]),
+                            REPO_ROOT,
+                        )
+                        self.assertEqual(
+                            Path(observed[0][2]["OSTRAM_WORKSPACE"]),
+                            REPO_ROOT / "workspace",
+                        )
                         self.assertIs(sys.argv, original_argv)
             finally:
                 os.chdir(starting_cwd)

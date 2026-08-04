@@ -16,17 +16,17 @@ from openpyxl import Workbook, load_workbook
 
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
-T1_ROOT = REPO_ROOT / "t1_confection"
-TEMPLATE = T1_ROOT / "A3_process" / "OSTRAM_Scenario_Inputs.xlsx"
-FIX_SCRIPT = T1_ROOT / "A3_process" / "fix_trn_residuals.py"
-AUTHORITY_SCRIPT = T1_ROOT / "A3_process" / "interconnector_authority.py"
-A3_SCRIPT = T1_ROOT / "A3_process.py"
-PATCH_SCRIPT = T1_ROOT / "sensitivity_expansion" / "apply_patches.py"
-TXCAP_CONFIG = T1_ROOT / "A3_process" / "rules_scripts" / "configs" / "B_Opt_TxCap150" / "patches.json"
-LINKFREEZE_CONFIG = T1_ROOT / "A3_process" / "rules_scripts" / "configs" / "B_Opt_LinkFreeze" / "patches.json"
-SCENARIO_REGISTRY = (
-    REPO_ROOT / "t1_confection" / "scenario_registry.json"
-)
+PIPELINE = REPO_ROOT / "ostram" / "pipeline"
+SCENARIOS = PIPELINE / "scenarios"
+TRANSFORMATIONS = SCENARIOS / "transformations"
+TEMPLATE = REPO_ROOT / "inputs" / "scenarios" / "OSTRAM_Scenario_Inputs.xlsx"
+FIX_SCRIPT = TRANSFORMATIONS / "fix_trn_residuals.py"
+AUTHORITY_SCRIPT = TRANSFORMATIONS / "interconnector_authority.py"
+A3_SCRIPT = SCENARIOS / "transform.py"
+PATCH_SCRIPT = SCENARIOS / "apply_patches.py"
+TXCAP_CONFIG = REPO_ROOT / "config" / "scenarios" / "B_Opt_TxCap150" / "patches.json"
+LINKFREEZE_CONFIG = REPO_ROOT / "config" / "scenarios" / "B_Opt_LinkFreeze" / "patches.json"
+SCENARIO_REGISTRY = REPO_ROOT / "config" / "scenarios" / "registry.json"
 
 YEARS = tuple(range(2023, 2051))
 STUDY_YEARS = tuple(range(2027, 2051))
@@ -105,7 +105,13 @@ CAP_TARGETS = {"TotalAnnualMaxCapacity", "TotalAnnualMaxCapacityInvestment"}
 
 
 def _load_module(path: Path, label: str):
-    name = f"_ostram_rc_v1_{label}"
+    if path.parent == TRANSFORMATIONS:
+        package = "ostram.pipeline.scenarios.transformations"
+    elif path.parent.name == "rules":
+        package = "ostram.pipeline.scenarios.rules"
+    else:
+        package = "ostram.pipeline.scenarios"
+    name = f"{package}._rc_v1_{label}"
     spec = importlib.util.spec_from_file_location(name, path)
     if spec is None or spec.loader is None:
         raise AssertionError(f"could not load module spec for {path}")
@@ -509,9 +515,15 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
         stage_source = ast.get_source_segment(source, stage)
         self.assertIsNotNone(stage_source)
         assert stage_source is not None
-        fix_at = stage_source.index('label="fix_trn_residuals.py"')
-        clear_at = stage_source.index('label="clear_stale_unbinding_caps.py"')
-        cap_at = stage_source.index('label="cap_trn_to_residual.py"')
+        fix_at = stage_source.index(
+            '"ostram.pipeline.scenarios.transformations.fix_trn_residuals"'
+        )
+        clear_at = stage_source.index(
+            '"ostram.pipeline.scenarios.transformations.clear_stale_unbinding_caps"'
+        )
+        cap_at = stage_source.index(
+            '"ostram.pipeline.scenarios.transformations.cap_trn_to_residual"'
+        )
         self.assertLess(fix_at, clear_at)
         self.assertLess(clear_at, cap_at)
         self.assertIn('os.environ.get("OSTRAM_TEMPLATE_PATH")', stage_source)
@@ -521,7 +533,7 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
         ) + ".xlsx"
         self.assertNotIn(retired_token, source)
         self.assertNotIn("--" + "reference", stage_source)
-        self.assertIn('"interconnector_authority.py"', source)
+        self.assertNotIn("_legacy_import", source)
 
         module = _load_module(FIX_SCRIPT, "runtime_route")
         run_source = inspect.getsource(module.run_fix)
@@ -654,9 +666,9 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
 
     def test_protected_cap_and_relax_implementations_are_byte_identical(self) -> None:
         protected = {
-            T1_ROOT / "A3_process" / "cap_trn_to_residual.py":
-                "f9f876d1e58cc8dd1339aea703477fe7a85bef776ad227ab99d972d25f7c6a36",
-            T1_ROOT / "A3_process" / "rules_scripts" / "relax_interconnectors.py":
+            TRANSFORMATIONS / "cap_trn_to_residual.py":
+                "b5d8d9536bd6948bb40390e05bb19f46538439cb2b90ee26b00e71707d7b3854",
+            SCENARIOS / "rules" / "relax_interconnectors.py":
                 "e496d54157459e7da2eb460d0cc76264eeee26a386e6a8c811cad1285424fbb7",
         }
         for path, expected in protected.items():
@@ -731,7 +743,7 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
             ("A-O", "Parametrization", "NA" + "TY")
         ) + ".xlsx"
         roots = (
-            T1_ROOT,
+            REPO_ROOT / "ostram",
             REPO_ROOT / "config",
         )
         suffixes = {".py", ".json", ".yaml", ".yml", ".toml", ".ini", ".cfg"}

@@ -44,7 +44,8 @@ class AcceptedBaselineTests(unittest.TestCase):
                 )
                 output = (
                     root
-                    / "t1_confection"
+                    / "workspace"
+                    / "execution"
                     / "Executables"
                     / f"{scenario}_0"
                     / filename
@@ -100,12 +101,12 @@ class AcceptedBaselineTests(unittest.TestCase):
         )
 
         probes = (
-            "t1_confection/A1_Outputs/Probe/A-O_Demand.xlsx",
-            "t1_confection/A2_Output_Params/Probe/VariableCost.csv",
-            "t1_confection/A2_Outputs_Params_otoole/Probe/VariableCost.csv",
-            "t1_confection/Executables/Probe_0/arbitrary.log",
-            "t1_confection/Outputs/Probe.csv",
-            "t1_confection/Config_MOMF_T1_A.yaml",
+            "workspace/preparation/A1_Outputs/Probe/A-O_Demand.xlsx",
+            "workspace/compilation/A2_Output_Params/Probe/VariableCost.csv",
+            "workspace/execution/A2_Outputs_Params_otoole/Probe/VariableCost.csv",
+            "workspace/execution/Executables/Probe_0/arbitrary.log",
+            "workspace/execution/Outputs/Probe.csv",
+            "config/compilation/Config_MOMF_T1_A.yaml",
             "tests/regression/accepted_baseline.py",
         )
         output = _git("check-ignore", "-v", "--no-index", *probes)
@@ -116,8 +117,8 @@ class AcceptedBaselineTests(unittest.TestCase):
             pattern = source.rsplit(":", 1)[-1]
             matched[path.replace("\\", "/")] = pattern
 
-        for probe, rule in zip(probes[:5], baseline.EXPECTED_IGNORE_RULES):
-            self.assertEqual(matched[probe], rule)
+        for probe in probes[:5]:
+            self.assertEqual(matched[probe], "/workspace/")
         for probe in probes[5:]:
             self.assertNotIn(probe, matched)
 

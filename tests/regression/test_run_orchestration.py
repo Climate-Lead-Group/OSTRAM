@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import ast
 import importlib.util
 import io
@@ -13,10 +14,12 @@ from itertools import product
 from pathlib import Path
 from unittest import mock
 
+from ostram.pipeline.compilation import orchestrator as b1_orchestrator
+
 
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
-RUN_PATH = REPO_ROOT / "run.py"
+RUN_PATH = REPO_ROOT / "ostram" / "pipeline" / "orchestration.py"
 
 
 def _load_launcher(label: str):
@@ -174,6 +177,17 @@ def _event_names(events: list[tuple[object, ...]]) -> list[str]:
     return [str(event[0]) for event in events]
 
 
+def _tree_state(root: Path) -> tuple[tuple[str, str, bytes | None], ...]:
+    entries: list[tuple[str, str, bytes | None]] = []
+    for path in sorted(root.rglob("*"), key=lambda item: item.relative_to(root).as_posix()):
+        relative = path.relative_to(root).as_posix()
+        if path.is_dir():
+            entries.append((relative, "directory", None))
+        elif path.is_file():
+            entries.append((relative, "file", path.read_bytes()))
+    return tuple(entries)
+
+
 class ImportAndCliCharacterizationTests(unittest.TestCase):
     def test_import_has_no_process_or_pipeline_side_effects(self) -> None:
         with (
@@ -194,7 +208,7 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
 
     def test_parse_args_accepts_explicit_argv_and_preserves_cli_contract(self) -> None:
         launcher = _load_launcher("parse_args")
-        with mock.patch.object(sys, "argv", ["run.py", "--not-an-option"]):
+        with mock.patch.object(sys, "argv", ["python -m ostram run", "--not-an-option"]):
             defaults = launcher.parse_args([])
             explicit = launcher.parse_args(
                 [
@@ -247,7 +261,7 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
     def test_defaults_and_free_form_cli_values_are_forwarded_exactly(self) -> None:
         launcher = _load_launcher("cli_values")
         argv = [
-            "run.py",
+            "python -m ostram run",
             "--env-name",
             "custom env",
             "--env-file",
@@ -276,7 +290,6 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
                 "check_tool",
                 "create_env",
                 "ensure_deps",
-                "ensure_dvc",
                 "snapshot_exists",
             ],
         )
@@ -286,7 +299,7 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
             (
                 "create_env",
                 "custom env",
-                "config/custom environment.yaml",
+                REPO_ROOT / "config" / "custom environment.yaml",
                 cwd,
             ),
         )
@@ -294,15 +307,21 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
             harness.events[-1],
             (
                 "snapshot_exists",
-                cwd / "t1_confection" / "A1_Outputs",
+                REPO_ROOT / "workspace" / "preparation" / "A1_Outputs",
                 ("A", "B", "C"),
                 cwd,
             ),
         )
         output = stdout.getvalue()
         self.assertIn("Using environment: custom env", output)
-        self.assertIn(f"DVC config: {cwd / 'config' / 'custom dvc.yaml'}", output)
-        self.assertIn("Skipping `dvc pull` by request.", output)
+        self.assertIn(
+            f"DVC config: {REPO_ROOT / 'config' / 'custom dvc.yaml'}",
+            output,
+        )
+        self.assertIn(
+            "Skipping DVC repository setup and `dvc pull` by request.",
+            output,
+        )
 
     def test_default_environment_resolution_order(self) -> None:
         launcher = _load_launcher("env_defaults")
@@ -314,17 +333,23 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
             with self.subTest(guessed=guessed):
                 with (
                     LauncherHarness(launcher, guessed_env=guessed) as harness,
-                    mock.patch.object(sys, "argv", ["run.py", "--skip-pull", "--skip-a3", "--skip-b1", "--skip-b2"]),
+                    mock.patch.object(sys, "argv", ["python -m ostram run", "--skip-pull", "--skip-a3", "--skip-b1", "--skip-b2"]),
                     redirect_stdout(io.StringIO()),
                 ):
                     launcher.main()
 
-                self.assertEqual(harness.events[0][0:2], ("guess_env", "environment.yaml"))
-                self.assertEqual(harness.events[2][0:3], ("create_env", expected, "environment.yaml"))
+                self.assertEqual(
+                    harness.events[0][0:2],
+                    ("guess_env", REPO_ROOT / "environment.yaml"),
+                )
+                self.assertEqual(
+                    harness.events[2][0:3],
+                    ("create_env", expected, REPO_ROOT / "environment.yaml"),
+                )
 
     def test_unknown_option_and_help_use_argparse_exit_codes_before_setup(self) -> None:
         launcher = _load_launcher("argparse_exits")
-        cases = ((["run.py", "--not-an-option"], 2), (["run.py", "--help"], 0))
+        cases = ((["python -m ostram run", "--not-an-option"], 2), (["python -m ostram run", "--help"], 0))
         for argv, expected_code in cases:
             with self.subTest(argv=argv):
                 with (
@@ -339,7 +364,7 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
                 check_tool.assert_not_called()
 
     def test_main_guard_maps_process_and_other_failures_to_current_exit_codes(self) -> None:
-        tree = ast.parse(RUN_PATH.read_text(encoding="utf-8-sig"), filename="run.py")
+        tree = ast.parse(RUN_PATH.read_text(encoding="utf-8-sig"), filename="python -m ostram run")
         guard = next(
             node
             for node in tree.body
@@ -363,7 +388,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
         launcher = _load_launcher("skip_matrix")
         for skip_a3, skip_b1, skip_b2 in product((False, True), repeat=3):
             with self.subTest(skip_a3=skip_a3, skip_b1=skip_b1, skip_b2=skip_b2):
-                argv = ["run.py", "--skip-pull"]
+                argv = ["python -m ostram run", "--skip-pull"]
                 if skip_a3:
                     argv.append("--skip-a3")
                 if skip_b1:
@@ -396,15 +421,15 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                 ]
                 expected_names: list[str] = []
                 if not skip_b1:
-                    expected_names.append("B1_Run_Compiler.py")
+                    expected_names.append("runner.py")
                 if not skip_b2:
-                    expected_names.append("B2_Executing_OG_Model.py")
+                    expected_names.append("runner.py")
                 self.assertEqual(pipeline_names, expected_names)
 
     def test_a1_a2_snapshot_gate_is_independent_of_all_skip_flags(self) -> None:
         launcher = _load_launcher("snapshot_gate")
         argv = [
-            "run.py",
+            "python -m ostram run",
             "--skip-pull",
             "--skip-a3",
             "--skip-b1",
@@ -412,7 +437,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
         ]
         for snapshot_exists, expected_scripts in (
             (True, []),
-            (False, ["A1_Pre_processing_OG_csvs.py", "A2_AddTx.py"]),
+            (False, ["base_inputs.py", "transmission.py"]),
         ):
             with self.subTest(snapshot_exists=snapshot_exists):
                 with (
@@ -431,7 +456,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
         with (
             LauncherHarness(launcher, active_scenarios=("A", "B", "C")) as harness,
             mock.patch.object(
-                sys, "argv", ["run.py", "--skip-pull", "--scenarios", " C , A "]
+                sys, "argv", ["python -m ostram run", "--skip-pull", "--scenarios", " C , A "]
             ),
             redirect_stdout(io.StringIO()),
         ):
@@ -442,7 +467,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
         )
         self.assertEqual(
             [event[3] for event in harness.events if event[0] == "pipeline"],
-            ['--scenarios "A,C"', '--scenarios "A,C"'],
+            [["--scenarios", "A,C"], ["--scenarios", "A,C"]],
         )
 
     def test_a3_filter_does_not_auto_add_the_bau_prerequisite(self) -> None:
@@ -459,7 +484,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                 sys,
                 "argv",
                 [
-                    "run.py",
+                    "python -m ostram run",
                     "--skip-pull",
                     "--scenarios",
                     "A_Calibrated_BAU",
@@ -482,7 +507,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                 sys,
                 "argv",
                 [
-                    "run.py",
+                    "python -m ostram run",
                     "--skip-pull",
                     "--scenarios",
                     "Missing,A,Missing,Other",
@@ -507,7 +532,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
         with (
             LauncherHarness(launcher, active_scenarios=("A", "B")) as harness,
             mock.patch.object(
-                sys, "argv", ["run.py", "--skip-pull", "--scenarios", ", , "]
+                sys, "argv", ["python -m ostram run", "--skip-pull", "--scenarios", ", , "]
             ),
             redirect_stdout(io.StringIO()),
         ):
@@ -534,7 +559,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                     mock.patch.object(
                         sys,
                         "argv",
-                        ["run.py", "--skip-pull", "--scenarios", raw],
+                        ["python -m ostram run", "--skip-pull", "--scenarios", raw],
                     ),
                     redirect_stdout(io.StringIO()),
                 ):
@@ -550,7 +575,9 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                 )
                 self.assertEqual(
                     [event[3] for event in harness.events if event[0] == "pipeline"],
-                    [] if should_fail else ['--scenarios "A,B"', '--scenarios "A,B"'],
+                    []
+                    if should_fail
+                    else [["--scenarios", "A,B"], ["--scenarios", "A,B"]],
                 )
 
     def test_unknown_scenario_is_rejected_before_a1_a2_a3_b1_b2(self) -> None:
@@ -560,7 +587,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                 launcher, snapshot_exists=False, active_scenarios=("A", "B")
             ) as harness,
             mock.patch.object(
-                sys, "argv", ["run.py", "--skip-pull", "--scenarios", "Missing"]
+                sys, "argv", ["python -m ostram run", "--skip-pull", "--scenarios", "Missing"]
             ),
             redirect_stdout(io.StringIO()),
         ):
@@ -580,7 +607,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
             mock.patch.object(
                 sys,
                 "argv",
-                ["run.py", "--skip-pull", "--skip-a3", "--scenarios", "Missing"],
+                ["python -m ostram run", "--skip-pull", "--skip-a3", "--scenarios", "Missing"],
             ),
             redirect_stdout(io.StringIO()),
         ):
@@ -593,14 +620,129 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
             [],
         )
 
+    def test_skip_pull_actual_route_keeps_fresh_explicit_project_dvc_free(self) -> None:
+        import ostram.__main__ as canonical_cli
+
+        with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
+            fixture_root = Path(temp).resolve()
+            project_root = fixture_root / "fresh project"
+            external_workspace = fixture_root / "external workspace"
+            caller_cwd = fixture_root / "caller cwd"
+            invalid_project_root = fixture_root / "invalid environment project"
+            invalid_workspace = fixture_root / "invalid environment workspace"
+
+            for directory in (
+                project_root / ".git",
+                project_root / "ostram",
+                project_root / "inputs",
+                project_root / "config",
+                project_root / "model",
+                caller_cwd,
+            ):
+                directory.mkdir(parents=True, exist_ok=True)
+            (project_root / "ostram" / "__init__.py").write_text(
+                '"""Fresh project fixture."""\n',
+                encoding="utf-8",
+            )
+            (project_root / "environment.yaml").write_text(
+                "name: fixture-env\n",
+                encoding="utf-8",
+            )
+            (project_root / "dvc.yaml").write_text("stages: {}\n", encoding="utf-8")
+
+            self.assertFalse((project_root / ".dvc").exists())
+            self.assertFalse(external_workspace.exists())
+            project_before = _tree_state(project_root)
+
+            with mock.patch.dict(
+                os.environ,
+                {
+                    "OSTRAM_PROJECT_ROOT": str(project_root),
+                    "OSTRAM_WORKSPACE": str(external_workspace),
+                },
+                clear=False,
+            ):
+                launcher = _load_launcher("fresh_explicit_skip_pull")
+
+            with (
+                _working_directory(caller_cwd),
+                LauncherHarness(
+                    launcher,
+                    active_scenarios=("BAU",),
+                ) as harness,
+                mock.patch.dict(
+                    os.environ,
+                    {
+                        "OSTRAM_PROJECT_ROOT": str(invalid_project_root),
+                        "OSTRAM_WORKSPACE": str(invalid_workspace),
+                    },
+                    clear=False,
+                ),
+                mock.patch.object(
+                    canonical_cli,
+                    "_load_route_module",
+                    return_value=launcher,
+                ),
+                mock.patch.object(launcher.subprocess, "check_call") as check_call,
+                mock.patch.object(launcher.subprocess, "check_output") as check_output,
+                redirect_stdout(io.StringIO()) as stdout,
+            ):
+                result = canonical_cli.main(
+                    [
+                        "--project-root",
+                        str(project_root),
+                        "--workspace",
+                        str(external_workspace),
+                        "run",
+                        "--skip-pull",
+                        "--skip-b2",
+                        "--scenarios",
+                        "BAU",
+                    ]
+                )
+
+            self.assertEqual(result, 0)
+            self.assertNotIn("ensure_dvc", _event_names(harness.events))
+            self.assertNotIn("has_dvc_remote", _event_names(harness.events))
+            self.assertNotIn("dvc_command", _event_names(harness.events))
+            check_call.assert_not_called()
+            check_output.assert_not_called()
+
+            create_env = next(event for event in harness.events if event[0] == "create_env")
+            self.assertEqual(create_env[2], project_root / "environment.yaml")
+            snapshot = next(event for event in harness.events if event[0] == "snapshot_exists")
+            self.assertEqual(
+                snapshot[1],
+                external_workspace / "preparation" / "A1_Outputs",
+            )
+            self.assertEqual(
+                [event[0] for event in harness.events if event[0] in {"a3", "pipeline"}],
+                ["a3", "pipeline"],
+            )
+            self.assertEqual(
+                next(event for event in harness.events if event[0] == "a3")[2],
+                project_root / "ostram" / "pipeline" / "scenarios" / "materializer.py",
+            )
+            self.assertEqual(
+                next(event for event in harness.events if event[0] == "pipeline")[2],
+                project_root / "ostram" / "pipeline" / "compilation" / "runner.py",
+            )
+            self.assertIn(
+                "Skipping DVC repository setup and `dvc pull` by request.",
+                stdout.getvalue(),
+            )
+            self.assertEqual(_tree_state(project_root), project_before)
+            self.assertFalse((project_root / ".dvc").exists())
+            self.assertFalse(external_workspace.exists())
+
     def test_dvc_remote_check_and_pull_selection(self) -> None:
         launcher = _load_launcher("dvc_pull")
         for remote, expected_tail in (
-            (False, ["has_dvc_remote"]),
-            (True, ["has_dvc_remote", "dvc_command"]),
+            (False, ["ensure_dvc", "has_dvc_remote"]),
+            (True, ["ensure_dvc", "has_dvc_remote", "dvc_command"]),
         ):
             with self.subTest(remote=remote):
-                argv = ["run.py", "--skip-a3", "--skip-b1", "--skip-b2"]
+                argv = ["python -m ostram run", "--skip-a3", "--skip-b1", "--skip-b2"]
                 with (
                     LauncherHarness(launcher, dvc_remote=remote) as harness,
                     mock.patch.object(sys, "argv", argv),
@@ -610,7 +752,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
                 dvc_events = [
                     name
                     for name in _event_names(harness.events)
-                    if name in {"has_dvc_remote", "dvc_command"}
+                    if name in {"ensure_dvc", "has_dvc_remote", "dvc_command"}
                 ]
                 self.assertEqual(dvc_events, expected_tail)
                 if remote:
@@ -619,12 +761,12 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
 
     def test_pipeline_failure_propagates_exactly_and_stops_later_stages(self) -> None:
         launcher = _load_launcher("failure_stop")
-        failure = ("A2_AddTx.py", 7)
+        failure = ("transmission.py", 7)
         with (
             LauncherHarness(
                 launcher, snapshot_exists=False, pipeline_failure=failure
             ) as harness,
-            mock.patch.object(sys, "argv", ["run.py", "--skip-pull"]),
+            mock.patch.object(sys, "argv", ["python -m ostram run", "--skip-pull"]),
             redirect_stdout(io.StringIO()),
         ):
             with self.assertRaises(subprocess.CalledProcessError) as raised:
@@ -633,9 +775,90 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
         self.assertEqual(raised.exception.returncode, 7)
         self.assertEqual(
             [event[2].name for event in harness.events if event[0] == "pipeline"],
-            ["A1_Pre_processing_OG_csvs.py", "A2_AddTx.py"],
+            ["base_inputs.py", "transmission.py"],
         )
         self.assertNotIn("enumerate_active", _event_names(harness.events))
+
+    def test_canonical_outer_route_propagates_b1_child_failure_and_skips_b2(
+        self,
+    ) -> None:
+        import ostram.__main__ as canonical_cli
+
+        launcher = _load_launcher("b1_child_failure")
+        with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
+            fixture_root = Path(temp).resolve()
+            workspace = fixture_root / "workspace"
+            script_dir = fixture_root / "compilation"
+            scenario_root = fixture_root / "A1_Outputs"
+            scenario_root.mkdir(parents=True)
+            (scenario_root / "A1_Outputs_A").mkdir()
+            script_dir.mkdir()
+            config = script_dir / "Config_MOMF_T1_A.yaml"
+            original_config = b"xtra_scen:\r\n  Main_Scenario: ORIGINAL\r\n"
+            config.write_bytes(original_config)
+            compiler = script_dir / "compiler.py"
+            compiler.write_text("# controlled compiler fixture\n", encoding="utf-8")
+            b1_paths = b1_orchestrator.B1Paths(
+                script_dir=script_dir,
+                config_path=config,
+                compiler_path=compiler,
+                scenarios_root=scenario_root,
+            )
+            stage_calls: list[Path] = []
+
+            def run_stage(_env_name, script, _extra_args=()):
+                stage_calls.append(script)
+                if script == launcher.B1_SCRIPT_DEFAULT:
+                    return b1_orchestrator.orchestrate(
+                        argparse.Namespace(scenarios="A"),
+                        b1_paths,
+                        compiler_runner=lambda _path: 1,
+                    )
+                raise AssertionError(f"B2 was called after B1 failed: {script}")
+
+            with (
+                LauncherHarness(
+                    launcher,
+                    active_scenarios=("A",),
+                ),
+                mock.patch.object(
+                    launcher,
+                    "run_pipeline_script",
+                    side_effect=run_stage,
+                ),
+                mock.patch.object(
+                    canonical_cli,
+                    "_load_route_module",
+                    return_value=launcher,
+                ),
+                redirect_stdout(io.StringIO()) as stdout,
+                redirect_stderr(io.StringIO()) as stderr,
+            ):
+                result = canonical_cli.main(
+                    [
+                        "--project-root",
+                        str(REPO_ROOT),
+                        "--workspace",
+                        str(workspace),
+                        "run",
+                        "--skip-pull",
+                        "--skip-a3",
+                        "--scenarios",
+                        "A",
+                    ]
+                )
+
+            self.assertEqual(result, 1)
+            self.assertEqual(stage_calls, [launcher.B1_SCRIPT_DEFAULT])
+            self.assertNotIn(launcher.B2_SCRIPT_DEFAULT, stage_calls)
+            self.assertIn(
+                "B1_Compiler.py exited with code 1 for scenario 'A'",
+                stdout.getvalue(),
+            )
+            self.assertNotIn("Pipeline completed", stdout.getvalue())
+            self.assertIn("Command failed (exit 1)", stderr.getvalue())
+            self.assertIn(str(compiler), stderr.getvalue())
+            self.assertEqual(config.read_bytes(), original_config)
 
 
 class CommandBoundaryCharacterizationTests(unittest.TestCase):
@@ -654,8 +877,8 @@ class CommandBoundaryCharacterizationTests(unittest.TestCase):
 
         self.assertIsNone(result)
         check_call.assert_called_once_with(
-            "tool --flag value",
-            shell=True,
+            ["tool", "--flag", "value"],
+            cwd=None,
             env={
                 "EXISTING": "kept",
                 "PYTHONHASHSEED": "0",
@@ -664,23 +887,32 @@ class CommandBoundaryCharacterizationTests(unittest.TestCase):
         )
         self.assertEqual(Path.cwd(), cwd)
 
-    def test_run_pipeline_and_a3_construct_exact_shell_commands(self) -> None:
+    def test_run_pipeline_and_a3_construct_module_commands(self) -> None:
         launcher = _load_launcher("command_strings")
         with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
             cwd = Path(temp).resolve()
-            pipeline_script = cwd / "t1_confection" / "B1_Run_Compiler.py"
-            pipeline_script.parent.mkdir()
+            pipeline_script = cwd / "ostram" / "pipeline" / "compilation" / "runner.py"
+            pipeline_script.parent.mkdir(parents=True)
             pipeline_script.write_text("# fixture only\n", encoding="utf-8")
-            a3_script = pipeline_script.with_name("A3_process.py")
+            a3_script = cwd / "ostram" / "pipeline" / "scenarios" / "materializer.py"
+            a3_script.parent.mkdir(parents=True)
             a3_script.write_text("# fixture only\n", encoding="utf-8")
-            commands: list[tuple[str, Path]] = []
+            commands: list[tuple[list[str], Path, Path | None]] = []
 
-            def record(command: str) -> None:
-                commands.append((command, Path.cwd()))
+            def record(command, *, cwd=None) -> None:
+                commands.append((list(command), Path.cwd(), cwd))
+
+            path_fixture = mock.Mock(project_root=cwd)
+            path_fixture.stage_workspace.side_effect = (
+                lambda stage, create=False: cwd / "workspace" / stage
+            )
 
             with (
                 _working_directory(cwd),
                 mock.patch.object(launcher, "run", side_effect=record),
+                mock.patch.object(
+                    launcher, "resolve_paths", return_value=path_fixture
+                ),
                 redirect_stdout(io.StringIO()),
             ):
                 launcher.run_pipeline_script(
@@ -692,19 +924,33 @@ class CommandBoundaryCharacterizationTests(unittest.TestCase):
             commands,
             [
                 (
-                    f'conda run -n Env Name python -u "{pipeline_script}" '
-                    '--scenarios "C,A"',
+                    [
+                        sys.executable,
+                        "-B",
+                        "-m",
+                        "ostram.pipeline.compilation.runner",
+                        "--scenarios",
+                        "C,A",
+                    ],
                     cwd,
+                    cwd / "workspace" / "compilation",
                 ),
                 (
-                    f'conda run -n Env Name python -u "{a3_script}" '
-                    '--scenarios "Scenario A"',
+                    [
+                        sys.executable,
+                        "-B",
+                        "-m",
+                        "ostram.pipeline.scenarios.materializer",
+                        "--scenarios",
+                        "Scenario A",
+                    ],
                     cwd,
+                    cwd / "workspace" / "scenarios",
                 ),
             ],
         )
 
-    def test_pipeline_display_requires_script_to_be_below_current_directory(self) -> None:
+    def test_pipeline_resolution_does_not_depend_on_caller_directory(self) -> None:
         launcher = _load_launcher("relative_display")
         with tempfile.TemporaryDirectory(dir=TEST_ROOT) as script_temp:
             script = Path(script_temp).resolve() / "stage.py"
@@ -715,9 +961,8 @@ class CommandBoundaryCharacterizationTests(unittest.TestCase):
                     mock.patch.object(launcher, "run") as process_boundary,
                     redirect_stdout(io.StringIO()),
                 ):
-                    with self.assertRaises(ValueError):
-                        launcher.run_pipeline_script("env", script)
-            process_boundary.assert_not_called()
+                    launcher.run_pipeline_script("env", script)
+            process_boundary.assert_called_once()
 
     def test_missing_stage_files_fail_before_command_execution(self) -> None:
         launcher = _load_launcher("missing_scripts")
