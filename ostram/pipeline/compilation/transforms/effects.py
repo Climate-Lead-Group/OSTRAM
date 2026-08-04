@@ -16,12 +16,12 @@ def read_config(
     opener: Callable[..., Any] | None = None,
     loader: Callable[[Any], Any] | None = None,
 ) -> Any:
-    """Read a YAML config with the predecessor's text-mode/default-encoding call."""
+    """Read the generated YAML config without depending on the console code page."""
     if opener is None:
         opener = open
     if loader is None:
         loader = yaml.safe_load
-    with opener(path, "r") as stream:
+    with opener(path, "r", encoding="utf-8") as stream:
         return loader(stream)
 
 

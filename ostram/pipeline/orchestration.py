@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Sequence
 
 from ostram.paths import ProjectPaths, resolve_paths
+from ostram.terminal import RunReporter, activate_reporter, active_reporter
 
 from ostram.pipeline.scenarios.registry import (
     ensure_root_output_directories,
@@ -68,6 +69,14 @@ def run(cmd: Sequence[str | Path], *, cwd: Path | None = None) -> None:
     env["PYTHONHASHSEED"] = "0"
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     tokens = shlex.split(cmd) if isinstance(cmd, str) else list(cmd)
+    reporter = active_reporter()
+    if reporter is not None:
+        reporter.run_child(
+            [str(token) for token in tokens],
+            cwd=cwd,
+            env=env,
+        )
+        return
     subprocess.check_call(
         [str(token) for token in tokens],
         cwd=str(cwd.resolve()) if cwd is not None else None,
@@ -328,7 +337,13 @@ def format_duration(start_time: dt.datetime, end_time: dt.datetime) -> str:
 
 # ---------- Main ----------
 def parse_args(argv=None):
-    parser = argparse.ArgumentParser(description="Top-level runner for OSTRAM A3/B1/B2 execution")
+    parser = argparse.ArgumentParser(
+        description=(
+            "Run OSTRAM through base-model preparation (A1), transmission "
+            "network preparation (A2), scenario building (A3), input "
+            "compilation (B1), and model execution/result collection (B2)."
+        )
+    )
     parser.add_argument(
         "--env-name",
         default=None,
@@ -371,7 +386,29 @@ def parse_args(argv=None):
             "matrix/solver/output boundary."
         ),
     )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help=(
+            "Stream complete child-process output and command diagnostics; "
+            "the detailed UTF-8 run log is always written."
+        ),
+    )
     return parser.parse_args(argv)
+
+
+def _create_run_reporter(
+    paths: ProjectPaths,
+    scenarios: Sequence[str],
+    *,
+    verbose: bool,
+) -> RunReporter:
+    return RunReporter(
+        project_root=paths.project_root,
+        workspace=paths.workspace,
+        scenarios=scenarios,
+        verbose=verbose,
+    )
 
 
 def main() -> None:
@@ -381,26 +418,6 @@ def main() -> None:
     dvc_file = paths.resolve_project_file(args.dvc_file)
     env_name = args.env_name or guess_env_name_from_yaml(env_file) or ENV_NAME_DEFAULT
 
-    print(f"Using environment: {env_name}")
-    print(f"DVC config: {dvc_file}")
-
-    check_tool_available("conda")
-
-    create_env_if_missing(env_name, env_file)
-    ensure_deps(env_name)
-
-    if args.skip_pull:
-        print("Skipping DVC repository setup and `dvc pull` by request.")
-    else:
-        ensure_dvc_repo(env_name)
-        if has_dvc_remote(env_name):
-            print("Pulling DVC data...")
-            dvc_command(env_name, "pull")
-        else:
-            print("No DVC remote configured. Skipping `dvc pull`.")
-
-    start_time = dt.datetime.now()
-
     registry = load_registry()
     try:
         scenarios = list(registry.select(args.scenarios))
@@ -409,55 +426,143 @@ def main() -> None:
     if not scenarios:
         raise RuntimeError("--scenarios selected no canonical scenarios")
     required_roots = registry.required_roots(scenarios)
+    reporter = _create_run_reporter(paths, scenarios, verbose=args.verbose)
+    start_time = dt.datetime.now()
 
-    # A1 + A2 are a combo: every requested root must have its own post-A2
-    # snapshot. A1 creates only the four root output directories; A2 snapshots
-    # only those roots.
-    a1_outputs_dir = paths.a1_outputs
-    if root_snapshots_exist(a1_outputs_dir, required_roots):
-        print(
-            f"All required post-A2 root snapshots exist in {A1_OUTPUTS_DIR}/: "
-            f"{list(required_roots)}. Skipping A1 + A2."
-        )
-    else:
-        print(
-            f"One or more required post-A2 root snapshots are absent in "
-            f"{A1_OUTPUTS_DIR}/. Running A1 + A2 for the four roots."
-        )
-        ensure_root_output_directories(a1_outputs_dir, registry)
-        run_pipeline_script(env_name, A1_SCRIPT_DEFAULT)
-        run_pipeline_script(env_name, A2_SCRIPT_DEFAULT)
+    with activate_reporter(reporter), reporter.capture_output():
+        try:
+            print(f"Using environment: {env_name}")
+            print(f"DVC config: {dvc_file}")
+            reporter.note(f"Selected scenarios: {', '.join(scenarios)}")
 
-    if args.skip_a3:
-        print("Skipping A3 pre-process stage by request.")
-    else:
-        run_a3_for_scenarios(
-            env_name,
-            A3_SCRIPT_DEFAULT,
-            scenarios,
-            args.a_result_seed,
-        )
+            check_tool_available("conda")
+            create_env_if_missing(env_name, env_file)
+            ensure_deps(env_name)
 
-    scenarios_arg = ["--scenarios", ",".join(scenarios)]
+            if args.skip_pull:
+                print("Skipping DVC repository setup and `dvc pull` by request.")
+            else:
+                ensure_dvc_repo(env_name)
+                if has_dvc_remote(env_name):
+                    print("Pulling DVC data...")
+                    dvc_command(env_name, "pull")
+                else:
+                    print("No DVC remote configured. Skipping `dvc pull`.")
 
-    if args.skip_b1:
-        print("Skipping B1 compiler stage by request.")
-    else:
-        run_pipeline_script(env_name, B1_SCRIPT_DEFAULT, scenarios_arg)
+            # A1 + A2 are a combo: every requested root must have its own
+            # post-A2 snapshot. A1 creates only the four root output
+            # directories; A2 snapshots only those roots.
+            a1_outputs_dir = paths.a1_outputs
+            if root_snapshots_exist(a1_outputs_dir, required_roots):
+                reason = "required post-A2 root snapshots already exist"
+                reporter.stage_skip("A1", reason)
+                reporter.stage_skip("A2", reason)
+                print(
+                    f"All required post-A2 root snapshots exist in "
+                    f"{a1_outputs_dir}/: {list(required_roots)}. "
+                    "Skipping base-model and transmission preparation."
+                )
+            else:
+                print(
+                    f"One or more required post-A2 root snapshots are absent "
+                    f"in {a1_outputs_dir}/. Preparing the four roots."
+                )
+                reporter.stage_start("A1")
+                ensure_root_output_directories(a1_outputs_dir, registry)
+                run_pipeline_script(env_name, A1_SCRIPT_DEFAULT)
+                reporter.stage_complete("A1")
 
-    if args.skip_b2:
-        print("Skipping B2 execution stage by request.")
-    else:
-        b2_args = [*scenarios_arg, *( ["--compile-only"] if args.compile_only else [])]
-        run_pipeline_script(env_name, B2_SCRIPT_DEFAULT, b2_args)
+                reporter.stage_start("A2")
+                run_pipeline_script(env_name, A2_SCRIPT_DEFAULT)
+                reporter.stage_complete("A2")
 
-    end_time = dt.datetime.now()
-    print(f"Pipeline completed in {format_duration(start_time, end_time)}.")
+            if args.skip_a3:
+                reporter.stage_skip("A3", "skipped by --skip-a3")
+                print("Skipping scenario building (A3) by request.")
+            else:
+                current = scenarios[0] if len(scenarios) == 1 else f"{len(scenarios)} selected"
+                reporter.stage_start("A3", scenario=current)
+                run_a3_for_scenarios(
+                    env_name,
+                    A3_SCRIPT_DEFAULT,
+                    scenarios,
+                    args.a_result_seed,
+                )
+                reporter.stage_complete("A3")
+
+            scenarios_arg = ["--scenarios", ",".join(scenarios)]
+
+            if args.skip_b1:
+                reporter.stage_skip("B1", "skipped by --skip-b1")
+                print("Skipping model-input compilation (B1) by request.")
+            else:
+                reporter.stage_start("B1")
+                run_pipeline_script(env_name, B1_SCRIPT_DEFAULT, scenarios_arg)
+                reporter.stage_complete("B1")
+
+            if args.skip_b2:
+                reporter.stage_skip("B2", "skipped by --skip-b2")
+                print("Skipping model execution and result collection (B2) by request.")
+            else:
+                reporter.stage_start("B2")
+                b2_args = [
+                    *scenarios_arg,
+                    *(["--compile-only"] if args.compile_only else []),
+                ]
+                run_pipeline_script(env_name, B2_SCRIPT_DEFAULT, b2_args)
+                reporter.stage_complete(
+                    "B2",
+                    detail=(
+                        "compile-only; matrix and solver skipped"
+                        if args.compile_only
+                        else None
+                    ),
+                )
+
+            end_time = dt.datetime.now()
+            print(f"Pipeline stages finished in {format_duration(start_time, end_time)}.")
+        except KeyboardInterrupt:
+            reporter.stage_fail("interrupted by user")
+            reporter.finish(
+                outcome="INTERRUPTED",
+                exit_code=130,
+                final_message="OSTRAM run interrupted",
+            )
+            raise
+        except subprocess.CalledProcessError as error:
+            reporter.stage_fail(f"child process exited with code {error.returncode}")
+            reporter.finish(
+                outcome="FAILED",
+                exit_code=error.returncode,
+                final_message="OSTRAM run failed",
+            )
+            raise
+        except Exception as error:
+            reporter.stage_fail(f"{type(error).__name__}: {error}")
+            reporter.finish(
+                outcome="FAILED",
+                exit_code=1,
+                final_message="OSTRAM run failed",
+            )
+            raise
+        else:
+            compile_only_completed = args.compile_only and not args.skip_b2
+            reporter.finish(
+                outcome="COMPILE_ONLY_SUCCESS" if compile_only_completed else "SUCCESS",
+                exit_code=0,
+                final_message=(
+                    "OSTRAM compile-only run completed successfully"
+                    if compile_only_completed
+                    else "OSTRAM run completed successfully"
+                ),
+            )
 
 
 if __name__ == "__main__":
     try:
         main()
+    except KeyboardInterrupt:
+        sys.exit(130)
     except subprocess.CalledProcessError as e:
         print(f"\nCommand failed (exit {e.returncode}): {e.cmd}", file=sys.stderr)
         sys.exit(e.returncode)

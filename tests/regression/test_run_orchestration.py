@@ -145,6 +145,32 @@ class LauncherHarness:
         for scenario in scenarios:
             self._record("a3", env_name, script, scenario, seed)
 
+    class _Reporter:
+        @contextmanager
+        def capture_output(self):
+            yield
+
+        def note(self, *_args, **_kwargs):
+            return None
+
+        def stage_start(self, *_args, **_kwargs):
+            return None
+
+        def stage_complete(self, *_args, **_kwargs):
+            return None
+
+        def stage_skip(self, *_args, **_kwargs):
+            return None
+
+        def stage_fail(self, *_args, **_kwargs):
+            return None
+
+        def finish(self, *_args, **_kwargs):
+            return None
+
+    def _reporter(self, *_args, **_kwargs):
+        return self._Reporter()
+
     def __enter__(self):
         replacements = {
             "guess_env_name_from_yaml": self._guess_env,
@@ -159,6 +185,7 @@ class LauncherHarness:
             "ensure_root_output_directories": lambda *_: None,
             "run_pipeline_script": self._pipeline,
             "run_a3_for_scenarios": self._a3,
+            "_create_run_reporter": self._reporter,
         }
         self.patches = [
             mock.patch.object(self.launcher, name, replacement)
@@ -240,6 +267,7 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
                 "scenarios": None,
                 "a_result_seed": None,
                 "compile_only": False,
+                "verbose": False,
             },
         )
         self.assertEqual(
@@ -255,6 +283,7 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
                 "scenarios": " C , A, C ",
                 "a_result_seed": None,
                 "compile_only": False,
+                "verbose": False,
             },
         )
 

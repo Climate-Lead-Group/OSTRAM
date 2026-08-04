@@ -71,6 +71,11 @@ registry selection, compiles it, and executes B2. Use `--scenarios` for an
 explicit comma-separated selection and the documented `--skip-*` flags when a
 stage is already satisfied.
 
+The interactive display is compact and updates in place on stderr. Redirected
+output uses append-only status lines. Add `--verbose` to disable the moving
+display and stream complete child output. The detailed UTF-8 log is always at
+`<workspace>/logs/<run-id>/run.log` for an actual run.
+
 ## 5. Know where files belong
 
 - Maintained scenario workbooks: `inputs/scenarios/`
