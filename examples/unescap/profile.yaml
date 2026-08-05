@@ -1,31 +1,24 @@
-# profile.yaml — UNESCAP South Asia training profile
+# UNESCAP South Asia training profile.
 #
-# One example profile: a complete, self-contained set of authorities for a
-# reduced two-region OSTRAM model used in the UNESCAP training sessions.
-#
-# This branch carries the ASSETS only. The profile engine that reads this file
-# lives on the parallel profile-engine branch; until that branch is merged,
-# nothing here is runnable. See README.md.
+# Every runtime authority is explicit. Profile-owned inputs and configuration
+# never fall back to the full-model file with the same role. The maintained
+# model, execution support input, and package templates are shared authorities
+# named here rather than implicit compatibility defaults.
 
 schema: ostram-profile-v1
 id: unescap
-name: "UNESCAP South Asia training profile"
-description: >-
-  Bangladesh (BGDXX) and India East (INDEA), joined by the real TRNBGDXXINDEA
-  cross-border corridor. Twenty timeslices, four scenario roots, four storage
-  technologies. Built for teaching the OSTRAM workflow end to end without the
-  cost of the full ten-region SOASIA model.
-
-# ---------------------------------------------------------------------------
-# Model scope
-# ---------------------------------------------------------------------------
-model:
-  region: GLOBAL                 # the single OSeMOSYS REGION the model solves in
+metadata:
+  title: UNESCAP South Asia training profile
+  description: >-
+    Bangladesh (BGDXX) and India East (INDEA), joined by TRNBGDXXINDEA,
+    over 2023-2050 in twenty timeslices.
   country_regions:
-    - BGDXX
-    - INDEA
+    - region: BGDXX
+      label: Bangladesh
+    - region: INDEA
+      label: India East
   interconnectors:
-    - TRNBGDXXINDEA
+    - technology: TRNBGDXXINDEA
   year_range:
     start: 2023
     end: 2050
@@ -40,115 +33,162 @@ model:
     - LDSINDEA01
     - SDSBGDXX01
     - SDSINDEA01
-  set_sizes:                     # asserted against inputs/osemosys_global/
+  seed_set_sizes:
     TECHNOLOGY: 89
     FUEL: 43
     STORAGE: 4
     REGION: 1
-
-# ---------------------------------------------------------------------------
-# Resolution policy
-# ---------------------------------------------------------------------------
-# Every resource this profile uses is named below under exactly one of the
-# profile:, project:, or package: authorities. There is NO implicit per-file
-# fallback: if a profile-owned file is missing, resolution fails loudly rather
-# than silently reaching for the project-root file of the same name.
-resolution:
-  implicit_file_fallback: false
-  authorities:
-    - profile
-    - project
-    - package
-  tokens:
-    - profile
-    - project
-    - package
-    - workspace
-
-# ---------------------------------------------------------------------------
-# profile: authority — everything this example owns
-# ---------------------------------------------------------------------------
-# ${profile} resolves to the directory holding this file.
-profile:
-  root: examples/unescap
-  resources:
-    osemosys_inputs: ${profile}/inputs/osemosys_global
-    scenario_workbook: ${profile}/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
-
-    preparation_config: ${profile}/config/preparation
-    country_codes_config: ${profile}/config/preparation/Config_country_codes.yaml
-    region_consolidation_config: ${profile}/config/preparation/Config_region_consolidation.yaml
-
-    compilation_config: ${profile}/config/compilation/Config_MOMF_T1_A.yaml
-    execution_config: ${profile}/config/execution/Config_MOMF_T1_AB.yaml
-
-    scenario_config_root: ${profile}/config/scenarios
-    scenario_registry: ${profile}/config/scenarios/registry.json
-    technology_types: ${profile}/config/scenarios/technology_types.csv
-    ao_extension_decisions: ${profile}/config/scenarios/ao_extension_decisions.csv
-
-    exercises: ${profile}/exercises
-    profile_docs: ${profile}/docs
-    references: ${profile}/references
-    provenance: ${profile}/references/provenance.md
-
-# ---------------------------------------------------------------------------
-# project: authority — repository-level resources this profile borrows
-# ---------------------------------------------------------------------------
-# ${project} resolves to the OSTRAM project bundle root.
-project:
-  root: ${project}
-  resources:
-    maintained_model: ${project}/model/osemosys_fast_preprocessed.txt
-    execution_inputs: ${project}/inputs/execution
-
-# ---------------------------------------------------------------------------
-# package: authority — resources shipped inside the installed ostram package
-# ---------------------------------------------------------------------------
-# ${package} resolves to the installed ostram package directory.
-package:
-  root: ${package}
-  resources:
-    compilation_resources: ${package}/resources/compilation
-    compilation_templates: ${package}/resources/compilation/templates
-    preparation_resources: ${package}/resources/preparation
-    country_templates: ${package}/resources/preparation/country_templates
-
-# ---------------------------------------------------------------------------
-# workspace: mutable, generated, never committed
-# ---------------------------------------------------------------------------
-# ${workspace} resolves to the run workspace (--workspace / OSTRAM_WORKSPACE).
-# Nothing under ${workspace} belongs in examples/unescap/.
-workspace:
-  root: ${workspace}
-  stages:
-    preparation: ${workspace}/preparation
-    scenarios: ${workspace}/scenarios
-    compilation: ${workspace}/compilation
-    execution: ${workspace}/execution
-
-# ---------------------------------------------------------------------------
-# Scenarios
-# ---------------------------------------------------------------------------
-# Authoritative list and dependency graph: config/scenarios/registry.json.
-scenarios:
-  registry: ${profile.scenario_registry}
-  roots:
-    - BAU
-    - A_Calibrated_BAU
-    - B_Optimised_VRE
-    - C_Target_VRE
-
-# ---------------------------------------------------------------------------
-# Runtime
-# ---------------------------------------------------------------------------
-runtime:
-  # The profile ships input CSVs and a scenario workbook, not a built model.
-  # The preparation stage must run before any scenario can be compiled or solved:
-  #   python -m ostram example prepare unescap
+  compiled_set_sizes:
+    TECHNOLOGY: 90
+    FUEL: 49
+    STORAGE: 4
+    REGION: 1
+  # Membership hashes are over sorted VALUE members, one UTF-8 value plus LF
+  # per line. The projected seed records preparation's count-preserving name
+  # reconciliation; compilation may then add only the exact generated delta.
+  domain_contract:
+    membership_hash: sha256-sorted-values-v1
+    stages:
+      seed:
+        TECHNOLOGY:
+          count: 89
+          sha256: a866b63a168d413cec240b31598bbabafb1f8da99e202caf05d4e1bf5373c66b
+        FUEL:
+          count: 43
+          sha256: c45a6db17552f4a3527bfa7fc8d014fee1e46457a6fabd81b77f4661b04f367c
+      projected_seed:
+        TECHNOLOGY:
+          count: 89
+          sha256: b198cdaa23bcff3157668ead9a0578fd18f63a08127529cb344205d8c1a67f35
+        FUEL:
+          count: 43
+          sha256: c45a6db17552f4a3527bfa7fc8d014fee1e46457a6fabd81b77f4661b04f367c
+      compiled:
+        TECHNOLOGY:
+          count: 90
+          sha256: 6266dd062c5d593be8cb62f5169eb2759f4a7301200e26d147bb4f934ebec4d3
+        FUEL:
+          count: 49
+          sha256: e924cb09c945ad23e1b3c7bb2f760dce245eafe4fbeca065207fd7868d8501e8
+    technology_reconciliation:
+      drop_before_normalization:
+        - PWRCCGBGDXX00
+        - PWRCCGINDEA00
+        - PWROCGBGDXX00
+        - PWROCGINDEA00
+      normalize_pwr01_suffix: true
+      remove_after_normalization:
+        - PWRCCGBGDXX
+        - PWRCCGINDEA
+        - PWROCGBGDXX
+        - PWROCGINDEA
+        - PWRCSPBGDXX
+        - PWRGEOBGDXX
+        - PWRGEOINDEA
+        - PWRHETINDEA
+        - PWRWAVBGDXX
+        - PWRWAVINDEA
+      add_after_normalization:
+        - PWRNGSBGDXX
+        - PWRNGSINDEA
+        - DSPTRNBGDXX
+        - DSPTRNINDEA
+        - RNWTRNBGDXX
+        - RNWTRNINDEA
+        - RNWRPOBGDXX
+        - RNWRPOINDEA
+        - RNWNLIBGDXX
+        - RNWNLIINDEA
+        - TRNRPOBGDXX
+        - TRNRPOINDEA
+        - TRNNLIBGDXX
+        - TRNNLIINDEA
+    generated_delta:
+      TECHNOLOGY:
+        - PWRSHPINDEA
+      FUEL:
+        - ELCBGDXX00
+        - ELCBGDXX03
+        - ELCBGDXX04
+        - ELCINDEA00
+        - ELCINDEA03
+        - ELCINDEA04
+  effective_values:
+    TRNBGDXXINDEA_residual_capacity_gw: 2.496
+    interconnector_capacity_gw: 2.496
+    TRNBGDXXINDEA_relaxed_total_annual_max_capacity_gw: 9999.0
+  reporting:
+    result_glob: execution/**/*Combined_Inputs_Outputs.csv
   requires_prepare: true
-  solver: cbc
-  commands:
-    prepare: python -m ostram example prepare unescap
-    run: python -m ostram --profile unescap run
-    report: python -m ostram example report unescap
+
+policies:
+  # The training correction replaces legacy hand-entered LID cells. The full
+  # profile explicitly keeps this false in config/profiles/full.yaml.
+  lid_rule_new_semantics: true
+  # Exact digest of config/scenarios/rules/pwr_min_2023_2026_pin.csv. The
+  # reduced table is a domain projection of the audited full-model authority.
+  pwr_min_pin_rules_sha256: 984c3885f7bcee992d634c602402e3c6183a2f3bc8a1d8a0620ae214c1a1d872
+
+authorities:
+  # Profile-owned reduced-model authorities.
+  scenario_registry: profile:config/scenarios/registry.json
+  scenario_inputs:
+    path: profile:inputs/scenarios
+    kind: directory
+  scenario_config_root:
+    path: profile:config/scenarios
+    kind: directory
+  scenario_workbook:
+    path: profile:inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
+    mutable: true
+  timeslice_workbook: profile:inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx
+  ao_decisions: profile:config/scenarios/ao_extension_decisions.csv
+  interconnector_authority:
+    path: profile:inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
+    mutable: true
+  interconnector_taxonomy: profile:config/scenarios/technology_types.csv
+  compilation_config: profile:config/compilation/Config_MOMF_T1_A.yaml
+  execution_config: profile:config/execution/Config_MOMF_T1_AB.yaml
+  preparation_config:
+    path: profile:config/preparation
+    kind: directory
+  country_config: profile:config/preparation/Config_country_codes.yaml
+  region_config: profile:config/preparation/Config_region_consolidation.yaml
+  osemosys_inputs:
+    path: profile:inputs/osemosys_global
+    kind: directory
+    mutable: true
+  preparation_inputs:
+    path: profile:inputs/preparation
+    kind: directory
+    mutable: true
+  secondary_technology_inputs:
+    path: profile:inputs/preparation/secondary_technologies
+    kind: directory
+
+  # Explicit shared project/package authorities (not fallback paths).
+  maintained_model: project:model/osemosys_fast_preprocessed.txt
+  execution_inputs:
+    path: project:inputs/execution
+    kind: directory
+  preparation_templates:
+    path: project:inputs/preparation/workbook_templates
+    kind: directory
+  preparation_resources:
+    path: package:resources/preparation
+    kind: directory
+  compilation_resources:
+    path: package:resources/compilation
+    kind: directory
+
+  # Read-only teaching and provenance material.
+  exercises:
+    path: profile:exercises
+    kind: directory
+  profile_docs:
+    path: profile:docs
+    kind: directory
+  references:
+    path: profile:references
+    kind: directory
+  provenance: profile:references/provenance.md

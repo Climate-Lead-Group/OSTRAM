@@ -28,7 +28,7 @@
           "type": "result",
           "scenario": "A_Calibrated_BAU",
           "environment": "OSTRAM_A_CALIBRATED_BAU_RESULT",
-          "default_path": "${workspace.execution}/Executables/A_Calibrated_BAU_0"
+          "default_path": "Executables/A_Calibrated_BAU_0"
         }
       ]
     }

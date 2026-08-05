@@ -112,6 +112,7 @@ class AtomicWorkspaceTests(unittest.TestCase):
         manifest_path.write_text(
             "schema: ostram-profile-v1\nid: tiny\nauthorities:\n"
             "  seed: {path: profile:seed.txt, mutable: true}\n"
+            "  seed_alias: {path: profile:seed.txt, mutable: true}\n"
             "  readonly: project:inputs/readonly.txt\n",
             encoding="utf-8",
         )
@@ -124,11 +125,27 @@ class AtomicWorkspaceTests(unittest.TestCase):
             self.assertTrue((result.workspace / STAMP_NAME).is_file())
             self.assertEqual(result.authorities["seed"].read_text(), "version one")
             self.assertEqual(
+                result.authorities["seed"], result.authorities["seed_alias"]
+            )
+            self.assertEqual(
                 result.authorities["readonly"],
                 (paths.project_root / "inputs" / "readonly.txt").resolve(),
             )
             with self.assertRaises(FileExistsError):
                 prepare_profile(manifest, paths=paths)
+
+            manifest.path.write_text(
+                manifest.path.read_text(encoding="utf-8")
+                + "metadata:\n  revision: two\n",
+                encoding="utf-8",
+            )
+            changed_manifest = load_manifest(manifest.path)
+            with self.assertRaisesRegex(ProfileWorkspaceError, "different manifest"):
+                prepare_profile(changed_manifest, paths=paths)
+            result = prepare_profile(changed_manifest, paths=paths, reset=True)
+            self.assertEqual(result.stamp["manifest_sha256"], changed_manifest.digest)
+            manifest = changed_manifest
+
             (manifest.root / "seed.txt").write_text("version two", encoding="utf-8")
             with self.assertRaisesRegex(ProfileWorkspaceError, "changed"):
                 prepared_profile(manifest, paths=paths)
@@ -219,6 +236,48 @@ class ProfileCliTests(unittest.TestCase):
                 "TRNBGDXXINDEA_residual_capacity_gw"
             ],
             2.496,
+        )
+
+    def test_unescap_manifest_is_complete_and_namespaced(self) -> None:
+        paths = project_paths(REPO_ROOT)
+        manifest = load_profile("unescap", paths=paths)
+        sources = manifest.source_paths(paths)
+        required_roles = {
+            "scenario_registry", "scenario_inputs", "scenario_config_root",
+            "scenario_workbook", "timeslice_workbook", "ao_decisions",
+            "interconnector_authority", "interconnector_taxonomy",
+            "compilation_config", "execution_config", "preparation_config",
+            "country_config", "region_config", "osemosys_inputs",
+            "preparation_inputs", "preparation_templates",
+            "preparation_resources", "compilation_resources",
+            "secondary_technology_inputs", "execution_inputs",
+            "maintained_model",
+        }
+        self.assertTrue(required_roles.issubset(manifest.authorities))
+        self.assertTrue(all(path.exists() for path in sources.values()))
+        self.assertEqual(manifest.policies["lid_rule_new_semantics"], True)
+        self.assertEqual(
+            manifest.metadata["effective_values"][
+                "TRNBGDXXINDEA_residual_capacity_gw"
+            ],
+            2.496,
+        )
+        self.assertEqual(
+            manifest.metadata["effective_values"][
+                "TRNBGDXXINDEA_relaxed_total_annual_max_capacity_gw"
+            ],
+            9999.0,
+        )
+        self.assertEqual(
+            {
+                role
+                for role, spec in manifest.authorities.items()
+                if spec.namespace == "project"
+            },
+            {"maintained_model", "execution_inputs", "preparation_templates"},
+        )
+        self.assertEqual(
+            sources["scenario_workbook"], sources["interconnector_authority"]
         )
 
 

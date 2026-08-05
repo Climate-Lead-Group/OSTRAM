@@ -18,6 +18,11 @@ from ostram.pipeline.scenarios.registry import load_registry
 from ostram.pipeline.scenarios.transformations.ao_extension_decisions import (
     _decision_rows,
 )
+from ostram.pipeline.scenarios.transformations.fix_elc_pmode_revert import (
+    country_region_map,
+    configured_elc_dispatch_techs,
+    elc_dispatch_techs,
+)
 from ostram.reporting.training_dashboard import (
     build_dashboard_data,
     render_html,
@@ -181,6 +186,41 @@ class ProfileLidPolicyTests(unittest.TestCase):
         self.assertEqual(full_log["changes"], [])
         self.assertEqual(enabled_value, 10.0)
         self.assertEqual(enabled_log["changes"][0]["reason"], "lid_relaxed")
+
+
+class ProfileElcDispatchTests(unittest.TestCase):
+    def test_dispatch_nodes_are_derived_from_profile_country_regions(self) -> None:
+        self.assertEqual(
+            elc_dispatch_techs(["BGD", "INDEA", "MMR"]),
+            frozenset({"ELCBGDXX01", "ELCINDEA01", "ELCMMRXX01"}),
+        )
+        self.assertEqual(
+            country_region_map(["BGD", "INDEA", "MMR"]),
+            {"BGDXX": "BGD", "INDEA": "INDEA", "MMRXX": "MMR"},
+        )
+        self.assertEqual(
+            configured_elc_dispatch_techs(
+                REPO_ROOT
+                / "examples"
+                / "unescap"
+                / "config"
+                / "preparation"
+                / "Config_country_codes.yaml"
+            ),
+            frozenset({"ELCBGDXX01", "ELCINDEA01"}),
+        )
+
+    def test_full_country_regions_preserve_the_historical_node_set(self) -> None:
+        self.assertEqual(
+            configured_elc_dispatch_techs(
+                REPO_ROOT / "config" / "preparation" / "Config_country_codes.yaml"
+            ),
+            frozenset({
+                "ELCBGDXX01", "ELCBTNXX01", "ELCINDEA01", "ELCINDNE01",
+                "ELCINDNO01", "ELCINDSO01", "ELCINDWE01", "ELCLKAXX01",
+                "ELCMDVXX01", "ELCNPLXX01",
+            }),
+        )
 
 
 class ProfileReportingTests(unittest.TestCase):

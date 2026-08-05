@@ -1,17 +1,3 @@
 AO_Code_To_Add,Include,Override_Template_AO,Override_Tech.Name_AO,Notes
-PWRGEOINDNO,Y,PWRHYDINDNO,"Geothermal (Power generator) India, region NO",Manual override: PWRHYDINDNO chosen — no-fuel-cost baseload analogue. Discussed [date].
 PWRNGSBGDXX,Y,,,
-PWRNGSMDVXX,Y,,,
-PWROILMDVXX,Y,,,
-PWROILNPLXX,Y,,,
 PWRSHPINDEA,Y,,,[FALLBACK: category SHP->HYD via CATEGORY_FALLBACKS; template=PWRHYDINDEA; confirm Tech.Name override]
-PWRSHPINDNE,Y,,,[FALLBACK: category SHP->HYD via CATEGORY_FALLBACKS; template=PWRHYDINDNE; confirm Tech.Name override]
-PWRSHPINDNO,Y,,,[FALLBACK: category SHP->HYD via CATEGORY_FALLBACKS; template=PWRHYDINDNO; confirm Tech.Name override]
-PWRSHPINDSO,Y,,,[FALLBACK: category SHP->HYD via CATEGORY_FALLBACKS; template=PWRHYDINDSO; confirm Tech.Name override]
-PWRSHPINDWE,Y,,,[FALLBACK: category SHP->HYD via CATEGORY_FALLBACKS; template=PWRHYDINDWE; confirm Tech.Name override]
-PWRWOFMDVXX,Y,,,
-PWRWONMDVXX,Y,,,
-TRNBTNXXBGDXX,Y,,,
-TRNBTNXXINDNE,Y,,,
-TRNMDVXXINDSO,Y,,,[FALLBACK: TRN partial-region match — region overlap with TRNINDSOINDWE; confirm Tech.Name override]
-TRNNPLXXBGDXX,Y,,,[FALLBACK: TRN partial-region match — region overlap with TRNBGDXXINDEA; confirm Tech.Name override]

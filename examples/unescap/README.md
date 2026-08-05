@@ -9,12 +9,8 @@ preparation/compilation/execution configuration, the scenario registry, the exer
 and the provenance record. Nothing here falls back to the project-root configuration of
 the same name.
 
-> **This branch carries the assets only.**
-> The profile engine that reads `profile.yaml` and resolves `${profile.…}` /
-> `${project.…}` / `${package.…}` / `${workspace.…}` tokens lives on the parallel
-> profile-engine branch. Until that branch is merged, none of the commands below run:
-> there is no `--profile` option and no `example` subcommand yet. Treat the commands as
-> the interface these assets are written against.
+The profile engine and these assets are integrated. All commands below resolve the
+profile's explicit authorities; none implicitly borrow a same-named full-model input.
 
 ## The model
 
@@ -25,11 +21,18 @@ the same name.
 | Interconnector | `TRNBGDXXINDEA` |
 | Years | 2023–2050 (28) |
 | Timeslices | 20 (4 seasons × 1 day type × 5 daily brackets) |
-| Technologies | 89 |
-| Fuels | 43 |
+| Seed technologies / fuels | 89 / 43 (pre-preparation authorities) |
+| Prepared/compiled technologies / fuels | 90 / 49 |
 | Storage | 4 — `LDSBGDXX01`, `LDSINDEA01`, `SDSBGDXX01`, `SDSINDEA01` |
 | Solver | CBC |
 | Scenario roots | `BAU`, `A_Calibrated_BAU`, `B_Optimised_VRE`, `C_Target_VRE` |
+
+The two rows above are stage-specific contracts, not competing counts. Preparation
+performs a count-preserving reconciliation of legacy technology identities. Compilation
+then adds exactly one technology, `PWRSHPINDEA`, and six ELC dispatch fuels:
+`ELCBGDXX00`, `ELCBGDXX03`, `ELCBGDXX04`, `ELCINDEA00`, `ELCINDEA03`, and
+`ELCINDEA04`. `profile.yaml` records membership hashes for both stages, and the runtime
+rejects any other addition or removal before crossing the matrix/solver boundary.
 
 `C_Target_VRE` declares a completed-result dependency on `A_Calibrated_BAU`: it scales
 its NDC-derived floors against solved CalBAU generation, so A must be solved first. The
@@ -86,7 +89,7 @@ python -m ostram --profile unescap run
 python -m ostram --profile unescap run --scenarios "A_Calibrated_BAU,B_Optimised_VRE"
 python -m ostram --profile unescap run --scenarios "C_Target_VRE"
 python -m ostram example report unescap
-python -m ostram example report unescap --label baseline
+python -m ostram example report unescap --capture baseline
 ```
 
 Profile-aware country commands, used by [Exercise A](exercises/add-country.html):
@@ -131,6 +134,9 @@ legacy path such as `./A1_Outputs` or `../Executables/A_Calibrated_BAU_0`.
 
 [`references/provenance.md`](references/provenance.md) records the source commit, the
 source path of every migrated file, the SHA-256 of the scenario workbook, and every
-transformation applied. It also documents the **2.496 vs 2.5 GW** discrepancy in the
-`TRNBGDXXINDEA` residual capacity — the workbook says 2.496, the scenario YAMLs and the
-exercise text say 2.5. That discrepancy is documented, not resolved.
+transformation applied. The workbook's exact **2.496 GW** `TRNBGDXXINDEA` residual
+capacity is also the 2023 anchor in every executable scenario schedule; prose may describe
+it as approximately 2.5 GW, but no executable authority rounds it. Choosing 2.500 GW is
+an exercise edit, not the shipped seed. In the active relaxed scenario the resulting
+`TotalAnnualMaxCapacity` is intentionally unbound at exactly `9999.0`; that does not alter
+the `ResidualCapacity` series.

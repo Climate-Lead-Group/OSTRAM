@@ -326,7 +326,14 @@ def main(argv: Sequence[str] | None = None) -> int | None:
         if command == "inspect-resources":
             if len(remaining) != 1:
                 parser.error("inspect-resources accepts no command arguments")
-            print(json.dumps(paths.inspect_resources(), indent=2, sort_keys=True))
+            # Re-resolve after profile activation so non-full profiles report
+            # their isolated prepared workspace rather than the outer workspace
+            # used only to locate ``profiles/<id>``.
+            print(
+                json.dumps(
+                    resolve_paths().inspect_resources(), indent=2, sort_keys=True
+                )
+            )
             return 0
 
     parser.parse_args(arguments)

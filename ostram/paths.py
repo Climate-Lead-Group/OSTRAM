@@ -218,7 +218,9 @@ class ProjectPaths:
 
     @property
     def preparation_templates(self) -> Path:
-        return (self.preparation_inputs / "workbook_templates").resolve()
+        return self.authority(
+            "preparation_templates", self.preparation_inputs / "workbook_templates"
+        )
 
     @property
     def secondary_technology_inputs(self) -> Path:
@@ -247,7 +249,9 @@ class ProjectPaths:
 
     @property
     def preparation_config(self) -> Path:
-        return (self.config_root / "preparation").resolve()
+        return self.authority(
+            "preparation_config", self.config_root / "preparation"
+        )
 
     @property
     def country_config(self) -> Path:
@@ -279,11 +283,15 @@ class ProjectPaths:
 
     @property
     def compilation_resources(self) -> Path:
-        return (self.package_resources_root / "compilation").resolve()
+        return self.authority(
+            "compilation_resources", self.package_resources_root / "compilation"
+        )
 
     @property
     def preparation_resources(self) -> Path:
-        return (self.package_resources_root / "preparation").resolve()
+        return self.authority(
+            "preparation_resources", self.package_resources_root / "preparation"
+        )
 
     @property
     def scenario_registry(self) -> Path:

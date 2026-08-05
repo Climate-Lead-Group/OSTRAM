@@ -13,6 +13,7 @@ from typing import Mapping
 
 from ostram.paths import ProjectPaths
 from ostram.profiles import ProfileError, ProfileManifest
+from ostram.validation.profile import validate_seed_domain
 
 
 STAMP_NAME = ".ostram-profile.json"
@@ -109,6 +110,7 @@ def prepare_profile(
     """Validate, stage, stamp-last, and atomically publish one profile bundle."""
 
     sources = manifest.source_paths(paths, require_exists=True)
+    validate_seed_domain(manifest, sources.get("osemosys_inputs"))
     mutable = {
         role: spec for role, spec in manifest.authorities.items() if spec.mutable
     }
@@ -124,8 +126,18 @@ def prepare_profile(
             f"{staging if staging.exists() else backup}"
         )
     if target.exists():
-        _validate_stamp(target, manifest)
-        if not reset:
+        if reset:
+            # A reset is the supported way to republish after an intentional
+            # manifest edit, but it must never adopt a foreign or unstamped
+            # workspace.
+            stamp = _read_stamp(target)
+            if stamp.get("profile_id") != manifest.profile_id:
+                raise ProfileWorkspaceError(
+                    f"foreign profile workspace at {target}: stamp declares "
+                    f"{stamp.get('profile_id')!r}, expected {manifest.profile_id!r}"
+                )
+        else:
+            _validate_stamp(target, manifest)
             raise FileExistsError(
                 f"profile workspace already exists: {target}; pass --reset to replace it"
             )
@@ -134,11 +146,16 @@ def prepare_profile(
     staging.mkdir()
     relative_authorities: dict[str, str] = {}
     source_digests: dict[str, str] = {}
+    copied_sources: dict[tuple[Path, str], Path] = {}
     for role, spec in mutable.items():
         source = sources[role]
-        destination = staging / "authorities" / role / source.name
         source_digest = _authority_digest(source, spec.kind)
-        _copy_authority(source, destination, spec.kind)
+        source_key = (source.resolve(), spec.kind)
+        destination = copied_sources.get(source_key)
+        if destination is None:
+            destination = staging / "authorities" / role / source.name
+            _copy_authority(source, destination, spec.kind)
+            copied_sources[source_key] = destination
         if _authority_digest(destination, spec.kind) != source_digest:
             raise ProfileWorkspaceError(
                 f"authority {role!r} changed while it was being prepared"

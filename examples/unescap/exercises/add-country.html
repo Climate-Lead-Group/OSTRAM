@@ -248,14 +248,6 @@
 <section id="run-generator">
   <h2><span class="num">4</span> Step 2 &mdash; Run the Template Generator</h2>
 
-  <div class="callout warn">
-    <div class="tag">Not runnable from this branch yet</div>
-    <p>This branch carries the UNESCAP example assets only. The <code>example</code> and
-    <code>--profile</code> commands in this exercise arrive with the parallel
-    profile-engine branch. Until that branch is merged, work through the edits and read
-    the commands as the interface you will use.</p>
-  </div>
-
   <p>The commands are identical on Windows, macOS, and Linux, and none of them depend on
   your current directory &mdash; you name the profile, you do not navigate to it.</p>
 
@@ -570,8 +562,8 @@ Overall: PASS</span></code></pre>
       </tr>
       <tr>
         <td><strong>Unknown profile: unescap</strong></td>
-        <td>You are on a build without the profile engine, or outside an OSTRAM project bundle.</td>
-        <td>This branch carries the example assets only. The <code>--profile</code> and <code>example</code> commands arrive with the profile-engine branch.</td>
+        <td>The installed OSTRAM build does not contain the UNESCAP profile, or the project root is wrong.</td>
+        <td>Run from this integrated repository or install a build that includes <code>examples/unescap/profile.yaml</code>.</td>
       </tr>
       <tr>
         <td><strong>ELCMMRXX01 exported as technology</strong></td>

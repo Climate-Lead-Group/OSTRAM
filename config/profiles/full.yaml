@@ -8,6 +8,7 @@ metadata:
     TRNBGDXXINDEA_residual_capacity_gw: 2.496
 policies:
   lid_rule_new_semantics: false
+  pwr_min_pin_rules_sha256: cdcb0aeb570486b40ab96be68f6db031af54afa3ac02e4832a456522ca73a17c
 authorities:
   scenario_registry: project:config/scenarios/registry.json
   scenario_inputs:
@@ -33,6 +34,18 @@ authorities:
     kind: directory
   preparation_inputs:
     path: project:inputs/preparation
+    kind: directory
+  preparation_templates:
+    path: project:inputs/preparation/workbook_templates
+    kind: directory
+  preparation_config:
+    path: project:config/preparation
+    kind: directory
+  preparation_resources:
+    path: package:resources/preparation
+    kind: directory
+  compilation_resources:
+    path: package:resources/compilation
     kind: directory
   secondary_technology_inputs:
     path: project:inputs/preparation/secondary_technologies

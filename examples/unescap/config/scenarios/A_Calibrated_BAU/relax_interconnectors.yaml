@@ -14,5 +14,6 @@ headroom_factor: 1.0      # pipeline only, no extra slack
 
 overrides:
   # BGD <-> INDEA: real HVDC pipeline (Bheramara-Baharampur, Katihar-Parbatipur,
-  # 2nd Bheramara, Barapukuria, Jamalpur). ResCap 2.50 GW -> 8.50 GW by 2033.
-  TRNBGDXXINDEA: {2023: 2.50, 2028: 6.50, 2029: 7.00, 2030: 7.75, 2033: 8.50}
+  # 2nd Bheramara, Barapukuria, Jamalpur). Exact workbook ResCap 2.496 GW
+  # -> 8.50 GW by 2033.
+  TRNBGDXXINDEA: {2023: 2.496, 2028: 6.50, 2029: 7.00, 2030: 7.75, 2033: 8.50}

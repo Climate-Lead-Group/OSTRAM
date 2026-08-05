@@ -408,13 +408,13 @@
 
   <div class="callout tip">
     <div class="tag">Where do the values come from?</div>
-    <p>Look at the existing <code>TRNBGDXXINDEA</code> entry as your guide. Its values (<code>2023: 2.50, 2028: 6.50, &hellip; 2033: 8.50</code>) come from the real project pipeline &mdash; the commissioned and planned HVDC capacities from the <strong>Interconnectors</strong> sheet. For our exercise interconnector, the only project is a single 0.5 GW link commissioning in 2030. We set <code>{2029: 0, 2030: 0.5}</code> &mdash; the explicit zero before COD prevents the interpolation logic from allowing investment in earlier years.</p>
+    <p>Look at the existing <code>TRNBGDXXINDEA</code> entry as your guide. Its values (<code>2023: 2.496, 2028: 6.50, &hellip; 2033: 8.50</code>) come from the real project pipeline &mdash; the commissioned and planned HVDC capacities from the <strong>Interconnectors</strong> sheet. For our exercise interconnector, the only project is a single 0.5 GW link commissioning in 2030. We set <code>{2029: 0, 2030: 0.5}</code> &mdash; the explicit zero before COD prevents the interpolation logic from allowing investment in earlier years.</p>
   </div>
 
   <p><strong>A_Calibrated_BAU</strong> &mdash; open <code>config/scenarios/A_Calibrated_BAU/relax_interconnectors.yaml</code>. The file currently has:</p>
   <div class="code-wrap">
 <pre><code><span class="key">overrides:</span>
-  <span class="key">TRNBGDXXINDEA:</span> {<span class="key">2023:</span> 2.50, <span class="key">2028:</span> 6.50, <span class="key">2029:</span> 7.00, <span class="key">2030:</span> 7.75, <span class="key">2033:</span> 8.50}</code></pre>
+  <span class="key">TRNBGDXXINDEA:</span> {<span class="key">2023:</span> 2.496, <span class="key">2028:</span> 6.50, <span class="key">2029:</span> 7.00, <span class="key">2030:</span> 7.75, <span class="key">2033:</span> 8.50}</code></pre>
   </div>
   <p>Add the new line below <code>TRNBGDXXINDEA</code>:</p>
   <div class="code-wrap">
@@ -460,14 +460,6 @@
 <!-- SECTION 7 -->
 <section id="run">
   <h2><span class="num">7</span> Run the Model</h2>
-
-  <div class="callout warn">
-    <div class="tag">Not runnable from this branch yet</div>
-    <p>This branch carries the UNESCAP example assets only. The <code>example</code> and
-    <code>--profile</code> commands below arrive with the parallel profile-engine branch.
-    Until that branch is merged, work through the edits and read the commands as the
-    interface you will use.</p>
-  </div>
 
   <p>The commands are the same on Windows, macOS, and Linux, and they do not depend
   on which directory you are in &mdash; the profile is named, not located.</p>

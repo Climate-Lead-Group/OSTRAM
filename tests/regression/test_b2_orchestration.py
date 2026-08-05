@@ -473,6 +473,7 @@ class B2AstBoundaryCharacterizationTests(unittest.TestCase):
         compiled_input = _function(orchestrator_tree, "run_compiled_input_stage")
         compiled_calls = {
             "dependencies.process_scenario_folder",
+            "validate_active_compiled_domain",
             "dependencies.run_otoole_conversion",
             "dependencies.run_preprocessing_script",
             "dependencies.run_days_in_day_type_patcher",
@@ -488,6 +489,7 @@ class B2AstBoundaryCharacterizationTests(unittest.TestCase):
             _selected_calls(compiled_input, compiled_calls),
             [
                 "dependencies.process_scenario_folder",
+                "validate_active_compiled_domain",
                 "dependencies.run_otoole_conversion",
                 "dependencies.run_preprocessing_script",
                 "dependencies.run_days_in_day_type_patcher",

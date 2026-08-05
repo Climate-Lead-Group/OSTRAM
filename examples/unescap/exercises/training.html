@@ -413,12 +413,6 @@
     <h2><span class="num">3</span> Before You Start: First Build</h2>
     <p>Build the baseline results once, in <strong>two passes</strong>. This order matters: <code>C_Target_VRE</code> scales its targets against the <em>solved</em> <code>A_Calibrated_BAU</code> results, so the calibrated baseline must be solved <strong>before</strong> the policy scenario runs.</p>
 
-    <div class="callout warn"><div class="tag">Not runnable from this branch yet</div><p>This branch carries the
-    UNESCAP example assets &mdash; inputs, configs, scenario registry and these exercises. The
-    <code>example</code> and <code>--profile</code> commands used throughout arrive with the parallel
-    profile-engine branch. Until that branch is merged, work through the edits and read the commands
-    as the interface you will use; every command below is the same on Windows, macOS and Linux.</p></div>
-
     <div class="callout tip"><div class="tag">Step 0 &mdash; Get a conda terminal</div><p>All commands below run from a terminal with <em>conda</em> available &mdash; an <strong>Anaconda Prompt</strong> on Windows, or your normal <strong>Terminal</strong> on macOS and Linux with the conda environment activated. If you don't have conda, install either <a href="https://www.anaconda.com/download" target="_blank" style="color:var(--teal-mid);font-weight:600">Anaconda Distribution</a> or the lighter <a href="https://docs.conda.io/en/latest/miniconda.html" target="_blank" style="color:var(--teal-mid);font-weight:600">Miniconda</a>. Both give you a working <em>conda</em> command line.</p></div>
 
     <ol class="step-list">
@@ -458,7 +452,7 @@
         <strong>Save your baseline snapshot.</strong> Every run replaces the current combined results, and they only hold the scenarios you have solved so far. So you can compare later, record this run under a <strong>label</strong> &mdash; the results dashboard (Section&nbsp;8) lists every recorded <code>&lt;LABEL&gt;</code> in its <strong>Before</strong>/<strong>After</strong> menus:
         <div class="code-wrap">
           <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
-<pre><code><span class="cmd">python</span> -m ostram example report unescap <span class="flag">--label</span> <span class="string">baseline</span></code></pre>
+<pre><code><span class="cmd">python</span> -m ostram example report unescap <span class="flag">--capture</span> <span class="string">baseline</span></code></pre>
         </div>
         <p>The label <code>baseline</code> marks this as your untouched, pre-exercise starting point. The command stamps the date for you.</p>
       </li>
@@ -525,7 +519,7 @@
     <p>Then save this run under an exercise label and open the dashboard to compare it against your baseline:</p>
     <div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
-<pre><code><span class="cmd">python</span> -m ostram example report unescap <span class="flag">--label</span> <span class="string">E1</span></code></pre>
+<pre><code><span class="cmd">python</span> -m ostram example report unescap <span class="flag">--capture</span> <span class="string">E1</span></code></pre>
     </div>
     <p>In the dashboard set <strong>Before</strong> = <code>baseline</code>, <strong>After</strong> = <code>E1</code>, <strong>Scenario</strong> = <code>A_Calibrated_BAU</code>, and switch <strong>Region</strong> between System, Bangladesh and India-East to watch the lid open up. (See <a href="#inspect">Section&nbsp;8</a> for details.)</p>
 
@@ -608,7 +602,7 @@
     <p>Then save this run and open the dashboard to compare it against your baseline:</p>
     <div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
-<pre><code><span class="cmd">python</span> -m ostram example report unescap <span class="flag">--label</span> <span class="string">E1+E2</span></code></pre>
+<pre><code><span class="cmd">python</span> -m ostram example report unescap <span class="flag">--capture</span> <span class="string">E1+E2</span></code></pre>
     </div>
     <p>In the dashboard set <strong>Before</strong> = <code>E1</code>, <strong>After</strong> = <code>E1+E2</code>, <strong>Scenario</strong> = <code>B_Optimised_VRE</code>. Because runs are cumulative, the previous exercise's snapshot (<code>E1</code>) is the fair &ldquo;before&rdquo; here &mdash; so the coal/gas ceilings and the storage floor show up cleanly in the generation mix, CO&#8322; line and storage chart. (See <a href="#inspect">Section&nbsp;8</a>.)</p>
 
@@ -636,6 +630,7 @@
 <pre><code><span class="key">TRNBGDXXINDEA</span>   <span class="comment"># Bheramara&ndash;Baharampur HVDC + planned expansions</span></code></pre>
     </div>
     <p>It is the corridor that lets the two grids share power. Today it carries about <strong>2.5&nbsp;GW</strong>; the real project pipeline grows it toward <strong>8.5&nbsp;GW by 2033</strong>. In the reduced model it is the <em>only</em> interconnector, which makes it perfect for a clean on/off experiment: whatever you do to it, you see the effect immediately in how the two regions lean on &mdash; or fend for &mdash; each other.</p>
+    <div class="callout important"><div class="tag">Exact baseline versus exercise edits</div><p>The shipped workbook and every executable scenario anchor retain <code>ResidualCapacity = 2.496</code>&nbsp;GW for 2023&ndash;2028. This guide uses “2.5&nbsp;GW” only as rounded prose. Typing an exact <code>2.500</code> value is an exercise edit, not a baseline correction.</p></div>
     <div class="analogy">
       <div class="label">Think of it this way</div>
       <p>The interconnector is an <strong>extension cord between two houses</strong>. Unplug it and each house must generate everything it needs on its own. Plug in a fatter cord and the house with cheap solar at noon can sell it next door instead of curtailing it &mdash; and borrow power back after sunset.</p>
@@ -652,7 +647,7 @@
 <span class="key">headroom_factor:</span> 1.5          <span class="comment"># default slack for links without an override</span>
 
 <span class="key">overrides:</span>
-  <span class="key">TRNBGDXXINDEA:</span> {2023: 2.50, 2028: 6.50, 2029: 7.00, 2030: 7.75, 2033: 8.50}</code></pre>
+  <span class="key">TRNBGDXXINDEA:</span> {2023: 2.496, 2028: 6.50, 2029: 7.00, 2030: 7.75, 2033: 8.50}</code></pre>
     </div>
     <p>Two things control the link:</p>
     <table>
@@ -687,7 +682,7 @@
 <pre><code><span class="key">headroom_factor:</span> 1.5
 
 <span class="key">overrides:</span>
-  <span class="key">TRNBGDXXINDEA:</span> {2023: 2.50, 2028: 6.50,
+  <span class="key">TRNBGDXXINDEA:</span> {2023: 2.496, 2028: 6.50,
                   2029: 7.00, 2030: 7.75,
                   2033: 8.50}</code></pre>
     </div>
@@ -701,13 +696,13 @@
     </div>
       </div>
     </div>
-    <div class="callout important"><div class="tag">Why empty &mdash; and not a flat <code>2.50</code> override</div><p>The base model already freezes the link by pinning <code>TotalAnnualMaxCapacity = ResidualCapacity</code> (2.5&nbsp;GW). The relax script reads <strong>any non-zero override &mdash; even a flat <code>{2023: 2.50, 2050: 2.50}</code></strong> &mdash; as &ldquo;open this link&rdquo;: it lifts that total-capacity ceiling to <code>9999</code> and then caps only the <em>annual build rate</em>. The corridor is then free to grow (it climbed to ~10&nbsp;GW). An override can cap investment; it can never pin total capacity. So the way to freeze is to add <em>no</em> override and let the base 2.5&nbsp;GW ceiling stand.</p></div>
+    <div class="callout important"><div class="tag">Why empty &mdash; and not a flat <code>2.496</code> override</div><p>The base model already freezes the link by pinning <code>TotalAnnualMaxCapacity = ResidualCapacity</code> (exactly 2.496&nbsp;GW). The relax script reads <strong>any non-zero override &mdash; even a flat <code>{2023: 2.496, 2050: 2.496}</code></strong> &mdash; as &ldquo;open this link&rdquo;: it lifts that total-capacity ceiling to <code>9999</code> and then caps only the <em>annual build rate</em>. The corridor is then free to grow (it climbed to ~10&nbsp;GW). An override can cap investment; it can never pin total capacity. So the way to freeze is to add <em>no</em> override and let the base 2.496&nbsp;GW ceiling stand.</p></div>
     <h3>Run it</h3><div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
 <pre><code><span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> run <span class="flag">--scenarios</span> <span class="string">"B_Optimised_VRE"</span></code></pre>
     </div><p>Then save this run under an exercise label and open the dashboard:</p><div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
-<pre><code><span class="cmd">python</span> -m ostram example report unescap <span class="flag">--label</span> <span class="string">IC-off</span></code></pre>
+<pre><code><span class="cmd">python</span> -m ostram example report unescap <span class="flag">--capture</span> <span class="string">IC-off</span></code></pre>
     </div>
     <p>In the dashboard set <strong>Before</strong> = <code>baseline</code>, <strong>After</strong> = <code>IC-off</code>, <strong>Scenario</strong> = <code>B_Optimised_VRE</code>, and switch <strong>Region</strong> between System, Bangladesh and India-East.</p>
     <h3>What to observe</h3>
@@ -734,7 +729,7 @@
         <div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
 <pre><code><span class="key">overrides:</span>
-  <span class="key">TRNBGDXXINDEA:</span> {2023: 2.50, 2028: 6.50,
+  <span class="key">TRNBGDXXINDEA:</span> {2023: 2.496, 2028: 6.50,
                   2029: 7.00, 2030: 7.75,
                   2033: 8.50}</code></pre>
     </div>
@@ -743,7 +738,7 @@
         <div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
 <pre><code><span class="key">overrides:</span>
-  <span class="key">TRNBGDXXINDEA:</span> <span class="add">{2023: 2.50, 2030: 15.0, 2050: 25.0}</span></code></pre>
+  <span class="key">TRNBGDXXINDEA:</span> <span class="add">{2023: 2.496, 2030: 15.0, 2050: 25.0}</span></code></pre>
     </div>
       </div>
     </div>
@@ -751,7 +746,7 @@
     <h3>Run it &amp; compare</h3><div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
 <pre><code><span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> run <span class="flag">--scenarios</span> <span class="string">"B_Optimised_VRE"</span>
-<span class="cmd">python</span> -m ostram example report unescap <span class="flag">--label</span> <span class="string">IC-wide</span></code></pre>
+<span class="cmd">python</span> -m ostram example report unescap <span class="flag">--capture</span> <span class="string">IC-wide</span></code></pre>
     </div>
     <p>Set <strong>Before</strong> = <code>baseline</code> (or <code>IC-off</code> for the sharpest contrast) and <strong>After</strong> = <code>IC-wide</code>.</p>
     <h3>What to observe</h3>
@@ -777,14 +772,14 @@
         <div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
 <pre><code><span class="key">overrides:</span>
-  <span class="key">TRNBGDXXINDEA:</span> <span class="add">{2023: 2.50, 2026: 8.50}</span></code></pre>
+  <span class="key">TRNBGDXXINDEA:</span> <span class="add">{2023: 2.496, 2026: 8.50}</span></code></pre>
     </div>
       </div>
       <div><h4>Variant B &mdash; late (full link only by 2045)</h4>
         <div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
 <pre><code><span class="key">overrides:</span>
-  <span class="key">TRNBGDXXINDEA:</span> <span class="add">{2023: 2.50, 2045: 8.50}</span></code></pre>
+  <span class="key">TRNBGDXXINDEA:</span> <span class="add">{2023: 2.496, 2045: 8.50}</span></code></pre>
     </div>
       </div>
     </div>
@@ -792,8 +787,8 @@
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
 <pre><code><span class="comment"># after editing to Variant A</span>
 <span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> run <span class="flag">--scenarios</span> <span class="string">"B_Optimised_VRE"</span>
-<span class="cmd">python</span> -m ostram example report unescap <span class="flag">--label</span> <span class="string">IC-early</span>
-<span class="comment"># then edit to Variant B, re-run, and record it as --label IC-late</span></code></pre>
+<span class="cmd">python</span> -m ostram example report unescap <span class="flag">--capture</span> <span class="string">IC-early</span>
+<span class="comment"># then edit to Variant B, re-run, and record it as --capture IC-late</span></code></pre>
     </div>
     <h3>What to observe</h3>
     <ul>
@@ -818,17 +813,17 @@
     <table>
       <thead><tr><th>Override for <code>TRNBGDXXINDEA</code></th><th>Save as label</th></tr></thead>
       <tbody>
-        <tr><td><code>{2023: 2.50, 2050: 2.50}</code></td><td><code>IC-2.5</code> (= off)</td></tr>
-        <tr><td><code>{2023: 2.50, 2033: 5.00}</code></td><td><code>IC-5</code></td></tr>
-        <tr><td><code>{2023: 2.50, 2033: 8.50}</code></td><td><code>IC-8.5</code> (= pipeline)</td></tr>
-        <tr><td><code>{2023: 2.50, 2033: 12.0}</code></td><td><code>IC-12</code></td></tr>
-        <tr><td><code>{2023: 2.50, 2030: 15.0, 2050: 25.0}</code></td><td><code>IC-25</code> (= wide)</td></tr>
+        <tr><td><code>{2023: 2.496, 2050: 2.496}</code></td><td><code>IC-2.496</code> (= off)</td></tr>
+        <tr><td><code>{2023: 2.496, 2033: 5.00}</code></td><td><code>IC-5</code></td></tr>
+        <tr><td><code>{2023: 2.496, 2033: 8.50}</code></td><td><code>IC-8.5</code> (= pipeline)</td></tr>
+        <tr><td><code>{2023: 2.496, 2033: 12.0}</code></td><td><code>IC-12</code></td></tr>
+        <tr><td><code>{2023: 2.496, 2030: 15.0, 2050: 25.0}</code></td><td><code>IC-25</code> (= wide)</td></tr>
       </tbody>
     </table><div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
 <pre><code><span class="comment"># repeat for each row: edit the override, then</span>
 <span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> run <span class="flag">--scenarios</span> <span class="string">"B_Optimised_VRE"</span>
-<span class="cmd">python</span> -m ostram example report unescap <span class="flag">--label</span> <span class="string">IC-8.5</span></code></pre>
+<span class="cmd">python</span> -m ostram example report unescap <span class="flag">--capture</span> <span class="string">IC-8.5</span></code></pre>
     </div>
     <h3>What to observe</h3>
     <ul>
@@ -896,9 +891,9 @@
 <span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> run <span class="flag">--scenarios</span> <span class="string">"B_Optimised_VRE"</span>
 
 <span class="comment"># 3. Record it under a direction label</span>
-<span class="cmd">python</span> -m ostram example report unescap <span class="flag">--label</span> <span class="string">forward</span>
+<span class="cmd">python</span> -m ostram example report unescap <span class="flag">--capture</span> <span class="string">forward</span>
 
-<span class="comment"># 4. Repeat for "reverse" and "bidirectional", recording --label reverse and --label bidirectional</span></code></pre>
+<span class="comment"># 4. Repeat for "reverse" and "bidirectional", recording --capture reverse and --capture bidirectional</span></code></pre>
     </div>
     <h3>Generate the comparison report</h3>
     <p>Once you have all three labelled runs, build the comparison report &mdash; a self-contained HTML page with interactive charts:</p><div class="code-wrap">
@@ -934,7 +929,7 @@
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
 <pre><code><span class="key">headroom_factor:</span> 1.5
 <span class="key">overrides:</span>
-  <span class="key">TRNBGDXXINDEA:</span> {<span class="key">2023:</span> 2.50, <span class="key">2028:</span> 6.50, <span class="key">2029:</span> 7.00, <span class="key">2030:</span> 7.75, <span class="key">2033:</span> 8.50}</code></pre>
+  <span class="key">TRNBGDXXINDEA:</span> {<span class="key">2023:</span> 2.496, <span class="key">2028:</span> 6.50, <span class="key">2029:</span> 7.00, <span class="key">2030:</span> 7.75, <span class="key">2033:</span> 8.50}</code></pre>
     </div><p>And for the direction file (Exercise&nbsp;3.5), the shipped default is bidirectional:</p><div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
 <pre><code><span class="key">directions:</span> {}</code></pre>
@@ -995,7 +990,7 @@
     <p>Then save this run and open the dashboard to compare it against your baseline:</p>
     <div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
-<pre><code><span class="cmd">python</span> -m ostram example report unescap <span class="flag">--label</span> <span class="string">E1+E2+E3</span></code></pre>
+<pre><code><span class="cmd">python</span> -m ostram example report unescap <span class="flag">--capture</span> <span class="string">E1+E2+E3</span></code></pre>
     </div>
     <p>In the dashboard set <strong>Before</strong> = <code>E1+E2</code>, <strong>After</strong> = <code>E1+E2+E3</code>, <strong>Scenario</strong> = <code>C_Target_VRE</code> &mdash; <code>E1+E2</code> is the cumulative state just before this exercise. Watch the solar/VRE-share line rise to meet the target. Capital investment rises (more solar capacity to build), but total discounted system cost may actually <em>fall</em> because solar&rsquo;s zero fuel cost offsets the higher capex. (See <a href="#inspect">Section&nbsp;8</a>.)</p>
 
@@ -1030,13 +1025,13 @@
     </div>
 
     <h3>Visualise before vs after</h3>
-    <p>To <em>see</em> what your edits changed, generate the interactive results dashboard. Every run you recorded with <code>--label</code> becomes a selectable point in the dashboard's <strong>Before</strong> and <strong>After</strong> menus, listed by its label:</p>
+    <p>To <em>see</em> what your edits changed, generate the interactive results dashboard. Every run you recorded with <code>--capture</code> becomes a selectable point in the dashboard's <strong>Before</strong> and <strong>After</strong> menus, listed by its label:</p>
     <div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
 <pre><code><span class="cmd">python</span> -m ostram example report unescap</code></pre>
     </div>
     <p>This writes the dashboard into your workspace. Open it in a browser and pick a <strong>Before</strong> snapshot, an <strong>After</strong> snapshot, a <strong>scenario</strong> (A/B/C) and a <strong>region</strong> (System / Bangladesh / India-East) to compare generation mix, capacity, CO&#8322; emissions, storage, renewable share and system cost side by side.</p>
-    <div class="callout tip"><div class="tag">Keep a baseline, label every run</div><p>Each run replaces the current combined results, and those results only hold the scenarios you have solved so far &mdash; so record a label after every build. Right after the first build use <code>--label baseline</code>; after Exercise&nbsp;1 <code>--label E1</code>, after Exercise&nbsp;2 <code>--label "E1+E2"</code>, after Exercise&nbsp;3 <code>--label "E1+E2+E3"</code>. Runs are <strong>cumulative</strong> (each carries the previous exercises' edits), so compare a run against the <em>previous</em> snapshot to isolate one exercise (e.g. <code>E1</code> vs <code>E1+E2</code>), or against <code>baseline</code> to see the total change since the start.</p></div>
+    <div class="callout tip"><div class="tag">Keep a baseline, label every run</div><p>Each run replaces the current combined results, and those results only hold the scenarios you have solved so far &mdash; so record a label after every build. Right after the first build use <code>--capture baseline</code>; after Exercise&nbsp;1 <code>--capture E1</code>, after Exercise&nbsp;2 <code>--capture "E1+E2"</code>, after Exercise&nbsp;3 <code>--capture "E1+E2+E3"</code>. Runs are <strong>cumulative</strong> (each carries the previous exercises' edits), so compare a run against the <em>previous</em> snapshot to isolate one exercise (e.g. <code>E1</code> vs <code>E1+E2</code>), or against <code>baseline</code> to see the total change since the start.</p></div>
 
     <h3>Undoing your changes</h3>
     <p>Every config file in the profile is small, commented, and carries its shipped values in its own header, so

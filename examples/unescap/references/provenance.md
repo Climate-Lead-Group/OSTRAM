@@ -1,365 +1,153 @@
-# Provenance — UNESCAP example profile
+# Provenance — integrated UNESCAP profile
 
-Every file under `examples/unescap/` and where it came from, what was changed on the way,
-and what was deliberately left behind.
+This record describes the runnable UNESCAP example after integration with the OSTRAM
+profile engine. Generated workspaces remain outside `examples/unescap/`.
 
-## Source
+## Integration lineage
 
-| | |
+| Item | Commit |
 |---|---|
-| Source repository | `OSTRAM_training_source` (read-only clone; never modified) |
-| Source commit | `6e00e8b00144b6859344f54022df34417c075ae9` |
-| Target branch | `feat/unescap-example-assets` |
-| Base commit | `8636ccccc324dacdd7bb7137fcbfe31d02c5e67d` |
-| Files added | 95, all under `examples/unescap/` |
+| Integration base | `8636ccccc324dacdd7bb7137fcbfe31d02c5e67d` |
+| Profile engine component | `49bf4c6a4ade7a9f0e88ce7625964ab071ea123d` (cherry-picked here as `c6293c2`) |
+| Training operations component | `1f323b17d55574e465fcd9263843847491e217d3` (cherry-picked here as `15573ba`) |
+| UNESCAP seed/assets component | `cecf7f776d9890f5897fa83d66d083c7f7f55716` (cherry-picked here as `ef66110`) |
+| Asset source repository | `OSTRAM_training_source`, read-only source commit `6e00e8b00144b6859344f54022df34417c075ae9` |
 
-This branch carries **assets only**. The profile engine that reads `profile.yaml` and
-resolves `${profile.…}` / `${project.…}` / `${package.…}` / `${workspace.…}` is on the
-parallel profile-engine branch. Nothing here is runnable until that branch lands, and the
-exercise pages say so on the page.
+The integrated manifest uses only explicit `profile:`, `project:`, and `package:`
+authorities. Missing profile assets fail closed; a same-named full-model resource is never
+used as an implicit fallback. Shared maintained-model, execution-support, and package
+resources are declared explicitly.
 
----
+## Seed inputs and stage-specific domain authority
 
-## 1. Copied verbatim
+The 64 OSeMOSYS Global CSVs came from `t1_confection/OG_csvs_inputs/*.csv`. Git's
+repository-wide text normalization changes CRLF to LF where applicable but does not change
+CSV members or values.
 
-### Model input CSVs — 64 files, byte-identical
+The authoritative counts are stage-specific:
 
-| | |
+| Stage | Technologies | Fuels | Meaning |
+|---|---:|---:|---|
+| Seed | 89 | 43 | `inputs/osemosys_global/{TECHNOLOGY,FUEL}.csv`, before preparation |
+| Projected seed | 89 | 43 | count-preserving preparation reconciliation |
+| Prepared/compiled | 90 | 49 | valid B2 CSV domain before matrix/solver work |
+
+Membership hashes use `sha256-sorted-values-v1`: sorted `VALUE` members, each encoded as
+UTF-8 and terminated by LF.
+
+| Stage / set | SHA-256 |
 |---|---|
-| Source | `t1_confection/OG_csvs_inputs/*.csv` |
-| Destination | `inputs/osemosys_global/*.csv` |
-| Transformation | none — filenames, rows, columns and values preserved |
-
-The files were copied byte-for-byte and verified byte-identical to the source in the
-working tree. One thing does change at commit time: the source CSVs use CRLF line endings,
-and the repository's `.gitattributes` sets `* text=auto eol=lf`, so git normalises them to
-LF in the index. That is the repository's existing standard — the tracked CSVs in the
-project-root `inputs/osemosys_global/` are LF too — and it is applied here rather than
-carving out an exception, since `.gitattributes` is outside this branch's ownership
-boundary. No filename, row, column, or value is affected.
-
-Verified set sizes:
-
-| Set | Members |
-|---|---|
-| `TECHNOLOGY` | 89 |
-| `FUEL` | 43 |
-| `STORAGE` | 4 (`LDSBGDXX01`, `LDSINDEA01`, `SDSBGDXX01`, `SDSINDEA01`) |
-| `REGION` | `GLOBAL` (single) |
-
-### Scenario workbook — byte-for-byte
-
-| | |
-|---|---|
-| Source path | `t1_confection/A3_process/SOASIA_OSeMOSYS_Template_v18.xlsx` |
-| Source commit | `6e00e8b00144b6859344f54022df34417c075ae9` |
-| Destination | `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx` |
-| Source SHA-256 | `f9e3ed1fc720c3c2906cd3ffc18e0023ea18df7f977260580c6d7f37a82019a8` |
-| Destination SHA-256 | `f9e3ed1fc720c3c2906cd3ffc18e0023ea18df7f977260580c6d7f37a82019a8` |
-| Hashes match | yes |
-| Size | 257,429 bytes (identical) |
-
-The workbook was **copied as bytes**. It was never opened and resaved, so all 20 sheets —
-including `Restrictions`, `Control`, and `Interconnector_Params` — arrive untouched, along
-with every formula, format, and defined name a resave would have altered.
-
-### Scenario YAML authorities — copied, then edited only where noted below
-
-| Scenario | Files | Source |
-|---|---|---|
-| `A_Calibrated_BAU` | `bau_calibration.yaml`, `lid_rule.yaml`, `relax_interconnectors.yaml`, `retirement_schedule.yaml` | `t1_confection/A3_process/rules_scripts/configs/A_Calibrated_BAU/` |
-| `B_Optimised_VRE` | `lid_rule.yaml`, `relax_interconnectors.yaml`, `retirement_schedule.yaml`, `set_interconnector_direction.yaml`, `set_interconnector_direction_EXAMPLE_forward.yaml`, `set_interconnector_direction_EXAMPLE_reverse.yaml`, `storage_floors.yaml` | `t1_confection/A3_process/rules_scripts/configs/B_Optimised_VRE/` |
-| `C_Target_VRE` | `lid_rule.yaml`, `relax_interconnectors.yaml`, `retirement_schedule.yaml`, `set_vre_targets.yaml`, `storage_floors.yaml` | `t1_confection/A3_process/rules_scripts/configs/C_Target_VRE/` |
-
-Both interconnector-direction **example** files (forward and reverse) were migrated —
-they are active teaching material for Exercise 3.5, not backups.
-
----
-
-## 2. Transformed
-
-### `config/preparation/Config_country_codes.yaml`
-
-Source: `t1_confection/Config_country_codes.yaml`.
-
-| Change | Before | After |
-|---|---|---|
-| `country_data` | 6 countries (BGD, BTN, IND, NPL, LKA, MDV) | BGD and IND only |
-| `countries` | `["BGD", "INDEA"]` | unchanged — already correct |
-| `template_generation` | MDV cloned from **LKA** | MMR cloned from **BGD**, isolated (`interconnections: []`), centerpoint 19.8118 / 96.6022 |
-| Commented examples | referenced LKA/MDV/BTN/NPL as reference countries | rewritten to reference only BGD/IND, which are the countries this profile actually models |
-| `implausible_combinations` comments | referenced Maldives atolls, Sri Lanka, etc. | rewritten for the two modelled countries |
-| Generator instruction | `python Z_generate_country_template.py` | `python -m ostram --profile unescap country template` |
-
-The MDV-from-LKA template was **stale and unrunnable**: Sri Lanka was removed from this
-model with the other four countries, so the active configuration named a reference country
-that no longer exists. MMR-from-BGD is the example the exercises actually teach
-(`exercises/add-country.html`), so the active configuration and the exercise now agree.
-
-### `config/preparation/Config_region_consolidation.yaml`
-
-Source: `t1_confection/Config_region_consolidation.yaml`. `enabled: false` preserved. The
-commented BRA/MEX examples were replaced with an India example, since the only country in
-this profile that *could* have sub-regions is India. Consolidation stays off deliberately:
-merging INDEA into a unified India region would erase `TRNBGDXXINDEA`, the object every
-interconnector exercise studies.
-
-### `config/compilation/Config_MOMF_T1_A.yaml`
-
-Source: `t1_confection/Config_MOMF_T1_A.yaml` (the repository-root copy, not the
-`A3_process/` working copy).
-
-Only the six directory keys changed, from physical relative paths to logical tokens:
-
-| Key | Before | After |
-|---|---|---|
-| `A1_inputs` | `./A1_Inputs` | `${profile.osemosys_inputs}` |
-| `A1_outputs` | `./A1_Outputs` | `${workspace.preparation}/A1_Outputs` |
-| `A2_extra_inputs` | `./A2_Extra_Inputs` | `${workspace.preparation}/extra_inputs` |
-| `A2_output` | `./A2_Output_Params/` | `${workspace.compilation}/A2_Output_Params/` |
-| `A2_output_main_scen` | `./A2_Output_Params/` | `${workspace.compilation}/A2_Output_Params/` |
-| `A2_output_NDP` | `./A2_Output_Params/NDC/` | `${workspace.compilation}/A2_Output_Params/NDC/` |
-
-Everything else is unchanged, including the 20-timeslice fabric (`Timeslices`,
-`Conversionls`, `Conversionld`, `Conversionlh`) and the four UNESCAP storage technologies
-in `xtra_scen.Storage`.
-
-### `config/execution/Config_MOMF_T1_AB.yaml`
-
-Source: `t1_confection/Config_MOMF_T1_AB.yaml`.
-
-| Change | Detail |
-|---|---|
-| Directory and file keys | rewritten to `${workspace.*}`, `${package.*}`, `${project.*}` tokens |
-| `osemosys_model` | `'osemosys_fast_preprocessed.txt'` → `${project.maintained_model}` |
-| `otoole_config`, `conv_format` | → `${package.compilation_resources}/conversion_format.yaml` |
-| `templates` | → `${package.compilation_templates}` |
-| `reserve_margin_xlsx_workbook` | → `${project.execution_inputs}/firm_capacity_fallbacks_by_cr.xlsx` |
-| `storage_delay_model_output` | → `${workspace.execution}/…` — the maintained model is never patched in place |
-| `concat_csvs: 'concatenate_ostram.py'` | **dropped** — a legacy runner reference; the project-root execution config had already dropped it |
-| `solver` | `'cbc'` — **preserved unchanged** |
-| `strip_storage_active` | `True` → **`False`** (see below) |
-| Stale Tier-1 example | `strip_storage_targets: ["SDSLKAXX01"]` → `["SDSBGDXX01"]` |
-| Script-name comments | `patch_storage_delay.py`, `patch_reserve_margin_repair_careful_xlsx.py` → described by what the stage does |
-
-**On `strip_storage_active`.** The source shipped `strip_storage_active: True` with
-`strip_storage_mode: "all"` — a no-storage diagnostic. In the source it was inert, because
-`storage_delay_active: True` silently turns stripping off, but as written it contradicts a
-profile whose declared scope includes four storage technologies and whose B and C scenarios
-put floors on them. It is now explicitly `False`, so the intent is legible rather than
-depending on a precedence rule two switches away. `storage_delay_active: True` is kept as
-the source had it.
-
-### `config/scenarios/C_Target_VRE/set_vre_targets.yaml`
-
-`bau_results_path` changed from `../Executables/A_Calibrated_BAU_0` to
-`${workspace.execution}/Executables/A_Calibrated_BAU_0`. Comment references to
-`set_vre_targets.py`, `set_min_capacity_floors.py`, and `TECH_TYPES.csv` were reworded to
-name the rule or the migrated filename. **No target values were changed** — the INDEA and
-BGDXX solar schedules are the source values.
-
-### `config/scenarios/technology_types.csv`
-
-Source: `t1_confection/A3_process/TECH_TYPES.csv` (386 rows) → 92 rows.
-
-Rows were dropped when the technology name carries a region or country this profile does
-not model: the 5-character regions `BTNXX`, `INDNE`, `INDNO`, `INDSO`, `INDWE`, `NPLXX`,
-`LKAXX`, `MDVXX`, and the 3-letter `MIN*` country suffixes `BTN`, `LKA`, `MDV`, `NPL`.
-294 rows dropped, 92 kept. Nothing else was edited — categories, ordering, and the header
-are as in the source.
-
-Result by category: `GENERATION` 32, `PRIMARY_NONRENO` 21, `PRIMARY_RENO` 18,
-`INTERCONNECTORS` 1 (`TRNBGDXXINDEA`), `STORAGE_LONG` 2, `STORAGE_SHORT` 2, and 2 rows in
-each of the seven `TRANSMISSION_*` categories.
-
-Note that `TECH_TYPES` uses post-PWR-cleanup technology names (`PWRCOABGDXX`), while
-`inputs/osemosys_global/TECHNOLOGY.csv` carries the pre-cleanup names (`PWRCOABGDXX01`).
-That naming difference is inherited from the source, not introduced here. Three kept
-entries — `PWRNGSBGDXX`, `PWRNGSINDEA`, `PWRSHPINDEA` — have no counterpart in the current
-89-technology set because they are technologies the AO-extension process adds; they appear
-in `ao_extension_decisions.csv` for exactly that reason.
-
-### `config/scenarios/ao_extension_decisions.csv`
-
-Source: `t1_confection/A3_process/OSTRAM_AO_Extensions_FILLED.xlsx`, sheet
-`1_Extensions_To_Add` (read only; the workbook was not modified).
-
-Five columns extracted verbatim, 16 data rows:
-
-`AO_Code_To_Add`, `Include`, `Override_Template_AO`, `Override_Tech.Name_AO`, `Notes`
-
-Sheets `2_Parameter_Rows_To_Replicate` and `3_Signal_Disagreements` were **not** copied —
-both are generated from sheet 1 and the source data, so carrying them would duplicate
-derived state.
-
-This CSV is a **historical decision record**, not a baseline authority. Its rows still name
-MDV, NPL, BTN, and India's other regions, because that is what was decided at the time it
-was filled in. It is kept unfiltered on purpose: trimming a decision record to today's
-scope would misrepresent what was actually decided. Every other config authority in this
-profile describes only `BGDXX` and `INDEA`.
-
----
-
-## 3. Created
-
-| File | What it is |
-|---|---|
-| `profile.yaml` | `ostram-profile-v1`. Explicit `profile:` / `project:` / `package:` authorities, `workspace:` for generated state, and `resolution.implicit_file_fallback: false`. Declares regions BGDXX + INDEA, interconnector TRNBGDXXINDEA, 20 timeslices, `year_range: {start: 2023, end: 2050, count: 28}`, root scenarios BAU/A/B/C, and `runtime.requires_prepare: true`. |
-| `config/scenarios/registry.json` | `ostram-scenario-registry-v1`, four roots. `BAU` is the support scenario; A, B, C are decision scenarios. `C_Target_VRE` declares a `result` dependency on a completed `A_Calibrated_BAU`. `derived_scenarios` is empty — none were added. |
-| `README.md` | Profile overview, layout, command surface, path-resolution contract. |
-| `references/provenance.md` | This file. |
-
----
-
-## 4. Migrated documents
-
-| Source | Destination |
-|---|---|
-| `OSTRAM_Training_Exercises.html` | `exercises/training.html` |
-| `OSTRAM_Exercise_A_Add_Country.html` | `exercises/add-country.html` |
-| `OSTRAM_Exercise_B_Add_Interconnector.html` | `exercises/add-interconnector.html` |
-| `OSTRAM_Git_Setup_Guide.html` | `docs/git-setup.html` |
-| `OSTRAM_Interconnector_Direction_Results.html` | `references/interconnector-direction-results.html` |
-
-Commands were rewritten to the planned interface:
-
-| Was | Now |
-|---|---|
-| `python run.py --scenarios "…"` | `python -m ostram --profile unescap run --scenarios "…"` |
-| `python t1_confection/A1_Pre_processing_OG_csvs.py` + `A2_AddTx.py` | `python -m ostram example prepare unescap` |
-| `python ostram_training_dashboard.py` / `generate_direction_comparison.py` | `python -m ostram example report unescap` |
-| `python t1_confection/Z_generate_country_template.py` | `python -m ostram --profile unescap country template` |
-| `python t1_confection/templates/MMR/merge_into_inputs.py` | `python -m ostram --profile unescap country merge MMR` |
-| `python t1_confection/Z_validate_country_data.py --country MMR` | `python -m ostram --profile unescap country validate MMR` |
-| `python t1_confection/A3_process/populate_v18_new_country.py --country MMR` | `python -m ostram --profile unescap country populate-workbook MMR` |
-
-Removed entirely:
-
-- `git clone --branch training-unescap …` — the model ships as a profile; there is no
-  training branch to check out and no branch switching in the exercises.
-- Manual deletion of generated folders (`rm -rf …/_post_a2_snapshot_*`, `Executables/*`,
-  `_run_*`). Generated state lives in the workspace and the stage that owns it replaces it.
-- `git checkout -- <file>` and `git checkout -- .` revert recipes. The exercises now quote
-  the shipped values inline so a trainee can type them back, and point at file history
-  rather than prescribing destructive version-control commands.
-- The manual copy-and-label ritual (`cd t1_confection` + `copy …_<DATE>_<LABEL>.csv`),
-  replaced by `example report unescap --label <LABEL>`.
-- Instructions to edit pipeline source: the `REGION_NAME_MAP` dictionary in
-  `3_update_ao_from_extensions.py` and the `TARGET_TECHS` set in `fix_elc_pmode_revert.py`.
-  Both are now derived from the country authority the trainee already edits, so the
-  exercises explain the behaviour instead of asking for a source patch.
-- OS-specific command variants in `training.html`, `add-country.html`, and
-  `add-interconnector.html`. Every remaining command is identical on Windows, macOS, and
-  Linux, so the OS pickers were removed with the blocks they switched. `docs/git-setup.html`
-  keeps its platform-specific installation instructions, which are genuinely different per OS.
-
-Each page carries a "not runnable from this branch yet" notice stating that the
-examples-only branch needs the parallel profile-engine branch before the commands work.
-
-`references/interconnector-direction-results.html` keeps its embedded result figures. They
-were produced by earlier full-pipeline runs of `B_Optimised_VRE` and are reproduced as a
-reference; the page says so and is not regenerated by this branch.
-
----
-
-## 5. The 2.496 / 2.5 GW discrepancy — documented, not resolved
-
-The `TRNBGDXXINDEA` residual capacity is recorded twice, with two different values:
-
-| Where | Value |
-|---|---|
-| `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx`, sheet `Interconnector_Params`, `TRNBGDXXINDEA` / `ResidualCapacity` / `User defined` | **2.496 GW** for 2023–2028, stepping 2.996 (2029) → 3.746 (2030) → 4.496 (2033) |
-| `config/scenarios/{A,B,C}/relax_interconnectors.yaml`, `overrides.TRNBGDXXINDEA` | **2.50 GW** at 2023 |
-| `exercises/training.html`, Exercise 3.1 | "base 2.5 GW freeze" |
-| `exercises/add-interconnector.html`, quick-reference table | 2.496 → 4.496 GW (the workbook value) |
-
-2.496 GW is the sum of the two operational projects — Bheramara HVDC (1,000 MW) and Adani
-Power Godda HVDC (1,496 MW). 2.50 is that figure rounded.
-
-**The workbook value is preserved exactly.** The workbook was copied as bytes and not
-edited; the YAML anchors were copied as written. Neither side was changed to agree with the
-other, and nothing was rounded. Reconciling them is a modelling decision — it changes the
-2023 anchor of the interconnector relaxation schedule in all three scenarios — and it is
-out of scope for an asset migration. It is recorded here so whoever makes that decision
-finds both numbers and the reason they differ.
-
----
-
-## 6. Deliberately omitted
-
-Nothing below was migrated. Each family is listed with why.
-
-### Generated and runtime state
-
-| Family | Source location |
-|---|---|
-| A1 outputs, per-scenario | `t1_confection/A1_Outputs/A1_Outputs_{A,B,C}/` |
-| Post-A2 snapshots | `t1_confection/A1_Outputs/_post_a2_snapshot_*/` |
-| A2 compiled parameters | `t1_confection/A2_Output_Params/`, `A2_Outputs_Params_otoole/` |
-| Solver working directories and outputs | `t1_confection/Executables/{A,B,C}_0/` |
-| Timestamped run folders | `t1_confection/A3_process/_run_20260525_195646/`, `_run_20260526_133935/`, `_run_20260526_160528/`, `_run_20260526_165441/` |
-| Concatenated result tables | `concatenate_files/`, `OSTRAM_*Combined_Inputs_Outputs*.csv` |
-| Plots, figures, dashboards | `t1_confection/ostram_plots/`, `trn_plots/`, `Figures/`, `figs_A1_A6/` |
-| Model copies | `t1_confection/osemosys_fast_preprocessed.txt`, root `OSTRAM_data.txt` |
-
-All of it is derived output. It belongs in the run workspace, and the migrated exercises
-now point there.
-
-### Executable code
-
-| Family | Why |
-|---|---|
-| Legacy runner `run.py` | Replaced by `python -m ostram`; the branch adds no executable Python under `examples/unescap/` |
-| Stage scripts `A0`–`A3`, `B1`, `B2`, and the `A3_process/` numbered stages | Engine code; belongs to the package, not to an example profile |
-| Rule scripts under `A3_process/rules_scripts/*.py` | Same — the profile ships the rule **configuration**, not the rule implementation |
-| `Z_*` and `Z_AUX_*` helpers, `patch_*`, `fix_*`, `check_*`, `concat_*`, `reduce_*`, `slice_*` | Ad-hoc tooling and one-off patches |
-| Dashboard and analysis scripts (`ostram_training_dashboard.py`, `ostram_scenario_analysis.py`, `ostram_trn_plotter.py`, `Z_AUX_generate_*`) | Reporting is now `example report unescap` |
-| `t1_confection/tests/`, `_test_scenarios_lite.py`, `test_strip_storage.py` | Engine tests; out of the ownership boundary for this branch |
-
-### Deprecated and duplicate configuration
-
-| File | Why |
-|---|---|
-| `configs/A_Calibrated_BAU/deprecate/retirement_schedule.yaml` | Deprecated folder |
-| `configs/B_Optimised_VRE/deprecate/retirement_schedule.yaml` | Deprecated folder |
-| `configs/A_Calibrated_BAU/retirement_schedule_-_bau_v2.yaml` | Byte-identical duplicate of `retirement_schedule.yaml` (verified by hash) |
-| `configs/B_Optimised_VRE/retirement_schedule_-_opti_v2.yaml` | Byte-identical duplicate of `retirement_schedule.yaml` (verified by hash) |
-| `_run_*/Config_MOMF_T1_A.yaml`, `_run_*/rules_scripts/*.yaml` | Snapshots of config inside generated run folders |
-| `t1_confection/A3_process/Config_MOMF_T1_A.yaml` | Working copy; the repository-root copy is the authority |
-| `t1_confection/Config_tech_equivalences.yaml` | Not referenced by any migrated authority |
-| `t1_confection/Miscellaneous/conversion_format.yaml` | otoole config — resolved from `${package.compilation_resources}` |
-
-### Other source material not carried over
-
-| Family | Why |
-|---|---|
-| `SOASIA_OSeMOSYS_Template_v17.xlsx` | Superseded by v18, which is what was migrated |
-| `A-O_Parametrization_*.xlsx`, `OSTRAM_Timeslice_Outputs.xlsx` | Generated A-O workbooks and timeslice output |
-| Data workbooks (`CapacityAndDistances.xlsx`, `Shares_*.xlsx`, `RateGrowthDemand_*.xlsx`, `REV_FILTER_ISSUE.xlsx`, `Tech_Country_Matrix.xlsx`, `Interconnectors.xlsx`, `firm_capacity_fallbacks_by_cr.xlsx`) | Preparation-stage source data. `firm_capacity_fallbacks_by_cr.xlsx` already exists at the project root and is referenced through `${project.execution_inputs}` |
-| Environment and pipeline definitions (`environment.yaml`, `dvc.yaml`, `dvc.lock`, `.dvcignore`, `.readthedocs.yaml`) | Repository-level; outside the ownership boundary |
-| Root documentation (`README.md`, `TECHNICAL_INVENTORY.md`, `docs/`) | Repository-level; outside the ownership boundary |
-| `t1_confection/A3_process/{README,USER_GUIDE,LID_RULE}.md` | Documentation for the legacy stage scripts, not for the profile |
-
----
-
-## 7. Validation performed
-
-| Check | Result |
-|---|---|
-| Every changed path under `examples/unescap/**` | 95 files, all inside |
-| No `.py` under `examples/unescap/` | 0 found |
-| CSV count in the profile input directory | 64 |
-| CSV filenames and bytes vs source | identical in the working tree (LF-normalised at commit by repository `.gitattributes`) |
-| `TECHNOLOGY` / `FUEL` / `STORAGE` / `REGION` | 89 / 43 / 4 / `GLOBAL` |
-| Workbook source vs destination SHA-256 | match |
-| Every YAML parses | 21/21 |
-| Every JSON parses | 1/1 |
-| Registry schema, four roots, C→A result dependency, no derived scenarios | as specified |
-| `profile.yaml` contract (schema, id, three authorities, no implicit fallback, regions, interconnector, 20 timeslices, `year_range` triple, roots, `requires_prepare`) | as specified |
-| No `python run.py`, `run.py`, `t1_confection/`, `training-unescap`, `git checkout --`, or direct legacy script execution in any migrated text | none found |
-| No stale region codes in any config authority | none (the AO decision record is excluded by design — see §2) |
-| No physical legacy paths in any config authority | none |
-| HTML internal links and fragments resolve | 47/47 |
-| 2.496 GW preserved verbatim | yes |
-
-Solvers were not run and the full repository test suite was not executed.
+| Seed TECHNOLOGY | `a866b63a168d413cec240b31598bbabafb1f8da99e202caf05d4e1bf5373c66b` |
+| Seed FUEL | `c45a6db17552f4a3527bfa7fc8d014fee1e46457a6fabd81b77f4661b04f367c` |
+| Projected-seed TECHNOLOGY | `b198cdaa23bcff3157668ead9a0578fd18f63a08127529cb344205d8c1a67f35` |
+| Projected-seed FUEL | `c45a6db17552f4a3527bfa7fc8d014fee1e46457a6fabd81b77f4661b04f367c` |
+| Compiled TECHNOLOGY | `6266dd062c5d593be8cb62f5169eb2759f4a7301200e26d147bb4f934ebec4d3` |
+| Compiled FUEL | `e924cb09c945ad23e1b3c7bb2f760dce245eafe4fbeca065207fd7868d8501e8` |
+
+Preparation first removes four duplicate legacy `*00` technology identities, normalizes
+the declared `PWR...01` identities, removes ten matrix-filtered identities, and adds the
+fourteen A1/A2 canonical dispatch/transmission identities listed in `profile.yaml`. That
+projection remains exactly 89 technologies. The only net compiled technology addition is:
+
+- `PWRSHPINDEA`
+
+The only compiled fuel additions are:
+
+- `ELCBGDXX00`, `ELCBGDXX03`, `ELCBGDXX04`
+- `ELCINDEA00`, `ELCINDEA03`, `ELCINDEA04`
+
+The engine validates both count and membership at seed preparation, then validates the
+exact projected-seed-to-compiled delta immediately after B2 CSV materialization and before
+text preprocessing, matrix creation, or solver dispatch. Same-count substitutions,
+undeclared additions, and removals all fail closed.
+
+## Scenario workbook transformation
+
+Source:
+`t1_confection/A3_process/SOASIA_OSeMOSYS_Template_v18.xlsx` at source commit
+`6e00e8b00144b6859344f54022df34417c075ae9`.
+
+| Property | Source | Integrated seed |
+|---|---:|---:|
+| Size | 257,429 bytes | 162,918 bytes |
+| SHA-256 | `f9e3ed1fc720c3c2906cd3ffc18e0023ea18df7f977260580c6d7f37a82019a8` | `4cf3323f28fe3da2c552433a9083ee4d4ee03d7c249a14d1925fa4afb3b41253` |
+| `Restrictions` data rows | 2,537 generated rows | 0; header retained |
+
+The cleanup was archive-preserving rather than a workbook resave. The source and result
+both contain 59 ZIP members in the same order. Only `xl/worksheets/sheet3.xml` changed;
+all other member bytes and archive metadata are identical. All 20 sheets, the
+`Restrictions` header, `Control` contents, formulas, formatting, validations, defined
+names, and unrelated worksheet XML were preserved.
+
+## Reduced mappings and preparation authorities
+
+`config/scenarios/technology_types.csv` is a deliberate reduced projection of the
+386-row full source. It has 92 physical lines and 90 nonblank, unique mappings. It covers
+the complete compiled 90-technology taxonomy, including `PWRSHPINDEA`, the A2-generated
+dispatch/transmission technologies, four storage technologies, and the single physical
+interconnector `TRNBGDXXINDEA`. Irrelevant full-model rows were not restored.
+
+`config/scenarios/ao_extension_decisions.csv` contains only the live reduced decisions:
+`PWRNGSBGDXX` and `PWRSHPINDEA`. The reduced base-year pin authority contains 510 rules
+over 50 technologies and has SHA-256
+`984c3885f7bcee992d634c602402e3c6183a2f3bc8a1d8a0620ae214c1a1d872`.
+
+The profile also carries the required preparation sources absent from the initial asset
+copy: `Tech_Country_Matrix.xlsx`, the reduced timeslice workbook, country centerpoints,
+and secondary-technology inputs. Exercise A's ELC dispatch nodes are derived from the
+active profile country list; the shipped BGD/INDEA list yields `ELCBGDXX01` and
+`ELCINDEA01`, and adding a country extends the set through configuration rather than a
+source-code list.
+
+## Interconnector authority
+
+`OSTRAM_Scenario_Inputs.xlsx`, sheet `Interconnector_Params`, is authoritative for
+`TRNBGDXXINDEA` residual capacity:
+
+- exactly `2.496` GW for 2023–2028;
+- `2.996` GW in 2029;
+- `3.746` GW in 2030–2032;
+- `4.496` GW in 2033–2050.
+
+Every shipped executable scenario schedule begins at exactly `2.496`; none rounds the
+seed to `2.50`. Training prose that says “about 2.5 GW” is descriptive. An exact 2.500-GW
+value, including the historical embedded direction-results snapshot, is an exercise edit
+or rounded reference result, not the baseline authority.
+
+The active `B_Optimised_VRE` relaxation intentionally lifts
+`TotalAnnualMaxCapacity(TRNBGDXXINDEA, 2023..2050)` to exactly `9999.0`. This is the lid
+rule's explicit unbinding value; it neither overwrites nor rounds `ResidualCapacity`.
+
+## Runtime integration decisions
+
+- `lid_rule_new_semantics: true` applies only to UNESCAP; `full` and unqualified behavior
+  retain the historical semantics.
+- `storage_delay_active` reads the declared maintained model and writes a scenario-local
+  patched model under `Executables/<scenario>_0/`; it never resolves a removed legacy
+  patched-model path or modifies the maintained model.
+- Preparation is stamped atomically. Repeated preparation requires `--reset`, refuses
+  foreign/unstamped workspaces, and profile workspaces are isolated by profile id.
+- Reporting/capture and resource inspection resolve the activated profile bundle.
+
+## Integration validation record
+
+The complete solver-free suite passed. Unqualified commands were compared with
+`--profile full` and produced the same full authority bundle. Real UNESCAP preparation and
+the `B_Optimised_VRE` compile-only route completed without a matrix or solver. The compiled
+domain was `GLOBAL`, country-region content only for `BGDXX` and `INDEA`, 90 technologies,
+49 fuels, four storage technologies, 20 timeslices, years 2023–2050, and physical
+interconnector `TRNBGDXXINDEA`.
+
+The canonical full-model compile-only artifact gate regenerated and checked these 15 final
+production text inputs:
+
+- `A_Calibrated_BAU`, `A_Calibrated_BAU_Clipped`
+- `B_Optimised_VRE`, `B_Opt_Clipped`, `B_Opt_DirBidir`, `B_Opt_DirContractual`
+- `B_Opt_IndiaCosts`, `B_Opt_IndiaCostsFuel`
+- `B_Opt_SolarCapex130`, `B_Opt_SolarCapexHi`, `B_Opt_SolarCapexSpike`
+- `B_Opt_TradeCap15`, `B_Opt_TxCap150`
+- `C_Target_VRE`, `C_Target_VRE_Clipped`
+
+All 15 matched the accepted governed manifest byte-for-byte. The governed manifest
+SHA-256 was `9c5c01526049d38cdfe9cedb0505c10ead1b09a83514a7877f98495620617aab`.
+No solver was invoked during any integration gate.

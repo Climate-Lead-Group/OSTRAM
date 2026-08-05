@@ -69,6 +69,17 @@ def run(cmd: Sequence[str | Path], *, cwd: Path | None = None) -> None:
     env = os.environ.copy()
     env["PYTHONHASHSEED"] = "0"
     env["PYTHONDONTWRITEBYTECODE"] = "1"
+    # Pipeline stages run from isolated stage workspaces, so ``sys.path[0]``
+    # is not the project root.  Put the activated bundle first to prevent an
+    # unrelated editable/install copy of ``ostram`` from servicing children.
+    project_root = str(resolve_paths().project_root)
+    inherited = [
+        item
+        for item in env.get("PYTHONPATH", "").split(os.pathsep)
+        if item and os.path.normcase(os.path.abspath(item))
+        != os.path.normcase(os.path.abspath(project_root))
+    ]
+    env["PYTHONPATH"] = os.pathsep.join([project_root, *inherited])
     tokens = shlex.split(cmd) if isinstance(cmd, str) else list(cmd)
     reporter = active_reporter()
     if reporter is not None:

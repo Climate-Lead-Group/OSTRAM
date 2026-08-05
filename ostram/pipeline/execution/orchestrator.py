@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from ostram.paths import resolve_paths
+from ostram.validation.profile import validate_active_compiled_domain
 
 
 @dataclass(frozen=True)
@@ -201,10 +202,6 @@ def build_run_plan(
     ) as config_file:
         params = yaml_safe_load(config_file)
 
-    apply_configuration_overrides(params)
-    if compile_only:
-        apply_compile_only_overrides(params)
-
     if local_contract:
         for key in (
             "A2_output",
@@ -226,6 +223,13 @@ def build_run_plan(
                 "A2_output": str(project.compiled_parameters),
                 "A2_output_otoole": str(project.otoole_outputs),
                 "Miscellaneous": str(project.compilation_resources),
+                "templates": str(project.compilation_resources / "templates"),
+                "otoole_config": str(
+                    project.compilation_resources / "conversion_format.yaml"
+                ),
+                "conv_format": str(
+                    project.compilation_resources / "conversion_format.yaml"
+                ),
                 "executables": str(project.executables),
                 "outputs": str(project.outputs),
                 "osemosys_model": str(project.maintained_model),
@@ -235,6 +239,18 @@ def build_run_plan(
                 ),
             }
         )
+
+        storage_delay_output = params.get("storage_delay_model_output")
+        if storage_delay_output:
+            params["storage_delay_model_output"] = Path(
+                str(storage_delay_output)
+            ).name
+
+    # Storage-delay defaults must be derived after profile model/path
+    # authorities have replaced any declarative manifest tokens.
+    apply_configuration_overrides(params)
+    if compile_only:
+        apply_compile_only_overrides(params)
 
     with compilation_config.open(
         "r", encoding="utf-8"
@@ -280,6 +296,17 @@ def run_compiled_input_stage(
                 template_path=plan.template_path,
                 base_output_path=plan.base_output_path,
                 scenario_name=scenario_name,
+            )
+        domain = validate_active_compiled_domain(
+            Path(plan.base_output_path) / scenario_name
+        )
+        if domain is not None:
+            counts = domain["compiled"]
+            print(
+                "[profile-domain] compiled domain accepted: "
+                f"TECHNOLOGY={counts['TECHNOLOGY']['count']}, "
+                f"FUEL={counts['FUEL']['count']}, "
+                f"scenario={scenario_name}"
             )
         if params["write_txt_model"]:
             conversion_ok = dependencies.run_otoole_conversion(
