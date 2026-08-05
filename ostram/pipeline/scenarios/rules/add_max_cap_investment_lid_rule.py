@@ -150,6 +150,7 @@ from pathlib import Path
 
 import pandas as pd
 from ostram.paths import resolve_paths
+from ostram.profiles import profile_policy
 from openpyxl import load_workbook
 
 try:
@@ -1092,6 +1093,8 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             "build_tech_share_map and build_pool_delta_map."
         )
 
+    override_inherited = bool(profile_policy("lid_rule_new_semantics", False))
+
     year_cols = find_year_columns(ws)
     headers = find_named_columns(ws, ["Tech", "Parameter", PROJ_MODE_COL])
     if "Tech" not in headers or "Parameter" not in headers:
@@ -1274,7 +1277,10 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                     and not pd.isna(old)
                     and float(old) in (0.0, float(PLACEHOLDER_VALUE)))
             )
-            if is_placeholder:
+            has_active_relaxation = bool(LID_RELAXATION_SCHEDULE)
+            if is_placeholder or (
+                override_inherited and has_active_relaxation and not is_exempt
+            ):
                 proposed = lid
                 if is_exempt:
                     reason = "exempt_uncapped"
@@ -1288,6 +1294,8 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                     reason = "lid_family_capped"
                 elif relax_mult != 1.0:
                     reason = "lid_relaxed"
+                elif not is_placeholder:
+                    reason = "lid_override_inherited"
                 else:
                     reason = "lid_fill"
             elif is_exempt:
@@ -1433,7 +1441,7 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
     generation_techs = None
     tech_types_path = None
     if RESTRICT_TO_GENERATION:
-        tech_types_path = resolve_paths().scenario_config_root / "technology_types.csv"
+        tech_types_path = resolve_paths().interconnector_taxonomy
         generation_techs = load_generation_techs(tech_types_path)
 
     # Load the per-cr demand multipliers (from the input dir).

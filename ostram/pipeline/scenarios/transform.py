@@ -51,7 +51,12 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from ostram.paths import bounded_workspace_workbook_path, resolve_paths
+from ostram.paths import (
+    PROFILE_AUTHORITIES_ENV,
+    bounded_workspace_workbook_path,
+    resolve_paths,
+)
+from ostram.profiles import profile_policy
 
 from . import orchestrator as _orchestrator
 
@@ -63,6 +68,19 @@ SCENARIO_RULE_DATA = SCENARIO_CONFIG_DIR / "rules"
 A3_WORKSPACE = _PROJECT_PATHS.scenarios_workspace
 SOASIA_V18 = _PROJECT_PATHS.scenario_workbook
 PIN_ROOT_SCENARIOS = _orchestrator.PWR_MIN_PIN_ROOT_SCENARIOS
+
+
+def _configure_profile_paths() -> None:
+    """Refresh authorities after the canonical CLI activates a profile."""
+
+    global _PROJECT_PATHS, PREPARATION_WORKSPACE, SCENARIO_CONFIG_DIR
+    global SCENARIO_RULE_DATA, A3_WORKSPACE, SOASIA_V18
+    _PROJECT_PATHS = resolve_paths()
+    PREPARATION_WORKSPACE = _PROJECT_PATHS.preparation_workspace
+    SCENARIO_CONFIG_DIR = _PROJECT_PATHS.scenario_config_root
+    SCENARIO_RULE_DATA = SCENARIO_CONFIG_DIR / "rules"
+    A3_WORKSPACE = _PROJECT_PATHS.scenarios_workspace
+    SOASIA_V18 = _PROJECT_PATHS.scenario_workbook
 
 # =============================================================================
 # USER CONFIGURATION — defaults; can be overridden via CLI
@@ -280,7 +298,7 @@ def build_workdir(
 
     # Stage 2 inputs.
     shutil.copy(
-        SCENARIO_CONFIG_DIR / "technology_types.csv",
+        _PROJECT_PATHS.interconnector_taxonomy,
         s2 / "TECH_TYPES.csv",
     )
 
@@ -294,7 +312,7 @@ def build_workdir(
         wd / "Config_MOMF_T1_A.yaml",
     )
     shutil.copy(
-        SCENARIO_CONFIG_DIR / "technology_types.csv",
+        _PROJECT_PATHS.interconnector_taxonomy,
         wd / "TECH_TYPES.csv",
     )
 
@@ -418,14 +436,16 @@ def stage_3_fix_2(s2: Path, s3: Path) -> Path:
     banner("Stage 3 — FIX_2 pipeline (fix_trn + clear_stale + cap_trn)")
 
     authority_path_raw = os.environ.get("OSTRAM_TEMPLATE_PATH")
-    if not authority_path_raw:
-        raise RuntimeError(
-            "OSTRAM_TEMPLATE_PATH is required for RC Authority V1"
-        )
-    authority_path = Path(authority_path_raw).resolve()
+    authority_path = (
+        resolve_paths().interconnector_authority
+        if os.environ.get(PROFILE_AUTHORITIES_ENV)
+        else Path(authority_path_raw).resolve() if authority_path_raw else None
+    )
+    if authority_path is None:
+        raise RuntimeError("OSTRAM_TEMPLATE_PATH is required for RC Authority V1")
     if not authority_path.is_file():
         raise FileNotFoundError(
-            f"RC Authority V1 materialized workbook not found: {authority_path}"
+            f"RC Authority V1 profile authority not found: {authority_path}"
         )
 
     post_cap_reset = bounded_workspace_workbook_path(
@@ -600,7 +620,7 @@ def stage_ws3_internal_transmission(s5: Path) -> None:
     accounting; the study is about interties).
     """
     script = RULES_SCRIPTS_DIR / "apply_internal_transmission.py"
-    config = _PROJECT_PATHS.preparation_config / "Config_country_codes.yaml"
+    config = _PROJECT_PATHS.country_config
     residuals = SCENARIO_RULE_DATA / "internal_tx_residuals.csv"
     if not (script.is_file() and config.is_file() and residuals.is_file()):
         print("    [SKIP] internal-transmission stage: script/config/residuals missing")
@@ -623,7 +643,7 @@ def stage_ws3_internal_tx_losses(s5: Path) -> None:
     DSPTRN, generators and storage untouched.
     """
     script = RULES_SCRIPTS_DIR / "apply_internal_tx_losses.py"
-    config = _PROJECT_PATHS.preparation_config / "Config_country_codes.yaml"
+    config = _PROJECT_PATHS.country_config
     if not (script.is_file() and config.is_file()):
         print("    [SKIP] internal-tx losses stage: script/config missing")
         return
@@ -642,6 +662,13 @@ def stage_ws4_pwr_min_pin(s5: Path, scenario: str) -> None:
     """
     if scenario not in PIN_ROOT_SCENARIOS:
         raise ValueError(f"unsupported PWR/MIN pin scenario: {scenario!r}")
+    if not profile_policy("apply_pwr_min_pin", True):
+        print(
+            "    [SKIP] WS-4 PWR/MIN pin: profile policy "
+            "apply_pwr_min_pin=false (calibration authority not valid "
+            "for this profile's domain)"
+        )
+        return
     script = RULES_SCRIPTS_DIR / "apply_base_year_pin.py"
     rules_csv = SCENARIO_RULE_DATA / "pwr_min_2023_2026_pin.csv"
     missing = [path for path in (script, rules_csv) if not path.is_file()]
@@ -842,6 +869,8 @@ def _orchestration_dependencies() -> _orchestrator.A3Dependencies:
 
 
 def main() -> int:
+    if os.environ.get(PROFILE_AUTHORITIES_ENV):
+        _configure_profile_paths()
     return _orchestrator.orchestrate_a3(
         parse_cli_args(),
         _orchestration_paths(),

@@ -1,0 +1,19 @@
+## A_Calibrated_BAU — policy floors and ceilings from national plans.
+##
+## TODO: populate from CCDRs / IRPs / national energy plans (Natalia's research).
+## Below is a placeholder template demonstrating the structure.
+
+warn_on_untie: true
+
+floors: []
+  # Example shape — uncomment and replace with real values once research lands:
+  # - cr: INDEA
+  #   tech: 'PWRSPV*'
+  #   param: min_capacity
+  #   schedule: {2030: 30.0, 2035: 50.0}
+
+ceilings: []
+  # - cr: INDEA
+  #   tech: 'PWRCOA*'
+  #   param: max_capacity
+  #   schedule: {2035: 0.0}

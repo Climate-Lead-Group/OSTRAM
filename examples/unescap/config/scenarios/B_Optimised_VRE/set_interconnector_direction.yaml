@@ -1,0 +1,24 @@
+## set_interconnector_direction.yaml -- B_Optimised_VRE
+##
+## DEFAULT: bidirectional (no entries). Both modes of every interconnector
+## remain active and the optimizer chooses the flow direction each year.
+##
+## To restrict a link to one-way, add an entry under "directions:" with the
+## technology name and the desired direction:
+##
+##   directions:
+##     TRNBGDXXINDEA: forward    # BGD -> INDEA only
+##
+## Valid values:
+##   forward       -- keep only the mode whose input fuel matches the SOURCE
+##                    region (SRC = characters 4-8 of TRN<SRC><DST>).
+##                    For TRNBGDXXINDEA: BGD exports to INDEA.
+##   reverse       -- keep only the mode whose input fuel matches the DST
+##                    region. For TRNBGDXXINDEA: INDEA exports to BGD.
+##   bidirectional -- no-op (both modes stay active). Same as omitting the entry.
+##
+## See the example files in this directory:
+##   set_interconnector_direction_EXAMPLE_forward.yaml
+##   set_interconnector_direction_EXAMPLE_reverse.yaml
+
+directions: {}

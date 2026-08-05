@@ -12,12 +12,10 @@ from dataclasses import dataclass
 import json
 import os
 from pathlib import Path
+import re
 from typing import Iterable, Mapping, Sequence
 
 from ostram.paths import resolve_paths
-
-_PROJECT_PATHS = resolve_paths()
-DEFAULT_REGISTRY = _PROJECT_PATHS.scenario_registry
 
 SUPPORT_SCENARIOS = ("BAU",)
 ROOT_SCENARIOS = (
@@ -44,6 +42,8 @@ DECISION_SCENARIOS = (
     "C_Target_VRE_Clipped",
 )
 CANONICAL_SCENARIOS = SUPPORT_SCENARIOS + DECISION_SCENARIOS
+_SCENARIO_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
+_ENVIRONMENT_NAME = re.compile(r"^[A-Z][A-Z0-9_]*$")
 
 
 @dataclass(frozen=True)
@@ -80,6 +80,7 @@ class ScenarioRegistry:
     """Validated, immutable scenario registry."""
 
     path: Path
+    support_scenarios: tuple[str, ...]
     roots: tuple[RootScenario, ...]
     derived: tuple[DerivedScenario, ...]
     decision_scenarios: tuple[str, ...]
@@ -98,7 +99,7 @@ class ScenarioRegistry:
 
     @property
     def scenario_names(self) -> tuple[str, ...]:
-        return SUPPORT_SCENARIOS + self.decision_scenarios
+        return self.support_scenarios + self.decision_scenarios
 
     def select(self, requested: str | Sequence[str] | None) -> tuple[str, ...]:
         """Return an exact selection in frozen canonical order.
@@ -181,19 +182,35 @@ def _duplicates(values: Sequence[str]) -> list[str]:
     return sorted({value for value in values if values.count(value) > 1})
 
 
+def _registry_relative(base: Path, value: object, *, label: str) -> Path:
+    raw = str(value)
+    relative = Path(raw)
+    if relative.is_absolute() or not raw or ".." in relative.parts:
+        raise ValueError(f"unsafe {label} path: {raw!r}")
+    resolved = (base / relative).resolve()
+    try:
+        resolved.relative_to(base.resolve())
+    except ValueError as error:
+        raise ValueError(f"{label} path escapes registry root: {raw!r}") from error
+    return resolved
+
+
 def load_registry(
-    path: Path | str = DEFAULT_REGISTRY,
+    path: Path | str | None = None,
     *,
     validate_files: bool = True,
 ) -> ScenarioRegistry:
     """Load and fully validate the canonical scenario registry."""
 
-    registry_path = Path(path).resolve()
+    registry_path = (
+        resolve_paths().scenario_registry
+        if path is None
+        else Path(path).resolve()
+    )
     raw = json.loads(registry_path.read_text(encoding="utf-8"))
     if raw.get("schema") != "ostram-scenario-registry-v1":
         raise ValueError(f"unsupported scenario registry schema: {raw.get('schema')}")
-    if tuple(raw.get("support_scenarios", ())) != SUPPORT_SCENARIOS:
-        raise ValueError("support scenario contract must contain BAU only")
+    support_scenarios = tuple(str(name) for name in raw.get("support_scenarios", ()))
 
     base = registry_path.parent
     roots: list[RootScenario] = []
@@ -205,11 +222,17 @@ def load_registry(
                     f"unsupported dependency type for {entry.get('name')}: "
                     f"{dependency.get('type')}"
                 )
+            default_path = Path(str(dependency["default_path"]))
+            if default_path.is_absolute() or ".." in default_path.parts:
+                raise ValueError(
+                    f"unsafe dependency default_path for {entry.get('name')}: "
+                    f"{default_path}"
+                )
             dependencies.append(
                 ResultDependency(
                     scenario=str(dependency["scenario"]),
                     environment=str(dependency["environment"]),
-                    default_path=Path(str(dependency["default_path"])),
+                    default_path=default_path,
                 )
             )
         roots.append(
@@ -223,8 +246,15 @@ def load_registry(
     derived: list[DerivedScenario] = []
     for entry in raw.get("derived_scenarios", ()):
         overlay = entry.get("direction_overlay")
-        patches = (base / str(entry["patches"])).resolve()
-        direction_overlay = (base / str(overlay)).resolve() if overlay else None
+        patches = _registry_relative(
+            base, entry["patches"], label=f"{entry.get('name')} patches"
+        )
+        direction_overlay = (
+            _registry_relative(
+                base, overlay, label=f"{entry.get('name')} direction overlay"
+            )
+            if overlay else None
+        )
         derived.append(
             DerivedScenario(
                 name=str(entry["name"]),
@@ -240,6 +270,7 @@ def load_registry(
     decision_scenarios = tuple(raw.get("decision_scenarios", ()))
     registry = ScenarioRegistry(
         path=registry_path,
+        support_scenarios=support_scenarios,
         roots=tuple(roots),
         derived=tuple(derived),
         decision_scenarios=decision_scenarios,
@@ -253,22 +284,40 @@ def _validate_registry(
     *,
     validate_files: bool,
 ) -> None:
-    if registry.root_names != ROOT_SCENARIOS:
-        raise ValueError(
-            f"root scenarios must be {list(ROOT_SCENARIOS)}, "
-            f"got {list(registry.root_names)}"
-        )
-    if registry.decision_scenarios != DECISION_SCENARIOS:
-        raise ValueError("decision scenario order differs from the frozen contract")
-
     root_names = list(registry.root_names)
     derived_names = [scenario.name for scenario in registry.derived]
+    invalid_names = [
+        name for name in root_names + derived_names
+        if not _SCENARIO_NAME.fullmatch(name)
+    ]
+    if invalid_names:
+        raise ValueError(f"unsafe registry scenario names: {invalid_names}")
     duplicates = _duplicates(root_names + derived_names)
     if duplicates:
         raise ValueError(f"duplicate registry scenario names: {duplicates}")
 
+    if not registry.support_scenarios:
+        raise ValueError("scenario registry must declare at least one support scenario")
+    support_duplicates = _duplicates(list(registry.support_scenarios))
+    if support_duplicates:
+        raise ValueError(f"duplicate support scenarios: {support_duplicates}")
+    if not set(registry.support_scenarios).issubset(root_names):
+        raise ValueError("every support scenario must be a registered root")
+    decision_duplicates = _duplicates(list(registry.decision_scenarios))
+    if decision_duplicates:
+        raise ValueError(f"duplicate decision scenarios: {decision_duplicates}")
+    known = set(root_names) | set(derived_names)
+    unknown_decisions = [
+        name for name in registry.decision_scenarios if name not in known
+    ]
+    if unknown_decisions:
+        raise ValueError(f"unknown decision scenarios: {unknown_decisions}")
+    overlap = set(registry.support_scenarios) & set(registry.decision_scenarios)
+    if overlap:
+        raise ValueError(f"support and decision scenarios overlap: {sorted(overlap)}")
+
     expected_derived = [
-        name for name in DECISION_SCENARIOS if name not in ROOT_SCENARIOS
+        name for name in registry.decision_scenarios if name not in root_names
     ]
     if derived_names != expected_derived:
         raise ValueError(
@@ -311,6 +360,11 @@ def _validate_registry(
 
     for root in registry.roots:
         for dependency in root.dependencies:
+            if not _ENVIRONMENT_NAME.fullmatch(dependency.environment):
+                raise ValueError(
+                    f"unsafe dependency environment for {root.name}: "
+                    f"{dependency.environment!r}"
+                )
             if dependency.scenario not in root_set:
                 raise ValueError(
                     f"{root.name} depends on unknown root "

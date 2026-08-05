@@ -12,7 +12,7 @@ from ostram.paths import resolve_paths
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = (
-    resolve_paths().preparation_config / "Config_country_codes.yaml"
+    resolve_paths().country_config
 ).resolve()
 
 _cached_config = None

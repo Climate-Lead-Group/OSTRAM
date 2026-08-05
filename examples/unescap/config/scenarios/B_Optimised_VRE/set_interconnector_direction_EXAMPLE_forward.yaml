@@ -1,0 +1,11 @@
+## EXAMPLE: Forward-only configuration
+##
+## This forces TRNBGDXXINDEA to one-way: Bangladesh -> India East.
+## Mode 1 (BGD exports) stays active; Mode 2 (INDEA exports) is disabled
+## by zeroing its InputActivityRatio and OutputActivityRatio.
+##
+## To use: copy this file over set_interconnector_direction.yaml
+##   (or rename it to set_interconnector_direction.yaml)
+
+directions:
+  TRNBGDXXINDEA: forward      # BGD -> INDEA only

@@ -40,6 +40,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
+from ostram.profiles import DEFAULT_PROFILE, active_profile_id
 from .interconnector_authority import (
     MINIMUM_CONTRIBUTION_TECHS,
     load_minimum_boundary_authority,
@@ -211,15 +212,18 @@ def _validate_authority_mapping(
     authority: Mapping[str, Mapping[int, float]],
 ) -> None:
     techs = set(authority)
-    if techs != set(AUTHORITY_TECHS):
+    strict_full = active_profile_id() == DEFAULT_PROFILE
+    if strict_full and techs != set(AUTHORITY_TECHS):
         missing = sorted(AUTHORITY_TECHS - techs)
         extra = sorted(techs - AUTHORITY_TECHS)
         raise ValueError(
             "RC Authority V1 technology domain mismatch: "
             f"missing={missing}, extra={extra}"
         )
+    if not techs or any(not tech.startswith(TECH_PREFIX) for tech in techs):
+        raise ValueError("RC authority requires a non-empty TRN technology domain")
     expected_years = set(AUTHORITY_YEARS)
-    for tech in sorted(AUTHORITY_TECHS):
+    for tech in sorted(techs):
         years = set(authority[tech])
         if years != expected_years:
             raise ValueError(
@@ -230,7 +234,7 @@ def _validate_authority_mapping(
         for year in AUTHORITY_YEARS:
             _decimal_text(authority[tech][year], f"{tech}/{year}")
     digest = authority_semantic_sha256(authority)
-    if digest != AUTHORITY_SEMANTIC_SHA256:
+    if strict_full and digest != AUTHORITY_SEMANTIC_SHA256:
         raise ValueError(
             "RC Authority V1 semantic digest mismatch: "
             f"expected {AUTHORITY_SEMANTIC_SHA256}, got {digest}"
@@ -324,6 +328,7 @@ def apply_rc_authority(
 ) -> List[DiffEntry]:
     """Write the validated v18 RC table into model Secondary Techs."""
     _validate_authority_mapping(authority)
+    authority_techs = frozenset(authority)
     meta_cols, year_cols = _build_column_index(ws)
     if not set(AUTHORITY_YEARS).issubset(year_cols):
         missing = sorted(set(AUTHORITY_YEARS) - set(year_cols))
@@ -333,21 +338,21 @@ def apply_rc_authority(
     for row_idx in range(2, ws.max_row + 1):
         tech = ws.cell(row_idx, meta_cols[TECH_COL]).value
         param = ws.cell(row_idx, meta_cols[PARAM_COL]).value
-        if tech not in AUTHORITY_TECHS or param != RESIDUAL_PARAM:
+        if tech not in authority_techs or param != RESIDUAL_PARAM:
             continue
         if tech in rows:
             raise ValueError(
                 f"model workbook has duplicate {tech}/{RESIDUAL_PARAM} rows"
             )
         rows[tech] = row_idx
-    if set(rows) != set(AUTHORITY_TECHS):
+    if set(rows) != set(authority_techs):
         raise ValueError(
             "model workbook RC row domain mismatch: "
-            f"missing={sorted(AUTHORITY_TECHS - set(rows))}"
+            f"missing={sorted(authority_techs - set(rows))}"
         )
 
     diffs: List[DiffEntry] = []
-    for tech in sorted(AUTHORITY_TECHS):
+    for tech in sorted(authority_techs):
         row_idx = rows[tech]
         for year in AUTHORITY_YEARS:
             cell = ws.cell(row_idx, year_cols[year])
@@ -733,10 +738,17 @@ def run_fix(
     # All production authority families fail closed before the target workbook
     # is opened or can be mutated.
     authority = load_rc_authority(authority_path)
-    contribution_authority = load_minimum_contribution_authority(
-        authority_path
-    )
-    load_minimum_boundary_authority(authority_path)
+    strict_full = active_profile_id() == DEFAULT_PROFILE
+    if strict_full:
+        contribution_authority = load_minimum_contribution_authority(
+            authority_path
+        )
+        load_minimum_boundary_authority(authority_path)
+    else:
+        # Reduced profile workbooks retain their own RC rows but intentionally
+        # omit the full model's 11-row additive contribution family and
+        # two-row LinkFreeze boundary family.
+        contribution_authority = {}
 
     wb = load_workbook(input_path)
     if SHEET_NAME not in wb.sheetnames:
@@ -749,10 +761,12 @@ def run_fix(
     warnings: List[str] = []
 
     overrides = load_overrides(override_path) if override_path else None
-    if mode == "min":
+    if mode == "min" and contribution_authority:
         plans, skipped, plan_warnings = build_minimum_contribution_plan(
             ws, contribution_authority, cutoff_year, overrides
         )
+    elif mode == "min":
+        plans, skipped, plan_warnings = [], sorted(authority), []
     else:
         plans, skipped, plan_warnings = build_fix_plan(
             ws, cutoff_year, overrides

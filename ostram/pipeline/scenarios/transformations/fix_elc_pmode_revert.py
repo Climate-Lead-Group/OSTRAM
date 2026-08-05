@@ -7,11 +7,8 @@ add_max_capacity_investment_rule.py (10:55) and B1b_Pre_solver_validation.py
 WHAT IT DOES
 ------------
 In the 'Secondary Techs' sheet, reverts the 'Projection.Mode' column from
-"User defined" to "EMPTY" for 10 electricity techs x 2 parameters = 20 cells:
-
-  Techs (10):
-    ELCBGDXX01, ELCBTNXX01, ELCINDEA01, ELCINDNE01, ELCINDNO01,
-    ELCINDSO01, ELCINDWE01, ELCLKAXX01, ELCMDVXX01, ELCNPLXX01
+"User defined" to "EMPTY" for each ELC*01 dispatch node derived from the
+active profile's ``countries`` list, across two parameters:
   Parameters (2):
     TotalAnnualMaxCapacity, TotalAnnualMaxCapacityInvestment
 
@@ -34,8 +31,12 @@ Usage:
 from __future__ import annotations
 import argparse
 from pathlib import Path
+import re
 import sys
 from openpyxl import load_workbook
+import yaml
+
+from ostram.paths import resolve_paths
 
 TARGET_SHEET = "Secondary Techs"
 TECH_COL_NAME = "Tech"
@@ -45,16 +46,55 @@ PMODE_COL_NAME = "Projection.Mode"
 OLD_VALUE = "User defined"
 NEW_VALUE = "EMPTY"
 
-TARGET_TECHS = {
-    "ELCBGDXX01", "ELCBTNXX01", "ELCINDEA01", "ELCINDNE01", "ELCINDNO01",
-    "ELCINDSO01", "ELCINDWE01", "ELCLKAXX01", "ELCMDVXX01", "ELCNPLXX01",
-}
 TARGET_PARAMS = {
     "TotalAnnualMaxCapacity", "TotalAnnualMaxCapacityInvestment",
 }
 
 
-def revert_pmode(input_path: Path, output_path: Path | None = None) -> int:
+_COUNTRY_REGION = re.compile(r"^[A-Z]{3}(?:[A-Z]{2})?$")
+
+
+def country_region_map(countries: object) -> dict[str, str]:
+    """Map model regions to their timeslice workbook sheet prefixes."""
+
+    if not isinstance(countries, list) or not countries:
+        raise ValueError("country configuration requires a non-empty countries list")
+    result: dict[str, str] = {}
+    for value in countries:
+        if not isinstance(value, str) or not _COUNTRY_REGION.fullmatch(value):
+            raise ValueError(f"invalid country region in countries list: {value!r}")
+        region = value + "XX" if len(value) == 3 else value
+        result[region] = value
+    return result
+
+
+def elc_dispatch_techs(countries: object) -> frozenset[str]:
+    """Return ELC*01 nodes from three- or five-character country regions."""
+
+    return frozenset(f"ELC{region}01" for region in country_region_map(countries))
+
+
+def configured_country_region_map(config_path: Path | None = None) -> dict[str, str]:
+    path = resolve_paths().country_config if config_path is None else Path(config_path)
+    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise ValueError(f"country configuration must be a mapping: {path}")
+    return country_region_map(raw.get("countries"))
+
+
+def configured_elc_dispatch_techs(config_path: Path | None = None) -> frozenset[str]:
+    return frozenset(
+        f"ELC{region}01"
+        for region in configured_country_region_map(config_path)
+    )
+
+
+def revert_pmode(
+    input_path: Path,
+    output_path: Path | None = None,
+    *,
+    target_techs: frozenset[str] | None = None,
+) -> int:
     """Revert Projection.Mode for ELC*01 lockout rows. Returns cells changed."""
     if output_path is None:
         output_path = input_path
@@ -70,13 +110,18 @@ def revert_pmode(input_path: Path, output_path: Path | None = None) -> int:
     tech_col = headers[TECH_COL_NAME]
     param_col = headers[PARAM_COL_NAME]
     pmode_col = headers[PMODE_COL_NAME]
+    active_target_techs = (
+        configured_elc_dispatch_techs()
+        if target_techs is None
+        else target_techs
+    )
 
     cells_changed = 0
     rows_touched: list[tuple[int, str, str, object, object]] = []
     rows_skipped_already_empty: list[tuple[int, str, str]] = []
     for r in range(2, ws.max_row + 1):
         tech = ws.cell(r, tech_col).value
-        if tech not in TARGET_TECHS:
+        if tech not in active_target_techs:
             continue
         param = ws.cell(r, param_col).value
         if param not in TARGET_PARAMS:

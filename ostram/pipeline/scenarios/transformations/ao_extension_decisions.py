@@ -12,10 +12,11 @@ authority is never saved here.
 from __future__ import annotations
 
 import argparse
-import os
+import csv
 from pathlib import Path
 
 from openpyxl import load_workbook
+from ostram.paths import resolve_paths
 
 
 DECISIONS_SHEET = "AO_Extension_Decisions"
@@ -50,7 +51,46 @@ def _headers(worksheet) -> dict[str, int]:
     }
 
 
+def _csv_decision_rows(authority_path: Path) -> list[dict[str, object]]:
+    with authority_path.open("r", encoding="utf-8-sig", newline="") as stream:
+        reader = csv.DictReader(stream)
+        if reader.fieldnames != list(DECISION_HEADERS):
+            raise ValueError(
+                f"AO decision CSV headers must be exactly {list(DECISION_HEADERS)}, "
+                f"got {reader.fieldnames}"
+            )
+        decisions: list[dict[str, object]] = []
+        seen: set[str] = set()
+        for row_index, row in enumerate(reader, start=2):
+            code = str(row["AO_Code_To_Add"] or "").strip()
+            if not code:
+                if any(str(value or "").strip() for value in row.values()):
+                    raise ValueError(f"AO decision CSV row {row_index} has no code")
+                continue
+            if code in seen:
+                raise ValueError(f"duplicate AO extension decision for {code!r}")
+            include = str(row["Include"] or "").strip().upper()
+            if include not in {"Y", "N"}:
+                raise ValueError(
+                    f"AO decision CSV row {row_index} Include must be Y or N"
+                )
+            seen.add(code)
+            decisions.append(
+                {
+                    name: (code if name == "AO_Code_To_Add" else row[name])
+                    for name in DECISION_HEADERS
+                }
+            )
+        return decisions
+
+
 def _decision_rows(authority_path: Path) -> list[dict[str, object]]:
+    if authority_path.suffix.lower() == ".csv":
+        return _csv_decision_rows(authority_path)
+    if authority_path.suffix.lower() not in {".xlsx", ".xlsm"}:
+        raise ValueError(
+            f"AO decision authority must be CSV or XLSX: {authority_path}"
+        )
     workbook = load_workbook(authority_path, read_only=True, data_only=True)
     try:
         if DECISIONS_SHEET not in workbook.sheetnames:
@@ -262,13 +302,9 @@ def apply_decisions(
 
 
 def _default_authority() -> Path:
-    configured = os.environ.get("OSTRAM_TEMPLATE_PATH")
-    if not configured:
-        raise SystemExit(
-            "ERROR: OSTRAM_TEMPLATE_PATH is required; decisions must come "
-            "from the materialized scenario-input working copy"
-        )
-    return Path(configured)
+    # The activated bundle makes this either the full workbook authority or a
+    # profile-specific CSV sidecar.  No filename probing or fallback occurs.
+    return resolve_paths().ao_decisions
 
 
 def parse_args() -> argparse.Namespace:

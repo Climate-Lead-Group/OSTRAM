@@ -1,0 +1,43 @@
+## lid_rule.yaml — A_Calibrated_BAU scenario override
+## Updated: 2026-05-26
+##
+## Key differences from B_Optimised_VRE:
+##   - NO relaxation (flat 1.0× — pure BAU proportions for all families)
+##   - ALL generation families locked at 1.0
+##   - Storage STILL exempt (PWRSDS/PWRLDS not in GENERATION category,
+##     so removing them from exempt causes MaxCapInv=0 vs MinCapInv>0
+##     infeasibility). Use storage_delay_active: True in B2 YAML to
+##     block early-year builds. The 36.9 GW LKA anomaly may recur —
+##     if so, a storage-specific cap mechanism is needed in a future
+##     iteration.
+
+rule_mode: proportional
+security_factor: 1.1
+
+## Flat — no relaxation for calibrated BAU
+relaxation_schedule:
+  2023: 1.0
+  2050: 1.0
+
+## Minimum MaxCapInv (GW) per tech per year.
+lid_floor_gw: 0.5
+
+## All generation families locked at BAU proportions.
+## Combined with the floor-respects-ceiling fix, families with
+## near-zero BAU share (BIO, WAS) get near-zero MaxCapInv.
+family_relaxation_ceilings:
+  COA: 1.0
+  PET: 1.0
+  OIL: 1.0
+  BIO: 1.0
+  WAS: 1.0
+  NGA: 1.0
+  NUC: 1.0
+
+## Storage must stay exempt to avoid MinCapInv > MaxCapInv
+## infeasibility (storage techs are not GENERATION, so the lid
+## script won't touch them otherwise and MaxCapInv stays at 0
+## from upstream).
+exempt_prefixes:
+  - PWRSDS
+  - PWRLDS

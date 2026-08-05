@@ -1,0 +1,202 @@
+# UNESCAP South Asia training profile.
+#
+# Every runtime authority is explicit. Profile-owned inputs and configuration
+# never fall back to the full-model file with the same role. The maintained
+# model, execution support input, and package templates are shared authorities
+# named here rather than implicit compatibility defaults.
+
+schema: ostram-profile-v1
+id: unescap
+metadata:
+  title: UNESCAP South Asia training profile
+  description: >-
+    Bangladesh (BGDXX) and India East (INDEA), joined by TRNBGDXXINDEA,
+    over 2023-2050 in twenty timeslices.
+  country_regions:
+    - region: BGDXX
+      label: Bangladesh
+    - region: INDEA
+      label: India East
+  interconnectors:
+    - technology: TRNBGDXXINDEA
+  year_range:
+    start: 2023
+    end: 2050
+    count: 28
+  timeslices:
+    count: 20
+    seasons: 4
+    day_types: 1
+    daily_time_brackets: 5
+  storage:
+    - LDSBGDXX01
+    - LDSINDEA01
+    - SDSBGDXX01
+    - SDSINDEA01
+  seed_set_sizes:
+    TECHNOLOGY: 89
+    FUEL: 43
+    STORAGE: 4
+    REGION: 1
+  compiled_set_sizes:
+    TECHNOLOGY: 90
+    FUEL: 49
+    STORAGE: 4
+    REGION: 1
+  # Membership hashes are over sorted VALUE members, one UTF-8 value plus LF
+  # per line. The projected seed records preparation's count-preserving name
+  # reconciliation; compilation may then add only the exact generated delta.
+  domain_contract:
+    membership_hash: sha256-sorted-values-v1
+    stages:
+      seed:
+        TECHNOLOGY:
+          count: 89
+          sha256: a866b63a168d413cec240b31598bbabafb1f8da99e202caf05d4e1bf5373c66b
+        FUEL:
+          count: 43
+          sha256: c45a6db17552f4a3527bfa7fc8d014fee1e46457a6fabd81b77f4661b04f367c
+      projected_seed:
+        TECHNOLOGY:
+          count: 89
+          sha256: b198cdaa23bcff3157668ead9a0578fd18f63a08127529cb344205d8c1a67f35
+        FUEL:
+          count: 43
+          sha256: c45a6db17552f4a3527bfa7fc8d014fee1e46457a6fabd81b77f4661b04f367c
+      compiled:
+        TECHNOLOGY:
+          count: 90
+          sha256: 6266dd062c5d593be8cb62f5169eb2759f4a7301200e26d147bb4f934ebec4d3
+        FUEL:
+          count: 49
+          sha256: e924cb09c945ad23e1b3c7bb2f760dce245eafe4fbeca065207fd7868d8501e8
+    technology_reconciliation:
+      drop_before_normalization:
+        - PWRCCGBGDXX00
+        - PWRCCGINDEA00
+        - PWROCGBGDXX00
+        - PWROCGINDEA00
+      normalize_pwr01_suffix: true
+      remove_after_normalization:
+        - PWRCCGBGDXX
+        - PWRCCGINDEA
+        - PWROCGBGDXX
+        - PWROCGINDEA
+        - PWRCSPBGDXX
+        - PWRGEOBGDXX
+        - PWRGEOINDEA
+        - PWRHETINDEA
+        - PWRWAVBGDXX
+        - PWRWAVINDEA
+      add_after_normalization:
+        - PWRNGSBGDXX
+        - PWRNGSINDEA
+        - DSPTRNBGDXX
+        - DSPTRNINDEA
+        - RNWTRNBGDXX
+        - RNWTRNINDEA
+        - RNWRPOBGDXX
+        - RNWRPOINDEA
+        - RNWNLIBGDXX
+        - RNWNLIINDEA
+        - TRNRPOBGDXX
+        - TRNRPOINDEA
+        - TRNNLIBGDXX
+        - TRNNLIINDEA
+    generated_delta:
+      TECHNOLOGY:
+        - PWRSHPINDEA
+      FUEL:
+        - ELCBGDXX00
+        - ELCBGDXX03
+        - ELCBGDXX04
+        - ELCINDEA00
+        - ELCINDEA03
+        - ELCINDEA04
+  effective_values:
+    TRNBGDXXINDEA_residual_capacity_gw: 2.496
+    interconnector_capacity_gw: 2.496
+    TRNBGDXXINDEA_relaxed_total_annual_max_capacity_gw: 9999.0
+  reporting:
+    result_glob: execution/**/*Combined_Inputs_Outputs.csv
+  requires_prepare: true
+
+policies:
+  # The training correction replaces legacy hand-entered LID cells. The full
+  # profile explicitly keeps this false in config/profiles/full.yaml.
+  lid_rule_new_semantics: true
+  # The WS-4 base-year pin is a full-model calibration authority (audited on
+  # the five-country domain, where pinned 2023-2026 BGD generation balances
+  # against several import corridors). Projected onto this reduced two-region
+  # model it is provably infeasible: pinned BGD activity (~270.7 PJ in 2023,
+  # backstop pinned to 0) plus the single 2.496 GW interconnector cannot meet
+  # the 427.3 PJ 2023 BGD demand tier, and CBC certifies primal infeasibility.
+  # The pinned training pipeline (training-unescap@6e00e8b) applies no
+  # base-year pin to any scenario of this model, so the profile disables the
+  # stage. config/scenarios/rules/pwr_min_2023_2026_pin.csv is retained as the
+  # frozen reference projection only; it is not applied.
+  apply_pwr_min_pin: false
+
+authorities:
+  # Profile-owned reduced-model authorities.
+  scenario_registry: profile:config/scenarios/registry.json
+  scenario_inputs:
+    path: profile:inputs/scenarios
+    kind: directory
+  scenario_config_root:
+    path: profile:config/scenarios
+    kind: directory
+  scenario_workbook:
+    path: profile:inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
+    mutable: true
+  timeslice_workbook: profile:inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx
+  ao_decisions: profile:config/scenarios/ao_extension_decisions.csv
+  interconnector_authority:
+    path: profile:inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
+    mutable: true
+  interconnector_taxonomy: profile:config/scenarios/technology_types.csv
+  compilation_config: profile:config/compilation/Config_MOMF_T1_A.yaml
+  execution_config: profile:config/execution/Config_MOMF_T1_AB.yaml
+  preparation_config:
+    path: profile:config/preparation
+    kind: directory
+  country_config: profile:config/preparation/Config_country_codes.yaml
+  region_config: profile:config/preparation/Config_region_consolidation.yaml
+  osemosys_inputs:
+    path: profile:inputs/osemosys_global
+    kind: directory
+    mutable: true
+  preparation_inputs:
+    path: profile:inputs/preparation
+    kind: directory
+    mutable: true
+  secondary_technology_inputs:
+    path: profile:inputs/preparation/secondary_technologies
+    kind: directory
+
+  # Explicit shared project/package authorities (not fallback paths).
+  maintained_model: project:model/osemosys_fast_preprocessed.txt
+  execution_inputs:
+    path: project:inputs/execution
+    kind: directory
+  preparation_templates:
+    path: project:inputs/preparation/workbook_templates
+    kind: directory
+  preparation_resources:
+    path: package:resources/preparation
+    kind: directory
+  compilation_resources:
+    path: package:resources/compilation
+    kind: directory
+
+  # Read-only teaching and provenance material.
+  exercises:
+    path: profile:exercises
+    kind: directory
+  profile_docs:
+    path: profile:docs
+    kind: directory
+  references:
+    path: profile:references
+    kind: directory
+  provenance: profile:references/provenance.md

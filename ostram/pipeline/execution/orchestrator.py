@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from ostram.paths import resolve_paths
+from ostram.validation.profile import validate_active_compiled_domain
 
 
 @dataclass(frozen=True)
@@ -201,10 +202,6 @@ def build_run_plan(
     ) as config_file:
         params = yaml_safe_load(config_file)
 
-    apply_configuration_overrides(params)
-    if compile_only:
-        apply_compile_only_overrides(params)
-
     if local_contract:
         for key in (
             "A2_output",
@@ -226,6 +223,13 @@ def build_run_plan(
                 "A2_output": str(project.compiled_parameters),
                 "A2_output_otoole": str(project.otoole_outputs),
                 "Miscellaneous": str(project.compilation_resources),
+                "templates": str(project.compilation_resources / "templates"),
+                "otoole_config": str(
+                    project.compilation_resources / "conversion_format.yaml"
+                ),
+                "conv_format": str(
+                    project.compilation_resources / "conversion_format.yaml"
+                ),
                 "executables": str(project.executables),
                 "outputs": str(project.outputs),
                 "osemosys_model": str(project.maintained_model),
@@ -235,6 +239,18 @@ def build_run_plan(
                 ),
             }
         )
+
+        storage_delay_output = params.get("storage_delay_model_output")
+        if storage_delay_output:
+            params["storage_delay_model_output"] = Path(
+                str(storage_delay_output)
+            ).name
+
+    # Storage-delay defaults must be derived after profile model/path
+    # authorities have replaced any declarative manifest tokens.
+    apply_configuration_overrides(params)
+    if compile_only:
+        apply_compile_only_overrides(params)
 
     with compilation_config.open(
         "r", encoding="utf-8"
@@ -280,6 +296,17 @@ def run_compiled_input_stage(
                 template_path=plan.template_path,
                 base_output_path=plan.base_output_path,
                 scenario_name=scenario_name,
+            )
+        domain = validate_active_compiled_domain(
+            Path(plan.base_output_path) / scenario_name
+        )
+        if domain is not None:
+            counts = domain["compiled"]
+            print(
+                "[profile-domain] compiled domain accepted: "
+                f"TECHNOLOGY={counts['TECHNOLOGY']['count']}, "
+                f"FUEL={counts['FUEL']['count']}, "
+                f"scenario={scenario_name}"
             )
         if params["write_txt_model"]:
             conversion_ok = dependencies.run_otoole_conversion(
@@ -745,6 +772,28 @@ def invoke_solver_command(
     )
 
 
+def validate_cbc_solution(solution_file: str | os.PathLike[str]) -> str:
+    """Require CBC's solution header to declare an optimal solution.
+
+    CBC returns process status zero for model-level outcomes such as an
+    infeasible linear relaxation.  The solution header is therefore the
+    authoritative status boundary; result conversion must never turn an
+    infeasible incumbent into a successful OSTRAM report.
+    """
+
+    path = Path(solution_file)
+    if not path.is_file():
+        raise FileNotFoundError(f"CBC solution file not found: {path}")
+    with path.open("r", encoding="utf-8", errors="replace") as stream:
+        status = next((line.strip() for line in stream if line.strip()), "")
+    if not status.lower().startswith("optimal - objective value"):
+        raise RuntimeError(
+            f"CBC did not produce an optimal solution: {status or '<empty status>'} "
+            f"({path})"
+        )
+    return status
+
+
 class SolverAdapter:
     """Prepare and invoke supported solver commands behind one explicit seam."""
 
@@ -983,6 +1032,10 @@ def execute_scenario(
             "Solver finished but did not create the expected solution file: "
             f"{paths.output_file}.sol"
         )
+
+    if params["execute_model"] and solver == "cbc":
+        status = validate_cbc_solution(paths.output_file + ".sol")
+        print(f"CBC solution status: {status}")
 
     run_scenario_output_stage(
         params,

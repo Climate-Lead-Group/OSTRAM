@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="EL">
+<title>Exercise A: Add a New Country to the Model &mdash; OSTRAM</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --teal-dark:#00414D; --teal:#0A595F; --teal-mid:#23978E;
+    --emerald:#10B981; --amber:#F59E0B; --slate-900:#334155;
+    --slate-600:#475569; --slate-400:#94A3B8; --sage-light:#C5D8D8;
+    --mint-light:#D0EDEB; --cloud:#E0F0EF; --ice:#F0F5F5;
+    --white:#FFFFFF; --red:#EF4444;
+  }
+  body { font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; background:var(--ice); color:var(--slate-900); line-height:1.7; font-size:16px; }
+
+  /* Hero */
+  .hero { background:linear-gradient(135deg,var(--teal-dark) 0%,var(--teal) 50%,var(--teal-mid) 100%); color:var(--white); padding:60px 40px 50px; text-align:center; position:relative; overflow:hidden; }
+  .hero::before { content:''; position:absolute; top:-60px; right:-60px; width:250px; height:250px; border-radius:50%; background:rgba(16,185,129,.12); }
+  .hero::after  { content:''; position:absolute; bottom:-40px; left:-40px; width:180px; height:180px; border-radius:50%; background:rgba(245,158,11,.1); }
+  .hero h1 { font-size:2.6rem; font-weight:800; letter-spacing:-.5px; margin-bottom:10px; position:relative; }
+  .hero .subtitle { font-size:1.15rem; opacity:.88; max-width:640px; margin:0 auto; position:relative; }
+  .hero .badge { display:inline-block; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25); border-radius:20px; padding:4px 16px; font-size:.82rem; font-weight:500; margin-bottom:18px; position:relative; }
+
+  /* Layout */
+  .container { max-width:860px; margin:0 auto; padding:0 24px; }
+
+  /* Sections */
+  section { background:var(--white); border-radius:12px; padding:36px; margin-bottom:28px; border:1px solid var(--sage-light); box-shadow:0 2px 10px rgba(0,65,77,.04); }
+  section:first-of-type { margin-top:30px; }
+  section h2 { font-size:1.55rem; font-weight:800; color:var(--teal-dark); margin-bottom:6px; display:flex; align-items:center; gap:12px; }
+  section h2 .num { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; background:var(--teal); color:var(--white); font-size:.95rem; font-weight:700; flex-shrink:0; }
+  section h3 { font-size:1.15rem; font-weight:700; color:var(--teal); margin:26px 0 10px; }
+  section p { margin-bottom:14px; color:var(--slate-600); }
+  section ul, section ol.plain { margin:0 0 14px 22px; color:var(--slate-600); }
+  section ul li, section ol.plain li { margin-bottom:6px; }
+
+  /* Analogy */
+  .analogy { background:linear-gradient(135deg,var(--cloud),var(--mint-light)); border-left:4px solid var(--teal-mid); border-radius:0 10px 10px 0; padding:18px 22px; margin:18px 0; }
+  .analogy .label { font-weight:700; color:var(--teal); font-size:.85rem; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+  .analogy p { margin:0; color:var(--slate-900); }
+
+  /* Goal banner */
+  .goal { background:linear-gradient(135deg,rgba(35,151,142,.12),rgba(16,185,129,.10)); border:1px solid var(--teal-mid); border-radius:10px; padding:16px 20px; margin:0 0 18px; }
+  .goal .label { font-weight:700; color:var(--teal-dark); font-size:.8rem; text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px; }
+  .goal p { margin:0; color:var(--slate-900); }
+
+  /* Code blocks with copy button */
+  .code-wrap { position:relative; margin:14px 0 18px; }
+  pre { background:var(--slate-900); color:#e2e8f0; border-radius:10px; padding:18px 22px; overflow-x:auto; font-family:'JetBrains Mono','Consolas',monospace; font-size:.88rem; line-height:1.7; margin:0; }
+  pre .comment { color:#64748b; }
+  pre .cmd { color:#34d399; }
+  pre .flag { color:#fbbf24; }
+  pre .string { color:#7dd3fc; }
+  pre .key { color:#f0abfc; }
+  pre .output { color:#94a3b8; font-style:italic; }
+  code { font-family:'JetBrains Mono','Consolas',monospace; background:var(--cloud); color:var(--teal-dark); padding:2px 7px; border-radius:4px; font-size:.88em; }
+  pre code { background:none; color:inherit; padding:0; }
+
+  .copy-btn {
+    position:absolute; top:10px; right:10px;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
+    color:#e2e8f0; border-radius:6px; padding:4px 10px;
+    font-size:.75rem; font-family:'Inter',sans-serif; font-weight:500;
+    cursor:pointer; transition:background .2s,color .2s;
+    display:flex; align-items:center; gap:5px;
+  }
+  .copy-btn:hover { background:rgba(255,255,255,.2); }
+  .copy-btn.copied { background:var(--emerald); color:#fff; border-color:var(--emerald); }
+  .copy-btn svg { width:13px; height:13px; fill:currentColor; }
+
+  /* Steps */
+  .step-list { list-style:none; counter-reset:step; padding:0; }
+  .step-list > li { counter-increment:step; padding:16px 18px 16px 56px; position:relative; margin-bottom:12px; background:var(--ice); border-radius:10px; border:1px solid var(--sage-light); }
+  .step-list > li::before { content:counter(step); position:absolute; left:16px; top:16px; width:28px; height:28px; border-radius:50%; background:var(--teal); color:var(--white); font-size:.82rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
+  .step-list > li strong { color:var(--slate-900); }
+
+  /* Callouts */
+  .callout { border-radius:10px; padding:16px 20px; margin:16px 0; font-size:.95rem; }
+  .callout.tip { background:#ecfdf5; border-left:4px solid var(--emerald); }
+  .callout.tip .tag { color:var(--emerald); }
+  .callout.warn { background:#fefce8; border-left:4px solid var(--amber); }
+  .callout.warn .tag { color:var(--amber); }
+  .callout.important { background:#fef2f2; border-left:4px solid var(--red); }
+  .callout.important .tag { color:var(--red); }
+  .callout .tag { font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+  .callout p { margin:0; color:var(--slate-900); }
+
+  /* Table */
+  table { width:100%; border-collapse:collapse; margin:16px 0; font-size:.92rem; }
+  thead th { background:var(--teal-dark); color:var(--white); padding:12px 16px; text-align:left; font-weight:600; }
+  thead th:first-child { border-radius:8px 0 0 0; }
+  thead th:last-child  { border-radius:0 8px 0 0; }
+  tbody td { padding:11px 16px; border-bottom:1px solid var(--sage-light); color:var(--slate-600); }
+  tbody td code { white-space:nowrap; }
+  tbody tr:nth-child(even) { background:var(--ice); }
+  tbody tr:hover { background:var(--cloud); }
+
+  .scrollable { overflow-x:auto; }
+
+  /* Pill on h2 */
+  .pill { margin-left:auto; font-size:.7rem; font-weight:700; letter-spacing:.6px; text-transform:uppercase; padding:5px 12px; border-radius:20px; background:var(--mint-light); color:var(--teal-dark); }
+
+  /* OS command switcher */
+  .os-switch { display:inline-flex; align-items:center; gap:3px; flex-wrap:wrap;
+    background:var(--white); border:1px solid var(--sage-light); border-radius:26px; padding:4px; }
+  .os-switch-label { font-size:.74rem; font-weight:700; color:var(--slate-400);
+    padding:0 6px 0 10px; text-transform:uppercase; letter-spacing:.6px; }
+  .os-switch button { border:none; background:transparent; cursor:pointer;
+    font-family:'Inter',sans-serif; font-size:.84rem; font-weight:600; color:var(--slate-600);
+    padding:7px 16px; border-radius:20px; transition:background .18s,color .18s; line-height:1; }
+  .os-switch button:hover { color:var(--teal-dark); background:var(--ice); }
+  .os-switch button.active { background:var(--teal); color:var(--white); }
+
+  .os-switch-bar { display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    background:linear-gradient(135deg,var(--cloud),var(--mint-light));
+    border:1px solid var(--teal-mid); border-radius:12px; padding:14px 16px; margin:0 0 22px; }
+  .os-switch-bar .hint { font-size:.86rem; color:var(--slate-900); flex:1; min-width:190px; }
+  .os-switch-bar .hint strong { color:var(--teal-dark); }
+
+  /* OS-variant command lines */
+  pre[data-os] { display:none; }
+  body.os-win   pre[data-os="win"]   { display:block; }
+  body.os-mac   pre[data-os="mac"]   { display:block; }
+  body.os-linux pre[data-os="linux"] { display:block; }
+
+  /* Footer */
+  footer { background:var(--teal-dark); color:rgba(255,255,255,.75); padding:40px 24px 30px; margin-top:10px; }
+  .footer-inner { max-width:860px; margin:0 auto; }
+  .footer-links { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; font-size:.88rem; }
+  .footer-links div strong { display:block; color:var(--white); font-size:.78rem; text-transform:uppercase; letter-spacing:.8px; margin-bottom:8px; }
+  .footer-links a { color:rgba(255,255,255,.65); text-decoration:none; display:block; margin-bottom:4px; transition:color .2s; }
+  .footer-links a:hover { color:var(--emerald); }
+  .footer-bottom { font-size:.8rem; color:rgba(255,255,255,.45); text-align:center; padding-top:20px; border-top:1px solid rgba(255,255,255,.1); }
+
+  @media (max-width:700px) {
+    .hero h1 { font-size:2rem; }
+    section { padding:24px 20px; }
+    .footer-links { grid-template-columns:1fr; }
+    section h2 { flex-wrap:wrap; }
+    .pill { margin-left:0; }
+  }
+
+  html { scroll-behavior:smooth; }
+</style>
+</head>
+<body class="os-win">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="badge">OSTRAM &middot; UNESCAP Training &middot; Session 3</div>
+  <h1>Exercise A: Add a New Country to the Model</h1>
+  <p class="subtitle">Add Myanmar (MMR) to your OSTRAM model as an isolated country &mdash; configure, generate, merge, validate, and run the pipeline.</p>
+</div>
+
+<div class="container">
+
+<!-- SECTION 1 -->
+<section id="what">
+  <h2><span class="num">1</span> What You Will Do <span class="pill">Exercise A</span></h2>
+
+  <div class="goal">
+    <div class="label">Goal</div>
+    <p>Add Myanmar as a new country to the UNESCAP training profile with the profile-aware <code>country</code> commands. The process clones data from an existing reference country (Bangladesh), generates CSV input files, and merges them into the profile's inputs.</p>
+  </div>
+
+  <p>This process is designed for countries that are <strong>NOT</strong> already in OSeMOSYS Global. The template generator clones a reference country&rsquo;s data as a starting point. After merging, you can replace the cloned values with real data from IRENA, national energy statistics, or IEA.</p>
+
+  <div class="analogy">
+    <div class="label">Analogy</div>
+    <p>Think of it like opening a new branch of a business. You copy the processes and pricing from an existing branch as a starting point, then adjust everything to reflect local conditions.</p>
+  </div>
+
+  <div class="callout important">
+    <div class="tag">Important</div>
+    <p>This process resets any prior parametrization for the country &mdash; it is designed as a <strong>PRE-parametrization</strong> step using OSeMOSYS Global defaults.</p>
+  </div>
+</section>
+
+<!-- SECTION 2 -->
+<section id="prerequisites">
+  <h2><span class="num">2</span> Prerequisites</h2>
+
+  <p>Before starting, make sure you have the following:</p>
+
+  <ul>
+    <li>The model must already have <strong>at least one country</strong> configured (BGD and INDEA are already in the model).</li>
+    <li>You need the country&rsquo;s <strong>geographic coordinates</strong> (latitude/longitude) for the centerpoint.</li>
+    <li>You need to know which <strong>existing country to use as reference</strong> &mdash; choose one with a similar energy profile.</li>
+    <li>Interconnections are <strong>not</strong> needed for this exercise &mdash; we add the country as an isolated system first (see <a href="add-interconnector.html">Exercise B</a> for interconnectors).</li>
+  </ul>
+
+  <p>Start from a guarded clean profile workspace. This removes only ignored generated state and republishes the committed profile authorities:</p>
+  <div class="code-wrap">
+    <pre><code><span class="cmd">python</span> -m ostram example prepare unescap <span class="flag">--reset</span></code></pre>
+  </div>
+  <div class="callout warn"><div class="tag">Do this before generating</div><p>Do not reset again after Step 5: the country merge deliberately lives in the prepared workspace and a later reset would discard it.</p></div>
+</section>
+
+<!-- SECTION 3 -->
+<section id="configure-yaml">
+  <h2><span class="num">3</span> Step 1 &mdash; Configure the YAML</h2>
+
+  <p>Open <code>examples/unescap/config/preparation/Config_country_codes.yaml</code> and go to the section marked <code># ACTIVE CONFIGURATION</code>.</p>
+
+  <p>This section contains three commented examples that illustrate different use cases:</p>
+  <ul>
+    <li><strong>Single country</strong> &mdash; one country, one region (the simplest case)</li>
+    <li><strong>Multiple countries</strong> &mdash; adding several countries at once</li>
+    <li><strong>Country with multiple regions</strong> &mdash; like India, which is split into sub-regions (INDEA, INDNE, etc.)</li>
+  </ul>
+
+  <p>The profile ships with exactly this MMR configuration already active, so you can read it as the worked answer. If you have changed it, restore it to:</p>
+
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+<pre><code><span class="key">template_generation:</span>
+  - <span class="key">new_country:</span> <span class="string">MMR</span>
+    <span class="key">reference_country:</span> <span class="string">BGD</span>
+    <span class="key">region:</span> <span class="string">XX</span>
+    <span class="key">centerpoint_lat:</span> <span class="string">19.811800</span>
+    <span class="key">centerpoint_lon:</span> <span class="string">96.602200</span>
+    <span class="key">interconnections:</span> <span class="string">[]</span></code></pre>
+  </div>
+
+  <h3>Field explanations</h3>
+
+  <div class="scrollable">
+  <table>
+    <thead>
+      <tr><th>Field</th><th>Value</th><th>Explanation</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>new_country</code></td><td>MMR</td><td>3-letter ISO code for Myanmar</td></tr>
+      <tr><td><code>reference_country</code></td><td>BGD</td><td>Existing country to clone data from (Bangladesh &mdash; chosen for similar energy profile in South Asia)</td></tr>
+      <tr><td><code>region</code></td><td>XX</td><td>XX for single-region country (no sub-regions)</td></tr>
+      <tr><td><code>centerpoint_lat</code></td><td>19.811800</td><td>Latitude of Myanmar&rsquo;s geographic center</td></tr>
+      <tr><td><code>centerpoint_lon</code></td><td>96.602200</td><td>Longitude of Myanmar&rsquo;s geographic center</td></tr>
+      <tr><td><code>interconnections</code></td><td>[] (empty)</td><td>No interconnections for now &mdash; we add the country first as an isolated system. Interconnectors are added separately in <a href="add-interconnector.html">Exercise B</a></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout tip">
+    <div class="tag">Tip</div>
+    <p>The examples in the YAML show advanced cases &mdash; multiple countries at once, and countries with multiple regions (like India). For this exercise, we use the simplest case: one country, one region.</p>
+  </div>
+</section>
+
+<!-- SECTION 4 -->
+<section id="run-generator">
+  <h2><span class="num">4</span> Step 2 &mdash; Run the Template Generator</h2>
+
+  <p>The commands are identical on Windows, macOS, and Linux, and none of them depend on
+  your current directory &mdash; you name the profile, you do not navigate to it.</p>
+
+  <ol class="step-list">
+    <li>
+      <strong>Generate the country template</strong>
+
+      <div class="code-wrap">
+        <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+        <pre><code><span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> country template</code></pre>
+      </div>
+    </li>
+  </ol>
+
+  <p>The command reads the profile's <code>Config_country_codes.yaml</code>, clones data from the reference country (Bangladesh), and writes the generated CSVs into the workspace under <code>&lt;workspace&gt;/preparation/country_templates/MMR/</code>. Nothing under the profile is touched yet.</p>
+
+  <p>Expected output:</p>
+
+  <div class="code-wrap">
+<pre><code><span class="output">Profile: unescap
+Processing MMR...
+  Reference country: BGD
+  Region: XX
+  Centerpoint: 19.8118, 96.6022
+  Interconnections: (none)
+  Generating CSV files...
+  Done.
+
+=== NEXT STEPS ===
+1. Review the generated CSVs in &lt;workspace&gt;/preparation/country_templates/MMR/
+2. Update Config_country_codes.yaml (country_data, countries, implausible_combinations)
+3. Merge:    python -m ostram --profile unescap country merge MMR
+4. Validate: python -m ostram --profile unescap country validate MMR</span></code></pre>
+  </div>
+
+  <div class="callout tip">
+    <div class="tag">Tip</div>
+    <p>The command does <strong>NOT</strong> modify any profile file &mdash; it writes new ones into the workspace. Your existing model data is safe.</p>
+  </div>
+</section>
+
+<!-- SECTION 5 -->
+<section id="review-csvs">
+  <h2><span class="num">5</span> Step 3 &mdash; Review the Generated CSVs</h2>
+
+  <p>Open <code>&lt;workspace&gt;/preparation/country_templates/MMR/</code>. The folder contains CSV files for all parameters:</p>
+
+  <ul>
+    <li><code>CapitalCost.csv</code></li>
+    <li><code>FixedCost.csv</code></li>
+    <li><code>VariableCost.csv</code></li>
+    <li><code>ResidualCapacity.csv</code></li>
+    <li><code>SpecifiedAnnualDemand.csv</code></li>
+    <li>And many more&hellip;</li>
+  </ul>
+
+  <p>All values are <strong>cloned from Bangladesh</strong> &mdash; they are starting points, <strong>NOT</strong> final values. For a real project, you would replace these with actual data from IRENA, national energy statistics, or IEA databases.</p>
+
+  <div class="callout tip">
+    <div class="tag">Key files to focus on</div>
+    <p>For a real project, prioritise replacing these files with actual data: <strong>ResidualCapacity</strong> (installed capacity), <strong>CapitalCost</strong> / <strong>FixedCost</strong> / <strong>VariableCost</strong> (generation costs), <strong>SpecifiedAnnualDemand</strong> (electricity demand), and fuel availability parameters.</p>
+  </div>
+
+  <p>For this training exercise, you can proceed with the cloned values as-is.</p>
+</section>
+
+<!-- SECTION 6 -->
+<section id="update-yaml">
+  <h2><span class="num">6</span> Step 4 &mdash; Update the YAML</h2>
+
+  <p>This step registers Myanmar in the rest of <code>examples/unescap/config/preparation/Config_country_codes.yaml</code> so the rest of the pipeline recognises it. You need to update <strong>three sections</strong> in the same file.</p>
+
+  <h3>6a. Add to <code>country_data</code></h3>
+
+  <p>Find the <code>country_data</code> section and add MMR:</p>
+
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+<pre><code><span class="key">country_data:</span>
+  <span class="key">BGD:</span>
+    <span class="key">english_name:</span> <span class="string">"Bangladesh"</span>
+    <span class="key">ostram_name:</span> <span class="string">"Bangladesh"</span>
+  <span class="comment"># ... existing entries ...</span>
+  <span class="key">MMR:</span>
+    <span class="key">english_name:</span> <span class="string">"Myanmar"</span>
+    <span class="key">ostram_name:</span> <span class="string">"Myanmar"</span></code></pre>
+  </div>
+
+  <h3>6b. Add to <code>countries</code> list</h3>
+
+  <p>Find the <code>countries</code> list and add MMR:</p>
+
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+<pre><code><span class="key">countries:</span>
+  - <span class="string">"BGD"</span>
+  - <span class="string">"INDEA"</span>
+  - <span class="string">"MMR"</span></code></pre>
+  </div>
+
+  <h3>6c. Update <code>implausible_combinations</code></h3>
+
+  <p>Find <code>implausible_combinations</code> and add MMR to the relevant technology exclusion lists. These tell the model which technologies are <strong>not available</strong> in Myanmar:</p>
+
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+<pre><code><span class="key">implausible_combinations:</span>
+  <span class="key">CSP:</span> [<span class="string">BGD</span>, <span class="string">MMR</span>]             <span class="comment"># no concentrated solar potential</span>
+  <span class="key">GAS:</span> [<span class="string">BGD</span>, <span class="string">IND</span>, <span class="string">MMR</span>]        <span class="comment"># no PWRGAS technology</span>
+  <span class="key">GEO:</span> [<span class="string">BGD</span>, <span class="string">IND</span>, <span class="string">MMR</span>]        <span class="comment"># no geothermal resources</span>
+  <span class="key">NGS:</span> [<span class="string">BGD</span>, <span class="string">MMR</span>]             <span class="comment"># no CCG/OCG/NGS power data</span>
+  <span class="key">WAV:</span> [<span class="string">BGD</span>, <span class="string">IND</span>, <span class="string">MMR</span>]        <span class="comment"># no wave energy data in model</span></code></pre>
+  </div>
+
+  <div class="callout warn">
+    <div class="tag">Warning</div>
+    <p>Make sure to add MMR to <strong>ALL THREE</strong> sections (<code>country_data</code>, <code>countries</code>, <code>implausible_combinations</code>). This profile declares its own country authority and does not fall back to the project-root list, so a missing entry fails loudly rather than being silently filled in from elsewhere.</p>
+  </div>
+</section>
+
+<!-- SECTION 7 -->
+<section id="merge">
+  <h2><span class="num">7</span> Step 5 &mdash; Merge into Model Inputs</h2>
+
+  <p>Merge the generated CSVs into the prepared profile's mutable OSeMOSYS input authority:</p>
+
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+    <pre><code><span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> country merge <span class="string">MMR</span></code></pre>
+  </div>
+
+  <p>Expected output:</p>
+
+  <div class="code-wrap">
+<pre><code><span class="output">Merged country template: {'TECHNOLOGY': ..., 'FUEL': ..., 'SpecifiedAnnualDemand': ..., 'centerpoint': ...}</span></code></pre>
+  </div>
+
+  <p>The command writes timestamped <code>*.bak.csv</code> siblings before replacing any existing prepared CSV. The committed seed under <code>examples/unescap/inputs/osemosys_global/</code> remains unchanged.</p>
+
+  <div class="callout tip">
+    <div class="tag">Tip</div>
+    <p>All merged CSVs and their backups remain in the ignored prepared workspace. Use <code>inspect-resources</code> to confirm the active <code>osemosys_inputs</code> path before reviewing them.</p>
+  </div>
+</section>
+
+<!-- SECTION 8 -->
+<section id="validate">
+  <h2><span class="num">8</span> Step 6 &mdash; Validate</h2>
+
+  <p>Verify that Myanmar was added correctly:</p>
+
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+    <pre><code><span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> country validate <span class="string">MMR</span></code></pre>
+  </div>
+
+  <p>Expected output:</p>
+
+  <div class="code-wrap">
+<pre><code><span class="output">============================================================
+VALIDATION SUMMARY: MMR  (profile: unescap)
+============================================================
+  Total checks: 54
+  Passed:       51 (94%)
+  Warnings:     3 (6%)
+  Failed:       0 (0%)
+============================================================
+
+WARNINGS:
+  - RANGE:CapitalCost: 28/504 values (5.6%) outside [0, 15000] $/kW
+  - RANGE:FixedCost: 28/504 values (5.6%) outside [0, 500] $/kW/year
+  - RANGE:VariableCost: 28/392 values (7.1%) outside [0, 50] M$/PJ
+
+Overall: PASS</span></code></pre>
+  </div>
+
+  <p>Warnings about cost ranges are <strong>normal for cloned data</strong> &mdash; the values come from Bangladesh and may not reflect Myanmar&rsquo;s actual cost structure. In a real project, you would replace these with country-specific data to eliminate the warnings.</p>
+
+  <p>The validation should show <strong>0 failures</strong> and <strong>Overall: PASS</strong>.</p>
+</section>
+
+<!-- SECTION 9 -->
+<section id="fix-elc">
+  <h2><span class="num">9</span> Step 7 &mdash; ELC dispatch nodes (nothing to edit)</h2>
+
+  <p>Each country carries internal ELC dispatch technologies &mdash; for Myanmar, <code>ELCMMRXX01</code>. These must be treated as internal fuel-chain nodes, not as standalone power plants; exporting one as a regular technology would make the solver double-count Myanmar&rsquo;s dispatch capacity.</p>
+
+  <p>You do not maintain that list by hand. The scenario stage derives the ELC dispatch nodes from the <code>countries</code> list you edited in Step 4, so adding <code>MMR</code> there is what registers <code>ELCMMRXX01</code>. There is no source file to patch and no list to keep in sync.</p>
+
+  <div class="callout tip">
+    <div class="tag">Why this step still exists</div>
+    <p>It used to be a manual edit to a pipeline script, and it was an easy one to forget. It is listed here so you know the behaviour exists and where it comes from &mdash; if a new country&rsquo;s ELC node shows up as a technology in your results, the cause is a missing entry in <code>countries</code>, not a missing edit in the engine.</p>
+  </div>
+</section>
+
+<!-- SECTION 10 -->
+<section id="run-a1-a2">
+  <h2><span class="num">10</span> Step 8 &mdash; Run A1 + A2 (Create Country Structure)</h2>
+
+  <p>Run only the base-model and transmission stages now. The skip flags stop before scenario materialisation, compilation, and CBC, leaving the canonical post-A2 snapshots needed by the next step.</p>
+
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+    <pre><code><span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> run <span class="flag">--scenarios</span> <span class="string">"B_Optimised_VRE"</span> <span class="flag">--skip-a3 --skip-b1 --skip-b2 --skip-pull</span></code></pre>
+  </div>
+
+  <div class="callout tip">
+    <div class="tag">What preparation does</div>
+    <p><strong>A1</strong> processes the profile&rsquo;s OSeMOSYS Global CSVs and creates each country&rsquo;s technology/fuel structure (including ELC fuel codes like ELCMMRXX00&ndash;04). <strong>A2</strong> adds internal transmission technologies and writes the post-A2 snapshot with the A-O parametrization workbook. Everything lands under <code>&lt;workspace&gt;/preparation/</code>.</p>
+  </div>
+
+  <div class="callout warn">
+    <div class="tag">Why stop here?</div>
+    <p>The next step needs the A-O parametrization snapshot that preparation produces. The scenario stage reads the scenario workbook, so the workbook must be populated after preparation and before you run any scenario.</p>
+  </div>
+</section>
+
+<!-- SECTION 11 -->
+<section id="populate-workbook">
+  <h2><span class="num">11</span> Step 9 &mdash; Populate the Scenario Workbook</h2>
+
+  <p>Now that preparation has written the snapshot, populate the profile&rsquo;s scenario workbook with the new country&rsquo;s rows. This is what lets the scenario stage find MMR data and apply scenario-specific overrides correctly.</p>
+
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+    <pre><code><span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> scenario sync-country <span class="flag">--country</span> <span class="string">MMR</span></code></pre>
+  </div>
+
+  <p>The command reads the canonical post-A2 BAU snapshot and adds missing MMR rows to the <strong>prepared workspace copy</strong> of <code>OSTRAM_Scenario_Inputs.xlsx</code> for sheets like Secondary_Techs, Primary_Techs, Demand_Techs, VariableCost, Capacities_CF, and Fixed_Horizon_Parameters. It never edits the committed profile seed, and it is idempotent &mdash; running it twice adds nothing the second time.</p>
+
+  <div class="callout tip">
+    <div class="tag">Tip</div>
+    <p>Append <code>--dry-run</code> first to see what would be added without modifying the prepared workbook. For a real project, this is also the moment to open that workspace workbook and adjust MMR&rsquo;s costs, capacities, or demand before running any scenario.</p>
+  </div>
+</section>
+
+<!-- SECTION 12 -->
+<section id="run-a3-b1-b2">
+  <h2><span class="num">12</span> Step 10 &mdash; Run the Scenarios</h2>
+
+  <p>Now that the scenario workbook has MMR&rsquo;s data, run the scenarios. The run reuses the preparation output already in the workspace and goes straight to the scenario, compilation, and execution stages.</p>
+
+  <p><strong>Run scenarios A and B:</strong></p>
+
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+    <pre><code><span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> run <span class="flag">--scenarios</span> <span class="string">"A_Calibrated_BAU,B_Optimised_VRE"</span></code></pre>
+  </div>
+
+  <p><strong>Run scenario C</strong> (its completed-A dependency is declared in <code>config/scenarios/registry.json</code>, so it runs separately &mdash; and running it before A stops with a clear message):</p>
+
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+    <pre><code><span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> run <span class="flag">--scenarios</span> <span class="string">"C_Target_VRE"</span></code></pre>
+  </div>
+
+  <div class="callout tip">
+    <div class="tag">What happens now</div>
+    <p><strong>A3</strong> reads the scenario workbook (now with MMR rows) and materialises scenario overrides into the A-O workbooks. <strong>B1</strong> compiles everything into solver-ready input files. <strong>B2</strong> runs the solver &mdash; this profile is configured for CBC. Confirm <code>OPTIMAL SOLUTION FOUND</code> for all scenarios.</p>
+  </div>
+
+  <div class="callout warn">
+    <div class="tag">Expected runtime</div>
+    <p>The scenario, compilation, and execution stages together typically take 15&ndash;30 minutes depending on your machine and solver.</p>
+  </div>
+</section>
+
+<!-- SECTION 13 -->
+<section id="whats-next">
+  <h2><span class="num">13</span> What&rsquo;s Next?</h2>
+
+  <p>Myanmar is now in the model with generation data, but it is <strong>electrically isolated</strong> &mdash; there are no interconnectors connecting it to neighbouring countries.</p>
+
+  <ul>
+    <li>To connect Myanmar to its neighbours, <strong>add interconnectors</strong> (see <a href="add-interconnector.html">Exercise B: Add a New Transmission Interconnector</a>).</li>
+    <li>For a real project: replace the cloned values with actual data from IRENA, national statistics, or IEA, then parametrise the model.</li>
+  </ul>
+
+  <div class="callout warn">
+    <div class="tag">Important distinction</div>
+    <p>This process is for countries <strong>NOT</strong> in OSeMOSYS Global. Countries that <strong>ARE</strong> already in OSeMOSYS Global follow a different, longer process that requires Linux or WSL. The template generator is a shortcut for countries outside the OSeMOSYS Global dataset.</p>
+  </div>
+</section>
+
+<!-- SECTION 14 -->
+<section id="troubleshooting">
+  <h2><span class="num">14</span> Troubleshooting</h2>
+
+  <div class="scrollable">
+  <table>
+    <thead>
+      <tr><th>Problem</th><th>Cause</th><th>Solution</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Script says country already exists</strong></td>
+        <td>The template folder already has data for this country.</td>
+        <td>Run <code>python -m ostram --profile unescap country template</code> again; each run rewrites its own workspace template files, so there is nothing to delete by hand.</td>
+      </tr>
+      <tr>
+        <td><strong>Validation shows FAIL</strong></td>
+        <td>One or more of the three YAML sections is missing the MMR entry.</td>
+        <td>Check that <code>country_data</code>, <code>countries</code>, and <code>implausible_combinations</code> are all updated in <code>examples/unescap/config/preparation/Config_country_codes.yaml</code>.</td>
+      </tr>
+      <tr>
+        <td><strong>ModuleNotFoundError</strong></td>
+        <td>Missing Python dependencies.</td>
+        <td>Make sure you are in the environment where OSTRAM is installed (<code>python -m ostram --help</code> should work).</td>
+      </tr>
+      <tr>
+        <td><strong>Unknown profile: unescap</strong></td>
+        <td>The installed OSTRAM build does not contain the UNESCAP profile, or the project root is wrong.</td>
+        <td>Run from this integrated repository or install a build that includes <code>examples/unescap/profile.yaml</code>.</td>
+      </tr>
+      <tr>
+        <td><strong>ELCMMRXX01 exported as technology</strong></td>
+        <td><code>MMR</code> is missing from the <code>countries</code> list, so its ELC node was never registered.</td>
+        <td>Add <code>"MMR"</code> to <code>countries</code> in <code>Config_country_codes.yaml</code> (Step 4b), then prepare again.</td>
+      </tr>
+      <tr>
+        <td><strong>Solver infeasible after adding country</strong></td>
+        <td>Missing demand or capacity data for MMR.</td>
+        <td>Check that the merge succeeded. Verify that the prepared <code>osemosys_inputs/SpecifiedAnnualDemand.csv</code> reported by <code>inspect-resources</code> has MMR rows.</td>
+      </tr>
+      <tr>
+        <td><strong>sync-country finds no snapshot</strong></td>
+        <td>The profile has not been prepared yet.</td>
+        <td>Run the A1+A2-only command in Step 8. <code>example prepare</code> publishes the profile workspace; the <code>run</code> command creates the post-A2 snapshot.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+</div><!-- /container -->
+
+<footer>
+  <div class="footer-inner">
+
+    <div class="footer-links">
+      <div>
+        <strong>OSTRAM Resources</strong>
+        <a href="https://github.com/Climate-Lead-Group/OSTRAM" target="_blank">GitHub Repository</a>
+        <a href="https://ostram.readthedocs.io" target="_blank">Documentation</a>
+        <a href="https://github.com/Climate-Lead-Group/OSTRAM/issues" target="_blank">Report an Issue</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      Exercise A: Add a New Country to the Model &mdash; OSTRAM &middot; UNESCAP Training<br>
+      Quality &bull; Integrity &bull; Transparency &bull; Responsibility &bull; Inclusion
+    </div>
+  </div>
+</footer>
+
+<script>
+/* Copy code block */
+function copyCode(btn) {
+  const wrap = btn.closest('.code-wrap') || btn.parentElement;
+  const pres = wrap.querySelectorAll('pre');
+  let pre = pres[0];
+  pres.forEach(p => { if (p.offsetParent !== null) pre = p; });
+  const text = (pre.innerText || pre.textContent).replace(/\n+$/, '');
+  navigator.clipboard.writeText(text).then(() => {
+    const original = btn.innerHTML;
+    btn.classList.add('copied');
+    btn.innerHTML = 'Copied';
+    setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = original; }, 1600);
+  });
+}
+
+/* OS command switcher */
+(function () {
+  function detectOS() {
+    const p = ((navigator.userAgentData && navigator.userAgentData.platform)
+                || navigator.platform || navigator.userAgent || '').toLowerCase();
+    if (p.includes('win')) return 'win';
+    if (p.includes('mac')) return 'mac';
+    if (p.includes('linux') || p.includes('x11')) return 'linux';
+    return 'win';
+  }
+  function setOS(os) {
+    document.body.classList.remove('os-win', 'os-mac', 'os-linux');
+    document.body.classList.add('os-' + os);
+    document.querySelectorAll('[data-set-os]').forEach(b => {
+      const on = b.getAttribute('data-set-os') === os;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  document.querySelectorAll('[data-set-os]').forEach(b => {
+    b.addEventListener('click', () => setOS(b.getAttribute('data-set-os')));
+  });
+  setOS(detectOS());
+})();
+</script>
+
+</body>
+</html>

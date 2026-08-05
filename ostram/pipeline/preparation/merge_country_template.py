@@ -1,94 +1,131 @@
-"""
-Auto-generated script to merge MDV template data into OG_csvs_inputs.
+"""Merge a reviewed country template into the active preparation workspace."""
 
-IMPORTANT: Review the template CSV files BEFORE running this script.
-Modify values as needed to reflect the actual data for MDV.
+from __future__ import annotations
 
-Usage:
-    python -m ostram.pipeline.preparation.merge_country_template
-"""
+import argparse
+from datetime import datetime, timezone
+from pathlib import Path
+import shutil
+from typing import Sequence
 
 import pandas as pd
-import os
-import shutil
-from datetime import datetime
+
 from ostram.paths import resolve_paths
-
-_PROJECT_PATHS = resolve_paths()
-TEMPLATE_DIR = str(
-    _PROJECT_PATHS.preparation_resources / "country_templates" / "MDV"
-)
-INPUT_DIR = str(_PROJECT_PATHS.preparation_workspace / "og_csvs_inputs")
-CENTERPOINTS_PATH = str(_PROJECT_PATHS.preparation_inputs / "centerpoints.csv")
-
-backup_suffix = datetime.now().strftime("%Y%m%d_%H%M%S")
+from ostram.profiles import DEFAULT_PROFILE, active_profile_id
 
 
-def merge_file(filename):
-    """Merge a template file into the corresponding input file."""
-    template_path = os.path.join(TEMPLATE_DIR, filename + ".csv")
-    input_path = os.path.join(INPUT_DIR, filename + ".csv")
-
-    if not os.path.exists(template_path):
-        return
-
-    template_df = pd.read_csv(template_path)
-    if len(template_df) == 0:
-        return
-
-    if os.path.exists(input_path):
-        input_df = pd.read_csv(input_path)
-        backup_path = input_path.replace(".csv", f"_backup_{backup_suffix}.csv")
-        shutil.copy2(input_path, backup_path)
-        merged = pd.concat([input_df, template_df], ignore_index=True)
-        merged.to_csv(input_path, index=False)
-        print(f"  Merged {filename}.csv: {len(input_df)} + {len(template_df)} = {len(merged)} rows")
-    else:
-        template_df.to_csv(input_path, index=False)
-        print(f"  Created {filename}.csv: {len(template_df)} rows")
-
-
-# Sets
-for s in ["TECHNOLOGY", "FUEL", "EMISSION", "STORAGE"]:
-    merge_file(s)
-
-# Parameters
-params = [
-    "CapitalCost", "FixedCost", "VariableCost",
-    "ResidualCapacity", "CapacityFactor", "AvailabilityFactor",
-    "InputActivityRatio", "OutputActivityRatio", "EmissionActivityRatio",
-    "SpecifiedAnnualDemand", "SpecifiedDemandProfile",
-    "OperationalLife", "CapacityToActivityUnit",
+DATASETS = (
+    "TECHNOLOGY", "FUEL", "EMISSION", "STORAGE",
+    "CapitalCost", "FixedCost", "VariableCost", "ResidualCapacity",
+    "CapacityFactor", "AvailabilityFactor", "InputActivityRatio",
+    "OutputActivityRatio", "EmissionActivityRatio", "SpecifiedAnnualDemand",
+    "SpecifiedDemandProfile", "OperationalLife", "CapacityToActivityUnit",
     "TotalAnnualMaxCapacity", "TotalAnnualMaxCapacityInvestment",
-    "TotalTechnologyAnnualActivityUpperLimit",
-    "ReserveMarginTagTechnology", "ReserveMarginTagFuel",
-    "CapitalCostStorage", "OperationalLifeStorage",
-    "StorageLevelStart", "ResidualStorageCapacity",
-    "TechnologyToStorage", "TechnologyFromStorage",
-]
+    "TotalTechnologyAnnualActivityUpperLimit", "ReserveMarginTagTechnology",
+    "ReserveMarginTagFuel", "CapitalCostStorage", "OperationalLifeStorage",
+    "StorageLevelStart", "ResidualStorageCapacity", "TechnologyToStorage",
+    "TechnologyFromStorage",
+)
 
-for p in params:
-    merge_file(p)
 
-# Centerpoint
-centerpoint_template = os.path.join(TEMPLATE_DIR, "centerpoint.csv")
-if os.path.exists(centerpoint_template):
-    cp_new = pd.read_csv(centerpoint_template)
-    if len(cp_new) > 0:
-        if os.path.exists(CENTERPOINTS_PATH):
-            cp_existing = pd.read_csv(CENTERPOINTS_PATH)
-            backup_path = CENTERPOINTS_PATH.replace(".csv", f"_backup_{backup_suffix}.csv")
-            shutil.copy2(CENTERPOINTS_PATH, backup_path)
-            # Remove existing entry for same region to avoid duplicates
-            new_regions = set(cp_new["region"].astype(str))
-            cp_existing = cp_existing[~cp_existing["region"].astype(str).isin(new_regions)]
-            merged = pd.concat([cp_existing, cp_new], ignore_index=True)
-            merged = merged.sort_values("region").reset_index(drop=True)
-            merged.to_csv(CENTERPOINTS_PATH, index=False)
-            print(f"  Merged centerpoint.csv into {CENTERPOINTS_PATH}")
+def _default_input_dir(paths) -> Path:
+    """Keep full's legacy staging target; profiles merge their mutable authority."""
+
+    if active_profile_id() == DEFAULT_PROFILE:
+        return paths.preparation_workspace / "og_csvs_inputs"
+    return paths.osemosys_inputs
+
+
+def merge_country_template(
+    template_dir: Path,
+    input_dir: Path,
+    centerpoints_path: Path,
+) -> dict[str, int]:
+    """Merge exact-schema CSVs, backing up each existing destination once."""
+
+    template_dir = Path(template_dir).resolve()
+    input_dir = Path(input_dir).resolve()
+    centerpoints_path = Path(centerpoints_path).resolve()
+    if not template_dir.is_dir():
+        raise FileNotFoundError(f"country template directory not found: {template_dir}")
+    input_dir.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    counts: dict[str, int] = {}
+    for name in DATASETS:
+        source = template_dir / f"{name}.csv"
+        if not source.is_file():
+            continue
+        incoming = pd.read_csv(source)
+        if incoming.empty:
+            continue
+        destination = input_dir / source.name
+        if destination.is_file():
+            existing = pd.read_csv(destination)
+            if list(existing.columns) != list(incoming.columns):
+                raise ValueError(
+                    f"schema mismatch for {name}: {list(existing.columns)} != "
+                    f"{list(incoming.columns)}"
+                )
+            shutil.copy2(destination, destination.with_suffix(f".{stamp}.bak.csv"))
+            merged = pd.concat([existing, incoming], ignore_index=True)
+            merged = merged.drop_duplicates().reset_index(drop=True)
         else:
-            cp_new.to_csv(CENTERPOINTS_PATH, index=False)
-            print(f"  Created {CENTERPOINTS_PATH}")
+            merged = incoming.drop_duplicates().reset_index(drop=True)
+        merged.to_csv(destination, index=False)
+        counts[name] = len(merged)
 
-print("\nDone! Backup files created with suffix: " + backup_suffix)
-print("Run the validation script to verify: python Z_validate_country_data.py --country MDV")
+    source_centerpoint = template_dir / "centerpoint.csv"
+    if source_centerpoint.is_file():
+        incoming = pd.read_csv(source_centerpoint)
+        required = ["region", "latitude", "longitude"]
+        if list(incoming.columns) != required:
+            raise ValueError(
+                f"centerpoint schema must be {required}, got {list(incoming.columns)}"
+            )
+        centerpoints_path.parent.mkdir(parents=True, exist_ok=True)
+        if centerpoints_path.is_file():
+            existing = pd.read_csv(centerpoints_path)
+            if list(existing.columns) != required:
+                raise ValueError("existing centerpoints schema differs from template")
+            shutil.copy2(
+                centerpoints_path,
+                centerpoints_path.with_suffix(f".{stamp}.bak.csv"),
+            )
+            regions = set(incoming["region"].astype(str))
+            existing = existing[~existing["region"].astype(str).isin(regions)]
+            incoming = pd.concat([existing, incoming], ignore_index=True)
+        incoming.sort_values("region").to_csv(centerpoints_path, index=False)
+        counts["centerpoint"] = len(incoming)
+    return counts
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    paths = resolve_paths()
+    parser = argparse.ArgumentParser(prog="python -m ostram country merge")
+    parser.add_argument(
+        "country",
+        nargs="?",
+        help="ISO-3 country whose generated workspace template should be merged",
+    )
+    parser.add_argument("--template", type=Path)
+    parser.add_argument("--input-dir", type=Path, default=_default_input_dir(paths))
+    parser.add_argument("--centerpoints", type=Path, default=paths.preparation_inputs / "centerpoints.csv")
+    args = parser.parse_args(argv)
+    if args.country and args.template:
+        parser.error("country and --template are mutually exclusive")
+    if args.country:
+        country = args.country.strip().upper()
+        if len(country) != 3 or not country.isalpha():
+            parser.error(f"country must be an ISO-3 code: {args.country!r}")
+        template = paths.preparation_workspace / "country_templates" / country
+    elif args.template:
+        template = args.template
+    else:
+        parser.error("provide COUNTRY or --template PATH")
+    counts = merge_country_template(template, args.input_dir, args.centerpoints)
+    print(f"Merged country template: {counts}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

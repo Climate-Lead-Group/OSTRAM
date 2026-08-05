@@ -215,12 +215,17 @@ class ReserveMarginWarningPathTests(unittest.TestCase):
                 "TotalAnnualMaxCapacity=1 but TotalAnnualMaxCapacityInvestment=0.\n"
             )
             expected_warning = expected_warning_text.replace(
-                "\n", os.linesep
+                "\n", "\r\n"
             ).encode("utf-8")
             self.assertEqual(short_warnings.read_bytes(), expected_warning)
             self.assertEqual(bounded_long_warnings.read_bytes(), expected_warning)
             self.assertEqual(short_output.read_bytes(), long_output.read_bytes())
-            self.assertEqual(short_output.read_bytes(), input_path.read_bytes())
+            output_bytes = short_output.read_bytes()
+            self.assertNotIn(b"\n", output_bytes.replace(b"\r\n", b""))
+            self.assertEqual(
+                short_output.read_text(encoding="utf-8"),
+                input_path.read_text(encoding="utf-8"),
+            )
             self.assertFalse(long_warnings.exists())
 
     def test_overlong_parent_fails_explicitly(self) -> None:
@@ -231,7 +236,9 @@ class ReserveMarginWarningPathTests(unittest.TestCase):
         ):
             reserve_margin_repair_xlsx.bounded_warnings_path(relative)
 
-        desired = Path("C:/") / ("p" * 230) / FAILED_WARNING_NAME
+        overlong_root = Path("C:/") if os.name == "nt" else Path("/")
+        desired = overlong_root / ("p" * 230) / FAILED_WARNING_NAME
+        self.assertTrue(desired.is_absolute())
         with self.assertRaisesRegex(
             path_module.WorkspacePathBudgetError,
             "parent leaves no Windows-safe filename budget",

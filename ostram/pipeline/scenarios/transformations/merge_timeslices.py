@@ -36,6 +36,10 @@ import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 
+from ostram.pipeline.scenarios.transformations.fix_elc_pmode_revert import (
+    configured_country_region_map,
+)
+
 # =============================================================================
 # USER CONFIGURATION
 # =============================================================================
@@ -59,13 +63,10 @@ YEAR_END   = 2050
 TAB_COLOR_PINK = "FFFFB6C1"  # rebuilt data sheets (were RED in v17)
 TAB_COLOR_META = "FFFFEB9C"  # auto-generated audit sheets (light yellow)
 
-# v17 region (5-char Tech infix) -> TS sheet prefix
-REGION_MAP = {
-    "BGDXX": "BGD",   "BTNXX": "BTN",
-    "LKAXX": "LKA",   "MDVXX": "MDV",   "NPLXX": "NPL",
-    "INDEA": "INDEA", "INDNE": "INDNE", "INDNO": "INDNO",
-    "INDSO": "INDSO", "INDWE": "INDWE",
-}
+# v17 region (5-char Tech infix) -> TS sheet prefix, derived from the active
+# profile country authority.  The full country list reproduces the historical
+# ten-region mapping exactly; reduced profiles load only their own sheets.
+REGION_MAP = configured_country_region_map()
 REGION_MAP_INV = {v: k for k, v in REGION_MAP.items()}
 
 # v17 tech category (3-char infix after PWR) -> TS tech_type candidates,

@@ -645,7 +645,7 @@ def main():
     
     
         defaults = {
-            "yaml": str(paths.preparation_config / "Config_country_codes.yaml"),
+            "yaml": str(paths.country_config),
             "base": str(scenario_dir / "A-O_AR_Model_Base_Year.xlsx"),
             "proj": str(scenario_dir / "A-O_AR_Projections.xlsx"),
             "param": str(scenario_dir / "A-O_Parametrization.xlsx"),

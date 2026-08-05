@@ -1,0 +1,42 @@
+{
+  "schema": "ostram-scenario-registry-v1",
+  "profile": "unescap",
+  "support_scenarios": [
+    "BAU"
+  ],
+  "root_scenarios": [
+    {
+      "name": "BAU",
+      "role": "support",
+      "dependencies": []
+    },
+    {
+      "name": "A_Calibrated_BAU",
+      "role": "decision",
+      "dependencies": []
+    },
+    {
+      "name": "B_Optimised_VRE",
+      "role": "decision",
+      "dependencies": []
+    },
+    {
+      "name": "C_Target_VRE",
+      "role": "decision",
+      "dependencies": [
+        {
+          "type": "result",
+          "scenario": "A_Calibrated_BAU",
+          "environment": "OSTRAM_A_CALIBRATED_BAU_RESULT",
+          "default_path": "Executables/A_Calibrated_BAU_0"
+        }
+      ]
+    }
+  ],
+  "decision_scenarios": [
+    "A_Calibrated_BAU",
+    "B_Optimised_VRE",
+    "C_Target_VRE"
+  ],
+  "derived_scenarios": []
+}

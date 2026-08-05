@@ -1,0 +1,314 @@
+name: UNESCAP macOS ARM64 acceptance
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/unescap-macos-acceptance.yml"
+      - "config/profiles/**"
+      - "environment.yaml"
+      - "examples/unescap/**"
+      - "inputs/execution/**"
+      - "model/**"
+      - "ostram/**"
+      - "pyproject.toml"
+      - "tests/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unescap-macos-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  acceptance:
+    name: macOS ARM64 UNESCAP acceptance
+    runs-on: macos-latest
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: bash -el {0}
+    env:
+      ACCEPTANCE_DIR: acceptance/unescap-macos-arm64
+      OSTRAM_GATE_WORKSPACE: workspace/macos-acceptance
+      PYTHONHASHSEED: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUTF8: "1"
+
+    steps:
+      - name: Check out pull-request source
+        uses: actions/checkout@v6
+
+      - name: Install the supported Miniforge environment
+        uses: conda-incubator/setup-miniconda@v4
+        with:
+          activate-environment: OSTRAM-env
+          environment-file: environment.yaml
+          miniforge-version: latest
+          conda-remove-defaults: "true"
+          conda-solver: libmamba
+
+      - name: Record macOS, ARM64, Python, and CBC evidence
+        id: environment
+        run: |
+          set -o pipefail
+          mkdir -p "$ACCEPTANCE_DIR"
+          {
+            sw_vers
+            printf 'uname_machine=' && uname -m
+            printf 'python=' && python --version
+            printf 'conda=' && conda --version
+          } 2>&1 | tee "$ACCEPTANCE_DIR/environment.txt"
+          test "$(uname -m)" = "arm64"
+          python -c "import platform; assert platform.machine() == 'arm64', platform.machine()"
+          cbc --version </dev/null 2>&1 | tee "$ACCEPTANCE_DIR/cbc-version.txt"
+          cbc -stop </dev/null >> "$ACCEPTANCE_DIR/cbc-version.txt" 2>&1
+
+      - name: Install the checkout package
+        run: |
+          python -m pip install -e . --no-deps
+          python -m pip check
+          python -c "import ostram; print(ostram.__file__)"
+
+      - name: Run the complete solver-free suite
+        id: tests
+        run: |
+          set -o pipefail
+          set +e
+          python -m unittest discover -s tests -p 'test_*.py' 2>&1 | tee "$ACCEPTANCE_DIR/tests.log"
+          return_code=${PIPESTATUS[0]}
+          set -e
+          tail -n 40 "$ACCEPTANCE_DIR/tests.log" > "$ACCEPTANCE_DIR/test-summary.txt"
+          test "$return_code" -eq 0
+
+      - name: Prepare and inspect the UNESCAP profile
+        id: prepare
+        run: |
+          set -o pipefail
+          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" example prepare unescap 2>&1 | tee "$ACCEPTANCE_DIR/profile-preparation.txt"
+          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" --profile unescap inspect-resources 2>&1 | tee "$ACCEPTANCE_DIR/inspect-resources.json"
+
+      - name: Compile B_Optimised_VRE without a solver
+        id: compile
+        run: |
+          set -o pipefail
+          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" --profile unescap run --scenarios B_Optimised_VRE --compile-only --skip-pull 2>&1 | tee "$ACCEPTANCE_DIR/compile-only.txt"
+
+      - name: Validate the compiled stage-domain contract
+        id: domain
+        run: |
+          python - <<'PY'
+          import csv
+          import json
+          import os
+          from pathlib import Path
+          from ostram.paths import resolve_paths
+          from ostram.profile_workspace import prepared_profile
+          from ostram.profiles import load_profile
+          from ostram.validation.profile import validate_compiled_domain
+
+          outer = resolve_paths(workspace=Path(os.environ["OSTRAM_GATE_WORKSPACE"]))
+          manifest = load_profile("unescap", paths=outer)
+          prepared = prepared_profile(manifest, paths=outer)
+          source = (
+              prepared.workspace / "compilation" / "A2_Output_Params"
+              / "B_Optimised_VRE"
+          )
+          semantic = Path(os.environ["ACCEPTANCE_DIR"]) / "semantic-compiled-domain"
+          semantic.mkdir(parents=True, exist_ok=True)
+          blank_padding = {}
+          for set_name in ("TECHNOLOGY", "FUEL"):
+              with (source / f"{set_name}.csv").open(
+                  "r", encoding="utf-8-sig", newline=""
+              ) as stream:
+                  reader = csv.DictReader(stream)
+                  assert reader.fieldnames == ["VALUE"], reader.fieldnames
+                  rows = [row["VALUE"].strip() for row in reader]
+              members = [value for value in rows if value]
+              assert len(members) == len(set(members)), f"duplicate {set_name} members"
+              blank_padding[set_name] = len(rows) - len(members)
+              with (semantic / f"{set_name}.csv").open(
+                  "w", encoding="utf-8", newline=""
+              ) as stream:
+                  writer = csv.writer(stream, lineterminator="\n")
+                  writer.writerow(["VALUE"])
+                  writer.writerows([value] for value in sorted(members))
+          evidence = validate_compiled_domain(
+              manifest,
+              osemosys_inputs=prepared.authorities["osemosys_inputs"],
+              compiled_root=semantic,
+          )
+          expected = {
+              "TECHNOLOGY": ["PWRSHPINDEA"],
+              "FUEL": [
+                  "ELCBGDXX00", "ELCBGDXX03", "ELCBGDXX04",
+                  "ELCINDEA00", "ELCINDEA03", "ELCINDEA04",
+              ],
+          }
+          assert evidence["compiled"]["TECHNOLOGY"]["count"] == 90
+          assert evidence["compiled"]["FUEL"]["count"] == 49
+          assert evidence["generated_delta"] == expected
+          evidence["b1_blank_padding"] = blank_padding
+          target = Path(os.environ["ACCEPTANCE_DIR"]) / "compiled-domain.json"
+          target.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          print(target.read_text(encoding="utf-8"))
+          PY
+
+      - name: Run one reduced CBC solver smoke
+        id: solver
+        run: |
+          set -o pipefail
+          started=$SECONDS
+          set +e
+          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" --profile unescap run --scenarios B_Optimised_VRE --skip-pull 2>&1 | tee "$ACCEPTANCE_DIR/solver-run.txt"
+          return_code=${PIPESTATUS[0]}
+          set -e
+          duration_seconds=$((SECONDS - started))
+          {
+            echo "return_code=$return_code"
+            echo "duration_seconds=$duration_seconds"
+          } | tee "$ACCEPTANCE_DIR/solver-status.txt"
+          test "$return_code" -eq 0
+
+      - name: Generate, capture, and validate the real dashboard
+        id: report
+        run: |
+          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" example report unescap --capture macos-arm64-cbc
+          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" example report unescap
+          python - <<'PY'
+          import json
+          import os
+          from html.parser import HTMLParser
+          from pathlib import Path
+
+          class Document(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.ids = set()
+                  self.hrefs = []
+                  self.payload = []
+                  self.in_payload = False
+              def handle_starttag(self, tag, attrs):
+                  values = dict(attrs)
+                  if values.get("id"):
+                      self.ids.add(values["id"])
+                  if tag == "a" and values.get("href"):
+                      self.hrefs.append(values["href"])
+                  if tag == "script" and values.get("id") == "ostram-profile-data":
+                      self.in_payload = True
+              def handle_endtag(self, tag):
+                  if tag == "script" and self.in_payload:
+                      self.in_payload = False
+              def handle_data(self, data):
+                  if self.in_payload:
+                      self.payload.append(data)
+
+          workspace = Path(os.environ["OSTRAM_GATE_WORKSPACE"]) / "profiles" / "unescap"
+          report = workspace / "reports" / "unescap.html"
+          document = Document()
+          document.feed(report.read_text(encoding="utf-8"))
+          assert {"report", "ostram-profile-data"} <= document.ids
+          assert all(not href.startswith("#") or href[1:] in document.ids for href in document.hrefs)
+          data = json.loads("".join(document.payload))
+          assert [item["region"] for item in data["country_regions"]] == ["BGDXX", "INDEA"]
+          assert [item["technology"] for item in data["interconnectors"]] == ["TRNBGDXXINDEA"]
+          snapshot = data["snapshots"]["macos-arm64-cbc"]["B_Optimised_VRE"]
+          assert snapshot["BGDXX"]["available"]
+          assert snapshot["INDEA"]["available"]
+          assert snapshot["System"]["interconnectors"].get("TotalCapacityAnnual")
+          solutions = sorted(workspace.glob("execution/Executables/B_Optimised_VRE_0/*.sol"))
+          assert len(solutions) == 1, solutions
+          first_line = solutions[0].read_text(encoding="utf-8", errors="replace").splitlines()[0]
+          assert first_line.lower().startswith("optimal"), first_line
+          acceptance = Path(os.environ["ACCEPTANCE_DIR"])
+          (acceptance / "solver-solution-status.txt").write_text(first_line + "\n", encoding="utf-8")
+          (acceptance / "unescap-report.html").write_bytes(report.read_bytes())
+          (acceptance / "report-evidence.json").write_text(
+              json.dumps({
+                  "schema": data["schema"],
+                  "snapshot": "macos-arm64-cbc",
+                  "scenario": "B_Optimised_VRE",
+                  "country_regions": ["BGDXX", "INDEA"],
+                  "interconnector": "TRNBGDXXINDEA",
+                  "solution_status": first_line,
+                  "internal_links_valid": True,
+              }, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Assemble bounded acceptance summary
+        if: always()
+        env:
+          ENVIRONMENT_OUTCOME: ${{ steps.environment.outcome }}
+          TEST_OUTCOME: ${{ steps.tests.outcome }}
+          PREPARE_OUTCOME: ${{ steps.prepare.outcome }}
+          COMPILE_OUTCOME: ${{ steps.compile.outcome }}
+          DOMAIN_OUTCOME: ${{ steps.domain.outcome }}
+          SOLVER_OUTCOME: ${{ steps.solver.outcome }}
+          REPORT_OUTCOME: ${{ steps.report.outcome }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          target = Path(os.environ["ACCEPTANCE_DIR"])
+          target.mkdir(parents=True, exist_ok=True)
+          outcomes = {
+              name.lower().removesuffix("_outcome"): value
+              for name, value in os.environ.items()
+              if name.endswith("_OUTCOME")
+          }
+          logs = sorted((Path(os.environ["OSTRAM_GATE_WORKSPACE"]) / "profiles" / "unescap" / "logs").glob("*/run.log"))
+          if logs:
+              lines = [line for line in logs[-1].read_text(encoding="utf-8").splitlines()
+                       if "RUN |" in line or "STAGE |" in line]
+              (target / "terminal-run-summary.txt").write_text("\n".join(lines[-30:]) + "\n", encoding="utf-8")
+          summary = {
+              "schema": "ostram-unescap-macos-acceptance-v1",
+              "runner": "macos-latest",
+              "expected_architecture": "arm64",
+              "outcomes": outcomes,
+              "artifact_scope": "summaries, domain evidence, solver status, and report HTML only",
+          }
+          (target / "acceptance-summary.json").write_text(
+              json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+          )
+          markdown = [
+              "# UNESCAP macOS ARM64 acceptance",
+              "",
+              "Runner: `macos-latest` (required architecture: `arm64`)",
+              "",
+              "| Gate | Outcome |",
+              "|---|---|",
+              *[f"| {name} | {value} |" for name, value in sorted(outcomes.items())],
+              "",
+              "See `environment.txt`, `cbc-version.txt`, `compiled-domain.json`, "
+              "`solver-status.txt`, `solver-solution-status.txt`, and `unescap-report.html`.",
+          ]
+          (target / "acceptance-summary.md").write_text("\n".join(markdown) + "\n", encoding="utf-8")
+          PY
+
+      - name: Upload bounded macOS acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: unescap-macos-arm64-acceptance
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            acceptance/unescap-macos-arm64/acceptance-summary.json
+            acceptance/unescap-macos-arm64/acceptance-summary.md
+            acceptance/unescap-macos-arm64/environment.txt
+            acceptance/unescap-macos-arm64/cbc-version.txt
+            acceptance/unescap-macos-arm64/test-summary.txt
+            acceptance/unescap-macos-arm64/profile-preparation.txt
+            acceptance/unescap-macos-arm64/inspect-resources.json
+            acceptance/unescap-macos-arm64/compiled-domain.json
+            acceptance/unescap-macos-arm64/solver-status.txt
+            acceptance/unescap-macos-arm64/solver-solution-status.txt
+            acceptance/unescap-macos-arm64/terminal-run-summary.txt
+            acceptance/unescap-macos-arm64/report-evidence.json
+            acceptance/unescap-macos-arm64/unescap-report.html

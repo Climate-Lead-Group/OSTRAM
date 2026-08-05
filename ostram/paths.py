@@ -17,6 +17,7 @@ from typing import Mapping
 
 PROJECT_ROOT_ENV = "OSTRAM_PROJECT_ROOT"
 WORKSPACE_ENV = "OSTRAM_WORKSPACE"
+PROFILE_AUTHORITIES_ENV = "OSTRAM_PROFILE_AUTHORITIES"
 WINDOWS_SAFE_ABSOLUTE_PATH_BUDGET = 240
 _WORKBOOK_PATH_DIGEST_LENGTH = 16
 _SAFE_COMPONENT = re.compile(r"^[^./\\][^/\\]*$")
@@ -166,33 +167,75 @@ class ProjectPaths:
     def package_root(self) -> Path:
         return (self.project_root / "ostram").resolve()
 
+    def authority(self, role: str, default: Path) -> Path:
+        """Return an activated profile authority or the compatibility default.
+
+        The canonical CLI injects the entire validated mapping in one
+        environment value before importing a route.  Direct historical module
+        calls have no mapping and retain their established full-model paths.
+        A present but incomplete mapping fails closed instead of falling back.
+        """
+
+        encoded = os.environ.get(PROFILE_AUTHORITIES_ENV)
+        if encoded is None:
+            return default.resolve()
+        try:
+            mapping = json.loads(encoded)
+        except json.JSONDecodeError as error:
+            raise ProjectResolutionError(
+                f"invalid {PROFILE_AUTHORITIES_ENV}: {error}"
+            ) from error
+        if not isinstance(mapping, dict):
+            raise ProjectResolutionError(
+                f"{PROFILE_AUTHORITIES_ENV} must encode an object"
+            )
+        if role not in mapping:
+            raise ProjectResolutionError(
+                f"active profile has no authority for role {role!r}"
+            )
+        value = mapping[role]
+        if not isinstance(value, str) or not Path(value).is_absolute():
+            raise ProjectResolutionError(
+                f"active profile authority {role!r} is not an absolute path"
+            )
+        return Path(value).resolve()
+
     @property
     def inputs_root(self) -> Path:
         return (self.project_root / "inputs").resolve()
 
     @property
     def osemosys_inputs(self) -> Path:
-        return (self.inputs_root / "osemosys_global").resolve()
+        return self.authority(
+            "osemosys_inputs", self.inputs_root / "osemosys_global"
+        )
 
     @property
     def preparation_inputs(self) -> Path:
-        return (self.inputs_root / "preparation").resolve()
+        return self.authority(
+            "preparation_inputs", self.inputs_root / "preparation"
+        )
 
     @property
     def preparation_templates(self) -> Path:
-        return (self.preparation_inputs / "workbook_templates").resolve()
+        return self.authority(
+            "preparation_templates", self.preparation_inputs / "workbook_templates"
+        )
 
     @property
     def secondary_technology_inputs(self) -> Path:
-        return (self.preparation_inputs / "secondary_technologies").resolve()
+        return self.authority(
+            "secondary_technology_inputs",
+            self.inputs_root / "preparation" / "secondary_technologies",
+        )
 
     @property
     def scenario_inputs(self) -> Path:
-        return (self.inputs_root / "scenarios").resolve()
+        return self.authority("scenario_inputs", self.inputs_root / "scenarios")
 
     @property
     def execution_inputs(self) -> Path:
-        return (self.inputs_root / "execution").resolve()
+        return self.authority("execution_inputs", self.inputs_root / "execution")
 
     @property
     def config_root(self) -> Path:
@@ -200,11 +243,29 @@ class ProjectPaths:
 
     @property
     def scenario_config_root(self) -> Path:
-        return (self.config_root / "scenarios").resolve()
+        return self.authority(
+            "scenario_config_root", self.config_root / "scenarios"
+        )
 
     @property
     def preparation_config(self) -> Path:
-        return (self.config_root / "preparation").resolve()
+        return self.authority(
+            "preparation_config", self.config_root / "preparation"
+        )
+
+    @property
+    def country_config(self) -> Path:
+        return self.authority(
+            "country_config",
+            self.config_root / "preparation" / "Config_country_codes.yaml",
+        )
+
+    @property
+    def region_config(self) -> Path:
+        return self.authority(
+            "region_config",
+            self.config_root / "preparation" / "Config_region_consolidation.yaml",
+        )
 
     @property
     def model_root(self) -> Path:
@@ -212,7 +273,9 @@ class ProjectPaths:
 
     @property
     def maintained_model(self) -> Path:
-        return (self.model_root / "osemosys_fast_preprocessed.txt").resolve()
+        return self.authority(
+            "maintained_model", self.model_root / "osemosys_fast_preprocessed.txt"
+        )
 
     @property
     def package_resources_root(self) -> Path:
@@ -220,31 +283,70 @@ class ProjectPaths:
 
     @property
     def compilation_resources(self) -> Path:
-        return (self.package_resources_root / "compilation").resolve()
+        return self.authority(
+            "compilation_resources", self.package_resources_root / "compilation"
+        )
 
     @property
     def preparation_resources(self) -> Path:
-        return (self.package_resources_root / "preparation").resolve()
+        return self.authority(
+            "preparation_resources", self.package_resources_root / "preparation"
+        )
 
     @property
     def scenario_registry(self) -> Path:
-        return (self.config_root / "scenarios" / "registry.json").resolve()
+        return self.authority(
+            "scenario_registry", self.config_root / "scenarios" / "registry.json"
+        )
 
     @property
     def scenario_workbook(self) -> Path:
-        return (self.scenario_inputs / "OSTRAM_Scenario_Inputs.xlsx").resolve()
+        return self.authority(
+            "scenario_workbook",
+            self.inputs_root / "scenarios" / "OSTRAM_Scenario_Inputs.xlsx",
+        )
 
     @property
     def timeslice_workbook(self) -> Path:
-        return (self.scenario_inputs / "OSTRAM_Timeslice_Inputs.xlsx").resolve()
+        return self.authority(
+            "timeslice_workbook",
+            self.inputs_root / "scenarios" / "OSTRAM_Timeslice_Inputs.xlsx",
+        )
+
+    @property
+    def ao_decisions(self) -> Path:
+        return self.authority(
+            "ao_decisions",
+            self.inputs_root / "scenarios" / "OSTRAM_Scenario_Inputs.xlsx",
+        )
+
+    @property
+    def interconnector_authority(self) -> Path:
+        return self.authority(
+            "interconnector_authority",
+            self.inputs_root / "scenarios" / "OSTRAM_Scenario_Inputs.xlsx",
+        )
+
+    @property
+    def interconnector_taxonomy(self) -> Path:
+        return self.authority(
+            "interconnector_taxonomy",
+            self.config_root / "scenarios" / "technology_types.csv",
+        )
 
     @property
     def execution_config(self) -> Path:
-        return (self.config_root / "execution" / "Config_MOMF_T1_AB.yaml").resolve()
+        return self.authority(
+            "execution_config",
+            self.config_root / "execution" / "Config_MOMF_T1_AB.yaml",
+        )
 
     @property
     def compilation_config(self) -> Path:
-        return (self.config_root / "compilation" / "Config_MOMF_T1_A.yaml").resolve()
+        return self.authority(
+            "compilation_config",
+            self.config_root / "compilation" / "Config_MOMF_T1_A.yaml",
+        )
 
     @property
     def preparation_workspace(self) -> Path:

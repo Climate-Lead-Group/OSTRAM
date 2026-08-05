@@ -1,0 +1,26 @@
+## relax_interconnectors.yaml — B_Optimised_VRE
+##
+## DEFAULT: the real project pipeline. TRNBGDXXINDEA grows from its exact 2.496 GW
+## residual up to the ~8.5 GW evidence-based pipeline (Katihar-Parbatipur,
+## Parbatipur-Boronagar, 2nd Bheramara, Barapukuria, Jamalpur COD years).
+##
+## A non-zero override is read as "open this link": the relax script's second
+## pass lifts TotalAnnualMaxCapacity to 9999 (removing the base residual ceiling)
+## and the staged override values then cap ANNUAL investment (MaxCapInv).
+##
+## To FREEZE the link at today's exact 2.496 GW (Exercise 1 — "Switch it off"), replace
+## the override with an empty map so the base freeze holds:
+##     overrides: {}
+## (The freeze is enforced by the scenario stage's cap-to-residual rule, which pins
+## TotalAnnualMaxCapacity = ResidualCapacity AND sets that row's Projection.Mode
+## to "User defined" so the compiler actually emits the exact 2.496 GW cap.)
+
+mode: multiplicative
+headroom_factor: 1.5          # default slack for links without an override
+
+overrides:
+  # BGD <-> INDEA (exact workbook ResCap 2.496 GW, pipeline 8.50 GW):
+  # Katihar-Parbatipur 2.0 GW
+  # (2028), Parbatipur-Boronagar 2.0 GW (2028), 2nd Bheramara 0.5 GW (2029),
+  # Barapukuria 0.75 GW (2030), Jamalpur 0.75 GW (2033).
+  TRNBGDXXINDEA: {2023: 2.496, 2028: 6.50, 2029: 7.00, 2030: 7.75, 2033: 8.50}

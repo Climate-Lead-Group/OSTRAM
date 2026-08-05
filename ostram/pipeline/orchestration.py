@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Sequence
 
 from ostram.paths import ProjectPaths, resolve_paths
+from ostram.profiles import PROFILE_MANIFEST_ENV, active_profile_id
 from ostram.terminal import RunReporter, activate_reporter, active_reporter
 
 from ostram.pipeline.scenarios.registry import (
@@ -68,6 +69,17 @@ def run(cmd: Sequence[str | Path], *, cwd: Path | None = None) -> None:
     env = os.environ.copy()
     env["PYTHONHASHSEED"] = "0"
     env["PYTHONDONTWRITEBYTECODE"] = "1"
+    # Pipeline stages run from isolated stage workspaces, so ``sys.path[0]``
+    # is not the project root.  Put the activated bundle first to prevent an
+    # unrelated editable/install copy of ``ostram`` from servicing children.
+    project_root = str(resolve_paths().project_root)
+    inherited = [
+        item
+        for item in env.get("PYTHONPATH", "").split(os.pathsep)
+        if item and os.path.normcase(os.path.abspath(item))
+        != os.path.normcase(os.path.abspath(project_root))
+    ]
+    env["PYTHONPATH"] = os.pathsep.join([project_root, *inherited])
     tokens = shlex.split(cmd) if isinstance(cmd, str) else list(cmd)
     reporter = active_reporter()
     if reporter is not None:
@@ -402,18 +414,29 @@ def _create_run_reporter(
     scenarios: Sequence[str],
     *,
     verbose: bool,
+    compile_only: bool = False,
 ) -> RunReporter:
+    manifest_value = os.environ.get(PROFILE_MANIFEST_ENV)
     return RunReporter(
         project_root=paths.project_root,
         workspace=paths.workspace,
         scenarios=scenarios,
         verbose=verbose,
+        profile_id=active_profile_id(),
+        manifest=Path(manifest_value) if manifest_value else None,
+        compile_only=compile_only,
     )
 
 
 def main() -> None:
     args = parse_args()
     paths = resolve_paths()
+    pipeline_dir = paths.package_root / "pipeline"
+    a1_script = pipeline_dir / "preparation" / "base_inputs.py"
+    a2_script = pipeline_dir / "preparation" / "transmission.py"
+    a3_script = pipeline_dir / "scenarios" / "materializer.py"
+    b1_script = pipeline_dir / "compilation" / "runner.py"
+    b2_script = pipeline_dir / "execution" / "runner.py"
     env_file = paths.resolve_project_file(args.env_file)
     dvc_file = paths.resolve_project_file(args.dvc_file)
     env_name = args.env_name or guess_env_name_from_yaml(env_file) or ENV_NAME_DEFAULT
@@ -426,12 +449,20 @@ def main() -> None:
     if not scenarios:
         raise RuntimeError("--scenarios selected no canonical scenarios")
     required_roots = registry.required_roots(scenarios)
-    reporter = _create_run_reporter(paths, scenarios, verbose=args.verbose)
+    reporter = _create_run_reporter(
+        paths,
+        scenarios,
+        verbose=args.verbose,
+        compile_only=args.compile_only,
+    )
     start_time = dt.datetime.now()
 
     with activate_reporter(reporter), reporter.capture_output():
         try:
             print(f"Using environment: {env_name}")
+            reporter.note(f"Profile: {active_profile_id()}")
+            reporter.note(f"Manifest: {os.environ.get(PROFILE_MANIFEST_ENV, 'compatibility default')}")
+            reporter.note(f"Workspace: {paths.workspace}")
             print(f"DVC config: {dvc_file}")
             reporter.note(f"Selected scenarios: {', '.join(scenarios)}")
 
@@ -469,11 +500,11 @@ def main() -> None:
                 )
                 reporter.stage_start("A1")
                 ensure_root_output_directories(a1_outputs_dir, registry)
-                run_pipeline_script(env_name, A1_SCRIPT_DEFAULT)
+                run_pipeline_script(env_name, a1_script)
                 reporter.stage_complete("A1")
 
                 reporter.stage_start("A2")
-                run_pipeline_script(env_name, A2_SCRIPT_DEFAULT)
+                run_pipeline_script(env_name, a2_script)
                 reporter.stage_complete("A2")
 
             if args.skip_a3:
@@ -484,7 +515,7 @@ def main() -> None:
                 reporter.stage_start("A3", scenario=current)
                 run_a3_for_scenarios(
                     env_name,
-                    A3_SCRIPT_DEFAULT,
+                    a3_script,
                     scenarios,
                     args.a_result_seed,
                 )
@@ -497,7 +528,7 @@ def main() -> None:
                 print("Skipping model-input compilation (B1) by request.")
             else:
                 reporter.stage_start("B1")
-                run_pipeline_script(env_name, B1_SCRIPT_DEFAULT, scenarios_arg)
+                run_pipeline_script(env_name, b1_script, scenarios_arg)
                 reporter.stage_complete("B1")
 
             if args.skip_b2:
@@ -509,7 +540,7 @@ def main() -> None:
                     *scenarios_arg,
                     *(["--compile-only"] if args.compile_only else []),
                 ]
-                run_pipeline_script(env_name, B2_SCRIPT_DEFAULT, b2_args)
+                run_pipeline_script(env_name, b2_script, b2_args)
                 reporter.stage_complete(
                     "B2",
                     detail=(

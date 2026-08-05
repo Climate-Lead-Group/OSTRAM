@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import os
 from pathlib import Path
+import signal
 import subprocess
 import sys
 import tempfile
@@ -259,8 +260,15 @@ class ChildProcessTeeTests(unittest.TestCase):
             root = Path(temp).resolve()
             reporter, _stdout, _stderr = self._reporter(root, verbose=False)
             process = FakeProcess()
+            group_signals: list[tuple[int, object]] = []
+
+            def fake_killpg(pgid, sent_signal):
+                group_signals.append((pgid, sent_signal))
+                process.send_signal(sent_signal)
+
             with (
                 mock.patch("ostram.terminal.subprocess.Popen", return_value=process),
+                mock.patch("ostram.terminal.os.killpg", fake_killpg, create=True),
                 self.assertRaises(KeyboardInterrupt),
             ):
                 reporter.run_child(
@@ -275,7 +283,12 @@ class ChildProcessTeeTests(unittest.TestCase):
             )
             log = reporter.log_path.read_text(encoding="utf-8")
 
-        self.assertIsNotNone(process.signal_received)
+        if os.name == "nt":
+            self.assertEqual(process.signal_received, signal.CTRL_BREAK_EVENT)
+            self.assertEqual(group_signals, [])
+        else:
+            self.assertEqual(process.signal_received, signal.SIGINT)
+            self.assertEqual(group_signals, [(process.pid, signal.SIGINT)])
         self.assertIn("terminating child pid=4242", log)
         self.assertIn("final_process_exit_code=130", log)
 

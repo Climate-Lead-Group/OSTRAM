@@ -36,6 +36,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from ostram.paths import resolve_paths
+from ostram.profiles import DEFAULT_PROFILE, active_profile_id, profile_policy
 
 from openpyxl import load_workbook
 
@@ -294,13 +295,26 @@ def load_pin_rules(
     if not path.is_file():
         raise FileNotFoundError(path)
     is_default = path.resolve() == RULES_CSV.resolve()
+    profile_id = active_profile_id()
     if enforce_production_contract is None:
-        enforce_production_contract = is_default
+        enforce_production_contract = is_default and profile_id == DEFAULT_PROFILE
     if is_default:
-        actual_hash = _sha256(path)
-        if actual_hash != RULES_SHA256:
+        expected_hash = profile_policy("pwr_min_pin_rules_sha256")
+        if expected_hash is None and profile_id == DEFAULT_PROFILE:
+            expected_hash = RULES_SHA256
+        if not (
+            isinstance(expected_hash, str)
+            and len(expected_hash) == 64
+            and all(character in "0123456789abcdef" for character in expected_hash)
+        ):
             raise ValueError(
-                f"production rule hash mismatch: {actual_hash} != {RULES_SHA256}"
+                f"profile {profile_id!r} does not declare a valid "
+                "pwr_min_pin_rules_sha256 policy"
+            )
+        actual_hash = _sha256(path)
+        if actual_hash != expected_hash:
+            raise ValueError(
+                f"profile rule hash mismatch: {actual_hash} != {expected_hash}"
             )
     with path.open("r", encoding="utf-8-sig", newline="") as stream:
         reader = csv.DictReader(stream)
@@ -438,6 +452,7 @@ def apply_pin_rules(
         raise ValueError(f"no pin rules apply to scenario {scenario!r}")
     if (
         rules_path.resolve() == RULES_CSV.resolve()
+        and active_profile_id() == DEFAULT_PROFILE
         and len(rules) != EXPECTED_SCENARIO_COUNTS[scenario]
     ):
         raise ValueError(

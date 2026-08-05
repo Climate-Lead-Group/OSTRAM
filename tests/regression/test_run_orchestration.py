@@ -891,7 +891,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
 
 
 class CommandBoundaryCharacterizationTests(unittest.TestCase):
-    def test_run_sets_only_pythonhashseed_override_and_inherits_cwd(self) -> None:
+    def test_run_pins_project_pythonpath_and_inherits_cwd(self) -> None:
         launcher = _load_launcher("run_env")
         cwd = Path.cwd()
         with (
@@ -912,6 +912,7 @@ class CommandBoundaryCharacterizationTests(unittest.TestCase):
                 "EXISTING": "kept",
                 "PYTHONHASHSEED": "0",
                 "PYTHONDONTWRITEBYTECODE": "1",
+                "PYTHONPATH": str(REPO_ROOT),
             },
         )
         self.assertEqual(Path.cwd(), cwd)

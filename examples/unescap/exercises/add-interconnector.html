@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="EL">
+<title>Exercise B: Add a New Transmission Interconnector &mdash; OSTRAM</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --teal-dark:#00414D; --teal:#0A595F; --teal-mid:#23978E;
+    --emerald:#10B981; --amber:#F59E0B; --slate-900:#334155;
+    --slate-600:#475569; --slate-400:#94A3B8; --sage-light:#C5D8D8;
+    --mint-light:#D0EDEB; --cloud:#E0F0EF; --ice:#F0F5F5;
+    --white:#FFFFFF; --red:#EF4444;
+  }
+  body { font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; background:var(--ice); color:var(--slate-900); line-height:1.7; font-size:16px; }
+
+  /* Hero */
+  .hero { background:linear-gradient(135deg,var(--teal-dark) 0%,var(--teal) 50%,var(--teal-mid) 100%); color:var(--white); padding:60px 40px 50px; text-align:center; position:relative; overflow:hidden; }
+  .hero::before { content:''; position:absolute; top:-60px; right:-60px; width:250px; height:250px; border-radius:50%; background:rgba(16,185,129,.12); }
+  .hero::after  { content:''; position:absolute; bottom:-40px; left:-40px; width:180px; height:180px; border-radius:50%; background:rgba(245,158,11,.1); }
+  .hero h1 { font-size:2.6rem; font-weight:800; letter-spacing:-.5px; margin-bottom:10px; position:relative; }
+  .hero .subtitle { font-size:1.15rem; opacity:.88; max-width:640px; margin:0 auto; position:relative; }
+  .hero .badge { display:inline-block; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25); border-radius:20px; padding:4px 16px; font-size:.82rem; font-weight:500; margin-bottom:18px; position:relative; }
+
+  /* Layout */
+  .container { max-width:860px; margin:0 auto; padding:0 24px; }
+
+  /* Sections */
+  section { background:var(--white); border-radius:12px; padding:36px; margin-bottom:28px; border:1px solid var(--sage-light); box-shadow:0 2px 10px rgba(0,65,77,.04); }
+  section:first-of-type { margin-top:30px; }
+  section h2 { font-size:1.55rem; font-weight:800; color:var(--teal-dark); margin-bottom:6px; display:flex; align-items:center; gap:12px; }
+  section h2 .num { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; background:var(--teal); color:var(--white); font-size:.95rem; font-weight:700; flex-shrink:0; }
+  section h3 { font-size:1.15rem; font-weight:700; color:var(--teal); margin:26px 0 10px; }
+  section p { margin-bottom:14px; color:var(--slate-600); }
+  section ul, section ol.plain { margin:0 0 14px 22px; color:var(--slate-600); }
+  section ul li, section ol.plain li { margin-bottom:6px; }
+
+  /* Analogy */
+  .analogy { background:linear-gradient(135deg,var(--cloud),var(--mint-light)); border-left:4px solid var(--teal-mid); border-radius:0 10px 10px 0; padding:18px 22px; margin:18px 0; }
+  .analogy .label { font-weight:700; color:var(--teal); font-size:.85rem; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+  .analogy p { margin:0; color:var(--slate-900); }
+
+  /* Goal banner */
+  .goal { background:linear-gradient(135deg,rgba(35,151,142,.12),rgba(16,185,129,.10)); border:1px solid var(--teal-mid); border-radius:10px; padding:16px 20px; margin:0 0 18px; }
+  .goal .label { font-weight:700; color:var(--teal-dark); font-size:.8rem; text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px; }
+  .goal p { margin:0; color:var(--slate-900); }
+
+  /* Code blocks with copy button */
+  .code-wrap { position:relative; margin:14px 0 18px; }
+  pre { background:var(--slate-900); color:#e2e8f0; border-radius:10px; padding:18px 22px; overflow-x:auto; font-family:'JetBrains Mono','Consolas',monospace; font-size:.88rem; line-height:1.7; margin:0; }
+  pre .comment { color:#64748b; }
+  pre .cmd { color:#34d399; }
+  pre .flag { color:#fbbf24; }
+  pre .string { color:#7dd3fc; }
+  pre .key { color:#f0abfc; }
+  pre .output { color:#94a3b8; font-style:italic; }
+  code { font-family:'JetBrains Mono','Consolas',monospace; background:var(--cloud); color:var(--teal-dark); padding:2px 7px; border-radius:4px; font-size:.88em; }
+  pre code { background:none; color:inherit; padding:0; }
+
+  .copy-btn {
+    position:absolute; top:10px; right:10px;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
+    color:#e2e8f0; border-radius:6px; padding:4px 10px;
+    font-size:.75rem; font-family:'Inter',sans-serif; font-weight:500;
+    cursor:pointer; transition:background .2s,color .2s;
+    display:flex; align-items:center; gap:5px;
+  }
+  .copy-btn:hover { background:rgba(255,255,255,.2); }
+  .copy-btn.copied { background:var(--emerald); color:#fff; border-color:var(--emerald); }
+  .copy-btn svg { width:13px; height:13px; fill:currentColor; }
+
+  /* Steps */
+  .step-list { list-style:none; counter-reset:step; padding:0; }
+  .step-list > li { counter-increment:step; padding:16px 18px 16px 56px; position:relative; margin-bottom:12px; background:var(--ice); border-radius:10px; border:1px solid var(--sage-light); }
+  .step-list > li::before { content:counter(step); position:absolute; left:16px; top:16px; width:28px; height:28px; border-radius:50%; background:var(--teal); color:var(--white); font-size:.82rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
+  .step-list > li strong { color:var(--slate-900); }
+
+  /* Callouts */
+  .callout { border-radius:10px; padding:16px 20px; margin:16px 0; font-size:.95rem; }
+  .callout.tip { background:#ecfdf5; border-left:4px solid var(--emerald); }
+  .callout.tip .tag { color:var(--emerald); }
+  .callout.warn { background:#fefce8; border-left:4px solid var(--amber); }
+  .callout.warn .tag { color:var(--amber); }
+  .callout.important { background:#fef2f2; border-left:4px solid var(--red); }
+  .callout.important .tag { color:var(--red); }
+  .callout .tag { font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+  .callout p { margin:0; color:var(--slate-900); }
+
+  /* Table */
+  table { width:100%; border-collapse:collapse; margin:16px 0; font-size:.92rem; }
+  thead th { background:var(--teal-dark); color:var(--white); padding:12px 16px; text-align:left; font-weight:600; }
+  thead th:first-child { border-radius:8px 0 0 0; }
+  thead th:last-child  { border-radius:0 8px 0 0; }
+  tbody td { padding:11px 16px; border-bottom:1px solid var(--sage-light); color:var(--slate-600); }
+  tbody td code { white-space:nowrap; }
+  tbody tr:nth-child(even) { background:var(--ice); }
+  tbody tr:hover { background:var(--cloud); }
+
+  /* Copy-paste friendly tables */
+  .copy-table { width:100%; border-collapse:collapse; font-family:'JetBrains Mono','Consolas',monospace; font-size:.82rem; }
+  .copy-table tr:first-child td { background:var(--teal-dark); color:var(--white); font-weight:600; }
+  .copy-table td { border:1px solid var(--sage-light); padding:6px 10px; white-space:nowrap; color:var(--slate-600); }
+  .copy-table tr:nth-child(even) td { background:var(--ice); }
+  .copy-table tr:hover td { background:var(--cloud); }
+  .copy-btn-table { display:inline-flex; align-items:center; gap:6px; margin-top:6px; padding:6px 14px; background:var(--teal); color:var(--white); border:none; border-radius:6px; cursor:pointer; font-family:'Inter',sans-serif; font-size:.82rem; font-weight:600; transition:background .2s; }
+  .copy-btn-table:hover { background:var(--teal-dark); }
+  .copy-btn-table.copied { background:var(--emerald); }
+
+  /* Naming diagram */
+  .naming-diagram {
+    display:flex; align-items:center; justify-content:center;
+    gap:0; margin:1.2rem 0;
+    font-family:'JetBrains Mono','Consolas',monospace;
+    font-size:1.3rem; font-weight:700;
+  }
+  .naming-diagram .seg {
+    padding:0.5rem 0.6rem; border-radius:4px; text-align:center;
+  }
+  .naming-diagram .seg-label {
+    display:block; font-size:.65rem; font-weight:400;
+    font-family:'Inter',sans-serif; margin-top:0.2rem; letter-spacing:.02em;
+  }
+  .seg-trn { background:var(--teal-dark); color:var(--white); }
+  .seg-from { background:var(--teal); color:var(--white); }
+  .seg-to { background:var(--amber); color:var(--white); }
+
+  .scrollable { overflow-x:auto; }
+
+  /* Pill on h2 */
+  .pill { margin-left:auto; font-size:.7rem; font-weight:700; letter-spacing:.6px; text-transform:uppercase; padding:5px 12px; border-radius:20px; background:var(--mint-light); color:var(--teal-dark); }
+
+  /* OS command switcher */
+  .os-switch { display:inline-flex; align-items:center; gap:3px; flex-wrap:wrap;
+    background:var(--white); border:1px solid var(--sage-light); border-radius:26px; padding:4px; }
+  .os-switch-label { font-size:.74rem; font-weight:700; color:var(--slate-400);
+    padding:0 6px 0 10px; text-transform:uppercase; letter-spacing:.6px; }
+  .os-switch button { border:none; background:transparent; cursor:pointer;
+    font-family:'Inter',sans-serif; font-size:.84rem; font-weight:600; color:var(--slate-600);
+    padding:7px 16px; border-radius:20px; transition:background .18s,color .18s; line-height:1; }
+  .os-switch button:hover { color:var(--teal-dark); background:var(--ice); }
+  .os-switch button.active { background:var(--teal); color:var(--white); }
+
+  .os-switch-bar { display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    background:linear-gradient(135deg,var(--cloud),var(--mint-light));
+    border:1px solid var(--teal-mid); border-radius:12px; padding:14px 16px; margin:0 0 22px; }
+  .os-switch-bar .hint { font-size:.86rem; color:var(--slate-900); flex:1; min-width:190px; }
+  .os-switch-bar .hint strong { color:var(--teal-dark); }
+
+  /* OS-variant command lines */
+  pre[data-os] { display:none; }
+  body.os-win   pre[data-os="win"]   { display:block; }
+  body.os-mac   pre[data-os="mac"]   { display:block; }
+  body.os-linux pre[data-os="linux"] { display:block; }
+
+  /* Footer */
+  footer { background:var(--teal-dark); color:rgba(255,255,255,.75); padding:40px 24px 30px; margin-top:10px; }
+  .footer-inner { max-width:860px; margin:0 auto; }
+  .footer-links { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; font-size:.88rem; }
+  .footer-links div strong { display:block; color:var(--white); font-size:.78rem; text-transform:uppercase; letter-spacing:.8px; margin-bottom:8px; }
+  .footer-links a { color:rgba(255,255,255,.65); text-decoration:none; display:block; margin-bottom:4px; transition:color .2s; }
+  .footer-links a:hover { color:var(--emerald); }
+  .footer-bottom { font-size:.8rem; color:rgba(255,255,255,.45); text-align:center; padding-top:20px; border-top:1px solid rgba(255,255,255,.1); }
+
+  @media (max-width:700px) {
+    .hero h1 { font-size:2rem; }
+    section { padding:24px 20px; }
+    .footer-links { grid-template-columns:1fr; }
+    section h2 { flex-wrap:wrap; }
+    .pill { margin-left:0; }
+  }
+
+  html { scroll-behavior:smooth; }
+</style>
+</head>
+<body class="os-win">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="badge">OSTRAM &middot; UNESCAP Training &middot; Session 3</div>
+  <h1>Exercise B: Add a New Transmission Interconnector</h1>
+  <p class="subtitle">Connect Bangladesh and Myanmar by adding a cross-border TRN technology to the profile's scenario workbook &mdash; then run the model and verify.</p>
+</div>
+
+<div class="container">
+
+<!-- SECTION 1 -->
+<section id="what">
+  <h2><span class="num">1</span> What You Will Do <span class="pill">Exercise B</span></h2>
+
+  <div class="goal">
+    <div class="label">Goal</div>
+    <p>Add a new BGD&harr;MMR interconnector (<code>TRNBGDXXMMRXX</code>) by editing the profile's scenario workbook, registering it in two profile config files, then run the model and verify the technology was created.</p>
+  </div>
+
+  <p>Myanmar (MMR) is already in the model as a country, but there is no electricity interconnector linking it to any neighbour. Without one, the solver treats Myanmar as an isolated system: it cannot import or export power, even if trade would be cheaper. In this exercise you add the corridor <strong>Bangladesh &harr; Myanmar</strong> so the solver can optimise cross-border flows between them.</p>
+
+  <div class="analogy">
+    <div class="label">Analogy</div>
+    <p>Think of it like wiring a new cable between two buildings. The electrical infrastructure exists at both ends &mdash; switchboards, meters, circuits &mdash; you are just connecting them so power can flow between the two.</p>
+  </div>
+</section>
+
+<!-- SECTION 2 -->
+<section id="naming">
+  <h2><span class="num">2</span> The Naming Convention</h2>
+
+  <p>Every cross-border interconnector follows a strict <strong>13-character</strong> format:</p>
+
+  <div class="naming-diagram">
+    <div class="seg seg-trn">TRN<span class="seg-label">prefix</span></div>
+    <div class="seg seg-from">BGDXX<span class="seg-label">from (5 chars)</span></div>
+    <div class="seg seg-to">MMRXX<span class="seg-label">to (5 chars)</span></div>
+  </div>
+
+  <p>Each node is encoded as a <strong>3-letter ISO country code + 2-character sub-region</strong>. Countries without sub-regions use <code>XX</code>. For example, Bangladesh is <code>BGDXX</code> (BGD + XX), Myanmar is <code>MMRXX</code> (MMR + XX), and India East is <code>INDEA</code> (IND + EA).</p>
+
+  <p>Your new technology code: <code style="font-size:1.05em; font-weight:700; color:var(--teal);">TRNBGDXXMMRXX</code></p>
+
+  <div class="callout tip">
+    <div class="tag">Tip</div>
+    <p>The "from" node is always alphabetically first. BGD comes before MMR, so the code is TRN<strong>BGD</strong>XX<strong>MMR</strong>XX, not TRNMMRXXBGDXX. This is a convention, not a direction: the technology can carry power both ways.</p>
+  </div>
+</section>
+
+<!-- SECTION 3 -->
+<section id="edit-template">
+  <h2><span class="num">3</span> Edit the Scenario Workbook</h2>
+
+  <p>Open the <strong>prepared workspace copy</strong> of the scenario workbook. Run <code>python -m ostram --profile unescap inspect-resources</code> and use the absolute <code>scenario_workbook</code> path it prints. You will edit three sheets. Keep the existing <code>TRNBGDXXINDEA</code> rows visible as your reference &mdash; all new rows follow the same column structure. The committed seed at <code>examples/unescap/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx</code> remains unchanged during the exercise.</p>
+
+  <ol class="step-list">
+    <!-- Step 1 -->
+    <li>
+      <strong>Interconnectors sheet</strong> &mdash; project inventory
+
+      <p style="margin-top:10px;">This sheet documents the physical projects behind the corridor. The pipeline does not read it directly, but it helps you and your team trace where the numbers came from. Add one row below the last existing entry.</p>
+
+      <div class="scrollable">
+      <table class="copy-table" id="table-interconnectors">
+        <tr><td>scenario</td><td>NO</td><td>Project</td><td>From_Node</td><td>To_Node</td><td>Circuits</td><td>COD_Date</td><td>Affiliated_Power</td><td>Capacity_MW</td><td>Voltage_kV</td><td>DC_AC</td><td>Directionality</td><td>Status</td><td>Export_Resource_Type</td><td>Source</td></tr>
+        <tr><td>BAU</td><td>40</td><td>BGD-MMR HVDC Link</td><td>BD</td><td>MM</td><td>1</td><td>2030</td><td>Grid-to-Grid</td><td>500</td><td>400 kV</td><td>HVDC</td><td>Bi-directional</td><td>Proposed</td><td>Mixed</td><td>Exercise</td></tr>
+      </table>
+      </div>
+      <button class="copy-btn-table" onclick="copyTable('table-interconnectors')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        Copy data rows
+      </button>
+
+      <div class="callout tip">
+        <div class="tag">Tip</div>
+        <p>Use any <code>NO</code> value that does not conflict with existing rows (the existing ones go up to 32). This sheet is informational only.</p>
+      </div>
+    </li>
+
+    <!-- Step 2 -->
+    <li>
+      <strong>Interconnector_Params sheet</strong> &mdash; main parameters (7 rows)
+
+      <p style="margin-top:10px;">Go to the <strong>Interconnector_Params</strong> sheet. Add <strong>7 rows</strong>, one per parameter. The button copies only data values (not headers) so you can paste directly below the last existing row.</p>
+
+      <div class="scrollable">
+      <table class="copy-table" id="table-params">
+        <tr><td>scenario</td><td>Tech.ID</td><td>Tech</td><td>Tech.Name</td><td>Parameter.ID</td><td>Parameter</td><td>Unit</td><td>Projection.Mode</td><td>Projection.Parameter</td><td>2023</td><td>2024</td><td>2025</td><td>2026</td><td>2027</td><td>2028</td><td>2029</td><td>2030</td><td>2031</td><td>2032</td><td>2033</td><td>2034</td><td>2035</td><td>2036</td><td>2037</td><td>2038</td><td>2039</td><td>2040</td><td>2041</td><td>2042</td><td>2043</td><td>2044</td><td>2045</td><td>2046</td><td>2047</td><td>2048</td><td>2049</td><td>2050</td></tr>
+        <tr><td>BAU</td><td>2</td><td>TRNBGDXXMMRXX</td><td>Cross-border interconnector: Bangladesh &lt;-&gt; Myanmar</td><td>1</td><td>CapitalCost</td><td>USD/kW</td><td>User defined</td><td>0</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td><td>450</td></tr>
+        <tr><td>BAU</td><td>2</td><td>TRNBGDXXMMRXX</td><td>Cross-border interconnector: Bangladesh &lt;-&gt; Myanmar</td><td>2</td><td>FixedCost</td><td>USD/kW/yr</td><td>User defined</td><td>0</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td><td>6.75</td></tr>
+        <tr><td>BAU</td><td>2</td><td>TRNBGDXXMMRXX</td><td>Cross-border interconnector: Bangladesh &lt;-&gt; Myanmar</td><td>3</td><td>ResidualCapacity</td><td>GW</td><td>User defined</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td></tr>
+        <tr><td>BAU</td><td>2</td><td>TRNBGDXXMMRXX</td><td>Cross-border interconnector: Bangladesh &lt;-&gt; Myanmar</td><td>4</td><td>TotalAnnualMaxCapacity</td><td>GW</td><td>User defined</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>BAU</td><td>2</td><td>TRNBGDXXMMRXX</td><td>Cross-border interconnector: Bangladesh &lt;-&gt; Myanmar</td><td>5</td><td>CapacityFactor</td><td>fraction</td><td>User defined</td><td>0</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td><td>0.85</td></tr>
+        <tr><td>BAU</td><td>2</td><td>TRNBGDXXMMRXX</td><td>Cross-border interconnector: Bangladesh &lt;-&gt; Myanmar</td><td>6</td><td>TransmissionLossFactor</td><td>fraction</td><td>User defined</td><td>0</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td><td>0.04</td></tr>
+        <tr><td>BAU</td><td>2</td><td>TRNBGDXXMMRXX</td><td>Cross-border interconnector: Bangladesh &lt;-&gt; Myanmar</td><td>7</td><td>OperationalLife</td><td>years</td><td>User defined</td><td>0</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td><td>40</td></tr>
+      </table>
+      </div>
+      <button class="copy-btn-table" onclick="copyTable('table-params')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        Copy data rows
+      </button>
+
+      <h3>Key values</h3>
+      <ul>
+        <li><strong>ResidualCapacity</strong>: 0 for 2023&ndash;2029 (nothing built yet), then 0.5 GW from 2030 onward (the 500 MW project commissions).</li>
+        <li><strong>TotalAnnualMaxCapacity</strong>: left blank &mdash; the solver faces no hard ceiling on total installed capacity.</li>
+        <li>All other parameters are constant across all years.</li>
+      </ul>
+    </li>
+
+    <!-- Step 3 -->
+    <li>
+      <strong>Fixed_Horizon_Parameters sheet</strong> &mdash; time-invariant parameters (4 rows)
+
+      <p style="margin-top:10px;">Go to the <strong>Fixed_Horizon_Parameters</strong> sheet. Add <strong>4 rows</strong>. These parameters do not vary by year.</p>
+
+      <div class="scrollable">
+      <table class="copy-table" id="table-fixed">
+        <tr><td>scenario</td><td>Tech.Type</td><td>Tech.ID</td><td>Tech</td><td>Tech.Name</td><td>Parameter.ID</td><td>Parameter</td><td>Unit</td><td>Value</td></tr>
+        <tr><td>BAU</td><td>Secondary</td><td>2</td><td>TRNBGDXXMMRXX</td><td>Cross-border interconnector: Bangladesh &lt;-&gt; Myanmar</td><td>1</td><td>CapacityToActivityUnit</td><td>PJ/GW</td><td>31.536</td></tr>
+        <tr><td>BAU</td><td>Secondary</td><td>2</td><td>TRNBGDXXMMRXX</td><td>Cross-border interconnector: Bangladesh &lt;-&gt; Myanmar</td><td>2</td><td>OperationalLife</td><td>years</td><td>50</td></tr>
+        <tr><td>BAU</td><td>Secondary</td><td>2</td><td>TRNBGDXXMMRXX</td><td>Cross-border interconnector: Bangladesh &lt;-&gt; Myanmar</td><td>3</td><td>InputActivityRatio</td><td>PJ/PJ</td><td>1</td></tr>
+        <tr><td>BAU</td><td>Secondary</td><td>2</td><td>TRNBGDXXMMRXX</td><td>Cross-border interconnector: Bangladesh &lt;-&gt; Myanmar</td><td>4</td><td>OutputActivityRatio</td><td>PJ/PJ</td><td>0.96</td></tr>
+      </table>
+      </div>
+      <button class="copy-btn-table" onclick="copyTable('table-fixed')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        Copy data rows
+      </button>
+
+      <h3>What do these mean?</h3>
+      <ul>
+        <li><strong>CapacityToActivityUnit = 31.536</strong> &mdash; converts GW to PJ/year (1 GW running 24/7 for a year = 31.536 PJ). Same for all technologies.</li>
+        <li><strong>InputActivityRatio = 1</strong> &mdash; for every PJ of electricity that enters the line, the model consumes 1 PJ from the source node's dispatch bus.</li>
+        <li><strong>OutputActivityRatio = 0.96</strong> &mdash; 4% is lost in transmission, so the destination receives 0.96 PJ per PJ consumed. This matches the TransmissionLossFactor of 0.04 from the Interconnector_Params sheet.</li>
+      </ul>
+
+      <div class="callout tip">
+        <div class="tag">Consistency check</div>
+        <p>OutputActivityRatio should equal <code>1 - TransmissionLossFactor</code>. If you set TransmissionLossFactor = 0.04, then OutputActivityRatio = 0.96. The existing BGD-INDEA uses 0.035 loss / 0.95 output (note: 0.95 instead of 0.965 because OSeMOSYS Global used a different convention; for new corridors, keep them consistent).</p>
+      </div>
+    </li>
+  </ol>
+</section>
+
+<!-- SECTION 4 -->
+<section id="tech-types">
+  <h2><span class="num">4</span> Register in technology_types.csv</h2>
+
+  <p>Open <code>examples/unescap/config/scenarios/technology_types.csv</code> in a text editor or spreadsheet. Find the <code>INTERCONNECTORS</code> section and add one row:</p>
+
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+    <pre><code>INTERCONNECTORS,TRNBGDXXMMRXX</code></pre>
+  </div>
+
+  <p>This tells the scenario-stage rules (<code>relax_interconnectors</code>, <code>set_interconnector_direction</code>, and the cap-to-residual rule) that <code>TRNBGDXXMMRXX</code> is a cross-border interconnector. Without this registration, those rules ignore it.</p>
+
+  <div class="callout warn">
+    <div class="tag">Important</div>
+    <p>If you also want to add the MMR internal transmission technologies (<code>PWRTRNMMRXX</code>, <code>RNWTRNMMRXX</code>, etc.), the transmission stage creates them automatically when MMR is in the <code>countries:</code> list in <code>examples/unescap/config/preparation/Config_country_codes.yaml</code>. You do not need to add them manually &mdash; Exercise A already put MMR there.</p>
+  </div>
+</section>
+
+<!-- SECTION 5: AO EXTENSIONS -->
+<section id="ao-extensions">
+  <h2><span class="num">5</span> Register in AO Extensions</h2>
+
+  <p>When you add a <strong>brand-new</strong> technology to the scenario workbook, the scenario stage needs to know it should create rows for it in the A-O workbooks. This is controlled by the extension decision list, <code>examples/unescap/config/scenarios/ao_extension_decisions.csv</code>.</p>
+
+  <div class="analogy">
+    <div class="label">Why this file?</div>
+    <p>Remember from Session 2: A1/A2 ran once and are frozen in the BAU snapshot. The A-O workbooks were built <em>before</em> your new interconnector existed. The extension decision list tells the scenario stage to inject the new technology rows into the A-O workbooks during processing &mdash; without it, the stage would not know about the technology even though the scenario workbook has all the data.</p>
+  </div>
+
+  <p>Open <code>examples/unescap/config/scenarios/ao_extension_decisions.csv</code> and add a new row. The CSV carries the five decision columns you actually fill in &mdash; <code>AO_Code_To_Add</code>, <code>Include</code>, <code>Override_Template_AO</code>, <code>Override_Tech.Name_AO</code>, <code>Notes</code>. The wider table below shows the full set of columns the stage derives, so you can see where your decision lands:</p>
+
+  <div class="scrollable">
+  <table class="copy-table" id="table-extensions">
+    <tr><td>AO_Code_To_Add</td><td>Tech_Name_WV</td><td>Sheets_in_WV</td><td>Orange_Flagged</td><td>In_Param</td><td>In_AR_Base</td><td>In_AR_Proj</td><td>In_Demand</td><td>Suggested_Template_AO</td><td>Suggested_Tech.Name_AO</td><td>Add_To_Param</td><td>Add_To_AR_Base</td><td>Add_To_AR_Proj</td><td>Add_To_Demand</td><td>Include</td><td>Override_Template_AO</td><td>Override_Tech.Name_AO</td><td>Notes</td></tr>
+    <tr><td>TRNBGDXXMMRXX</td><td>Cross-border interconnector: Bangladesh &harr; Myanmar</td><td>Interconnector_Params, Fixed_Horizon_Parameters</td><td>Y</td><td>N</td><td>N</td><td>N</td><td>N</td><td>TRNBGDXXINDEA</td><td></td><td>Y</td><td>Y</td><td>Y</td><td>N</td><td>Y</td><td></td><td></td><td></td></tr>
+  </table>
+  </div>
+  <button class="copy-btn-table" onclick="copyTable('table-extensions')">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+    Copy data rows
+  </button>
+
+  <div class="callout tip">
+    <div class="tag">Key columns explained</div>
+    <p>Only five of these columns are yours to set; the rest are derived. In <code>ao_extension_decisions.csv</code> you write <code>AO_Code_To_Add = TRNBGDXXMMRXX</code> and <code>Include = Y</code>, and leave <code>Override_Template_AO</code> and <code>Override_Tech.Name_AO</code> empty. Empty overrides mean the stage clones the row structure from the existing BGD&ndash;INDEA interconnector and generates the technology name (&ldquo;Myanmar, region XX&rdquo;) itself. Fill an override in only when you disagree with what it picked, and say why in <code>Notes</code>.</p>
+  </div>
+
+  <div class="callout warn">
+    <div class="tag">Only for new techs</div>
+    <p>You only need this step when adding a technology that did <strong>not exist before</strong> in the A-O workbooks. If you were modifying an existing interconnector&rsquo;s parameters (changing costs, capacity, etc.), editing the scenario workbook alone would be enough &mdash; the scenario stage overwrites those values during materialisation.</p>
+  </div>
+
+  <h3>5b. Make sure both regions are known</h3>
+
+  <p>Region codes are turned into human-readable names (&ldquo;Bangladesh, region XX&rdquo;) for the A-O workbook columns. The names come from the country authority you edited in Exercise A, <code>examples/unescap/config/preparation/Config_country_codes.yaml</code>, so there is no source file to patch here.</p>
+
+  <p>Check that both endpoints of your new interconnector are declared. <code>BGDXX</code> comes from the <code>BGD</code> entry that is already in <code>country_data</code>; <code>MMRXX</code> comes from the <code>MMR</code> entry Exercise A added:</p>
+
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+<pre><code><span class="key">country_data:</span>
+  <span class="key">MMR:</span>
+    <span class="key">english_name:</span> <span class="string">"Myanmar"</span>
+    <span class="key">ostram_name:</span> <span class="string">"Myanmar"</span></code></pre>
+  </div>
+
+  <p>This profile declares only the two countries it models, <code>BGD</code> and <code>IND</code>, plus whatever you add. If a region code is missing when you run the profile, preparation stops and names the code &mdash; it does not guess a name or fall back to the project-root country list.</p>
+
+  <div class="callout tip">
+    <div class="tag">When can you skip this?</div>
+    <p>If both endpoints of your interconnector are already declared in <code>country_data</code> (e.g. adding a second BGD&harr;IND corridor), you do not need to touch this file. You only need this step when connecting to a country the profile has never modelled.</p>
+  </div>
+</section>
+
+<!-- SECTION 6: YAML CONFIG -->
+<section id="yaml-config">
+  <h2><span class="num">6</span> Configure Scenario YAMLs</h2>
+
+  <p>Each scenario has its own config files under <code>examples/unescap/config/scenarios/&lt;scenario&gt;/</code>. Three scenarios use interconnector rules; BAU does not (it has no <code>relax_interconnectors.yaml</code>).</p>
+
+  <h3>6a. Capacity limits &mdash; <code>relax_interconnectors.yaml</code></h3>
+
+  <p>This file controls how much capacity the solver can build for each interconnector. Each entry under <code>overrides:</code> is a year&ndash;GW map that caps annual investment. An empty map <code>{}</code> means &ldquo;freeze at residual capacity&rdquo; (no new investment). You need to add <code>TRNBGDXXMMRXX</code> to three scenarios.</p>
+
+  <div class="callout tip">
+    <div class="tag">Where do the values come from?</div>
+    <p>Look at the existing <code>TRNBGDXXINDEA</code> entry as your guide. Its values (<code>2023: 2.496, 2028: 6.50, &hellip; 2033: 8.50</code>) come from the real project pipeline &mdash; the commissioned and planned HVDC capacities from the <strong>Interconnectors</strong> sheet. For our exercise interconnector, the only project is a single 0.5 GW link commissioning in 2030. We set <code>{2029: 0, 2030: 0.5}</code> &mdash; the explicit zero before COD prevents the interpolation logic from allowing investment in earlier years.</p>
+  </div>
+
+  <p><strong>A_Calibrated_BAU</strong> &mdash; open <code>config/scenarios/A_Calibrated_BAU/relax_interconnectors.yaml</code>. The file currently has:</p>
+  <div class="code-wrap">
+<pre><code><span class="key">overrides:</span>
+  <span class="key">TRNBGDXXINDEA:</span> {<span class="key">2023:</span> 2.496, <span class="key">2028:</span> 6.50, <span class="key">2029:</span> 7.00, <span class="key">2030:</span> 7.75, <span class="key">2033:</span> 8.50}</code></pre>
+  </div>
+  <p>Add the new line below <code>TRNBGDXXINDEA</code>:</p>
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+<pre><code>  <span class="key">TRNBGDXXMMRXX:</span> {<span class="key">2029:</span> 0, <span class="key">2030:</span> 0.5}   <span class="comment"># new: 500 MW project, COD 2030</span></code></pre>
+  </div>
+
+  <p><strong>B_Optimised_VRE</strong> &mdash; open <code>config/scenarios/B_Optimised_VRE/relax_interconnectors.yaml</code>. Same structure as A &mdash; add the same line below <code>TRNBGDXXINDEA</code>:</p>
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+<pre><code>  <span class="key">TRNBGDXXMMRXX:</span> {<span class="key">2029:</span> 0, <span class="key">2030:</span> 0.5}   <span class="comment"># new: 500 MW project, COD 2030</span></code></pre>
+  </div>
+
+  <p><strong>C_Target_VRE</strong> &mdash; open <code>config/scenarios/C_Target_VRE/relax_interconnectors.yaml</code>. Same &mdash; add the line:</p>
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+<pre><code>  <span class="key">TRNBGDXXMMRXX:</span> {<span class="key">2029:</span> 0, <span class="key">2030:</span> 0.5}   <span class="comment"># new: 500 MW project, COD 2030</span></code></pre>
+  </div>
+
+  <div class="callout warn">
+    <div class="tag">What about BAU?</div>
+    <p>The BAU scenario does <strong>not</strong> have a <code>relax_interconnectors.yaml</code> &mdash; it does not run the relax rule. Instead, the cap-to-residual rule freezes every TRN at its residual capacity automatically. Your new interconnector will be capped at 0 GW before 2030 and 0.5 GW from 2030 &mdash; no config needed.</p>
+  </div>
+
+  <h3>6b. Flow direction &mdash; <code>set_interconnector_direction.yaml</code></h3>
+
+  <p>This file only exists in <strong>B_Optimised_VRE</strong> (it is used in <a href="training.html#ic-exercises">Exercise 3</a> of the main guide). A_Calibrated_BAU and C_Target_VRE do <strong>not</strong> have this file, so their interconnectors are always bidirectional.</p>
+
+  <p>The B_Optimised_VRE file currently says <code>directions: {}</code>, which means all interconnectors are bidirectional. For this exercise, <strong>leave it unchanged</strong> &mdash; the new BGD&harr;MMR link will be bidirectional by default.</p>
+
+  <div class="code-wrap">
+<pre><code><span class="comment"># config/scenarios/B_Optimised_VRE/set_interconnector_direction.yaml</span>
+<span class="comment"># No changes needed — {} = bidirectional for all links</span>
+<span class="key">directions:</span> {}</code></pre>
+  </div>
+
+  <div class="callout tip">
+    <div class="tag">Tip</div>
+    <p>To experiment with direction control (forward-only, reverse-only), see <strong>Exercise 3.5: Control the Direction</strong> in the <a href="training.html#ic-exercises">main training guide</a>.</p>
+  </div>
+</section>
+
+<!-- SECTION 7 -->
+<section id="run">
+  <h2><span class="num">7</span> Run the Model</h2>
+
+  <p>The commands are the same on Windows, macOS, and Linux, and they do not depend
+  on which directory you are in &mdash; the profile is named, not located.</p>
+
+  <ol class="step-list">
+    <li>
+      <strong>Confirm the prepared resources</strong>
+      <p style="margin-top:8px;">Exercise B continues from Exercise A's prepared workspace. Confirm that the scenario workbook path is inside that workspace; do not reset, because reset would discard the Exercise A country merge.</p>
+
+      <div class="code-wrap">
+        <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+        <pre><code><span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> inspect-resources</code></pre>
+      </div>
+    </li>
+
+    <li>
+      <strong>Run scenarios A and B</strong>
+
+      <div class="code-wrap">
+        <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+        <pre><code><span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> run <span class="flag">--scenarios</span> <span class="string">"A_Calibrated_BAU,B_Optimised_VRE"</span></code></pre>
+      </div>
+    </li>
+
+    <li>
+      <strong>Run scenario C</strong>
+      <p style="margin-top:8px;">C needs solved A_Calibrated_BAU results to calculate its
+      targets. That dependency is declared in
+      <code>config/scenarios/registry.json</code>, so running C before A stops with a clear
+      message instead of producing quiet nonsense.</p>
+
+      <div class="code-wrap">
+        <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+        <pre><code><span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> run <span class="flag">--scenarios</span> <span class="string">"C_Target_VRE"</span></code></pre>
+      </div>
+    </li>
+
+    <li>
+      <strong>Collect the results</strong>
+      <p style="margin-top:8px;">Each run writes into its own workspace folder, so nothing is
+      overwritten and there is nothing to copy by hand.</p>
+
+      <div class="code-wrap">
+        <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+        <pre><code><span class="cmd">python</span> -m ostram example report unescap</code></pre>
+      </div>
+    </li>
+  </ol>
+
+  <div class="callout tip">
+    <div class="tag">Tip</div>
+    <p>You do not need to re-prepare the profile. The scenario stage reads the prepared
+    workspace workbook fresh on every run and detects the new technology automatically.</p>
+  </div>
+
+  <div class="callout warn">
+    <div class="tag">Impact on BAU</div>
+    <p>Since the new rows are tagged <code>scenario = BAU</code>, all scenarios see this interconnector. Check your BAU results after running: if <code>NewCapacity</code> for TRNBGDXXMMRXX is unexpectedly large, add a <code>TotalAnnualMaxCapacityInvestment</code> restriction in the scenario workbook's <strong>Restrictions</strong> sheet (or set <code>TotalAnnualMaxCapacity = ResidualCapacity</code> in Interconnector_Params for BAU to freeze it).</p>
+  </div>
+</section>
+
+<!-- SECTION 7 -->
+<section id="verify">
+  <h2><span class="num">8</span> Verify</h2>
+
+  <p>After running, open the A-O workbook for <strong>one of the scenarios you ran</strong> (not BAU &mdash; BAU uses the frozen A1/A2 snapshot and does not process extensions):</p>
+
+  <div class="code-wrap">
+    <pre><code>&lt;workspace&gt;/preparation/A1_Outputs/A1_Outputs_A_Calibrated_BAU/A-O_Parametrization.xlsx</code></pre>
+  </div>
+
+  <p>Go to the <strong>Secondary Techs</strong> sheet and search for <code>TRNBGDXXMMRXX</code>. You should see rows for CapitalCost, FixedCost, ResidualCapacity, and other parameters. Verify that:</p>
+  <ul>
+    <li>The <strong>Tech.Name</strong> says &ldquo;Myanmar&rdquo;, not &ldquo;India&rdquo; (if it says India, check that <code>REGION_NAME_MAP</code> has <code>MMRXX</code> from Step 5b and that <code>Suggested_Tech.Name_AO</code> is blank in the Extensions file).</li>
+    <li><strong>CapitalCost</strong> = 450 (not 292 &mdash; 292 is the INDEA template value; 450 is what you entered in the scenario workbook).</li>
+    <li><strong>ResidualCapacity</strong> = 0 before 2030, 0.5 from 2030 onward.</li>
+  </ul>
+
+  <div class="callout warn">
+    <div class="tag">Why not check BAU?</div>
+    <p>The <code>A1_Outputs_BAU/</code> folder holds the original A1/A2 snapshot &mdash; it was created before your interconnector existed. Only the scenario-specific folders (<code>A1_Outputs_A_Calibrated_BAU/</code>, <code>A1_Outputs_B_Optimised_VRE/</code>) are processed by the scenario stage and contain the new technology. Everything under the workspace is generated; none of it belongs in the profile.</p>
+  </div>
+
+  <h3>Troubleshooting checklist</h3>
+  <ul>
+    <li>The <code>Tech</code> column in the scenario workbook is exactly <code>TRNBGDXXMMRXX</code> (13 characters, no spaces, no trailing whitespace).</li>
+    <li>The <code>scenario</code> column says <code>BAU</code> (not &ldquo;bau&rdquo; or &ldquo;Bau&rdquo;) &mdash; this is the workbook's base scenario, not where you check the output.</li>
+    <li>You saved <code>OSTRAM_Scenario_Inputs.xlsx</code> before running the pipeline.</li>
+    <li><code>MMR</code> is in <code>country_data</code> in <code>config/preparation/Config_country_codes.yaml</code>.</li>
+    <li><code>TRNBGDXXMMRXX</code> has <code>Include = Y</code> in <code>config/scenarios/ao_extension_decisions.csv</code>.</li>
+    <li><code>Override_Tech.Name_AO</code> is blank &mdash; if you fill it with the template name (&ldquo;India, region EA&rdquo;), the stage uses it literally instead of generating the correct Myanmar name.</li>
+  </ul>
+
+  <div class="callout tip">
+    <div class="tag">Tip</div>
+    <p>If you see INDEA values (CapitalCost 292, name mentioning &ldquo;India&rdquo;), check that <code>Override_Tech.Name_AO</code> is blank in <code>ao_extension_decisions.csv</code> and that <code>MMR</code> is declared in <code>Config_country_codes.yaml</code>. Then run again &mdash; each run gets a fresh workspace folder, so there is nothing to delete by hand.</p>
+  </div>
+</section>
+
+<!-- SECTION 8 -->
+<section id="reference">
+  <h2><span class="num">9</span> Quick Reference &mdash; Existing BGD-INDEA</h2>
+
+  <p>Use these values from the existing <code>TRNBGDXXINDEA</code> as your template for comparison:</p>
+
+  <div class="scrollable">
+  <table>
+    <thead>
+      <tr><th>Parameter</th><th>Value</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>CapitalCost</td><td>380 USD/kW</td><td>constant all years</td></tr>
+      <tr><td>FixedCost</td><td>5.7 USD/kW/yr</td><td>constant all years</td></tr>
+      <tr><td>ResidualCapacity</td><td>2.496 &rarr; 4.496 GW</td><td>steps up as projects commission (2029, 2030, 2033)</td></tr>
+      <tr><td>CapacityFactor</td><td>0.85</td><td>same for all interconnectors</td></tr>
+      <tr><td>TransmissionLossFactor</td><td>0.035</td><td>3.5% line losses</td></tr>
+      <tr><td>OperationalLife</td><td>40 years (Params) / 50 years (Fixed)</td><td>two different sheets</td></tr>
+      <tr><td>CapacityToActivityUnit</td><td>31.536 PJ/GW</td><td>universal constant</td></tr>
+      <tr><td>InputActivityRatio</td><td>1</td><td>always 1</td></tr>
+      <tr><td>OutputActivityRatio</td><td>0.95</td><td>= 1 - loss (note: uses 5% here, not 3.5%)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Physical projects behind this interconnector</h3>
+
+  <div class="scrollable">
+  <table>
+    <thead>
+      <tr><th>Project</th><th>Capacity</th><th>COD</th><th>Direction</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Bheramara HVDC</td><td>1,000 MW</td><td>2013</td><td>Bi-directional</td><td>Operational</td></tr>
+      <tr><td>Adani Power Godda HVDC</td><td>1,496 MW</td><td>2023</td><td>Uni-directional</td><td>Operational</td></tr>
+      <tr><td>Second Bheramara Expansion</td><td>500 MW</td><td>2029</td><td>Bi-directional</td><td>Proposed</td></tr>
+      <tr><td>Barapukuria HVDC B2B</td><td>750 MW</td><td>2030</td><td>Bi-directional</td><td>Planned</td></tr>
+      <tr><td>Katihar-Parbatipur</td><td>2,000 MW</td><td>2028</td><td>Bi-directional</td><td>Proposed</td></tr>
+      <tr><td>Parbatipur-Boronagar</td><td>2,000 MW</td><td>2028</td><td>Bi-directional</td><td>Proposed</td></tr>
+      <tr><td>Jamalpur HVDC B2B</td><td>750 MW</td><td>2033</td><td>Bi-directional</td><td>Proposed</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- AGGREGATION NOTE -->
+<section id="aggregation">
+  <h2>How OSTRAM Aggregates Interconnectors</h2>
+
+  <div class="analogy">
+    <div class="label">Key concept</div>
+    <p>OSTRAM represents all physical interconnectors between two nodes as a <strong>single TRN technology</strong> with two operation modes (forward and reverse). The <strong>Interconnectors</strong> sheet documents the individual projects for traceability, but in the model they are summed into one technology with shared capacity. The solver decides how much power flows in each direction per timeslice.</p>
+  </div>
+
+  <p>For controlling the direction of flow (forward-only, reverse-only, or bidirectional), see <strong>Exercise 3.5: Control the Direction</strong> in the <a href="training.html#ic-exercises">main training guide</a>, and the measured comparison in <a href="../references/interconnector-direction-results.html">interconnector direction results</a>.</p>
+</section>
+
+</div><!-- /container -->
+
+<footer>
+  <div class="footer-inner">
+
+    <div class="footer-links">
+      <div>
+        <strong>OSTRAM Resources</strong>
+        <a href="https://github.com/Climate-Lead-Group/OSTRAM" target="_blank">GitHub Repository</a>
+        <a href="https://ostram.readthedocs.io" target="_blank">Documentation</a>
+        <a href="https://github.com/Climate-Lead-Group/OSTRAM/issues" target="_blank">Report an Issue</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      Exercise B: Add a New Transmission Interconnector &mdash; OSTRAM &middot; UNESCAP Training<br>
+      Quality &bull; Integrity &bull; Transparency &bull; Responsibility &bull; Inclusion
+    </div>
+  </div>
+</footer>
+
+<script>
+/* Copy code block */
+function copyCode(btn) {
+  const wrap = btn.closest('.code-wrap') || btn.parentElement;
+  const pres = wrap.querySelectorAll('pre');
+  let pre = pres[0];
+  pres.forEach(p => { if (p.offsetParent !== null) pre = p; });
+  const text = (pre.innerText || pre.textContent).replace(/\n+$/, '');
+  navigator.clipboard.writeText(text).then(() => {
+    const original = btn.innerHTML;
+    btn.classList.add('copied');
+    btn.innerHTML = 'Copied';
+    setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = original; }, 1600);
+  });
+}
+
+/* Copy table (skip header row, TSV format) */
+function copyTable(tableId) {
+  const table = document.getElementById(tableId);
+  const rows = Array.from(table.querySelectorAll('tr')).slice(1);
+  const tsv = rows.map(r =>
+    Array.from(r.cells).map(c => c.textContent).join('\t')
+  ).join('\n');
+  navigator.clipboard.writeText(tsv).then(() => {
+    const btn = table.closest('.scrollable').nextElementSibling;
+    if (btn && btn.classList.contains('copy-btn-table')) {
+      const orig = btn.innerHTML;
+      btn.classList.add('copied');
+      btn.innerHTML = 'Copied!';
+      setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = orig; }, 1500);
+    }
+  });
+}
+
+/* OS command switcher */
+(function () {
+  function detectOS() {
+    const p = ((navigator.userAgentData && navigator.userAgentData.platform)
+                || navigator.platform || navigator.userAgent || '').toLowerCase();
+    if (p.includes('win')) return 'win';
+    if (p.includes('mac')) return 'mac';
+    if (p.includes('linux') || p.includes('x11')) return 'linux';
+    return 'win';
+  }
+  function setOS(os) {
+    document.body.classList.remove('os-win', 'os-mac', 'os-linux');
+    document.body.classList.add('os-' + os);
+    document.querySelectorAll('[data-set-os]').forEach(b => {
+      const on = b.getAttribute('data-set-os') === os;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  document.querySelectorAll('[data-set-os]').forEach(b => {
+    b.addEventListener('click', () => setOS(b.getAttribute('data-set-os')));
+  });
+  setOS(detectOS());
+})();
+</script>
+
+</body>
+</html>

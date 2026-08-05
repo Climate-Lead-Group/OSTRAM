@@ -1,0 +1,15 @@
+## storage_floors.yaml — C_Target_VRE
+## IDENTICAL to B_Optimised_VRE. Same storage deployment nudge.
+
+storage_floors:
+  SDS:            # short-duration (battery)
+    2029: 0.05
+    2030: 0.10
+    2035: 0.20
+    2040: 0.30
+    2050: 0.30
+  LDS:            # long-duration (pumped hydro, etc.)
+    2030: 0.05
+    2035: 0.10
+    2040: 0.15
+    2050: 0.15

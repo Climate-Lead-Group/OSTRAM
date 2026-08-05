@@ -36,8 +36,16 @@ class ProjectPathResolutionTests(unittest.TestCase):
 
     def test_workspace_precedence_and_unicode_space_backslash_paths(self) -> None:
         cli_workspace = REPO_ROOT / "workspace path Ω" / "drive-C"
+        if os.name == "nt":
+            # Genuine Windows coverage: a backslash-separated absolute root.
+            project_root_argument = str(REPO_ROOT).replace("/", "\\")
+        else:
+            # Backslashes are ordinary name characters on POSIX, not
+            # separators; the native absolute form with the Unicode-and-space
+            # workspace below is the equivalent coverage.
+            project_root_argument = str(REPO_ROOT)
         resolved = path_module.resolve_paths(
-            project_root=str(REPO_ROOT).replace("/", "\\"),
+            project_root=project_root_argument,
             workspace=cli_workspace,
             environ={path_module.WORKSPACE_ENV: str(REPO_ROOT / "ignored")},
         )

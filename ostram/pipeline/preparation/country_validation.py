@@ -3,9 +3,9 @@ Validation script for OG_csvs_inputs data.
 Validates that a country has all required data in the OSeMOSYS CSV input files.
 
 Usage:
-    python Z_validate_country_data.py                  # Validate all RELAC countries
-    python Z_validate_country_data.py --country ARG    # Validate specific country
-    python Z_validate_country_data.py --country NCC --report  # Generate detailed report
+    python -m ostram --profile unescap country validate
+    python -m ostram --profile unescap country validate ARG
+    python -m ostram --profile unescap country validate NCC --report
 
 Author: Climate Lead Group, Andrey Salazar-Vargas
 """
@@ -578,9 +578,13 @@ def generate_summary(country_code, results):
     return overall
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(
         description="Validate country data in OG_csvs_inputs"
+    )
+    parser.add_argument(
+        "country_positional", nargs="?",
+        help="Country code to validate (e.g., MMR)."
     )
     parser.add_argument(
         "--country", "-c",
@@ -598,13 +602,17 @@ def main():
         help="Only show summary"
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+
+    if args.country_positional and args.country:
+        parser.error("positional country and --country are mutually exclusive")
+    selected_country = args.country_positional or args.country
 
     if not os.path.isdir(INPUT_DIR):
         print(f"ERROR: Input directory not found: {INPUT_DIR}")
-        sys.exit(1)
+        return 1
 
-    countries = [args.country.upper()] if args.country else OSTRAM_COUNTRIES
+    countries = [selected_country.upper()] if selected_country else OSTRAM_COUNTRIES
     verbose = not args.quiet
 
     overall_results = {}
@@ -632,8 +640,8 @@ def main():
         print(f"\n  Passed: {total_pass}/{len(countries)}")
         print(f"  Failed: {total_fail}/{len(countries)}")
 
-    sys.exit(0 if all(s == "PASS" for s in overall_results.values()) else 1)
+    return 0 if all(s == "PASS" for s in overall_results.values()) else 1
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

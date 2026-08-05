@@ -1,0 +1,312 @@
+# Config_country_codes.yaml — UNESCAP training profile
+# Single source of truth for country codes, names, and technology mappings.
+#
+# Profile:  unescap  (examples/unescap/profile.yaml)
+# Scope:    the reduced two-region training model — Bangladesh (BGDXX) and
+#           India East (INDEA), joined by the real TRNBGDXXINDEA corridor.
+#
+# The full ten-region SOASIA configuration is the project-root authority
+# (config/preparation/Config_country_codes.yaml); it is NOT inherited here.
+# This profile authority is complete on its own.
+
+# ============================================================
+# COUNTRY CONFIGURATION (Single Source of Truth)
+# ============================================================
+# Each country: iso3 key, english_name, ostram_name (used by the OSTRAM and
+# Shares workbooks).
+country_data:
+  BGD:
+    english_name: "Bangladesh"
+    ostram_name: "Bangladesh"
+  IND:
+    english_name: "India"
+    ostram_name: "India"
+
+# Special entries (not model countries, used in iso_country_map)
+special_entries:
+  INT: "International Markets"
+
+# ============================================================
+# MODEL SETTINGS
+# ============================================================
+
+# Reference year for the model (first year of the model horizon)
+first_year: 2023
+
+# Whether to add missing countries' demand data from OSTRAM generation file
+# When true, A1 reads OSTRAM Excel to fill in countries not present in the input CSVs
+add_missing_countries_from_ostram: false
+
+# PWR technology cleanup mode (handles PWR00/PWR01 duplicates):
+#   "drop"  - drop PWR00 rows when PWR01 exists, then rename PWR01 (removes '01' suffix)
+#   "merge" - sum PWR00 values into PWR01, then drop PWR00, then rename PWR01
+#   false   - skip PWR cleanup entirely
+pwr_cleanup_mode: merge
+
+# Force Projection.Mode = "EMPTY" for TotalAnnualMaxCapacityInvestment on all PWR technologies
+#   true  - override Projection.Mode to EMPTY for all PWR techs on that parameter
+#   false - keep the auto-detected Projection.Mode
+force_empty_max_capacity_investment_pwr: true
+
+# ============================================================
+# TECHNOLOGY CONFIGURATION
+# ============================================================
+
+# Technology name (in Excel source files) -> model 3-char code
+ostram_tech_mapping:
+  Nuclear: URN
+  "Natural gas": NGS
+  "Mineral coal": COA
+  Hydro: HYD
+  Geothermal: GEO
+  Wind: WON
+  Solar: SPV
+  # BIO is special: sum of Biogas + Solid biomass + Liquid biofuels
+
+# Model tech code -> description
+code_to_energy:
+  MIN: "Mining tradable commodity"
+  RNW: "Mining non-tradable (renewable) commodity"
+  BIO: "Biomass"
+  GAS: "Natural Gas"
+  COA: "Coal"
+  GEO: "Geothermal"
+  HYD: "Hydroelectric"
+  OIL: "Oil"
+  OTH: "Other"
+  PET: "Petroleum"
+  SPV: "Solar Photovoltaic"
+  URN: "Nuclear"
+  WAV: "Wave"
+  WAS: "Waste"
+  WOF: "Offshore Wind"
+  WON: "Onshore Wind"
+  CCG: "Combined Cycle Natural Gas"
+  COG: "Cogeneration"
+  CSP: "Concentrated Solar Power"
+  NGS: "Natural Gas"
+  OCG: "Open Cycle Natural Gas"
+  TRN: "Transmission technology"
+  LDS: "Long duration storage"
+  SDS: "Short duration storage"
+  PWR: "Power generator"
+  ELC: "Electricity"
+  BCK: "Backstop"
+  CCS: "Carbon Capture Storage with Coal"
+
+# Renewable fuel codes (used to classify technologies)
+renewable_fuels:
+  - BIO
+  - HYD
+  - CSP
+  - GEO
+  - SPV
+  - WAS
+  - WON
+  - WOF
+
+# Shares technology name -> model tech code (for the Shares power-generation workbook)
+shares_tech_mapping:
+  Biomass: BIO
+  Bunker: OIL
+  Coal: COA
+  Diesel: PET
+  Wind: WON
+  "Fuel oil": OIL
+  "Natural gas": NGS
+  Geothermal: GEO
+  Hydroelectric: HYD
+  Nuclear: URN
+  "Solar (DG)": SPV
+  "Solar (utility scale)": SPV
+
+# ============================================================
+# COUNTRY LIST & TRANSMISSION TECHNOLOGY PARAMETERS
+# ============================================================
+
+# List of country-region codes used when building region pairs.
+# UNESCAP training model: two interconnected regions only.
+countries:
+  - "BGD"
+  - "INDEA"
+
+# ============================================================
+# TEMPLATE GENERATION
+# ============================================================
+# Configure the entries below, then run:
+#   python -m ostram --profile unescap country template
+# The command processes each entry in the list sequentially.
+#
+# Fields per entry:
+#   new_country:          3-letter ISO code for the new country
+#   reference_country:    existing country to clone data from (must be a
+#                         country this profile already models: BGD or IND)
+#   region:               region code (default: XX). Use a 2-letter code for
+#                         sub-regions
+#   interconnections:     list of neighbour codes (3-letter = region XX,
+#                         5-letter = explicit region);
+#                         an empty list adds the country as an isolated system;
+#                         removing the key entirely selects legacy mode
+#                         (copies the reference country's topology)
+#   centerpoint_lat:      latitude of the country/region centerpoint
+#   centerpoint_lon:      longitude of the country/region centerpoint
+#
+# ── EXAMPLES ──────────────────────────────────────────────────
+#
+# Example 1: Single country, single region, one interconnection
+#   - new_country: NPL
+#     reference_country: IND
+#     region: XX
+#     centerpoint_lat: 28.394857
+#     centerpoint_lon: 84.124008
+#     interconnections:
+#       - INDEA
+#
+# Example 2: Multiple countries at once
+#   - new_country: MMR
+#     reference_country: BGD
+#     region: XX
+#     centerpoint_lat: 19.811800
+#     centerpoint_lon: 96.602200
+#     interconnections:
+#       - BGD
+#       - INDEA
+#   - new_country: PAK
+#     reference_country: IND
+#     region: XX
+#     centerpoint_lat: 24.87
+#     centerpoint_lon: 66.99
+#     interconnections:
+#       - INDEA
+#
+# Example 3: Country with multiple regions (like India)
+#   Each region needs its own entry with its own centerpoint.
+#   Use 5-letter codes for interconnections to specific regions.
+#   - new_country: CHN
+#     reference_country: IND
+#     region: SO                          # China South → CHNSO
+#     centerpoint_lat: 23.145
+#     centerpoint_lon: 113.325
+#     interconnections:
+#       - CHNNO                           # connected to China North
+#   - new_country: CHN
+#     reference_country: IND
+#     region: NO                          # China North → CHNNO
+#     centerpoint_lat: 39.929
+#     centerpoint_lon: 116.388
+#     interconnections:
+#       - CHNSO                           # connected to China South
+#
+# ── ACTIVE CONFIGURATION ─────────────────────────────────────
+# Exercise A ("Add a New Country") — Myanmar cloned from Bangladesh and added
+# as an isolated system. Exercise B then connects it.
+template_generation:
+  - new_country: MMR
+    reference_country: BGD
+    region: XX
+    centerpoint_lat: 19.811800
+    centerpoint_lon: 96.602200
+    interconnections: []
+
+# Implausible technology-country combinations based on the profile input CSVs
+# (ResidualCapacity, CapitalCost, TotalAnnualMaxCapacityInvestment, TotalAnnualMaxCapacity)
+# A combo is implausible when all four parameters are zero for every year.
+# Format: technology_code -> list of country codes where it is implausible.
+# Only BGD and IND are modelled here; an empty list means the technology is
+# plausible for both.
+implausible_combinations:
+  # BIO (Biomass)
+  BIO: []
+  # CCS (Carbon Capture Storage with Coal)
+  CCS: []
+  # COA (Coal)
+  COA: []
+  # COG (Cogeneration)
+  COG: []
+  # CSP (Concentrated Solar Power) - insufficient suitable land area in BGD
+  CSP: [BGD]
+  # GAS (Natural Gas) - no PWRGAS technology in model; gas generation modelled via CCG/OCG → NGS
+  GAS: [BGD, IND]
+  # GEO (Geothermal) - no geothermal resources in either modelled country
+  GEO: [BGD, IND]
+  # HYD (Hydroelectric)
+  HYD: []
+  # NGS (Natural Gas unified) - no CCG/OCG/NGS power data for BGD
+  NGS: [BGD]
+  # OIL (Oil/Fuel Oil)
+  OIL: []
+  # URN (Nuclear)
+  URN: []
+  # WAS (Waste-to-Energy)
+  WAS: []
+  # WAV (Wave Energy) - no capacity or plans in either modelled country
+  WAV: [BGD, IND]
+  # WOF (Offshore Wind)
+  WOF: []
+  # WON (Onshore Wind)
+  WON: []
+
+# Technology parameters
+# Renewable transmission technologies
+#Existing renewable transmission technologies
+RNWTRN:
+  CapacityToActivityUnit: 31.536
+  OperationalLife: 20
+  CapitalCost: 100
+  FixedCost: 4
+  ResidualCapacity: 5
+  TotalAnnualMaxCapacityInvestment: 5
+#Repowered renewable transmission technologies
+RNWRPO:
+  CapacityToActivityUnit: 31.536
+  OperationalLife: 20
+  CapitalCost: 100
+  FixedCost: 4
+  ResidualCapacity: 5
+  TotalAnnualMaxCapacityInvestment: 5
+#New lines of renewable transmission technologies
+RNWNLI:
+  CapacityToActivityUnit: 31.536
+  OperationalLife: 20
+  CapitalCost: 100
+  FixedCost: 4
+  ResidualCapacity: 5
+  TotalAnnualMaxCapacityInvestment: 5
+
+# Non-renewable transmission technologies
+#Existing non-renewable transmission technologies
+PWRTRN:
+  CapacityToActivityUnit: 31.536
+  OperationalLife: 20
+  CapitalCost: 100
+  FixedCost: 4
+  ResidualCapacity: 5
+  TotalAnnualMaxCapacityInvestment: 5
+#Repowered non-renewable transmission technologies
+TRNRPO:
+  CapacityToActivityUnit: 31.536
+  OperationalLife: 20
+  CapitalCost: 100
+  FixedCost: 4
+  ResidualCapacity: 5
+  TotalAnnualMaxCapacityInvestment: 5
+#New lines of non-renewable transmission technologies
+TRNNLI:
+  CapacityToActivityUnit: 31.536
+  OperationalLife: 20
+  CapitalCost: 100
+  FixedCost: 4
+  ResidualCapacity: 5
+  TotalAnnualMaxCapacityInvestment: 5
+
+# Enable DSPTRN dispatch technology (adds ELC03/ELC04 tier for interconnections)
+enable_dsptrn: true
+
+# Dispatch transmission technology (routes electricity through ELC03 tier)
+DSPTRN:
+  CapacityToActivityUnit: 31.536
+  OperationalLife: 20
+  CapitalCost: 0
+  FixedCost: 0
+  ResidualCapacity: 9999
+  TotalAnnualMaxCapacityInvestment: 9999

@@ -1,0 +1,3 @@
+AO_Code_To_Add,Include,Override_Template_AO,Override_Tech.Name_AO,Notes
+PWRNGSBGDXX,Y,,,
+PWRSHPINDEA,Y,,,[FALLBACK: category SHP->HYD via CATEGORY_FALLBACKS; template=PWRHYDINDEA; confirm Tech.Name override]

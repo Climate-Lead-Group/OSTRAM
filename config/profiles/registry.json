@@ -1,0 +1,7 @@
+{
+  "schema": "ostram-profile-registry-v1",
+  "profiles": {
+    "full": "project:config/profiles/full.yaml",
+    "unescap": "project:examples/unescap/profile.yaml"
+  }
+}
