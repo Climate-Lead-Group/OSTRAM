@@ -142,7 +142,82 @@ def parse_cli_args() -> argparse.Namespace:
         "--keep-workdir", action="store_true", default=KEEP_WORKDIR_DEFAULT,
         help="Preserve the runtime _run_<ts>/ folder for debugging.",
     )
+    p.add_argument(
+        "--run-state-out", default=None, type=Path,
+        help="Copy the disposable post-run scenario state workbook (holding "
+             "this run's persisted Restrictions rows) to this path after "
+             "stage 6. The maintained scenario-input workbook is never "
+             "written.",
+    )
+    p.add_argument(
+        "--restrictions-source", action="append", default=None,
+        metavar="SCENARIO=PATH",
+        help="Stage 4.5 reads inherited Restrictions rows for SCENARIO from "
+             "this workbook instead of the scenario-input authority. "
+             "SCENARIO must appear in inherit_restrictions_from. Repeatable.",
+    )
     return p.parse_args()
+
+
+def _parse_restriction_sources(
+    raw_sources: list[str] | None,
+    *,
+    workspace: Path | None = None,
+) -> dict[str, Path]:
+    """Parse workspace-contained ``SCENARIO=PATH`` declarations fail-closed."""
+
+    root = (A3_WORKSPACE if workspace is None else workspace).resolve()
+    sources: dict[str, Path] = {}
+    for raw in raw_sources or []:
+        scenario, separator, path = str(raw).partition("=")
+        scenario = scenario.strip()
+        if not separator or not scenario or not path.strip():
+            sys.exit(
+                f"ERROR: --restrictions-source must be SCENARIO=PATH, got {raw!r}"
+            )
+        if scenario in sources:
+            sys.exit(
+                f"ERROR: duplicate --restrictions-source scenario {scenario!r}"
+            )
+        source = Path(path.strip()).expanduser().resolve()
+        try:
+            source.relative_to(root)
+        except ValueError:
+            sys.exit(
+                f"ERROR: --restrictions-source must be inside the scenario "
+                f"workspace: {source}"
+            )
+        if not source.is_file() or source.stat().st_size == 0:
+            sys.exit(
+                f"ERROR: --restrictions-source workbook is absent or empty for "
+                f"{scenario!r}: {source}"
+            )
+        sources[scenario] = source
+    return sources
+
+
+def _workspace_run_state_destination(
+    raw_destination: Path,
+    *,
+    workspace: Path | None = None,
+) -> Path:
+    """Resolve one non-traversing, workspace-contained XLSX export path."""
+
+    root = (A3_WORKSPACE if workspace is None else workspace).resolve()
+    destination = Path(raw_destination).expanduser().resolve()
+    try:
+        destination.relative_to(root)
+    except ValueError:
+        sys.exit(
+            "ERROR: --run-state-out must be inside the scenario workspace: "
+            f"{destination}"
+        )
+    if destination.suffix.lower() != ".xlsx":
+        sys.exit(
+            "ERROR: --run-state-out must name an .xlsx workbook: "
+            f"{destination}"
+        )
+    return destination
 
 def _load_scenarios_module():
     """Load the staged helper without modifying the interpreter import path."""
@@ -509,6 +584,7 @@ def stage_4_5_apply_inherited_restrictions(
     s5: Path,
     soasia: Path,
     inherit_from: list[str],
+    restriction_sources: dict[str, Path] | None = None,
 ) -> None:
     """Stage 4.5: write inherited Restrictions rows from `inherit_from` scenarios
     into stage5/A-O_Parametrization.xlsx. Skipped when inherit_from is empty.
@@ -517,15 +593,37 @@ def stage_4_5_apply_inherited_restrictions(
     BEFORE stage 5 (where this scenario's rules_script runs on top). Stages 1b
     earlier in the pipeline may have written 9999 placeholders into the same
     MaxCapInv cells — overwriting them here is the intended behavior.
+
+    `restriction_sources` maps an inherited scenario to an alternative
+    workbook (a prerequisite's exported run state) whose Restrictions rows
+    replace the scenario-input authority for that source only.  Reading stays
+    fail-closed: a source with no rows for its scenario is still an error.
     """
     if not inherit_from:
         return
+    sources = dict(restriction_sources or {})
+    unknown = sorted(set(sources) - set(inherit_from))
+    if unknown:
+        sys.exit(
+            "ERROR: --restrictions-source declares scenarios not in "
+            f"inherit_restrictions_from: {unknown}"
+        )
     banner(
         f"Stage 4.5 — apply inherited restrictions from {', '.join(inherit_from)}"
     )
     _scenarios = _load_scenarios_module()
 
-    restrictions = _scenarios.read_restrictions(soasia, inherit_from)
+    restrictions: dict = {}
+    for source_scenario in inherit_from:
+        workbook = sources.get(source_scenario, soasia)
+        if source_scenario in sources:
+            print(
+                f"    reading {source_scenario} rows from exported run state "
+                f"{workbook.name}"
+            )
+        restrictions.update(
+            _scenarios.read_restrictions(workbook, [source_scenario])
+        )
     if not restrictions:
         print("    (no rows matched; nothing applied)")
         return
@@ -834,8 +932,41 @@ def _orchestration_paths() -> _orchestrator.A3Paths:
     )
 
 
-def _orchestration_dependencies() -> _orchestrator.A3Dependencies:
+def _orchestration_dependencies(
+    cli_args: argparse.Namespace | None = None,
+) -> _orchestrator.A3Dependencies:
     """Bind existing helpers to the isolated orchestration effect seams."""
+    restriction_sources = _parse_restriction_sources(
+        getattr(cli_args, "restrictions_source", None)
+    )
+    raw_run_state_out = getattr(cli_args, "run_state_out", None)
+    run_state_out = (
+        _workspace_run_state_destination(raw_run_state_out)
+        if raw_run_state_out is not None
+        else None
+    )
+
+    stage_4_5 = stage_4_5_apply_inherited_restrictions
+    if restriction_sources:
+        def stage_4_5(s5, soasia, inherit_from):
+            return stage_4_5_apply_inherited_restrictions(
+                s5,
+                soasia,
+                inherit_from,
+                restriction_sources=restriction_sources,
+            )
+
+    stage_6 = stage_6_persist_restrictions
+    if run_state_out is not None:
+        def stage_6(s5, scenario_run_state, scenario, rules_scripts):
+            result = stage_6_persist_restrictions(
+                s5, scenario_run_state, scenario, rules_scripts
+            )
+            run_state_out.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(scenario_run_state, run_state_out)
+            print(f"    Exported disposable run state to {run_state_out}")
+            return result
+
     return _orchestrator.A3Dependencies(
         resolve_scenario_config=_resolve_scenario_config,
         resolve_path=_resolve,
@@ -846,16 +977,14 @@ def _orchestration_dependencies() -> _orchestrator.A3Dependencies:
         stage_2_and_2_5=stage_2_and_2_5,
         stage_3_fix_2=stage_3_fix_2,
         stage_4_consolidate=stage_4_consolidate,
-        stage_4_5_apply_inherited_restrictions=(
-            stage_4_5_apply_inherited_restrictions
-        ),
+        stage_4_5_apply_inherited_restrictions=stage_4_5,
         stage_5_rules_scripts=stage_5_rules_scripts,
         stage_ws3_interconnector_costs=stage_ws3_interconnector_costs,
         stage_ws3_internal_transmission=stage_ws3_internal_transmission,
         stage_ws3_internal_tx_losses=stage_ws3_internal_tx_losses,
         stage_ws4_pwr_min_pin=stage_ws4_pwr_min_pin,
         stage_6_sync_og_to_ts20=stage_6_sync_og_to_ts20,
-        stage_6_persist_restrictions=stage_6_persist_restrictions,
+        stage_6_persist_restrictions=stage_6,
         deliver_outputs=deliver_outputs,
         remove_tree=shutil.rmtree,
         copy_tree=shutil.copytree,
@@ -871,10 +1000,11 @@ def _orchestration_dependencies() -> _orchestrator.A3Dependencies:
 def main() -> int:
     if os.environ.get(PROFILE_AUTHORITIES_ENV):
         _configure_profile_paths()
+    cli_args = parse_cli_args()
     return _orchestrator.orchestrate_a3(
-        parse_cli_args(),
+        cli_args,
         _orchestration_paths(),
-        _orchestration_dependencies(),
+        _orchestration_dependencies(cli_args),
         INPUT_FILES,
     )
 

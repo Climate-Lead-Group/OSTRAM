@@ -39,6 +39,14 @@ its NDC-derived floors against solved CalBAU generation, so A must be solved fir
 dependency is declared in [`config/scenarios/registry.json`](config/scenarios/registry.json),
 not left to the operator to remember.
 
+`A_Calibrated_BAU` declares a restriction-materialization dependency on `BAU`
+(`{"type": "restrictions", "scenario": "BAU"}` in the same registry): this workbook
+ships a header-only Restrictions sheet, and A inherits the rows that BAU's rules
+generate. Selecting A therefore materializes BAU first in the same A3 run and hands
+BAU's generated Restrictions to A through an exported disposable run state; the
+downstream compile/solve selection stays exactly what was requested, and requesting
+only `B_Optimised_VRE` never adds BAU.
+
 ## Layout
 
 ```

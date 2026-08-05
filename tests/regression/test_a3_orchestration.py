@@ -453,6 +453,8 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
                 "input_dir": None,
                 "output_dir": None,
                 "keep_workdir": False,
+                "run_state_out": None,
+                "restrictions_source": None,
             },
         )
 
