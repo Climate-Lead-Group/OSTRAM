@@ -512,7 +512,7 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
         )
     config = load_config(yaml_path)
 
-    tech_types_path = resolve_paths().scenario_config_root / "technology_types.csv"
+    tech_types_path = resolve_paths().interconnector_taxonomy
     gen_techs = load_generation_techs(tech_types_path)
 
     backup_dir = None if skip_backup else make_backup(input_dir)

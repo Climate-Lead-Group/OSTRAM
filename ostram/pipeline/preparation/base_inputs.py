@@ -44,7 +44,7 @@ OUTPUT_FOLDER = _PROJECT_PATHS.a1_outputs
 MISCELLANEOUS_FOLDER = _PROJECT_PATHS.preparation_templates
 A2_EXTRA_INPUTS_FOLDER = _PROJECT_PATHS.generated_extra_inputs
 REGION_CONSOLIDATION_CONFIG = (
-    _PROJECT_PATHS.preparation_config / "Config_region_consolidation.yaml"
+    _PROJECT_PATHS.region_config
 )
 TECH_COUNTRY_MATRIX_FILE = (
     _PROJECT_PATHS.secondary_technology_inputs / "Tech_Country_Matrix.xlsx"

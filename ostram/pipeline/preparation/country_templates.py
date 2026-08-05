@@ -36,7 +36,7 @@ _PROJECT_PATHS = resolve_paths()
 SCRIPT_DIR = str(Path(__file__).resolve().parent)
 INPUT_DIR = str(_PROJECT_PATHS.osemosys_inputs)
 CONFIG_PATH = str(
-    _PROJECT_PATHS.preparation_config / "Config_country_codes.yaml"
+    _PROJECT_PATHS.country_config
 )
 TEMPLATE_OUTPUT_ROOT = _PROJECT_PATHS.preparation_workspace / "country_templates"
 

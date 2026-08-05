@@ -88,7 +88,7 @@ TECH_DESCRIPTIONS = {
 # Format in YAML: {tech: [country1, country2, ...]}
 # Converted here to set of (tech, country) tuples for fast lookup
 def _load_implausible_combinations():
-    config_path = _PROJECT_PATHS.preparation_config / "Config_country_codes.yaml"
+    config_path = _PROJECT_PATHS.country_config
     with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
     combos = set()
