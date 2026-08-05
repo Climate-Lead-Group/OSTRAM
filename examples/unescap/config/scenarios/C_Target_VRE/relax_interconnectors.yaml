@@ -1,0 +1,17 @@
+## relax_interconnectors.yaml — C_Target_VRE
+## IDENTICAL to B_Optimised_VRE. Same evidence-based pipeline caps.
+##
+## Sources: Zixuan v3 + IEPMP 2023 + BPC PDB 2024 + NEA Annual 2024/25
+##          + NEP Vol.II + LTGEP 2025-2044.
+##
+## UNESCAP training model: only the Bangladesh <-> India East corridor remains;
+## all other SOASIA corridors were removed with their countries/regions.
+## The full corridor table lives in git history.
+
+mode: multiplicative
+headroom_factor: 1.5
+
+overrides:
+  # BGD <-> INDEA: real HVDC pipeline (Bheramara-Baharampur, Katihar-Parbatipur,
+  # 2nd Bheramara, Barapukuria, Jamalpur). ResCap 2.50 GW -> 8.50 GW by 2033.
+  TRNBGDXXINDEA: {2023: 2.50, 2028: 6.50, 2029: 7.00, 2030: 7.75, 2033: 8.50}

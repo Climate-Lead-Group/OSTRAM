@@ -1,0 +1,69 @@
+# Region Consolidation Configuration — UNESCAP training profile
+# This file controls the consolidation of multiple regions into a unified
+# region for countries that have sub-regional granularity in the model.
+#
+# Profile: unescap  (examples/unescap/profile.yaml)
+#
+# DISABLED for this profile. The training model carries exactly two regions,
+# BGDXX and INDEA, and INDEA is deliberately kept as a distinct region so the
+# cross-border corridor TRNBGDXXINDEA stays visible. Consolidation would erase
+# the very interconnector the exercises are built around.
+
+# Enable/disable region consolidation globally
+enabled: false
+
+# Countries with multiple regions to consolidate
+# Each country entry specifies:
+#   - regions: list of region codes to consolidate
+#   - unified_region: the code to use for the consolidated region
+countries:
+  # No entries. Example shape, for a future profile that models all of India:
+  # IND:
+  #   regions: ["EA", "NE", "NO", "SO", "WE"]
+  #   unified_region: "XX"
+
+# Aggregation rules by parameter
+# - avg: parameters where values should be averaged across regions
+# - sum: parameters where values should be summed across regions
+# - disabled: parameters that are skipped (no data or not applicable)
+aggregation_rules:
+  avg:
+    - AvailabilityFactor
+    - CapacityFactor
+    - CapacityToActivityUnit
+    - CapitalCost
+    - CapitalCostStorage
+    - DiscountRateStorage
+    - EmissionActivityRatio
+    - FixedCost
+    - InputActivityRatio
+    - MinStorageCharge
+    - OperationalLife
+    - OperationalLifeStorage
+    - OutputActivityRatio
+    - ReserveMarginTagFuel
+    - ReserveMarginTagTechnology
+    - SpecifiedDemandProfile
+    - StorageMaxChargeRate
+    - StorageMaxDischargeRate
+    - TechnologyFromStorage
+    - TechnologyToStorage
+    - VariableCost
+
+  sum:
+    - ResidualCapacity
+    - ResidualStorageCapacity
+    - StorageLevelStart
+    - SpecifiedAnnualDemand
+    - TotalAnnualMaxCapacity
+    - TotalAnnualMaxCapacityInvestment
+    - TotalAnnualMinCapacityInvestment
+    - TotalTechnologyAnnualActivityLowerLimit
+    - TotalTechnologyAnnualActivityUpperLimit
+
+  disabled:
+    - CapacityOfOneTechnologyUnit
+    - RETagTechnology
+    - TotalAnnualMinCapacity
+    - TotalTechnologyModelPeriodActivityLowerLimit
+    - TotalTechnologyModelPeriodActivityUpperLimit

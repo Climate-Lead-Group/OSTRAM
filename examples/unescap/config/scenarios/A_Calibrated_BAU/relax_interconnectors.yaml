@@ -1,0 +1,18 @@
+## relax_interconnectors.yaml — A_Calibrated_BAU
+## Updated: 2026-05-26
+##
+## Same evidence-based corridor overrides as B_Optimised_VRE (these
+## represent the actual project pipeline from Interconnectors.xlsx),
+## but with headroom_factor: 1.0 (no slack beyond the pipeline data).
+##
+## UNESCAP training model: only the Bangladesh <-> India East corridor remains;
+## all other SOASIA corridors were removed with their countries/regions.
+## The full corridor table lives in git history.
+
+mode: multiplicative
+headroom_factor: 1.0      # pipeline only, no extra slack
+
+overrides:
+  # BGD <-> INDEA: real HVDC pipeline (Bheramara-Baharampur, Katihar-Parbatipur,
+  # 2nd Bheramara, Barapukuria, Jamalpur). ResCap 2.50 GW -> 8.50 GW by 2033.
+  TRNBGDXXINDEA: {2023: 2.50, 2028: 6.50, 2029: 7.00, 2030: 7.75, 2033: 8.50}

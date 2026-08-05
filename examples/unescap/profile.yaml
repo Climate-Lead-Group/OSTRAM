@@ -1,0 +1,154 @@
+# profile.yaml — UNESCAP South Asia training profile
+#
+# One example profile: a complete, self-contained set of authorities for a
+# reduced two-region OSTRAM model used in the UNESCAP training sessions.
+#
+# This branch carries the ASSETS only. The profile engine that reads this file
+# lives on the parallel profile-engine branch; until that branch is merged,
+# nothing here is runnable. See README.md.
+
+schema: ostram-profile-v1
+id: unescap
+name: "UNESCAP South Asia training profile"
+description: >-
+  Bangladesh (BGDXX) and India East (INDEA), joined by the real TRNBGDXXINDEA
+  cross-border corridor. Twenty timeslices, four scenario roots, four storage
+  technologies. Built for teaching the OSTRAM workflow end to end without the
+  cost of the full ten-region SOASIA model.
+
+# ---------------------------------------------------------------------------
+# Model scope
+# ---------------------------------------------------------------------------
+model:
+  region: GLOBAL                 # the single OSeMOSYS REGION the model solves in
+  country_regions:
+    - BGDXX
+    - INDEA
+  interconnectors:
+    - TRNBGDXXINDEA
+  year_range:
+    start: 2023
+    end: 2050
+    count: 28
+  timeslices:
+    count: 20
+    seasons: 4
+    day_types: 1
+    daily_time_brackets: 5
+  storage:
+    - LDSBGDXX01
+    - LDSINDEA01
+    - SDSBGDXX01
+    - SDSINDEA01
+  set_sizes:                     # asserted against inputs/osemosys_global/
+    TECHNOLOGY: 89
+    FUEL: 43
+    STORAGE: 4
+    REGION: 1
+
+# ---------------------------------------------------------------------------
+# Resolution policy
+# ---------------------------------------------------------------------------
+# Every resource this profile uses is named below under exactly one of the
+# profile:, project:, or package: authorities. There is NO implicit per-file
+# fallback: if a profile-owned file is missing, resolution fails loudly rather
+# than silently reaching for the project-root file of the same name.
+resolution:
+  implicit_file_fallback: false
+  authorities:
+    - profile
+    - project
+    - package
+  tokens:
+    - profile
+    - project
+    - package
+    - workspace
+
+# ---------------------------------------------------------------------------
+# profile: authority — everything this example owns
+# ---------------------------------------------------------------------------
+# ${profile} resolves to the directory holding this file.
+profile:
+  root: examples/unescap
+  resources:
+    osemosys_inputs: ${profile}/inputs/osemosys_global
+    scenario_workbook: ${profile}/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
+
+    preparation_config: ${profile}/config/preparation
+    country_codes_config: ${profile}/config/preparation/Config_country_codes.yaml
+    region_consolidation_config: ${profile}/config/preparation/Config_region_consolidation.yaml
+
+    compilation_config: ${profile}/config/compilation/Config_MOMF_T1_A.yaml
+    execution_config: ${profile}/config/execution/Config_MOMF_T1_AB.yaml
+
+    scenario_config_root: ${profile}/config/scenarios
+    scenario_registry: ${profile}/config/scenarios/registry.json
+    technology_types: ${profile}/config/scenarios/technology_types.csv
+    ao_extension_decisions: ${profile}/config/scenarios/ao_extension_decisions.csv
+
+    exercises: ${profile}/exercises
+    profile_docs: ${profile}/docs
+    references: ${profile}/references
+    provenance: ${profile}/references/provenance.md
+
+# ---------------------------------------------------------------------------
+# project: authority — repository-level resources this profile borrows
+# ---------------------------------------------------------------------------
+# ${project} resolves to the OSTRAM project bundle root.
+project:
+  root: ${project}
+  resources:
+    maintained_model: ${project}/model/osemosys_fast_preprocessed.txt
+    execution_inputs: ${project}/inputs/execution
+
+# ---------------------------------------------------------------------------
+# package: authority — resources shipped inside the installed ostram package
+# ---------------------------------------------------------------------------
+# ${package} resolves to the installed ostram package directory.
+package:
+  root: ${package}
+  resources:
+    compilation_resources: ${package}/resources/compilation
+    compilation_templates: ${package}/resources/compilation/templates
+    preparation_resources: ${package}/resources/preparation
+    country_templates: ${package}/resources/preparation/country_templates
+
+# ---------------------------------------------------------------------------
+# workspace: mutable, generated, never committed
+# ---------------------------------------------------------------------------
+# ${workspace} resolves to the run workspace (--workspace / OSTRAM_WORKSPACE).
+# Nothing under ${workspace} belongs in examples/unescap/.
+workspace:
+  root: ${workspace}
+  stages:
+    preparation: ${workspace}/preparation
+    scenarios: ${workspace}/scenarios
+    compilation: ${workspace}/compilation
+    execution: ${workspace}/execution
+
+# ---------------------------------------------------------------------------
+# Scenarios
+# ---------------------------------------------------------------------------
+# Authoritative list and dependency graph: config/scenarios/registry.json.
+scenarios:
+  registry: ${profile.scenario_registry}
+  roots:
+    - BAU
+    - A_Calibrated_BAU
+    - B_Optimised_VRE
+    - C_Target_VRE
+
+# ---------------------------------------------------------------------------
+# Runtime
+# ---------------------------------------------------------------------------
+runtime:
+  # The profile ships input CSVs and a scenario workbook, not a built model.
+  # The preparation stage must run before any scenario can be compiled or solved:
+  #   python -m ostram example prepare unescap
+  requires_prepare: true
+  solver: cbc
+  commands:
+    prepare: python -m ostram example prepare unescap
+    run: python -m ostram --profile unescap run
+    report: python -m ostram example report unescap

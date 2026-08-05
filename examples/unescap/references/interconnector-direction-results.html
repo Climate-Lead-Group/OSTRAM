@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interconnector direction comparison — TRNBGDXXINDEA</title>
+<style>
+  :root {
+    --bg: #fcfcfb; --fg: #0b0b0b; --muted: #898781; --secondary: #52514e;
+    --surface: #f5f5f3; --card-bg: #fff; --border: rgba(11,11,11,0.10);
+    --grid: #e1e0d9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a19; --fg: #ffffff; --muted: #898781; --secondary: #c3c2b7;
+      --surface: #232322; --card-bg: #1f1f1e; --border: rgba(255,255,255,0.10);
+      --grid: #2c2c2a;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         background: var(--bg); color: var(--fg); padding: 2rem; max-width: 900px;
+         margin: 0 auto; line-height: 1.6; }
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.5rem; }
+  h2 { font-size: 18px; font-weight: 500; margin: 2rem 0 0.5rem; }
+  .subtitle { font-size: 14px; color: var(--secondary); margin-bottom: 2rem; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+            margin-bottom: 2rem; }
+  .card { background: var(--surface); border-radius: 8px; padding: 1rem;
+           text-align: center; }
+  .card .label { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .card .value { font-size: 15px; font-weight: 500; }
+  .card .detail { font-size: 12px; color: var(--secondary); margin-top: 4px; }
+  .metric-card { background: var(--card-bg); border: 1px solid var(--border);
+                  border-radius: 12px; padding: 1rem 1.25rem; }
+  .metric-card .label { font-size: 13px; color: var(--muted); }
+  .metric-card .num { font-size: 22px; font-weight: 500; margin-top: 4px; }
+  .metric-card .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .chart-wrap { position: relative; width: 100%; height: 280px; margin-bottom: 2rem; }
+  .chart-half { position: relative; width: 100%; height: 220px; }
+  .side-by-side { display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+                   margin-bottom: 2rem; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px;
+             color: var(--secondary); margin: 1rem 0 2rem; }
+  .legend span { display: flex; align-items: center; gap: 4px; }
+  .legend .dot { width: 10px; height: 10px; border-radius: 2px; }
+  .section-label { font-size: 13px; color: var(--secondary); margin-bottom: 4px; }
+  .guide { background: var(--surface); border-radius: 12px; padding: 1.5rem;
+            margin-top: 2rem; font-size: 14px; }
+  .guide h3 { font-size: 16px; font-weight: 500; margin-bottom: 0.75rem; }
+  .guide code { background: var(--card-bg); border: 1px solid var(--border);
+                 padding: 2px 6px; border-radius: 4px; font-size: 13px;
+                 font-family: 'Consolas', 'Monaco', monospace; }
+  .guide pre { background: var(--card-bg); border: 1px solid var(--border);
+                padding: 1rem; border-radius: 8px; font-size: 13px;
+                font-family: 'Consolas', 'Monaco', monospace; overflow-x: auto;
+                margin: 0.75rem 0; line-height: 1.5; }
+  .guide ul { padding-left: 1.5rem; margin: 0.5rem 0; }
+  .guide li { margin-bottom: 0.25rem; }
+  .arrow { font-size: 16px; vertical-align: middle; }
+  .footer { font-size: 12px; color: var(--muted); margin-top: 3rem;
+             border-top: 1px solid var(--border); padding-top: 1rem; }
+</style>
+</head>
+<body>
+
+<h1>Interconnector direction comparison</h1>
+<p class="subtitle">TRNBGDXXINDEA (BGDXX &harr; INDEA) &mdash; scenario: B_Optimised_VRE</p>
+
+<div class="cards">
+  <div class="card">
+    <div class="label">Forward only</div>
+    <div class="value">BGDXX &rarr; INDEA</div>
+    <div class="detail">BGDXX exports to INDEA</div>
+  </div>
+  <div class="card">
+    <div class="label">Reverse only</div>
+    <div class="value">BGDXX &larr; INDEA</div>
+    <div class="detail">INDEA exports to BGDXX</div>
+  </div>
+  <div class="card">
+    <div class="label">Bidirectional</div>
+    <div class="value">BGDXX &harr; INDEA</div>
+    <div class="detail">Both directions allowed</div>
+  </div>
+</div>
+
+<h2>Installed capacity (GW)</h2>
+<div class="chart-wrap"><canvas id="capChart"></canvas></div>
+
+<h2>Mode activity (PJ) &mdash; who sends power?</h2>
+<div class="side-by-side">
+  <div>
+    <div class="section-label">Mode 1: BGDXX &rarr; INDEA</div>
+    <div class="chart-half"><canvas id="mode1Chart"></canvas></div>
+  </div>
+  <div>
+    <div class="section-label">Mode 2: INDEA &rarr; BGDXX</div>
+    <div class="chart-half"><canvas id="mode2Chart"></canvas></div>
+  </div>
+</div>
+
+<h2>Total production (PJ)</h2>
+<div class="chart-wrap"><canvas id="prodChart"></canvas></div>
+
+<div class="legend">
+  <span><span class="dot" style="background:#2a78d6;"></span>Forward (BGDXX&rarr;INDEA)</span>
+  <span><span class="dot" style="background:#1baf7a;"></span>Reverse (INDEA&rarr;BGDXX)</span>
+  <span><span class="dot" style="background:#eda100;"></span>Bidirectional</span>
+</div>
+
+<div class="cards">
+  <div class="metric-card">
+    <div class="label">Peak capacity</div>
+    <div class="num">12.67 GW</div>
+    <div class="sub">reverse (vs 8.5 forward, 10.3 bidirectional)</div>
+  </div>
+  <div class="metric-card">
+    <div class="label">Peak production</div>
+    <div class="num">382.7 PJ</div>
+    <div class="sub">reverse in 2035</div>
+  </div>
+  <div class="metric-card">
+    <div class="label">Bidir. dominant early</div>
+    <div class="num">INDEA</div>
+    <div class="sub">Mode 2 dominates 2023-2035</div>
+  </div>
+</div>
+
+<div class="guide">
+  <h3>How to reproduce this comparison</h3>
+  <p>The interconnector direction is controlled by a single YAML file that runs
+  between the A3 and B1 pipeline stages.</p>
+
+  <p><strong>Step 0</strong> &mdash; Prepare the profile once (the profile ships inputs,
+  not a built model):</p>
+  <pre>python -m ostram example prepare unescap</pre>
+
+  <p><strong>Step 1</strong> &mdash; Edit the direction authority in the profile:</p>
+  <pre>examples/unescap/config/scenarios/B_Optimised_VRE/set_interconnector_direction.yaml</pre>
+  <p>Set the direction for the interconnector technology:</p>
+  <pre>directions:
+  TRNBGDXXINDEA: forward      # or reverse, or bidirectional</pre>
+  <p>Two ready-made variants sit next to it &mdash;
+  <code>set_interconnector_direction_EXAMPLE_forward.yaml</code> and
+  <code>set_interconnector_direction_EXAMPLE_reverse.yaml</code>. Copy one over
+  <code>set_interconnector_direction.yaml</code> instead of editing by hand.</p>
+
+  <p><strong>Step 2</strong> &mdash; Run the scenario. One command carries the whole
+  chain; the direction rule is applied between the scenario and compilation stages:</p>
+  <pre>python -m ostram --profile unescap run --scenario B_Optimised_VRE</pre>
+
+  <p><strong>Step 3</strong> &mdash; Change the direction in the YAML and run again,
+  once per direction. Each run writes its results under its own workspace folder,
+  so nothing is overwritten.</p>
+
+  <p><strong>Step 4</strong> &mdash; Regenerate this report:</p>
+  <pre>python -m ostram example report unescap</pre>
+
+  <ul>
+    <li><code>forward</code> keeps only the mode whose input fuel matches the source region (BGDXX)</li>
+    <li><code>reverse</code> keeps only the mode whose input fuel matches the destination region (INDEA)</li>
+    <li><code>bidirectional</code> is the default &mdash; both modes stay active</li>
+  </ul>
+
+  <p><strong>Not runnable from this branch yet.</strong> This branch carries the
+  UNESCAP example assets only. The <code>example</code> and <code>--profile</code>
+  commands above arrive with the parallel profile-engine branch; until that lands,
+  treat the commands as the target interface and the figures below as a record of
+  earlier runs.</p>
+</div>
+
+<div class="footer">
+  OSTRAM / UNESCAP interconnector exercise &mdash; reference result set.
+  The figures on this page were produced by earlier full-pipeline runs of
+  <code>B_Optimised_VRE</code>; they are reproduced here as a reference and are
+  not regenerated by this branch.
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+const YEARS = [2023, 2025, 2030, 2035, 2040, 2045, 2050];
+const data = {"forward": {"capacity": [2.5, 2.5, 2.5, 2.5, 2.5, 8.5263, 8.5263], "mode1": [0.0019, 0.4189, 0.5519, 0.0097, 1.656, 34.7678, 5.646], "mode2": [0, 0, 0, 0, 0, 0, 0], "production": [0.4106, 0.4118, 0.5424, 0.8111, 19.0384, 83.8947, 56.3084]}, "reverse": {"capacity": [5.0, 8.1901, 12.6693, 12.6693, 12.6693, 12.6693, 12.6693], "mode1": [0, 0, 0, 0, 0, 0, 0], "mode2": [2.196, 1.8984, 5.5644, 5.5644, 0.132, 2.0642, 3.6008], "production": [150.8406, 196.252, 372.4205, 382.6775, 111.3649, 2.2498, 119.3095]}, "bidirectional": {"capacity": [5.0, 8.1901, 10.2658, 10.2658, 10.2658, 10.2658, 10.2658], "mode1": [0, 0, 0, 0, 5.1579, 22.1077, 4.7403], "mode2": [2.196, 3.5971, 4.5088, 4.5088, 4.5088, 0, 4.5088], "production": [150.8406, 196.252, 311.6888, 295.6541, 63.5244, 62.5039, 83.4022]}};
+
+const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+const gridColor = isDark ? '#2c2c2a' : '#e1e0d9';
+const tickColor = '#898781';
+const FWD = '#2a78d6', REV = '#1baf7a', BID = '#eda100';
+
+function lineChart(id, key, yLabel) {
+  new Chart(document.getElementById(id), {
+    type: 'line',
+    data: {
+      labels: YEARS,
+      datasets: [
+        { label: 'Forward', data: data.forward[key], borderColor: FWD, borderWidth: 2, pointRadius: 4, pointBackgroundColor: FWD, tension: 0.3, fill: false },
+        { label: 'Reverse', data: data.reverse[key], borderColor: REV, borderWidth: 2, pointRadius: 4, pointBackgroundColor: REV, tension: 0.3, fill: false },
+        { label: 'Bidirectional', data: data.bidirectional[key], borderColor: BID, borderWidth: 2, pointRadius: 4, pointBackgroundColor: BID, tension: 0.3, fill: false },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: tickColor } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor },
+              title: { display: true, text: yLabel, color: tickColor } }
+      }
+    }
+  });
+}
+
+function barChart(id, key) {
+  new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: {
+      labels: YEARS,
+      datasets: [
+        { label: 'Forward', data: data.forward[key], backgroundColor: FWD, borderRadius: 4 },
+        { label: 'Reverse', data: data.reverse[key], backgroundColor: REV, borderRadius: 4 },
+        { label: 'Bidirectional', data: data.bidirectional[key], backgroundColor: BID, borderRadius: 4 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: tickColor } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor },
+              title: { display: true, text: 'PJ', color: tickColor } }
+      }
+    }
+  });
+}
+
+lineChart('capChart', 'capacity', 'GW');
+barChart('mode1Chart', 'mode1');
+barChart('mode2Chart', 'mode2');
+lineChart('prodChart', 'production', 'PJ');
+</script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+# Config_MOMF_T1_AB.yaml — UNESCAP training profile (execution authority)
+#
+# Profile: unescap  (examples/unescap/profile.yaml)
+#
+# Model external dependencies: Directories, Files, sheets and columns.
+#
+# Paths below are LOGICAL. Every ${...} token is declared in profile.yaml under
+# the profile:, project:, package:, or workspace: authority. Nothing here is
+# resolved against the caller's working directory, and there is no per-file
+# fallback to the project-root configuration of the same name.
+########################################################################################
+# Directories (logical)
+A2_output: ${workspace.compilation}/A2_Output_Params
+A2_output_otoole: ${workspace.execution}/A2_Outputs_Params_otoole
+Miscellaneous: ${package.compilation_resources}
+templates: ${package.compilation_templates}
+executables: ${workspace.execution}/Executables
+outputs: ${workspace.execution}/Outputs
+concatenate_folder: ${workspace.execution}/concatenate_files
+
+# Files (logical)
+otoole_config: ${package.compilation_resources}/conversion_format.yaml
+conv_format: ${package.compilation_resources}/conversion_format.yaml
+osemosys_model: ${project.maintained_model}
+preprocess_data: 'preprocess_data.py'   # OSeMOSYS preprocessor, resolved by the toolchain
+inputs_file: 'Inputs.csv'
+outputs_file: 'Outputs.csv'
+
+# Prefixes and suffixes
+prefix_final_files: 'OSTRAM_'
+preprocess_data_name: 'Pre_processed_'
+output_files: '_output'
+
+base_scenario: 'BAU'
+
+# Configuration parameters
+########################################################################################
+solver: 'cbc' # Could you use: 'glpk', 'cbc', 'cplex' and 'gurobi'
+
+# For CBC use
+iteration_time: 20000
+cbc_random_seed: 12345        # Random seed for reproducibility
+
+# For CPLEX use
+cplex_threads: 4
+cplex_random_seed: 12345      # Random seed for reproducibility
+
+# For Gurobi use
+gurobi_threads: 3
+gurobi_seed: 12345            # Random seed for reproducibility
+
+# For delete intermediate files
+del_files: False
+
+# For run only the main scenarios
+only_main_scenario: False
+
+# Paralle scenarios
+parallel: False
+# Number of scenario per run
+max_x_per_iter: 4
+
+# Write A2 otoole outputs
+A2_otoole_outputs: True
+
+# Write txt model
+write_txt_model: True
+
+# Create matrixes
+create_matrix: True
+
+# Execute OSeMOSYS model
+execute_model: True
+
+# Reuse existing .sol file (skip solver and LP creation if .sol already exists
+# at the expected path). otoole .sol -> CSV and the per-scenario / cross-scenario
+# concatenation still run, so this lets you regenerate outputs from a previous
+# solve without re-solving. If the .sol is missing, B2 falls back to a normal
+# solve. Requires execute_model: True and concat_otoole_csv: True for the full
+# downstream chain to produce *_output.csv.
+reuse_existing_sol: False
+
+# Concatenate otoole csv
+concat_otoole_csv: True
+
+# Concatenate scenarios csv
+concat_scenarios_csv: True
+
+# Annualize capital investment
+annualize_capital: False
+
+########################################################################################
+# === Storage delay (block storage builds for first N years, then release) ===
+# Master switch. False (or absent) = pipeline runs unchanged.
+# When True: mutually exclusive with strip_storage_active (strip is silently
+# turned off). The solver is redirected to a patched copy of the OSeMOSYS model
+# written into the execution workspace, and combined inputs/outputs are written
+# with `storage_delay_prefix_final_files` so baseline OSTRAM_* artifacts are
+# not overwritten. The maintained model at ${project.maintained_model} is never
+# modified in place.
+#
+# ON for this profile: storage exists from the start of the horizon in the
+# input data, but the first five years are reserved for the calibrated build-out
+# so the optimiser cannot front-load batteries into the calibration window.
+storage_delay_active: True
+storage_delay_first_n_years: 5
+storage_delay_storage_prefixes:
+  - SDS
+  - LDS
+# storage_delay_storages: []          # exact storage names (overrides prefixes if set)
+storage_delay_allowed_value: "-1"     # PWR cap value applied in open years (-1 = unconstrained)
+storage_delay_suffix: "StorageDelayN5"
+storage_delay_model_output: ${workspace.execution}/osemosys_fast_preprocessed_storage_delay.txt
+storage_delay_prefix_final_files: "OSTRAM_StorageDelay_"
+storage_delay_root_datafile: "OSTRAM_data_storage_delay.txt"
+
+########################################################################################
+# === Storage stripping diagnostic ===
+# Master switch. False (or absent) = pipeline runs unchanged (no strip).
+#
+# OFF for this profile. The UNESCAP training model deliberately carries four
+# storage technologies — LDSBGDXX01, LDSINDEA01, SDSBGDXX01, SDSINDEA01 — and
+# the B/C scenarios put storage floors on them. Stripping storage would delete
+# the object the exercises study. Turn this on only for a deliberate
+# no-storage diagnostic, and expect the storage exercises to stop working.
+strip_storage_active: False
+
+# --- Tier 3: zero storage (baseline) ---
+strip_storage_mode: "all"
+strip_storage_targets: []
+strip_storage_suffix: "NoStorage"
+
+# --- Tier 1: a single storage technology ---
+# strip_storage_mode: "tech"
+# strip_storage_targets: ["SDSBGDXX01"]
+# strip_storage_suffix: "NoBGDSDS"
+
+# --- Tier 2: all SDS (keep LDS) ---
+# strip_storage_mode: "class"
+# strip_storage_targets: ["SDS"]
+# strip_storage_suffix: "NoSDS"
+
+########################################################################################
+# === PWRBCK cap-opening diagnostic ===
+# Opens TotalAnnualMaxCapacity and TotalAnnualMaxCapacityInvestment for PWRBCK*
+# backstop techs. Runs after strip_storage and before the careful XLSX repair.
+open_pwrbck_active: True
+open_pwrbck_value: 9999
+open_pwrbck_pattern: "PWRBCK"
+open_pwrbck_suffix: "OpenBCK"
+
+########################################################################################
+# === Older blunt reserve-margin repair ===
+# Keep this disabled for the careful XLSX path. It is preserved for
+# compatibility; the XLSX repair below is the one intended for this profile.
+reserve_margin_repair_active: False
+
+########################################################################################
+# === Careful XLSX reserve-margin repair ===
+# Applied by the execution stage from the workbook named below.
+# It produces e.g.:
+#   Pre_processed_BAU_0_OpenBCK_RMCarefulXLSX.txt
+reserve_margin_xlsx_active: True
+reserve_margin_xlsx_suffix: "RMCarefulXLSX"
+reserve_margin_xlsx_workbook: ${project.execution_inputs}/firm_capacity_fallbacks_by_cr.xlsx
+reserve_margin_xlsx_sheet: "fallbacks"
+
+# Reserve tag repairs.
+# 1.0 means PWRBCK capacity gets full reserve capacity credit.
+reserve_margin_xlsx_backstop_credit: 1.0
+
+# 0.9 means 90% of PWRCCS installed capacity counts for reserve.
+reserve_margin_xlsx_ccs_credit: 0.9
+
+# Target firm fossil technologies whose stock/flow cap sentinel values may be replaced.
+reserve_margin_xlsx_target_prefixes:
+  - PWRPET
+  - PWROIL
+  - PWRNGS
+
+# Only these current values are replaced in TotalAnnualMaxCapacity and
+# TotalAnnualMaxCapacityInvestment. Other values are left untouched.
+reserve_margin_xlsx_sentinel_values:
+  - 0
+  - 9999
+
+# Optional stricter final-style alternatives:
+# Use ONE of these after the diagnostic case solves.
+#
+# Alternative A: leave PWRBCK at default/no reserve credit.
+# reserve_margin_xlsx_patch_backstop: False
+#
+# Alternative B: explicitly set PWRBCK reserve credit to zero.
+# reserve_margin_xlsx_backstop_credit: 0

@@ -1,0 +1,30 @@
+## retirement_schedule.yaml — C_Target_VRE
+## IDENTICAL to B_Optimised_VRE (v2). Thermal retirements are physical
+## and do not change between scenarios.
+##
+## Lifetime midpoints from Natalia's research:
+##   COA 35yr, NGS 30yr, PET 25yr, NUC 50yr
+
+base_year: 2028
+
+age_based:
+  COA:
+    lifetime_years: 35
+    retirement_profile: linear
+  NGS:
+    lifetime_years: 30
+    retirement_profile: linear
+  PET:
+    lifetime_years: 25
+    retirement_profile: linear
+  NUC:
+    lifetime_years: 50
+    retirement_profile: linear
+
+exempt:
+  - 'PWRHYD*'
+  - 'PWRSPV*'
+  - 'PWRWON*'
+  - 'PWRBCK*'
+
+scheduled: []
