@@ -1015,6 +1015,38 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                         label="apply base-year pin",
                     )
 
+    def test_static_pin_wrapper_honors_profile_policy_gate(self) -> None:
+        module = _load_a3("pin_policy_gate")
+        with tempfile.TemporaryDirectory() as temp:
+            rules_dir = Path(temp)
+            (rules_dir / "apply_base_year_pin.py").write_text(
+                "# fixture\n", encoding="utf-8"
+            )
+            (rules_dir / "pwr_min_2023_2026_pin.csv").write_text(
+                "fixture\n", encoding="utf-8"
+            )
+            stage5 = rules_dir / "stage5"
+            stage5.mkdir()
+            cases = (
+                ('{"apply_pwr_min_pin": false}', 0),
+                ('{"apply_pwr_min_pin": true}', 1),
+                (None, 1),
+            )
+            for policies, expected_calls in cases:
+                with self.subTest(policies=policies):
+                    environ = {"OSTRAM_PROFILE_POLICIES": policies} if policies else {}
+                    with (
+                        mock.patch.dict(os.environ, environ, clear=False),
+                        mock.patch.object(module, "RULES_SCRIPTS_DIR", rules_dir),
+                        mock.patch.object(module, "SCENARIO_RULE_DATA", rules_dir),
+                        mock.patch.object(module, "banner"),
+                        mock.patch.object(module, "run_subproc") as run_subproc,
+                    ):
+                        if policies is None:
+                            os.environ.pop("OSTRAM_PROFILE_POLICIES", None)
+                        module.stage_ws4_pwr_min_pin(stage5, "B_Optimised_VRE")
+                    self.assertEqual(run_subproc.call_count, expected_calls)
+
     def test_static_pin_wrapper_fails_closed_on_scenario_or_missing_asset(self):
         module = _load_a3("pin_wrapper_failures")
         with tempfile.TemporaryDirectory() as temp:

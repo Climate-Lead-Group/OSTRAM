@@ -56,6 +56,7 @@ from ostram.paths import (
     bounded_workspace_workbook_path,
     resolve_paths,
 )
+from ostram.profiles import profile_policy
 
 from . import orchestrator as _orchestrator
 
@@ -661,6 +662,13 @@ def stage_ws4_pwr_min_pin(s5: Path, scenario: str) -> None:
     """
     if scenario not in PIN_ROOT_SCENARIOS:
         raise ValueError(f"unsupported PWR/MIN pin scenario: {scenario!r}")
+    if not profile_policy("apply_pwr_min_pin", True):
+        print(
+            "    [SKIP] WS-4 PWR/MIN pin: profile policy "
+            "apply_pwr_min_pin=false (calibration authority not valid "
+            "for this profile's domain)"
+        )
+        return
     script = RULES_SCRIPTS_DIR / "apply_base_year_pin.py"
     rules_csv = SCENARIO_RULE_DATA / "pwr_min_2023_2026_pin.csv"
     missing = [path for path in (script, rules_csv) if not path.is_file()]

@@ -157,6 +157,9 @@ class UnescapMappingTests(unittest.TestCase):
         )
 
     def test_reduced_pwr_min_pin_is_complete_for_its_domain(self) -> None:
+        # The projection stays frozen as reference evidence, but the profile
+        # disables its application (policies.apply_pwr_min_pin: false): the
+        # full-model calibration is infeasible on the reduced domain.
         authority = (
             UNESCAP / "config" / "scenarios" / "rules"
             / "pwr_min_2023_2026_pin.csv"

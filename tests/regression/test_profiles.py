@@ -256,6 +256,11 @@ class ProfileCliTests(unittest.TestCase):
         self.assertTrue(required_roles.issubset(manifest.authorities))
         self.assertTrue(all(path.exists() for path in sources.values()))
         self.assertEqual(manifest.policies["lid_rule_new_semantics"], True)
+        # The full-model WS-4 base-year pin is not domain-valid on the
+        # reduced two-region model (CBC-certified infeasible); the profile
+        # must keep it disabled and must not re-declare the rules digest.
+        self.assertEqual(manifest.policies["apply_pwr_min_pin"], False)
+        self.assertNotIn("pwr_min_pin_rules_sha256", manifest.policies)
         self.assertEqual(
             manifest.metadata["effective_values"][
                 "TRNBGDXXINDEA_residual_capacity_gw"

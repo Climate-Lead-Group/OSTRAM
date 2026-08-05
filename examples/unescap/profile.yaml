@@ -125,9 +125,17 @@ policies:
   # The training correction replaces legacy hand-entered LID cells. The full
   # profile explicitly keeps this false in config/profiles/full.yaml.
   lid_rule_new_semantics: true
-  # Exact digest of config/scenarios/rules/pwr_min_2023_2026_pin.csv. The
-  # reduced table is a domain projection of the audited full-model authority.
-  pwr_min_pin_rules_sha256: 984c3885f7bcee992d634c602402e3c6183a2f3bc8a1d8a0620ae214c1a1d872
+  # The WS-4 base-year pin is a full-model calibration authority (audited on
+  # the five-country domain, where pinned 2023-2026 BGD generation balances
+  # against several import corridors). Projected onto this reduced two-region
+  # model it is provably infeasible: pinned BGD activity (~270.7 PJ in 2023,
+  # backstop pinned to 0) plus the single 2.496 GW interconnector cannot meet
+  # the 427.3 PJ 2023 BGD demand tier, and CBC certifies primal infeasibility.
+  # The pinned training pipeline (training-unescap@6e00e8b) applies no
+  # base-year pin to any scenario of this model, so the profile disables the
+  # stage. config/scenarios/rules/pwr_min_2023_2026_pin.csv is retained as the
+  # frozen reference projection only; it is not applied.
+  apply_pwr_min_pin: false
 
 authorities:
   # Profile-owned reduced-model authorities.
