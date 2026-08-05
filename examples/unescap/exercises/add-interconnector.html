@@ -229,7 +229,7 @@
 <section id="edit-template">
   <h2><span class="num">3</span> Edit the Scenario Workbook</h2>
 
-  <p>Open the profile's scenario workbook, <code>examples/unescap/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx</code>. You will edit three sheets. Keep the existing <code>TRNBGDXXINDEA</code> rows visible as your reference &mdash; all new rows follow the same column structure.</p>
+  <p>Open the <strong>prepared workspace copy</strong> of the scenario workbook. Run <code>python -m ostram --profile unescap inspect-resources</code> and use the absolute <code>scenario_workbook</code> path it prints. You will edit three sheets. Keep the existing <code>TRNBGDXXINDEA</code> rows visible as your reference &mdash; all new rows follow the same column structure. The committed seed at <code>examples/unescap/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx</code> remains unchanged during the exercise.</p>
 
   <ol class="step-list">
     <!-- Step 1 -->
@@ -466,14 +466,12 @@
 
   <ol class="step-list">
     <li>
-      <strong>Prepare the profile (once)</strong>
-      <p style="margin-top:8px;">The profile ships input CSVs and a scenario workbook, not a
-      built model. Preparation turns them into the base model. You only repeat this after
-      changing country membership.</p>
+      <strong>Confirm the prepared resources</strong>
+      <p style="margin-top:8px;">Exercise B continues from Exercise A's prepared workspace. Confirm that the scenario workbook path is inside that workspace; do not reset, because reset would discard the Exercise A country merge.</p>
 
       <div class="code-wrap">
         <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
-        <pre><code><span class="cmd">python</span> -m ostram example prepare unescap</code></pre>
+        <pre><code><span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> inspect-resources</code></pre>
       </div>
     </li>
 
@@ -513,8 +511,8 @@
 
   <div class="callout tip">
     <div class="tag">Tip</div>
-    <p>You do not need to re-prepare the profile. The scenario stage reads the scenario
-    workbook fresh on every run and detects the new technology automatically.</p>
+    <p>You do not need to re-prepare the profile. The scenario stage reads the prepared
+    workspace workbook fresh on every run and detects the new technology automatically.</p>
   </div>
 
   <div class="callout warn">

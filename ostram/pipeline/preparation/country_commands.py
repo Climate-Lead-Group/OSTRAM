@@ -28,8 +28,14 @@ def _arguments(action: str, arguments: Sequence[str]) -> Iterator[None]:
 
 def main(argv: Sequence[str] | None = None) -> int:
     arguments = list(sys.argv[1:] if argv is None else argv)
-    parser = argparse.ArgumentParser(prog="python -m ostram country")
+    parser = argparse.ArgumentParser(prog="python -m ostram country", add_help=False)
     parser.add_argument("action", choices=sorted(MODULES))
+    if not arguments or arguments == ["--help"] or arguments == ["-h"]:
+        print("usage: python -m ostram country {merge,template,validate} ...")
+        print("\nprofile-aware country data operations")
+        print("\npositional arguments:")
+        print("  {merge,template,validate}")
+        return 0
     known, remaining = parser.parse_known_args(arguments)
     module = importlib.import_module(MODULES[known.action])
     with _arguments(known.action, remaining):

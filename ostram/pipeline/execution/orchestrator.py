@@ -772,6 +772,28 @@ def invoke_solver_command(
     )
 
 
+def validate_cbc_solution(solution_file: str | os.PathLike[str]) -> str:
+    """Require CBC's solution header to declare an optimal solution.
+
+    CBC returns process status zero for model-level outcomes such as an
+    infeasible linear relaxation.  The solution header is therefore the
+    authoritative status boundary; result conversion must never turn an
+    infeasible incumbent into a successful OSTRAM report.
+    """
+
+    path = Path(solution_file)
+    if not path.is_file():
+        raise FileNotFoundError(f"CBC solution file not found: {path}")
+    with path.open("r", encoding="utf-8", errors="replace") as stream:
+        status = next((line.strip() for line in stream if line.strip()), "")
+    if not status.lower().startswith("optimal - objective value"):
+        raise RuntimeError(
+            f"CBC did not produce an optimal solution: {status or '<empty status>'} "
+            f"({path})"
+        )
+    return status
+
+
 class SolverAdapter:
     """Prepare and invoke supported solver commands behind one explicit seam."""
 
@@ -1010,6 +1032,10 @@ def execute_scenario(
             "Solver finished but did not create the expected solution file: "
             f"{paths.output_file}.sol"
         )
+
+    if params["execute_model"] and solver == "cbc":
+        status = validate_cbc_solution(paths.output_file + ".sol")
+        print(f"CBC solution status: {status}")
 
     run_scenario_output_stage(
         params,

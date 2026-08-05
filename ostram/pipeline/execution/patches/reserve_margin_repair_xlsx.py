@@ -270,7 +270,11 @@ def main() -> int:
     consistency_warnings = stock_flow_warnings(patched, args.target_prefixes)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text("".join(patched), encoding="utf-8")
+    output_path.write_text(
+        "".join(patched),
+        encoding="utf-8",
+        newline="\r\n",
+    )
 
     warnings = stock_warnings + flow_warnings + consistency_warnings
     if warnings:
@@ -281,6 +285,7 @@ def main() -> int:
         bounded_warnings_path(args.warnings_file).write_text(
             warning_text,
             encoding="utf-8",
+            newline="\r\n",
         )
 
     print(f"Wrote patched datafile: {output_path}")

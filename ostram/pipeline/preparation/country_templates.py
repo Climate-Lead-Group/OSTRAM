@@ -5,11 +5,11 @@ Creates a set of CSV files with the minimum required data structure
 for a new country, using an existing country as a reference template.
 
 Usage:
-    python Z_generate_country_template.py                  # reads from Config_country_codes.yaml
-    python Z_generate_country_template.py --new NCC --ref ARG -i BOL PRY   # CLI overrides
+    python -m ostram --profile unescap country template
+    python -m ostram --profile unescap country template --new NCC --ref ARG -i BOL PRY
 
 Configure the 'template_generation' section in Config_country_codes.yaml,
-then just run: python Z_generate_country_template.py
+then run the profile-aware country template command.
 
 This script does NOT modify the original files in OG_csvs_inputs.
 It creates new CSV files in the output directory that can be manually
@@ -27,6 +27,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from ostram.paths import resolve_paths
+from ostram.profiles import active_profile_id
 
 # ============================================================================
 # Configuration
@@ -558,7 +559,8 @@ def generate_merge_script(new_cc, output_dir):
         '            print(f"  Created {CENTERPOINTS_PATH}")',
         '',
         'print("\\nDone! Backup files created with suffix: " + backup_suffix)',
-        f'print("Run the validation script to verify: python Z_validate_country_data.py --country {new_cc}")',
+        f'print("Validate with: python -m ostram --profile '
+        f'{active_profile_id()} country validate {new_cc}")',
     ]
 
     with open(script_path, "w", encoding="utf-8") as f:
@@ -694,8 +696,15 @@ def process_entry(new_cc, ref_cc, new_rr, ixn_raw, ixn_source,
     print(f"  1. Review and modify the CSV files in {output_dir}")
     print(f"  2. Update values to reflect actual data for {new_cc}")
     print(f"  3. Update Config_country_codes.yaml with {new_cc} entry")
-    print(f"  4. Run: python {os.path.join(output_dir, 'merge_into_inputs.py')}")
-    print(f"  5. Validate: python Z_validate_country_data.py --country {new_cc}")
+    profile = active_profile_id()
+    print(
+        f"  4. Run: python -m ostram --profile {profile} "
+        f"country merge {new_cc}"
+    )
+    print(
+        f"  5. Validate: python -m ostram --profile {profile} "
+        f"country validate {new_cc}"
+    )
 
 
 def main():

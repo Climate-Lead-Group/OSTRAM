@@ -239,11 +239,14 @@ def synchronize_country(
 
 def _default_ao(paths) -> Path:
     snapshots = sorted(paths.a1_outputs.glob("_post_a2_snapshot_*/A-O_Parametrization.xlsx"))
-    if len(snapshots) != 1:
-        raise FileNotFoundError(
-            "--ao is required unless exactly one post-A2 parametrization exists"
-        )
-    return snapshots[0]
+    bau = paths.a1_outputs / "_post_a2_snapshot_BAU" / "A-O_Parametrization.xlsx"
+    if bau.is_file():
+        return bau
+    if len(snapshots) == 1:
+        return snapshots[0]
+    raise FileNotFoundError(
+        "--ao is required when the canonical post-A2 BAU snapshot is absent"
+    )
 
 
 def main(argv: Sequence[str] | None = None) -> int:

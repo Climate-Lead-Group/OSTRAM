@@ -45,6 +45,8 @@ not left to the operator to remember.
 examples/unescap/
   profile.yaml                     the profile's authorities and resolution policy
   README.md                        this file
+  AUTHORING_AND_ACCEPTANCE.md      Natalia's Windows authoring + Actions acceptance start
+  TRAINING_OPERATION_COVERAGE.md   legacy-to-canonical operation ledger
   exercises/
     training.html                  main guide — 4 scenario exercises + 5 interconnector sub-exercises
     add-country.html               Exercise A — add Myanmar to the model
@@ -73,11 +75,16 @@ examples/unescap/
   references/
     interconnector-direction-results.html   measured forward/reverse/bidirectional comparison
     provenance.md                  where every file came from, and what changed
+    release-readiness.md           Windows CBC and cross-platform acceptance evidence
 ```
 
 Nothing generated lives here. Preparation output, compiled parameters, solver inputs,
 `.sol` files, `Executables/`, `Outputs/`, dashboards, and plots are all written under the
 run workspace (`--workspace` / `OSTRAM_WORKSPACE`), never inside `examples/unescap/`.
+
+Training authors should start with
+[`AUTHORING_AND_ACCEPTANCE.md`](AUTHORING_AND_ACCEPTANCE.md). The audited migration map
+is [`TRAINING_OPERATION_COVERAGE.md`](TRAINING_OPERATION_COVERAGE.md).
 
 ## Commands
 
@@ -98,19 +105,19 @@ Profile-aware country commands, used by [Exercise A](exercises/add-country.html)
 python -m ostram --profile unescap country template
 python -m ostram --profile unescap country merge MMR
 python -m ostram --profile unescap country validate MMR
-python -m ostram --profile unescap country populate-workbook MMR
+python -m ostram --profile unescap scenario sync-country --country MMR
 ```
 
 Profile-aware scenario commands:
 
 ```
-python -m ostram --profile unescap scenario list
+python -m ostram --profile unescap scenario sync-country --help
 python -m ostram --profile unescap transform --scenario B_Optimised_VRE
 python -m ostram --profile unescap compile-inputs
 python -m ostram --profile unescap inspect-resources
 ```
 
-`profile.yaml` sets `runtime.requires_prepare: true`. The profile ships input CSVs and a
+`profile.yaml` sets `metadata.requires_prepare: true`. The profile ships input CSVs and a
 scenario workbook, not a built model, so `example prepare unescap` must succeed before any
 scenario can be compiled or solved.
 

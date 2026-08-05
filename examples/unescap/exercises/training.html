@@ -461,7 +461,7 @@
     <div class="callout warn"><div class="tag">If you change the input data</div><p>Preparation output is reused on every run. If you edit the raw model under <code>examples/unescap/inputs/osemosys_global/</code>, prepare the profile again so the base model is rebuilt from your new data:</p>
       <div class="code-wrap">
         <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
-<pre><code><span class="cmd">python</span> -m ostram example prepare unescap <span class="flag">--rebuild</span></code></pre>
+<pre><code><span class="cmd">python</span> -m ostram example prepare unescap <span class="flag">--reset</span></code></pre>
       </div>
       <p>Nothing needs deleting by hand. Preparation owns its workspace and replaces stale output itself; no generated folder lives inside the profile.</p>
     </div>
@@ -602,9 +602,9 @@
     <p>Then save this run and open the dashboard to compare it against your baseline:</p>
     <div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
-<pre><code><span class="cmd">python</span> -m ostram example report unescap <span class="flag">--capture</span> <span class="string">E1+E2</span></code></pre>
+<pre><code><span class="cmd">python</span> -m ostram example report unescap <span class="flag">--capture</span> <span class="string">E1-E2</span></code></pre>
     </div>
-    <p>In the dashboard set <strong>Before</strong> = <code>E1</code>, <strong>After</strong> = <code>E1+E2</code>, <strong>Scenario</strong> = <code>B_Optimised_VRE</code>. Because runs are cumulative, the previous exercise's snapshot (<code>E1</code>) is the fair &ldquo;before&rdquo; here &mdash; so the coal/gas ceilings and the storage floor show up cleanly in the generation mix, CO&#8322; line and storage chart. (See <a href="#inspect">Section&nbsp;8</a>.)</p>
+    <p>In the dashboard set <strong>Before</strong> = <code>E1</code>, <strong>After</strong> = <code>E1-E2</code>, <strong>Scenario</strong> = <code>B_Optimised_VRE</code>. Because runs are cumulative, the previous exercise's snapshot (<code>E1</code>) is the fair &ldquo;before&rdquo; here &mdash; so the coal/gas ceilings and the storage floor show up cleanly in the generation mix, CO&#8322; line and storage chart. (See <a href="#inspect">Section&nbsp;8</a>.)</p>
 
     <h3>What to observe</h3>
     <table>
@@ -990,9 +990,9 @@
     <p>Then save this run and open the dashboard to compare it against your baseline:</p>
     <div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
-<pre><code><span class="cmd">python</span> -m ostram example report unescap <span class="flag">--capture</span> <span class="string">E1+E2+E3</span></code></pre>
+<pre><code><span class="cmd">python</span> -m ostram example report unescap <span class="flag">--capture</span> <span class="string">E1-E2-E3</span></code></pre>
     </div>
-    <p>In the dashboard set <strong>Before</strong> = <code>E1+E2</code>, <strong>After</strong> = <code>E1+E2+E3</code>, <strong>Scenario</strong> = <code>C_Target_VRE</code> &mdash; <code>E1+E2</code> is the cumulative state just before this exercise. Watch the solar/VRE-share line rise to meet the target. Capital investment rises (more solar capacity to build), but total discounted system cost may actually <em>fall</em> because solar&rsquo;s zero fuel cost offsets the higher capex. (See <a href="#inspect">Section&nbsp;8</a>.)</p>
+    <p>In the dashboard set <strong>Before</strong> = <code>E1-E2</code>, <strong>After</strong> = <code>E1-E2-E3</code>, <strong>Scenario</strong> = <code>C_Target_VRE</code> &mdash; <code>E1-E2</code> is the cumulative state just before this exercise. Watch the solar/VRE-share line rise to meet the target. Capital investment rises (more solar capacity to build), but total discounted system cost may actually <em>fall</em> because solar&rsquo;s zero fuel cost offsets the higher capex. (See <a href="#inspect">Section&nbsp;8</a>.)</p>
 
     <h3>What to observe</h3>
     <ul>
@@ -1031,7 +1031,7 @@
 <pre><code><span class="cmd">python</span> -m ostram example report unescap</code></pre>
     </div>
     <p>This writes the dashboard into your workspace. Open it in a browser and pick a <strong>Before</strong> snapshot, an <strong>After</strong> snapshot, a <strong>scenario</strong> (A/B/C) and a <strong>region</strong> (System / Bangladesh / India-East) to compare generation mix, capacity, CO&#8322; emissions, storage, renewable share and system cost side by side.</p>
-    <div class="callout tip"><div class="tag">Keep a baseline, label every run</div><p>Each run replaces the current combined results, and those results only hold the scenarios you have solved so far &mdash; so record a label after every build. Right after the first build use <code>--capture baseline</code>; after Exercise&nbsp;1 <code>--capture E1</code>, after Exercise&nbsp;2 <code>--capture "E1+E2"</code>, after Exercise&nbsp;3 <code>--capture "E1+E2+E3"</code>. Runs are <strong>cumulative</strong> (each carries the previous exercises' edits), so compare a run against the <em>previous</em> snapshot to isolate one exercise (e.g. <code>E1</code> vs <code>E1+E2</code>), or against <code>baseline</code> to see the total change since the start.</p></div>
+    <div class="callout tip"><div class="tag">Keep a baseline, label every run</div><p>Each run replaces the current combined results, and those results only hold the scenarios you have solved so far &mdash; so record a label after every build. Right after the first build use <code>--capture baseline</code>; after Exercise&nbsp;1 <code>--capture E1</code>, after Exercise&nbsp;2 <code>--capture "E1-E2"</code>, after Exercise&nbsp;3 <code>--capture "E1-E2-E3"</code>. Runs are <strong>cumulative</strong> (each carries the previous exercises' edits), so compare a run against the <em>previous</em> snapshot to isolate one exercise (e.g. <code>E1</code> vs <code>E1-E2</code>), or against <code>baseline</code> to see the total change since the start.</p></div>
 
     <h3>Undoing your changes</h3>
     <p>Every config file in the profile is small, commented, and carries its shipped values in its own header, so

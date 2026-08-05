@@ -306,6 +306,11 @@ def main(argv: Sequence[str] | None = None) -> int | None:
             and command == "example"
             and remaining[1] == "prepare"
         )
+        # Help is a source-inspection operation. It must remain available in a
+        # fresh checkout before a mutable profile workspace has been prepared.
+        preparing = preparing or any(
+            token in {"-h", "--help"} for token in remaining[1:]
+        )
         _, profile_environment, active_workspace = _activate_profile(
             profile_id,
             paths=paths,

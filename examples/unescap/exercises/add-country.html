@@ -192,6 +192,12 @@
     <li>You need to know which <strong>existing country to use as reference</strong> &mdash; choose one with a similar energy profile.</li>
     <li>Interconnections are <strong>not</strong> needed for this exercise &mdash; we add the country as an isolated system first (see <a href="add-interconnector.html">Exercise B</a> for interconnectors).</li>
   </ul>
+
+  <p>Start from a guarded clean profile workspace. This removes only ignored generated state and republishes the committed profile authorities:</p>
+  <div class="code-wrap">
+    <pre><code><span class="cmd">python</span> -m ostram example prepare unescap <span class="flag">--reset</span></code></pre>
+  </div>
+  <div class="callout warn"><div class="tag">Do this before generating</div><p>Do not reset again after Step 5: the country merge deliberately lives in the prepared workspace and a later reset would discard it.</p></div>
 </section>
 
 <!-- SECTION 3 -->
@@ -372,7 +378,7 @@ Processing MMR...
 <section id="merge">
   <h2><span class="num">7</span> Step 5 &mdash; Merge into Model Inputs</h2>
 
-  <p>Merge the generated CSVs into the profile's input files:</p>
+  <p>Merge the generated CSVs into the prepared profile's mutable OSeMOSYS input authority:</p>
 
   <div class="code-wrap">
     <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
@@ -382,17 +388,14 @@ Processing MMR...
   <p>Expected output:</p>
 
   <div class="code-wrap">
-<pre><code><span class="output">Profile: unescap
-Merged MMR into examples/unescap/inputs/osemosys_global/
-Done! Backup copies written to &lt;workspace&gt;/preparation/backups/20260722_081803/
-Verify with: python -m ostram --profile unescap country validate MMR</span></code></pre>
+<pre><code><span class="output">Merged country template: {'TECHNOLOGY': ..., 'FUEL': ..., 'SpecifiedAnnualDemand': ..., 'centerpoint': ...}</span></code></pre>
   </div>
 
-  <p>The command writes <strong>backup copies</strong> into the workspace before modifying anything, so your original data is preserved and no backup file lands inside the profile.</p>
+  <p>The command writes timestamped <code>*.bak.csv</code> siblings before replacing any existing prepared CSV. The committed seed under <code>examples/unescap/inputs/osemosys_global/</code> remains unchanged.</p>
 
   <div class="callout tip">
     <div class="tag">Tip</div>
-    <p>The backup folder name is a timestamp. If anything goes wrong, restore from it &mdash; and because the profile is tracked in git, <code>git status</code> shows you exactly what changed.</p>
+    <p>All merged CSVs and their backups remain in the ignored prepared workspace. Use <code>inspect-resources</code> to confirm the active <code>osemosys_inputs</code> path before reviewing them.</p>
   </div>
 </section>
 
@@ -450,11 +453,11 @@ Overall: PASS</span></code></pre>
 <section id="run-a1-a2">
   <h2><span class="num">10</span> Step 8 &mdash; Run A1 + A2 (Create Country Structure)</h2>
 
-  <p>Preparation creates the country&rsquo;s technology/fuel structure and adds internal transmission. It is one command &mdash; the profile declares <code>runtime.requires_prepare: true</code>, so this must succeed before any scenario can be compiled or solved.</p>
+  <p>Run only the base-model and transmission stages now. The skip flags stop before scenario materialisation, compilation, and CBC, leaving the canonical post-A2 snapshots needed by the next step.</p>
 
   <div class="code-wrap">
     <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
-    <pre><code><span class="cmd">python</span> -m ostram example prepare unescap</code></pre>
+    <pre><code><span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> run <span class="flag">--scenarios</span> <span class="string">"B_Optimised_VRE"</span> <span class="flag">--skip-a3 --skip-b1 --skip-b2 --skip-pull</span></code></pre>
   </div>
 
   <div class="callout tip">
@@ -476,14 +479,14 @@ Overall: PASS</span></code></pre>
 
   <div class="code-wrap">
     <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
-    <pre><code><span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> country populate-workbook <span class="string">MMR</span></code></pre>
+    <pre><code><span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> scenario sync-country <span class="flag">--country</span> <span class="string">MMR</span></code></pre>
   </div>
 
-  <p>The command reads the A-O parametrization snapshot and adds missing MMR rows to <code>examples/unescap/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx</code> for sheets like Secondary_Techs, Primary_Techs, Demand_Techs, VariableCost, Capacities_CF, and Fixed_Horizon_Parameters. It is idempotent &mdash; running it twice adds nothing the second time.</p>
+  <p>The command reads the canonical post-A2 BAU snapshot and adds missing MMR rows to the <strong>prepared workspace copy</strong> of <code>OSTRAM_Scenario_Inputs.xlsx</code> for sheets like Secondary_Techs, Primary_Techs, Demand_Techs, VariableCost, Capacities_CF, and Fixed_Horizon_Parameters. It never edits the committed profile seed, and it is idempotent &mdash; running it twice adds nothing the second time.</p>
 
   <div class="callout tip">
     <div class="tag">Tip</div>
-    <p>Use <code>--dry-run</code> first to see what would be added without modifying the file. For a real project, this is also the moment to open the scenario workbook and adjust MMR&rsquo;s costs, capacities, or demand before running any scenario.</p>
+    <p>Append <code>--dry-run</code> first to see what would be added without modifying the prepared workbook. For a real project, this is also the moment to open that workspace workbook and adjust MMR&rsquo;s costs, capacities, or demand before running any scenario.</p>
   </div>
 </section>
 
@@ -548,7 +551,7 @@ Overall: PASS</span></code></pre>
       <tr>
         <td><strong>Script says country already exists</strong></td>
         <td>The template folder already has data for this country.</td>
-        <td>Run <code>python -m ostram --profile unescap country template --force</code>; each run rewrites its own workspace folder, so there is nothing to delete by hand.</td>
+        <td>Run <code>python -m ostram --profile unescap country template</code> again; each run rewrites its own workspace template files, so there is nothing to delete by hand.</td>
       </tr>
       <tr>
         <td><strong>Validation shows FAIL</strong></td>
@@ -573,12 +576,12 @@ Overall: PASS</span></code></pre>
       <tr>
         <td><strong>Solver infeasible after adding country</strong></td>
         <td>Missing demand or capacity data for MMR.</td>
-        <td>Check that the merge succeeded. Verify that <code>inputs/osemosys_global/SpecifiedAnnualDemand.csv</code> has MMR rows.</td>
+        <td>Check that the merge succeeded. Verify that the prepared <code>osemosys_inputs/SpecifiedAnnualDemand.csv</code> reported by <code>inspect-resources</code> has MMR rows.</td>
       </tr>
       <tr>
-        <td><strong>populate-workbook finds no snapshot</strong></td>
+        <td><strong>sync-country finds no snapshot</strong></td>
         <td>The profile has not been prepared yet.</td>
-        <td>Run <code>python -m ostram example prepare unescap</code> first (Step 8). The command needs the post-A2 snapshot preparation writes.</td>
+        <td>Run the A1+A2-only command in Step 8. <code>example prepare</code> publishes the profile workspace; the <code>run</code> command creates the post-A2 snapshot.</td>
       </tr>
     </tbody>
   </table>

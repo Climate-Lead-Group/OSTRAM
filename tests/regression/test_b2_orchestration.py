@@ -1363,6 +1363,11 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
                 "run",
                 side_effect=process_side_effect,
             ) as process_runner,
+            mock.patch.object(
+                module.b2_orchestrator,
+                "validate_cbc_solution",
+                return_value="Optimal - objective value 1",
+            ),
             redirect_stdout(io.StringIO()) as stdout,
         ):
             module.main_executer(params, "A", root)

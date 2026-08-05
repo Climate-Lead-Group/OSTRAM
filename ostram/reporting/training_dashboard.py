@@ -144,7 +144,7 @@ def build_dashboard_data(
     scenario_hint = metadata.get("scenarios", [])
     data: dict[str, object] = {}
     for label, path in snapshots:
-        frame = pd.read_csv(path)
+        frame = pd.read_csv(path, low_memory=False)
         scenarios = (
             sorted(frame["Scenario"].dropna().astype(str).unique())
             if "Scenario" in frame.columns

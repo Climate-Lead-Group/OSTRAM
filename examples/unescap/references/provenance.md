@@ -151,3 +151,9 @@ production text inputs:
 All 15 matched the accepted governed manifest byte-for-byte. The governed manifest
 SHA-256 was `9c5c01526049d38cdfe9cedb0505c10ead1b09a83514a7877f98495620617aab`.
 No solver was invoked during any integration gate.
+
+The later release-readiness continuation was explicitly authorized to run one reduced
+Windows CBC solve. Its environment, duration, hashes, and genuine infeasible linear-
+relaxation boundary are recorded separately in
+[`release-readiness.md`](release-readiness.md). That result led to fail-closed CBC status
+propagation; it did not change any model authority or the accepted full compile artifacts.

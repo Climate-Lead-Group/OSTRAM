@@ -11,7 +11,6 @@ import pandas as pd
 import yaml
 import subprocess
 import sys
-import platform
 import shutil
 import time
 from datetime import date, datetime
@@ -117,16 +116,22 @@ def get_env_executable(executable_name):
     """Return the full path to an executable inside the active environment when available."""
     ensure_env_tool_paths()
     env_root = Path(sys.executable).resolve().parent
-    suffix = ".exe" if platform.system() == "Windows" else ""
     candidate_dirs = [
         env_root / "Scripts",
         env_root / "Library" / "bin",
         env_root / "bin",
     ]
+    candidate_names = [executable_name]
+    if os.name == "nt" and not executable_name.lower().endswith(".exe"):
+        candidate_names.append(f"{executable_name}.exe")
     for candidate_dir in candidate_dirs:
-        candidate = candidate_dir / f"{executable_name}{suffix}"
-        if candidate.exists():
-            return str(candidate)
+        for candidate_name in candidate_names:
+            candidate = candidate_dir / candidate_name
+            if candidate.is_file():
+                return str(candidate)
+    discovered = shutil.which(executable_name)
+    if discovered:
+        return discovered
     return executable_name
 
 
@@ -699,25 +704,17 @@ def run_preprocessing_script(params, scenario_name):
     print('#------------------------------------------------------------------------------#')
 
 def check_enviro_variables(solver_command):
+    """Fail clearly unless *solver_command* resolves in the active environment."""
+
     ensure_env_tool_paths()
-    # Determine the command according to the operating system
-    command = 'where' if platform.system() == 'Windows' else 'which'
-
-    # Run the appropriate command
-    where_solver = subprocess.run([command, solver_command], capture_output=True, text=True)
-    paths = where_solver.stdout.splitlines()
-
-    if paths:  # Ensure at least one path was found
-        path_solver = paths[0]
-
-        # Check whether the path is already in the PATH environment variable
-        if path_solver not in os.environ["PATH"]:
-            # If it is not in PATH, add it
-            os.environ["PATH"] += os.pathsep + path_solver
-            print("Path added:", path_solver)
-    else:
-        print(f"'{solver_command}' was not found on the system.")
-    #
+    resolved = get_env_executable(solver_command)
+    if Path(resolved).is_file() or shutil.which(resolved):
+        print(f"Solver executable: {resolved}")
+        return
+    raise FileNotFoundError(
+        f"solver executable {solver_command!r} was not found in the active "
+        "Python environment or PATH"
+    )
 
 def main_executer(params, scenario_name, HERE):
     execution_dependencies = b2_orchestrator.ScenarioExecutionDependencies(

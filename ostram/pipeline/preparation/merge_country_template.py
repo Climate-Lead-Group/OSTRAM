@@ -11,6 +11,7 @@ from typing import Sequence
 import pandas as pd
 
 from ostram.paths import resolve_paths
+from ostram.profiles import DEFAULT_PROFILE, active_profile_id
 
 
 DATASETS = (
@@ -25,6 +26,14 @@ DATASETS = (
     "StorageLevelStart", "ResidualStorageCapacity", "TechnologyToStorage",
     "TechnologyFromStorage",
 )
+
+
+def _default_input_dir(paths) -> Path:
+    """Keep full's legacy staging target; profiles merge their mutable authority."""
+
+    if active_profile_id() == DEFAULT_PROFILE:
+        return paths.preparation_workspace / "og_csvs_inputs"
+    return paths.osemosys_inputs
 
 
 def merge_country_template(
@@ -93,11 +102,27 @@ def merge_country_template(
 def main(argv: Sequence[str] | None = None) -> int:
     paths = resolve_paths()
     parser = argparse.ArgumentParser(prog="python -m ostram country merge")
-    parser.add_argument("--template", type=Path, required=True)
-    parser.add_argument("--input-dir", type=Path, default=paths.preparation_workspace / "og_csvs_inputs")
+    parser.add_argument(
+        "country",
+        nargs="?",
+        help="ISO-3 country whose generated workspace template should be merged",
+    )
+    parser.add_argument("--template", type=Path)
+    parser.add_argument("--input-dir", type=Path, default=_default_input_dir(paths))
     parser.add_argument("--centerpoints", type=Path, default=paths.preparation_inputs / "centerpoints.csv")
     args = parser.parse_args(argv)
-    counts = merge_country_template(args.template, args.input_dir, args.centerpoints)
+    if args.country and args.template:
+        parser.error("country and --template are mutually exclusive")
+    if args.country:
+        country = args.country.strip().upper()
+        if len(country) != 3 or not country.isalpha():
+            parser.error(f"country must be an ISO-3 code: {args.country!r}")
+        template = paths.preparation_workspace / "country_templates" / country
+    elif args.template:
+        template = args.template
+    else:
+        parser.error("provide COUNTRY or --template PATH")
+    counts = merge_country_template(template, args.input_dir, args.centerpoints)
     print(f"Merged country template: {counts}")
     return 0
 
