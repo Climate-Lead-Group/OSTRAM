@@ -169,7 +169,7 @@ class CanonicalTrainingRouteTests(unittest.TestCase):
 
     def test_capture_and_selected_comparison_use_only_workspace_results(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
-            workspace = Path(temp)
+            workspace = Path(temp).resolve()
             execution = workspace / "execution"
             execution.mkdir()
             result = execution / "OSTRAM_Combined_Inputs_Outputs.csv"

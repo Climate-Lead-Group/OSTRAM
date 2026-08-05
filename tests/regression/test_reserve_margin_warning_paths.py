@@ -236,7 +236,9 @@ class ReserveMarginWarningPathTests(unittest.TestCase):
         ):
             reserve_margin_repair_xlsx.bounded_warnings_path(relative)
 
-        desired = Path("C:/") / ("p" * 230) / FAILED_WARNING_NAME
+        overlong_root = Path("C:/") if os.name == "nt" else Path("/")
+        desired = overlong_root / ("p" * 230) / FAILED_WARNING_NAME
+        self.assertTrue(desired.is_absolute())
         with self.assertRaisesRegex(
             path_module.WorkspacePathBudgetError,
             "parent leaves no Windows-safe filename budget",
