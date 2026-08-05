@@ -1,0 +1,40 @@
+schema: ostram-profile-v1
+id: full
+metadata:
+  title: OSTRAM full model
+  country_regions: []
+  interconnectors: []
+  effective_values:
+    TRNBGDXXINDEA_residual_capacity_gw: 2.496
+policies:
+  lid_rule_new_semantics: false
+authorities:
+  scenario_registry: project:config/scenarios/registry.json
+  scenario_inputs:
+    path: project:inputs/scenarios
+    kind: directory
+  scenario_config_root:
+    path: project:config/scenarios
+    kind: directory
+  scenario_workbook: project:inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
+  timeslice_workbook: project:inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx
+  ao_decisions: project:inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
+  interconnector_authority: project:inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
+  interconnector_taxonomy: project:config/scenarios/technology_types.csv
+  compilation_config: project:config/compilation/Config_MOMF_T1_A.yaml
+  execution_config: project:config/execution/Config_MOMF_T1_AB.yaml
+  execution_inputs:
+    path: project:inputs/execution
+    kind: directory
+  country_config: project:config/preparation/Config_country_codes.yaml
+  region_config: project:config/preparation/Config_region_consolidation.yaml
+  osemosys_inputs:
+    path: project:inputs/osemosys_global
+    kind: directory
+  preparation_inputs:
+    path: project:inputs/preparation
+    kind: directory
+  secondary_technology_inputs:
+    path: project:inputs/preparation/secondary_technologies
+    kind: directory
+  maintained_model: project:model/osemosys_fast_preprocessed.txt

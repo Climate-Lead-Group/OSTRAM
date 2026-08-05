@@ -181,12 +181,18 @@ class RunReporter:
         workspace: Path,
         scenarios: Sequence[str],
         verbose: bool,
+        profile_id: str = "full",
+        manifest: Path | None = None,
+        compile_only: bool = False,
         stdout: TextIO | None = None,
         stderr: TextIO | None = None,
     ) -> None:
         self.project_root = Path(project_root).resolve()
         self.workspace = Path(workspace).resolve()
         self.scenarios = tuple(str(scenario) for scenario in scenarios)
+        self.profile_id = str(profile_id)
+        self.manifest = None if manifest is None else Path(manifest).resolve()
+        self.compile_only = bool(compile_only)
         self.verbose = bool(verbose)
         self.stdout = sys.stdout if stdout is None else stdout
         self.stderr = sys.stderr if stderr is None else stderr
@@ -219,7 +225,10 @@ class RunReporter:
         self._write_log("RUN", f"start_time={self.started_at.isoformat()}")
         self._write_log("RUN", f"project_root={self.project_root}")
         self._write_log("RUN", f"workspace={self.workspace}")
+        self._write_log("RUN", f"profile_id={self.profile_id}")
+        self._write_log("RUN", f"manifest={self.manifest}")
         self._write_log("RUN", "scenarios=" + json.dumps(self.scenarios, ensure_ascii=False))
+        self._write_log("RUN", f"compile_only={self.compile_only}")
         self._write_log("RUN", f"verbose={self.verbose}")
         if self.interactive:
             self._heartbeat = threading.Thread(

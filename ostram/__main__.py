@@ -8,12 +8,20 @@ from dataclasses import dataclass
 import importlib
 import json
 import os
+from pathlib import Path
 import subprocess
 import sys
 from types import ModuleType
 from typing import Iterator, Sequence
 
 from ostram.paths import PROJECT_ROOT_ENV, WORKSPACE_ENV, ProjectPaths, resolve_paths
+from ostram.profile_workspace import prepared_profile, profile_workspace
+from ostram.profiles import (
+    DEFAULT_PROFILE,
+    ProfileManifest,
+    encoded_environment,
+    load_profile,
+)
 from ostram.terminal import safe_print
 
 
@@ -52,6 +60,27 @@ ROUTES = {
     ),
 }
 
+EXTENDED_ROUTES = {
+    "example": Route(
+        module_name="ostram.examples",
+        program="python -m ostram example",
+        help="Prepare or report a registered example profile.",
+        exit_policy="main-result",
+    ),
+    "country": Route(
+        module_name="ostram.pipeline.preparation.country_commands",
+        program="python -m ostram country",
+        help="Generate, merge, or validate country data for the active profile.",
+        exit_policy="main-result",
+    ),
+    "scenario": Route(
+        module_name="ostram.pipeline.preparation.scenario_country_sync",
+        program="python -m ostram scenario",
+        help="Run profile-aware scenario preparation operations.",
+        exit_policy="main-result",
+    ),
+}
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -76,8 +105,15 @@ def build_parser() -> argparse.ArgumentParser:
             "<project-root>/workspace)."
         ),
     )
+    parser.add_argument(
+        "--profile",
+        default=DEFAULT_PROFILE,
+        help="Fail-closed OSTRAM profile (default: full).",
+    )
     subcommands = parser.add_subparsers(dest="command", metavar="COMMAND")
     for name, route in ROUTES.items():
+        subcommands.add_parser(name, add_help=False, help=route.help)
+    for name, route in EXTENDED_ROUTES.items():
         subcommands.add_parser(name, add_help=False, help=route.help)
     subcommands.add_parser(
         "inspect-resources",
@@ -91,6 +127,7 @@ def _global_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--project-root")
     parser.add_argument("--workspace")
+    parser.add_argument("--profile", default=DEFAULT_PROFILE)
     return parser
 
 
@@ -105,13 +142,23 @@ def _historical_argv(program: str, arguments: Sequence[str]) -> Iterator[None]:
 
 
 @contextmanager
-def _resolved_environment(paths: ProjectPaths) -> Iterator[None]:
+def _resolved_environment(
+    paths: ProjectPaths,
+    profile_environment: dict[str, str] | None = None,
+    *,
+    effective_workspace: Path | None = None,
+) -> Iterator[None]:
+    profile_environment = {} if profile_environment is None else profile_environment
     previous = {
         PROJECT_ROOT_ENV: os.environ.get(PROJECT_ROOT_ENV),
         WORKSPACE_ENV: os.environ.get(WORKSPACE_ENV),
+        **{name: os.environ.get(name) for name in profile_environment},
     }
     os.environ[PROJECT_ROOT_ENV] = str(paths.project_root)
-    os.environ[WORKSPACE_ENV] = str(paths.workspace)
+    os.environ[WORKSPACE_ENV] = str(
+        paths.workspace if effective_workspace is None else effective_workspace
+    )
+    os.environ.update(profile_environment)
     try:
         yield
     finally:
@@ -155,15 +202,81 @@ def _invoke_route(route: Route, arguments: Sequence[str]) -> int | None:
         return 0
 
 
-def _resolve_cli(arguments: list[str]) -> tuple[ProjectPaths, list[str]]:
-    options, remaining = _global_parser().parse_known_args(arguments)
+def _resolve_cli(
+    arguments: list[str],
+) -> tuple[ProjectPaths, argparse.Namespace, list[str]]:
+    """Parse only the global prefix so options never leak to child parsers."""
+
+    known = {"--project-root", "--workspace", "--profile"}
+    prefix: list[str] = []
+    index = 0
+    while index < len(arguments):
+        token = arguments[index]
+        option = token.split("=", 1)[0]
+        if option not in known:
+            break
+        prefix.append(token)
+        if "=" not in token:
+            index += 1
+            if index >= len(arguments):
+                # Let argparse produce its established missing-value error.
+                break
+            prefix.append(arguments[index])
+        index += 1
+    options = _global_parser().parse_args(prefix)
+    options.profile_explicit = any(
+        token == "--profile" or token.startswith("--profile=") for token in prefix
+    )
+    remaining = arguments[index:]
     return (
         resolve_paths(
             project_root=options.project_root,
             workspace=options.workspace,
         ),
+        options,
         remaining,
     )
+
+
+def _selection_id(options: argparse.Namespace, remaining: Sequence[str]) -> str:
+    selected = options.profile
+    if len(remaining) >= 3 and remaining[0] == "example" and remaining[1] in {
+        "prepare",
+        "report",
+    }:
+        positional = remaining[2]
+        if options.profile_explicit and selected != positional:
+            raise ValueError(
+                f"--profile {selected!r} conflicts with example profile {positional!r}"
+            )
+        selected = positional
+    return selected
+
+
+def _activate_profile(
+    profile_id: str,
+    *,
+    paths: ProjectPaths,
+    preparing: bool,
+) -> tuple[ProfileManifest, dict[str, str], Path]:
+    manifest = load_profile(profile_id, paths=paths)
+    if preparing:
+        authorities = manifest.source_paths(paths, require_exists=True)
+        prepared_workspace = profile_workspace(paths, profile_id)
+        active_workspace = paths.workspace
+    else:
+        prepared = prepared_profile(manifest, paths=paths)
+        authorities = prepared.authorities
+        active_workspace = (
+            paths.workspace if profile_id == DEFAULT_PROFILE else prepared.workspace
+        )
+        prepared_workspace = active_workspace
+    environment = encoded_environment(
+        manifest,
+        authorities=authorities,
+        profile_workspace=prepared_workspace,
+    )
+    return manifest, environment, active_workspace
 
 
 def main(argv: Sequence[str] | None = None) -> int | None:
@@ -177,7 +290,7 @@ def main(argv: Sequence[str] | None = None) -> int | None:
         return 0
 
     try:
-        paths, remaining = _resolve_cli(arguments)
+        paths, options, remaining = _resolve_cli(arguments)
     except SystemExit:
         raise
     except Exception as error:
@@ -186,9 +299,30 @@ def main(argv: Sequence[str] | None = None) -> int | None:
     if not remaining:
         parser.error("a command is required")
     command = remaining[0]
-    with _resolved_environment(paths):
+    try:
+        profile_id = _selection_id(options, remaining)
+        preparing = (
+            len(remaining) >= 2
+            and command == "example"
+            and remaining[1] == "prepare"
+        )
+        _, profile_environment, active_workspace = _activate_profile(
+            profile_id,
+            paths=paths,
+            preparing=preparing,
+        )
+    except Exception as error:
+        parser.error(str(error))
+
+    with _resolved_environment(
+        paths,
+        profile_environment,
+        effective_workspace=active_workspace,
+    ):
         if command in ROUTES:
             return _invoke_route(ROUTES[command], remaining[1:])
+        if command in EXTENDED_ROUTES:
+            return _invoke_route(EXTENDED_ROUTES[command], remaining[1:])
         if command == "inspect-resources":
             if len(remaining) != 1:
                 parser.error("inspect-resources accepts no command arguments")
