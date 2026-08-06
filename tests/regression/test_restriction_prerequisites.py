@@ -338,7 +338,8 @@ def _restrictions_workbook(path: Path, rows: list[list]) -> None:
 class RunStateHandoffTests(unittest.TestCase):
     def test_restriction_source_parsing_is_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
-            workspace = Path(temp) / "workspace"
+            # Canonicalize like production does (macOS /var -> /private/var).
+            workspace = (Path(temp) / "workspace").resolve()
             workspace.mkdir()
             state = workspace / "state.xlsx"
             state.write_bytes(b"fixture")
