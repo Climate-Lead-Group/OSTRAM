@@ -234,7 +234,7 @@ jobs:
           report = workspace / "reports" / "unescap.html"
           document = Document()
           document.feed(report.read_text(encoding="utf-8"))
-          assert {"report", "ostram-profile-data"} <= document.ids
+          assert {"app", "ostram-profile-data"} <= document.ids
           assert all(not href.startswith("#") or href[1:] in document.ids for href in document.hrefs)
           data = json.loads("".join(document.payload))
           assert [item["region"] for item in data["country_regions"]] == ["BGDXX", "INDEA"]
