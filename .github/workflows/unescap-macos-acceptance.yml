@@ -95,6 +95,32 @@ jobs:
           set -o pipefail
           python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" --profile unescap run --scenarios B_Optimised_VRE --compile-only --skip-pull 2>&1 | tee "$ACCEPTANCE_DIR/compile-only.txt"
 
+      - name: Compile A_Calibrated_BAU from a fresh workspace without a solver
+        id: compile_a
+        env:
+          OSTRAM_A_GATE_WORKSPACE: workspace/macos-acceptance-fresh-a
+        run: |
+          set -o pipefail
+          python -m ostram --workspace "$OSTRAM_A_GATE_WORKSPACE" example prepare unescap 2>&1 | tee "$ACCEPTANCE_DIR/compile-only-a-preparation.txt"
+          python -m ostram --workspace "$OSTRAM_A_GATE_WORKSPACE" --profile unescap run --scenarios A_Calibrated_BAU --compile-only --skip-pull 2>&1 | tee "$ACCEPTANCE_DIR/compile-only-a.txt"
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          provenance = json.loads(
+              (
+                  Path(os.environ["OSTRAM_A_GATE_WORKSPACE"]) / "profiles"
+                  / "unescap" / "preparation" / "A1_Outputs"
+                  / "_scenario_materialization.json"
+              ).read_text(encoding="utf-8")
+          )
+          assert provenance["selected_scenarios"] == ["A_Calibrated_BAU"], provenance
+          assert provenance["required_roots"] == ["BAU", "A_Calibrated_BAU"], provenance
+          assert provenance["solver_invoked"] is False, provenance
+          PY
+          git diff --exit-code -- examples/unescap/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
+
       - name: Validate the compiled stage-domain contract
         id: domain
         run: |
@@ -208,7 +234,7 @@ jobs:
           report = workspace / "reports" / "unescap.html"
           document = Document()
           document.feed(report.read_text(encoding="utf-8"))
-          assert {"report", "ostram-profile-data"} <= document.ids
+          assert {"app", "ostram-profile-data"} <= document.ids
           assert all(not href.startswith("#") or href[1:] in document.ids for href in document.hrefs)
           data = json.loads("".join(document.payload))
           assert [item["region"] for item in data["country_regions"]] == ["BGDXX", "INDEA"]
@@ -245,6 +271,7 @@ jobs:
           TEST_OUTCOME: ${{ steps.tests.outcome }}
           PREPARE_OUTCOME: ${{ steps.prepare.outcome }}
           COMPILE_OUTCOME: ${{ steps.compile.outcome }}
+          COMPILE_A_OUTCOME: ${{ steps.compile_a.outcome }}
           DOMAIN_OUTCOME: ${{ steps.domain.outcome }}
           SOLVER_OUTCOME: ${{ steps.solver.outcome }}
           REPORT_OUTCOME: ${{ steps.report.outcome }}

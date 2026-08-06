@@ -14,13 +14,19 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 from typing import Callable, Mapping, MutableMapping, Sequence
 
 from ostram.paths import resolve_paths
 
-from .registry import ScenarioRegistry, load_registry, root_snapshots_exist
+from .registry import (
+    RootScenario,
+    ScenarioRegistry,
+    load_registry,
+    root_snapshots_exist,
+)
 from . import apply_patches
 
 
@@ -67,7 +73,13 @@ def validate_control_roots(
     registry: ScenarioRegistry,
     soasia: Path,
 ) -> None:
-    """Require the workbook Control sheet to contain only active roots."""
+    """Require the workbook Control sheet to contain only active roots.
+
+    Every restriction dependency declared by the registry must also be
+    declared by the matching Control ``inherit_restrictions_from`` entry, so
+    the registry can never widen materialization beyond the workbook
+    contract.
+    """
 
     from .transformations import scenario_workbooks
 
@@ -81,10 +93,24 @@ def validate_control_roots(
     inactive = [config.scenario for config in configs if not config.active]
     if inactive:
         raise ValueError(f"Control roots must all be active: {inactive}")
+    configs_by_name = {config.scenario: config for config in configs}
+    for root in registry.roots:
+        undeclared = [
+            prerequisite
+            for prerequisite in root.restriction_dependencies
+            if prerequisite
+            not in configs_by_name[root.name].inherit_restrictions_from
+        ]
+        if undeclared:
+            raise ValueError(
+                f"registry restriction dependencies for {root.name} are not "
+                f"declared by Control inherit_restrictions_from: {undeclared}"
+            )
 
 
 def _default_root_materializer(
     paths: MaterializationPaths,
+    extra_arguments: Mapping[str, Sequence[str]] | None = None,
 ) -> RootMaterializer:
     def materialize(root: str, environment: Mapping[str, str]) -> None:
         command = [
@@ -96,6 +122,7 @@ def _default_root_materializer(
             root,
             "--soasia",
             str(paths.soasia),
+            *[str(value) for value in (extra_arguments or {}).get(root, ())],
         ]
         subprocess.run(
             command,
@@ -105,6 +132,78 @@ def _default_root_materializer(
         )
 
     return materialize
+
+
+def _restriction_state_wiring(
+    roots: Sequence[str],
+    roots_by_name: Mapping[str, "RootScenario"],
+    state_dir: Path,
+) -> tuple[dict[str, list[str]], dict[str, Path]]:
+    """Plan the run-state handoff for declared restriction prerequisites.
+
+    A prerequisite exports its disposable run state (the only place generated
+    Restrictions rows live); each dependent reads its prerequisites' rows
+    from those exported states.  The maintained scenario workbook is never
+    written.  Registries without declarations produce no wiring.
+    """
+
+    consumers = {
+        root: roots_by_name[root].restriction_dependencies
+        for root in roots
+        if roots_by_name[root].restriction_dependencies
+    }
+    provider_set = {
+        prerequisite for deps in consumers.values() for prerequisite in deps
+    }
+    providers = tuple(root for root in roots if root in provider_set)
+    state_paths = {
+        provider: state_dir / f"_run_state_{provider}.xlsx"
+        for provider in providers
+    }
+    extra_arguments: dict[str, list[str]] = {}
+    for provider in providers:
+        extra_arguments.setdefault(provider, []).extend(
+            ["--run-state-out", str(state_paths[provider])]
+        )
+    for consumer, prerequisites in consumers.items():
+        for prerequisite in prerequisites:
+            extra_arguments.setdefault(consumer, []).extend(
+                [
+                    "--restrictions-source",
+                    f"{prerequisite}={state_paths[prerequisite]}",
+                ]
+            )
+    return extra_arguments, state_paths
+
+
+def _restriction_state_directory() -> Path:
+    """Return the sole workspace-contained location for ephemeral states."""
+
+    workspace = resolve_paths().stage_workspace("scenarios", create=True).resolve()
+    state_dir = (workspace / "_restriction_states").resolve()
+    try:
+        state_dir.relative_to(workspace)
+    except ValueError as error:
+        raise ValueError(
+            f"restriction state directory escapes the scenario workspace: {state_dir}"
+        ) from error
+    return state_dir
+
+
+def _remove_restriction_state_directory(state_dir: Path) -> None:
+    """Remove only the known ephemeral state directory, never an arbitrary path."""
+
+    workspace = resolve_paths().stage_workspace("scenarios", create=True).resolve()
+    resolved = state_dir.resolve()
+    if resolved.name != "_restriction_states":
+        raise ValueError(f"unsafe restriction state directory: {state_dir}")
+    try:
+        resolved.relative_to(workspace)
+    except ValueError as error:
+        raise ValueError(
+            f"restriction state directory escapes the scenario workspace: {resolved}"
+        ) from error
+    shutil.rmtree(resolved, ignore_errors=True)
 
 
 def _load_direction_module(paths: MaterializationPaths):
@@ -182,8 +281,31 @@ def materialize_scenarios(
         {name: str(path) for name, path in resolved_dependencies.items()}
     )
 
+    # Declared restriction prerequisites hand their generated Restrictions
+    # rows to dependents through exported disposable run states.  The wiring
+    # exists only on the default transform boundary; injected materializers
+    # own their own effects.
+    restriction_prerequisites = {
+        root: list(active_registry.roots_by_name[root].restriction_dependencies)
+        for root in roots
+        if active_registry.roots_by_name[root].restriction_dependencies
+    }
+    state_paths: dict[str, Path] = {}
+    state_dir: Path | None = None
+    extra_arguments: dict[str, list[str]] = {}
+    if root_materializer is None and restriction_prerequisites:
+        state_dir = _restriction_state_directory()
+        if state_dir.exists():
+            _remove_restriction_state_directory(state_dir)
+        state_dir.mkdir(parents=True, exist_ok=True)
+        extra_arguments, state_paths = _restriction_state_wiring(
+            roots,
+            active_registry.roots_by_name,
+            state_dir,
+        )
+
     materialize_root = (
-        _default_root_materializer(active_paths)
+        _default_root_materializer(active_paths, extra_arguments)
         if root_materializer is None
         else root_materializer
     )
@@ -193,78 +315,94 @@ def materialize_scenarios(
         else direction_applier
     )
 
-    root_records: list[dict] = []
-    for root in roots:
-        materialize_root(root, process_environment)
-        target = active_paths.a1_outputs / f"A1_Outputs_{root}"
-        missing = [
-            filename
-            for filename in REQUIRED_AO_FILES
-            if not (target / filename).is_file()
-        ]
-        if missing:
-            raise FileNotFoundError(
-                f"A3 did not materialize required files for {root}: {missing}"
+    try:
+        root_records: list[dict] = []
+        for root in roots:
+            materialize_root(root, process_environment)
+            exported_state = state_paths.get(root)
+            if (
+                exported_state is not None
+                and (
+                    not exported_state.is_file()
+                    or exported_state.stat().st_size == 0
+                )
+            ):
+                raise FileNotFoundError(
+                    f"restriction prerequisite {root} did not export a nonempty "
+                    f"run state: {exported_state}"
+                )
+            target = active_paths.a1_outputs / f"A1_Outputs_{root}"
+            missing = [
+                filename
+                for filename in REQUIRED_AO_FILES
+                if not (target / filename).is_file()
+            ]
+            if missing:
+                raise FileNotFoundError(
+                    f"A3 did not materialize required files for {root}: {missing}"
+                )
+            root_records.append(
+                {
+                    "scenario": root,
+                    "snapshot": str(
+                        active_paths.a1_outputs / f"_post_a2_snapshot_{root}"
+                    ),
+                    "target": str(target),
+                }
             )
-        root_records.append(
-            {
-                "scenario": root,
-                "snapshot": str(
-                    active_paths.a1_outputs / f"_post_a2_snapshot_{root}"
-                ),
-                "target": str(target),
-            }
-        )
 
-    derived_by_name = active_registry.derived_by_name
-    derived_records: list[dict] = []
-    for scenario in selected:
-        derived = derived_by_name.get(scenario)
-        if derived is None:
-            continue
-        log = apply_patches.build_scenario(
-            scenario,
-            source=derived.base_scenario,
-            skip_backup=True,
-            a1_outputs=active_paths.a1_outputs,
-            configs=resolve_paths().scenario_config_root,
-            ceiling_path=(
-                resolve_paths().scenario_config_root
-                / "sensitivities"
-                / "vre_ceilings_base.json"
-            ),
-            authority_path=active_paths.soasia,
-        )
-        target = active_paths.a1_outputs / f"A1_Outputs_{scenario}"
-        direction_record: dict | None = None
-        if derived.direction_overlay is not None:
-            direction_log = apply_direction(
-                target,
-                derived.direction_overlay,
-                derived.direction_study_start_year,
+        derived_by_name = active_registry.derived_by_name
+        derived_records: list[dict] = []
+        for scenario in selected:
+            derived = derived_by_name.get(scenario)
+            if derived is None:
+                continue
+            log = apply_patches.build_scenario(
+                scenario,
+                source=derived.base_scenario,
+                skip_backup=True,
+                a1_outputs=active_paths.a1_outputs,
+                configs=resolve_paths().scenario_config_root,
+                ceiling_path=(
+                    resolve_paths().scenario_config_root
+                    / "sensitivities"
+                    / "vre_ceilings_base.json"
+                ),
+                authority_path=active_paths.soasia,
             )
-            direction_record = {
-                "overlay": str(derived.direction_overlay),
-                "study_start_year": derived.direction_study_start_year,
-                "skipped": bool(direction_log.get("skipped", False)),
-                "projection_changes": len(
-                    direction_log.get("projections", {}).get("changes", [])
-                ),
-                "base_year_changes": len(
-                    direction_log.get("base_year", {}).get("changes", [])
-                ),
-            }
-        derived_records.append(
-            {
-                "scenario": scenario,
-                "base_scenario": derived.base_scenario,
-                "patches": str(derived.patches),
-                "patch_cells": len(log.get("cells", [])),
-                "patch_rows_created": len(log.get("rows_created", [])),
-                "target": str(target),
-                "direction": direction_record,
-            }
-        )
+            target = active_paths.a1_outputs / f"A1_Outputs_{scenario}"
+            direction_record: dict | None = None
+            if derived.direction_overlay is not None:
+                direction_log = apply_direction(
+                    target,
+                    derived.direction_overlay,
+                    derived.direction_study_start_year,
+                )
+                direction_record = {
+                    "overlay": str(derived.direction_overlay),
+                    "study_start_year": derived.direction_study_start_year,
+                    "skipped": bool(direction_log.get("skipped", False)),
+                    "projection_changes": len(
+                        direction_log.get("projections", {}).get("changes", [])
+                    ),
+                    "base_year_changes": len(
+                        direction_log.get("base_year", {}).get("changes", [])
+                    ),
+                }
+            derived_records.append(
+                {
+                    "scenario": scenario,
+                    "base_scenario": derived.base_scenario,
+                    "patches": str(derived.patches),
+                    "patch_cells": len(log.get("cells", [])),
+                    "patch_rows_created": len(log.get("rows_created", [])),
+                    "target": str(target),
+                    "direction": direction_record,
+                }
+            )
+    finally:
+        if state_dir is not None:
+            _remove_restriction_state_directory(state_dir)
 
     record = {
         "schema": "ostram-scenario-materialization-v1",
@@ -272,6 +410,7 @@ def materialize_scenarios(
         "registry": str(active_registry.path),
         "selected_scenarios": list(selected),
         "required_roots": list(roots),
+        "restriction_prerequisites": restriction_prerequisites,
         "result_dependencies": {
             name: str(path) for name, path in resolved_dependencies.items()
         },
