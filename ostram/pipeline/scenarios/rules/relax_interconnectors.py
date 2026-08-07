@@ -152,11 +152,28 @@ def load_config(yaml_path: Path) -> dict:
             )
         overrides[tech] = {int(y): float(v) for y, v in year_map.items()}
 
+    # Parse capacity_ceiling: optional {tech: {year: maxcap_value}}
+    # When present, TotalAnnualMaxCapacity is set to the ceiling schedule
+    # instead of being opened to 9999.  This lets the YAML control the
+    # *total* capacity available by year, which is the binding constraint
+    # when per-year investment (overrides) is not the limiting factor.
+    raw_ceiling = cfg.get("capacity_ceiling", {}) or {}
+    capacity_ceiling: dict = {}
+    for tech, year_map in raw_ceiling.items():
+        tech = str(tech)
+        if not isinstance(year_map, dict):
+            raise ValueError(
+                f"capacity_ceiling for '{tech}' must be a dict of year: value, "
+                f"got {type(year_map).__name__}."
+            )
+        capacity_ceiling[tech] = {int(y): float(v) for y, v in year_map.items()}
+
     return {
         "mode": mode,
         "headroom_factor": headroom_factor,
         "headroom_gw": headroom_gw,
         "overrides": overrides,
+        "capacity_ceiling": capacity_ceiling,
     }
 
 
@@ -369,6 +386,7 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
     headroom_factor = config["headroom_factor"]
     headroom_gw = config["headroom_gw"]
     overrides = config["overrides"]
+    capacity_ceiling = config.get("capacity_ceiling", {})
 
     headers = find_named_columns(ws, ["Tech", "Parameter", PROJ_MODE_COL])
     tech_col_idx = headers.get("Tech")
@@ -386,6 +404,13 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
     interp_overrides: dict = {}
     for tech, schedule in overrides.items():
         interp_overrides[tech] = interpolate_schedule(schedule, sorted_years)
+
+    # Identify "freeze" techs: override present but schedule is empty (all zeros).
+    # An empty override dict means "freeze this link at its residual capacity".
+    freeze_techs = {
+        tech for tech, sched in interp_overrides.items()
+        if all(v == 0.0 for v in sched.values())
+    }
 
     # Locate Min rows so we can clear stale Min > Max cells in lockstep
     min_inv_row_map = build_min_inv_row_map(ws, trn_techs)
@@ -440,7 +465,11 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
                 reason = "fallback"
 
             # Safety floor: never go below ResidualCapacity
-            if proposed < rescap:
+            # Exception: freeze techs (empty override) get MaxCapInv = 0
+            if tech in freeze_techs:
+                proposed = 0.0
+                reason = "freeze"
+            elif proposed < rescap:
                 proposed = rescap
                 reason = f"{reason}_clamped_to_rescap"
 
@@ -496,8 +525,15 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
     # ------------------------------------------------------------------
     # For techs with explicit overrides that allow non-zero investment,
     # cap_trn_to_residual may have set MaxCap = ResCap = 0, which blocks
-    # any new build even when MaxCapInv > 0.  Open MaxCap to 9999 so
-    # MaxCapInv is the sole investment control.
+    # any new build even when MaxCapInv > 0.
+    #
+    # If capacity_ceiling is set for a tech, MaxCap is pinned to the
+    # ceiling schedule (interpolated).  Otherwise MaxCap is opened to 9999
+    # so MaxCapInv is the sole investment control.
+    interp_ceiling: dict = {}
+    for tech, schedule in capacity_ceiling.items():
+        interp_ceiling[tech] = interpolate_schedule(schedule, sorted_years)
+
     overrides_with_investment = {
         tech for tech, sched in interp_overrides.items()
         if any(v > 0 for v in sched.values())
@@ -517,13 +553,73 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
                 col = year_cols[year]
                 cell = ws.cell(row=row_idx, column=col)
                 old = cell.value
-                if old is None or float(old) < PLACEHOLDER_VALUE:
-                    cell.value = PLACEHOLDER_VALUE
+
+                if tech in interp_ceiling:
+                    # Use capacity_ceiling schedule for this tech
+                    target = interp_ceiling[tech].get(year, PLACEHOLDER_VALUE)
+                else:
+                    # Default: open to 9999
+                    target = PLACEHOLDER_VALUE
+
+                if values_differ(old, target):
+                    cell.value = target
                     log["maxcap_opened"].append({
                         "tech": tech,
                         "year": year,
                         "old": old,
-                        "new": PLACEHOLDER_VALUE,
+                        "new": target,
+                    })
+
+            # Flip Projection.Mode
+            if proj_mode_col_idx is not None:
+                mode_cell = ws.cell(row=row_idx, column=proj_mode_col_idx)
+                if mode_cell.value == PROJ_MODE_EMPTY:
+                    mode_cell.value = PROJ_MODE_USER
+
+    # ------------------------------------------------------------------
+    # Third pass: full freeze for freeze techs
+    # ------------------------------------------------------------------
+    # For techs with an empty override (= freeze signal), pin BOTH
+    # ResidualCapacity AND TotalAnnualMaxCapacity to the base-year
+    # residual value.  Without this, committed pipeline projects
+    # encoded as growing ResidualCapacity would still add capacity
+    # even with MaxCapInv = 0.
+    if freeze_techs:
+        log["rescap_frozen"] = []
+        log["maxcap_frozen"] = []
+
+        # Determine the base-year residual for each freeze tech
+        base_year = sorted_years[0]
+        freeze_rescap = {}
+        for tech in freeze_techs:
+            freeze_rescap[tech] = rescap_map.get((tech, base_year), 0.0)
+
+        for row_idx in range(2, ws.max_row + 1):
+            tech = ws.cell(row=row_idx, column=tech_col_idx).value
+            param = ws.cell(row=row_idx, column=param_col_idx).value
+
+            if tech not in freeze_techs:
+                continue
+
+            target_params = {RES_PARAM, MAX_CAP_PARAM}
+            if param not in target_params:
+                continue
+
+            base_val = freeze_rescap.get(tech, 0.0)
+            log_key = "rescap_frozen" if param == RES_PARAM else "maxcap_frozen"
+
+            for year in sorted_years:
+                col = year_cols[year]
+                cell = ws.cell(row=row_idx, column=col)
+                old = cell.value
+                if values_differ(old, base_val):
+                    cell.value = base_val
+                    log[log_key].append({
+                        "tech": tech,
+                        "year": year,
+                        "param": param,
+                        "old": old,
+                        "new": base_val,
                     })
 
             # Flip Projection.Mode
