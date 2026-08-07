@@ -1497,6 +1497,41 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
             self.assertIn("Scenario A_0 solved successfully", result.stdout)
             self.assertIn("Outputs concatenated to A_0_Output.csv", result.stdout)
 
+    def test_absolute_outputs_config_still_routes_results_per_scenario(self) -> None:
+        """An absolute ``outputs`` must not collapse onto one shared directory.
+
+        The execution profile resolves ``outputs`` to an absolute workspace
+        path.  Joining that onto the scenario folder discards the scenario, so
+        every scenario wrote its otoole results to the same directory and the
+        next scenario's run overwrote them.
+        """
+
+        module = _load_b2("absolute_outputs_route")
+        with tempfile.TemporaryDirectory() as temp:
+            here = Path(temp).resolve() / "execution_workspace"
+            shared = here / "Outputs"
+            params = _base_params(
+                solver="cplex",
+                execute_model=True,
+                create_matrix=False,
+                concat_otoole_csv=True,
+                outputs=str(shared),
+            )
+            result = self._run_executor(module, here, params)
+
+            folder = os.path.join(str(here), "Executables", "A_0")
+            expected_outputs = os.path.join(folder, "Outputs")
+            outputs_arguments = [
+                call.args[0][5]
+                for call in result.runner.call_args_list
+                if call.args[0][0] == "ENV-otoole"
+            ]
+            self.assertEqual(outputs_arguments, [expected_outputs])
+            self.assertNotIn(
+                str(shared),
+                [argument for call in result.runner.call_args_list for argument in call.args[0]],
+            )
+
     def test_command_failure_propagates_before_success_and_postprocessing(self) -> None:
         module = _load_b2("command_failure")
         with tempfile.TemporaryDirectory() as temp:
@@ -1536,6 +1571,43 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
                     params,
                     solution_exists=False,
                 )
+
+
+class B2PerScenarioOutputsContractTests(unittest.TestCase):
+    """Every scenario must own its result directory, whatever ``outputs`` holds."""
+
+    def _resolver(self):
+        return _load_b2("per_scenario_outputs").b2_orchestrator.resolve_scenario_outputs_dir
+
+    def test_bare_and_absolute_outputs_both_anchor_inside_the_scenario_folder(
+        self,
+    ) -> None:
+        resolve = self._resolver()
+        folder = os.path.join("workspace", "execution", "Executables", "A_0")
+        expected = os.path.join(folder, "Outputs")
+        for configured in (
+            "Outputs",
+            os.path.join("workspace", "execution", "Outputs"),
+            os.path.abspath(os.path.join("workspace", "execution", "Outputs")),
+        ):
+            with self.subTest(outputs=configured):
+                self.assertEqual(
+                    resolve({"outputs": configured}, folder),
+                    expected,
+                )
+
+    def test_distinct_scenarios_never_share_one_outputs_directory(self) -> None:
+        resolve = self._resolver()
+        executables = os.path.join("workspace", "execution", "Executables")
+        shared = os.path.abspath(os.path.join("workspace", "execution", "Outputs"))
+        resolved = [
+            resolve({"outputs": shared}, os.path.join(executables, f"{scenario}_0"))
+            for scenario in ("A_Calibrated_BAU", "B_Optimised_VRE", "C_Target_VRE")
+        ]
+        self.assertEqual(len(set(resolved)), len(resolved))
+        for path in resolved:
+            self.assertTrue(path.startswith(executables))
+            self.assertNotEqual(path, shared)
 
 
 if __name__ == "__main__":

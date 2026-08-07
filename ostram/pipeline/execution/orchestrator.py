@@ -134,6 +134,24 @@ def apply_compile_only_overrides(params: dict[str, Any]) -> None:
     params["del_files"] = False
 
 
+def resolve_scenario_outputs_dir(
+    params: dict[str, Any],
+    folder_scenario: str | os.PathLike[str],
+) -> str:
+    """Anchor one scenario's otoole result directory inside its own folder.
+
+    ``params["outputs"]`` reaches this module either as a bare directory name
+    (``'Outputs'``, from the execution YAML) or as an already-resolved absolute
+    workspace path.  ``os.path.join`` silently discards ``folder_scenario`` when
+    the second operand is absolute, which routed every scenario's results into
+    one shared directory that the next scenario's run then overwrote.  Only the
+    final component carries meaning here, so take it and re-anchor per scenario.
+    """
+
+    configured = os.path.normpath(str(params["outputs"]))
+    return os.path.join(str(folder_scenario), os.path.basename(configured))
+
+
 def resolve_scenarios(
     base_input_path: str,
     params: dict[str, Any],
@@ -415,10 +433,9 @@ def run_cleanup_stage(
                 params["executables"],
                 scenario_name + "_0",
             )
-            outputs_otoole_csvs = os.path.join(
-                plan.here,
+            outputs_otoole_csvs = resolve_scenario_outputs_dir(
+                params,
                 folder_scenario,
-                params["outputs"],
             )
             data_file = os.path.join(
                 plan.here,
@@ -905,9 +922,9 @@ def run_scenario_output_stage(
         params["A2_output_otoole"],
         scenario_name,
     )
-    file_path_outputs = os.path.join(
+    file_path_outputs = resolve_scenario_outputs_dir(
+        params,
         paths.folder_scenario,
-        params["outputs"],
     )
 
     if solver == "glpk" and params["glpk_option"] == "new":
