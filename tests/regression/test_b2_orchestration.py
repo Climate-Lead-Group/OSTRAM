@@ -682,6 +682,37 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             positions = [harness.stdout.index(marker) for marker in markers]
             self.assertEqual(positions, sorted(positions))
 
+    def test_cross_scenario_concat_runs_once_after_the_final_scenario(self) -> None:
+        """One selection concatenates once, not once per scenario.
+
+        ``concatenate_all_scenarios`` rereads every scenario already on disk, so
+        running it per scenario is quadratic: a 15-scenario campaign measured the
+        phase growing from 183.5 s to 754.5 s.  B2 must keep it in the run's
+        final post-processing stage, after the last scenario of the selection.
+        """
+
+        module = _load_b2_guard_as_callable("concat_once_per_selection")
+        selection = ("A", "B", "C", "D", "E")
+        with B2Fixture(
+            *selection,
+            "Default",
+            main_scenario="A",
+            execute_model=True,
+            concat_scenarios_csv=True,
+        ) as fixture:
+            harness = GuardHarness(module, fixture)
+            harness.run(
+                ["python -m ostram run", "--scenarios", ",".join(selection)]
+            )
+
+            names = [event[0] for event in harness.events]
+            self.assertEqual(names.count("concat_scenarios"), 1)
+            self.assertEqual(names.count("solver_boundary"), len(selection))
+            self.assertGreater(
+                names.index("concat_scenarios"),
+                len(names) - 1 - names[::-1].index("solver_boundary"),
+            )
+
     def test_compile_only_stops_before_every_solver_and_result_boundary(self) -> None:
         module = _load_b2_guard_as_callable("compile_only_gate")
         with B2Fixture(

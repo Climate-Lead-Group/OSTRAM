@@ -143,6 +143,33 @@ This route stops before matrix creation, solver adapters, cleanup, and result
 post-processing. A normal `python -m ostram run` follows the solver and policy
 settings in the execution YAML.
 
+### Result layout and concatenation
+
+Each scenario owns its otoole result tables at
+`<workspace>/execution/Executables/<scenario>_0/Outputs/`. The directory is
+anchored to the scenario regardless of whether `outputs` is configured as a bare
+name or an absolute workspace path, so a serial multi-scenario run keeps every
+scenario's results instead of overwriting them.
+
+`concat_otoole_csv` writes that scenario's own combined table and feeds cost
+verification, including `TotalDiscountedCost.csv`.
+
+`concat_scenarios_csv` writes the cross-scenario combined CSVs. It runs **once
+per run invocation**, in the final post-processing stage, after the last
+scenario of the selection. Because it rereads every scenario present in
+`Executables/`, its cost grows with the number of scenarios already on disk —
+so pass the whole selection to a single invocation:
+
+```powershell
+python -m ostram run --scenarios "A_Calibrated_BAU,B_Optimised_VRE,C_Target_VRE"
+```
+
+Driving a campaign as one invocation per scenario instead makes B2 — and
+therefore this concatenation — run once per scenario, which is quadratic in the
+selection size. A 15-scenario campaign measured the phase growing from 183.5 s
+to 754.5 s per invocation. Split invocations only when a run genuinely needs a
+seam between scenarios, and expect that cost.
+
 ## Scenario selection
 
 `--scenarios` accepts a comma-separated exact selection. The registry validates
