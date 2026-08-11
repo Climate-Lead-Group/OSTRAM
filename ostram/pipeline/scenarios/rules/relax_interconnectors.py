@@ -577,6 +577,51 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
                     mode_cell.value = PROJ_MODE_USER
 
     # ------------------------------------------------------------------
+    # Second-pass B: cap ResidualCapacity when capacity_ceiling < ResCap
+    # ------------------------------------------------------------------
+    # OSeMOSYS requires ResidualCapacity <= TotalAnnualMaxCapacity.
+    # When capacity_ceiling is set below the committed pipeline's ResCap,
+    # we must also reduce ResCap to the ceiling (= "cancel uncommitted
+    # pipeline beyond the ceiling").  Without this, the MathProg pre-
+    # processor check fails with:  check[GLOBAL,TRN...,year] failed.
+    if interp_ceiling:
+        log["rescap_capped_to_ceiling"] = []
+        for row_idx in range(2, ws.max_row + 1):
+            tech = ws.cell(row=row_idx, column=tech_col_idx).value
+            param = ws.cell(row=row_idx, column=param_col_idx).value
+
+            if tech not in interp_ceiling:
+                continue
+            if param != RES_PARAM:
+                continue
+
+            for year in sorted_years:
+                col = year_cols[year]
+                cell = ws.cell(row=row_idx, column=col)
+                old_val = cell.value
+                try:
+                    old_float = float(old_val) if old_val is not None and not pd.isna(old_val) else 0.0
+                except (TypeError, ValueError):
+                    old_float = 0.0
+
+                ceiling_val = interp_ceiling[tech].get(year, PLACEHOLDER_VALUE)
+                if old_float > ceiling_val:
+                    cell.value = ceiling_val
+                    log["rescap_capped_to_ceiling"].append({
+                        "tech": tech,
+                        "year": year,
+                        "old": old_float,
+                        "new": ceiling_val,
+                        "reason": "rescap_exceeds_capacity_ceiling",
+                    })
+
+            # Flip Projection.Mode for the ResCap row too
+            if proj_mode_col_idx is not None:
+                mode_cell = ws.cell(row=row_idx, column=proj_mode_col_idx)
+                if mode_cell.value == PROJ_MODE_EMPTY:
+                    mode_cell.value = PROJ_MODE_USER
+
+    # ------------------------------------------------------------------
     # Third pass: full freeze for freeze techs
     # ------------------------------------------------------------------
     # For techs with an empty override (= freeze signal), pin BOTH

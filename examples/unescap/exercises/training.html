@@ -262,6 +262,7 @@
   <ol>
     <li><a href="#model">The Training Model</a></li>
     <li><a href="#scenarios">How Scenarios Are Built</a></li>
+    <li><a href="#install">Installation</a></li>
     <li><a href="#first-build">Before You Start: First Build</a></li>
     <li><a href="#ex1">Exercise 1 &mdash; Calibrated BAU: The Investment Lid</a></li>
     <li><a href="#ex2">Exercise 2 &mdash; Optimised VRE: Ceilings &amp; Storage</a></li>
@@ -287,6 +288,7 @@
     <ol>
       <li><a href="#model">The Training Model</a></li>
       <li><a href="#scenarios">How Scenarios Are Built</a></li>
+      <li><a href="#install">Installation</a></li>
       <li><a href="#first-build">Before You Start: First Build</a></li>
       <li><a href="#ex1">Exercise 1 &mdash; Calibrated BAU: The Investment Lid</a></li>
       <li><a href="#ex2">Exercise 2 &mdash; Optimised VRE: Ceilings &amp; Storage</a></li>
@@ -408,9 +410,59 @@
     </div>
   </section>
 
-  <!-- 3. FIRST BUILD -->
+  <!-- 3. INSTALLATION -->
+  <section id="install">
+    <h2><span class="num">3</span> Installation</h2>
+    <p>OSTRAM requires <strong>Python 3.10 or newer</strong>. The recommended way to install is with <a href="https://www.anaconda.com/download" target="_blank" style="color:var(--teal-mid);font-weight:600">Conda</a> (Anaconda or Miniconda). If you already have Conda, open an <strong>Anaconda Prompt</strong> (Windows) or your terminal (macOS/Linux) and run:</p>
+
+    <h3>Fresh install</h3>
+    <ol class="step-list">
+      <li>
+        <strong>Create the environment and install OSTRAM.</strong> This installs Python, the solvers (GLPK and CBC), and all Python dependencies in one step.
+        <div class="code-wrap">
+          <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="cmd">conda</span> env create <span class="flag">-f</span> environment.yaml
+<span class="cmd">conda</span> activate OSTRAM-env
+<span class="cmd">python</span> <span class="flag">-m</span> pip install <span class="flag">-e</span> .</code></pre>
+        </div>
+        <div class="callout tip"><div class="tag">Why editable mode?</div><p>The <code>-e</code> flag installs OSTRAM in <em>editable</em> mode: the <code>ostram</code> package points back at your checkout, so <code>python -m ostram</code> works from any directory and always sees the latest code.</p></div>
+      </li>
+    </ol>
+
+    <h3>Updating an existing environment</h3>
+    <p>If you already have the <code>OSTRAM-env</code> environment and need to update it:</p>
+    <div class="code-wrap">
+      <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="cmd">conda</span> env update <span class="flag">-f</span> environment.yaml <span class="flag">--prune</span>
+<span class="cmd">python</span> <span class="flag">-m</span> pip install <span class="flag">-e</span> .</code></pre>
+    </div>
+
+    <h3>Verify the installation</h3>
+    <p>Confirm that OSTRAM is on your path and that the solvers are available:</p>
+    <div class="code-wrap">
+      <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="comment"># OSTRAM command line</span>
+<span class="cmd">python</span> -m ostram <span class="flag">--help</span>
+<span class="cmd">python</span> -m ostram inspect-resources
+
+<span class="comment"># Solvers (GLPK and CBC ship with environment.yaml)</span>
+<span class="cmd">glpsol</span> <span class="flag">--version</span>
+<span class="cmd">cbc</span> -stop</code></pre>
+    </div>
+
+    <div class="callout warn"><div class="tag">External solvers</div><p>GLPK and CBC are installed automatically via <code>environment.yaml</code>. If you need <strong>CPLEX</strong> or <strong>Gurobi</strong>, install them separately with their vendor licenses and select the solver in <code>config/execution/Config_MOMF_T1_AB.yaml</code>.</p></div>
+
+    <h3>Run the test suite (optional)</h3>
+    <p>The tests are solver-free and verify the installation without building a model:</p>
+    <div class="code-wrap">
+      <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="cmd">python</span> <span class="flag">-B</span> -m unittest discover <span class="flag">-s</span> tests <span class="flag">-p</span> <span class="string">"test_*.py"</span></code></pre>
+    </div>
+  </section>
+
+  <!-- 4. FIRST BUILD -->
   <section id="first-build">
-    <h2><span class="num">3</span> Before You Start: First Build</h2>
+    <h2><span class="num">4</span> Before You Start: First Build</h2>
     <p>Build the baseline results once, in <strong>two passes</strong>. This order matters: <code>C_Target_VRE</code> scales its targets against the <em>solved</em> <code>A_Calibrated_BAU</code> results, so the calibrated baseline must be solved <strong>before</strong> the policy scenario runs.</p>
 
     <div class="callout tip"><div class="tag">Step 0 &mdash; Get a conda terminal</div><p>All commands below run from a terminal with <em>conda</em> available &mdash; an <strong>Anaconda Prompt</strong> on Windows, or your normal <strong>Terminal</strong> on macOS and Linux with the conda environment activated. If you don't have conda, install either <a href="https://www.anaconda.com/download" target="_blank" style="color:var(--teal-mid);font-weight:600">Anaconda Distribution</a> or the lighter <a href="https://docs.conda.io/en/latest/miniconda.html" target="_blank" style="color:var(--teal-mid);font-weight:600">Miniconda</a>. Both give you a working <em>conda</em> command line.</p></div>
@@ -434,6 +486,9 @@
 <pre><code><span class="cmd">python</span> -m ostram example prepare unescap</code></pre>
         </div>
       </li>
+    </ol>
+
+    <ol class="step-list" start="3">
       <li>
         <strong>Pass 1 &mdash; build &amp; solve the calibrated baseline and the VRE scenario.</strong> This builds the snapshot (if needed) and produces the solved <code>A_Calibrated_BAU</code> results that the next pass relies on:
         <div class="code-wrap">
@@ -458,19 +513,46 @@
       </li>
     </ol>
     <div class="callout important"><div class="tag">Why two passes?</div><p>A single <code>run</code> builds <em>every</em> requested scenario (the A3 stage) before it solves <em>any</em> of them (the B2 stage). So in a single all-scenarios run, <code>C_Target_VRE</code> is built while <code>A_Calibrated_BAU</code> is still unsolved &mdash; and it aborts with <em>"BAU results not found&hellip; Run the BAU/CalBAU scenario first."</em> Solving A first (pass 1) fixes this.</p></div>
-    <div class="callout warn"><div class="tag">If you change the input data</div><p>Preparation output is reused on every run. If you edit the raw model under <code>examples/unescap/inputs/osemosys_global/</code>, prepare the profile again so the base model is rebuilt from your new data:</p>
+    <div class="callout warn"><div class="tag">If you change the input data</div>
+      <p>Preparation output is reused on every run. If you edit anything under <code>examples/unescap/inputs/</code> (scenario workbook, CSVs, etc.), a subsequent <code>run</code> will fail with:</p>
       <div class="code-wrap">
-        <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
-<pre><code><span class="cmd">python</span> -m ostram example prepare unescap <span class="flag">--reset</span></code></pre>
+<pre><code><span class="output">python -m ostram: error: profile source for 'interconnector_authority' changed after preparation; use --reset</span></code></pre>
       </div>
-      <p>Nothing needs deleting by hand. Preparation owns its workspace and replaces stale output itself; no generated folder lives inside the profile.</p>
+      <p>This means the input files have changed since the last <code>prepare</code>. You must re-prepare with the <code>--reset</code> flag, which <strong>deletes the existing workspace</strong> and rebuilds it from scratch.</p>
+      <p>If you already have a workspace with results from previous exercises, <strong>rename the whole folder first</strong> so you don't lose anything &mdash; <code>--reset</code> deletes it entirely:</p>
+      <div class="two-col">
+        <div>
+          <h4>Windows (Anaconda Prompt)</h4>
+          <div class="code-wrap">
+            <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="comment">REM 1. Rename the entire workspace folder</span>
+<span class="cmd">ren</span> workspace\profiles\unescap  unescap_old
+
+<span class="comment">REM 2. Reset and re-prepare (creates a fresh unescap)</span>
+<span class="cmd">python</span> -m ostram example prepare unescap <span class="flag">--reset</span></code></pre>
+          </div>
+        </div>
+        <div>
+          <h4>macOS / Linux</h4>
+          <div class="code-wrap">
+            <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="comment"># 1. Rename the entire workspace folder</span>
+<span class="cmd">mv</span> workspace/profiles/unescap  workspace/profiles/unescap_old
+
+<span class="comment"># 2. Reset and re-prepare (creates a fresh unescap)</span>
+<span class="cmd">python</span> -m ostram example prepare unescap <span class="flag">--reset</span></code></pre>
+          </div>
+        </div>
+      </div>
+      <p>Your old results, snapshots, and everything else stay safe in <code>unescap_old</code>. If you need to recover snapshots later, just copy them from <code>unescap_old/reports/snapshots/</code> into the new workspace.</p>
+      <p>If this is your first time (no existing workspace), skip the rename and just run <code>python -m ostram example prepare unescap</code> directly.</p>
     </div>
     <div class="callout tip"><div class="tag">Save your baseline numbers</div><p>After the first build, note a few headline figures for each scenario (total system cost, total CO&#8322; emissions, and the 2050 generation mix). Every exercise asks you to compare against these baseline values. To re-run a single scenario after editing its YAML, use <code>python -m ostram --profile unescap run --scenarios "&lt;name&gt;"</code>.</p></div>
   </section>
 
   <!-- EXERCISE 1 -->
   <section id="ex1">
-    <h2><span class="num">4</span> Exercise 1: The Investment Lid <span class="pill">A_Calibrated_BAU</span></h2>
+    <h2><span class="num">5</span> Exercise 1: The Investment Lid <span class="pill">A_Calibrated_BAU</span></h2>
 
     <div class="goal">
       <div class="label">Goal</div>
@@ -534,7 +616,7 @@
 
   <!-- EXERCISE 2 -->
   <section id="ex2">
-    <h2><span class="num">5</span> Exercise 2: Ceilings &amp; Storage <span class="pill">B_Optimised_VRE</span></h2>
+    <h2><span class="num">6</span> Exercise 2: Ceilings &amp; Storage <span class="pill">B_Optimised_VRE</span></h2>
 
     <div class="goal">
       <div class="label">Goal</div>
@@ -568,6 +650,14 @@
   <span class="key">NGS:</span> <span class="add">0.8</span>   <span class="comment"># squeeze gas</span>
   <span class="comment"># ...</span></code></pre></div>
       </div>
+    </div>
+    <p>Still in the same file, update the <strong>last line</strong> of <code>adequacy_floor_schedule</code> (don't touch <code>relaxation_schedule</code> or the ceilings):</p>
+    <div class="code-wrap">
+      <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="key">adequacy_floor_schedule:</span>
+  <span class="key">2040:</span> 0.0
+  <span class="key">2045:</span> 0.08
+  <span class="key">2050:</span> <span class="add">0.25</span>   <span class="comment"># was 0.20</span></code></pre>
     </div>
 
     <h3>Part B &mdash; Seed more storage</h3>
@@ -621,7 +711,7 @@
 
   <!-- EXERCISE 3: INTERCONNECTORS -->
   <section id="ic-exercises">
-    <h2><span class="num">6</span> Exercise 3: Interconnectors &mdash; On &amp; Off</h2>
+    <h2><span class="num">7</span> Exercise 3: Interconnectors &mdash; On &amp; Off</h2>
     <p>A focused set of exercises on the Bangladesh&ndash;India cross-border power link. Switch the interconnector off, open it wide, reshape its build-out, find the sweet spot, and control its direction &mdash; each by editing a single YAML file.</p>
 
     <h3>The Cross-Border Link</h3>
@@ -766,12 +856,16 @@
     </div>
     <h3>The concept</h3>
     <p>The override is a schedule, so you can shift the whole ramp earlier or later. Run it once <em>fast</em> and once <em>slow</em> and compare &mdash; the endpoint is identical, only the path differs.</p>
+    <p>The <code>overrides</code> key controls per-year <em>new</em> investment (<code>TotalAnnualMaxCapacityInvestment</code>), while <code>capacity_ceiling</code> controls the <em>total</em> installed capacity allowed (<code>TotalAnnualMaxCapacity</code>). Both are needed here because the solver in this model never hits the per-year investment limit on its own &mdash; the total-capacity ceiling is what actually constrains the build timeline.</p>
     <h3>What to change</h3>
     <div class="two-col">
       <div><h4>Variant A &mdash; early (full link by 2026)</h4>
         <div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
 <pre><code><span class="key">overrides:</span>
+  <span class="key">TRNBGDXXINDEA:</span> <span class="add">{2023: 2.496, 2026: 8.50}</span>
+
+<span class="key">capacity_ceiling:</span>
   <span class="key">TRNBGDXXINDEA:</span> <span class="add">{2023: 2.496, 2026: 8.50}</span></code></pre>
     </div>
       </div>
@@ -779,6 +873,9 @@
         <div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
 <pre><code><span class="key">overrides:</span>
+  <span class="key">TRNBGDXXINDEA:</span> <span class="add">{2023: 2.496, 2045: 8.50}</span>
+
+<span class="key">capacity_ceiling:</span>
   <span class="key">TRNBGDXXINDEA:</span> <span class="add">{2023: 2.496, 2045: 8.50}</span></code></pre>
     </div>
       </div>
@@ -809,9 +906,9 @@
     <h3>The concept</h3>
     <p>Exercises 1 and 2 gave you the two extremes (frozen vs. wide open). Now fill in the middle. Re-run the scenario a few times, each with a different 2050 ceiling, and plot system cost against link size. Somewhere between &ldquo;off&rdquo; and &ldquo;wide open&rdquo; the curve flattens &mdash; that knee is the economically efficient interconnector size.</p>
     <h3>What to change</h3>
-    <p>Run the scenario once per row below, editing only the override and saving a matching label:</p>
+    <p>Run the scenario once per row below, editing <strong>both</strong> <code>overrides</code> and <code>capacity_ceiling</code> with the same schedule, and saving a matching label. As in Exercise&nbsp;3.3, <code>capacity_ceiling</code> controls the total installed capacity (<code>TotalAnnualMaxCapacity</code>) &mdash; without it the link grows beyond the intended size.</p>
     <table>
-      <thead><tr><th>Override for <code>TRNBGDXXINDEA</code></th><th>Save as label</th></tr></thead>
+      <thead><tr><th><code>overrides</code> <em>and</em> <code>capacity_ceiling</code> for <code>TRNBGDXXINDEA</code></th><th>Save as label</th></tr></thead>
       <tbody>
         <tr><td><code>{2023: 2.496, 2050: 2.496}</code></td><td><code>IC-2.496</code> (= off)</td></tr>
         <tr><td><code>{2023: 2.496, 2033: 5.00}</code></td><td><code>IC-5</code></td></tr>
@@ -819,11 +916,21 @@
         <tr><td><code>{2023: 2.496, 2033: 12.0}</code></td><td><code>IC-12</code></td></tr>
         <tr><td><code>{2023: 2.496, 2030: 15.0, 2050: 25.0}</code></td><td><code>IC-25</code> (= wide)</td></tr>
       </tbody>
-    </table><div class="code-wrap">
+    </table>
+    <p>For example, the IC-5 run would look like:</p>
+    <div class="code-wrap">
       <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
-<pre><code><span class="comment"># repeat for each row: edit the override, then</span>
+<pre><code><span class="key">overrides:</span>
+  <span class="key">TRNBGDXXINDEA:</span> <span class="add">{2023: 2.496, 2033: 5.00}</span>
+
+<span class="key">capacity_ceiling:</span>
+  <span class="key">TRNBGDXXINDEA:</span> <span class="add">{2023: 2.496, 2033: 5.00}</span></code></pre>
+    </div>
+    <div class="code-wrap">
+      <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="comment"># repeat for each row: edit overrides + capacity_ceiling, then</span>
 <span class="cmd">python</span> -m ostram <span class="flag">--profile</span> <span class="string">unescap</span> run <span class="flag">--scenarios</span> <span class="string">"B_Optimised_VRE"</span>
-<span class="cmd">python</span> -m ostram example report unescap <span class="flag">--capture</span> <span class="string">IC-8.5</span></code></pre>
+<span class="cmd">python</span> -m ostram example report unescap <span class="flag">--capture</span> <span class="string">IC-5</span></code></pre>
     </div>
     <h3>What to observe</h3>
     <ul>
@@ -943,7 +1050,7 @@
 
   <!-- EXERCISE 4 (was Exercise 3) -->
   <section id="ex4">
-    <h2><span class="num">7</span> Exercise 4: Renewable Targets <span class="pill">C_Target_VRE</span></h2>
+    <h2><span class="num">8</span> Exercise 4: Renewable Targets <span class="pill">C_Target_VRE</span></h2>
 
     <div class="goal">
       <div class="label">Goal</div>
@@ -1003,9 +1110,9 @@
     <div class="callout warn"><div class="tag">Feasibility</div><p>Targets are hard constraints. If you set a share the system physically cannot reach (e.g. a solar share far above what the grid and storage can absorb), the solver will report the model as <strong>infeasible</strong> and produce no result. If that happens, lower the target, raise it more gradually across years, or revert. Pushing a target to the edge of feasibility is itself a valuable lesson.</p></div>
   </section>
 
-  <!-- 7. INSPECT & REVERT -->
+  <!-- 9. INSPECT & REVERT -->
   <section id="inspect">
-    <h2><span class="num">8</span> Inspecting Results &amp; Reverting</h2>
+    <h2><span class="num">9</span> Inspecting Results &amp; Reverting</h2>
 
     <h3>Where the results land</h3>
     <p>After a run, each scenario's solver output is written under its own folder in the execution workspace, alongside the combined input/output tables. Nothing is written inside <code>examples/unescap/</code>:</p>
@@ -1116,12 +1223,13 @@ function copyCode(btn) {
   // On narrow screens, close after picking a section; on wide screens leave it open
   links.forEach(a => a.addEventListener('click', () => { if (window.innerWidth < 1100) closeNav(); }));
 
-  // Scrollspy: highlight the section currently in view
-  const sections = links
+  // Scrollspy: highlight the section currently in view (hash links only)
+  const hashLinks = links.filter(a => (a.getAttribute('href') || '').startsWith('#'));
+  const sections = hashLinks
     .map(a => document.querySelector(a.getAttribute('href')))
     .filter(Boolean);
   const byId = {};
-  links.forEach(a => byId[a.getAttribute('href').slice(1)] = a);
+  hashLinks.forEach(a => byId[a.getAttribute('href').slice(1)] = a);
 
   const spy = new IntersectionObserver(entries => {
     entries.forEach(en => {

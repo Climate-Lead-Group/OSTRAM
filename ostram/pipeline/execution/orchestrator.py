@@ -844,6 +844,8 @@ class SolverAdapter:
                 "cbc", f"{paths.output_file}.lp",
                 "randomSeed", str(cbc_random_seed),
                 "randomCbcSeed", str(cbc_random_seed),
+                "primalTolerance", "1e-8",
+                "dualTolerance", "1e-8",
                 "-seconds", str(params["iteration_time"]),
                 "solve", "-solu", f"{paths.output_file}.sol",
             ]
