@@ -3,7 +3,7 @@
 """
 6_sync_og_to_ts20.py
 
-Final A3 stage: propagate the 20-timeslice / 5-bracket fabric from
+Final A3 stage: propagate the timeslice fabric (shape derived from the WV) from
 SOASIA_OSeMOSYS_WV.xlsx down into:
   * OG_csvs_inputs/*.csv  (the source-of-truth A1 reads on the next run)
   * Config_MOMF_T1_A.yaml  (xtra_scen.DailyTimeBracket and xtra_scen.Timeslices)
@@ -13,8 +13,8 @@ already produces 20-ts xlsx outputs. B1_Compiler then aborts with
 'These variables are differents...'.
 
 Files rewritten in --og-csvs-dir:
-    TIMESLICE.csv               20 entries, S1D1..S4D5
-    DAILYTIMEBRACKET.csv        [1..5]
+    TIMESLICE.csv               S1D1..S{s}D{b}, shape derived from WV
+    DAILYTIMEBRACKET.csv        [1..n], derived from WV
     YearSplit.csv               WV.Yearsplit_Template, broadcast to YEARS
     DaySplit.csv                WV.DaySplit x365 (frac-of-day), broadcast to YEARS
     SpecifiedDemandProfile.csv  WV.Demand_Profiles values (ELC*03 -> ELC*02,
@@ -44,10 +44,66 @@ from pathlib import Path
 import pandas as pd
 
 YEARS = list(range(2023, 2051))  # 2023..2050 inclusive
-SEASONS = [1, 2, 3, 4]
-BRACKETS = [1, 2, 3, 4, 5]
-TIMESLICES = [f"S{s}D{d}" for s in SEASONS for d in BRACKETS]  # 20 entries
 DAYSPLIT_UNIT_FACTOR = 365.0  # WV stores fraction-of-year; OG CSV expects fraction-of-day
+
+# Timeslice fabric shape (seasons, daily time brackets, timeslice list) is
+# DERIVED from the WV workbook at runtime, not hard-coded. The Timeslice
+# Inputs workbook is the single source of truth for the fabric; this script
+# adapts to whatever dense S{s}D{d} grid it declares. Populated by
+# derive_fabric() before any writer runs.
+SEASONS: list[int] = []
+BRACKETS: list[int] = []
+TIMESLICES: list[str] = []
+
+_TS_TAG_RE = re.compile(r"S(\d+)D(\d+)")
+
+
+def derive_fabric(wv_file: Path) -> None:
+    """Read the fabric shape from WV Yearsplit_Template and validate it.
+
+    Requirements enforced:
+      * every timeslice tag matches S{season}D{bracket} exactly;
+      * seasons and brackets are each contiguous from 1;
+      * the grid is dense (every season x bracket combination present once);
+      * row order is canonical (S1D1..S{max}D{max}, bracket fastest);
+      * the WV DaySplit sheet declares exactly the derived bracket list.
+    """
+    global SEASONS, BRACKETS, TIMESLICES
+
+    ys = pd.read_excel(wv_file, sheet_name="Yearsplit_Template")
+    tags = [str(t) for t in ys["Timeslices"]]
+    parsed = []
+    for t in tags:
+        m = _TS_TAG_RE.fullmatch(t)
+        if not m:
+            sys.exit(f"[ERROR] WV Yearsplit_Template timeslice tag not S<s>D<d>: {t!r}")
+        parsed.append((int(m.group(1)), int(m.group(2))))
+
+    seasons = sorted({s for s, _ in parsed})
+    brackets = sorted({b for _, b in parsed})
+    if seasons != list(range(1, len(seasons) + 1)):
+        sys.exit(f"[ERROR] Seasons not contiguous from 1: {seasons}")
+    if brackets != list(range(1, len(brackets) + 1)):
+        sys.exit(f"[ERROR] Brackets not contiguous from 1: {brackets}")
+    if len(parsed) != len(set(parsed)):
+        sys.exit(f"[ERROR] Duplicate timeslice tags in Yearsplit_Template")
+    if len(parsed) != len(seasons) * len(brackets):
+        sys.exit(f"[ERROR] Timeslice grid not dense: {len(parsed)} tags for "
+                 f"{len(seasons)} seasons x {len(brackets)} brackets")
+    canonical = [(s, b) for s in seasons for b in brackets]
+    if parsed != canonical:
+        sys.exit(f"[ERROR] WV Yearsplit_Template not in canonical "
+                 f"S1D1..S{seasons[-1]}D{brackets[-1]} order")
+
+    ds = pd.read_excel(wv_file, sheet_name="DaySplit")
+    ds_brackets = [int(b) for b in ds["DAILYTIMEBRACKET"]]
+    if ds_brackets != brackets:
+        sys.exit(f"[ERROR] WV DaySplit brackets {ds_brackets} != "
+                 f"Yearsplit-derived brackets {brackets}")
+
+    SEASONS = seasons
+    BRACKETS = brackets
+    TIMESLICES = [f"S{s}D{b}" for s, b in canonical]
 
 
 # ---------------------------------------------------------------------------
@@ -68,7 +124,7 @@ def write_dailytimebracket_csv(out_dir: Path) -> None:
 def write_yearsplit_csv(wv_file: Path, out_dir: Path) -> None:
     src = pd.read_excel(wv_file, sheet_name="Yearsplit_Template")
     if list(src["Timeslices"]) != TIMESLICES:
-        sys.exit(f"[ERROR] WV Yearsplit_Template not in canonical S1D1..S4D5 order")
+        sys.exit(f"[ERROR] WV Yearsplit_Template rows != derived canonical order")
     # WV has per-year columns 2023..2050; in this build they're constant per ts.
     # Use the 2023 column as the per-ts value (same value for every modeled year).
     ts_to_val = dict(zip(src["Timeslices"], src[2023]))
@@ -82,7 +138,7 @@ def write_yearsplit_csv(wv_file: Path, out_dir: Path) -> None:
 def write_daysplit_csv(wv_file: Path, out_dir: Path) -> None:
     src = pd.read_excel(wv_file, sheet_name="DaySplit")
     if list(src["DAILYTIMEBRACKET"]) != BRACKETS:
-        sys.exit(f"[ERROR] WV DaySplit brackets not [1..5]: {list(src['DAILYTIMEBRACKET'])}")
+        sys.exit(f"[ERROR] WV DaySplit brackets {list(src['DAILYTIMEBRACKET'])} != derived {BRACKETS}")
     # WV stores fraction-of-year (sums to 1/365); OG expects fraction-of-day (sums to 1).
     bracket_to_val = {b: float(src.loc[src["DAILYTIMEBRACKET"] == b, 2023].iloc[0]) * DAYSPLIT_UNIT_FACTOR
                       for b in BRACKETS}
@@ -105,7 +161,7 @@ def write_specified_demand_profile_csv(wv_file: Path, out_dir: Path, region: str
     src = src.copy()
     src["FUEL_OG"] = src["Fuel/Tech"].apply(to_pre_dsptrn)
     if not set(src["Timeslices"]) == set(TIMESLICES):
-        sys.exit(f"[ERROR] WV Demand_Profiles timeslices != canonical 20-ts set")
+        sys.exit(f"[ERROR] WV Demand_Profiles timeslices != derived {len(TIMESLICES)}-ts set")
     # Use 2023 column; values are constant across years in this WV build.
     rows = []
     for _, r in src.iterrows():
@@ -123,7 +179,8 @@ def write_specified_demand_profile_csv(wv_file: Path, out_dir: Path, region: str
 
 def write_conversion_csvs(out_dir: Path) -> None:
     # Conversionls: TIMESLICE x SEASON; 1.0 if S<season> matches the ts season prefix
-    rows = [(ts, s, 1.0 if ts.startswith(f"S{s}") else 0.0) for ts in TIMESLICES for s in SEASONS]
+    rows = [(ts, s, 1.0 if int(_TS_TAG_RE.fullmatch(ts).group(1)) == s else 0.0)
+            for ts in TIMESLICES for s in SEASONS]
     pd.DataFrame(rows, columns=["TIMESLICE", "SEASON", "VALUE"]).to_csv(
         out_dir / "Conversionls.csv", index=False)
     print(f"  Conversionls.csv            {len(rows)} rows")
@@ -135,7 +192,8 @@ def write_conversion_csvs(out_dir: Path) -> None:
     print(f"  Conversionld.csv            {len(rows)} rows")
 
     # Conversionlh: TIMESLICE x DAILYTIMEBRACKET; 1.0 if D<bracket> matches the ts bracket suffix
-    rows = [(ts, b, 1.0 if ts.endswith(f"D{b}") else 0.0) for ts in TIMESLICES for b in BRACKETS]
+    rows = [(ts, b, 1.0 if int(_TS_TAG_RE.fullmatch(ts).group(2)) == b else 0.0)
+            for ts in TIMESLICES for b in BRACKETS]
     pd.DataFrame(rows, columns=["TIMESLICE", "DAILYTIMEBRACKET", "VALUE"]).to_csv(
         out_dir / "Conversionlh.csv", index=False)
     print(f"  Conversionlh.csv            {len(rows)} rows")
@@ -187,7 +245,8 @@ def update_yaml_xtra_scen(yaml_path: Path) -> None:
     with open(yaml_path, "w", encoding="utf-8") as f:
         f.writelines(out)
     print(f"  YAML xtra_scen.DailyTimeBracket -> [{', '.join(replacements['DailyTimeBracket'])}]")
-    print(f"  YAML xtra_scen.Timeslices       -> {len(replacements['Timeslices'])} entries (S1D1..S4D5)")
+    print(f"  YAML xtra_scen.Timeslices       -> {len(replacements['Timeslices'])} entries "
+          f"({TIMESLICES[0]}..{TIMESLICES[-1]})")
 
 
 # ---------------------------------------------------------------------------
@@ -211,11 +270,13 @@ def main() -> int:
     if not args.yaml.is_file():
         sys.exit(f"[ERROR] YAML not found: {args.yaml}")
 
+    derive_fabric(args.wv)
+
     print(f"[INFO] WV source        : {args.wv}")
     print(f"[INFO] OG csvs target   : {args.og_csvs_dir}")
     print(f"[INFO] YAML target      : {args.yaml}")
     print(f"[INFO] Years            : {YEARS[0]}..{YEARS[-1]} ({len(YEARS)} years)")
-    print(f"[INFO] Timeslices       : {len(TIMESLICES)} (S1D1..S4D5)")
+    print(f"[INFO] Timeslices       : {len(TIMESLICES)} ({TIMESLICES[0]}..{TIMESLICES[-1]})")
     print()
 
     print("[INFO] Rewriting OG_csvs_inputs CSVs:")

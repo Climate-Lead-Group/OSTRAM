@@ -3,7 +3,7 @@
 """
 5_propagate_timeslice_fabric.py
 
-Propagates the 20-timeslice / 5-bracket timeslice fabric from
+Propagates the timeslice fabric (shape derived from the WV workbook) from
 SOASIA_OSeMOSYS_WV.xlsx into A-O_Parametrization_wvaligned_v2.xlsx.
 
 This is a strictly additive post-step that runs after script 4. It does NOT
@@ -12,8 +12,8 @@ A-O Parametrization workbook; every other sheet is left byte-identical
 (via openpyxl in-place rewrite).
 
 What it does:
-    Yearsplit  -- direct copy of WV's Yearsplit_Template (20 rows, fraction-of-year)
-    DaySplit   -- copy of WV's DaySplit (5 rows) with x365 unit conversion:
+    Yearsplit  -- direct copy of WV's Yearsplit_Template (fraction-of-year)
+    DaySplit   -- copy of WV's DaySplit with x365 unit conversion:
                   WV stores fraction-of-year (sums to 1/365), A-O expects
                   fraction-of-day (sums to 1.0, OSeMOSYS-standard).
                   Conversion factor confirmed against script 1 line 255
@@ -57,6 +57,39 @@ AO_OUT      = SCRIPT_DIR / "wvaligned_outputs_v2" / "A-O_Parametrization_wvalign
 # DaySplit unit conversion: WV fraction-of-year  ->  A-O fraction-of-day
 DAYSPLIT_UNIT_FACTOR = 365.0
 
+# Timeslice fabric shape is DERIVED from the WV workbook at runtime, not
+# hard-coded: the Timeslice Inputs workbook is the single source of truth.
+import re as _re
+_TS_TAG_RE = _re.compile(r"S(\d+)D(\d+)")
+
+
+def derive_fabric(ys_df):
+    """Return (expected_ts, brackets) from Yearsplit_Template, validated.
+
+    Enforces: every tag matches S{s}D{d}; seasons and brackets contiguous
+    from 1; dense grid; canonical row order (bracket fastest).
+    """
+    tags = [str(t) for t in ys_df["Timeslices"]]
+    parsed = []
+    for t in tags:
+        m = _TS_TAG_RE.fullmatch(t)
+        assert m, f"Yearsplit_Template timeslice tag not S<s>D<d>: {t!r}"
+        parsed.append((int(m.group(1)), int(m.group(2))))
+    seasons = sorted({s for s, _ in parsed})
+    brackets = sorted({b for _, b in parsed})
+    assert seasons == list(range(1, len(seasons) + 1)), \
+        f"seasons not contiguous from 1: {seasons}"
+    assert brackets == list(range(1, len(brackets) + 1)), \
+        f"brackets not contiguous from 1: {brackets}"
+    canonical = [(s, b) for s in seasons for b in brackets]
+    assert len(parsed) == len(set(parsed)) == len(canonical), \
+        f"timeslice grid not dense/unique: {len(parsed)} tags, " \
+        f"{len(seasons)}x{len(brackets)} grid"
+    assert parsed == canonical, \
+        f"WV Yearsplit_Template not in canonical S1D1..S{seasons[-1]}D{brackets[-1]} order"
+    expected_ts = [f"S{s}D{b}" for s, b in canonical]
+    return expected_ts, brackets
+
 
 # -----------------------------------------------------------------------------
 # Helpers
@@ -92,19 +125,20 @@ def read_header(ws, header_row=1):
 def load_wv_yearsplit():
     """Return (header_list, data_rows_list) ready to write into A-O Yearsplit."""
     df = pd.read_excel(WV_FILE, sheet_name="Yearsplit_Template")
-    # Sort by timeslice for stable ordering (WV is already in S1D1..S4D5 order, but assert)
-    expected_ts = [f"S{s}D{d}" for s in range(1, 5) for d in range(1, 6)]
-    assert list(df["Timeslices"]) == expected_ts, \
-        f"WV Yearsplit_Template not in canonical S1D1..S4D5 order: {list(df['Timeslices'])}"
+    # Shape and order are validated against the workbook itself.
+    derive_fabric(df)
     return df
 
 
 def load_wv_daysplit():
     """Return WV DaySplit df with year columns multiplied by 365 (fraction-of-day)."""
     df = pd.read_excel(WV_FILE, sheet_name="DaySplit")
-    # Verify shape and brackets
-    assert list(df["DAILYTIMEBRACKET"]) == [1, 2, 3, 4, 5], \
-        f"WV DaySplit brackets not [1..5]: {list(df['DAILYTIMEBRACKET'])}"
+    # Verify brackets against the Yearsplit-derived fabric (single source of truth).
+    ys = pd.read_excel(WV_FILE, sheet_name="Yearsplit_Template")
+    _, expected_brackets = derive_fabric(ys)
+    assert [int(b) for b in df["DAILYTIMEBRACKET"]] == expected_brackets, \
+        f"WV DaySplit brackets {list(df['DAILYTIMEBRACKET'])} != " \
+        f"Yearsplit-derived {expected_brackets}"
     # Apply x365 conversion to year columns
     year_cols = [c for c in df.columns if isinstance(c, int) and 2000 <= c <= 2100]
     df = df.copy()
