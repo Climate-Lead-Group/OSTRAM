@@ -4,14 +4,18 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+import os
 from pathlib import Path
 import shutil
-from typing import Sequence
+from typing import Any, Sequence
 
 import pandas as pd
 
 from ostram.paths import resolve_paths
-from ostram.profiles import DEFAULT_PROFILE, active_profile_id
+from ostram.profiles import (
+    DEFAULT_PROFILE,
+    active_profile_id,
+)
 
 
 DATASETS = (
@@ -77,7 +81,7 @@ def merge_country_template(
     source_centerpoint = template_dir / "centerpoint.csv"
     if source_centerpoint.is_file():
         incoming = pd.read_csv(source_centerpoint)
-        required = ["region", "latitude", "longitude"]
+        required = ["region", "lat", "long"]
         if list(incoming.columns) != required:
             raise ValueError(
                 f"centerpoint schema must be {required}, got {list(incoming.columns)}"
@@ -97,6 +101,63 @@ def merge_country_template(
         incoming.sort_values("region").to_csv(centerpoints_path, index=False)
         counts["centerpoint"] = len(incoming)
     return counts
+
+
+SNAPSHOT_PREFIX = "_post_a2_snapshot_"
+
+
+def _invalidate_stale_snapshots(a1_outputs: Path) -> list[str]:
+    """Rename existing post-A2 snapshots so A1/A2 are forced to regenerate.
+
+    After merging a new country, the old snapshots don't include the new
+    country's technologies and must be rebuilt.  Snapshots are renamed
+    (not deleted) so data is never lost.
+    """
+    if not a1_outputs.is_dir():
+        return []
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    renamed: list[str] = []
+    for entry in sorted(a1_outputs.iterdir()):
+        if entry.is_dir() and entry.name.startswith(SNAPSHOT_PREFIX):
+            new_name = entry.with_name(f"{entry.name}_stale_{stamp}")
+            entry.rename(new_name)
+            renamed.append(entry.name)
+    return renamed
+
+
+def _find_a1_outputs(paths) -> Path:
+    """Resolve the A1_Outputs directory robustly across profile contexts.
+
+    ``paths.a1_outputs`` applies ``.resolve()`` which can behave differently
+    on Windows depending on the profile environment.  This helper tries
+    multiple strategies to locate the directory that actually contains the
+    post-A2 snapshots.
+    """
+    # Strategy 1: the canonical property
+    candidate = paths.a1_outputs
+    if candidate.is_dir() and any(
+        p.is_dir() and p.name.startswith(SNAPSHOT_PREFIX)
+        for p in candidate.iterdir()
+    ):
+        return candidate
+    # Strategy 2: preparation_workspace / A1_Outputs (no .resolve())
+    candidate = paths.preparation_workspace / "A1_Outputs"
+    if candidate.is_dir() and any(
+        p.is_dir() and p.name.startswith(SNAPSHOT_PREFIX)
+        for p in candidate.iterdir()
+    ):
+        return candidate
+    # Strategy 3: walk up from workspace looking for preparation/A1_Outputs
+    for parent in [paths.workspace, paths.workspace.parent]:
+        for prep in parent.rglob("preparation"):
+            candidate = prep / "A1_Outputs"
+            if candidate.is_dir() and any(
+                p.is_dir() and p.name.startswith(SNAPSHOT_PREFIX)
+                for p in candidate.iterdir()
+            ):
+                return candidate
+    # Fallback: return paths.a1_outputs even if we couldn't verify it
+    return paths.a1_outputs
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -124,6 +185,23 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.error("provide COUNTRY or --template PATH")
     counts = merge_country_template(template, args.input_dir, args.centerpoints)
     print(f"Merged country template: {counts}")
+
+    # Invalidate stale post-A2 snapshots so the next run regenerates A1/A2
+    # with the newly merged country data.
+    a1_dir = _find_a1_outputs(paths)
+    print(f"Checking for stale snapshots in: {a1_dir}")
+    stale = _invalidate_stale_snapshots(a1_dir)
+    if stale:
+        print(
+            f"Invalidated {len(stale)} stale post-A2 snapshot(s): "
+            f"{', '.join(stale)}"
+        )
+        print(
+            "The next 'ostram run' will regenerate A1 and A2 to include "
+            "the merged country."
+        )
+    else:
+        print("No stale post-A2 snapshots found to invalidate.")
     return 0
 
 

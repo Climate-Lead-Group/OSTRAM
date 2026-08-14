@@ -21,9 +21,11 @@ Author: Climate Lead Group, Andrey Salazar-Vargas
 import pandas as pd
 import yaml
 import os
+import shutil
 import sys
 import argparse
 from collections import defaultdict
+from datetime import datetime
 from pathlib import Path
 
 from ostram.paths import resolve_paths
@@ -454,6 +456,80 @@ def generate_centerpoint_template(new_cc, new_rr, lat, lon, output_dir):
     return df
 
 
+def _resolve_sheet_prefix(cc, rr):
+    """Return the timeslice sheet prefix for a country/region pair.
+
+    3-letter code with region XX → prefix is the 3-letter code (e.g. BGD).
+    3-letter code with explicit region → prefix is CC+RR (e.g. INDEA).
+    5-letter code → used as-is.
+    """
+    if len(cc) == 3 and rr == "XX":
+        return cc
+    if len(cc) == 3:
+        return f"{cc}{rr}"
+    return cc
+
+
+def clone_timeslice_sheets(ref_cc, ref_rr, new_cc, new_rr):
+    """Clone reference country timeslice sheets for the new country.
+
+    Copies {ref}_CF → {new}_CF and {ref}_Dem → {new}_Dem inside the
+    profile's OSTRAM_Timeslice_Inputs.xlsx so that merge_timeslices can
+    find capacity-factor and demand-profile data for the new country.
+    """
+    from openpyxl import load_workbook
+
+    ts_path = _PROJECT_PATHS.timeslice_workbook
+    if not ts_path.is_file():
+        print(f"  WARNING: Timeslice workbook not found: {ts_path}")
+        print("  Skipping timeslice sheet cloning.")
+        return
+
+    # Look up the reference prefix from the countries list so that
+    # multi-region codes like INDEA are handled correctly.
+    ref_prefix = _resolve_sheet_prefix(ref_cc, ref_rr)
+    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+        cfg = yaml.safe_load(f)
+    countries = cfg.get("countries", [])
+    for c in countries:
+        if c.upper().startswith(ref_cc):
+            ref_prefix = c.upper()
+            break
+
+    new_prefix = _resolve_sheet_prefix(new_cc, new_rr)
+
+    wb = load_workbook(ts_path)
+    sheets_cloned = []
+    for suffix in ("_CF", "_Dem"):
+        src_name = f"{ref_prefix}{suffix}"
+        dst_name = f"{new_prefix}{suffix}"
+
+        if src_name not in wb.sheetnames:
+            print(f"  WARNING: Source sheet '{src_name}' not found in "
+                  f"timeslice workbook; skipping {dst_name}.")
+            continue
+        if dst_name in wb.sheetnames:
+            print(f"  Sheet '{dst_name}' already exists, skipping.")
+            continue
+
+        target = wb.copy_worksheet(wb[src_name])
+        target.title = dst_name
+        sheets_cloned.append(dst_name)
+
+    if sheets_cloned:
+        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup = ts_path.with_name(
+            f"{ts_path.stem}_backup_{stamp}{ts_path.suffix}"
+        )
+        shutil.copy2(ts_path, backup)
+        wb.save(ts_path)
+        print(f"  Cloned timeslice sheets: {', '.join(sheets_cloned)}")
+        print(f"  Backup: {backup.name}")
+    else:
+        print("  No timeslice sheets needed cloning.")
+    wb.close()
+
+
 def generate_merge_script(new_cc, output_dir):
     """Generate a helper script to merge templates into the main files."""
     script_path = os.path.join(output_dir, "merge_into_inputs.py")
@@ -648,6 +724,10 @@ def process_entry(new_cc, ref_cc, new_rr, ixn_raw, ixn_source,
         print("  Add 'centerpoint_lat' and 'centerpoint_lon' to Config_country_codes.yaml")
         print("  or pass --lat and --lon on the command line.")
         print("  The centerpoint will NOT be included in the merge script.")
+
+    # Clone timeslice sheets from reference country
+    print("\n--- TIMESLICE SHEETS ---")
+    clone_timeslice_sheets(ref_cc, ref_rr, new_cc, new_rr)
 
     # Generate sets
     print("\n--- SETS ---")
