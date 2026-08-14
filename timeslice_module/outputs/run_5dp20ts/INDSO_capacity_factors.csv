@@ -1,0 +1,181 @@
+timeslice,season,daypart,tech_code,tech_type,cf_dispatch,cf_ninja,cf_da_workbook,cf_default,source_notes
+S1D1,Winter (Dec-Feb),Night (00-06),PWRHYDINDSO,Hydro_HYD,,,0.240966,,CEA fleet PLF
+S1D1,Winter (Dec-Feb),Night (00-06),PWRHDRINDSO,Hydro_HDR,,,0.240966,,CEA fleet PLF
+S1D1,Winter (Dec-Feb),Night (00-06),PWRHROINDSO,Hydro_HRO,,,0.240966,,CEA fleet PLF
+S1D1,Winter (Dec-Feb),Night (00-06),PWRSPVINDSO,Solar,,0.000000,,,Ninja
+S1D1,Winter (Dec-Feb),Night (00-06),PWRWONINDSO,Wind,,0.300627,,,Ninja
+S1D1,Winter (Dec-Feb),Night (00-06),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D1,Winter (Dec-Feb),Night (00-06),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D1,Winter (Dec-Feb),Night (00-06),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D1,Winter (Dec-Feb),Night (00-06),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D2,Winter (Dec-Feb),Solar day (06-17),PWRHYDINDSO,Hydro_HYD,,,0.240966,,CEA fleet PLF
+S1D2,Winter (Dec-Feb),Solar day (06-17),PWRHDRINDSO,Hydro_HDR,,,0.240966,,CEA fleet PLF
+S1D2,Winter (Dec-Feb),Solar day (06-17),PWRHROINDSO,Hydro_HRO,,,0.240966,,CEA fleet PLF
+S1D2,Winter (Dec-Feb),Solar day (06-17),PWRSPVINDSO,Solar,,0.469493,,,Ninja
+S1D2,Winter (Dec-Feb),Solar day (06-17),PWRWONINDSO,Wind,,0.220496,,,Ninja
+S1D2,Winter (Dec-Feb),Solar day (06-17),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D2,Winter (Dec-Feb),Solar day (06-17),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D2,Winter (Dec-Feb),Solar day (06-17),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D2,Winter (Dec-Feb),Solar day (06-17),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D3,Winter (Dec-Feb),Evening peak (17-20),PWRHYDINDSO,Hydro_HYD,,,0.240966,,CEA fleet PLF
+S1D3,Winter (Dec-Feb),Evening peak (17-20),PWRHDRINDSO,Hydro_HDR,,,0.240966,,CEA fleet PLF
+S1D3,Winter (Dec-Feb),Evening peak (17-20),PWRHROINDSO,Hydro_HRO,,,0.240966,,CEA fleet PLF
+S1D3,Winter (Dec-Feb),Evening peak (17-20),PWRSPVINDSO,Solar,,0.001269,,,Ninja
+S1D3,Winter (Dec-Feb),Evening peak (17-20),PWRWONINDSO,Wind,,0.543508,,,Ninja
+S1D3,Winter (Dec-Feb),Evening peak (17-20),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D3,Winter (Dec-Feb),Evening peak (17-20),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D3,Winter (Dec-Feb),Evening peak (17-20),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D3,Winter (Dec-Feb),Evening peak (17-20),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D4,Winter (Dec-Feb),Late evening (20-22),PWRHYDINDSO,Hydro_HYD,,,0.240966,,CEA fleet PLF
+S1D4,Winter (Dec-Feb),Late evening (20-22),PWRHDRINDSO,Hydro_HDR,,,0.240966,,CEA fleet PLF
+S1D4,Winter (Dec-Feb),Late evening (20-22),PWRHROINDSO,Hydro_HRO,,,0.240966,,CEA fleet PLF
+S1D4,Winter (Dec-Feb),Late evening (20-22),PWRSPVINDSO,Solar,,0.000000,,,Ninja
+S1D4,Winter (Dec-Feb),Late evening (20-22),PWRWONINDSO,Wind,,0.646140,,,Ninja
+S1D4,Winter (Dec-Feb),Late evening (20-22),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D4,Winter (Dec-Feb),Late evening (20-22),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D4,Winter (Dec-Feb),Late evening (20-22),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D4,Winter (Dec-Feb),Late evening (20-22),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D5,Winter (Dec-Feb),Late night (22-24),PWRHYDINDSO,Hydro_HYD,,,0.240966,,CEA fleet PLF
+S1D5,Winter (Dec-Feb),Late night (22-24),PWRHDRINDSO,Hydro_HDR,,,0.240966,,CEA fleet PLF
+S1D5,Winter (Dec-Feb),Late night (22-24),PWRHROINDSO,Hydro_HRO,,,0.240966,,CEA fleet PLF
+S1D5,Winter (Dec-Feb),Late night (22-24),PWRSPVINDSO,Solar,,0.000000,,,Ninja
+S1D5,Winter (Dec-Feb),Late night (22-24),PWRWONINDSO,Wind,,0.542366,,,Ninja
+S1D5,Winter (Dec-Feb),Late night (22-24),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D5,Winter (Dec-Feb),Late night (22-24),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D5,Winter (Dec-Feb),Late night (22-24),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D5,Winter (Dec-Feb),Late night (22-24),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D1,Pre-monsoon (Mar-May),Night (00-06),PWRHYDINDSO,Hydro_HYD,,,0.219112,,CEA fleet PLF
+S2D1,Pre-monsoon (Mar-May),Night (00-06),PWRHDRINDSO,Hydro_HDR,,,0.219112,,CEA fleet PLF
+S2D1,Pre-monsoon (Mar-May),Night (00-06),PWRHROINDSO,Hydro_HRO,,,0.219112,,CEA fleet PLF
+S2D1,Pre-monsoon (Mar-May),Night (00-06),PWRSPVINDSO,Solar,,0.000000,,,Ninja
+S2D1,Pre-monsoon (Mar-May),Night (00-06),PWRWONINDSO,Wind,,0.302162,,,Ninja
+S2D1,Pre-monsoon (Mar-May),Night (00-06),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D1,Pre-monsoon (Mar-May),Night (00-06),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D1,Pre-monsoon (Mar-May),Night (00-06),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D1,Pre-monsoon (Mar-May),Night (00-06),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D2,Pre-monsoon (Mar-May),Solar day (06-17),PWRHYDINDSO,Hydro_HYD,,,0.219112,,CEA fleet PLF
+S2D2,Pre-monsoon (Mar-May),Solar day (06-17),PWRHDRINDSO,Hydro_HDR,,,0.219112,,CEA fleet PLF
+S2D2,Pre-monsoon (Mar-May),Solar day (06-17),PWRHROINDSO,Hydro_HRO,,,0.219112,,CEA fleet PLF
+S2D2,Pre-monsoon (Mar-May),Solar day (06-17),PWRSPVINDSO,Solar,,0.429861,,,Ninja
+S2D2,Pre-monsoon (Mar-May),Solar day (06-17),PWRWONINDSO,Wind,,0.189443,,,Ninja
+S2D2,Pre-monsoon (Mar-May),Solar day (06-17),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D2,Pre-monsoon (Mar-May),Solar day (06-17),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D2,Pre-monsoon (Mar-May),Solar day (06-17),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D2,Pre-monsoon (Mar-May),Solar day (06-17),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D3,Pre-monsoon (Mar-May),Evening peak (17-20),PWRHYDINDSO,Hydro_HYD,,,0.219112,,CEA fleet PLF
+S2D3,Pre-monsoon (Mar-May),Evening peak (17-20),PWRHDRINDSO,Hydro_HDR,,,0.219112,,CEA fleet PLF
+S2D3,Pre-monsoon (Mar-May),Evening peak (17-20),PWRHROINDSO,Hydro_HRO,,,0.219112,,CEA fleet PLF
+S2D3,Pre-monsoon (Mar-May),Evening peak (17-20),PWRSPVINDSO,Solar,,0.006843,,,Ninja
+S2D3,Pre-monsoon (Mar-May),Evening peak (17-20),PWRWONINDSO,Wind,,0.392451,,,Ninja
+S2D3,Pre-monsoon (Mar-May),Evening peak (17-20),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D3,Pre-monsoon (Mar-May),Evening peak (17-20),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D3,Pre-monsoon (Mar-May),Evening peak (17-20),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D3,Pre-monsoon (Mar-May),Evening peak (17-20),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D4,Pre-monsoon (Mar-May),Late evening (20-22),PWRHYDINDSO,Hydro_HYD,,,0.219112,,CEA fleet PLF
+S2D4,Pre-monsoon (Mar-May),Late evening (20-22),PWRHDRINDSO,Hydro_HDR,,,0.219112,,CEA fleet PLF
+S2D4,Pre-monsoon (Mar-May),Late evening (20-22),PWRHROINDSO,Hydro_HRO,,,0.219112,,CEA fleet PLF
+S2D4,Pre-monsoon (Mar-May),Late evening (20-22),PWRSPVINDSO,Solar,,0.000000,,,Ninja
+S2D4,Pre-monsoon (Mar-May),Late evening (20-22),PWRWONINDSO,Wind,,0.529859,,,Ninja
+S2D4,Pre-monsoon (Mar-May),Late evening (20-22),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D4,Pre-monsoon (Mar-May),Late evening (20-22),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D4,Pre-monsoon (Mar-May),Late evening (20-22),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D4,Pre-monsoon (Mar-May),Late evening (20-22),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D5,Pre-monsoon (Mar-May),Late night (22-24),PWRHYDINDSO,Hydro_HYD,,,0.219112,,CEA fleet PLF
+S2D5,Pre-monsoon (Mar-May),Late night (22-24),PWRHDRINDSO,Hydro_HDR,,,0.219112,,CEA fleet PLF
+S2D5,Pre-monsoon (Mar-May),Late night (22-24),PWRHROINDSO,Hydro_HRO,,,0.219112,,CEA fleet PLF
+S2D5,Pre-monsoon (Mar-May),Late night (22-24),PWRSPVINDSO,Solar,,0.000000,,,Ninja
+S2D5,Pre-monsoon (Mar-May),Late night (22-24),PWRWONINDSO,Wind,,0.505418,,,Ninja
+S2D5,Pre-monsoon (Mar-May),Late night (22-24),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D5,Pre-monsoon (Mar-May),Late night (22-24),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D5,Pre-monsoon (Mar-May),Late night (22-24),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D5,Pre-monsoon (Mar-May),Late night (22-24),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D1,SW Monsoon (Jun-Sep),Night (00-06),PWRHYDINDSO,Hydro_HYD,,,0.383845,,CEA fleet PLF
+S3D1,SW Monsoon (Jun-Sep),Night (00-06),PWRHDRINDSO,Hydro_HDR,,,0.383845,,CEA fleet PLF
+S3D1,SW Monsoon (Jun-Sep),Night (00-06),PWRHROINDSO,Hydro_HRO,,,0.383845,,CEA fleet PLF
+S3D1,SW Monsoon (Jun-Sep),Night (00-06),PWRSPVINDSO,Solar,,0.000000,,,Ninja
+S3D1,SW Monsoon (Jun-Sep),Night (00-06),PWRWONINDSO,Wind,,0.471362,,,Ninja
+S3D1,SW Monsoon (Jun-Sep),Night (00-06),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D1,SW Monsoon (Jun-Sep),Night (00-06),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D1,SW Monsoon (Jun-Sep),Night (00-06),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D1,SW Monsoon (Jun-Sep),Night (00-06),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D2,SW Monsoon (Jun-Sep),Solar day (06-17),PWRHYDINDSO,Hydro_HYD,,,0.383845,,CEA fleet PLF
+S3D2,SW Monsoon (Jun-Sep),Solar day (06-17),PWRHDRINDSO,Hydro_HDR,,,0.383845,,CEA fleet PLF
+S3D2,SW Monsoon (Jun-Sep),Solar day (06-17),PWRHROINDSO,Hydro_HRO,,,0.383845,,CEA fleet PLF
+S3D2,SW Monsoon (Jun-Sep),Solar day (06-17),PWRSPVINDSO,Solar,,0.350657,,,Ninja
+S3D2,SW Monsoon (Jun-Sep),Solar day (06-17),PWRWONINDSO,Wind,,0.588703,,,Ninja
+S3D2,SW Monsoon (Jun-Sep),Solar day (06-17),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D2,SW Monsoon (Jun-Sep),Solar day (06-17),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D2,SW Monsoon (Jun-Sep),Solar day (06-17),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D2,SW Monsoon (Jun-Sep),Solar day (06-17),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D3,SW Monsoon (Jun-Sep),Evening peak (17-20),PWRHYDINDSO,Hydro_HYD,,,0.383845,,CEA fleet PLF
+S3D3,SW Monsoon (Jun-Sep),Evening peak (17-20),PWRHDRINDSO,Hydro_HDR,,,0.383845,,CEA fleet PLF
+S3D3,SW Monsoon (Jun-Sep),Evening peak (17-20),PWRHROINDSO,Hydro_HRO,,,0.383845,,CEA fleet PLF
+S3D3,SW Monsoon (Jun-Sep),Evening peak (17-20),PWRSPVINDSO,Solar,,0.006658,,,Ninja
+S3D3,SW Monsoon (Jun-Sep),Evening peak (17-20),PWRWONINDSO,Wind,,0.494395,,,Ninja
+S3D3,SW Monsoon (Jun-Sep),Evening peak (17-20),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D3,SW Monsoon (Jun-Sep),Evening peak (17-20),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D3,SW Monsoon (Jun-Sep),Evening peak (17-20),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D3,SW Monsoon (Jun-Sep),Evening peak (17-20),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D4,SW Monsoon (Jun-Sep),Late evening (20-22),PWRHYDINDSO,Hydro_HYD,,,0.383845,,CEA fleet PLF
+S3D4,SW Monsoon (Jun-Sep),Late evening (20-22),PWRHDRINDSO,Hydro_HDR,,,0.383845,,CEA fleet PLF
+S3D4,SW Monsoon (Jun-Sep),Late evening (20-22),PWRHROINDSO,Hydro_HRO,,,0.383845,,CEA fleet PLF
+S3D4,SW Monsoon (Jun-Sep),Late evening (20-22),PWRSPVINDSO,Solar,,0.000000,,,Ninja
+S3D4,SW Monsoon (Jun-Sep),Late evening (20-22),PWRWONINDSO,Wind,,0.486582,,,Ninja
+S3D4,SW Monsoon (Jun-Sep),Late evening (20-22),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D4,SW Monsoon (Jun-Sep),Late evening (20-22),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D4,SW Monsoon (Jun-Sep),Late evening (20-22),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D4,SW Monsoon (Jun-Sep),Late evening (20-22),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D5,SW Monsoon (Jun-Sep),Late night (22-24),PWRHYDINDSO,Hydro_HYD,,,0.383845,,CEA fleet PLF
+S3D5,SW Monsoon (Jun-Sep),Late night (22-24),PWRHDRINDSO,Hydro_HDR,,,0.383845,,CEA fleet PLF
+S3D5,SW Monsoon (Jun-Sep),Late night (22-24),PWRHROINDSO,Hydro_HRO,,,0.383845,,CEA fleet PLF
+S3D5,SW Monsoon (Jun-Sep),Late night (22-24),PWRSPVINDSO,Solar,,0.000000,,,Ninja
+S3D5,SW Monsoon (Jun-Sep),Late night (22-24),PWRWONINDSO,Wind,,0.482106,,,Ninja
+S3D5,SW Monsoon (Jun-Sep),Late night (22-24),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D5,SW Monsoon (Jun-Sep),Late night (22-24),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D5,SW Monsoon (Jun-Sep),Late night (22-24),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D5,SW Monsoon (Jun-Sep),Late night (22-24),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D1,Post-monsoon (Oct-Nov),Night (00-06),PWRHYDINDSO,Hydro_HYD,,,0.339805,,CEA fleet PLF
+S4D1,Post-monsoon (Oct-Nov),Night (00-06),PWRHDRINDSO,Hydro_HDR,,,0.339805,,CEA fleet PLF
+S4D1,Post-monsoon (Oct-Nov),Night (00-06),PWRHROINDSO,Hydro_HRO,,,0.339805,,CEA fleet PLF
+S4D1,Post-monsoon (Oct-Nov),Night (00-06),PWRSPVINDSO,Solar,,0.000000,,,Ninja
+S4D1,Post-monsoon (Oct-Nov),Night (00-06),PWRWONINDSO,Wind,,0.260115,,,Ninja
+S4D1,Post-monsoon (Oct-Nov),Night (00-06),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D1,Post-monsoon (Oct-Nov),Night (00-06),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D1,Post-monsoon (Oct-Nov),Night (00-06),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D1,Post-monsoon (Oct-Nov),Night (00-06),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D2,Post-monsoon (Oct-Nov),Solar day (06-17),PWRHYDINDSO,Hydro_HYD,,,0.339805,,CEA fleet PLF
+S4D2,Post-monsoon (Oct-Nov),Solar day (06-17),PWRHDRINDSO,Hydro_HDR,,,0.339805,,CEA fleet PLF
+S4D2,Post-monsoon (Oct-Nov),Solar day (06-17),PWRHROINDSO,Hydro_HRO,,,0.339805,,CEA fleet PLF
+S4D2,Post-monsoon (Oct-Nov),Solar day (06-17),PWRSPVINDSO,Solar,,0.397090,,,Ninja
+S4D2,Post-monsoon (Oct-Nov),Solar day (06-17),PWRWONINDSO,Wind,,0.261414,,,Ninja
+S4D2,Post-monsoon (Oct-Nov),Solar day (06-17),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D2,Post-monsoon (Oct-Nov),Solar day (06-17),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D2,Post-monsoon (Oct-Nov),Solar day (06-17),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D2,Post-monsoon (Oct-Nov),Solar day (06-17),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D3,Post-monsoon (Oct-Nov),Evening peak (17-20),PWRHYDINDSO,Hydro_HYD,,,0.339805,,CEA fleet PLF
+S4D3,Post-monsoon (Oct-Nov),Evening peak (17-20),PWRHDRINDSO,Hydro_HDR,,,0.339805,,CEA fleet PLF
+S4D3,Post-monsoon (Oct-Nov),Evening peak (17-20),PWRHROINDSO,Hydro_HRO,,,0.339805,,CEA fleet PLF
+S4D3,Post-monsoon (Oct-Nov),Evening peak (17-20),PWRSPVINDSO,Solar,,0.000711,,,Ninja
+S4D3,Post-monsoon (Oct-Nov),Evening peak (17-20),PWRWONINDSO,Wind,,0.353446,,,Ninja
+S4D3,Post-monsoon (Oct-Nov),Evening peak (17-20),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D3,Post-monsoon (Oct-Nov),Evening peak (17-20),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D3,Post-monsoon (Oct-Nov),Evening peak (17-20),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D3,Post-monsoon (Oct-Nov),Evening peak (17-20),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D4,Post-monsoon (Oct-Nov),Late evening (20-22),PWRHYDINDSO,Hydro_HYD,,,0.339805,,CEA fleet PLF
+S4D4,Post-monsoon (Oct-Nov),Late evening (20-22),PWRHDRINDSO,Hydro_HDR,,,0.339805,,CEA fleet PLF
+S4D4,Post-monsoon (Oct-Nov),Late evening (20-22),PWRHROINDSO,Hydro_HRO,,,0.339805,,CEA fleet PLF
+S4D4,Post-monsoon (Oct-Nov),Late evening (20-22),PWRSPVINDSO,Solar,,0.000000,,,Ninja
+S4D4,Post-monsoon (Oct-Nov),Late evening (20-22),PWRWONINDSO,Wind,,0.387570,,,Ninja
+S4D4,Post-monsoon (Oct-Nov),Late evening (20-22),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D4,Post-monsoon (Oct-Nov),Late evening (20-22),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D4,Post-monsoon (Oct-Nov),Late evening (20-22),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D4,Post-monsoon (Oct-Nov),Late evening (20-22),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D5,Post-monsoon (Oct-Nov),Late night (22-24),PWRHYDINDSO,Hydro_HYD,,,0.339805,,CEA fleet PLF
+S4D5,Post-monsoon (Oct-Nov),Late night (22-24),PWRHDRINDSO,Hydro_HDR,,,0.339805,,CEA fleet PLF
+S4D5,Post-monsoon (Oct-Nov),Late night (22-24),PWRHROINDSO,Hydro_HRO,,,0.339805,,CEA fleet PLF
+S4D5,Post-monsoon (Oct-Nov),Late night (22-24),PWRSPVINDSO,Solar,,0.000000,,,Ninja
+S4D5,Post-monsoon (Oct-Nov),Late night (22-24),PWRWONINDSO,Wind,,0.341994,,,Ninja
+S4D5,Post-monsoon (Oct-Nov),Late night (22-24),PWRCOAINDSO,COA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D5,Post-monsoon (Oct-Nov),Late night (22-24),PWRGASINDSO,GAS,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D5,Post-monsoon (Oct-Nov),Late night (22-24),PWROILINDSO,OIL,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D5,Post-monsoon (Oct-Nov),Late night (22-24),PWRNGAINDSO,NGA,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)

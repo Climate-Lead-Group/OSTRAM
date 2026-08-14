@@ -1,0 +1,73 @@
+timeslice,season,daypart,tech_code,tech_type,cf_dispatch,cf_ninja,cf_da_workbook,cf_default,source_notes
+S1D1,Winter (Dec-Feb),Night (00-05),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S1D1,Winter (Dec-Feb),Night (00-05),PWRSPVMDVXX,Solar,,0.000000,0.000000,,GHI-scaled seasonal + Ninja
+S1D1,Winter (Dec-Feb),Night (00-05),PWRWONMDVXX,Wind,,0.219307,,,Ninja (1.5 MW installed)
+S1D2,Winter (Dec-Feb),Morning ramp (05-08),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S1D2,Winter (Dec-Feb),Morning ramp (05-08),PWRSPVMDVXX,Solar,,0.056783,0.183600,,GHI-scaled seasonal + Ninja
+S1D2,Winter (Dec-Feb),Morning ramp (05-08),PWRWONMDVXX,Wind,,0.223769,,,Ninja (1.5 MW installed)
+S1D3,Winter (Dec-Feb),Solar day (08-17),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S1D3,Winter (Dec-Feb),Solar day (08-17),PWRSPVMDVXX,Solar,,0.447526,0.183600,,GHI-scaled seasonal + Ninja
+S1D3,Winter (Dec-Feb),Solar day (08-17),PWRWONMDVXX,Wind,,0.234847,,,Ninja (1.5 MW installed)
+S1D4,Winter (Dec-Feb),Evening peak (17-20),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S1D4,Winter (Dec-Feb),Evening peak (17-20),PWRSPVMDVXX,Solar,,0.013888,0.183600,,GHI-scaled seasonal + Ninja
+S1D4,Winter (Dec-Feb),Evening peak (17-20),PWRWONMDVXX,Wind,,0.241995,,,Ninja (1.5 MW installed)
+S1D5,Winter (Dec-Feb),Late evening (20-22),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S1D5,Winter (Dec-Feb),Late evening (20-22),PWRSPVMDVXX,Solar,,0.000000,0.000000,,GHI-scaled seasonal + Ninja
+S1D5,Winter (Dec-Feb),Late evening (20-22),PWRWONMDVXX,Wind,,0.244674,,,Ninja (1.5 MW installed)
+S1D6,Winter (Dec-Feb),Late night (22-24),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S1D6,Winter (Dec-Feb),Late night (22-24),PWRSPVMDVXX,Solar,,0.000000,0.000000,,GHI-scaled seasonal + Ninja
+S1D6,Winter (Dec-Feb),Late night (22-24),PWRWONMDVXX,Wind,,0.232978,,,Ninja (1.5 MW installed)
+S2D1,Pre-monsoon (Mar-May),Night (00-05),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S2D1,Pre-monsoon (Mar-May),Night (00-05),PWRSPVMDVXX,Solar,,0.000000,0.000000,,GHI-scaled seasonal + Ninja
+S2D1,Pre-monsoon (Mar-May),Night (00-05),PWRWONMDVXX,Wind,,0.235518,,,Ninja (1.5 MW installed)
+S2D2,Pre-monsoon (Mar-May),Morning ramp (05-08),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S2D2,Pre-monsoon (Mar-May),Morning ramp (05-08),PWRSPVMDVXX,Solar,,0.056038,0.193900,,GHI-scaled seasonal + Ninja
+S2D2,Pre-monsoon (Mar-May),Morning ramp (05-08),PWRWONMDVXX,Wind,,0.232421,,,Ninja (1.5 MW installed)
+S2D3,Pre-monsoon (Mar-May),Solar day (08-17),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S2D3,Pre-monsoon (Mar-May),Solar day (08-17),PWRSPVMDVXX,Solar,,0.426057,0.193900,,GHI-scaled seasonal + Ninja
+S2D3,Pre-monsoon (Mar-May),Solar day (08-17),PWRWONMDVXX,Wind,,0.234905,,,Ninja (1.5 MW installed)
+S2D4,Pre-monsoon (Mar-May),Evening peak (17-20),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S2D4,Pre-monsoon (Mar-May),Evening peak (17-20),PWRSPVMDVXX,Solar,,0.014528,0.193900,,GHI-scaled seasonal + Ninja
+S2D4,Pre-monsoon (Mar-May),Evening peak (17-20),PWRWONMDVXX,Wind,,0.245070,,,Ninja (1.5 MW installed)
+S2D5,Pre-monsoon (Mar-May),Late evening (20-22),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S2D5,Pre-monsoon (Mar-May),Late evening (20-22),PWRSPVMDVXX,Solar,,0.000000,0.000000,,GHI-scaled seasonal + Ninja
+S2D5,Pre-monsoon (Mar-May),Late evening (20-22),PWRWONMDVXX,Wind,,0.232556,,,Ninja (1.5 MW installed)
+S2D6,Pre-monsoon (Mar-May),Late night (22-24),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S2D6,Pre-monsoon (Mar-May),Late night (22-24),PWRSPVMDVXX,Solar,,0.000000,0.000000,,GHI-scaled seasonal + Ninja
+S2D6,Pre-monsoon (Mar-May),Late night (22-24),PWRWONMDVXX,Wind,,0.228289,,,Ninja (1.5 MW installed)
+S3D1,SW Monsoon (Jun-Sep),Night (00-05),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S3D1,SW Monsoon (Jun-Sep),Night (00-05),PWRSPVMDVXX,Solar,,0.000000,0.000000,,GHI-scaled seasonal + Ninja
+S3D1,SW Monsoon (Jun-Sep),Night (00-05),PWRWONMDVXX,Wind,,0.235572,,,Ninja (1.5 MW installed)
+S3D2,SW Monsoon (Jun-Sep),Morning ramp (05-08),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S3D2,SW Monsoon (Jun-Sep),Morning ramp (05-08),PWRSPVMDVXX,Solar,,0.044364,0.170400,,GHI-scaled seasonal + Ninja
+S3D2,SW Monsoon (Jun-Sep),Morning ramp (05-08),PWRWONMDVXX,Wind,,0.231903,,,Ninja (1.5 MW installed)
+S3D3,SW Monsoon (Jun-Sep),Solar day (08-17),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S3D3,SW Monsoon (Jun-Sep),Solar day (08-17),PWRSPVMDVXX,Solar,,0.369980,0.170400,,GHI-scaled seasonal + Ninja
+S3D3,SW Monsoon (Jun-Sep),Solar day (08-17),PWRWONMDVXX,Wind,,0.228890,,,Ninja (1.5 MW installed)
+S3D4,SW Monsoon (Jun-Sep),Evening peak (17-20),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S3D4,SW Monsoon (Jun-Sep),Evening peak (17-20),PWRSPVMDVXX,Solar,,0.011554,0.170400,,GHI-scaled seasonal + Ninja
+S3D4,SW Monsoon (Jun-Sep),Evening peak (17-20),PWRWONMDVXX,Wind,,0.244943,,,Ninja (1.5 MW installed)
+S3D5,SW Monsoon (Jun-Sep),Late evening (20-22),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S3D5,SW Monsoon (Jun-Sep),Late evening (20-22),PWRSPVMDVXX,Solar,,0.000000,0.000000,,GHI-scaled seasonal + Ninja
+S3D5,SW Monsoon (Jun-Sep),Late evening (20-22),PWRWONMDVXX,Wind,,0.226326,,,Ninja (1.5 MW installed)
+S3D6,SW Monsoon (Jun-Sep),Late night (22-24),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S3D6,SW Monsoon (Jun-Sep),Late night (22-24),PWRSPVMDVXX,Solar,,0.000000,0.000000,,GHI-scaled seasonal + Ninja
+S3D6,SW Monsoon (Jun-Sep),Late night (22-24),PWRWONMDVXX,Wind,,0.218020,,,Ninja (1.5 MW installed)
+S4D1,Post-monsoon (Oct-Nov),Night (00-05),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S4D1,Post-monsoon (Oct-Nov),Night (00-05),PWRSPVMDVXX,Solar,,0.000000,0.000000,,GHI-scaled seasonal + Ninja
+S4D1,Post-monsoon (Oct-Nov),Night (00-05),PWRWONMDVXX,Wind,,0.309164,,,Ninja (1.5 MW installed)
+S4D2,Post-monsoon (Oct-Nov),Morning ramp (05-08),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S4D2,Post-monsoon (Oct-Nov),Morning ramp (05-08),PWRSPVMDVXX,Solar,,0.046539,0.172900,,GHI-scaled seasonal + Ninja
+S4D2,Post-monsoon (Oct-Nov),Morning ramp (05-08),PWRWONMDVXX,Wind,,0.303384,,,Ninja (1.5 MW installed)
+S4D3,Post-monsoon (Oct-Nov),Solar day (08-17),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S4D3,Post-monsoon (Oct-Nov),Solar day (08-17),PWRSPVMDVXX,Solar,,0.393918,0.172900,,GHI-scaled seasonal + Ninja
+S4D3,Post-monsoon (Oct-Nov),Solar day (08-17),PWRWONMDVXX,Wind,,0.316028,,,Ninja (1.5 MW installed)
+S4D4,Post-monsoon (Oct-Nov),Evening peak (17-20),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S4D4,Post-monsoon (Oct-Nov),Evening peak (17-20),PWRSPVMDVXX,Solar,,0.011070,0.172900,,GHI-scaled seasonal + Ninja
+S4D4,Post-monsoon (Oct-Nov),Evening peak (17-20),PWRWONMDVXX,Wind,,0.322350,,,Ninja (1.5 MW installed)
+S4D5,Post-monsoon (Oct-Nov),Late evening (20-22),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S4D5,Post-monsoon (Oct-Nov),Late evening (20-22),PWRSPVMDVXX,Solar,,0.000000,0.000000,,GHI-scaled seasonal + Ninja
+S4D5,Post-monsoon (Oct-Nov),Late evening (20-22),PWRWONMDVXX,Wind,,0.295360,,,Ninja (1.5 MW installed)
+S4D6,Post-monsoon (Oct-Nov),Late night (22-24),PWRDSLMDVXX,Diesel,,,,1.0,thermal default CF=1.0; CF=1.0 (dispatchable)
+S4D6,Post-monsoon (Oct-Nov),Late night (22-24),PWRSPVMDVXX,Solar,,0.000000,0.000000,,GHI-scaled seasonal + Ninja
+S4D6,Post-monsoon (Oct-Nov),Late night (22-24),PWRWONMDVXX,Wind,,0.287216,,,Ninja (1.5 MW installed)

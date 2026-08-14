@@ -1,0 +1,17 @@
+timeslice,season,daypart,demand_fraction,yearsplit
+S1D1,Winter (Dec-Feb),Night (00-06),0.048723,0.061644
+S1D2,Winter (Dec-Feb),Morning (06-12),0.058598,0.061644
+S1D3,Winter (Dec-Feb),Afternoon (12-18),0.055930,0.061644
+S1D4,Winter (Dec-Feb),Evening (18-24),0.058664,0.061644
+S2D1,Pre-monsoon (Mar-May),Night (00-06),0.076027,0.063014
+S2D2,Pre-monsoon (Mar-May),Morning (06-12),0.074613,0.063014
+S2D3,Pre-monsoon (Mar-May),Afternoon (12-18),0.078070,0.063014
+S2D4,Pre-monsoon (Mar-May),Evening (18-24),0.081976,0.063014
+S3D1,SW Monsoon (Jun-Sep),Night (00-06),0.086477,0.083562
+S3D2,SW Monsoon (Jun-Sep),Morning (06-12),0.081065,0.083562
+S3D3,SW Monsoon (Jun-Sep),Afternoon (12-18),0.084746,0.083562
+S3D4,SW Monsoon (Jun-Sep),Evening (18-24),0.090419,0.083562
+S4D1,Post-monsoon (Oct-Nov),Night (00-06),0.029786,0.041781
+S4D2,Post-monsoon (Oct-Nov),Morning (06-12),0.030499,0.041781
+S4D3,Post-monsoon (Oct-Nov),Afternoon (12-18),0.030977,0.041781
+S4D4,Post-monsoon (Oct-Nov),Evening (18-24),0.033431,0.041781

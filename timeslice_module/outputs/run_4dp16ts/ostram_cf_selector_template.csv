@@ -1,0 +1,72 @@
+country,tech_code,tech_type,available,recommended,notes
+BGD,PWRGASBGDXX,Gas,cf_default,cf_default,dispatch: 1132 PGCB files (compiled CSV); CF=1.0 (dispatchable)
+BGD,PWRCOABGDXX,Coal,cf_default,cf_default,dispatch: 1132 PGCB files (compiled CSV); CF=1.0 (dispatchable)
+BGD,PWRHFOBGDXX,Oil_HFO,cf_default,cf_default,dispatch: 1132 PGCB files (compiled CSV); CF=1.0 (dispatchable)
+BGD,PWRHSDBGDXX,Oil_HSD,cf_default,cf_default,dispatch: 1132 PGCB files (compiled CSV); CF=1.0 (dispatchable)
+BGD,PWRHYDBGDXX,Hydro,cf_dispatch,cf_dispatch,dispatch: 1132 PGCB files (compiled CSV)
+BGD,PWRSPVBGDXX,Solar,cf_dispatch; cf_ninja,cf_ninja,dispatch: 1132 PGCB files (compiled CSV)
+BGD,PWRWONBGDXX,Wind,cf_dispatch; cf_ninja,cf_ninja,dispatch: 1132 PGCB files (compiled CSV)
+BGD,PWRIMPBGDXX,Import,cf_default,cf_default,dispatch: 1132 PGCB files (compiled CSV); CF=1.0 (dispatchable)
+LKA,PWRCOALKAXX,Coal,cf_default,cf_default,dispatch: 361 days (compiled CSV); CF=1.0 (dispatchable)
+LKA,PWROILKA_CEB,Oil_CEB,cf_default,cf_default,dispatch: 361 days (compiled CSV); CF=1.0 (dispatchable)
+LKA,PWROILKA_IPP,Oil_IPP,cf_default,cf_default,dispatch: 361 days (compiled CSV); CF=1.0 (dispatchable)
+LKA,PWRHYDLKAXX,Major_Hydro,cf_dispatch,cf_dispatch,dispatch: 361 days (compiled CSV)
+LKA,PWRWONLKAXX,Wind,cf_dispatch; cf_ninja,cf_ninja,dispatch: 361 days (compiled CSV)
+LKA,PWRSPVLKAXX,Solar,cf_dispatch; cf_ninja,cf_ninja,dispatch: 361 days (compiled CSV)
+LKA,PWRBIOLKAXX,Biomass,cf_dispatch,cf_dispatch,dispatch: 361 days (compiled CSV)
+LKA,PWRMNHLKAXX,Mini_Hydro,cf_default,cf_default,dispatch: 361 days (compiled CSV); CF=1.0 (dispatchable)
+INDNO,PWRHYDINDNO,Hydro_HYD,cf_da_workbook,cf_da_workbook,CEA fleet PLF
+INDNO,PWRHDRINDNO,Hydro_HDR,cf_da_workbook,cf_da_workbook,CEA fleet PLF
+INDNO,PWRHROINDNO,Hydro_HRO,cf_da_workbook,cf_da_workbook,CEA fleet PLF
+INDNO,PWRSPVINDNO,Solar,cf_ninja,cf_ninja,Ninja
+INDNO,PWRWONINDNO,Wind,cf_ninja,cf_ninja,Ninja
+INDNO,PWRCOAINDNO,COA,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDNO,PWRGASINDNO,GAS,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDNO,PWROILINDNO,OIL,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDNO,PWRNGAINDNO,NGA,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDEA,PWRHYDINDEA,Hydro_HYD,cf_da_workbook,cf_da_workbook,CEA fleet PLF
+INDEA,PWRHDRINDEA,Hydro_HDR,cf_da_workbook,cf_da_workbook,CEA fleet PLF
+INDEA,PWRHROINDEA,Hydro_HRO,cf_da_workbook,cf_da_workbook,CEA fleet PLF
+INDEA,PWRSPVINDEA,Solar,cf_ninja,cf_ninja,Ninja
+INDEA,PWRWONINDEA,Wind,cf_ninja,cf_ninja,Ninja
+INDEA,PWRCOAINDEA,COA,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDEA,PWRGASINDEA,GAS,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDEA,PWROILINDEA,OIL,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDEA,PWRNGAINDEA,NGA,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDNE,PWRHYDINDNE,Hydro_HYD,cf_da_workbook,cf_da_workbook,CEA fleet PLF
+INDNE,PWRHDRINDNE,Hydro_HDR,cf_da_workbook,cf_da_workbook,CEA fleet PLF
+INDNE,PWRHROINDNE,Hydro_HRO,cf_da_workbook,cf_da_workbook,CEA fleet PLF
+INDNE,PWRSPVINDNE,Solar,cf_ninja,cf_ninja,Ninja
+INDNE,PWRWONINDNE,Wind,cf_ninja,cf_ninja,Ninja
+INDNE,PWRCOAINDNE,COA,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDNE,PWRGASINDNE,GAS,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDNE,PWROILINDNE,OIL,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDNE,PWRNGAINDNE,NGA,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDSO,PWRHYDINDSO,Hydro_HYD,cf_da_workbook,cf_da_workbook,CEA fleet PLF
+INDSO,PWRHDRINDSO,Hydro_HDR,cf_da_workbook,cf_da_workbook,CEA fleet PLF
+INDSO,PWRHROINDSO,Hydro_HRO,cf_da_workbook,cf_da_workbook,CEA fleet PLF
+INDSO,PWRSPVINDSO,Solar,cf_ninja,cf_ninja,Ninja
+INDSO,PWRWONINDSO,Wind,cf_ninja,cf_ninja,Ninja
+INDSO,PWRCOAINDSO,COA,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDSO,PWRGASINDSO,GAS,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDSO,PWROILINDSO,OIL,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDSO,PWRNGAINDSO,NGA,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDWE,PWRHYDINDWE,Hydro_HYD,cf_da_workbook,cf_da_workbook,CEA fleet PLF
+INDWE,PWRHDRINDWE,Hydro_HDR,cf_da_workbook,cf_da_workbook,CEA fleet PLF
+INDWE,PWRHROINDWE,Hydro_HRO,cf_da_workbook,cf_da_workbook,CEA fleet PLF
+INDWE,PWRSPVINDWE,Solar,cf_ninja,cf_ninja,Ninja
+INDWE,PWRWONINDWE,Wind,cf_ninja,cf_ninja,Ninja
+INDWE,PWRCOAINDWE,COA,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDWE,PWRGASINDWE,GAS,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDWE,PWROILINDWE,OIL,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+INDWE,PWRNGAINDWE,NGA,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+NPL,PWRHYDNPLXX,Hydro,cf_da_workbook,cf_da_workbook,"NDOR FY2080 fleet avg, flat within season"
+NPL,PWRSPVNPLXX,Solar,cf_ninja,cf_ninja,Ninja
+NPL,PWRWONNPLXX,Wind,cf_ninja,cf_ninja,Ninja
+NPL,PWRGASNPLXX,Gas,cf_default,cf_default,thermal CF=1.0; CF=1.0 (dispatchable)
+BTN,PWRHYDBTNXX,Hydro,cf_da_workbook,cf_da_workbook,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+BTN,PWRSPVBTNXX,Solar,cf_ninja,cf_ninja,Ninja
+BTN,PWRWONBTNXX,Wind,cf_ninja,cf_ninja,Ninja
+MDV,PWRDSLMDVXX,Diesel,cf_default,cf_default,thermal default CF=1.0; CF=1.0 (dispatchable)
+MDV,PWRSPVMDVXX,Solar,cf_ninja; cf_da_workbook,cf_ninja,GHI-scaled seasonal + Ninja
+MDV,PWRWONMDVXX,Wind,cf_ninja,cf_ninja,Ninja (1.5 MW installed)

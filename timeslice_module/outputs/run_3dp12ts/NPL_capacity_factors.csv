@@ -1,0 +1,49 @@
+timeslice,season,daypart,tech_code,tech_type,cf_dispatch,cf_ninja,cf_da_workbook,cf_default,source_notes
+S1D1,Winter (Dec-Feb),Night (00-08),PWRHYDNPLXX,Hydro,,,0.390000,,"NDOR FY2080 fleet avg, flat within season"
+S1D1,Winter (Dec-Feb),Night (00-08),PWRSPVNPLXX,Solar,,0.056187,,,Ninja
+S1D1,Winter (Dec-Feb),Night (00-08),PWRWONNPLXX,Wind,,0.010656,,,Ninja
+S1D1,Winter (Dec-Feb),Night (00-08),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D2,Winter (Dec-Feb),Day (08-16),PWRHYDNPLXX,Hydro,,,0.390000,,"NDOR FY2080 fleet avg, flat within season"
+S1D2,Winter (Dec-Feb),Day (08-16),PWRSPVNPLXX,Solar,,0.574940,,,Ninja
+S1D2,Winter (Dec-Feb),Day (08-16),PWRWONNPLXX,Wind,,0.043583,,,Ninja
+S1D2,Winter (Dec-Feb),Day (08-16),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D3,Winter (Dec-Feb),Evening (16-24),PWRHYDNPLXX,Hydro,,,0.390000,,"NDOR FY2080 fleet avg, flat within season"
+S1D3,Winter (Dec-Feb),Evening (16-24),PWRSPVNPLXX,Solar,,0.001946,,,Ninja
+S1D3,Winter (Dec-Feb),Evening (16-24),PWRWONNPLXX,Wind,,0.015765,,,Ninja
+S1D3,Winter (Dec-Feb),Evening (16-24),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D1,Pre-monsoon (Mar-May),Night (00-08),PWRHYDNPLXX,Hydro,,,0.358000,,"NDOR FY2080 fleet avg, flat within season"
+S2D1,Pre-monsoon (Mar-May),Night (00-08),PWRSPVNPLXX,Solar,,0.078847,,,Ninja
+S2D1,Pre-monsoon (Mar-May),Night (00-08),PWRWONNPLXX,Wind,,0.020714,,,Ninja
+S2D1,Pre-monsoon (Mar-May),Night (00-08),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D2,Pre-monsoon (Mar-May),Day (08-16),PWRHYDNPLXX,Hydro,,,0.358000,,"NDOR FY2080 fleet avg, flat within season"
+S2D2,Pre-monsoon (Mar-May),Day (08-16),PWRSPVNPLXX,Solar,,0.578567,,,Ninja
+S2D2,Pre-monsoon (Mar-May),Day (08-16),PWRWONNPLXX,Wind,,0.078170,,,Ninja
+S2D2,Pre-monsoon (Mar-May),Day (08-16),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D3,Pre-monsoon (Mar-May),Evening (16-24),PWRHYDNPLXX,Hydro,,,0.358000,,"NDOR FY2080 fleet avg, flat within season"
+S2D3,Pre-monsoon (Mar-May),Evening (16-24),PWRSPVNPLXX,Solar,,0.014322,,,Ninja
+S2D3,Pre-monsoon (Mar-May),Evening (16-24),PWRWONNPLXX,Wind,,0.042951,,,Ninja
+S2D3,Pre-monsoon (Mar-May),Evening (16-24),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D1,SW Monsoon (Jun-Sep),Night (00-08),PWRHYDNPLXX,Hydro,,,0.755000,,"NDOR FY2080 fleet avg, flat within season"
+S3D1,SW Monsoon (Jun-Sep),Night (00-08),PWRSPVNPLXX,Solar,,0.060500,,,Ninja
+S3D1,SW Monsoon (Jun-Sep),Night (00-08),PWRWONNPLXX,Wind,,0.013079,,,Ninja
+S3D1,SW Monsoon (Jun-Sep),Night (00-08),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D2,SW Monsoon (Jun-Sep),Day (08-16),PWRHYDNPLXX,Hydro,,,0.755000,,"NDOR FY2080 fleet avg, flat within season"
+S3D2,SW Monsoon (Jun-Sep),Day (08-16),PWRSPVNPLXX,Solar,,0.447866,,,Ninja
+S3D2,SW Monsoon (Jun-Sep),Day (08-16),PWRWONNPLXX,Wind,,0.050142,,,Ninja
+S3D2,SW Monsoon (Jun-Sep),Day (08-16),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D3,SW Monsoon (Jun-Sep),Evening (16-24),PWRHYDNPLXX,Hydro,,,0.755000,,"NDOR FY2080 fleet avg, flat within season"
+S3D3,SW Monsoon (Jun-Sep),Evening (16-24),PWRSPVNPLXX,Solar,,0.013413,,,Ninja
+S3D3,SW Monsoon (Jun-Sep),Evening (16-24),PWRWONNPLXX,Wind,,0.036215,,,Ninja
+S3D3,SW Monsoon (Jun-Sep),Evening (16-24),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D1,Post-monsoon (Oct-Nov),Night (00-08),PWRHYDNPLXX,Hydro,,,0.697000,,"NDOR FY2080 fleet avg, flat within season"
+S4D1,Post-monsoon (Oct-Nov),Night (00-08),PWRSPVNPLXX,Solar,,0.055562,,,Ninja
+S4D1,Post-monsoon (Oct-Nov),Night (00-08),PWRWONNPLXX,Wind,,0.005199,,,Ninja
+S4D1,Post-monsoon (Oct-Nov),Night (00-08),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D2,Post-monsoon (Oct-Nov),Day (08-16),PWRHYDNPLXX,Hydro,,,0.697000,,"NDOR FY2080 fleet avg, flat within season"
+S4D2,Post-monsoon (Oct-Nov),Day (08-16),PWRSPVNPLXX,Solar,,0.578017,,,Ninja
+S4D2,Post-monsoon (Oct-Nov),Day (08-16),PWRWONNPLXX,Wind,,0.014258,,,Ninja
+S4D2,Post-monsoon (Oct-Nov),Day (08-16),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D3,Post-monsoon (Oct-Nov),Evening (16-24),PWRHYDNPLXX,Hydro,,,0.697000,,"NDOR FY2080 fleet avg, flat within season"
+S4D3,Post-monsoon (Oct-Nov),Evening (16-24),PWRSPVNPLXX,Solar,,0.004444,,,Ninja
+S4D3,Post-monsoon (Oct-Nov),Evening (16-24),PWRWONNPLXX,Wind,,0.009502,,,Ninja
+S4D3,Post-monsoon (Oct-Nov),Evening (16-24),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
