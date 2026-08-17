@@ -186,6 +186,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     counts = merge_country_template(template, args.input_dir, args.centerpoints)
     print(f"Merged country template: {counts}")
 
+    # For non-default profiles the primary merge target is the authority
+    # directory, but A1 reads from og_csvs_inputs.  Mirror the merge there
+    # so the next A1 run picks up the new country data.
+    og_csvs = paths.preparation_workspace / "og_csvs_inputs"
+    if og_csvs.is_dir() and og_csvs.resolve() != args.input_dir.resolve():
+        og_counts = merge_country_template(template, og_csvs, args.centerpoints)
+        print(f"Also merged into og_csvs_inputs: {og_counts}")
+
     # Invalidate stale post-A2 snapshots so the next run regenerates A1/A2
     # with the newly merged country data.
     a1_dir = _find_a1_outputs(paths)
