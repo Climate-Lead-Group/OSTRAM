@@ -147,10 +147,9 @@ class AtomicWorkspaceTests(unittest.TestCase):
             manifest = changed_manifest
 
             (manifest.root / "seed.txt").write_text("version two", encoding="utf-8")
-            with self.assertRaisesRegex(ProfileWorkspaceError, "changed"):
-                prepared_profile(manifest, paths=paths)
-            reset = prepare_profile(manifest, paths=paths, reset=True)
-            self.assertEqual(reset.authorities["seed"].read_text(), "version two")
+            # Mutable sources are now auto-refreshed instead of raising.
+            refreshed = prepared_profile(manifest, paths=paths)
+            self.assertEqual(refreshed.authorities["seed"].read_text(), "version two")
 
     def test_interrupted_foreign_and_missing_prepared_files_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

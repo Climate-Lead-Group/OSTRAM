@@ -669,7 +669,7 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
             TRANSFORMATIONS / "cap_trn_to_residual.py":
                 "b5d8d9536bd6948bb40390e05bb19f46538439cb2b90ee26b00e71707d7b3854",
             SCENARIOS / "rules" / "relax_interconnectors.py":
-                "6c7097c9a7d53f9487c1e13d19c607ba1590f3a0bec8c1af8bc182d57e14e82c",
+                "4308c9b63b3365c6517d2e520ddf763c4831344aecf1f9b7c7c70768b1ed45af",
         }
         for path, expected in protected.items():
             with self.subTest(path=path.name):

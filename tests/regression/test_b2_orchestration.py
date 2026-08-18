@@ -1425,7 +1425,10 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
                 ],
                 "cbc": [
                     "cbc", f"{output_file}.lp", "randomSeed", "12345",
-                    "randomCbcSeed", "12345", "-seconds", "20000",
+                    "randomCbcSeed", "12345",
+                    "primalTolerance", "1e-8",
+                    "dualTolerance", "1e-8",
+                    "-seconds", "20000",
                     "solve", "-solu", f"{output_file}.sol",
                 ],
                 "cplex": [
