@@ -1,0 +1,109 @@
+{
+  "country": "INDNO",
+  "source": "Grid-India hourly+CEA hydro+Ninja",
+  "n_rows": 21888,
+  "years": [
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "timeslice_config": {
+    "seasons": [
+      {
+        "code": "S1",
+        "label": "Winter (Dec-Feb)",
+        "months": [
+          12,
+          1,
+          2
+        ],
+        "days": 90
+      },
+      {
+        "code": "S2",
+        "label": "Pre-monsoon (Mar-May)",
+        "months": [
+          3,
+          4,
+          5
+        ],
+        "days": 92
+      },
+      {
+        "code": "S3",
+        "label": "SW Monsoon (Jun-Sep)",
+        "months": [
+          6,
+          7,
+          8,
+          9
+        ],
+        "days": 122
+      },
+      {
+        "code": "S4",
+        "label": "Post-monsoon (Oct-Nov)",
+        "months": [
+          10,
+          11
+        ],
+        "days": 61
+      }
+    ],
+    "dayparts": [
+      {
+        "code": "D1",
+        "label": "Night",
+        "start_hour": 0,
+        "end_hour": 6
+      },
+      {
+        "code": "D2",
+        "label": "Solar day",
+        "start_hour": 6,
+        "end_hour": 17
+      },
+      {
+        "code": "D3",
+        "label": "Evening peak",
+        "start_hour": 17,
+        "end_hour": 20
+      },
+      {
+        "code": "D4",
+        "label": "Late evening",
+        "start_hour": 20,
+        "end_hour": 22
+      },
+      {
+        "code": "D5",
+        "label": "Late night",
+        "start_hour": 22,
+        "end_hour": 24
+      }
+    ],
+    "n_timeslices": 20,
+    "timeslices": [
+      "S1D1",
+      "S1D2",
+      "S1D3",
+      "S1D4",
+      "S1D5",
+      "S2D1",
+      "S2D2",
+      "S2D3",
+      "S2D4",
+      "S2D5",
+      "S3D1",
+      "S3D2",
+      "S3D3",
+      "S3D4",
+      "S3D5",
+      "S4D1",
+      "S4D2",
+      "S4D3",
+      "S4D4",
+      "S4D5"
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+timeslice,season,daypart,tech_code,tech_type,cf_dispatch,cf_ninja,cf_da_workbook,cf_default,source_notes
+S1D1,Winter (Dec-Feb),Night (00-06),PWRHYDNPLXX,Hydro,,,0.390000,,"NDOR FY2080 fleet avg, flat within season"
+S1D1,Winter (Dec-Feb),Night (00-06),PWRSPVNPLXX,Solar,,0.000005,,,Ninja
+S1D1,Winter (Dec-Feb),Night (00-06),PWRWONNPLXX,Wind,,0.011158,,,Ninja
+S1D1,Winter (Dec-Feb),Night (00-06),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D2,Winter (Dec-Feb),Morning (06-12),PWRHYDNPLXX,Hydro,,,0.390000,,"NDOR FY2080 fleet avg, flat within season"
+S1D2,Winter (Dec-Feb),Morning (06-12),PWRSPVNPLXX,Solar,,0.518536,,,Ninja
+S1D2,Winter (Dec-Feb),Morning (06-12),PWRWONNPLXX,Wind,,0.021464,,,Ninja
+S1D2,Winter (Dec-Feb),Morning (06-12),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D3,Winter (Dec-Feb),Afternoon (12-18),PWRHYDNPLXX,Hydro,,,0.390000,,"NDOR FY2080 fleet avg, flat within season"
+S1D3,Winter (Dec-Feb),Afternoon (12-18),PWRSPVNPLXX,Solar,,0.325459,,,Ninja
+S1D3,Winter (Dec-Feb),Afternoon (12-18),PWRWONNPLXX,Wind,,0.050148,,,Ninja
+S1D3,Winter (Dec-Feb),Afternoon (12-18),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S1D4,Winter (Dec-Feb),Evening (18-24),PWRHYDNPLXX,Hydro,,,0.390000,,"NDOR FY2080 fleet avg, flat within season"
+S1D4,Winter (Dec-Feb),Evening (18-24),PWRSPVNPLXX,Solar,,0.000000,,,Ninja
+S1D4,Winter (Dec-Feb),Evening (18-24),PWRWONNPLXX,Wind,,0.010569,,,Ninja
+S1D4,Winter (Dec-Feb),Evening (18-24),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D1,Pre-monsoon (Mar-May),Night (00-06),PWRHYDNPLXX,Hydro,,,0.358000,,"NDOR FY2080 fleet avg, flat within season"
+S2D1,Pre-monsoon (Mar-May),Night (00-06),PWRSPVNPLXX,Solar,,0.005412,,,Ninja
+S2D1,Pre-monsoon (Mar-May),Night (00-06),PWRWONNPLXX,Wind,,0.023244,,,Ninja
+S2D1,Pre-monsoon (Mar-May),Night (00-06),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D2,Pre-monsoon (Mar-May),Morning (06-12),PWRHYDNPLXX,Hydro,,,0.358000,,"NDOR FY2080 fleet avg, flat within season"
+S2D2,Pre-monsoon (Mar-May),Morning (06-12),PWRSPVNPLXX,Solar,,0.540705,,,Ninja
+S2D2,Pre-monsoon (Mar-May),Morning (06-12),PWRWONNPLXX,Wind,,0.029944,,,Ninja
+S2D2,Pre-monsoon (Mar-May),Morning (06-12),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D3,Pre-monsoon (Mar-May),Afternoon (12-18),PWRHYDNPLXX,Hydro,,,0.358000,,"NDOR FY2080 fleet avg, flat within season"
+S2D3,Pre-monsoon (Mar-May),Afternoon (12-18),PWRSPVNPLXX,Solar,,0.349532,,,Ninja
+S2D3,Pre-monsoon (Mar-May),Afternoon (12-18),PWRWONNPLXX,Wind,,0.111776,,,Ninja
+S2D3,Pre-monsoon (Mar-May),Afternoon (12-18),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S2D4,Pre-monsoon (Mar-May),Evening (18-24),PWRHYDNPLXX,Hydro,,,0.358000,,"NDOR FY2080 fleet avg, flat within season"
+S2D4,Pre-monsoon (Mar-May),Evening (18-24),PWRSPVNPLXX,Solar,,0.000000,,,Ninja
+S2D4,Pre-monsoon (Mar-May),Evening (18-24),PWRWONNPLXX,Wind,,0.024150,,,Ninja
+S2D4,Pre-monsoon (Mar-May),Evening (18-24),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D1,SW Monsoon (Jun-Sep),Night (00-06),PWRHYDNPLXX,Hydro,,,0.755000,,"NDOR FY2080 fleet avg, flat within season"
+S3D1,SW Monsoon (Jun-Sep),Night (00-06),PWRSPVNPLXX,Solar,,0.005955,,,Ninja
+S3D1,SW Monsoon (Jun-Sep),Night (00-06),PWRWONNPLXX,Wind,,0.013180,,,Ninja
+S3D1,SW Monsoon (Jun-Sep),Night (00-06),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D2,SW Monsoon (Jun-Sep),Morning (06-12),PWRHYDNPLXX,Hydro,,,0.755000,,"NDOR FY2080 fleet avg, flat within season"
+S3D2,SW Monsoon (Jun-Sep),Morning (06-12),PWRSPVNPLXX,Solar,,0.415904,,,Ninja
+S3D2,SW Monsoon (Jun-Sep),Morning (06-12),PWRWONNPLXX,Wind,,0.022764,,,Ninja
+S3D2,SW Monsoon (Jun-Sep),Morning (06-12),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D3,SW Monsoon (Jun-Sep),Afternoon (12-18),PWRHYDNPLXX,Hydro,,,0.755000,,"NDOR FY2080 fleet avg, flat within season"
+S3D3,SW Monsoon (Jun-Sep),Afternoon (12-18),PWRSPVNPLXX,Solar,,0.273846,,,Ninja
+S3D3,SW Monsoon (Jun-Sep),Afternoon (12-18),PWRWONNPLXX,Wind,,0.068879,,,Ninja
+S3D3,SW Monsoon (Jun-Sep),Afternoon (12-18),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S3D4,SW Monsoon (Jun-Sep),Evening (18-24),PWRHYDNPLXX,Hydro,,,0.755000,,"NDOR FY2080 fleet avg, flat within season"
+S3D4,SW Monsoon (Jun-Sep),Evening (18-24),PWRSPVNPLXX,Solar,,0.000000,,,Ninja
+S3D4,SW Monsoon (Jun-Sep),Evening (18-24),PWRWONNPLXX,Wind,,0.027758,,,Ninja
+S3D4,SW Monsoon (Jun-Sep),Evening (18-24),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D1,Post-monsoon (Oct-Nov),Night (00-06),PWRHYDNPLXX,Hydro,,,0.697000,,"NDOR FY2080 fleet avg, flat within season"
+S4D1,Post-monsoon (Oct-Nov),Night (00-06),PWRSPVNPLXX,Solar,,0.000034,,,Ninja
+S4D1,Post-monsoon (Oct-Nov),Night (00-06),PWRWONNPLXX,Wind,,0.005716,,,Ninja
+S4D1,Post-monsoon (Oct-Nov),Night (00-06),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D2,Post-monsoon (Oct-Nov),Morning (06-12),PWRHYDNPLXX,Hydro,,,0.697000,,"NDOR FY2080 fleet avg, flat within season"
+S4D2,Post-monsoon (Oct-Nov),Morning (06-12),PWRSPVNPLXX,Solar,,0.512327,,,Ninja
+S4D2,Post-monsoon (Oct-Nov),Morning (06-12),PWRWONNPLXX,Wind,,0.007150,,,Ninja
+S4D2,Post-monsoon (Oct-Nov),Morning (06-12),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D3,Post-monsoon (Oct-Nov),Afternoon (12-18),PWRHYDNPLXX,Hydro,,,0.697000,,"NDOR FY2080 fleet avg, flat within season"
+S4D3,Post-monsoon (Oct-Nov),Afternoon (12-18),PWRSPVNPLXX,Solar,,0.338336,,,Ninja
+S4D3,Post-monsoon (Oct-Nov),Afternoon (12-18),PWRWONNPLXX,Wind,,0.018990,,,Ninja
+S4D3,Post-monsoon (Oct-Nov),Afternoon (12-18),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)
+S4D4,Post-monsoon (Oct-Nov),Evening (18-24),PWRHYDNPLXX,Hydro,,,0.697000,,"NDOR FY2080 fleet avg, flat within season"
+S4D4,Post-monsoon (Oct-Nov),Evening (18-24),PWRSPVNPLXX,Solar,,0.000000,,,Ninja
+S4D4,Post-monsoon (Oct-Nov),Evening (18-24),PWRWONNPLXX,Wind,,0.006756,,,Ninja
+S4D4,Post-monsoon (Oct-Nov),Evening (18-24),PWRGASNPLXX,Gas,,,,1.0,thermal CF=1.0; CF=1.0 (dispatchable)

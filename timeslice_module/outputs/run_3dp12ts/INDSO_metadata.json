@@ -1,0 +1,89 @@
+{
+  "country": "INDSO",
+  "source": "Grid-India hourly+CEA hydro+Ninja",
+  "n_rows": 21888,
+  "years": [
+    "2023",
+    "2024",
+    "2025"
+  ],
+  "timeslice_config": {
+    "seasons": [
+      {
+        "code": "S1",
+        "label": "Winter (Dec-Feb)",
+        "months": [
+          12,
+          1,
+          2
+        ],
+        "days": 90
+      },
+      {
+        "code": "S2",
+        "label": "Pre-monsoon (Mar-May)",
+        "months": [
+          3,
+          4,
+          5
+        ],
+        "days": 92
+      },
+      {
+        "code": "S3",
+        "label": "SW Monsoon (Jun-Sep)",
+        "months": [
+          6,
+          7,
+          8,
+          9
+        ],
+        "days": 122
+      },
+      {
+        "code": "S4",
+        "label": "Post-monsoon (Oct-Nov)",
+        "months": [
+          10,
+          11
+        ],
+        "days": 61
+      }
+    ],
+    "dayparts": [
+      {
+        "code": "D1",
+        "label": "Night",
+        "start_hour": 0,
+        "end_hour": 8
+      },
+      {
+        "code": "D2",
+        "label": "Day",
+        "start_hour": 8,
+        "end_hour": 16
+      },
+      {
+        "code": "D3",
+        "label": "Evening",
+        "start_hour": 16,
+        "end_hour": 24
+      }
+    ],
+    "n_timeslices": 12,
+    "timeslices": [
+      "S1D1",
+      "S1D2",
+      "S1D3",
+      "S2D1",
+      "S2D2",
+      "S2D3",
+      "S3D1",
+      "S3D2",
+      "S3D3",
+      "S4D1",
+      "S4D2",
+      "S4D3"
+    ]
+  }
+}

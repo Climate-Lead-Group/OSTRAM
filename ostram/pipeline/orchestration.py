@@ -20,6 +20,7 @@ import datetime as dt
 import json
 import os
 import shlex
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -96,7 +97,30 @@ def run(cmd: Sequence[str | Path], *, cwd: Path | None = None) -> None:
     )
 
 
+
+# ---------- Conda executable resolution ----------
+def conda_exe() -> str:
+    """Full path to the conda executable, resolved robustly on Windows.
+
+    Windows CreateProcess cannot launch conda.bat from a bare [conda_exe(), ...]
+    argv; inside an activated non-base env, often only condabin\\conda.bat is
+    on PATH, so literal "conda" fails there. Conda's own activation scripts
+    export CONDA_EXE with the full path to conda.exe in every activated
+    prompt (base or not), so that is the authoritative answer. Fall back to
+    PATH resolution of a real executable, then to the bare name (POSIX).
+    """
+    exe = os.environ.get("CONDA_EXE")
+    if exe and Path(exe).is_file():
+        return exe
+    for name in ("conda.exe", "conda"):
+        found = shutil.which(name)
+        if found and not found.lower().endswith((".bat", ".cmd")):
+            return found
+    return "conda"
+
 def check_tool_available(tool: str) -> None:
+    if tool == "conda":
+        tool = conda_exe()
     try:
         subprocess.check_call(
             [tool, "--version"],
@@ -116,7 +140,7 @@ def env_exists(name: str) -> bool:
 
     try:
         out = subprocess.check_output(
-            ["conda", "env", "list", "--json"],
+            [conda_exe(), "env", "list", "--json"],
             text=True,
             stderr=subprocess.STDOUT,
         )
@@ -128,7 +152,7 @@ def env_exists(name: str) -> bool:
 
     try:
         txt = subprocess.check_output(
-            ["conda", "env", "list"],
+            [conda_exe(), "env", "list"],
             text=True,
             stderr=subprocess.STDOUT,
         )
@@ -164,15 +188,15 @@ def create_env_if_missing(env_name: str, env_file: str | Path) -> None:
         print(f"Conda environment '{env_name}' already exists. Skipping recreation.")
         return
     print(f"Creating Conda environment '{env_name}' from {env_file}...")
-    run(["conda", "env", "create", "-n", env_name, "-f", Path(env_file), "-y"])
+    run([conda_exe(), "env", "create", "-n", env_name, "-f", Path(env_file), "-y"])
 
 
 def ensure_pip_available(env_name: str) -> None:
     try:
-        run(["conda", "run", "-n", env_name, "python", "-m", "pip", "--version"])
+        run([conda_exe(), "run", "-n", env_name, "python", "-m", "pip", "--version"])
     except subprocess.CalledProcessError:
         print("pip not found in the environment. Installing 'pip' in the environment...")
-        run(["conda", "install", "-n", env_name, "pip", "-y"])
+        run([conda_exe(), "install", "-n", env_name, "pip", "-y"])
 
 
 def module_present(env_name: str, module: str) -> bool:
@@ -181,7 +205,7 @@ def module_present(env_name: str, module: str) -> bool:
         f"sys.exit(0) if importlib.util.find_spec('{module}') else sys.exit(1)"
     )
     try:
-        run(["conda", "run", "-n", env_name, "python", "-c", code])
+        run([conda_exe(), "run", "-n", env_name, "python", "-c", code])
         return True
     except subprocess.CalledProcessError:
         return False
@@ -195,13 +219,13 @@ def ensure_deps(env_name: str) -> None:
     missing_conda = [pkg for mod, pkg in CONDA_DEPS.items() if not module_present(env_name, mod)]
     if missing_conda:
         print(f"Installing missing conda dependencies: {missing_conda}")
-        run(["conda", "install", "-n", env_name, "-c", "conda-forge", "-y", *missing_conda])
+        run([conda_exe(), "install", "-n", env_name, "-c", "conda-forge", "-y", *missing_conda])
 
     missing_pip = [pkg for mod, pkg in PIP_DEPS.items() if not module_present(env_name, mod)]
     if missing_pip:
         for spec in missing_pip:
             print(f"Installing missing pip dependency: {spec}")
-            run(["conda", "run", "-n", env_name, "python", "-m", "pip", "install", "-U", spec])
+            run([conda_exe(), "run", "-n", env_name, "python", "-m", "pip", "install", "-U", spec])
 
 
 # ---------- DVC ----------
@@ -223,10 +247,10 @@ def ensure_dvc_repo(env_name: str, project_root: Path | None = None) -> None:
 
     if is_git_repo(root):
         print("DVC repo not found. Running `dvc init`...")
-        run(["conda", "run", "-n", env_name, "dvc", "init"], cwd=root)
+        run([conda_exe(), "run", "-n", env_name, "dvc", "init"], cwd=root)
     else:
         print("Git repo not found. Running `dvc init --no-scm`...")
-        run(["conda", "run", "-n", env_name, "dvc", "init", "--no-scm"], cwd=root)
+        run([conda_exe(), "run", "-n", env_name, "dvc", "init", "--no-scm"], cwd=root)
 
     if not is_dvc_repo(root):
         raise RuntimeError("Failed to initialize DVC (.dvc was not created).")
@@ -236,7 +260,7 @@ def has_dvc_remote(env_name: str, project_root: Path | None = None) -> bool:
     root = resolve_paths().project_root if project_root is None else project_root.resolve()
     try:
         out = subprocess.check_output(
-            ["conda", "run", "-n", env_name, "dvc", "remote", "list"],
+            [conda_exe(), "run", "-n", env_name, "dvc", "remote", "list"],
             cwd=str(root),
             stderr=subprocess.STDOUT,
         )
@@ -252,7 +276,7 @@ def dvc_command(
 ) -> None:
     root = resolve_paths().project_root if project_root is None else project_root.resolve()
     tokens = shlex.split(args) if isinstance(args, str) else list(args)
-    run(["conda", "run", "-n", env_name, "dvc", *tokens], cwd=root)
+    run([conda_exe(), "run", "-n", env_name, "dvc", *tokens], cwd=root)
 
 
 def _module_for_script(script_path: Path, paths: ProjectPaths) -> str:

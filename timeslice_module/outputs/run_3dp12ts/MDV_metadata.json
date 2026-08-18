@@ -1,0 +1,91 @@
+{
+  "country": "MDV",
+  "source": "STELCO Table 12.2 (60+ localities, 2023) + WB/IEEE Male Fig.14 (Apr 2019)",
+  "hourly_profile": "Season-invariant (equatorial, cooling-driven daytime plateau)",
+  "solar_cf": "GHI-proportional from WB/Solargis, annual avg=0.18 (IRENA 2023)",
+  "installed_capacity_MW": {
+    "Diesel": 531.5,
+    "Solar": 68.5,
+    "Wind": 1.5
+  },
+  "no_interconnection": "Maldives has no cross-border interconnection",
+  "timeslice_config": {
+    "seasons": [
+      {
+        "code": "S1",
+        "label": "Winter (Dec-Feb)",
+        "months": [
+          12,
+          1,
+          2
+        ],
+        "days": 90
+      },
+      {
+        "code": "S2",
+        "label": "Pre-monsoon (Mar-May)",
+        "months": [
+          3,
+          4,
+          5
+        ],
+        "days": 92
+      },
+      {
+        "code": "S3",
+        "label": "SW Monsoon (Jun-Sep)",
+        "months": [
+          6,
+          7,
+          8,
+          9
+        ],
+        "days": 122
+      },
+      {
+        "code": "S4",
+        "label": "Post-monsoon (Oct-Nov)",
+        "months": [
+          10,
+          11
+        ],
+        "days": 61
+      }
+    ],
+    "dayparts": [
+      {
+        "code": "D1",
+        "label": "Night",
+        "start_hour": 0,
+        "end_hour": 8
+      },
+      {
+        "code": "D2",
+        "label": "Day",
+        "start_hour": 8,
+        "end_hour": 16
+      },
+      {
+        "code": "D3",
+        "label": "Evening",
+        "start_hour": 16,
+        "end_hour": 24
+      }
+    ],
+    "n_timeslices": 12,
+    "timeslices": [
+      "S1D1",
+      "S1D2",
+      "S1D3",
+      "S2D1",
+      "S2D2",
+      "S2D3",
+      "S3D1",
+      "S3D2",
+      "S3D3",
+      "S4D1",
+      "S4D2",
+      "S4D3"
+    ]
+  }
+}

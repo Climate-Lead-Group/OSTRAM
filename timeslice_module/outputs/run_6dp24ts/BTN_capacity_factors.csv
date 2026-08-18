@@ -1,0 +1,73 @@
+timeslice,season,daypart,tech_code,tech_type,cf_dispatch,cf_ninja,cf_da_workbook,cf_default,source_notes
+S1D1,Winter (Dec-Feb),Night (00-05),PWRHYDBTNXX,Hydro,,,0.204700,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S1D1,Winter (Dec-Feb),Night (00-05),PWRSPVBTNXX,Solar,,0.000000,,,Ninja
+S1D1,Winter (Dec-Feb),Night (00-05),PWRWONBTNXX,Wind,,0.014406,,,Ninja
+S1D2,Winter (Dec-Feb),Morning ramp (05-08),PWRHYDBTNXX,Hydro,,,0.204700,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S1D2,Winter (Dec-Feb),Morning ramp (05-08),PWRSPVBTNXX,Solar,,0.080822,,,Ninja
+S1D2,Winter (Dec-Feb),Morning ramp (05-08),PWRWONBTNXX,Wind,,0.017296,,,Ninja
+S1D3,Winter (Dec-Feb),Solar day (08-17),PWRHYDBTNXX,Hydro,,,0.204700,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S1D3,Winter (Dec-Feb),Solar day (08-17),PWRSPVBTNXX,Solar,,0.611023,,,Ninja
+S1D3,Winter (Dec-Feb),Solar day (08-17),PWRWONBTNXX,Wind,,0.113002,,,Ninja
+S1D4,Winter (Dec-Feb),Evening peak (17-20),PWRHYDBTNXX,Hydro,,,0.204700,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S1D4,Winter (Dec-Feb),Evening peak (17-20),PWRSPVBTNXX,Solar,,0.000855,,,Ninja
+S1D4,Winter (Dec-Feb),Evening peak (17-20),PWRWONBTNXX,Wind,,0.014321,,,Ninja
+S1D5,Winter (Dec-Feb),Late evening (20-22),PWRHYDBTNXX,Hydro,,,0.204700,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S1D5,Winter (Dec-Feb),Late evening (20-22),PWRSPVBTNXX,Solar,,0.000000,,,Ninja
+S1D5,Winter (Dec-Feb),Late evening (20-22),PWRWONBTNXX,Wind,,0.008078,,,Ninja
+S1D6,Winter (Dec-Feb),Late night (22-24),PWRHYDBTNXX,Hydro,,,0.204700,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S1D6,Winter (Dec-Feb),Late night (22-24),PWRSPVBTNXX,Solar,,0.000000,,,Ninja
+S1D6,Winter (Dec-Feb),Late night (22-24),PWRWONBTNXX,Wind,,0.009565,,,Ninja
+S2D1,Pre-monsoon (Mar-May),Night (00-05),PWRHYDBTNXX,Hydro,,,0.195900,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S2D1,Pre-monsoon (Mar-May),Night (00-05),PWRSPVBTNXX,Solar,,0.000000,,,Ninja
+S2D1,Pre-monsoon (Mar-May),Night (00-05),PWRWONBTNXX,Wind,,0.023034,,,Ninja
+S2D2,Pre-monsoon (Mar-May),Morning ramp (05-08),PWRHYDBTNXX,Hydro,,,0.195900,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S2D2,Pre-monsoon (Mar-May),Morning ramp (05-08),PWRSPVBTNXX,Solar,,0.118310,,,Ninja
+S2D2,Pre-monsoon (Mar-May),Morning ramp (05-08),PWRWONBTNXX,Wind,,0.015954,,,Ninja
+S2D3,Pre-monsoon (Mar-May),Solar day (08-17),PWRHYDBTNXX,Hydro,,,0.195900,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S2D3,Pre-monsoon (Mar-May),Solar day (08-17),PWRSPVBTNXX,Solar,,0.570547,,,Ninja
+S2D3,Pre-monsoon (Mar-May),Solar day (08-17),PWRWONBTNXX,Wind,,0.193229,,,Ninja
+S2D4,Pre-monsoon (Mar-May),Evening peak (17-20),PWRHYDBTNXX,Hydro,,,0.195900,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S2D4,Pre-monsoon (Mar-May),Evening peak (17-20),PWRSPVBTNXX,Solar,,0.019512,,,Ninja
+S2D4,Pre-monsoon (Mar-May),Evening peak (17-20),PWRWONBTNXX,Wind,,0.065387,,,Ninja
+S2D5,Pre-monsoon (Mar-May),Late evening (20-22),PWRHYDBTNXX,Hydro,,,0.195900,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S2D5,Pre-monsoon (Mar-May),Late evening (20-22),PWRSPVBTNXX,Solar,,0.000000,,,Ninja
+S2D5,Pre-monsoon (Mar-May),Late evening (20-22),PWRWONBTNXX,Wind,,0.036024,,,Ninja
+S2D6,Pre-monsoon (Mar-May),Late night (22-24),PWRHYDBTNXX,Hydro,,,0.195900,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S2D6,Pre-monsoon (Mar-May),Late night (22-24),PWRSPVBTNXX,Solar,,0.000000,,,Ninja
+S2D6,Pre-monsoon (Mar-May),Late night (22-24),PWRWONBTNXX,Wind,,0.035230,,,Ninja
+S3D1,SW Monsoon (Jun-Sep),Night (00-05),PWRHYDBTNXX,Hydro,,,0.841350,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S3D1,SW Monsoon (Jun-Sep),Night (00-05),PWRSPVBTNXX,Solar,,0.000000,,,Ninja
+S3D1,SW Monsoon (Jun-Sep),Night (00-05),PWRWONBTNXX,Wind,,0.053914,,,Ninja
+S3D2,SW Monsoon (Jun-Sep),Morning ramp (05-08),PWRHYDBTNXX,Hydro,,,0.841350,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S3D2,SW Monsoon (Jun-Sep),Morning ramp (05-08),PWRSPVBTNXX,Solar,,0.083972,,,Ninja
+S3D2,SW Monsoon (Jun-Sep),Morning ramp (05-08),PWRWONBTNXX,Wind,,0.033578,,,Ninja
+S3D3,SW Monsoon (Jun-Sep),Solar day (08-17),PWRHYDBTNXX,Hydro,,,0.841350,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S3D3,SW Monsoon (Jun-Sep),Solar day (08-17),PWRSPVBTNXX,Solar,,0.414495,,,Ninja
+S3D3,SW Monsoon (Jun-Sep),Solar day (08-17),PWRWONBTNXX,Wind,,0.173975,,,Ninja
+S3D4,SW Monsoon (Jun-Sep),Evening peak (17-20),PWRHYDBTNXX,Hydro,,,0.841350,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S3D4,SW Monsoon (Jun-Sep),Evening peak (17-20),PWRSPVBTNXX,Solar,,0.019111,,,Ninja
+S3D4,SW Monsoon (Jun-Sep),Evening peak (17-20),PWRWONBTNXX,Wind,,0.099081,,,Ninja
+S3D5,SW Monsoon (Jun-Sep),Late evening (20-22),PWRHYDBTNXX,Hydro,,,0.841350,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S3D5,SW Monsoon (Jun-Sep),Late evening (20-22),PWRSPVBTNXX,Solar,,0.000000,,,Ninja
+S3D5,SW Monsoon (Jun-Sep),Late evening (20-22),PWRWONBTNXX,Wind,,0.100774,,,Ninja
+S3D6,SW Monsoon (Jun-Sep),Late night (22-24),PWRHYDBTNXX,Hydro,,,0.841350,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S3D6,SW Monsoon (Jun-Sep),Late night (22-24),PWRSPVBTNXX,Solar,,0.000000,,,Ninja
+S3D6,SW Monsoon (Jun-Sep),Late night (22-24),PWRWONBTNXX,Wind,,0.086794,,,Ninja
+S4D1,Post-monsoon (Oct-Nov),Night (00-05),PWRHYDBTNXX,Hydro,,,0.629700,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S4D1,Post-monsoon (Oct-Nov),Night (00-05),PWRSPVBTNXX,Solar,,0.000000,,,Ninja
+S4D1,Post-monsoon (Oct-Nov),Night (00-05),PWRWONBTNXX,Wind,,0.012484,,,Ninja
+S4D2,Post-monsoon (Oct-Nov),Morning ramp (05-08),PWRHYDBTNXX,Hydro,,,0.629700,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S4D2,Post-monsoon (Oct-Nov),Morning ramp (05-08),PWRSPVBTNXX,Solar,,0.063720,,,Ninja
+S4D2,Post-monsoon (Oct-Nov),Morning ramp (05-08),PWRWONBTNXX,Wind,,0.010319,,,Ninja
+S4D3,Post-monsoon (Oct-Nov),Solar day (08-17),PWRHYDBTNXX,Hydro,,,0.629700,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S4D3,Post-monsoon (Oct-Nov),Solar day (08-17),PWRSPVBTNXX,Solar,,0.569257,,,Ninja
+S4D3,Post-monsoon (Oct-Nov),Solar day (08-17),PWRWONBTNXX,Wind,,0.075102,,,Ninja
+S4D4,Post-monsoon (Oct-Nov),Evening peak (17-20),PWRHYDBTNXX,Hydro,,,0.629700,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S4D4,Post-monsoon (Oct-Nov),Evening peak (17-20),PWRSPVBTNXX,Solar,,0.001832,,,Ninja
+S4D4,Post-monsoon (Oct-Nov),Evening peak (17-20),PWRWONBTNXX,Wind,,0.021707,,,Ninja
+S4D5,Post-monsoon (Oct-Nov),Late evening (20-22),PWRHYDBTNXX,Hydro,,,0.629700,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S4D5,Post-monsoon (Oct-Nov),Late evening (20-22),PWRSPVBTNXX,Solar,,0.000000,,,Ninja
+S4D5,Post-monsoon (Oct-Nov),Late evening (20-22),PWRWONBTNXX,Wind,,0.019001,,,Ninja
+S4D6,Post-monsoon (Oct-Nov),Late night (22-24),PWRHYDBTNXX,Hydro,,,0.629700,,"BPSO 2024 ex-bus gen, seasonal avg, capped at 1.0"
+S4D6,Post-monsoon (Oct-Nov),Late night (22-24),PWRSPVBTNXX,Solar,,0.000000,,,Ninja
+S4D6,Post-monsoon (Oct-Nov),Late night (22-24),PWRWONBTNXX,Wind,,0.016067,,,Ninja

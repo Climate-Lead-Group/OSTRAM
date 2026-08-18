@@ -1,0 +1,25 @@
+timeslice,season,daypart,demand_fraction,yearsplit
+S1D1,Winter (Dec-Feb),Night (00-05),0.040050,0.051370
+S1D2,Winter (Dec-Feb),Morning ramp (05-08),0.031646,0.030822
+S1D3,Winter (Dec-Feb),Solar day (08-17),0.095525,0.092466
+S1D4,Winter (Dec-Feb),Evening peak (17-20),0.035472,0.030822
+S1D5,Winter (Dec-Feb),Late evening (20-22),0.021719,0.020548
+S1D6,Winter (Dec-Feb),Late night (22-24),0.018738,0.020548
+S2D1,Pre-monsoon (Mar-May),Night (00-05),0.042367,0.052511
+S2D2,Pre-monsoon (Mar-May),Morning ramp (05-08),0.031637,0.031507
+S2D3,Pre-monsoon (Mar-May),Solar day (08-17),0.097904,0.094521
+S2D4,Pre-monsoon (Mar-May),Evening peak (17-20),0.038771,0.031507
+S2D5,Pre-monsoon (Mar-May),Late evening (20-22),0.024217,0.021005
+S2D6,Pre-monsoon (Mar-May),Late night (22-24),0.019836,0.021005
+S3D1,SW Monsoon (Jun-Sep),Night (00-05),0.057330,0.069635
+S3D2,SW Monsoon (Jun-Sep),Morning ramp (05-08),0.042201,0.041781
+S3D3,SW Monsoon (Jun-Sep),Solar day (08-17),0.131678,0.125342
+S3D4,SW Monsoon (Jun-Sep),Evening peak (17-20),0.052120,0.041781
+S3D5,SW Monsoon (Jun-Sep),Late evening (20-22),0.032529,0.027854
+S3D6,SW Monsoon (Jun-Sep),Late night (22-24),0.026734,0.027854
+S4D1,Post-monsoon (Oct-Nov),Night (00-05),0.025430,0.034817
+S4D2,Post-monsoon (Oct-Nov),Morning ramp (05-08),0.019643,0.020890
+S4D3,Post-monsoon (Oct-Nov),Solar day (08-17),0.062487,0.062671
+S4D4,Post-monsoon (Oct-Nov),Evening peak (17-20),0.025296,0.020890
+S4D5,Post-monsoon (Oct-Nov),Late evening (20-22),0.014801,0.013927
+S4D6,Post-monsoon (Oct-Nov),Late night (22-24),0.011868,0.013927

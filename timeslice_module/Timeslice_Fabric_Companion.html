@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSTRAM · Timeslice fabric companion</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8f9fa;color:#1B2A4A;line-height:1.6}
+.wrap{max-width:960px;margin:0 auto;padding:2rem 1.5rem}
+h1{font-size:1.6rem;font-weight:600;color:#1B2A4A;margin-bottom:0.25rem}
+h2{font-size:1.2rem;font-weight:600;color:#1B2A4A;margin:2rem 0 0.75rem;padding-top:1rem;border-top:1px solid #e2e8f0}
+h3{font-size:1rem;font-weight:600;color:#1B2A4A;margin:1.5rem 0 0.5rem}
+.subtitle{font-size:0.95rem;color:#7A8B8C;margin-bottom:1.5rem}
+p,.desc{font-size:0.9rem;color:#4a5568;line-height:1.7;margin-bottom:0.75rem}
+.tabs{display:flex;gap:6px;margin-bottom:1.5rem;flex-wrap:wrap}
+.tab{padding:8px 18px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:0.85rem;color:#7A8B8C;transition:all 0.15s;font-weight:500}
+.tab:hover{border-color:#0F8B7D}
+.tab.active{background:#E8F5F3;color:#0F8B7D;border-color:#0F8B7D}
+.tab .badge{display:inline-block;font-size:0.7rem;padding:1px 6px;border-radius:4px;margin-left:4px;vertical-align:middle}
+.badge-canonical{background:#0F8B7D;color:#fff}
+.badge-new{background:#e2e8f0;color:#4a5568}
+
+.grid-container{overflow-x:auto;margin-bottom:1.5rem}
+.ts-grid{display:grid;gap:2px;min-width:500px}
+.ts-cell{padding:10px 6px;text-align:center;border-radius:4px;min-height:52px;display:flex;flex-direction:column;justify-content:center}
+.ts-cell .code{font-weight:600;font-size:0.8rem;margin-bottom:2px}
+.ts-cell .val{font-size:0.75rem;opacity:0.9}
+.grid-header{font-size:0.78rem;font-weight:600;color:#7A8B8C;padding:8px 4px;text-align:center}
+.season-label{font-size:0.78rem;font-weight:600;color:#7A8B8C;display:flex;align-items:center;justify-content:center;padding:4px}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:1.5rem}
+.stat{background:#fff;border-radius:8px;padding:1rem;border:1px solid #e2e8f0}
+.stat .lab{font-size:0.75rem;color:#7A8B8C;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px}
+.stat .val{font-size:1.4rem;font-weight:600;color:#1B2A4A}
+.stat .sub{font-size:0.75rem;color:#7A8B8C;margin-top:2px}
+
+.note{font-size:0.85rem;color:#4a5568;padding:12px 16px;background:#fff;border-radius:8px;border-left:3px solid #0F8B7D;margin-bottom:1.5rem}
+
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px;font-size:0.78rem;color:#7A8B8C}
+.legend span{display:flex;align-items:center;gap:5px}
+.swatch{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+.chart-wrap{position:relative;width:100%;margin-bottom:1.5rem}
+canvas{width:100%!important}
+.zone-select{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem}
+.zone-btn{padding:4px 12px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:0.78rem;color:#7A8B8C;transition:all 0.15s}
+.zone-btn:hover{border-color:#0F8B7D}
+.zone-btn.active{background:#E8F5F3;color:#0F8B7D;border-color:#0F8B7D}
+
+.menu-table{width:100%;border-collapse:collapse;font-size:0.85rem;margin-bottom:1.5rem}
+.menu-table th{text-align:left;padding:10px 12px;background:#f1f5f9;border-bottom:2px solid #e2e8f0;font-weight:600;color:#1B2A4A}
+.menu-table td{padding:10px 12px;border-bottom:1px solid #e2e8f0}
+.menu-table tr:hover{background:#f8fafc}
+.phantom-bar{display:inline-block;height:14px;border-radius:3px;vertical-align:middle;margin-right:6px}
+
+.section{margin-bottom:2rem}
+.insight{font-size:0.85rem;color:#0F8B7D;font-weight:500;margin-top:0.5rem}
+.footer{text-align:center;font-size:0.78rem;color:#7A8B8C;margin-top:3rem;padding-top:1rem;border-top:1px solid #e2e8f0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>OSTRAM timeslice fabric companion</h1>
+<div class="subtitle">Interactive training companion for the SOASIA model. Four timeslice fabrics computed, compared, and explored. All ten model zones.</div>
+
+<!-- SECTION 1: The menu -->
+<h2>The four fabrics at a glance</h2>
+<p>Each row is a pre-computed workbook case. Build time is ~45 seconds regardless of timeslice count. The cost of finer fabrics is paid at solve time, not generation time.</p>
+
+<table class="menu-table">
+<thead><tr><th>Fabric</th><th>Timeslices</th><th>Solar block CF</th><th>Phantom solar</th><th>LP row scaling</th></tr></thead>
+<tbody>
+<tr><td>3dp/12ts (8h equal)</td><td>12</td><td>0.491</td><td><span class="phantom-bar" style="width:67px;background:#E24B4A"></span>6.75%</td><td>-40%</td></tr>
+<tr><td>4dp/16ts (6h equal)</td><td>16</td><td>0.402</td><td><span class="phantom-bar" style="width:2px;background:#1D9E75"></span>0.15%</td><td>-20%</td></tr>
+<tr style="background:#E8F5F3"><td><strong>5dp/20ts (adopted)</strong></td><td><strong>20</strong></td><td><strong>0.395</strong></td><td><span class="phantom-bar" style="width:4px;background:#1D9E75"></span><strong>0.42%</strong></td><td><strong>baseline</strong></td></tr>
+<tr><td>6dp/24ts (sweep winner)</td><td>24</td><td>0.450</td><td><span class="phantom-bar" style="width:3px;background:#1D9E75"></span>0.28%</td><td>+20%</td></tr>
+</tbody>
+</table>
+
+<div class="note"><strong>Phantom solar</strong> is the fraction of solar energy a flat-CF block credits to hours when the sun is down. The 3dp fabric credits 16 times more solar to dark hours than the adopted fabric, meaning a solver could dispatch PV capacity at 3 a.m. This is the main reason coarse fabrics are problematic.</div>
+
+<!-- SECTION 2: Grid explorer -->
+<h2>Grid structure explorer</h2>
+<p>Each cell is one timeslice. Toggle between fabrics to see how daypart boundaries reshape the grid. Colours show block type: solar core, dawn/dusk shoulder, evening, or night.</p>
+
+<div class="tabs" id="fabricTabs"></div>
+
+<div class="legend">
+<span><span class="swatch" style="background:#1d6fb5"></span>Solar core</span>
+<span><span class="swatch" style="background:#e8d44d"></span>Dawn/dusk shoulder</span>
+<span><span class="swatch" style="background:#7f8c8d"></span>Evening</span>
+<span><span class="swatch" style="background:#2c3e50"></span>Night</span>
+</div>
+
+<div class="grid-container" id="gridArea"></div>
+<div class="stats" id="statsArea"></div>
+<div id="noteArea"></div>
+
+<!-- SECTION 3: Zone-level explorer (20ts only, real data) -->
+<h2>Zone-level explorer (adopted 5dp/20ts)</h2>
+<p>Real pipeline data for all ten model zones. This section uses the adopted fabric's computed values. The variant workbooks contain equivalent per-zone data for each fabric.</p>
+
+<h3>Demand profile</h3>
+<p>Teal bars show demand fraction (SpecifiedDemandProfile). The dashed line shows YearSplit (what each timeslice's share would be if demand were uniform). Bars above the line are demand-heavy.</p>
+
+<div class="zone-select" id="demandZones"></div>
+<div class="chart-wrap" style="height:300px"><canvas id="demandChart"></canvas></div>
+
+<h3>Technology capacity factors</h3>
+<p>The same GW of installed capacity produces very different energy depending on the technology and the timeslice. Toggle between solar, hydro, and wind to see how each responds to the 20-timeslice grid.</p>
+
+<div style="display:flex;gap:6px;margin-bottom:0.75rem">
+<button class="zone-btn active" onclick="setTech('Solar')" id="btn-Solar">Solar</button>
+<button class="zone-btn" onclick="setTech('Hydro')" id="btn-Hydro">Hydro</button>
+<button class="zone-btn" onclick="setTech('Wind')" id="btn-Wind">Wind</button>
+</div>
+<div class="zone-select" id="cfZones"></div>
+<div class="chart-wrap" style="height:300px"><canvas id="cfChart"></canvas></div>
+
+<h3>Regional demand heatmap</h3>
+<p>Each cell shows (demand fraction - YearSplit) in percentage points. Teal = demand-heavy, coral = demand-light. Hover for values.</p>
+
+<div id="heatmapArea" style="overflow-x:auto;margin-bottom:1.5rem"></div>
+
+<!-- SECTION 4: The teaching point -->
+<h2>The teaching point</h2>
+<p>Coarser fabrics do not dim the solar day. They invent solar at night. An 8-hour block that spans 00-08 includes 06-08 dawn, so it assigns a flat positive CF to five genuinely dark hours. A solver using 3dp/12ts could meet a 3 a.m. demand peak with PV capacity and call it feasible.</p>
+<p>Finer fabrics isolate the dawn ramp from the solar core, eliminating phantom solar, but they scale the LP proportionally. The adopted 5dp/20ts is the deliberate compromise: a dedicated 06-17 solar block captures the full production curve without the solver cost of 24 timeslices.</p>
+<p class="insight">The choice of timeslice fabric is not cosmetic. It changes what the model thinks is physically possible.</p>
+
+<div class="footer">OSTRAM timeslice fabric companion &middot; SOASIA model training &middot; CCG</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const DATA = {"config": {"seasons": [{"code": "S1", "label": "Winter (Dec-Feb)", "months": [12, 1, 2], "days": 90}, {"code": "S2", "label": "Pre-monsoon (Mar-May)", "months": [3, 4, 5], "days": 92}, {"code": "S3", "label": "SW Monsoon (Jun-Sep)", "months": [6, 7, 8, 9], "days": 122}, {"code": "S4", "label": "Post-monsoon (Oct-Nov)", "months": [10, 11], "days": 61}], "dayparts": [{"code": "D1", "label": "Night", "start_hour": 0, "end_hour": 6}, {"code": "D2", "label": "Solar day", "start_hour": 6, "end_hour": 17}, {"code": "D3", "label": "Evening peak", "start_hour": 17, "end_hour": 20}, {"code": "D4", "label": "Late evening", "start_hour": 20, "end_hour": 22}, {"code": "D5", "label": "Late night", "start_hour": 22, "end_hour": 24}], "n_timeslices": 20, "timeslices": ["S1D1", "S1D2", "S1D3", "S1D4", "S1D5", "S2D1", "S2D2", "S2D3", "S2D4", "S2D5", "S3D1", "S3D2", "S3D3", "S3D4", "S3D5", "S4D1", "S4D2", "S4D3", "S4D4", "S4D5"]}, "demand": {"BGD": [{"ts": "S1D1", "df": 0.052326, "ys": 0.061644}, {"ts": "S1D2", "df": 0.107446, "ys": 0.113014}, {"ts": "S1D3", "df": 0.032441, "ys": 0.030822}, {"ts": "S1D4", "df": 0.021866, "ys": 0.020548}, {"ts": "S1D5", "df": 0.017798, "ys": 0.020548}, {"ts": "S2D1", "df": 0.064752, "ys": 0.063014}, {"ts": "S2D2", "df": 0.112587, "ys": 0.115525}, {"ts": "S2D3", "df": 0.033108, "ys": 0.031507}, {"ts": "S2D4", "df": 0.02353, "ys": 0.021005}, {"ts": "S2D5", "df": 0.020671, "ys": 0.021005}, {"ts": "S3D1", "df": 0.094008, "ys": 0.083562}, {"ts": "S3D2", "df": 0.155291, "ys": 0.153196}, {"ts": "S3D3", "df": 0.044522, "ys": 0.041781}, {"ts": "S3D4", "df": 0.032875, "ys": 0.027854}, {"ts": "S3D5", "df": 0.029713, "ys": 0.027854}, {"ts": "S4D1", "df": 0.039096, "ys": 0.041781}, {"ts": "S4D2", "df": 0.069449, "ys": 0.076598}, {"ts": "S4D3", "df": 0.021398, "ys": 0.02089}, {"ts": "S4D4", "df": 0.014459, "ys": 0.013927}, {"ts": "S4D5", "df": 0.012663, "ys": 0.013927}], "BTN": [{"ts": "S1D1", "df": 0.034928, "ys": 0.061644}, {"ts": "S1D2", "df": 0.111319, "ys": 0.113014}, {"ts": "S1D3", "df": 0.038136, "ys": 0.030822}, {"ts": "S1D4", "df": 0.026347, "ys": 0.020548}, {"ts": "S1D5", "df": 0.020106, "ys": 0.020548}, {"ts": "S2D1", "df": 0.039627, "ys": 0.063014}, {"ts": "S2D2", "df": 0.107595, "ys": 0.115525}, {"ts": "S2D3", "df": 0.034472, "ys": 0.031507}, {"ts": "S2D4", "df": 0.02475, "ys": 0.021005}, {"ts": "S2D5", "df": 0.01923, "ys": 0.021005}, {"ts": "S3D1", "df": 0.075274, "ys": 0.083562}, {"ts": "S3D2", "df": 0.16126, "ys": 0.153196}, {"ts": "S3D3", "df": 0.045199, "ys": 0.041781}, {"ts": "S3D4", "df": 0.035154, "ys": 0.027854}, {"ts": "S3D5", "df": 0.028272, "ys": 0.027854}, {"ts": "S4D1", "df": 0.034826, "ys": 0.041781}, {"ts": "S4D2", "df": 0.094559, "ys": 0.076598}, {"ts": "S4D3", "df": 0.030295, "ys": 0.02089}, {"ts": "S4D4", "df": 0.021751, "ys": 0.013927}, {"ts": "S4D5", "df": 0.0169, "ys": 0.013927}], "INDEA": [{"ts": "S1D1", "df": 0.048723, "ys": 0.061644}, {"ts": "S1D2", "df": 0.10466, "ys": 0.113014}, {"ts": "S1D3", "df": 0.030937, "ys": 0.030822}, {"ts": "S1D4", "df": 0.019843, "ys": 0.020548}, {"ts": "S1D5", "df": 0.017752, "ys": 0.020548}, {"ts": "S2D1", "df": 0.076027, "ys": 0.063014}, {"ts": "S2D2", "df": 0.139916, "ys": 0.115525}, {"ts": "S2D3", "df": 0.039923, "ys": 0.031507}, {"ts": "S2D4", "df": 0.027702, "ys": 0.021005}, {"ts": "S2D5", "df": 0.027117, "ys": 0.021005}, {"ts": "S3D1", "df": 0.086477, "ys": 0.083562}, {"ts": "S3D2", "df": 0.152199, "ys": 0.153196}, {"ts": "S3D3", "df": 0.042594, "ys": 0.041781}, {"ts": "S3D4", "df": 0.030575, "ys": 0.027854}, {"ts": "S3D5", "df": 0.030862, "ys": 0.027854}, {"ts": "S4D1", "df": 0.029786, "ys": 0.041781}, {"ts": "S4D2", "df": 0.055899, "ys": 0.076598}, {"ts": "S4D3", "df": 0.017187, "ys": 0.02089}, {"ts": "S4D4", "df": 0.011189, "ys": 0.013927}, {"ts": "S4D5", "df": 0.010633, "ys": 0.013927}], "INDNE": [{"ts": "S1D1", "df": 0.044462, "ys": 0.061644}, {"ts": "S1D2", "df": 0.107846, "ys": 0.113014}, {"ts": "S1D3", "df": 0.037489, "ys": 0.030822}, {"ts": "S1D4", "df": 0.023155, "ys": 0.020548}, {"ts": "S1D5", "df": 0.018698, "ys": 0.020548}, {"ts": "S2D1", "df": 0.060568, "ys": 0.063014}, {"ts": "S2D2", "df": 0.128058, "ys": 0.115525}, {"ts": "S2D3", "df": 0.042601, "ys": 0.031507}, {"ts": "S2D4", "df": 0.028588, "ys": 0.021005}, {"ts": "S2D5", "df": 0.024754, "ys": 0.021005}, {"ts": "S3D1", "df": 0.084744, "ys": 0.083562}, {"ts": "S3D2", "df": 0.153413, "ys": 0.153196}, {"ts": "S3D3", "df": 0.049907, "ys": 0.041781}, {"ts": "S3D4", "df": 0.035333, "ys": 0.027854}, {"ts": "S3D5", "df": 0.03325, "ys": 0.027854}, {"ts": "S4D1", "df": 0.026541, "ys": 0.041781}, {"ts": "S4D2", "df": 0.057236, "ys": 0.076598}, {"ts": "S4D3", "df": 0.020527, "ys": 0.02089}, {"ts": "S4D4", "df": 0.012305, "ys": 0.013927}, {"ts": "S4D5", "df": 0.010525, "ys": 0.013927}], "INDNO": [{"ts": "S1D1", "df": 0.044574, "ys": 0.061644}, {"ts": "S1D2", "df": 0.118547, "ys": 0.113014}, {"ts": "S1D3", "df": 0.031655, "ys": 0.030822}, {"ts": "S1D4", "df": 0.0201, "ys": 0.020548}, {"ts": "S1D5", "df": 0.017245, "ys": 0.020548}, {"ts": "S2D1", "df": 0.065498, "ys": 0.063014}, {"ts": "S2D2", "df": 0.132266, "ys": 0.115525}, {"ts": "S2D3", "df": 0.035717, "ys": 0.031507}, {"ts": "S2D4", "df": 0.025044, "ys": 0.021005}, {"ts": "S2D5", "df": 0.024058, "ys": 0.021005}, {"ts": "S3D1", "df": 0.088897, "ys": 0.083562}, {"ts": "S3D2", "df": 0.165349, "ys": 0.153196}, {"ts": "S3D3", "df": 0.044472, "ys": 0.041781}, {"ts": "S3D4", "df": 0.031887, "ys": 0.027854}, {"ts": "S3D5", "df": 0.03223, "ys": 0.027854}, {"ts": "S4D1", "df": 0.026806, "ys": 0.041781}, {"ts": "S4D2", "df": 0.059287, "ys": 0.076598}, {"ts": "S4D3", "df": 0.016459, "ys": 0.02089}, {"ts": "S4D4", "df": 0.010289, "ys": 0.013927}, {"ts": "S4D5", "df": 0.009619, "ys": 0.013927}], "INDSO": [{"ts": "S1D1", "df": 0.055383, "ys": 0.061644}, {"ts": "S1D2", "df": 0.134084, "ys": 0.113014}, {"ts": "S1D3", "df": 0.031945, "ys": 0.030822}, {"ts": "S1D4", "df": 0.01936, "ys": 0.020548}, {"ts": "S1D5", "df": 0.018798, "ys": 0.020548}, {"ts": "S2D1", "df": 0.074409, "ys": 0.063014}, {"ts": "S2D2", "df": 0.160174, "ys": 0.115525}, {"ts": "S2D3", "df": 0.039631, "ys": 0.031507}, {"ts": "S2D4", "df": 0.02555, "ys": 0.021005}, {"ts": "S2D5", "df": 0.026123, "ys": 0.021005}, {"ts": "S3D1", "df": 0.064754, "ys": 0.083562}, {"ts": "S3D2", "df": 0.142434, "ys": 0.153196}, {"ts": "S3D3", "df": 0.036074, "ys": 0.041781}, {"ts": "S3D4", "df": 0.023795, "ys": 0.027854}, {"ts": "S3D5", "df": 0.023304, "ys": 0.027854}, {"ts": "S4D1", "df": 0.027046, "ys": 0.041781}, {"ts": "S4D2", "df": 0.061916, "ys": 0.076598}, {"ts": "S4D3", "df": 0.015792, "ys": 0.02089}, {"ts": "S4D4", "df": 0.009952, "ys": 0.013927}, {"ts": "S4D5", "df": 0.009476, "ys": 0.013927}], "INDWE": [{"ts": "S1D1", "df": 0.057284, "ys": 0.061644}, {"ts": "S1D2", "df": 0.134254, "ys": 0.113014}, {"ts": "S1D3", "df": 0.035122, "ys": 0.030822}, {"ts": "S1D4", "df": 0.020769, "ys": 0.020548}, {"ts": "S1D5", "df": 0.019888, "ys": 0.020548}, {"ts": "S2D1", "df": 0.074776, "ys": 0.063014}, {"ts": "S2D2", "df": 0.148193, "ys": 0.115525}, {"ts": "S2D3", "df": 0.039923, "ys": 0.031507}, {"ts": "S2D4", "df": 0.025602, "ys": 0.021005}, {"ts": "S2D5", "df": 0.02581, "ys": 0.021005}, {"ts": "S3D1", "df": 0.068021, "ys": 0.083562}, {"ts": "S3D2", "df": 0.132602, "ys": 0.153196}, {"ts": "S3D3", "df": 0.036434, "ys": 0.041781}, {"ts": "S3D4", "df": 0.023941, "ys": 0.027854}, {"ts": "S3D5", "df": 0.023795, "ys": 0.027854}, {"ts": "S4D1", "df": 0.030439, "ys": 0.041781}, {"ts": "S4D2", "df": 0.064627, "ys": 0.076598}, {"ts": "S4D3", "df": 0.017445, "ys": 0.02089}, {"ts": "S4D4", "df": 0.010545, "ys": 0.013927}, {"ts": "S4D5", "df": 0.010529, "ys": 0.013927}], "LKA": [{"ts": "S1D1", "df": 0.050231, "ys": 0.061644}, {"ts": "S1D2", "df": 0.11699, "ys": 0.113014}, {"ts": "S1D3", "df": 0.035472, "ys": 0.030822}, {"ts": "S1D4", "df": 0.021719, "ys": 0.020548}, {"ts": "S1D5", "df": 0.018738, "ys": 0.020548}, {"ts": "S2D1", "df": 0.053122, "ys": 0.063014}, {"ts": "S2D2", "df": 0.118786, "ys": 0.115525}, {"ts": "S2D3", "df": 0.038771, "ys": 0.031507}, {"ts": "S2D4", "df": 0.024217, "ys": 0.021005}, {"ts": "S2D5", "df": 0.019836, "ys": 0.021005}, {"ts": "S3D1", "df": 0.071571, "ys": 0.083562}, {"ts": "S3D2", "df": 0.159638, "ys": 0.153196}, {"ts": "S3D3", "df": 0.05212, "ys": 0.041781}, {"ts": "S3D4", "df": 0.032529, "ys": 0.027854}, {"ts": "S3D5", "df": 0.026734, "ys": 0.027854}, {"ts": "S4D1", "df": 0.032126, "ys": 0.041781}, {"ts": "S4D2", "df": 0.075434, "ys": 0.076598}, {"ts": "S4D3", "df": 0.025296, "ys": 0.02089}, {"ts": "S4D4", "df": 0.014801, "ys": 0.013927}, {"ts": "S4D5", "df": 0.011868, "ys": 0.013927}], "MDV": [{"ts": "S1D1", "df": 0.047848, "ys": 0.061644}, {"ts": "S1D2", "df": 0.110259, "ys": 0.113014}, {"ts": "S1D3", "df": 0.031668, "ys": 0.030822}, {"ts": "S1D4", "df": 0.020803, "ys": 0.020548}, {"ts": "S1D5", "df": 0.020572, "ys": 0.020548}, {"ts": "S2D1", "df": 0.054673, "ys": 0.063014}, {"ts": "S2D2", "df": 0.125985, "ys": 0.115525}, {"ts": "S2D3", "df": 0.036184, "ys": 0.031507}, {"ts": "S2D4", "df": 0.023771, "ys": 0.021005}, {"ts": "S2D5", "df": 0.023507, "ys": 0.021005}, {"ts": "S3D1", "df": 0.070036, "ys": 0.083562}, {"ts": "S3D2", "df": 0.161388, "ys": 0.153196}, {"ts": "S3D3", "df": 0.046353, "ys": 0.041781}, {"ts": "S3D4", "df": 0.030451, "ys": 0.027854}, {"ts": "S3D5", "df": 0.030112, "ys": 0.027854}, {"ts": "S4D1", "df": 0.034443, "ys": 0.041781}, {"ts": "S4D2", "df": 0.079368, "ys": 0.076598}, {"ts": "S4D3", "df": 0.022795, "ys": 0.02089}, {"ts": "S4D4", "df": 0.014975, "ys": 0.013927}, {"ts": "S4D5", "df": 0.014809, "ys": 0.013927}], "NPL": [{"ts": "S1D1", "df": 0.042472, "ys": 0.061644}, {"ts": "S1D2", "df": 0.103494, "ys": 0.113014}, {"ts": "S1D3", "df": 0.041418, "ys": 0.030822}, {"ts": "S1D4", "df": 0.02151, "ys": 0.020548}, {"ts": "S1D5", "df": 0.015906, "ys": 0.020548}, {"ts": "S2D1", "df": 0.055876, "ys": 0.063014}, {"ts": "S2D2", "df": 0.120771, "ys": 0.115525}, {"ts": "S2D3", "df": 0.039647, "ys": 0.031507}, {"ts": "S2D4", "df": 0.027186, "ys": 0.021005}, {"ts": "S2D5", "df": 0.01942, "ys": 0.021005}, {"ts": "S3D1", "df": 0.082841, "ys": 0.083562}, {"ts": "S3D2", "df": 0.177665, "ys": 0.153196}, {"ts": "S3D3", "df": 0.063697, "ys": 0.041781}, {"ts": "S3D4", "df": 0.030001, "ys": 0.027854}, {"ts": "S3D5", "df": 0.023297, "ys": 0.027854}, {"ts": "S4D1", "df": 0.028002, "ys": 0.041781}, {"ts": "S4D2", "df": 0.062911, "ys": 0.076598}, {"ts": "S4D3", "df": 0.023548, "ys": 0.02089}, {"ts": "S4D4", "df": 0.011552, "ys": 0.013927}, {"ts": "S4D5", "df": 0.008787, "ys": 0.013927}]}, "cf": {"BGD": {"Gas": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "Coal": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "Oil_HFO": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "Oil_HSD": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "Hydro": [{"ts": "S1D1", "v": 0.2057}, {"ts": "S1D2", "v": 0.2087}, {"ts": "S1D3", "v": 0.2122}, {"ts": "S1D4", "v": 0.2142}, {"ts": "S1D5", "v": 0.2128}, {"ts": "S2D1", "v": 0.1212}, {"ts": "S2D2", "v": 0.1394}, {"ts": "S2D3", "v": 0.1497}, {"ts": "S2D4", "v": 0.1532}, {"ts": "S2D5", "v": 0.1305}, {"ts": "S3D1", "v": 0.7081}, {"ts": "S3D2", "v": 0.7048}, {"ts": "S3D3", "v": 0.713}, {"ts": "S3D4", "v": 0.7238}, {"ts": "S3D5", "v": 0.7087}, {"ts": "S4D1", "v": 0.6734}, {"ts": "S4D2", "v": 0.6637}, {"ts": "S4D3", "v": 0.6682}, {"ts": "S4D4", "v": 0.6768}, {"ts": "S4D5", "v": 0.6779}], "Solar": [{"ts": "S1D1", "v": 0.0}, {"ts": "S1D2", "v": 0.3843}, {"ts": "S1D3", "v": 0.0003}, {"ts": "S1D4", "v": 0.0}, {"ts": "S1D5", "v": 0.0}, {"ts": "S2D1", "v": 0.0}, {"ts": "S2D2", "v": 0.4101}, {"ts": "S2D3", "v": 0.0152}, {"ts": "S2D4", "v": 0.0}, {"ts": "S2D5", "v": 0.0}, {"ts": "S3D1", "v": 0.0001}, {"ts": "S3D2", "v": 0.3112}, {"ts": "S3D3", "v": 0.0152}, {"ts": "S3D4", "v": 0.0}, {"ts": "S3D5", "v": 0.0}, {"ts": "S4D1", "v": 0.0}, {"ts": "S4D2", "v": 0.373}, {"ts": "S4D3", "v": 0.0009}, {"ts": "S4D4", "v": 0.0}, {"ts": "S4D5", "v": 0.0}], "Wind": [{"ts": "S1D1", "v": 0.1827}, {"ts": "S1D2", "v": 0.0697}, {"ts": "S1D3", "v": 0.1319}, {"ts": "S1D4", "v": 0.1849}, {"ts": "S1D5", "v": 0.2043}, {"ts": "S2D1", "v": 0.3122}, {"ts": "S2D2", "v": 0.1848}, {"ts": "S2D3", "v": 0.3139}, {"ts": "S2D4", "v": 0.4406}, {"ts": "S2D5", "v": 0.4172}, {"ts": "S3D1", "v": 0.3461}, {"ts": "S3D2", "v": 0.3083}, {"ts": "S3D3", "v": 0.3687}, {"ts": "S3D4", "v": 0.4172}, {"ts": "S3D5", "v": 0.3947}, {"ts": "S4D1", "v": 0.1246}, {"ts": "S4D2", "v": 0.0607}, {"ts": "S4D3", "v": 0.0818}, {"ts": "S4D4", "v": 0.113}, {"ts": "S4D5", "v": 0.124}], "Import": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}]}, "BTN": {"Hydro": [{"ts": "S1D1", "v": 0.2047}, {"ts": "S1D2", "v": 0.2047}, {"ts": "S1D3", "v": 0.2047}, {"ts": "S1D4", "v": 0.2047}, {"ts": "S1D5", "v": 0.2047}, {"ts": "S2D1", "v": 0.1959}, {"ts": "S2D2", "v": 0.1959}, {"ts": "S2D3", "v": 0.1959}, {"ts": "S2D4", "v": 0.1959}, {"ts": "S2D5", "v": 0.1959}, {"ts": "S3D1", "v": 0.8414}, {"ts": "S3D2", "v": 0.8414}, {"ts": "S3D3", "v": 0.8414}, {"ts": "S3D4", "v": 0.8414}, {"ts": "S3D5", "v": 0.8414}, {"ts": "S4D1", "v": 0.6297}, {"ts": "S4D2", "v": 0.6297}, {"ts": "S4D3", "v": 0.6297}, {"ts": "S4D4", "v": 0.6297}, {"ts": "S4D5", "v": 0.6297}], "Solar": [{"ts": "S1D1", "v": 0.0}, {"ts": "S1D2", "v": 0.522}, {"ts": "S1D3", "v": 0.0009}, {"ts": "S1D4", "v": 0.0}, {"ts": "S1D5", "v": 0.0}, {"ts": "S2D1", "v": 0.0001}, {"ts": "S2D2", "v": 0.499}, {"ts": "S2D3", "v": 0.0195}, {"ts": "S2D4", "v": 0.0}, {"ts": "S2D5", "v": 0.0}, {"ts": "S3D1", "v": 0.0003}, {"ts": "S3D2", "v": 0.3619}, {"ts": "S3D3", "v": 0.0191}, {"ts": "S3D4", "v": 0.0}, {"ts": "S3D5", "v": 0.0}, {"ts": "S4D1", "v": 0.0}, {"ts": "S4D2", "v": 0.4831}, {"ts": "S4D3", "v": 0.0018}, {"ts": "S4D4", "v": 0.0}, {"ts": "S4D5", "v": 0.0}], "Wind": [{"ts": "S1D1", "v": 0.0149}, {"ts": "S1D2", "v": 0.0956}, {"ts": "S1D3", "v": 0.0143}, {"ts": "S1D4", "v": 0.0081}, {"ts": "S1D5", "v": 0.0096}, {"ts": "S2D1", "v": 0.0218}, {"ts": "S2D2", "v": 0.161}, {"ts": "S2D3", "v": 0.0654}, {"ts": "S2D4", "v": 0.036}, {"ts": "S2D5", "v": 0.0352}, {"ts": "S3D1", "v": 0.0505}, {"ts": "S3D2", "v": 0.1485}, {"ts": "S3D3", "v": 0.0991}, {"ts": "S3D4", "v": 0.1008}, {"ts": "S3D5", "v": 0.0868}, {"ts": "S4D1", "v": 0.0123}, {"ts": "S4D2", "v": 0.0632}, {"ts": "S4D3", "v": 0.0217}, {"ts": "S4D4", "v": 0.019}, {"ts": "S4D5", "v": 0.0161}]}, "INDEA": {"Hydro": [{"ts": "S1D1", "v": 0.1485}, {"ts": "S1D2", "v": 0.1485}, {"ts": "S1D3", "v": 0.1485}, {"ts": "S1D4", "v": 0.1485}, {"ts": "S1D5", "v": 0.1485}, {"ts": "S2D1", "v": 0.1835}, {"ts": "S2D2", "v": 0.1835}, {"ts": "S2D3", "v": 0.1835}, {"ts": "S2D4", "v": 0.1835}, {"ts": "S2D5", "v": 0.1835}, {"ts": "S3D1", "v": 0.4013}, {"ts": "S3D2", "v": 0.4013}, {"ts": "S3D3", "v": 0.4013}, {"ts": "S3D4", "v": 0.4013}, {"ts": "S3D5", "v": 0.4013}, {"ts": "S4D1", "v": 0.2673}, {"ts": "S4D2", "v": 0.2673}, {"ts": "S4D3", "v": 0.2673}, {"ts": "S4D4", "v": 0.2673}, {"ts": "S4D5", "v": 0.2673}], "Solar": [{"ts": "S1D1", "v": 0.0001}, {"ts": "S1D2", "v": 0.3836}, {"ts": "S1D3", "v": 0.0}, {"ts": "S1D4", "v": 0.0}, {"ts": "S1D5", "v": 0.0}, {"ts": "S2D1", "v": 0.0065}, {"ts": "S2D2", "v": 0.4218}, {"ts": "S2D3", "v": 0.0001}, {"ts": "S2D4", "v": 0.0}, {"ts": "S2D5", "v": 0.0}, {"ts": "S3D1", "v": 0.0056}, {"ts": "S3D2", "v": 0.2884}, {"ts": "S3D3", "v": 0.0002}, {"ts": "S3D4", "v": 0.0}, {"ts": "S3D5", "v": 0.0}, {"ts": "S4D1", "v": 0.0003}, {"ts": "S4D2", "v": 0.3652}, {"ts": "S4D3", "v": 0.0}, {"ts": "S4D4", "v": 0.0}, {"ts": "S4D5", "v": 0.0}], "Wind": [{"ts": "S1D1", "v": 0.2451}, {"ts": "S1D2", "v": 0.1136}, {"ts": "S1D3", "v": 0.1678}, {"ts": "S1D4", "v": 0.156}, {"ts": "S1D5", "v": 0.1838}, {"ts": "S2D1", "v": 0.3444}, {"ts": "S2D2", "v": 0.2518}, {"ts": "S2D3", "v": 0.4954}, {"ts": "S2D4", "v": 0.4743}, {"ts": "S2D5", "v": 0.4262}, {"ts": "S3D1", "v": 0.3355}, {"ts": "S3D2", "v": 0.3162}, {"ts": "S3D3", "v": 0.4346}, {"ts": "S3D4", "v": 0.4474}, {"ts": "S3D5", "v": 0.4112}, {"ts": "S4D1", "v": 0.1851}, {"ts": "S4D2", "v": 0.0863}, {"ts": "S4D3", "v": 0.1103}, {"ts": "S4D4", "v": 0.1273}, {"ts": "S4D5", "v": 0.1416}], "COA": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "GAS": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "OIL": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "NGA": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}]}, "INDNE": {"Hydro": [{"ts": "S1D1", "v": 0.1921}, {"ts": "S1D2", "v": 0.1921}, {"ts": "S1D3", "v": 0.1921}, {"ts": "S1D4", "v": 0.1921}, {"ts": "S1D5", "v": 0.1921}, {"ts": "S2D1", "v": 0.2449}, {"ts": "S2D2", "v": 0.2449}, {"ts": "S2D3", "v": 0.2449}, {"ts": "S2D4", "v": 0.2449}, {"ts": "S2D5", "v": 0.2449}, {"ts": "S3D1", "v": 0.6358}, {"ts": "S3D2", "v": 0.6358}, {"ts": "S3D3", "v": 0.6358}, {"ts": "S3D4", "v": 0.6358}, {"ts": "S3D5", "v": 0.6358}, {"ts": "S4D1", "v": 0.4457}, {"ts": "S4D2", "v": 0.4457}, {"ts": "S4D3", "v": 0.4457}, {"ts": "S4D4", "v": 0.4457}, {"ts": "S4D5", "v": 0.4457}], "Solar": [{"ts": "S1D1", "v": 0.0005}, {"ts": "S1D2", "v": 0.3931}, {"ts": "S1D3", "v": 0.0}, {"ts": "S1D4", "v": 0.0}, {"ts": "S1D5", "v": 0.0}, {"ts": "S2D1", "v": 0.0123}, {"ts": "S2D2", "v": 0.4177}, {"ts": "S2D3", "v": 0.0}, {"ts": "S2D4", "v": 0.0}, {"ts": "S2D5", "v": 0.0}, {"ts": "S3D1", "v": 0.0112}, {"ts": "S3D2", "v": 0.3159}, {"ts": "S3D3", "v": 0.0}, {"ts": "S3D4", "v": 0.0}, {"ts": "S3D5", "v": 0.0}, {"ts": "S4D1", "v": 0.0018}, {"ts": "S4D2", "v": 0.3884}, {"ts": "S4D3", "v": 0.0}, {"ts": "S4D4", "v": 0.0}, {"ts": "S4D5", "v": 0.0}], "Wind": [{"ts": "S1D1", "v": 0.3117}, {"ts": "S1D2", "v": 0.1364}, {"ts": "S1D3", "v": 0.2498}, {"ts": "S1D4", "v": 0.3372}, {"ts": "S1D5", "v": 0.3538}, {"ts": "S2D1", "v": 0.4255}, {"ts": "S2D2", "v": 0.2768}, {"ts": "S2D3", "v": 0.335}, {"ts": "S2D4", "v": 0.4076}, {"ts": "S2D5", "v": 0.4476}, {"ts": "S3D1", "v": 0.2242}, {"ts": "S3D2", "v": 0.1717}, {"ts": "S3D3", "v": 0.2026}, {"ts": "S3D4", "v": 0.234}, {"ts": "S3D5", "v": 0.2392}, {"ts": "S4D1", "v": 0.2287}, {"ts": "S4D2", "v": 0.0927}, {"ts": "S4D3", "v": 0.1576}, {"ts": "S4D4", "v": 0.2241}, {"ts": "S4D5", "v": 0.2401}], "COA": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "GAS": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "OIL": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "NGA": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}]}, "INDNO": {"Hydro": [{"ts": "S1D1", "v": 0.2183}, {"ts": "S1D2", "v": 0.2183}, {"ts": "S1D3", "v": 0.2183}, {"ts": "S1D4", "v": 0.2183}, {"ts": "S1D5", "v": 0.2183}, {"ts": "S2D1", "v": 0.3633}, {"ts": "S2D2", "v": 0.3633}, {"ts": "S2D3", "v": 0.3633}, {"ts": "S2D4", "v": 0.3633}, {"ts": "S2D5", "v": 0.3633}, {"ts": "S3D1", "v": 0.7105}, {"ts": "S3D2", "v": 0.7105}, {"ts": "S3D3", "v": 0.7105}, {"ts": "S3D4", "v": 0.7105}, {"ts": "S3D5", "v": 0.7105}, {"ts": "S4D1", "v": 0.3203}, {"ts": "S4D2", "v": 0.3203}, {"ts": "S4D3", "v": 0.3203}, {"ts": "S4D4", "v": 0.3203}, {"ts": "S4D5", "v": 0.3203}], "Solar": [{"ts": "S1D1", "v": 0.0}, {"ts": "S1D2", "v": 0.379}, {"ts": "S1D3", "v": 0.0}, {"ts": "S1D4", "v": 0.0}, {"ts": "S1D5", "v": 0.0}, {"ts": "S2D1", "v": 0.0005}, {"ts": "S2D2", "v": 0.4539}, {"ts": "S2D3", "v": 0.0142}, {"ts": "S2D4", "v": 0.0}, {"ts": "S2D5", "v": 0.0}, {"ts": "S3D1", "v": 0.0013}, {"ts": "S3D2", "v": 0.4049}, {"ts": "S3D3", "v": 0.0179}, {"ts": "S3D4", "v": 0.0}, {"ts": "S3D5", "v": 0.0}, {"ts": "S4D1", "v": 0.0}, {"ts": "S4D2", "v": 0.382}, {"ts": "S4D3", "v": 0.0005}, {"ts": "S4D4", "v": 0.0}, {"ts": "S4D5", "v": 0.0}], "Wind": [{"ts": "S1D1", "v": 0.3525}, {"ts": "S1D2", "v": 0.1845}, {"ts": "S1D3", "v": 0.324}, {"ts": "S1D4", "v": 0.3769}, {"ts": "S1D5", "v": 0.3898}, {"ts": "S2D1", "v": 0.3756}, {"ts": "S2D2", "v": 0.2268}, {"ts": "S2D3", "v": 0.3693}, {"ts": "S2D4", "v": 0.4252}, {"ts": "S2D5", "v": 0.4331}, {"ts": "S3D1", "v": 0.2661}, {"ts": "S3D2", "v": 0.2036}, {"ts": "S3D3", "v": 0.1996}, {"ts": "S3D4", "v": 0.2501}, {"ts": "S3D5", "v": 0.2795}, {"ts": "S4D1", "v": 0.24}, {"ts": "S4D2", "v": 0.138}, {"ts": "S4D3", "v": 0.2268}, {"ts": "S4D4", "v": 0.2531}, {"ts": "S4D5", "v": 0.2681}], "COA": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "GAS": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "OIL": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "NGA": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}]}, "INDSO": {"Hydro": [{"ts": "S1D1", "v": 0.241}, {"ts": "S1D2", "v": 0.241}, {"ts": "S1D3", "v": 0.241}, {"ts": "S1D4", "v": 0.241}, {"ts": "S1D5", "v": 0.241}, {"ts": "S2D1", "v": 0.2191}, {"ts": "S2D2", "v": 0.2191}, {"ts": "S2D3", "v": 0.2191}, {"ts": "S2D4", "v": 0.2191}, {"ts": "S2D5", "v": 0.2191}, {"ts": "S3D1", "v": 0.3838}, {"ts": "S3D2", "v": 0.3838}, {"ts": "S3D3", "v": 0.3838}, {"ts": "S3D4", "v": 0.3838}, {"ts": "S3D5", "v": 0.3838}, {"ts": "S4D1", "v": 0.3398}, {"ts": "S4D2", "v": 0.3398}, {"ts": "S4D3", "v": 0.3398}, {"ts": "S4D4", "v": 0.3398}, {"ts": "S4D5", "v": 0.3398}], "Solar": [{"ts": "S1D1", "v": 0.0}, {"ts": "S1D2", "v": 0.4695}, {"ts": "S1D3", "v": 0.0013}, {"ts": "S1D4", "v": 0.0}, {"ts": "S1D5", "v": 0.0}, {"ts": "S2D1", "v": 0.0}, {"ts": "S2D2", "v": 0.4299}, {"ts": "S2D3", "v": 0.0068}, {"ts": "S2D4", "v": 0.0}, {"ts": "S2D5", "v": 0.0}, {"ts": "S3D1", "v": 0.0}, {"ts": "S3D2", "v": 0.3507}, {"ts": "S3D3", "v": 0.0067}, {"ts": "S3D4", "v": 0.0}, {"ts": "S3D5", "v": 0.0}, {"ts": "S4D1", "v": 0.0}, {"ts": "S4D2", "v": 0.3971}, {"ts": "S4D3", "v": 0.0007}, {"ts": "S4D4", "v": 0.0}, {"ts": "S4D5", "v": 0.0}], "Wind": [{"ts": "S1D1", "v": 0.3006}, {"ts": "S1D2", "v": 0.2205}, {"ts": "S1D3", "v": 0.5435}, {"ts": "S1D4", "v": 0.6461}, {"ts": "S1D5", "v": 0.5424}, {"ts": "S2D1", "v": 0.3022}, {"ts": "S2D2", "v": 0.1894}, {"ts": "S2D3", "v": 0.3925}, {"ts": "S2D4", "v": 0.5299}, {"ts": "S2D5", "v": 0.5054}, {"ts": "S3D1", "v": 0.4714}, {"ts": "S3D2", "v": 0.5887}, {"ts": "S3D3", "v": 0.4944}, {"ts": "S3D4", "v": 0.4866}, {"ts": "S3D5", "v": 0.4821}, {"ts": "S4D1", "v": 0.2601}, {"ts": "S4D2", "v": 0.2614}, {"ts": "S4D3", "v": 0.3534}, {"ts": "S4D4", "v": 0.3876}, {"ts": "S4D5", "v": 0.342}], "COA": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "GAS": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "OIL": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "NGA": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}]}, "INDWE": {"Hydro": [{"ts": "S1D1", "v": 0.2267}, {"ts": "S1D2", "v": 0.2267}, {"ts": "S1D3", "v": 0.2267}, {"ts": "S1D4", "v": 0.2267}, {"ts": "S1D5", "v": 0.2267}, {"ts": "S2D1", "v": 0.2166}, {"ts": "S2D2", "v": 0.2166}, {"ts": "S2D3", "v": 0.2166}, {"ts": "S2D4", "v": 0.2166}, {"ts": "S2D5", "v": 0.2166}, {"ts": "S3D1", "v": 0.4023}, {"ts": "S3D2", "v": 0.4023}, {"ts": "S3D3", "v": 0.4023}, {"ts": "S3D4", "v": 0.4023}, {"ts": "S3D5", "v": 0.4023}, {"ts": "S4D1", "v": 0.2876}, {"ts": "S4D2", "v": 0.2876}, {"ts": "S4D3", "v": 0.2876}, {"ts": "S4D4", "v": 0.2876}, {"ts": "S4D5", "v": 0.2876}], "Solar": [{"ts": "S1D1", "v": 0.0}, {"ts": "S1D2", "v": 0.435}, {"ts": "S1D3", "v": 0.0052}, {"ts": "S1D4", "v": 0.0}, {"ts": "S1D5", "v": 0.0}, {"ts": "S2D1", "v": 0.0}, {"ts": "S2D2", "v": 0.4602}, {"ts": "S2D3", "v": 0.0265}, {"ts": "S2D4", "v": 0.0}, {"ts": "S2D5", "v": 0.0}, {"ts": "S3D1", "v": 0.0}, {"ts": "S3D2", "v": 0.3474}, {"ts": "S3D3", "v": 0.0203}, {"ts": "S3D4", "v": 0.0}, {"ts": "S3D5", "v": 0.0}, {"ts": "S4D1", "v": 0.0}, {"ts": "S4D2", "v": 0.3898}, {"ts": "S4D3", "v": 0.0057}, {"ts": "S4D4", "v": 0.0}, {"ts": "S4D5", "v": 0.0}], "Wind": [{"ts": "S1D1", "v": 0.3138}, {"ts": "S1D2", "v": 0.161}, {"ts": "S1D3", "v": 0.3655}, {"ts": "S1D4", "v": 0.3304}, {"ts": "S1D5", "v": 0.2944}, {"ts": "S2D1", "v": 0.1224}, {"ts": "S2D2", "v": 0.1938}, {"ts": "S2D3", "v": 0.4287}, {"ts": "S2D4", "v": 0.229}, {"ts": "S2D5", "v": 0.1534}, {"ts": "S3D1", "v": 0.4692}, {"ts": "S3D2", "v": 0.4959}, {"ts": "S3D3", "v": 0.485}, {"ts": "S3D4", "v": 0.4478}, {"ts": "S3D5", "v": 0.4529}, {"ts": "S4D1", "v": 0.3102}, {"ts": "S4D2", "v": 0.1482}, {"ts": "S4D3", "v": 0.1689}, {"ts": "S4D4", "v": 0.2193}, {"ts": "S4D5", "v": 0.2387}], "COA": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "GAS": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "OIL": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "NGA": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}]}, "LKA": {"Coal": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "Oil_CEB": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "Oil_IPP": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "Hydro": [{"ts": "S1D1", "v": 0.3357}, {"ts": "S1D2", "v": 0.4799}, {"ts": "S1D3", "v": 0.5725}, {"ts": "S1D4", "v": 0.505}, {"ts": "S1D5", "v": 0.4024}, {"ts": "S2D1", "v": 0.1692}, {"ts": "S2D2", "v": 0.2822}, {"ts": "S2D3", "v": 0.469}, {"ts": "S2D4", "v": 0.3852}, {"ts": "S2D5", "v": 0.2226}, {"ts": "S3D1", "v": 0.1814}, {"ts": "S3D2", "v": 0.2666}, {"ts": "S3D3", "v": 0.3954}, {"ts": "S3D4", "v": 0.3318}, {"ts": "S3D5", "v": 0.2134}, {"ts": "S4D1", "v": 0.4793}, {"ts": "S4D2", "v": 0.6397}, {"ts": "S4D3", "v": 0.789}, {"ts": "S4D4", "v": 0.7056}, {"ts": "S4D5", "v": 0.553}], "Wind": [{"ts": "S1D1", "v": 0.3602}, {"ts": "S1D2", "v": 0.265}, {"ts": "S1D3", "v": 0.3072}, {"ts": "S1D4", "v": 0.3868}, {"ts": "S1D5", "v": 0.4004}, {"ts": "S2D1", "v": 0.2454}, {"ts": "S2D2", "v": 0.2115}, {"ts": "S2D3", "v": 0.2466}, {"ts": "S2D4", "v": 0.2399}, {"ts": "S2D5", "v": 0.2494}, {"ts": "S3D1", "v": 0.6386}, {"ts": "S3D2", "v": 0.5942}, {"ts": "S3D3", "v": 0.5635}, {"ts": "S3D4", "v": 0.5899}, {"ts": "S3D5", "v": 0.621}, {"ts": "S4D1", "v": 0.2973}, {"ts": "S4D2", "v": 0.2738}, {"ts": "S4D3", "v": 0.2805}, {"ts": "S4D4", "v": 0.2857}, {"ts": "S4D5", "v": 0.2962}], "Solar": [{"ts": "S1D1", "v": 0.0}, {"ts": "S1D2", "v": 0.4099}, {"ts": "S1D3", "v": 0.0002}, {"ts": "S1D4", "v": 0.0}, {"ts": "S1D5", "v": 0.0}, {"ts": "S2D1", "v": 0.0}, {"ts": "S2D2", "v": 0.3603}, {"ts": "S2D3", "v": 0.0017}, {"ts": "S2D4", "v": 0.0}, {"ts": "S2D5", "v": 0.0}, {"ts": "S3D1", "v": 0.0}, {"ts": "S3D2", "v": 0.3306}, {"ts": "S3D3", "v": 0.0022}, {"ts": "S3D4", "v": 0.0}, {"ts": "S3D5", "v": 0.0}, {"ts": "S4D1", "v": 0.0}, {"ts": "S4D2", "v": 0.3209}, {"ts": "S4D3", "v": 0.0001}, {"ts": "S4D4", "v": 0.0}, {"ts": "S4D5", "v": 0.0}], "Biomass": [{"ts": "S1D1", "v": 0.3235}, {"ts": "S1D2", "v": 0.3157}, {"ts": "S1D3", "v": 0.314}, {"ts": "S1D4", "v": 0.3112}, {"ts": "S1D5", "v": 0.311}, {"ts": "S2D1", "v": 0.188}, {"ts": "S2D2", "v": 0.1834}, {"ts": "S2D3", "v": 0.1836}, {"ts": "S2D4", "v": 0.1902}, {"ts": "S2D5", "v": 0.1888}, {"ts": "S3D1", "v": 0.3503}, {"ts": "S3D2", "v": 0.3454}, {"ts": "S3D3", "v": 0.3513}, {"ts": "S3D4", "v": 0.3558}, {"ts": "S3D5", "v": 0.3545}, {"ts": "S4D1", "v": 0.2778}, {"ts": "S4D2", "v": 0.285}, {"ts": "S4D3", "v": 0.2982}, {"ts": "S4D4", "v": 0.3064}, {"ts": "S4D5", "v": 0.3001}]}, "MDV": {"Diesel": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}], "Solar": [{"ts": "S1D1", "v": 0.0}, {"ts": "S1D2", "v": 0.3816}, {"ts": "S1D3", "v": 0.0139}, {"ts": "S1D4", "v": 0.0}, {"ts": "S1D5", "v": 0.0}, {"ts": "S2D1", "v": 0.0}, {"ts": "S2D2", "v": 0.3639}, {"ts": "S2D3", "v": 0.0145}, {"ts": "S2D4", "v": 0.0}, {"ts": "S2D5", "v": 0.0}, {"ts": "S3D1", "v": 0.0}, {"ts": "S3D2", "v": 0.3148}, {"ts": "S3D3", "v": 0.0116}, {"ts": "S3D4", "v": 0.0}, {"ts": "S3D5", "v": 0.0}, {"ts": "S4D1", "v": 0.0}, {"ts": "S4D2", "v": 0.335}, {"ts": "S4D3", "v": 0.0111}, {"ts": "S4D4", "v": 0.0}, {"ts": "S4D5", "v": 0.0}], "Wind": [{"ts": "S1D1", "v": 0.2197}, {"ts": "S1D2", "v": 0.233}, {"ts": "S1D3", "v": 0.242}, {"ts": "S1D4", "v": 0.2447}, {"ts": "S1D5", "v": 0.233}, {"ts": "S2D1", "v": 0.2355}, {"ts": "S2D2", "v": 0.2342}, {"ts": "S2D3", "v": 0.2451}, {"ts": "S2D4", "v": 0.2326}, {"ts": "S2D5", "v": 0.2283}, {"ts": "S3D1", "v": 0.2358}, {"ts": "S3D2", "v": 0.229}, {"ts": "S3D3", "v": 0.2449}, {"ts": "S3D4", "v": 0.2263}, {"ts": "S3D5", "v": 0.218}, {"ts": "S4D1", "v": 0.3093}, {"ts": "S4D2", "v": 0.3131}, {"ts": "S4D3", "v": 0.3224}, {"ts": "S4D4", "v": 0.2954}, {"ts": "S4D5", "v": 0.2872}]}, "NPL": {"Hydro": [{"ts": "S1D1", "v": 0.39}, {"ts": "S1D2", "v": 0.39}, {"ts": "S1D3", "v": 0.39}, {"ts": "S1D4", "v": 0.39}, {"ts": "S1D5", "v": 0.39}, {"ts": "S2D1", "v": 0.358}, {"ts": "S2D2", "v": 0.358}, {"ts": "S2D3", "v": 0.358}, {"ts": "S2D4", "v": 0.358}, {"ts": "S2D5", "v": 0.358}, {"ts": "S3D1", "v": 0.755}, {"ts": "S3D2", "v": 0.755}, {"ts": "S3D3", "v": 0.755}, {"ts": "S3D4", "v": 0.755}, {"ts": "S3D5", "v": 0.755}, {"ts": "S4D1", "v": 0.697}, {"ts": "S4D2", "v": 0.697}, {"ts": "S4D3", "v": 0.697}, {"ts": "S4D4", "v": 0.697}, {"ts": "S4D5", "v": 0.697}], "Solar": [{"ts": "S1D1", "v": 0.0}, {"ts": "S1D2", "v": 0.4604}, {"ts": "S1D3", "v": 0.0}, {"ts": "S1D4", "v": 0.0}, {"ts": "S1D5", "v": 0.0}, {"ts": "S2D1", "v": 0.0054}, {"ts": "S2D2", "v": 0.485}, {"ts": "S2D3", "v": 0.0022}, {"ts": "S2D4", "v": 0.0}, {"ts": "S2D5", "v": 0.0}, {"ts": "S3D1", "v": 0.006}, {"ts": "S3D2", "v": 0.3752}, {"ts": "S3D3", "v": 0.0037}, {"ts": "S3D4", "v": 0.0}, {"ts": "S3D5", "v": 0.0}, {"ts": "S4D1", "v": 0.0}, {"ts": "S4D2", "v": 0.464}, {"ts": "S4D3", "v": 0.0}, {"ts": "S4D4", "v": 0.0}, {"ts": "S4D5", "v": 0.0}], "Wind": [{"ts": "S1D1", "v": 0.0112}, {"ts": "S1D2", "v": 0.0374}, {"ts": "S1D3", "v": 0.0139}, {"ts": "S1D4", "v": 0.0099}, {"ts": "S1D5", "v": 0.0102}, {"ts": "S2D1", "v": 0.0232}, {"ts": "S2D2", "v": 0.0704}, {"ts": "S2D3", "v": 0.0479}, {"ts": "S2D4", "v": 0.0184}, {"ts": "S2D5", "v": 0.0201}, {"ts": "S3D1", "v": 0.0132}, {"ts": "S3D2", "v": 0.0454}, {"ts": "S3D3", "v": 0.0405}, {"ts": "S3D4", "v": 0.0268}, {"ts": "S3D5", "v": 0.021}, {"ts": "S4D1", "v": 0.0057}, {"ts": "S4D2", "v": 0.0133}, {"ts": "S4D3", "v": 0.0079}, {"ts": "S4D4", "v": 0.007}, {"ts": "S4D5", "v": 0.0066}], "Gas": [{"ts": "S1D1", "v": 1.0}, {"ts": "S1D2", "v": 1.0}, {"ts": "S1D3", "v": 1.0}, {"ts": "S1D4", "v": 1.0}, {"ts": "S1D5", "v": 1.0}, {"ts": "S2D1", "v": 1.0}, {"ts": "S2D2", "v": 1.0}, {"ts": "S2D3", "v": 1.0}, {"ts": "S2D4", "v": 1.0}, {"ts": "S2D5", "v": 1.0}, {"ts": "S3D1", "v": 1.0}, {"ts": "S3D2", "v": 1.0}, {"ts": "S3D3", "v": 1.0}, {"ts": "S3D4", "v": 1.0}, {"ts": "S3D5", "v": 1.0}, {"ts": "S4D1", "v": 1.0}, {"ts": "S4D2", "v": 1.0}, {"ts": "S4D3", "v": 1.0}, {"ts": "S4D4", "v": 1.0}, {"ts": "S4D5", "v": 1.0}]}}};
+
+const FABRICS = [
+  {id:'3dp12ts',label:'3dp / 12ts / 8h blocks',ts:12,
+    dayparts:[{code:'D1',label:'Night + dawn',s:0,e:8,type:'night'},{code:'D2',label:'Day core',s:8,e:16,type:'solar'},{code:'D3',label:'Evening + night',s:16,e:24,type:'night'}],
+    phantom:6.75,peakCF:0.491,note:'The 8-hour D1 (00-08) includes 06-08 dawn, crediting 3.8% CF across five dark hours. A solver could dispatch PV at 3 a.m.'},
+  {id:'4dp16ts',label:'4dp / 16ts / 6h blocks',ts:16,
+    dayparts:[{code:'D1',label:'Night',s:0,e:6,type:'night'},{code:'D2',label:'Morning + day',s:6,e:12,type:'solar'},{code:'D3',label:'Afternoon',s:12,e:18,type:'shoulder'},{code:'D4',label:'Evening + night',s:18,e:24,type:'evening'}],
+    phantom:0.15,peakCF:0.402,note:'Equal 6-hour blocks. Dawn and core solar share D2, pulling the mean CF slightly down. Low phantom solar.'},
+  {id:'5dp20ts',label:'5dp / 20ts / adopted',ts:20,canonical:true,
+    dayparts:[{code:'D1',label:'Night',s:0,e:6,type:'night'},{code:'D2',label:'Solar day',s:6,e:17,type:'solar'},{code:'D3',label:'Evening peak',s:17,e:20,type:'shoulder'},{code:'D4',label:'Late evening',s:20,e:22,type:'evening'},{code:'D5',label:'Late night',s:22,e:24,type:'night'}],
+    phantom:0.42,peakCF:0.395,note:'The adopted fabric. The dedicated 06-17 solar block captures the full production curve. Five dayparts balance fidelity against solver size.'},
+  {id:'6dp24ts',label:'6dp / 24ts / sweep winner',ts:24,
+    dayparts:[{code:'D1',label:'Night',s:0,e:5,type:'night'},{code:'D2',label:'Dawn ramp',s:5,e:8,type:'shoulder'},{code:'D3',label:'Solar core',s:8,e:17,type:'solar'},{code:'D4',label:'Evening peak',s:17,e:20,type:'shoulder'},{code:'D5',label:'Late evening',s:20,e:22,type:'evening'},{code:'D6',label:'Late night',s:22,e:24,type:'night'}],
+    phantom:0.28,peakCF:0.450,note:'The sweep winner, rejected for solver cost. Isolates the dawn ramp from the solar core for the sharpest CF resolution. 20% more LP variables.'}
+];
+
+const SEASONS = [
+  {code:'S1',label:'Winter',short:'S1 Winter',days:90},
+  {code:'S2',label:'Pre-monsoon',short:'S2 Pre-mon',days:92},
+  {code:'S3',label:'SW Monsoon',short:'S3 Monsoon',days:122},
+  {code:'S4',label:'Post-monsoon',short:'S4 Post-mon',days:61}
+];
+
+const ZONES = ['BGD','BTN','INDEA','INDNE','INDNO','INDSO','INDWE','LKA','MDV','NPL'];
+const ZONE_NAMES = {BGD:'Bangladesh',BTN:'Bhutan',INDEA:'India East',INDNE:'India NE',INDNO:'India North',INDSO:'India South',INDWE:'India West',LKA:'Sri Lanka',MDV:'Maldives',NPL:'Nepal'};
+
+const typeColor = {solar:'#1d6fb5',shoulder:'#e8d44d',night:'#2c3e50',evening:'#7f8c8d'};
+const typeFg = {solar:'#fff',shoulder:'#2c3e50',night:'#ecf0f1',evening:'#ecf0f1'};
+
+let activeFab = 2;
+let activeZone = 'BGD';
+let activeTech = 'Solar';
+let activeCFZone = 'BGD';
+
+// Grid explorer
+function renderGrid() {
+  const f = FABRICS[activeFab];
+  const tabs = document.getElementById('fabricTabs');
+  tabs.innerHTML = '';
+  FABRICS.forEach((fb,i) => {
+    const b = document.createElement('button');
+    b.className = 'tab' + (i===activeFab?' active':'');
+    b.innerHTML = fb.label + (fb.canonical ? ' <span class="badge badge-canonical">adopted</span>' : ' <span class="badge badge-new">computed</span>');
+    b.onclick = () => { activeFab=i; renderGrid(); };
+    tabs.appendChild(b);
+  });
+
+  const ga = document.getElementById('gridArea');
+  let h = '<div class="ts-grid" style="grid-template-columns:80px repeat('+f.dayparts.length+',1fr)">';
+  h += '<div class="grid-header"></div>';
+  f.dayparts.forEach(dp => {
+    const hrs = dp.e - dp.s;
+    h += '<div class="grid-header">'+dp.code+'<br>'+String(dp.s).padStart(2,'0')+'-'+String(dp.e).padStart(2,'0')+' ('+hrs+'h)</div>';
+  });
+  SEASONS.forEach(s => {
+    h += '<div class="season-label">'+s.short+'<br><span style="font-size:0.7rem;color:#aaa">'+s.days+'d</span></div>';
+    f.dayparts.forEach(dp => {
+      const hrs = dp.e - dp.s;
+      const ys = (s.days * hrs) / (365 * 24);
+      const code = s.code + dp.code;
+      h += '<div class="ts-cell" style="background:'+typeColor[dp.type]+';color:'+typeFg[dp.type]+'">';
+      h += '<div class="code">'+code+'</div>';
+      h += '<div class="val">YS '+ys.toFixed(3)+'</div>';
+      h += '</div>';
+    });
+  });
+  h += '</div>';
+  ga.innerHTML = h;
+
+  const vs20 = (activeFab === 2) ? 'baseline' : ((f.peakCF/0.395-1)*100).toFixed(1)+'%';
+  document.getElementById('statsArea').innerHTML = `
+    <div class="stat"><div class="lab">Timeslices</div><div class="val">${f.ts}</div><div class="sub">${SEASONS.length} seasons x ${f.dayparts.length} dayparts</div></div>
+    <div class="stat"><div class="lab">Phantom solar</div><div class="val">${f.phantom}%</div><div class="sub">Solar credited to dark hours</div></div>
+    <div class="stat"><div class="lab">Peak solar block CF</div><div class="val">${f.peakCF.toFixed(3)}</div><div class="sub">vs adopted: ${vs20}</div></div>
+    <div class="stat"><div class="lab">Build time</div><div class="val">~45s</div><div class="sub">Fabric-independent</div></div>
+  `;
+
+  document.getElementById('noteArea').innerHTML = '<div class="note">'+f.note+'</div>';
+}
+
+// Demand chart
+let demandChart;
+function renderDemandChart() {
+  const zone = activeZone;
+  const dem = DATA.demand[zone];
+  const labels = dem.map(d => d.ts);
+  const df = dem.map(d => d.df * 100);
+  const ys = dem.map(d => d.ys * 100);
+
+  if(demandChart) demandChart.destroy();
+  const ctx = document.getElementById('demandChart').getContext('2d');
+  demandChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {label:'Demand fraction (%)', data:df, backgroundColor:'#0F8B7D', borderRadius:3, barPercentage:0.7},
+        {label:'YearSplit (%)', data:ys, type:'line', borderColor:'#999', borderDash:[5,3], borderWidth:1.5, pointRadius:0, fill:false}
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: {legend:{display:true,position:'bottom',labels:{font:{size:11}}}},
+      scales: {
+        x:{ticks:{font:{size:9},maxRotation:45}},
+        y:{title:{display:true,text:'% of annual total',font:{size:11}},ticks:{font:{size:10}}}
+      }
+    }
+  });
+}
+
+function renderDemandZones() {
+  const el = document.getElementById('demandZones');
+  el.innerHTML = '';
+  ZONES.forEach(z => {
+    const b = document.createElement('button');
+    b.className = 'zone-btn' + (z===activeZone?' active':'');
+    b.textContent = ZONE_NAMES[z] || z;
+    b.onclick = () => { activeZone=z; renderDemandZones(); renderDemandChart(); };
+    el.appendChild(b);
+  });
+}
+
+// CF chart
+let cfChart;
+function renderCFChart() {
+  const zone = activeCFZone;
+  const tech = activeTech;
+  const cfData = DATA.cf[zone]?.[tech];
+  if(!cfData) return;
+  const labels = cfData.map(d => d.ts);
+  const vals = cfData.map(d => d.v);
+  const colors = {Solar:'#e8a817',Hydro:'#2E6E8E',Wind:'#0F8B7D'};
+
+  if(cfChart) cfChart.destroy();
+  const ctx = document.getElementById('cfChart').getContext('2d');
+  cfChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{label:tech+' CF', data:vals, backgroundColor:colors[tech]||'#0F8B7D', borderRadius:3, barPercentage:0.7}]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: {legend:{display:false}},
+      scales: {
+        x:{ticks:{font:{size:9},maxRotation:45}},
+        y:{title:{display:true,text:'Capacity factor',font:{size:11}},min:0,max:1,ticks:{font:{size:10}}}
+      }
+    }
+  });
+}
+
+function setTech(t) {
+  activeTech = t;
+  ['Solar','Hydro','Wind'].forEach(x => {
+    document.getElementById('btn-'+x).className = 'zone-btn'+(x===t?' active':'');
+  });
+  renderCFChart();
+}
+
+function renderCFZones() {
+  const el = document.getElementById('cfZones');
+  el.innerHTML = '';
+  ZONES.forEach(z => {
+    const b = document.createElement('button');
+    b.className = 'zone-btn' + (z===activeCFZone?' active':'');
+    b.textContent = ZONE_NAMES[z] || z;
+    b.onclick = () => { activeCFZone=z; renderCFZones(); renderCFChart(); };
+    el.appendChild(b);
+  });
+}
+
+// Heatmap
+function renderHeatmap() {
+  const ts = DATA.config.timeslices;
+  let h = '<table style="border-collapse:collapse;font-size:0.75rem;min-width:600px">';
+  h += '<tr><th style="padding:6px 8px;background:#f1f5f9;border:1px solid #e2e8f0;font-weight:600">Zone</th>';
+  ts.forEach(t => { h += '<th style="padding:6px 4px;background:#f1f5f9;border:1px solid #e2e8f0;font-weight:500;writing-mode:vertical-rl;text-orientation:mixed;height:60px;font-size:0.7rem">'+t+'</th>'; });
+  h += '</tr>';
+  ZONES.forEach(z => {
+    h += '<tr><td style="padding:6px 8px;border:1px solid #e2e8f0;font-weight:500;white-space:nowrap">'+(ZONE_NAMES[z]||z)+'</td>';
+    const dem = DATA.demand[z];
+    dem.forEach(d => {
+      const dev = (d.df - d.ys) * 100;
+      const maxDev = 3;
+      const intensity = Math.min(Math.abs(dev)/maxDev, 1);
+      let bg;
+      if(dev >= 0) { bg = 'rgba(15,139,125,'+intensity.toFixed(2)+')'; }
+      else { bg = 'rgba(226,75,74,'+intensity.toFixed(2)+')'; }
+      const fg = intensity > 0.5 ? '#fff' : '#333';
+      h += '<td style="padding:4px 3px;border:1px solid #e2e8f0;text-align:center;background:'+bg+';color:'+fg+'" title="'+(ZONE_NAMES[z]||z)+' '+d.ts+': '+(dev>=0?'+':'')+dev.toFixed(2)+' pp">'+(dev>=0?'+':'')+dev.toFixed(1)+'</td>';
+    });
+    h += '</tr>';
+  });
+  h += '</table>';
+  document.getElementById('heatmapArea').innerHTML = h;
+}
+
+// Init
+renderGrid();
+renderDemandZones();
+renderDemandChart();
+renderCFZones();
+renderCFChart();
+renderHeatmap();
+</script>
+</body>
+</html>
