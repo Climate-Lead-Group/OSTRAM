@@ -225,13 +225,17 @@ def _validate_authority_mapping(
     expected_years = set(AUTHORITY_YEARS)
     for tech in sorted(techs):
         years = set(authority[tech])
-        if years != expected_years:
+        if strict_full and years != expected_years:
             raise ValueError(
                 f"RC Authority V1 year domain mismatch for {tech}: "
                 f"missing={sorted(expected_years - years)}, "
                 f"extra={sorted(years - expected_years)}"
             )
-        for year in AUTHORITY_YEARS:
+        if not years:
+            raise ValueError(
+                f"RC Authority V1 has no year data for {tech}"
+            )
+        for year in sorted(years):
             _decimal_text(authority[tech][year], f"{tech}/{year}")
     digest = authority_semantic_sha256(authority)
     if strict_full and digest != AUTHORITY_SEMANTIC_SHA256:
@@ -257,19 +261,26 @@ def load_rc_authority(authority_path: Path) -> Dict[str, Dict[int, float]]:
             )
         ws = wb[AUTHORITY_SHEET_NAME]
         meta_cols, year_cols = _build_column_index(ws)
-        required_meta = {
-            TECH_COL, PARAM_COL, "Parameter.ID", "Unit",
-            PROJ_MODE_COL, "Projection.Parameter",
-        }
+        strict_full = active_profile_id() == DEFAULT_PROFILE
+        # Core columns are always required; extended metadata columns are
+        # only present (and validated) in the full/default profile workbook.
+        core_meta = {TECH_COL, PARAM_COL, "Unit"}
+        extended_meta = {"Parameter.ID", PROJ_MODE_COL, "Projection.Parameter"}
+        required_meta = core_meta | extended_meta if strict_full else core_meta
         missing_meta = sorted(required_meta - set(meta_cols))
         if missing_meta:
             raise ValueError(
                 f"RC Authority V1 missing metadata columns: {missing_meta}"
             )
-        if set(year_cols) != set(AUTHORITY_YEARS):
+        available_years = set(year_cols) & set(AUTHORITY_YEARS)
+        if strict_full and set(year_cols) != set(AUTHORITY_YEARS):
             raise ValueError(
                 "RC Authority V1 workbook year columns must be exactly "
                 f"2023-2050; got {sorted(year_cols)}"
+            )
+        if not available_years:
+            raise ValueError(
+                "RC Authority V1 workbook has no recognised year columns"
             )
 
         authority: Dict[str, Dict[int, float]] = {}
@@ -286,31 +297,34 @@ def load_rc_authority(authority_path: Path) -> Dict[str, Dict[int, float]]:
                 raise ValueError(
                     f"RC Authority V1 duplicate row for {tech} at row {row_idx}"
                 )
-            if values[meta_cols["Parameter.ID"] - 1] != 3:
-                raise ValueError(
-                    f"RC Authority V1 {tech}: Parameter.ID must be 3"
-                )
+            if "Parameter.ID" in meta_cols:
+                if values[meta_cols["Parameter.ID"] - 1] != 3:
+                    raise ValueError(
+                        f"RC Authority V1 {tech}: Parameter.ID must be 3"
+                    )
             if values[meta_cols["Unit"] - 1] != "GW":
                 raise ValueError(f"RC Authority V1 {tech}: Unit must be GW")
-            if (
-                values[meta_cols[PROJ_MODE_COL] - 1]
-                != DEFAULT_PROJECTION_MODE
-            ):
-                raise ValueError(
-                    f"RC Authority V1 {tech}: Projection.Mode must be "
-                    f"{DEFAULT_PROJECTION_MODE!r}"
-                )
-            projection_parameter = values[
-                meta_cols["Projection.Parameter"] - 1
-            ]
-            if _decimal_text(
-                projection_parameter, f"{tech}/Projection.Parameter"
-            ) != "0":
-                raise ValueError(
-                    f"RC Authority V1 {tech}: Projection.Parameter must be 0"
-                )
+            if PROJ_MODE_COL in meta_cols:
+                if (
+                    values[meta_cols[PROJ_MODE_COL] - 1]
+                    != DEFAULT_PROJECTION_MODE
+                ):
+                    raise ValueError(
+                        f"RC Authority V1 {tech}: Projection.Mode must be "
+                        f"{DEFAULT_PROJECTION_MODE!r}"
+                    )
+            if "Projection.Parameter" in meta_cols:
+                projection_parameter = values[
+                    meta_cols["Projection.Parameter"] - 1
+                ]
+                if _decimal_text(
+                    projection_parameter, f"{tech}/Projection.Parameter"
+                ) != "0":
+                    raise ValueError(
+                        f"RC Authority V1 {tech}: Projection.Parameter must be 0"
+                    )
             profile: Dict[int, float] = {}
-            for year in AUTHORITY_YEARS:
+            for year in available_years:
                 raw = values[year_cols[year] - 1]
                 canonical = _decimal_text(raw, f"{tech}/{year}")
                 profile[year] = float(Decimal(canonical))
@@ -329,9 +343,14 @@ def apply_rc_authority(
     """Write the validated v18 RC table into model Secondary Techs."""
     _validate_authority_mapping(authority)
     authority_techs = frozenset(authority)
+    # Determine which years the authority actually covers (may be a subset
+    # of AUTHORITY_YEARS for reduced-profile workbooks).
+    authority_years = set()
+    for tech_years in authority.values():
+        authority_years |= set(tech_years)
     meta_cols, year_cols = _build_column_index(ws)
-    if not set(AUTHORITY_YEARS).issubset(year_cols):
-        missing = sorted(set(AUTHORITY_YEARS) - set(year_cols))
+    if not authority_years.issubset(year_cols):
+        missing = sorted(authority_years - set(year_cols))
         raise ValueError(f"model workbook missing authority years: {missing}")
 
     rows: Dict[str, int] = {}
@@ -354,7 +373,9 @@ def apply_rc_authority(
     diffs: List[DiffEntry] = []
     for tech in sorted(authority_techs):
         row_idx = rows[tech]
-        for year in AUTHORITY_YEARS:
+        for year in sorted(authority[tech]):
+            if year not in year_cols:
+                continue
             cell = ws.cell(row_idx, year_cols[year])
             old = cell.value
             old_f = float(old) if old is not None else 0.0

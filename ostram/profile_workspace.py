@@ -233,6 +233,7 @@ def prepared_profile(
             f"prepared source digests do not match manifest for {manifest.profile_id!r}"
         )
     resolved = dict(sources)
+    stamp_dirty = False
     for role, relative in mapping.items():
         if not isinstance(relative, str):
             raise ProfileWorkspaceError(f"invalid prepared path for authority {role!r}")
@@ -246,8 +247,20 @@ def prepared_profile(
         spec = manifest.authorities[role]
         current_digest = _authority_digest(sources[role], spec.kind)
         if current_digest != source_digests[role]:
-            raise ProfileWorkspaceError(
-                f"profile source for {role!r} changed after preparation; use --reset"
+            # Mutable source legitimately changed (e.g. student edited the
+            # scenario workbook).  Refresh the workspace copy and update the
+            # stamp instead of failing.
+            if candidate.exists():
+                if spec.kind == "directory":
+                    shutil.rmtree(candidate)
+                else:
+                    candidate.unlink()
+            _copy_authority(sources[role], candidate, spec.kind)
+            source_digests[role] = current_digest
+            stamp_dirty = True
+            print(
+                f"[profile] Refreshed mutable authority {role!r} "
+                f"(source changed since preparation)"
             )
         exists = candidate.is_file() if spec.kind == "file" else candidate.is_dir()
         if not exists:
@@ -255,4 +268,13 @@ def prepared_profile(
                 f"prepared authority {role!r} is missing: {candidate}"
             )
         resolved[role] = candidate
+
+    if stamp_dirty:
+        stamp["mutable_source_sha256"] = source_digests
+        stamp["refreshed_at_utc"] = datetime.now(timezone.utc).isoformat()
+        (target / STAMP_NAME).write_text(
+            json.dumps(stamp, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+
     return PreparedProfile(manifest.profile_id, target, resolved, stamp)

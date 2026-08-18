@@ -107,9 +107,20 @@ REGION_NAME_MAP = {
     "INDWE": "India, region WE",
     "LKAXX": "Sri Lanka, region XX",
     "MDVXX": "Maldives, region XX",
+    "MMRXX": "Myanmar, region XX",
     "NPLXX": "Nepal, region XX",
 }
 VALID_REGIONS = set(REGION_NAME_MAP.keys())
+
+
+def _region_name(region_code: str) -> str:
+    """Return the descriptive name for a region code, auto-generating if unknown."""
+    if region_code in REGION_NAME_MAP:
+        return REGION_NAME_MAP[region_code]
+    # Auto-generate: "ABCXX" -> "ABC, region XX"
+    country = region_code[:3]
+    suffix = region_code[3:]
+    return f"{country}, region {suffix}"
 
 # Three-tier color scheme applied as a row fill on every newly-appended row.
 TIER_COLOR = {
@@ -242,20 +253,20 @@ def substitute_region_names(text, template_code, new_code):
         t_r = next(iter(t_regs)); n_r = next(iter(n_regs))
         if t_r == n_r:
             return text
-        return re.sub(re.escape(REGION_NAME_MAP[t_r]),
-                      REGION_NAME_MAP[n_r], text, flags=re.IGNORECASE)
+        return re.sub(re.escape(_region_name(t_r)),
+                      _region_name(n_r), text, flags=re.IGNORECASE)
 
     # 13-char: two named regions; placeholder swap to avoid clobbering.
     _, t_r1, t_r2 = parse_code(template_code)
     _, n_r1, n_r2 = parse_code(new_code)
     out = text
     if t_r1 != n_r1 or t_r2 != n_r2:
-        out = re.sub(re.escape(REGION_NAME_MAP[t_r1]),
+        out = re.sub(re.escape(_region_name(t_r1)),
                      _ZERO_WIDTH_REGION + "1", out, flags=re.IGNORECASE)
-        out = re.sub(re.escape(REGION_NAME_MAP[t_r2]),
+        out = re.sub(re.escape(_region_name(t_r2)),
                      _ZERO_WIDTH_REGION + "2", out, flags=re.IGNORECASE)
-        out = out.replace(_ZERO_WIDTH_REGION + "1", REGION_NAME_MAP[n_r1])
-        out = out.replace(_ZERO_WIDTH_REGION + "2", REGION_NAME_MAP[n_r2])
+        out = out.replace(_ZERO_WIDTH_REGION + "1", _region_name(n_r1))
+        out = out.replace(_ZERO_WIDTH_REGION + "2", _region_name(n_r2))
     return out
 
 
@@ -1667,8 +1678,8 @@ for label in ("AR_Base", "AR_Proj"):
                         if tr in v:
                             leaks.append((label, s, code, h, v))
                         # also region-name leak
-                        if REGION_NAME_MAP.get(tr) and \
-                                REGION_NAME_MAP[tr].lower() in v.lower():
+                        rname = _region_name(tr)
+                        if rname and rname.lower() in v.lower():
                             leaks.append((label, s, code, h, v))
     out_wb.close()
     check(f"no template region tokens leaked in {label}", len(leaks) == 0,

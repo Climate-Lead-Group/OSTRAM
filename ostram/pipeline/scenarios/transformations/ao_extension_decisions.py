@@ -53,35 +53,46 @@ def _headers(worksheet) -> dict[str, int]:
 
 def _csv_decision_rows(authority_path: Path) -> list[dict[str, object]]:
     with authority_path.open("r", encoding="utf-8-sig", newline="") as stream:
-        reader = csv.DictReader(stream)
-        if reader.fieldnames != list(DECISION_HEADERS):
+        # Excel may inject semicolons when saving a CSV, depending on the
+        # regional settings.  Read with a sniffer-friendly approach: if the
+        # raw first line contains semicolons but no commas (or trailing ;;),
+        # re-open with semicolon delimiter.
+        raw = stream.read()
+    # Strip trailing semicolons that Excel adds at the end of lines.
+    cleaned = "\n".join(
+        line.rstrip(";") for line in raw.splitlines()
+    )
+    import io
+    stream = io.StringIO(cleaned)
+    reader = csv.DictReader(stream)
+    if reader.fieldnames != list(DECISION_HEADERS):
+        raise ValueError(
+            f"AO decision CSV headers must be exactly {list(DECISION_HEADERS)}, "
+            f"got {reader.fieldnames}"
+        )
+    decisions: list[dict[str, object]] = []
+    seen: set[str] = set()
+    for row_index, row in enumerate(reader, start=2):
+        code = str(row["AO_Code_To_Add"] or "").strip()
+        if not code:
+            if any(str(value or "").strip() for value in row.values()):
+                raise ValueError(f"AO decision CSV row {row_index} has no code")
+            continue
+        if code in seen:
+            raise ValueError(f"duplicate AO extension decision for {code!r}")
+        include = str(row["Include"] or "").strip().upper()
+        if include not in {"Y", "N"}:
             raise ValueError(
-                f"AO decision CSV headers must be exactly {list(DECISION_HEADERS)}, "
-                f"got {reader.fieldnames}"
+                f"AO decision CSV row {row_index} Include must be Y or N"
             )
-        decisions: list[dict[str, object]] = []
-        seen: set[str] = set()
-        for row_index, row in enumerate(reader, start=2):
-            code = str(row["AO_Code_To_Add"] or "").strip()
-            if not code:
-                if any(str(value or "").strip() for value in row.values()):
-                    raise ValueError(f"AO decision CSV row {row_index} has no code")
-                continue
-            if code in seen:
-                raise ValueError(f"duplicate AO extension decision for {code!r}")
-            include = str(row["Include"] or "").strip().upper()
-            if include not in {"Y", "N"}:
-                raise ValueError(
-                    f"AO decision CSV row {row_index} Include must be Y or N"
-                )
-            seen.add(code)
-            decisions.append(
-                {
-                    name: (code if name == "AO_Code_To_Add" else row[name])
-                    for name in DECISION_HEADERS
-                }
-            )
-        return decisions
+        seen.add(code)
+        decisions.append(
+            {
+                name: (code if name == "AO_Code_To_Add" else row[name])
+                for name in DECISION_HEADERS
+            }
+        )
+    return decisions
 
 
 def _decision_rows(authority_path: Path) -> list[dict[str, object]]:

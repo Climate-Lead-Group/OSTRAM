@@ -351,18 +351,29 @@
     <p>Remember from Session 2: A1/A2 ran once and are frozen in the BAU snapshot. The A-O workbooks were built <em>before</em> your new interconnector existed. The extension decision list tells the scenario stage to inject the new technology rows into the A-O workbooks during processing &mdash; without it, the stage would not know about the technology even though the scenario workbook has all the data.</p>
   </div>
 
-  <p>Open <code>examples/unescap/config/scenarios/ao_extension_decisions.csv</code> and add a new row. The CSV carries the five decision columns you actually fill in &mdash; <code>AO_Code_To_Add</code>, <code>Include</code>, <code>Override_Template_AO</code>, <code>Override_Tech.Name_AO</code>, <code>Notes</code>. The wider table below shows the full set of columns the stage derives, so you can see where your decision lands:</p>
+  <p>Open <code>examples/unescap/config/scenarios/ao_extension_decisions.csv</code> and add a new row. The CSV has five columns: <code>AO_Code_To_Add</code>, <code>Include</code>, <code>Override_Template_AO</code>, <code>Override_Tech.Name_AO</code>, <code>Notes</code>. Copy the row below and paste it at the end of the file:</p>
 
   <div class="scrollable">
-  <table class="copy-table" id="table-extensions">
-    <tr><td>AO_Code_To_Add</td><td>Tech_Name_WV</td><td>Sheets_in_WV</td><td>Orange_Flagged</td><td>In_Param</td><td>In_AR_Base</td><td>In_AR_Proj</td><td>In_Demand</td><td>Suggested_Template_AO</td><td>Suggested_Tech.Name_AO</td><td>Add_To_Param</td><td>Add_To_AR_Base</td><td>Add_To_AR_Proj</td><td>Add_To_Demand</td><td>Include</td><td>Override_Template_AO</td><td>Override_Tech.Name_AO</td><td>Notes</td></tr>
-    <tr><td>TRNBGDXXMMRXX</td><td>Cross-border interconnector: Bangladesh &harr; Myanmar</td><td>Interconnector_Params, Fixed_Horizon_Parameters</td><td>Y</td><td>N</td><td>N</td><td>N</td><td>N</td><td>TRNBGDXXINDEA</td><td></td><td>Y</td><td>Y</td><td>Y</td><td>N</td><td>Y</td><td></td><td></td><td></td></tr>
+  <table class="copy-table" id="table-extensions-csv">
+    <tr><td>AO_Code_To_Add</td><td>Include</td><td>Override_Template_AO</td><td>Override_Tech.Name_AO</td><td>Notes</td></tr>
+    <tr><td>TRNBGDXXMMRXX</td><td>Y</td><td></td><td></td><td></td></tr>
   </table>
   </div>
-  <button class="copy-btn-table" onclick="copyTable('table-extensions')">
+  <button class="copy-btn-table" onclick="copyCSV('table-extensions-csv')">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-    Copy data rows
+    Copy CSV row
   </button>
+
+  <details style="margin:16px 0;">
+    <summary style="cursor:pointer;font-weight:600;color:var(--teal);font-size:.95rem;">Show full derived columns (read-only reference)</summary>
+    <p style="margin:10px 0 6px;color:var(--slate-600);font-size:.9rem;">The stage derives the remaining columns automatically. This wider view shows where your decision lands &mdash; you do <strong>not</strong> need to copy or edit these columns:</p>
+    <div class="scrollable">
+    <table class="copy-table" id="table-extensions-full">
+      <tr><td>AO_Code_To_Add</td><td>Tech_Name_WV</td><td>Sheets_in_WV</td><td>Orange_Flagged</td><td>In_Param</td><td>In_AR_Base</td><td>In_AR_Proj</td><td>In_Demand</td><td>Suggested_Template_AO</td><td>Suggested_Tech.Name_AO</td><td>Add_To_Param</td><td>Add_To_AR_Base</td><td>Add_To_AR_Proj</td><td>Add_To_Demand</td><td>Include</td><td>Override_Template_AO</td><td>Override_Tech.Name_AO</td><td>Notes</td></tr>
+      <tr><td>TRNBGDXXMMRXX</td><td>Cross-border interconnector: Bangladesh &harr; Myanmar</td><td>Interconnector_Params, Fixed_Horizon_Parameters</td><td>Y</td><td>N</td><td>N</td><td>N</td><td>N</td><td>TRNBGDXXINDEA</td><td></td><td>Y</td><td>Y</td><td>Y</td><td>N</td><td>Y</td><td></td><td></td><td></td></tr>
+    </table>
+    </div>
+  </details>
 
   <div class="callout tip">
     <div class="tag">Key columns explained</div>
@@ -661,6 +672,24 @@ function copyTable(tableId) {
     Array.from(r.cells).map(c => c.textContent).join('\t')
   ).join('\n');
   navigator.clipboard.writeText(tsv).then(() => {
+    const btn = table.closest('.scrollable').nextElementSibling;
+    if (btn && btn.classList.contains('copy-btn-table')) {
+      const orig = btn.innerHTML;
+      btn.classList.add('copied');
+      btn.innerHTML = 'Copied!';
+      setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = orig; }, 1500);
+    }
+  });
+}
+
+/* Copy table as CSV (skip header row, comma-separated) */
+function copyCSV(tableId) {
+  const table = document.getElementById(tableId);
+  const rows = Array.from(table.querySelectorAll('tr')).slice(1);
+  const csv = rows.map(r =>
+    Array.from(r.cells).map(c => c.textContent).join(',')
+  ).join('\n');
+  navigator.clipboard.writeText(csv).then(() => {
     const btn = table.closest('.scrollable').nextElementSibling;
     if (btn && btn.classList.contains('copy-btn-table')) {
       const orig = btn.innerHTML;

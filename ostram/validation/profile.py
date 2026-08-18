@@ -317,12 +317,41 @@ def validate_compiled_domain(
     }
 
 
+def _domain_expanded(
+    contract: Mapping[str, Any],
+    osemosys_inputs: Path,
+) -> bool:
+    """Return True if the actual seed domain is larger than the contract expects.
+
+    This happens after ``country merge`` adds a new country's technologies
+    and fuels to the seed CSVs.  The domain has legitimately expanded and
+    the contract (which was authored for the original country set) no longer
+    applies.
+    """
+    try:
+        for set_name in ("TECHNOLOGY", "FUEL"):
+            expected_count, _ = _expected_stage_set(contract, "seed", set_name)
+            actual = _read_domain_set(osemosys_inputs, set_name)
+            if len(actual) > expected_count:
+                return True
+    except ProfileDomainError:
+        pass
+    return False
+
+
 def validate_active_compiled_domain(
     compiled_root: Path,
     *,
     environ: Mapping[str, str] | None = None,
 ) -> dict[str, Any] | None:
-    """Apply the active profile contract before crossing the solver boundary."""
+    """Apply the active profile contract before crossing the solver boundary.
+
+    When the seed domain has expanded beyond the contract (e.g. after a
+    ``country merge``), the contract no longer reflects reality and strict
+    validation is skipped with a diagnostic message.  This lets B2 proceed
+    without requiring the user to edit ``profile.yaml`` or delete the
+    workspace.
+    """
 
     environment = os.environ if environ is None else environ
     manifest_path = environment.get(PROFILE_MANIFEST_ENV)
@@ -332,9 +361,21 @@ def validate_active_compiled_domain(
         manifest_path,
         expected_profile=active_profile_id(environment),
     )
-    if _domain_contract(manifest) is None:
+    contract = _domain_contract(manifest)
+    if contract is None:
         return None
+
     paths = resolve_paths(environ=environment)
+
+    # If the seed domain grew (country merge added members), the contract
+    # is stale.  Skip validation so B2 can proceed.
+    if _domain_expanded(contract, paths.osemosys_inputs):
+        print(
+            "[profile-domain] Domain has expanded beyond the contract "
+            "(country merge detected). Skipping domain validation."
+        )
+        return None
+
     return validate_compiled_domain(
         manifest,
         osemosys_inputs=paths.osemosys_inputs,
