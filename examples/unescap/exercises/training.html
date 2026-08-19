@@ -1140,6 +1140,15 @@
     <p>This writes the dashboard into your workspace. Open it in a browser and pick a <strong>Before</strong> snapshot, an <strong>After</strong> snapshot, a <strong>scenario</strong> (A/B/C) and a <strong>region</strong> (System / Bangladesh / India-East) to compare generation mix, capacity, CO&#8322; emissions, storage, renewable share and system cost side by side.</p>
     <div class="callout tip"><div class="tag">Keep a baseline, label every run</div><p>Each run replaces the current combined results, and those results only hold the scenarios you have solved so far &mdash; so record a label after every build. Right after the first build use <code>--capture baseline</code>; after Exercise&nbsp;1 <code>--capture E1</code>, after Exercise&nbsp;2 <code>--capture "E1-E2"</code>, after Exercise&nbsp;3 <code>--capture "E1-E2-E3"</code>. Runs are <strong>cumulative</strong> (each carries the previous exercises' edits), so compare a run against the <em>previous</em> snapshot to isolate one exercise (e.g. <code>E1</code> vs <code>E1-E2</code>), or against <code>baseline</code> to see the total change since the start.</p></div>
 
+    <h3>Timeslice fabric &mdash; pre-built results</h3>
+    <p>How finely the model cuts the day &mdash; its <em>timeslice fabric</em> &mdash; is not one of the exercises above, because it is a modelling decision that was already taken rather than a parameter for you to tune. A reference result set ships with the profile, comparing three solves of the same scenario at 20, 16 and 12 timeslices (<a href="../references/timeslice-fabric-results.html">timeslice fabric comparison</a>):</p><div class="code-wrap">
+      <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
+<pre><code><span class="comment"># Open the pre-built results in your browser:</span>
+<span class="string">examples/unescap/references/timeslice-fabric-results.html</span></code></pre>
+    </div>
+    <p>It shows the evening peak flattening as the blocks widen, the dispatch losing its intra-day shape, and the resulting system cost, capacity mix and solve times side by side, with a step-by-step guide for reproducing the comparison yourself.</p>
+    <div class="callout warn"><div class="tag">A cheaper number is not a cheaper system</div><p>The coarse fabrics come out roughly a fifth cheaper. That is the model solving an easier problem, not a cheaper system: wide blocks average the evening peak away and credit solar to hours with no sun. This is why the profile ships the 5-daypart, 20-timeslice fabric &mdash; if you swap it out to experiment, back up <code>OSTRAM_Timeslice_Inputs.xlsx</code> first and put it back when you are done.</p></div>
+
     <h3>Undoing your changes</h3>
     <p>Every config file in the profile is small, commented, and carries its shipped values in its own header, so
     the safest way back is to put the original numbers in and save. Each exercise above quotes the value it asks you

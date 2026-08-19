@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timeslice fabric comparison — 20 vs 16 vs 12 timeslices</title>
+<style>
+  :root {
+    --bg: #fcfcfb; --fg: #0b0b0b; --muted: #898781; --secondary: #52514e;
+    --surface: #f5f5f3; --card-bg: #fff; --border: rgba(11,11,11,0.10);
+    --grid: #e1e0d9; --track: rgba(11,11,11,0.06);
+    /* Categorical: one hue per fabric, fixed order, never cycled.
+       Validated light and dark (OKLCH band, chroma, CVD dE 9.1, contrast). */
+    --c1: #2a78d6; --c2: #1baf7a; --c3: #bf8a2a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a19; --fg: #ffffff; --muted: #898781; --secondary: #c3c2b7;
+      --surface: #232322; --card-bg: #1f1f1e; --border: rgba(255,255,255,0.10);
+      --grid: #2c2c2a; --track: rgba(255,255,255,0.07);
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         background: var(--bg); color: var(--fg); padding: 2rem; max-width: 900px;
+         margin: 0 auto; line-height: 1.6; }
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.5rem; }
+  h2 { font-size: 18px; font-weight: 500; margin: 2rem 0 0.5rem; }
+  .subtitle { font-size: 14px; color: var(--secondary); margin-bottom: 2rem; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+            margin-bottom: 2rem; }
+  .card { background: var(--surface); border-radius: 8px; padding: 1rem;
+           text-align: center; }
+  .card .label { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .card .value { font-size: 15px; font-weight: 500; }
+  .card .detail { font-size: 12px; color: var(--secondary); margin-top: 4px; }
+  .metric-card { background: var(--card-bg); border: 1px solid var(--border);
+                  border-radius: 12px; padding: 1rem 1.25rem; }
+  .metric-card .label { font-size: 13px; color: var(--muted); }
+  .metric-card .num { font-size: 22px; font-weight: 500; margin-top: 4px; }
+  .metric-card .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .note { font-size: 13px; color: var(--secondary); margin-bottom: 1.5rem; }
+  .section-label { font-size: 13px; color: var(--secondary); margin-bottom: 6px; }
+
+  /* Bar chart, plain HTML/CSS: no external library, works offline. */
+  .bars { margin-bottom: 1.75rem; }
+  .row { display: grid; grid-template-columns: 104px 1fr 96px;
+          align-items: center; gap: 10px; margin-bottom: 2px; }
+  .row .rl { font-size: 12px; color: var(--secondary); text-align: right; }
+  .row .track { position: relative; height: 18px; background: var(--track);
+                 border-radius: 4px; }
+  .row .fill { position: absolute; left: 0; top: 0; bottom: 0;
+                border-radius: 0 4px 4px 0; min-width: 2px; }
+  .row .rv { font-size: 12px; color: var(--fg); font-variant-numeric: tabular-nums; }
+  .row .rv .u { color: var(--muted); font-size: 11px; }
+  .panel { background: var(--surface); border-radius: 10px; padding: 1rem 1.1rem;
+            margin-bottom: 12px; }
+  .panel .ph { font-size: 13px; font-weight: 500; margin-bottom: 8px; }
+  .panel .ph .pu { color: var(--muted); font-weight: 400; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid2 .row { grid-template-columns: 88px 1fr 74px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px;
+             color: var(--secondary); margin: 0.5rem 0 2rem; }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .legend .dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  figure { margin: 0 0 2rem; }
+  figure img { width: 100%; height: auto; border: 1px solid var(--border);
+               border-radius: 8px; background: var(--card-bg); }
+  figcaption { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px;
+          margin-bottom: 1rem; }
+  th, td { text-align: right; padding: 8px 10px;
+           border-bottom: 1px solid var(--border);
+           font-variant-numeric: tabular-nums; }
+  th:first-child, td:first-child { text-align: left;
+           font-variant-numeric: normal; }
+  thead th { color: var(--muted); font-weight: 500; }
+  tbody tr:last-child td { border-bottom: none; }
+  .adopted { font-weight: 500; }
+
+  .guide { background: var(--surface); border-radius: 12px; padding: 1.5rem;
+            margin-top: 2rem; font-size: 14px; }
+  .guide h3 { font-size: 16px; font-weight: 500; margin: 1.5rem 0 0.75rem; }
+  .guide h3:first-child { margin-top: 0; }
+  .guide code { background: var(--card-bg); border: 1px solid var(--border);
+                 padding: 2px 6px; border-radius: 4px; font-size: 13px;
+                 font-family: 'Consolas', 'Monaco', monospace; }
+  .guide pre { background: var(--card-bg); border: 1px solid var(--border);
+                padding: 1rem; border-radius: 8px; font-size: 13px;
+                font-family: 'Consolas', 'Monaco', monospace; overflow-x: auto;
+                margin: 0.75rem 0; line-height: 1.5; }
+  .guide ul { padding-left: 1.5rem; margin: 0.5rem 0; }
+  .guide li { margin-bottom: 0.25rem; }
+  .warn { border-left: 3px solid #b4531f; padding-left: 1rem; margin: 1rem 0; }
+  .footer { font-size: 12px; color: var(--muted); margin-top: 3rem;
+             border-top: 1px solid var(--border); padding-top: 1rem; }
+  @media (max-width: 700px) {
+    body { padding: 1.25rem; }
+    .cards, .grid2 { grid-template-columns: 1fr; }
+    .row { grid-template-columns: 92px 1fr 82px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Timeslice fabric comparison</h1>
+<p class="subtitle">20 vs 16 vs 12 timeslices &mdash; scenario: B_Optimised_VRE, reduced training model (BGDXX + INDEA)</p>
+
+<div class="cards">
+  <div class="card">
+    <div class="label">Adopted</div>
+    <div class="value">5 dayparts &middot; 20 ts</div>
+    <div class="detail">uneven blocks; evening peak kept separate</div>
+  </div>
+  <div class="card">
+    <div class="label">6-hour case</div>
+    <div class="value">4 &times; 6 h &middot; 16 ts</div>
+    <div class="detail">equal blocks from midnight</div>
+  </div>
+  <div class="card">
+    <div class="label">8-hour case</div>
+    <div class="value">3 &times; 8 h &middot; 12 ts</div>
+    <div class="detail">equal blocks from midnight</div>
+  </div>
+</div>
+
+<p class="note">Three solves of the same scenario on the same hourly source year. Only the
+timeslice workbook was swapped &mdash; no code, no assumption and no input series changed.
+The four monsoon seasons are identical in all three; only the day is re-cut.</p>
+
+<h2>What the model sees: the evening peak</h2>
+<figure>
+  <img src="demand_profile.png" alt="Intra-day demand profile for Season 1 (Winter) 2050 under the three fabrics">
+  <figcaption>Season 1 (Winter), 2050. The adopted fabric resolves the 17&ndash;20 h evening
+  peak; the coarser fabrics average it down. This figure carries its own embedded legend,
+  whose colours are those of the plotting run and differ from the ones used by the bars on
+  this page.</figcaption>
+</figure>
+
+<div class="legend">
+  <span><span class="dot" style="background:var(--c1);"></span>20 ts (5dp) &mdash; adopted</span>
+  <span><span class="dot" style="background:var(--c2);"></span>16 ts (4&times;6 h)</span>
+  <span><span class="dot" style="background:var(--c3);"></span>12 ts (3&times;8 h)</span>
+</div>
+<p class="note" style="margin-top:-1rem;">The legend above applies to every bar on this
+page.</p>
+
+<div class="panel">
+  <div class="ph">Evening peak the model can see <span class="pu">&mdash; GW, Winter 2050</span></div>
+  <div class="bars">
+    <div class="row" title="20 ts (5dp): 143 GW"><span class="rl">20 ts (5dp)</span><div class="track"><div class="fill" style="width:100.00%;background:var(--c1)"></div></div><span class="rv">143 <span class="u">GW</span></span></div>
+    <div class="row" title="16 ts (4x6h): about 136 GW"><span class="rl">16 ts (4&times;6 h)</span><div class="track"><div class="fill" style="width:95.10%;background:var(--c2)"></div></div><span class="rv">~136 <span class="u">GW</span></span></div>
+    <div class="row" title="12 ts (3x8h): about 135 GW"><span class="rl">12 ts (3&times;8 h)</span><div class="track"><div class="fill" style="width:94.41%;background:var(--c3)"></div></div><span class="rv">~135 <span class="u">GW</span></span></div>
+  </div>
+  <div class="note" style="margin:0;">The model only plans capacity for demand it can see.</div>
+</div>
+
+<h2>What the model does about it: dispatch flattens</h2>
+<figure>
+  <img src="dispatch_intraday.png" alt="Intra-day dispatch by technology under the three fabrics">
+  <figcaption>With 20 timeslices the day has shape &mdash; solar fills midday, oil and imports
+  fire at the evening peak. With 6- and 8-hour blocks each block gets one flat answer, so the
+  ramps and the evening peaking disappear and imports grow: without a peak bracket, nothing
+  forces domestic build. Colours here are per technology, from the plotting run.</figcaption>
+</figure>
+
+<h2>System cost falls as the fabric coarsens</h2>
+<div class="panel">
+  <div class="ph">Total discounted system cost <span class="pu">&mdash; MUSD</span></div>
+  <div class="bars">
+    <div class="row" title="20 ts (5dp): 581,508 MUSD"><span class="rl">20 ts (5dp)</span><div class="track"><div class="fill" style="width:100.00%;background:var(--c1)"></div></div><span class="rv">581,508</span></div>
+    <div class="row" title="16 ts (4x6h): 511,973 MUSD"><span class="rl">16 ts (4&times;6 h)</span><div class="track"><div class="fill" style="width:88.04%;background:var(--c2)"></div></div><span class="rv">511,973</span></div>
+    <div class="row" title="12 ts (3x8h): 463,087 MUSD"><span class="rl">12 ts (3&times;8 h)</span><div class="track"><div class="fill" style="width:79.64%;background:var(--c3)"></div></div><span class="rv">463,087</span></div>
+  </div>
+</div>
+
+<h2>New capacity by technology</h2>
+<p class="note">Each panel is scaled to its own maximum, because the storage figures are an
+order of magnitude above the others. Read the printed values, not the bar lengths, when
+comparing across panels.</p>
+<div class="grid2">
+  <div class="panel">
+    <div class="ph">Coal <span class="pu">&mdash; new capacity, GW</span></div>
+    <div class="bars">
+      <div class="row" title="Coal, 20 ts: 56.49 GW"><span class="rl">20 ts</span><div class="track"><div class="fill" style="width:100.00%;background:var(--c1)"></div></div><span class="rv">56.49</span></div>
+      <div class="row" title="Coal, 16 ts: 51.62 GW"><span class="rl">16 ts</span><div class="track"><div class="fill" style="width:91.37%;background:var(--c2)"></div></div><span class="rv">51.62</span></div>
+      <div class="row" title="Coal, 12 ts: 49.76 GW"><span class="rl">12 ts</span><div class="track"><div class="fill" style="width:88.09%;background:var(--c3)"></div></div><span class="rv">49.76</span></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph">Hydro <span class="pu">&mdash; new capacity, GW</span></div>
+    <div class="bars">
+      <div class="row" title="Hydro, 20 ts: 20.60 GW"><span class="rl">20 ts</span><div class="track"><div class="fill" style="width:100.00%;background:var(--c1)"></div></div><span class="rv">20.60</span></div>
+      <div class="row" title="Hydro, 16 ts: 14.98 GW"><span class="rl">16 ts</span><div class="track"><div class="fill" style="width:72.72%;background:var(--c2)"></div></div><span class="rv">14.98</span></div>
+      <div class="row" title="Hydro, 12 ts: 4.86 GW"><span class="rl">12 ts</span><div class="track"><div class="fill" style="width:23.57%;background:var(--c3)"></div></div><span class="rv">4.86</span></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph">Small hydro <span class="pu">&mdash; new capacity, GW</span></div>
+    <div class="bars">
+      <div class="row" title="Small hydro, 20 ts: 14.72 GW"><span class="rl">20 ts</span><div class="track"><div class="fill" style="width:100.00%;background:var(--c1)"></div></div><span class="rv">14.72</span></div>
+      <div class="row" title="Small hydro, 16 ts: 1.56 GW"><span class="rl">16 ts</span><div class="track"><div class="fill" style="width:10.60%;background:var(--c2)"></div></div><span class="rv">1.56</span></div>
+      <div class="row" title="Small hydro, 12 ts: none built"><span class="rl">12 ts</span><div class="track"></div><span class="rv">none</span></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph">Short-duration storage <span class="pu">&mdash; new SDS capacity</span></div>
+    <div class="bars">
+      <div class="row" title="SDS, 20 ts: 38.61"><span class="rl">20 ts</span><div class="track"><div class="fill" style="width:15.12%;background:var(--c1)"></div></div><span class="rv">38.61</span></div>
+      <div class="row" title="SDS, 16 ts: 240.79"><span class="rl">16 ts</span><div class="track"><div class="fill" style="width:94.27%;background:var(--c2)"></div></div><span class="rv">240.79</span></div>
+      <div class="row" title="SDS, 12 ts: 255.42"><span class="rl">12 ts</span><div class="track"><div class="fill" style="width:100.00%;background:var(--c3)"></div></div><span class="rv">255.42</span></div>
+    </div>
+  </div>
+</div>
+
+<h2>The numbers</h2>
+<table>
+  <thead>
+    <tr>
+      <th scope="col">Metric</th>
+      <th scope="col">20 ts (5dp)</th>
+      <th scope="col">16 ts (4&times;6 h)</th>
+      <th scope="col">12 ts (3&times;8 h)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>System cost (MUSD)</td><td class="adopted">581,508</td><td>511,973</td><td>463,087</td></tr>
+    <tr><td>Coal, new capacity (GW)</td><td class="adopted">56.49</td><td>51.62</td><td>49.76</td></tr>
+    <tr><td>Hydro, new capacity (GW)</td><td class="adopted">20.60</td><td>14.98</td><td>4.86</td></tr>
+    <tr><td>Small hydro, new capacity (GW)</td><td class="adopted">14.72</td><td>1.56</td><td>none</td></tr>
+    <tr><td>Short-duration storage (SDS)</td><td class="adopted">38.61</td><td>240.79</td><td>255.42</td></tr>
+    <tr><td>Oil, new capacity (GW)</td><td class="adopted">19.22</td><td>20.53</td><td>13.13</td></tr>
+    <tr><td>Nuclear, new capacity (GW)</td><td class="adopted">4.08</td><td>3.88</td><td>2.40</td></tr>
+    <tr><td>Transmission (TRN)</td><td class="adopted">142.89</td><td>142.67</td><td>121.07</td></tr>
+    <tr><td>Evening peak seen (GW)</td><td class="adopted">143</td><td>~136</td><td>~135</td></tr>
+    <tr><td>Solve time (s)</td><td class="adopted">~31</td><td>~8</td><td>~5</td></tr>
+  </tbody>
+</table>
+<p class="note">Cost and capacity read from <code>summary.csv</code> in this folder. For the
+12-timeslice run the small-hydro cell is empty in that file, meaning no small hydro was
+built; it is shown here as <em>none</em> rather than as a zero measurement.</p>
+
+<div class="cards">
+  <div class="metric-card">
+    <div class="label">Cost drop, 20 &rarr; 12 ts</div>
+    <div class="num">&minus;20%</div>
+    <div class="sub">581,508 &rarr; 463,087 MUSD</div>
+  </div>
+  <div class="metric-card">
+    <div class="label">Hydro gives way to storage</div>
+    <div class="num">20.6 &rarr; 4.9 GW</div>
+    <div class="sub">while SDS goes 38.6 &rarr; 255.4</div>
+  </div>
+  <div class="metric-card">
+    <div class="label">Solar credited to dark hours</div>
+    <div class="num">6.75%</div>
+    <div class="sub">8-hour fabric &mdash; 16&times; the adopted one</div>
+  </div>
+</div>
+
+<h2>Read the cheaper runs as a warning</h2>
+<p class="note">Cost falls by a fifth from 20 to 12 timeslices because fewer brackets mean
+fewer constraints. The model solves an easier problem, not a cheaper system. Hydro gives way
+to storage that mostly papers over the averaging error, and a wide block credits solar to
+every hour it contains, including dark ones &mdash; the 8-hour fabric puts 6.75% of solar
+energy into hours with no sun, sixteen times the adopted fabric. Coarse fabrics do not dim
+the solar day; they invent solar at night. That is why the 5-daypart, 20-timeslice fabric was
+adopted: it keeps the evening peak, the solar day and the night as separate decisions the
+model must pay for.</p>
+
+<div class="guide">
+  <h3>How to reproduce this comparison</h3>
+  <p>The fabric is read from the timeslice workbook itself, so a variant swaps in as one
+  file. No code changes.</p>
+
+  <p><strong>Step 0</strong> &mdash; Prepare the profile once (the profile ships inputs,
+  not a built model):</p>
+  <pre>python -m ostram example prepare unescap</pre>
+
+  <div class="warn">
+    <p><strong>Back up the fabric authority first.</strong> The next step overwrites the
+    profile's committed timeslice workbook. Keep a copy before you start, or be ready to
+    restore it from version control.</p>
+  </div>
+
+  <p><strong>Step 1</strong> &mdash; Copy a variant workbook over the fabric authority:</p>
+  <pre>timeslice_module/outputs/OSTRAM_Timeslice_Outputs_3dp12ts.xlsx
+  &rarr; examples/unescap/inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx</pre>
+  <p>The module ships four pre-computed cases in <code>timeslice_module/outputs/</code>:
+  <code>REFERENCE_5dp20ts</code> (the adopted fabric), <code>4dp16ts</code> (6-hour blocks),
+  <code>3dp12ts</code> (8-hour blocks) and <code>6dp24ts</code>.</p>
+
+  <p><strong>Step 2</strong> &mdash; Run the scenario:</p>
+  <pre>python -m ostram --profile unescap run --scenarios B_Optimised_VRE</pre>
+
+  <p><strong>Step 3</strong> &mdash; Record a labelled snapshot before you touch the next
+  fabric. Every run <em>replaces</em> the combined results, so without a capture the previous
+  fabric's numbers are gone:</p>
+  <pre>python -m ostram example report unescap --capture ts-20</pre>
+  <p>Then repeat steps 1&ndash;3 once per fabric, capturing under <code>ts-16</code> and
+  <code>ts-12</code>. With the three snapshots on disk the report route can put any two of
+  them side by side.</p>
+
+  <p><strong>Step 4</strong> &mdash; Restore the adopted 20-timeslice workbook when you are
+  done, so the profile stays canonical.</p>
+
+  <h3>What to look at inside a variant workbook</h3>
+  <ul>
+    <li><code>YearSplit</code> is the fabric: one row per timeslice with its season, its
+    daypart and its share of the year. It goes from 20 rows to 16 or 12.</li>
+    <li><code>Config</code> is load-bearing. The pipeline parses the hour ranges out of the
+    daypart labels &mdash; the <code>(00-08)</code> parentheses are not decoration &mdash;
+    and stops the run if the hours do not sum to 24.</li>
+    <li>The <code>_Dem</code> sheets carry <code>demand_fraction</code>, which must sum to
+    one. A fraction above that slice's <code>yearsplit</code> marks a peaky slice; in the
+    coarse fabrics that signal is averaged away.</li>
+    <li>The <code>_CF</code> sheets show the phantom solar directly: solar earns a non-zero
+    capacity factor in the night block, because the block contains sunrise.</li>
+    <li>Each run writes a <code>CF_Provenance</code> audit sheet recording, per technology,
+    which zone sheet, tech type and column supplied every number.</li>
+  </ul>
+
+  <h3>Note on sheet counts</h3>
+  <p>The variant workbooks carry 23 sheets &mdash; one <code>_Dem</code> and one
+  <code>_CF</code> pair for each of the ten zones of the full model &mdash; while this
+  reduced profile's own workbook carries six. That is not an error: a reduced profile loads
+  only the sheets for the zones in its configuration and ignores the rest.</p>
+</div>
+
+<div class="footer">
+  OSTRAM / UNESCAP timeslice fabric &mdash; reference result set.
+  Cost and new-capacity figures are read from <code>summary.csv</code> in this folder; the
+  two figures, the evening-peak values and the solve times come from the canonical runs of
+  the timeslice module. These results were produced by earlier full-pipeline solves of
+  <code>B_Optimised_VRE</code>; they are reproduced here as a reference and are not
+  regenerated by profile preparation. The workbook generator, its source data and the four
+  pre-computed fabrics live in <code>timeslice_module/</code>.
+</div>
+
+</body>
+</html>
