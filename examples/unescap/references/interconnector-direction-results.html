@@ -150,12 +150,16 @@
   chain; the direction rule is applied between the scenario and compilation stages:</p>
   <pre>python -m ostram --profile unescap run --scenario B_Optimised_VRE</pre>
 
-  <p><strong>Step 3</strong> &mdash; Change the direction in the YAML and run again,
-  once per direction. Each run writes its results under its own workspace folder,
-  so nothing is overwritten.</p>
+  <p><strong>Step 3</strong> &mdash; Record a labelled snapshot after the run. Every run
+  <em>replaces</em> the combined results, so without a capture the previous direction's
+  numbers are gone:</p>
+  <pre>python -m ostram example report unescap --capture forward</pre>
+  <p>Then change the direction in the YAML and repeat steps 2&ndash;3 once per direction,
+  capturing under <code>reverse</code> and <code>bidirectional</code>.</p>
 
-  <p><strong>Step 4</strong> &mdash; Regenerate this report:</p>
-  <pre>python -m ostram example report unescap</pre>
+  <p><strong>Step 4</strong> &mdash; With the three snapshots on disk, generate the
+  side-by-side comparison:</p>
+  <pre>python -m ostram example report unescap --compare forward,reverse,bidirectional</pre>
 
   <ul>
     <li><code>forward</code> keeps only the mode whose input fuel matches the source region (BGDXX)</li>

@@ -10,7 +10,7 @@ computed alternatives at coarser or different resolutions.
 
 ## Folder layout
 
-- `scripts/` — the generator, the Ninja rebuilder, the sensitivity sweep, and the ranking script
+- `scripts/` — the generator, the Ninja rebuilder, the sensitivity sweep, the ranking script, and `compare_timeslice_runs.py`, which plots two or more solved runs against each other
 - `inputs/` — source data (hourly demand, capacity factors, Ninja raw CSVs)
 - `outputs/` — the four pre-computed workbook cases plus per-run evidence
 - `docs/` — handover documentation, the ranking justification, and the adoption rationale README
