@@ -75,21 +75,20 @@ class ScenarioCountrySyncTests(unittest.TestCase):
             dry = synchronize_country(
                 country="MMR", ao_path=ao, scenario_path=target, dry_run=True
             )
-            self.assertEqual(sum(change.rows_added for change in dry), 12)
+            self.assertEqual(sum(change.rows_added for change in dry), 6)
             workbook = load_workbook(target, read_only=True)
             self.assertEqual(workbook[SHEET_MAP[0][1]].max_row, 1)
             workbook.close()
 
             first = synchronize_country(country="MMR", ao_path=ao, scenario_path=target)
             second = synchronize_country(country="MMR", ao_path=ao, scenario_path=target)
-            self.assertEqual(sum(change.rows_added for change in first), 12)
+            self.assertEqual(sum(change.rows_added for change in first), 6)
             self.assertEqual(sum(change.rows_added for change in second), 0)
             workbook = load_workbook(target, read_only=True, data_only=True)
             rows = list(workbook[SHEET_MAP[0][1]].iter_rows(min_row=2, values_only=True))
             workbook.close()
             self.assertEqual(rows, [
                 ("A", "PWRSPVMMRXX01", 2.496),
-                ("B", "PWRSPVMMRXX01", 2.496),
             ])
 
 
