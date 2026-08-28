@@ -290,7 +290,11 @@ print(f"  Wrote {len(df_ds)} brackets ({dp_cfg['hours'].sum()}h total). "
 # STEP 4 -- Demand_Profiles
 # =============================================================================
 # Use the existing Fuel/Tech codes from v17 Demand_Profiles (ELC<REGION>03);
-# do NOT invent codes. Each entity's profile comes from {ts_region}_Dem.
+# each entity's profile comes from {ts_region}_Dem.  A region configured in
+# the country authority but absent from the v17 sheet (a country added with
+# `country template` + `country merge` whose demand entity was never inserted
+# into the scenario workbook) gets its canonical ELC<REGION>03 entity added
+# here, so the new country still receives SpecifiedDemandProfile rows.
 
 print("\n" + "=" * 72)
 print("STEP 4 -- Demand_Profiles")
@@ -310,6 +314,44 @@ if not unmapped.empty:
     raise RuntimeError(f"Cannot map these v17 Fuel/Tech codes:\n{unmapped[['Fuel/Tech','region']]}")
 
 print(f"  {len(entities)} demand entities found in v17 Demand_Profiles")
+
+# Configured regions with no demand entity in the v17 sheet: add the
+# canonical ELC<REGION>03 entity so the region is not silently skipped.
+# A configured region whose _Dem sheet is missing from the timeslice
+# workbook is a hard error -- `country template` should have cloned it.
+_ts_sheet_names = set(pd.ExcelFile(TIMESLICE_FILE).sheet_names)
+_covered_regions = set(entities["region"].dropna())
+_added_entities = []
+for _region, _prefix in sorted(REGION_MAP.items()):
+    if _region in _covered_regions:
+        continue
+    _dem_sheet = f"{_prefix}_Dem"
+    if _dem_sheet not in _ts_sheet_names:
+        raise RuntimeError(
+            f"Region {_region} is configured in the country authority but "
+            f"sheet '{_dem_sheet}' is missing from the timeslice workbook "
+            f"({TIMESLICE_FILE}). Run `country template` so the timeslice "
+            f"sheets are cloned for the new country, then re-run."
+        )
+    _added_entities.append({
+        "Fuel/Tech":    f"ELC{_region}03",
+        "Name":         f"Output demand of transmission lines in {_region}",
+        "Demand/Share": "Demand",
+        "Ref.Cap.BY":   "not needed",
+        "Ref.OAR.BY":   "not needed",
+        "Ref.km.BY":    "not needed",
+        "region":       _region,
+        "ts_prefix":    _prefix,
+    })
+    print(f"  + Added demand entity ELC{_region}03 for configured region "
+          f"{_region} (profile from sheet '{_dem_sheet}'; entity not "
+          f"present in v17 Demand_Profiles)")
+if _added_entities:
+    entities = pd.concat(
+        [entities, pd.DataFrame(_added_entities)], ignore_index=True
+    )
+    print(f"  {len(entities)} demand entities total after adding "
+          f"{len(_added_entities)} configured region(s)")
 
 new_rows = []
 for _, ent in entities.iterrows():

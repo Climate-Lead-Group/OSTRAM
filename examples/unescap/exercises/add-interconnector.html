@@ -158,16 +158,11 @@
   /* Footer */
   footer { background:var(--teal-dark); color:rgba(255,255,255,.75); padding:40px 24px 30px; margin-top:10px; }
   .footer-inner { max-width:860px; margin:0 auto; }
-  .footer-links { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; font-size:.88rem; }
-  .footer-links div strong { display:block; color:var(--white); font-size:.78rem; text-transform:uppercase; letter-spacing:.8px; margin-bottom:8px; }
-  .footer-links a { color:rgba(255,255,255,.65); text-decoration:none; display:block; margin-bottom:4px; transition:color .2s; }
-  .footer-links a:hover { color:var(--emerald); }
-  .footer-bottom { font-size:.8rem; color:rgba(255,255,255,.45); text-align:center; padding-top:20px; border-top:1px solid rgba(255,255,255,.1); }
+  .footer-bottom { font-size:.8rem; color:rgba(255,255,255,.45); text-align:center; }
 
   @media (max-width:700px) {
     .hero h1 { font-size:2rem; }
     section { padding:24px 20px; }
-    .footer-links { grid-template-columns:1fr; }
     section h2 { flex-wrap:wrap; }
     .pill { margin-left:0; }
   }
@@ -192,7 +187,7 @@
 
   <div class="goal">
     <div class="label">Goal</div>
-    <p>Add a new BGD&harr;MMR interconnector (<code>TRNBGDXXMMRXX</code>) by editing the profile's scenario workbook, registering it in two profile config files, then run the model and verify the technology was created.</p>
+    <p>Add a new BGD&harr;MMR interconnector (<code>TRNBGDXXMMRXX</code>) by editing the profile's scenario workbook, registering it in the profile config files, then running the model and verifying the technology was created.</p>
   </div>
 
   <p>Myanmar (MMR) is already in the model as a country, but there is no electricity interconnector linking it to any neighbour. Without one, the solver treats Myanmar as an isolated system: it cannot import or export power, even if trade would be cheaper. In this exercise you add the corridor <strong>Bangladesh &harr; Myanmar</strong> so the solver can optimise cross-border flows between them.</p>
@@ -200,6 +195,11 @@
   <div class="analogy">
     <div class="label">Analogy</div>
     <p>Think of it like wiring a new cable between two buildings. The electrical infrastructure exists at both ends &mdash; switchboards, meters, circuits &mdash; you are just connecting them so power can flow between the two.</p>
+  </div>
+
+  <div class="callout warn">
+    <div class="tag">Profile files vs workspace files</div>
+    <p>This exercise edits files in <strong>two different places</strong>. The <strong>scenario workbook</strong> (<code>OSTRAM_Scenario_Inputs.xlsx</code>) is a mutable data file &mdash; <code>example prepare</code> copies it to the <strong>prepared workspace</strong>, and you edit the workspace copy. <strong>Configuration files</strong> (<code>technology_types.csv</code>, <code>ao_extension_decisions.csv</code>, YAML scenario configs, <code>profile.yaml</code>) live in the <strong>profile directory</strong> (<code>examples/unescap/</code>) and are edited there directly &mdash; the pipeline reads them from <code>examples/</code>, not from the workspace. When the exercise gives an <code>examples/unescap/</code> path, that is the correct location.</p>
   </div>
 </section>
 
@@ -229,7 +229,12 @@
 <section id="edit-template">
   <h2><span class="num">3</span> Edit the Scenario Workbook</h2>
 
-  <p>Open the <strong>prepared workspace copy</strong> of the scenario workbook. Run <code>python -m ostram --profile unescap inspect-resources</code> and use the absolute <code>scenario_workbook</code> path it prints. You will edit three sheets. Keep the existing <code>TRNBGDXXINDEA</code> rows visible as your reference &mdash; all new rows follow the same column structure. The committed seed at <code>examples/unescap/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx</code> remains unchanged during the exercise.</p>
+  <p>Open the <strong>prepared workspace copy</strong> of the scenario workbook. Run <code>python -m ostram --profile unescap inspect-resources</code> and use the absolute <code>scenario_workbook</code> path it prints &mdash; it will be inside the <code>workspace/</code> directory. You will edit three sheets. Keep the existing <code>TRNBGDXXINDEA</code> rows visible as your reference &mdash; all new rows follow the same column structure.</p>
+
+  <div class="callout important">
+    <div class="tag">Important</div>
+    <p>Edit the <strong>workspace copy</strong>, not the original in <code>examples/</code>. The correct path is inside <code>workspace/</code> &mdash; run <code>inspect-resources</code> and use the <code>scenario_workbook</code> path it prints.</p>
+  </div>
 
   <ol class="step-list">
     <!-- Step 1 -->
@@ -323,9 +328,9 @@
 
 <!-- SECTION 4 -->
 <section id="tech-types">
-  <h2><span class="num">4</span> Register in technology_types.csv</h2>
+  <h2><span class="num">4</span> Register the interconnector in technology_types.csv</h2>
 
-  <p>Open <code>examples/unescap/config/scenarios/technology_types.csv</code> in a text editor or spreadsheet. Find the <code>INTERCONNECTORS</code> section and add one row:</p>
+  <p>Open <code>examples/unescap/config/scenarios/technology_types.csv</code> in a text editor or spreadsheet (this is a <strong>profile config file</strong>, edited in the profile directory &mdash; not in the workspace). Find the <code>INTERCONNECTORS</code> section and <strong>add</strong> this row (if you completed Exercise&nbsp;A, step&nbsp;4d, it is already there &mdash; just make sure):</p>
 
   <div class="code-wrap">
     <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
@@ -342,7 +347,7 @@
 
 <!-- SECTION 5: AO EXTENSIONS -->
 <section id="ao-extensions">
-  <h2><span class="num">5</span> Register in AO Extensions</h2>
+  <h2><span class="num">5</span> Register the AO Extension</h2>
 
   <p>When you add a <strong>brand-new</strong> technology to the scenario workbook, the scenario stage needs to know it should create rows for it in the A-O workbooks. This is controlled by the extension decision list, <code>examples/unescap/config/scenarios/ao_extension_decisions.csv</code>.</p>
 
@@ -351,7 +356,7 @@
     <p>Remember from Session 2: A1/A2 ran once and are frozen in the BAU snapshot. The A-O workbooks were built <em>before</em> your new interconnector existed. The extension decision list tells the scenario stage to inject the new technology rows into the A-O workbooks during processing &mdash; without it, the stage would not know about the technology even though the scenario workbook has all the data.</p>
   </div>
 
-  <p>Open <code>examples/unescap/config/scenarios/ao_extension_decisions.csv</code> and add a new row. The CSV has five columns: <code>AO_Code_To_Add</code>, <code>Include</code>, <code>Override_Template_AO</code>, <code>Override_Tech.Name_AO</code>, <code>Notes</code>. Copy the row below and paste it at the end of the file:</p>
+  <p>Open <code>examples/unescap/config/scenarios/ao_extension_decisions.csv</code> (profile config file &mdash; edited in the profile directory). The CSV has five columns: <code>AO_Code_To_Add</code>, <code>Include</code>, <code>Override_Template_AO</code>, <code>Override_Tech.Name_AO</code>, <code>Notes</code>. <strong>Add</strong> this row at the end of the file:</p>
 
   <div class="scrollable">
   <table class="copy-table" id="table-extensions-csv">
@@ -411,23 +416,23 @@
 <section id="yaml-config">
   <h2><span class="num">6</span> Configure Scenario YAMLs</h2>
 
-  <p>Each scenario has its own config files under <code>examples/unescap/config/scenarios/&lt;scenario&gt;/</code>. Three scenarios use interconnector rules; BAU does not (it has no <code>relax_interconnectors.yaml</code>).</p>
+  <p>Each scenario has its own config files under <code>examples/unescap/config/scenarios/&lt;scenario&gt;/</code> (profile config files &mdash; edited in the profile directory, not in the workspace). Three scenarios use interconnector rules; BAU does not (it has no <code>relax_interconnectors.yaml</code>).</p>
 
   <h3>6a. Capacity limits &mdash; <code>relax_interconnectors.yaml</code></h3>
 
-  <p>This file controls how much capacity the solver can build for each interconnector. Each entry under <code>overrides:</code> is a year&ndash;GW map that caps annual investment. An empty map <code>{}</code> means &ldquo;freeze at residual capacity&rdquo; (no new investment). You need to add <code>TRNBGDXXMMRXX</code> to three scenarios.</p>
+  <p>This file controls how much capacity the solver can build for each interconnector. Each entry under <code>overrides:</code> is a year&ndash;GW map that caps annual investment. An empty map <code>{}</code> means &ldquo;freeze at residual capacity&rdquo; (no new investment). <code>TRNBGDXXMMRXX</code> must be present in three scenarios &mdash; <strong>add the entry to all three files yourself</strong>.</p>
 
   <div class="callout tip">
     <div class="tag">Where do the values come from?</div>
     <p>Look at the existing <code>TRNBGDXXINDEA</code> entry as your guide. Its values (<code>2023: 2.496, 2028: 6.50, &hellip; 2033: 8.50</code>) come from the real project pipeline &mdash; the commissioned and planned HVDC capacities from the <strong>Interconnectors</strong> sheet. For our exercise interconnector, the only project is a single 0.5 GW link commissioning in 2030. We set <code>{2029: 0, 2030: 0.5}</code> &mdash; the explicit zero before COD prevents the interpolation logic from allowing investment in earlier years.</p>
   </div>
 
-  <p><strong>A_Calibrated_BAU</strong> &mdash; open <code>config/scenarios/A_Calibrated_BAU/relax_interconnectors.yaml</code>. The file currently has:</p>
+  <p><strong>A_Calibrated_BAU</strong> &mdash; open <code>config/scenarios/A_Calibrated_BAU/relax_interconnectors.yaml</code>. The BGD&ndash;INDEA corridor looks like this:</p>
   <div class="code-wrap">
 <pre><code><span class="key">overrides:</span>
   <span class="key">TRNBGDXXINDEA:</span> {<span class="key">2023:</span> 2.496, <span class="key">2028:</span> 6.50, <span class="key">2029:</span> 7.00, <span class="key">2030:</span> 7.75, <span class="key">2033:</span> 8.50}</code></pre>
   </div>
-  <p>Add the new line below <code>TRNBGDXXINDEA</code>:</p>
+  <p>Add this line below <code>TRNBGDXXINDEA</code>:</p>
   <div class="code-wrap">
     <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
 <pre><code>  <span class="key">TRNBGDXXMMRXX:</span> {<span class="key">2029:</span> 0, <span class="key">2030:</span> 0.5}   <span class="comment"># new: 500 MW project, COD 2030</span></code></pre>
@@ -437,6 +442,11 @@
   <div class="code-wrap">
     <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
 <pre><code>  <span class="key">TRNBGDXXMMRXX:</span> {<span class="key">2029:</span> 0, <span class="key">2030:</span> 0.5}   <span class="comment"># new: 500 MW project, COD 2030</span></code></pre>
+  </div>
+
+  <div class="callout tip">
+    <div class="tag">Reminder</div>
+    <p>This scenario needs the <code>MMRXX</code> firm-capacity row you added in Exercise&nbsp;A, step&nbsp;4e &mdash; if it is missing, B&rsquo;s system cost will come out inflated.</p>
   </div>
 
   <p><strong>C_Target_VRE</strong> &mdash; open <code>config/scenarios/C_Target_VRE/relax_interconnectors.yaml</code>. Same &mdash; add the line:</p>
@@ -471,6 +481,7 @@
 <!-- SECTION 7 -->
 <section id="run">
   <h2><span class="num">7</span> Run the Model</h2>
+
 
   <p>The commands are the same on Windows, macOS, and Linux, and they do not depend
   on which directory you are in &mdash; the profile is named, not located.</p>
@@ -532,7 +543,7 @@
   </div>
 </section>
 
-<!-- SECTION 7 -->
+<!-- SECTION 8 -->
 <section id="verify">
   <h2><span class="num">8</span> Verify</h2>
 
@@ -570,7 +581,7 @@
   </div>
 </section>
 
-<!-- SECTION 8 -->
+<!-- SECTION 9 -->
 <section id="reference">
   <h2><span class="num">9</span> Quick Reference &mdash; Existing BGD-INDEA</h2>
 
@@ -631,16 +642,6 @@
 
 <footer>
   <div class="footer-inner">
-
-    <div class="footer-links">
-      <div>
-        <strong>OSTRAM Resources</strong>
-        <a href="https://github.com/Climate-Lead-Group/OSTRAM" target="_blank">GitHub Repository</a>
-        <a href="https://ostram.readthedocs.io" target="_blank">Documentation</a>
-        <a href="https://github.com/Climate-Lead-Group/OSTRAM/issues" target="_blank">Report an Issue</a>
-      </div>
-    </div>
-
     <div class="footer-bottom">
       Exercise B: Add a New Transmission Interconnector &mdash; OSTRAM &middot; UNESCAP Training<br>
       Quality &bull; Integrity &bull; Transparency &bull; Responsibility &bull; Inclusion

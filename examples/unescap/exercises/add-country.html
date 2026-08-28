@@ -130,16 +130,11 @@
   /* Footer */
   footer { background:var(--teal-dark); color:rgba(255,255,255,.75); padding:40px 24px 30px; margin-top:10px; }
   .footer-inner { max-width:860px; margin:0 auto; }
-  .footer-links { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; font-size:.88rem; }
-  .footer-links div strong { display:block; color:var(--white); font-size:.78rem; text-transform:uppercase; letter-spacing:.8px; margin-bottom:8px; }
-  .footer-links a { color:rgba(255,255,255,.65); text-decoration:none; display:block; margin-bottom:4px; transition:color .2s; }
-  .footer-links a:hover { color:var(--emerald); }
-  .footer-bottom { font-size:.8rem; color:rgba(255,255,255,.45); text-align:center; padding-top:20px; border-top:1px solid rgba(255,255,255,.1); }
+  .footer-bottom { font-size:.8rem; color:rgba(255,255,255,.45); text-align:center; }
 
   @media (max-width:700px) {
     .hero h1 { font-size:2rem; }
     section { padding:24px 20px; }
-    .footer-links { grid-template-columns:1fr; }
     section h2 { flex-wrap:wrap; }
     .pill { margin-left:0; }
   }
@@ -178,6 +173,11 @@
     <div class="tag">Important</div>
     <p>This process resets any prior parametrization for the country &mdash; it is designed as a <strong>PRE-parametrization</strong> step using OSeMOSYS Global defaults.</p>
   </div>
+
+  <div class="callout warn">
+    <div class="tag">Profile files vs workspace files</div>
+    <p>This exercise touches two places. Config files (YAMLs, <code>technology_types.csv</code>) are edited directly in <code>examples/unescap/</code>. Mutable data files (scenario workbook, timeslice workbook, input CSVs) are copied by <code>example prepare</code> and edited in the <strong>workspace</strong>. An <code>examples/unescap/</code> path means the profile; &ldquo;prepared workspace copy&rdquo; means the workspace.</p>
+  </div>
 </section>
 
 <!-- SECTION 2 -->
@@ -193,7 +193,77 @@
     <li>Interconnections are <strong>not</strong> needed for this exercise &mdash; we add the country as an isolated system first (see <a href="add-interconnector.html">Exercise B</a> for interconnectors).</li>
   </ul>
 
-  <p>Start from a guarded clean profile workspace. This removes only ignored generated state and republishes the committed profile authorities:</p>
+  <h3>Configure <code>profile.yaml</code> for the dashboard</h3>
+
+  <p>Before preparing the workspace, the new country&rsquo;s metadata must be present in <code>examples/unescap/profile.yaml</code>. The dashboard reads this file to know which countries, interconnectors, and storage technologies to display. Editing <code>profile.yaml</code> after <code>example prepare</code> invalidates the workspace manifest &mdash; so any change must be made <strong>now</strong>.</p>
+
+  <div class="callout tip">
+    <div class="tag">Add the metadata yourself</div>
+    <p>The shipped <code>examples/unescap/profile.yaml</code> does <strong>not</strong> include Myanmar yet &mdash; add the blocks below exactly as shown. While you are in the file, confirm the <code>timeslice_workbook</code> authority has <code>mutable: true</code>, which is what lets Step&nbsp;2 clone the new timeslice sheets in the workspace.</p>
+  </div>
+
+  <p><strong>country_regions</strong> &mdash; must list the new country:</p>
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+<pre><code><span class="key">country_regions:</span>
+  - <span class="key">region:</span> <span class="string">BGDXX</span>
+    <span class="key">label:</span> <span class="string">Bangladesh</span>
+  - <span class="key">region:</span> <span class="string">INDEA</span>
+    <span class="key">label:</span> <span class="string">India East</span>
+  - <span class="key">region:</span> <span class="string">MMRXX</span>
+    <span class="key">label:</span> <span class="string">Myanmar</span></code></pre>
+  </div>
+
+  <p><strong>interconnectors</strong> &mdash; must list the corridor you will parametrize in <a href="add-interconnector.html">Exercise B</a>:</p>
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+<pre><code><span class="key">interconnectors:</span>
+  - <span class="key">technology:</span> <span class="string">TRNBGDXXINDEA</span>
+  - <span class="key">technology:</span> <span class="string">TRNBGDXXMMRXX</span></code></pre>
+  </div>
+
+  <p><strong>storage</strong> &mdash; must list the long-duration and short-duration storage codes:</p>
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+<pre><code><span class="key">storage:</span>
+  - <span class="string">LDSBGDXX01</span>
+  - <span class="string">LDSINDEA01</span>
+  - <span class="string">LDSMMRXX01</span>
+  - <span class="string">SDSBGDXX01</span>
+  - <span class="string">SDSINDEA01</span>
+  - <span class="string">SDSMMRXX01</span></code></pre>
+  </div>
+
+  <p><strong>description</strong> &mdash; must mention Myanmar:</p>
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+<pre><code><span class="key">description:</span> <span class="string">&gt;-</span>
+  <span class="string">Bangladesh (BGDXX), India East (INDEA), and Myanmar (MMRXX),</span>
+  <span class="string">joined by TRNBGDXXINDEA and TRNBGDXXMMRXX,</span>
+  <span class="string">over 2023-2050 in twenty timeslices.</span></code></pre>
+  </div>
+
+  <h3>Rename any existing workspace</h3>
+
+  <p>If you already have a <code>workspace/profiles/unescap</code> folder from a previous run, rename it before preparing a fresh one:</p>
+
+  <p><strong>Windows:</strong></p>
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+    <pre><code><span class="cmd">ren</span> workspace\profiles\unescap unescap_old</code></pre>
+  </div>
+
+  <p><strong>macOS / Linux:</strong></p>
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+    <pre><code><span class="cmd">mv</span> workspace/profiles/unescap workspace/profiles/unescap_old</code></pre>
+  </div>
+
+  <div class="callout tip"><div class="tag">First time?</div><p>If there is no existing folder, skip this step &mdash; <code>example prepare</code> will create it.</p></div>
+
+  <h3>Prepare the workspace</h3>
+
+  <p>Now start from a guarded clean profile workspace. This removes only ignored generated state and republishes the committed profile authorities:</p>
   <div class="code-wrap">
     <pre><code><span class="cmd">python</span> -m ostram example prepare unescap <span class="flag">--reset</span></code></pre>
   </div>
@@ -223,7 +293,8 @@
     <span class="key">region:</span> <span class="string">XX</span>
     <span class="key">centerpoint_lat:</span> <span class="string">19.811800</span>
     <span class="key">centerpoint_lon:</span> <span class="string">96.602200</span>
-    <span class="key">interconnections:</span> <span class="string">[]</span></code></pre>
+    <span class="key">interconnections:</span> <span class="string">[]</span>
+    <span class="key">demand_scale:</span> <span class="string">0.18</span></code></pre>
   </div>
 
   <h3>Field explanations</h3>
@@ -240,6 +311,7 @@
       <tr><td><code>centerpoint_lat</code></td><td>19.811800</td><td>Latitude of Myanmar&rsquo;s geographic center</td></tr>
       <tr><td><code>centerpoint_lon</code></td><td>96.602200</td><td>Longitude of Myanmar&rsquo;s geographic center</td></tr>
       <tr><td><code>interconnections</code></td><td>[] (empty)</td><td>No interconnections for now &mdash; we add the country first as an isolated system. Interconnectors are added separately in <a href="add-interconnector.html">Exercise B</a></td></tr>
+      <tr><td><code>demand_scale</code></td><td>0.18</td><td><strong>Critical.</strong> Multiplies the cloned <code>SpecifiedAnnualDemand</code> so Myanmar starts from a demand of its own size (~90&nbsp;PJ in 2023) instead of inheriting Bangladesh&rsquo;s (~500&nbsp;PJ). Without it two things go wrong: the unservable gap is covered by the <strong>backstop</strong> at penalty prices (System cost in the billions), and Myanmar becomes a perfect twin of Bangladesh &mdash; that symmetry makes the solver grind for <em>hours</em> instead of minutes. Demand <em>profiles</em> (fractions per timeslice) are never scaled. During Step&nbsp;2 the generator prints <code>SpecifiedAnnualDemand: cloned values scaled by 0.18</code> &mdash; verify that line appears. For a different country of your own, set it to <em>real annual demand of the new country &divide; reference country&rsquo;s demand</em>, or omit the field entirely to clone unchanged (default 1.0). This field only acts during template generation for the new country &mdash; it never touches the reference country or any existing data.</td></tr>
     </tbody>
   </table>
   </div>
@@ -280,6 +352,8 @@ Processing MMR...
   Centerpoint: 19.8118, 96.6022
   Interconnections: (none)
   Generating CSV files...
+  SpecifiedAnnualDemand: cloned values scaled by 0.18 (28 rows)
+  Demand scale: SpecifiedAnnualDemand x 0.18 (vs BGD clone)
   Done.
 
 === NEXT STEPS ===
@@ -292,6 +366,11 @@ Processing MMR...
   <div class="callout tip">
     <div class="tag">Tip</div>
     <p>The command does <strong>NOT</strong> modify any profile file &mdash; it writes new ones into the workspace. Your existing model data is safe.</p>
+  </div>
+
+  <div class="callout warn">
+    <div class="tag">Verify the timeslice sheets were cloned</div>
+    <p>The command also clones <code>BGD_CF &rarr; MMR_CF</code> and <code>BGD_Dem &rarr; MMR_Dem</code> in the workspace copy of the timeslice workbook: <code>&lt;workspace&gt;/profiles/unescap/authorities/timeslice_workbook/OSTRAM_Timeslice_Inputs.xlsx</code>. Open it and confirm both sheets exist &mdash; without them the scenario stage stops with an error naming the missing sheet.</p>
   </div>
 </section>
 
@@ -317,18 +396,23 @@ Processing MMR...
     <p>For a real project, prioritise replacing these files with actual data: <strong>ResidualCapacity</strong> (installed capacity), <strong>CapitalCost</strong> / <strong>FixedCost</strong> / <strong>VariableCost</strong> (generation costs), <strong>SpecifiedAnnualDemand</strong> (electricity demand), and fuel availability parameters.</p>
   </div>
 
-  <p>For this training exercise, you can proceed with the cloned values as-is.</p>
+  <p>For this training exercise, you can proceed with the cloned values as-is for now. However, note that the OSeMOSYS Global CSVs may not contain <code>ResidualCapacity</code> data for every technology. For example, Bangladesh&rsquo;s CSVs only carry residual capacity for coal, hydro, oil, and solar PV &mdash; technologies like wind, biomass, and nuclear have their capacity defined later in the scenario workbook (Step 10). The template generator can only clone what exists in the CSVs.</p>
+
+  <div class="callout warn">
+    <div class="tag">CSV coverage gap</div>
+    <p>If a technology has no <code>ResidualCapacity</code> in the CSV, the cloned country will also lack it. The scenario pipeline&rsquo;s capacity investment rule (Stage 1b) blocks any technology that has neither residual capacity nor minimum capacity investment &mdash; so those technologies will be <strong>completely unavailable</strong> until you add values in the scenario workbook. Step 10 below covers this calibration.</p>
+  </div>
 </section>
 
 <!-- SECTION 6 -->
 <section id="update-yaml">
-  <h2><span class="num">6</span> Step 4 &mdash; Update the YAML</h2>
+  <h2><span class="num">6</span> Step 4 &mdash; Register Myanmar in the YAMLs</h2>
 
-  <p>This step registers Myanmar in the rest of <code>examples/unescap/config/preparation/Config_country_codes.yaml</code> so the rest of the pipeline recognises it. You need to update <strong>three sections</strong> in the same file.</p>
+  <p>This step registers Myanmar in the rest of <code>examples/unescap/config/preparation/Config_country_codes.yaml</code> so the rest of the pipeline recognises it. There are <strong>three sections</strong> in the same file. The shipped file only lists BGD and IND &mdash; <strong>add the MMR entries yourself</strong>, exactly as shown below. These are the same sections you would edit for any country of your own.</p>
 
-  <h3>6a. Add to <code>country_data</code></h3>
+  <h3>4a. Add MMR to <code>country_data</code></h3>
 
-  <p>Find the <code>country_data</code> section and add MMR:</p>
+  <p>Find the <code>country_data</code> section and add the MMR entry:</p>
 
   <div class="code-wrap">
     <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
@@ -342,7 +426,7 @@ Processing MMR...
     <span class="key">ostram_name:</span> <span class="string">"Myanmar"</span></code></pre>
   </div>
 
-  <h3>6b. Add to <code>countries</code> list</h3>
+  <h3>4b. Add MMR to the <code>countries</code> list</h3>
 
   <p>Find the <code>countries</code> list and add MMR:</p>
 
@@ -354,9 +438,9 @@ Processing MMR...
   - <span class="string">"MMR"</span></code></pre>
   </div>
 
-  <h3>6c. Update <code>implausible_combinations</code></h3>
+  <h3>4c. Add MMR to <code>implausible_combinations</code></h3>
 
-  <p>Find <code>implausible_combinations</code> and add MMR to the relevant technology exclusion lists. These tell the model which technologies are <strong>not available</strong> in Myanmar:</p>
+  <p>Find <code>implausible_combinations</code> and add MMR to the relevant technology exclusion lists. These tell the model which technologies are <strong>not available</strong> in Myanmar. Watch the punctuation if you re-type them: every separator inside the brackets must be a comma (a stray period, e.g. <code>[BGD, IND. MMR]</code>, silently corrupts the list):</p>
 
   <div class="code-wrap">
     <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
@@ -370,7 +454,97 @@ Processing MMR...
 
   <div class="callout warn">
     <div class="tag">Warning</div>
-    <p>Make sure to add MMR to <strong>ALL THREE</strong> sections (<code>country_data</code>, <code>countries</code>, <code>implausible_combinations</code>). This profile declares its own country authority and does not fall back to the project-root list, so a missing entry fails loudly rather than being silently filled in from elsewhere.</p>
+    <p>MMR must be present in <strong>ALL FOUR</strong> sections (<code>country_data</code>, <code>countries</code>, <code>implausible_combinations</code>, and <code>technology_types.csv</code>). This profile declares its own country authority and does not fall back to the project-root list, so a missing entry fails loudly rather than being silently filled in from elsewhere.</p>
+  </div>
+
+  <h3>4d. Add the MMR rows to <code>technology_types.csv</code></h3>
+
+  <p>Open <code>examples/unescap/config/scenarios/technology_types.csv</code> in a text editor or spreadsheet. This file maps every technology to its category (GENERATION, STORAGE, TRANSMISSION, etc.) &mdash; the scenario rules use it to decide which rules apply to each technology. Every MMR technology that corresponds to a BGD entry must have its own row, <strong>in the same category as its BGD counterpart</strong>.</p>
+
+  <p>Add every row below, each one next to its BGD sibling (this is the exact, complete list):</p>
+
+  <div class="code-wrap">
+    <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg> Copy</button>
+<pre><code><span class="comment"># GENERATION — one row per MMR generation technology (15 rows)</span>
+GENERATION,PWRWONMMRXX
+GENERATION,PWRWOFMMRXX
+GENERATION,PWRWASMMRXX
+GENERATION,PWRURNMMRXX
+GENERATION,PWRSPVMMRXX
+GENERATION,PWRPETMMRXX
+GENERATION,PWROTHMMRXX
+GENERATION,PWROILMMRXX
+GENERATION,PWRNGSMMRXX
+GENERATION,PWRHYDMMRXX
+GENERATION,PWRCOGMMRXX
+GENERATION,PWRCOAMMRXX
+GENERATION,PWRCCSMMRXX
+GENERATION,PWRBIOMMRXX
+GENERATION,PWRBCKMMRXX
+
+<span class="comment"># PRIMARY_NONRENO — non-renewable primary supply.</span>
+<span class="comment"># NOTE: MIN technologies carry only the 3-letter country code (MINxxxMMR,</span>
+<span class="comment"># 9 characters, no XX) — that is how they appear in the A-O workbooks.</span>
+PRIMARY_NONRENO,MINURNMMR
+PRIMARY_NONRENO,MINPETMMR
+PRIMARY_NONRENO,MINOTHMMR
+PRIMARY_NONRENO,MINOILMMR
+PRIMARY_NONRENO,MINGASMMR
+PRIMARY_NONRENO,MINCOGMMR
+PRIMARY_NONRENO,MINCOAMMR
+
+<span class="comment"># PRIMARY_RENO — renewable primary supply (9 rows, mirroring BGD)</span>
+PRIMARY_RENO,RNWWONMMRXX
+PRIMARY_RENO,RNWWOFMMRXX
+PRIMARY_RENO,RNWWAVMMRXX
+PRIMARY_RENO,RNWWASMMRXX
+PRIMARY_RENO,RNWSPVMMRXX
+PRIMARY_RENO,RNWHYDMMRXX
+PRIMARY_RENO,RNWGEOMMRXX
+PRIMARY_RENO,RNWCSPMMRXX
+PRIMARY_RENO,RNWBIOMMRXX
+
+<span class="comment"># STORAGE</span>
+STORAGE_LONG,PWRLDSMMRXX
+STORAGE_SHORT,PWRSDSMMRXX
+
+<span class="comment"># TRANSMISSION — internal transmission (categories exactly as in the file)</span>
+TRANSMISSION_PLANNED_NONRENO,PWRTRNMMRXX
+TRANSMISSION_PLANNED_RE,RNWTRNMMRXX
+TRANSMISSION_REPOT_NR,TRNRPOMMRXX
+TRANSMISSION_REPOT_RE,RNWRPOMMRXX
+TRANSMISSION_SUM,DSPTRNMMRXX
+TRANSMISSION_UNPLANNED_NR,TRNNLIMMRXX
+TRANSMISSION_UNPLANNED_RE,RNWNLIMMRXX
+
+<span class="comment"># INTERCONNECTORS — needed later by Exercise B (add it now)</span>
+INTERCONNECTORS,TRNBGDXXMMRXX</code></pre>
+  </div>
+
+  <div class="callout tip">
+    <div class="tag">How to build this list for a different country</div>
+    <p>Mirror the existing BGD entries: for each <code>*BGDXX</code> row add the equivalent <code>*MMRXX</code> row in the <strong>same category</strong>, and for each 9-character <code>MINxxxBGD</code> row add <code>MINxxxMMR</code>. Use only category names that already exist in the file &mdash; do not invent new ones. The template generator created all these technologies in the CSVs; this file tells the scenario rules how to classify them.</p>
+  </div>
+
+  <div class="callout warn">
+    <div class="tag">What happens if you skip this</div>
+    <p>The scenario rules (<code>add_max_cap_investment_lid_rule</code>, <code>set_retirement_schedule</code>, <code>set_min_capacity_floors</code>, <code>set_vre_targets</code>) use this file to identify which technologies are GENERATION, STORAGE, or TRANSMISSION. Without the MMR entries, those rules will not process MMR&rsquo;s technologies &mdash; they will be invisible to the scenario pipeline even if they pass the capacity investment rule.</p>
+  </div>
+
+  <h3>4e. Add the firm-capacity fallback row (project input)</h3>
+
+  <p>Open <code>inputs/execution/firm_capacity_fallbacks_by_cr.xlsx</code> (a <strong>project-level</strong> input, shared by all profiles), sheet <code>fallbacks</code>. Every country-region needs one row here &mdash; it gives the country a firm-capacity allowance for its thermal placeholder technologies (PET/OIL/NGS), used by the reserve-margin repair at solve time. Add the MMR row, identical to every other country&rsquo;s:</p>
+
+  <div class="scrollable">
+  <table>
+    <thead><tr><th>CR</th><th>TotalAnnualMaxCapacity</th><th>TotalAnnualMaxCapacityInvestment</th></tr></thead>
+    <tbody><tr><td><code>MMRXX</code></td><td>10</td><td>0.5</td></tr></tbody>
+  </table>
+  </div>
+
+  <div class="callout warn">
+    <div class="tag">What happens without this row</div>
+    <p>The B2 stage prints warnings like <code>no fallback was provided for CR=MMRXX, prefix=PWRPET</code> and the new country&rsquo;s thermal placeholders stay capped at 0. When the country then needs firm capacity or peak energy (e.g. during the 2027&ndash;2029 transition years), its only escape valve is the <strong>backstop</strong> at penalty prices &mdash; which silently inflates the scenario&rsquo;s System cost by millions even when the energy shortfall is tiny.</p>
   </div>
 </section>
 
@@ -486,13 +660,156 @@ Overall: PASS</span></code></pre>
 
   <div class="callout tip">
     <div class="tag">Tip</div>
-    <p>Append <code>--dry-run</code> first to see what would be added without modifying the prepared workbook. For a real project, this is also the moment to open that workspace workbook and adjust MMR&rsquo;s costs, capacities, or demand before running any scenario.</p>
+    <p>Append <code>--dry-run</code> first to see what would be added without modifying the prepared workbook.</p>
+  </div>
+
+  <div class="callout warn">
+    <div class="tag">What sync-country copies &mdash; and what it does not</div>
+    <p><code>sync-country</code> reads the <strong>A-O parametrization workbook</strong> (derived from the OSeMOSYS Global CSVs). It does <strong>NOT</strong> copy calibrated values from the reference country&rsquo;s scenario workbook entries. Technologies that have no <code>ResidualCapacity</code> in the CSV will appear with <code>Projection.Mode = EMPTY</code> and empty values &mdash; meaning the scenario pipeline will treat them as if they do not exist. The next step adds the missing values.</p>
+  </div>
+
+  <div class="callout tip">
+    <div class="tag">Quick check of the sync output</div>
+    <p>The command prints how many rows it added per sheet, all under <code>scenario&nbsp;=&nbsp;BAU</code> (the other scenarios inherit the BAU base). Confirm <code>Primary_Techs</code> got the <code>MIN*MMR</code> rows (e.g. <code>MINCOAMMR</code>) and <code>Secondary_Techs</code> the <code>PWR*MMRXX</code> rows. Zero MMR rows in a sheet means Step&nbsp;8&rsquo;s A1+A2 run did not complete.</p>
+  </div>
+
+  <div class="callout tip">
+    <div class="tag">Demand profile &mdash; nothing to edit</div>
+    <p>You do <strong>not</strong> need to add Myanmar rows to the <code>Demand_Profiles</code> sheet by hand. The scenario stage detects every region configured in the <code>countries</code> list and generates the <code>ELCMMRXX03</code> demand-profile rows automatically from the <code>MMR_Dem</code> timeslice sheet that Step&nbsp;2 cloned. Look for the line <code>+ Added demand entity ELCMMRXX03 ...</code> in the run log of Step&nbsp;11.</p>
   </div>
 </section>
 
 <!-- SECTION 12 -->
+<section id="calibrate-workbook">
+  <h2><span class="num">12</span> Step 10 &mdash; Calibrate the Scenario Workbook <span class="pill">Critical</span></h2>
+
+  <div class="callout important">
+    <div class="tag">Why this step is required</div>
+    <p>Stage&nbsp;1b marks a technology ALLOWED only if it has <code>ResidualCapacity &gt; 0</code> or <code>TotalAnnualMinCapacityInvestment &gt; 0</code> in some year; everything else is ZEROED (max capacity&nbsp;0, nothing can be built). Without this calibration Myanmar would only have coal, hydro, oil and solar PV.</p>
+  </div>
+
+  <p>Open the <strong>prepared workspace copy</strong> of <code>OSTRAM_Scenario_Inputs.xlsx</code> (the one under <code>&lt;workspace&gt;/profiles/unescap/authorities/scenario_workbook/</code>) and go to the <code>Secondary_Techs</code> sheet. Find the MMR rows for the technologies listed below.</p>
+
+  <p>After Step&nbsp;9 the MMR rows arrive in two states, so this step has two small tasks &mdash; <strong>A</strong>: overwrite the values of 2 rows that already came filled, and <strong>B</strong>: fill in 6 rows that came empty. 8 rows in total, all in <code>Secondary_Techs</code>, all with <code>scenario = BAU</code>.</p>
+
+  <h3>Calibration for this training exercise (realistic Myanmar)</h3>
+
+  <div class="callout important">
+    <div class="tag">Why these values</div>
+    <p>With <code>demand_scale: 0.18</code> Myanmar&rsquo;s demand is realistic (~90&nbsp;&rarr;&nbsp;~319&nbsp;PJ). The cloned CSVs already give oil 2.56&nbsp;GW, coal 0.25 and solar 0.17; this step adds hydro (Myanmar&rsquo;s backbone) plus small wind/biomass/nuclear entries &mdash; ~6.5&nbsp;GW total, enough to keep the backstop at zero. Do <strong>not</strong> copy Bangladesh&rsquo;s full 25&nbsp;GW fleet: it is not needed, and it makes the solver grind for hours.</p>
+  </div>
+
+  <p>Training values &mdash; in a real project you would replace them with actual Myanmar statistics:</p>
+
+  <h4>A &mdash; Overwrite the year values (2 rows, both hydro)</h4>
+
+  <p>These two rows already arrived with <code>Projection.Mode = User defined</code> and Bangladesh&rsquo;s cloned numbers. Do not touch the mode &mdash; just replace the value in <strong>every year column</strong>:</p>
+
+  <div class="scrollable">
+  <table>
+    <thead>
+      <tr><th>Technology</th><th>Parameter</th><th>Cloned value (today)</th><th>New value (all years)</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>PWRHYDMMRXX</code> (Hydro)</td>
+        <td><code>ResidualCapacity</code></td>
+        <td>0.23</td>
+        <td><strong>3.5</strong></td>
+      </tr>
+      <tr>
+        <td><code>PWRHYDMMRXX</code> (Hydro)</td>
+        <td><code>TotalAnnualMaxCapacity</code></td>
+        <td>0.8302</td>
+        <td><strong>40</strong></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout warn">
+    <div class="tag">Why both hydro rows are mandatory</div>
+    <p>3.5&nbsp;GW is Myanmar&rsquo;s real hydro fleet. The 40 is not optional: the cloned ceiling (0.8302, Bangladesh&rsquo;s hydro potential) is below the new 3.5 residual, and the model refuses to run whenever ResidualCapacity exceeds TotalAnnualMaxCapacity &mdash; the run aborts with GLPK <code>check[GLOBAL,PWRHYDMMRXX,2023] failed</code>. 40&nbsp;GW is the order of Myanmar&rsquo;s technical hydro potential.</p>
+  </div>
+
+  <h4>B &mdash; Fill the empty rows (6 rows)</h4>
+
+  <p>These rows arrived with <code>Projection.Mode = EMPTY</code> and no values. For each one: set <code>Projection.Mode = User defined</code>, set <code>Projection.Parameter = 0</code>, and fill <strong>every year column</strong> &mdash; most years are 0, except the single year shown:</p>
+
+  <div class="scrollable">
+  <table>
+    <thead>
+      <tr><th>Technology</th><th>Parameter</th><th>Values</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>PWRWONMMRXX</code> (Onshore Wind)</td>
+        <td><code>ResidualCapacity</code></td>
+        <td><strong>0.063</strong> in all years</td>
+      </tr>
+      <tr>
+        <td><code>PWRBIOMMRXX</code> (Biomass)</td>
+        <td><code>ResidualCapacity</code></td>
+        <td><strong>0.001</strong> in all years</td>
+      </tr>
+      <tr>
+        <td><code>PWRHYDMMRXX</code> (Hydro)</td>
+        <td><code>TotalAnnualMinCapacityInvestment</code></td>
+        <td>0 in all years, except <strong>2025 = 0.5</strong></td>
+      </tr>
+      <tr>
+        <td><code>PWRSPVMMRXX</code> (Solar PV)</td>
+        <td><code>TotalAnnualMinCapacityInvestment</code></td>
+        <td>0 in all years, except <strong>2027 = 0.3</strong></td>
+      </tr>
+      <tr>
+        <td><code>PWRWONMMRXX</code> (Onshore Wind)</td>
+        <td><code>TotalAnnualMinCapacityInvestment</code></td>
+        <td>0 in all years, except <strong>2035 = 0.2</strong></td>
+      </tr>
+      <tr>
+        <td><code>PWRURNMMRXX</code> (Nuclear)</td>
+        <td><code>TotalAnnualMinCapacityInvestment</code></td>
+        <td>0 in all years, except <strong>2030 = 0.11</strong></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout warn">
+    <div class="tag">Two easy mistakes to avoid</div>
+    <p><strong>Solar:</strong> the row you fill is SPV&rsquo;s <em>TotalAnnualMinCapacityInvestment</em>; its <em>ResidualCapacity</em> row (0.17, already filled) is a different row &mdash; leave it alone. <strong>Nuclear:</strong> use 0.11 in 2030 only (an SMR pilot) &mdash; do <em>not</em> copy Bangladesh&rsquo;s 1.2, and never put a value in every year, or the model is forced to over-build nuclear.</p>
+  </div>
+
+  <div class="callout tip">
+    <div class="tag">Leave as cloned &mdash; verify only</div>
+    <p><code>PWROILMMRXX</code> (2.56&nbsp;GW), <code>PWRCOAMMRXX</code> (0.25) and <code>PWRSPVMMRXX</code> (0.17) already carry residual capacity &mdash; just confirm the values are there. Their decline over the years (oil &rarr; 0.481 by 2035, coal &rarr; 0 by 2030) is the cloned retirement trajectory and is expected.</p>
+  </div>
+
+  <div class="callout tip">
+    <div class="tag">Check after running</div>
+    <p>After Step&nbsp;11, verify the backstop stayed (near) zero: in the results, <code>PWRBCKMMRXX</code> should have essentially no generation, and the dashboard&rsquo;s System cost should be in the same order of magnitude as before the country was added. A large backstop contribution means demand is still outrunning the calibrated fleet.</p>
+  </div>
+
+  <div class="callout tip">
+    <div class="tag">How to find the rows</div>
+    <p>In <code>Secondary_Techs</code>, search the Tech column for <code>PWRWONMMRXX</code> / <code>PWRBIOMMRXX</code> / <code>PWRURNMMRXX</code> with Parameter = <code>ResidualCapacity</code> or <code>TotalAnnualMinCapacityInvestment</code>. MMR rows exist only under <code>scenario&nbsp;=&nbsp;BAU</code>; the other scenarios inherit them. If you find MMR rows tagged with a non-BAU scenario, delete them &mdash; they would silently shadow your calibration.</p>
+  </div>
+
+  <div class="callout warn">
+    <div class="tag">Do not skip this step</div>
+    <p>Without these values, the capacity investment rule will block wind, biomass, and nuclear for Myanmar. The model will still solve (it is not infeasible), but Myanmar&rsquo;s generation mix will be limited to only four technologies: coal, hydro, oil, and solar PV.</p>
+  </div>
+
+  <div class="analogy">
+    <div class="label">Why Bangladesh works without this step</div>
+    <p>The profile&rsquo;s seed scenario workbook already ships with calibrated values for Bangladesh &mdash; for example, <code>PWRWONBGDXX</code> has <code>ResidualCapacity = 0.063</code>. These were added by the model builders and are part of the committed profile data. When you add a new country, the template generator and <code>sync-country</code> only copy CSV-derived data, not these calibrated workbook entries. This step fills that gap for MMR.</p>
+  </div>
+</section>
+
+<!-- SECTION 13 -->
 <section id="run-a3-b1-b2">
-  <h2><span class="num">12</span> Step 10 &mdash; Run the Scenarios</h2>
+  <h2><span class="num">13</span> Step 11 &mdash; Run the Scenarios</h2>
 
   <p>Now that the scenario workbook has MMR&rsquo;s data, run the scenarios. The run reuses the preparation output already in the workspace and goes straight to the scenario, compilation, and execution stages.</p>
 
@@ -521,15 +838,15 @@ Overall: PASS</span></code></pre>
   </div>
 </section>
 
-<!-- SECTION 13 -->
+<!-- SECTION 14 -->
 <section id="whats-next">
-  <h2><span class="num">13</span> What&rsquo;s Next?</h2>
+  <h2><span class="num">14</span> What&rsquo;s Next?</h2>
 
-  <p>Myanmar is now in the model with generation data, but it is <strong>electrically isolated</strong> &mdash; there are no interconnectors connecting it to neighbouring countries.</p>
+  <p>Myanmar is now in the model with generation data and calibrated technologies, but it is <strong>electrically isolated</strong> &mdash; there are no interconnectors connecting it to neighbouring countries.</p>
 
   <ul>
     <li>To connect Myanmar to its neighbours, <strong>add interconnectors</strong> (see <a href="add-interconnector.html">Exercise B: Add a New Transmission Interconnector</a>).</li>
-    <li>For a real project: replace the cloned values with actual data from IRENA, national statistics, or IEA, then parametrise the model.</li>
+    <li>For a real project: replace the cloned and training-calibration values with actual data from IRENA, national statistics, or IEA, then parametrise the model fully. The calibration in Step 10 used Bangladesh&rsquo;s values as placeholders &mdash; real residual capacities and investment limits will differ.</li>
   </ul>
 
   <div class="callout warn">
@@ -538,9 +855,9 @@ Overall: PASS</span></code></pre>
   </div>
 </section>
 
-<!-- SECTION 14 -->
+<!-- SECTION 15 -->
 <section id="troubleshooting">
-  <h2><span class="num">14</span> Troubleshooting</h2>
+  <h2><span class="num">15</span> Troubleshooting</h2>
 
   <div class="scrollable">
   <table>
@@ -583,6 +900,26 @@ Overall: PASS</span></code></pre>
         <td>The profile has not been prepared yet.</td>
         <td>Run the A1+A2-only command in Step 8. <code>example prepare</code> publishes the profile workspace; the <code>run</code> command creates the post-A2 snapshot.</td>
       </tr>
+      <tr>
+        <td><strong>New country missing technologies (e.g. no wind, biomass, or nuclear)</strong></td>
+        <td>The OSeMOSYS Global CSVs do not have <code>ResidualCapacity</code> for those technologies, and no calibration was added in the scenario workbook. The capacity investment rule (Stage 1b) classifies them as ZEROED.</td>
+        <td>Open the prepared <code>OSTRAM_Scenario_Inputs.xlsx</code>, find the new country&rsquo;s rows in <code>Secondary_Techs</code>, set <code>Projection.Mode</code> to <code>User defined</code>, and add small positive <code>ResidualCapacity</code> or <code>TotalAnnualMinCapacityInvestment</code> values. See Step 10 for details.</td>
+      </tr>
+      <tr>
+        <td><strong>New country looks very different from reference country in dashboard</strong></td>
+        <td>The reference country has calibrated values in the seed scenario workbook that override the CSV data. The template generator only clones CSV data, not workbook calibrations.</td>
+        <td>Compare the reference country&rsquo;s <code>Secondary_Techs</code> rows (look for <code>Projection.Mode = User defined</code>) with the new country&rsquo;s rows. Add similar calibration values for the new country in the prepared workbook (Step 10).</td>
+      </tr>
+      <tr>
+        <td><strong>Error: sheet &lsquo;MMR_Dem&rsquo; (or &lsquo;MMR_CF&rsquo;) is missing from the timeslice workbook</strong></td>
+        <td>The timeslice sheets were never cloned into the workspace copy of <code>OSTRAM_Timeslice_Inputs.xlsx</code> &mdash; either <code>country template</code> was not run after <code>example prepare</code>, or the workspace was reset afterwards.</td>
+        <td>Run <code>python -m ostram --profile unescap country template</code> again (it re-clones the sheets into the workspace copy), verify <code>MMR_CF</code>/<code>MMR_Dem</code> exist (see the check in Step 2), then re-run. Remember that <code>example prepare --reset</code> discards the workspace copy, including these sheets.</td>
+      </tr>
+      <tr>
+        <td><strong>Myanmar shows demand but a flat or missing demand profile in results</strong></td>
+        <td>The scenario stage generates <code>ELCMMRXX03</code> demand-profile rows automatically from the <code>MMR_Dem</code> sheet. If <code>MMR_Dem</code> was cloned from Bangladesh and never replaced, Myanmar simply reuses Bangladesh&rsquo;s profile shape &mdash; expected for this training exercise.</td>
+        <td>Confirm the Step 11 run log prints <code>+ Added demand entity ELCMMRXX03</code>. For a real project, replace the cloned <code>MMR_Dem</code> values with Myanmar&rsquo;s actual demand profile.</td>
+      </tr>
     </tbody>
   </table>
   </div>
@@ -592,16 +929,6 @@ Overall: PASS</span></code></pre>
 
 <footer>
   <div class="footer-inner">
-
-    <div class="footer-links">
-      <div>
-        <strong>OSTRAM Resources</strong>
-        <a href="https://github.com/Climate-Lead-Group/OSTRAM" target="_blank">GitHub Repository</a>
-        <a href="https://ostram.readthedocs.io" target="_blank">Documentation</a>
-        <a href="https://github.com/Climate-Lead-Group/OSTRAM/issues" target="_blank">Report an Issue</a>
-      </div>
-    </div>
-
     <div class="footer-bottom">
       Exercise A: Add a New Country to the Model &mdash; OSTRAM &middot; UNESCAP Training<br>
       Quality &bull; Integrity &bull; Transparency &bull; Responsibility &bull; Inclusion

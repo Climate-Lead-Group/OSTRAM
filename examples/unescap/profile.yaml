@@ -149,7 +149,9 @@ authorities:
   scenario_workbook:
     path: profile:inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
     mutable: true
-  timeslice_workbook: profile:inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx
+  timeslice_workbook:
+    path: profile:inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx
+    mutable: true
   ao_decisions: profile:config/scenarios/ao_extension_decisions.csv
   interconnector_authority:
     path: profile:inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx

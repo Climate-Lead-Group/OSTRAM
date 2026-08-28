@@ -68,6 +68,13 @@ def technology_regions(technology: object) -> tuple[str, ...]:
         region = tech[6:11]
         if region[:3].isalpha() and region[3:].isalnum():
             return (region,)
+    if tech.startswith("MIN") and len(tech) == 9:
+        # Primary-supply technologies carry only the 3-letter country code
+        # (e.g. MINCOAMMR); normalise to the 5-character single-region form
+        # so they match the same country as their PWR counterparts.
+        country_code = tech[6:9]
+        if country_code.isalpha():
+            return (country_code + "XX",)
     if len(tech) >= 5:
         region = tech[-5:]
         if region[:3].isalpha() and region[3:].isalnum():
@@ -144,6 +151,14 @@ def _sync_sheet(source, target, country: str, scenarios: Sequence[str]) -> SyncC
         if _normalized_header(header) != "scenario"
     ]
     source_rows = _mapped_rows(source, target, country)
+    if not source_rows:
+        raise ValueError(
+            f"zero {country} source rows found in {source.title!r} for "
+            f"target {target.title!r}. The A-O workbook appears to have no "
+            f"technologies for country {country}: check that "
+            f"`country merge {country}` completed and that preparation "
+            f"(A1/A2) ran after the merge."
+        )
     existing: set[tuple[str, tuple[object, ...]]] = set()
     for values in target.iter_rows(min_row=2, values_only=True):
         scenario = values[scenario_index]
@@ -209,6 +224,15 @@ def synchronize_country(
     target_workbook = load_workbook(scenario_path, data_only=False)
     try:
         scenarios = _control_scenarios(target_workbook)
+        # Base-scenario sync only: rows in the parametric sheets are tagged
+        # BAU for every country (the materializer builds each scenario from
+        # the BAU base, and scenario-tagged rows OVERRIDE same-key BAU rows).
+        # Writing per-scenario copies here would shadow any later calibration
+        # made on the BAU rows, so the new country must follow the same
+        # BAU-only pattern as the existing countries.
+        sync_scenarios = ("BAU",) if "BAU" in scenarios else scenarios[:1]
+        print(f"  Control scenarios: {list(scenarios)}; syncing into: "
+              f"{list(sync_scenarios)} (others inherit the BAU base)")
         changes: list[SyncChange] = []
         for source_name, target_name in SHEET_MAP:
             if source_name not in source_workbook.sheetnames:
@@ -220,7 +244,7 @@ def synchronize_country(
                     source_workbook[source_name],
                     target_workbook[target_name],
                     country,
-                    scenarios,
+                    sync_scenarios,
                 )
             )
         if not dry_run:

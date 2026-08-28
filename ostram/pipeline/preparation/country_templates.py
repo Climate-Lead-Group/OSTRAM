@@ -316,12 +316,17 @@ def generate_sets_template(ref_cc, new_cc, interconnection_mapping=None):
 
 
 def generate_param_templates(ref_cc, new_cc, interconnection_mapping=None,
-                             ref_rr="XX", new_rr="XX"):
+                             ref_rr="XX", new_rr="XX", demand_scale=1.0):
     """Generate parameter templates by cloning from reference country.
 
     When interconnection_mapping is provided, TRN interconnection rows are
     transformed using the mapping (correct fuel codes + mode swaps) instead
     of simple string replacement.
+
+    demand_scale multiplies the cloned SpecifiedAnnualDemand values so the
+    new country starts from a demand of its own size instead of inheriting
+    the reference country's absolute demand (profiles/fractions are never
+    scaled). 1.0 = clone unchanged.
     """
     templates = {}
 
@@ -392,6 +397,14 @@ def generate_param_templates(ref_cc, new_cc, interconnection_mapping=None,
                 new_rows[col] = new_rows[col].apply(
                     lambda x: replace_country_in_string(x, ref_cc, new_cc)
                 )
+
+        if param == "SpecifiedAnnualDemand" and demand_scale != 1.0:
+            new_rows["VALUE"] = (
+                pd.to_numeric(new_rows["VALUE"], errors="coerce")
+                * float(demand_scale)
+            ).round(6)
+            print(f"  SpecifiedAnnualDemand: cloned values scaled by "
+                  f"{demand_scale} ({len(new_rows)} rows)")
 
         templates[param] = new_rows
 
@@ -671,8 +684,16 @@ def load_yaml_config():
 
 
 def process_entry(new_cc, ref_cc, new_rr, ixn_raw, ixn_source,
-                  cp_lat, cp_lon, output_dir):
+                  cp_lat, cp_lon, output_dir, demand_scale=1.0):
     """Process a single country/region template entry."""
+    try:
+        demand_scale = float(demand_scale)
+    except (TypeError, ValueError):
+        print(f"ERROR: demand_scale must be a number, got {demand_scale!r}")
+        return
+    if demand_scale <= 0:
+        print(f"ERROR: demand_scale must be positive, got {demand_scale}")
+        return
 
     if not os.path.isdir(INPUT_DIR):
         print(f"ERROR: Input directory not found: {INPUT_DIR}")
@@ -739,7 +760,8 @@ def process_entry(new_cc, ref_cc, new_rr, ixn_raw, ixn_source,
     # Generate parameters
     print("\n--- PARAMETERS ---")
     param_templates = generate_param_templates(
-        ref_cc, new_cc, interconnection_mapping, ref_rr, new_rr
+        ref_cc, new_cc, interconnection_mapping, ref_rr, new_rr,
+        demand_scale=demand_scale,
     )
     write_templates(param_templates, output_dir)
 
@@ -768,6 +790,9 @@ def process_entry(new_cc, ref_cc, new_rr, ixn_raw, ixn_source,
         print(f"  Centerpoint: {new_cc}{new_rr} ({cp_lat}, {cp_lon})")
     else:
         print(f"  Centerpoint: NOT SET (add --lat/--lon or YAML config)")
+    if demand_scale != 1.0:
+        print(f"  Demand scale: SpecifiedAnnualDemand x {demand_scale} "
+              f"(vs {ref_cc} clone)")
     print(f"  Files created: {total_files}")
     print(f"  Total data rows: {total_rows}")
     print(f"  Output: {output_dir}")
@@ -821,6 +846,12 @@ def main():
         "--lon", type=float,
         help="Longitude for the country centerpoint. Overrides YAML."
     )
+    parser.add_argument(
+        "--demand-scale", type=float, dest="demand_scale",
+        help="Scale factor for cloned SpecifiedAnnualDemand values "
+             "(e.g. 0.18 to size the demand down to the new country's "
+             "real scale). Overrides YAML demand_scale. Default 1.0."
+    )
 
     args = parser.parse_args()
 
@@ -846,9 +877,15 @@ def main():
             ixn_raw = [] if yaml_ixn is None else [str(x) for x in yaml_ixn]
             ixn_source = "YAML"
 
+        demand_scale = (
+            args.demand_scale
+            if args.demand_scale is not None
+            else entry.get("demand_scale", 1.0)
+        )
+
         output_dir = args.output or str(TEMPLATE_OUTPUT_ROOT / new_cc)
         process_entry(new_cc, ref_cc, new_rr, ixn_raw, ixn_source,
-                      cp_lat, cp_lon, output_dir)
+                      cp_lat, cp_lon, output_dir, demand_scale=demand_scale)
         return
 
     # --- YAML mode: process all entries in the list ---
@@ -888,8 +925,14 @@ def main():
             print(f"# Entry {i}/{len(yaml_entries)}: {new_cc}{new_rr}")
             print(f"{'#' * 50}")
 
+        demand_scale = (
+            args.demand_scale
+            if args.demand_scale is not None
+            else entry.get("demand_scale", 1.0)
+        )
+
         process_entry(new_cc, ref_cc, new_rr, ixn_raw, ixn_source,
-                      cp_lat, cp_lon, output_dir)
+                      cp_lat, cp_lon, output_dir, demand_scale=demand_scale)
 
 
 if __name__ == "__main__":

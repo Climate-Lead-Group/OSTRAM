@@ -207,6 +207,7 @@ template_generation:
     centerpoint_lat: 19.811800
     centerpoint_lon: 96.602200
     interconnections: []
+    demand_scale: 0.18
 
 # Implausible technology-country combinations based on the profile input CSVs
 # (ResidualCapacity, CapitalCost, TotalAnnualMaxCapacityInvestment, TotalAnnualMaxCapacity)
