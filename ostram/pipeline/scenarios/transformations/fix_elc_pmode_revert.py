@@ -14,7 +14,8 @@ active profile's ``countries`` list, across two parameters:
 
 WHY
 ---
-The second run of add_max_capacity_investment_rule.py (commit 2be1616)
+The second run of add_max_capacity_investment_rule.py (commit 2be1616;
+since Sept 2026 the pipeline runs the merged script once with --fill-zeros)
 flips Projection.Mode EMPTY -> User defined for all techs ZEROED
 in MaxCap/MaxCapInv. The ELC*01 techs are ZEROED (lockout: the model must not
 invest in a "placeholder electricity tech", only use the PWR* ones).

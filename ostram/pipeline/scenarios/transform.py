@@ -438,7 +438,7 @@ def stage_1_scripts_1_to_5(s1: Path) -> None:
 
 
 def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
-    banner("Stage 1b — A0 + add_max OLD/NEW + ELC revert + B1b")
+    banner("Stage 1b — A0 + add_max (fill-zeros) + ELC revert + B1b")
 
     # Move stage1 outputs into stage1b/
     src_dir = s1 / "wvaligned_outputs_v2"
@@ -457,22 +457,21 @@ def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
         "--input", s1b / "A-O_Parametrization.xlsx",
     ], label="insert reserve margin")
 
-    # 2) add_max OLD (commit 8ee8056) — cell value changes
-    run_subproc("ostram.pipeline.scenarios.transformations.add_max_capacity_investment_rule_OLD_8ee8056", [
-        "--input-dir", s1b,
-    ], cwd=wd, label="add_max_capacity_investment_rule (OLD 8ee8056)")
+    # 2) add_max_capacity_investment_rule — single pass with --fill-zeros.
+    #    Equivalent to the historical OLD (8ee8056: cell values, zeros->9999)
+    #    followed by NEW (2be1616: Projection.Mode flips) sequence; merged
+    #    into one script in Sept 2026 (the two copies shared a backup name
+    #    and collided when both ran within the same second).
+    run_subproc("ostram.pipeline.scenarios.transformations.add_max_capacity_investment_rule", [
+        "--input-dir", s1b, "--fill-zeros",
+    ], cwd=wd, label="add_max_capacity_investment_rule (--fill-zeros)")
 
-    # 3) add_max NEW (commit 2be1616) — Projection.Mode flips
-    run_subproc("ostram.pipeline.scenarios.transformations.add_max_capacity_investment_rule_NEW_2be1616", [
-        "--input-dir", s1b,
-    ], cwd=wd, label="add_max_capacity_investment_rule (NEW 2be1616)")
-
-    # 4) fix_elc_pmode_revert — manual ELC*01 revert
+    # 3) fix_elc_pmode_revert — manual ELC*01 revert
     run_subproc("ostram.pipeline.scenarios.transformations.fix_elc_pmode_revert", [
         "--input", s1b / "A-O_Parametrization.xlsx",
     ], label="fix ELC projection mode")
 
-    # 5) B1b validation (V2 fix on PWRHYDLKAXX)
+    # 4) B1b validation (V2 fix on PWRHYDLKAXX)
     run_subproc("ostram.pipeline.scenarios.transformations.pre_solver_validation", [
         "--xlsx", s1b / "A-O_Parametrization.xlsx",
         "--auto-fix-all",

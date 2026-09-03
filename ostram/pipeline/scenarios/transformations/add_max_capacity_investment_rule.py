@@ -24,6 +24,11 @@ If yes ("ALLOWED"):
     year because residual covers it", "transmission interconnect not online
     until 2030"). Only blank cells mean "no upper bound was set."
 
+    With --fill-zeros, explicit 0 cells are ALSO replaced with 9999 (only
+    positive values are preserved). This reproduces the legacy behaviour of
+    the first version of this script (commit 8ee8056), which the pipeline
+    relies on to regenerate the BAU A-O_Parametrization exactly.
+
 If no ("ZEROED"):
     For TotalAnnualMaxCapacity AND TotalAnnualMaxCapacityInvestment, set every
     year cell to 0 (overwriting whatever was there). The tech is locked out.
@@ -39,6 +44,17 @@ Additionally, MinCapacityInvestment rows whose year cells are non-null but
 mode is "EMPTY" also get flipped to "User defined". This activates planned-
 build values (e.g. hydro 1.138 GW commissioned in 2026) that the upstream
 pipeline left with mode=EMPTY, where downstream would silently ignore them.
+
+HISTORY
+-------
+Until Sept 2026 the pipeline (transform.py, Stage 1b) ran two frozen copies
+of this script back to back on the same folder: the OLD version (commit
+8ee8056: cell values, zeros filled with 9999) followed by the NEW version
+(commit 2be1616: only blanks filled, plus the Projection.Mode flips). Running
+OLD then NEW is equivalent to a single pass of this script with --fill-zeros
+(NEW found nothing left to fill after OLD, and only contributed the mode
+flips). The two copies were merged into this single file because they shared
+the same backup folder name and collided when both ran within one second.
 
 SCOPE
 -----
@@ -68,6 +84,10 @@ USAGE
     python add_max_capacity_investment_rule.py \\
         --input-dir A1_Outputs/A1_Outputs_BAU \\
         --sheets "Secondary Techs"
+
+    # Pipeline (Stage 1b) call — legacy OLD+NEW equivalent:
+    python -m ostram.pipeline.scenarios.transformations.add_max_capacity_investment_rule \\
+        --input-dir stage1b --fill-zeros
 """
 
 from __future__ import annotations
@@ -106,7 +126,7 @@ def make_backup(input_dir: Path) -> Path:
     """Copy `input_dir` to a timestamped sibling folder and return its path."""
     if not input_dir.is_dir():
         raise FileNotFoundError(f"Input directory does not exist: {input_dir}")
-    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     backup = input_dir.parent / f"{input_dir.name}_PRE_MAXCAP_{stamp}"
     if backup.exists():
         raise FileExistsError(f"Backup folder already exists: {backup}")
@@ -166,9 +186,13 @@ def apply_rule_to_sheet(
     allowed: set,
     zeroed: set,
     allowed_fill: int = ALLOWED_FILL_VALUE,
+    fill_zeros: bool = False,
 ) -> dict:
     """
     Edit a worksheet in place, applying the rule. Returns a sheet-level log.
+
+    fill_zeros=True also replaces explicit 0 cells of ALLOWED techs'
+    MaxCapacityInvestment with `allowed_fill` (legacy 8ee8056 behaviour).
     """
     year_cols = find_year_columns(ws)
     headers = find_named_columns(ws, ["Tech", "Parameter", PROJ_MODE_COL])
@@ -233,7 +257,8 @@ def apply_rule_to_sheet(
             for year, col in year_cols.items():
                 cell = ws.cell(row=row_idx, column=col)
                 old = cell.value
-                if old is None:
+                is_zero = isinstance(old, (int, float)) and old == 0
+                if old is None or (fill_zeros and is_zero):
                     cell.value = allowed_fill
                     log["changes_allowed_techs"].append(
                         {
@@ -285,7 +310,7 @@ def apply_rule_to_sheet(
     return log
 
 
-def edit_parametrization(filepath: Path, sheets: list) -> dict:
+def edit_parametrization(filepath: Path, sheets: list, fill_zeros: bool = False) -> dict:
     """Apply the rule to `sheets` in the parametrization workbook (in place)."""
     df_all = pd.read_excel(filepath, sheet_name=None)
     wb = load_workbook(filepath)
@@ -309,7 +334,7 @@ def edit_parametrization(filepath: Path, sheets: list) -> dict:
 
         allowed, zeroed = categorize_techs(df, year_cols)
         ws = wb[sheet]
-        sheet_log = apply_rule_to_sheet(ws, allowed, zeroed)
+        sheet_log = apply_rule_to_sheet(ws, allowed, zeroed, fill_zeros=fill_zeros)
         sheet_log["allowed_techs"] = sorted(allowed)
         sheet_log["zeroed_techs"] = sorted(zeroed)
         file_log["sheets"].append(sheet_log)
@@ -325,6 +350,7 @@ def run(
     input_dir,
     sheets: list = None,
     skip_backup: bool = False,
+    fill_zeros: bool = False,
 ) -> dict:
     """End-to-end: backup, edit, write log. Returns the log dict."""
     input_dir = Path(input_dir)
@@ -336,7 +362,8 @@ def run(
     if not paramfile.exists():
         raise FileNotFoundError(f"{paramfile} not found")
 
-    log = edit_parametrization(paramfile, sheets)
+    log = edit_parametrization(paramfile, sheets, fill_zeros=fill_zeros)
+    log["fill_zeros"] = fill_zeros
     log["backup_dir"] = str(backup_dir) if backup_dir else None
     log["timestamp"] = datetime.now().isoformat()
 
@@ -364,7 +391,8 @@ def print_summary(log: dict) -> None:
         years = s["years_found"]
         print(f"Sheet: '{s['sheet']}'")
         print(f"  Years        : {years[0]}..{years[-1]} ({len(years)} years)")
-        print(f"  ALLOWED techs (fill EMPTY MaxInv with {ALLOWED_FILL_VALUE}): "
+        what = "EMPTY/zero" if log.get("fill_zeros") else "EMPTY"
+        print(f"  ALLOWED techs (fill {what} MaxInv with {ALLOWED_FILL_VALUE}): "
               f"{s['allowed_count']}")
         print(f"  ZEROED  techs (MaxCap=0 and MaxInv=0)               : "
               f"{s['zeroed_count']}")
@@ -408,10 +436,16 @@ def main() -> int:
         action="store_true",
         help="Skip backup creation (DANGEROUS — for testing only)",
     )
+    parser.add_argument(
+        "--fill-zeros",
+        action="store_true",
+        help="Also replace explicit 0 MaxCapacityInvestment cells of ALLOWED "
+             "techs with 9999 (legacy 8ee8056 behaviour; used by the pipeline).",
+    )
     args = parser.parse_args()
 
     try:
-        log = run(args.input_dir, args.sheets, args.skip_backup)
+        log = run(args.input_dir, args.sheets, args.skip_backup, args.fill_zeros)
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
