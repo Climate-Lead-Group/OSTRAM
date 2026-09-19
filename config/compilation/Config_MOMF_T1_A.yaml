@@ -698,3 +698,18 @@ columns4:
 - DAILYTIMEBRACKET
 - SEASON
 - STORAGE
+
+# Country prices remain in the maintained VariableCost workbook/CSV rows.
+fuel_cost_allocation:
+  # Charge country fuel expenditure at consumption while preserving shared fuel buses.
+  # VariableCost MIN rows remain the price authority (including scenario mirrors).
+  schema: fuel-cost-allocation-v1
+  consumer_prefix: PWR
+  supplier_prefix: MIN
+  upstream_base: minimum_country_price
+  fuel_families: [COA, GAS, OIL, PET, OTH, COG]
+  default_nonfuel_variable_cost: 0.001
+  # Prices use the evidence workbook's HHV/GCV convention. A universal conversion
+  # to the inherited fleet's undocumented heat basis is not established; do not
+  # alter engineering ratios or manufacture a conversion factor.
+  price_to_model_energy_factor: 1.0

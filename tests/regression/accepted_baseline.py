@@ -7,6 +7,7 @@ import argparse
 import csv
 import hashlib
 import json
+import yaml
 import re
 from pathlib import Path
 from typing import Any
@@ -14,7 +15,7 @@ from typing import Any
 
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[1]
-INVENTORY_PATH = REPO_ROOT / "config" / "scenarios" / "registry.json"
+INVENTORY_PATH = REPO_ROOT / "config" / "profiles" / "full.yaml"
 
 EXPECTED_ROOT_SCENARIOS = (
     "BAU",
@@ -85,7 +86,8 @@ def _load_json(path: Path) -> dict[str, Any]:
 def scenario_contract(
     inventory_path: Path = INVENTORY_PATH,
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
-    inventory = _load_json(inventory_path)
+    inventory = yaml.safe_load(inventory_path.read_text(encoding="utf-8"))
+    inventory = inventory.get("scenario_registry", inventory)
     roots = inventory.get("root_scenarios")
     decisions = inventory.get("decision_scenarios")
     _require(isinstance(roots, list), "scenario registry must contain root_scenarios")

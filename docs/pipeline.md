@@ -74,7 +74,7 @@ The maintained authorities are:
 
 - `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx`
 - `inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx`
-- `config/scenarios/registry.json`
+- `config/profiles/full.yaml::scenario_registry`
 - scenario-specific rule YAML/JSON files in `config/scenarios/<scenario>/`
 
 The registry declares four roots and the accepted derived scenarios. A root is

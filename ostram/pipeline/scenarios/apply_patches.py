@@ -7,9 +7,9 @@ the ``base_scenario`` declared by its canonical registry/patch contract and
 applying, in order:
 
     1. the SHARED VRE physical-potential ceiling layer
-       (sensitivity_expansion/reference/vre_ceilings_base.json)
+       (config/profiles/full.yaml::vre_ceilings)
     2. the run-specific edits in
-       A3_process/rules_scripts/configs/<scenario>/patches.json
+       config/profiles/full.yaml::scenario_inputs[scenario]
 
 Design (patterned on the rules_scripts):
   * Non-destructive to the SOURCE: the declared root A-O is never mutated.
@@ -31,7 +31,7 @@ USAGE
     python apply_patches.py --self-test
     python apply_patches.py --scenario B_Opt_TradeCap50 --restore
 
-patches.json edit schema (one dict per edit):
+scenario YAML edit schema (one dict per edit):
     sheet            : worksheet name (e.g. "Secondary Techs", "Demand Techs")
     param            : OSeMOSYS parameter (the "Parameter" column value)
     tech | tech_prefix | techs : technology selector (exactly one)
@@ -58,6 +58,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import yaml
 import math
 import shutil
 import sys
@@ -85,7 +86,7 @@ REPO = _PROJECT_PATHS.project_root
 A1_OUTPUTS = _PROJECT_PATHS.a1_outputs
 A3_PROCESS_DIR = SCRIPT_DIR / "transformations"
 CONFIGS = _PROJECT_PATHS.scenario_config_root
-CEIL_BASE = CONFIGS / "sensitivities" / "vre_ceilings_base.json"
+CEIL_BASE = CONFIGS.parent / "profiles" / "full.yaml"
 SOASIA_V18 = _PROJECT_PATHS.scenario_workbook
 MINIMUM_BOUNDARY_SOURCE = "minimum_investment_boundary"
 
@@ -539,7 +540,8 @@ def scale_activity_to_ceiling(ws, col_map, year_cols, tech, ceil, maxcap_orig, l
 
 def apply_ceiling_layer(wb, log, ceiling_path=CEIL_BASE):
     ceiling_path = Path(ceiling_path)
-    base = json.loads(ceiling_path.read_text(encoding="utf-8"))
+    base = yaml.safe_load(ceiling_path.read_text(encoding="utf-8"))
+    base = base.get("vre_ceilings", base)
     sheet, param = base["sheet"], base["param"]
     ceilings = base["ceilings_gw"]
     ws = wb[sheet]
@@ -603,17 +605,17 @@ def build_scenario(
     """Rebuild one derived scenario from its explicitly declared root.
 
     ``source`` is retained as a fail-closed compatibility override.  When it
-    is supplied it must equal ``patches.json::base_scenario``; omitting it uses
+    is supplied it must equal ``scenario YAML::base_scenario``; omitting it uses
     the declaration directly.  Injectable path roots support pristine,
     disposable materialization proofs without touching the live worktree.
     """
 
     a1_outputs = Path(a1_outputs)
     configs = Path(configs)
-    patches_path = configs / scenario / "patches.json"
+    patches_path = configs.parent / "profiles" / "full.yaml"
     if not patches_path.is_file():
-        raise FileNotFoundError(f"patches.json not found: {patches_path}")
-    patches = json.loads(patches_path.read_text(encoding="utf-8"))
+        raise FileNotFoundError(f"scenario YAML not found: {patches_path}")
+    patches = yaml.safe_load(patches_path.read_text(encoding="utf-8"))["scenario_inputs"][scenario]
     declared_source = patches.get("base_scenario")
     if not declared_source:
         raise ValueError(f"{patches_path} does not declare base_scenario")
@@ -645,7 +647,7 @@ def build_scenario(
     shutil.copytree(src_dir, tgt_dir)
 
     log = {"scenario": scenario, "source": source, "timestamp": stamp,
-           "patches_json": str(patches_path), "target": str(tgt_dir),
+           "scenario_yaml": str(patches_path), "target": str(tgt_dir),
            "backup_dir": str(backup_dir) if backup_dir else None,
            "cells": [], "rows_created": [], "skipped": []}
 
@@ -660,6 +662,18 @@ def build_scenario(
     )
     wb.save(tgt_dir / PARAM_FILE)
     wb.close()
+
+    # Generic descendant ceilings must not replace reviewed calibration.
+    # Resolve the declared ancestry; retain descendant edits outside the table.
+    from ostram.profiles import profile_policy
+    from .rules import apply_base_year_pin as pins
+    root = pins.calibration_root(scenario)
+    if root is not None:
+        rules = Path(profile_policy("pwr_min_pin_rules_path", str(pins.RULES_CSV)))
+        log["reviewed_calibration"] = pins.apply_pin_rules(
+            tgt_dir, root, rules, skip_backup=True,
+            enforce_production_contract=True,
+        )
 
     log_path = tgt_dir / f"apply_patches_CHANGES_{stamp}.json"
     log_path.write_text(json.dumps(log, indent=2, default=str))
@@ -757,7 +771,7 @@ def main():
         default=None,
         help=(
             "Fail-closed compatibility override; must match the "
-            "patches.json base_scenario declaration."
+            "scenario YAML base_scenario declaration."
         ),
     )
     ap.add_argument("--self-test", action="store_true")

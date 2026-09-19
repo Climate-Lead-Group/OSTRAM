@@ -263,17 +263,25 @@ The three scopes are deliberately different:
 
 | Scope | Required count | Membership rule |
 |---|---:|---|
-| Scenario registry | 16/16 | BAU plus the frozen accepted decision set in `config/scenarios/registry.json`; only the four roots are prepared by A1/A2. |
-| Static cleanup acceptance | 16/16 | Plain `BAU` plus the 15 decision-relevant scenarios. |
-| Compiled-input equivalence | 15/15 | The decision scenarios below; plain `BAU` is excluded. |
+| Scenario registry | 18/18 | BAU plus the accepted 17-case decision set in `config/profiles/full.yaml::scenario_registry`; only the four roots are prepared by A1/A2. |
+| Static cleanup acceptance | 18/18 | Plain `BAU` plus the 17 decision-relevant scenarios. |
+| Compiled-input equivalence | 17/17 | The decision scenarios below; plain `BAU` is excluded. |
 
 The compiled-input scenarios are `A_Calibrated_BAU`,
 `A_Calibrated_BAU_Clipped`, `B_Optimised_VRE`, `B_Opt_Clipped`,
 `B_Opt_DirBidir`, `B_Opt_DirContractual`, `B_Opt_IndiaCosts`,
 `B_Opt_IndiaCostsFuel`, `B_Opt_SolarCapex130`, `B_Opt_SolarCapexHi`,
 `B_Opt_SolarCapexSpike`, `B_Opt_TradeCap15`, `B_Opt_TxCap150`,
-`C_Target_VRE`, and `C_Target_VRE_Clipped`. `A_Calibrated_BAU` is the decision
+`C_Target_VRE`, `C_Target_VRE_Clipped`,
+`A_Calibrated_BAU_Clipped_TxFreeze2026`, and
+`B_Opt_Clipped_GrossImportCap15`. The last two were already part of the accepted
+September cost candidate; this release adds no scenario. `A_Calibrated_BAU` is the decision
 baseline.
+
+The release aligns the formerly stale exported registry constants and regression
+expectations with this existing 17-case YAML portfolio. It retains exact
+membership/order assertions and explicit parent checks for the freeze and
+strict-cap cases. Earlier 15-case assertion failures remain in the release log.
 
 Plain `BAU` remains protected, discovered, and part of static acceptance, but it is
 non-decision support evidence. The four superseded definitions --

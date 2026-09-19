@@ -6,6 +6,7 @@ Created on 2025
 """
 
 import argparse
+import re
 import os
 import pandas as pd
 import yaml
@@ -239,6 +240,40 @@ def process_scenario_folder(base_input_path, template_path, base_output_path, sc
     print(f"✅ Scenario '{scenario_name}': templates completed and saved successfully.\n")
     print('#------------------------------------------------------------------------------#')
 
+def historical_trade_activation(input_folder, scenario_name):
+    """Scope approved historical equations and reject incomplete applicable data."""
+    from ostram.profiles import profile_policy
+    from ostram.pipeline.scenarios.rules.apply_base_year_pin import calibration_root
+    root = calibration_root(scenario_name)
+    active = root is not None and root in profile_policy("historical_trade_roots", [])
+    model = resolve_paths().maintained_model.read_text(encoding="utf-8")
+    marker = "param D4HistoricalTradeActive binary default 0;"
+    if marker not in model:
+        if active:
+            raise ValueError(f"Historical trade model guard missing for {scenario_name}")
+        return None
+    if active:
+        equations = [line for line in model.splitlines() if line.startswith("s.t. D4_I1_TRADE_")]
+        if len(equations) != 50:
+            raise ValueError("Historical trade authority requires all 50 inequalities")
+        body = "\n".join(equations)
+        required = {
+            "TECHNOLOGY": set(re.findall(r'"(TRN[^" ]+)"', body)),
+            "FUEL": set(re.findall(r'"(ELC[^" ]+)"', body)),
+            "YEAR": set(re.findall(r'\b(20[0-9]{2})\b', body)),
+            "MODE_OF_OPERATION": set(re.findall(r'RateOfActivity\[r,l,"[^" ]+",([0-9]+),', body)),
+        }
+        for dimension, expected in required.items():
+            path = Path(input_folder) / f"{dimension}.csv"
+            if not path.is_file():
+                raise ValueError(f"{scenario_name}: historical trade requires {path}")
+            actual = set(pd.read_csv(path, dtype=str)["VALUE"])
+            missing = sorted(expected - actual)
+            if missing:
+                raise ValueError(f"{scenario_name}: historical trade missing {dimension} indices {missing}")
+    return int(active)
+
+
 def run_otoole_conversion(base_output_path, scenario_name, params):
     """
     Run the corrected 'otoole convert csv datafile' command for a given scenario.
@@ -257,23 +292,40 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
     # Step 2: Ensure the scenario executable folder exists
     os.makedirs(scenario_exec_dir, exist_ok=True)
 
-    # Step 3: Build the command
-    otoole_exe = get_env_executable('otoole')
-    command = [
-        otoole_exe, 'convert', 'csv', 'datafile',
-        input_folder,
-        output_file,
-        config_file
-    ]
+    # Keep otoole's reader, default omission and GMPL structure, but preserve
+    # binary64 parameter precision. The stock %g writer truncates calibrated
+    # bounds and physical profiles to six significant digits.
+    from otoole.input import Context
+    from otoole.read_strategies import ReadCsv
+    from otoole.write_strategies import WriteDatafile
+    from otoole.utils import validate_config
 
-    print(f"Running command: {' '.join(command)}")
+    class PreciseDatafile(WriteDatafile):
+        def _write_parameter(self, df, parameter_name, handle, default, **kwargs):
+            df = self._form_parameter(df, default)
+            handle.write(f"param default {default} : {parameter_name} :=\n")
+            df.to_csv(handle, sep=" ", header=False, index=True,
+                      float_format="%.17g", lineterminator="\n")
+            handle.write(";\n")
 
-    # Step 4: Run the command
-    result = _run_stage_command(command)
-    _require_stage_success(result, command, "otoole conversion", scenario_name)
-
-    # Step 5: Handle output
-    print(f"✅ Scenario '{scenario_name}' converted successfully.\n{result.stdout}")
+    with open(config_file, encoding="utf-8") as stream:
+        user_config = yaml.safe_load(stream)
+    validate_config(user_config)
+    context = Context(ReadCsv(user_config=user_config),
+                      PreciseDatafile(user_config=user_config))
+    from .gross_import_cap import render_policy
+    import_policy = render_policy(input_folder, scenario_name)
+    trade_active = historical_trade_activation(input_folder, scenario_name)
+    context.convert(input_folder, output_file)
+    if trade_active is not None:
+        datafile = Path(output_file)
+        text = datafile.read_text(encoding="utf-8")
+        text, count = re.subn(r"(?m)^end;\s*$",
+                             f"param D4HistoricalTradeActive := {trade_active};\nparam D4BusbarAccountingActive := {trade_active};\n{import_policy}end;\n", text)
+        if count != 1:
+            raise ValueError("Expected one otoole data terminator for trade activation")
+        datafile.write_text(text, encoding="utf-8")
+    print(f"Scenario '{scenario_name}' converted with full parameter precision.")
     print('#------------------------------------------------------------------------------#')
     return True
 

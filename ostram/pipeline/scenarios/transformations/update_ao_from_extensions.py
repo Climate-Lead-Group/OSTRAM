@@ -798,6 +798,46 @@ def refresh_year_cells_in_place(ws, ao_df, wv_lookup, key_cols,
     return n_refreshed, n_cells_changed, ao_only_keys, matched_keys_seen, ao_df_iter
 
 
+def append_missing_min_capacity_rows(ws, ao_df, wv_lookup, year_cols):
+    """Retain explicit positive stock floors absent from the AO template.
+
+    Step 2D refreshes existing rows and Step 3 adds new technologies. Neither
+    otherwise carries this optional standard parameter for an existing tech.
+    Blank/zero defaults must not create rows or change other scenarios.
+    """
+    headers = [cell.value for cell in ws[1]]
+    tech_col, param_col = headers.index("Tech"), headers.index("Parameter")
+    templates, existing = {}, set()
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        tech = _norm_key_part(row[tech_col])
+        templates.setdefault(tech, dict(zip(headers, row)))
+        existing.add((tech, _norm_key_part(row[param_col])))
+    appended = []
+    for (tech, param), values in wv_lookup.items():
+        if (param != "TotalAnnualMinCapacity" or (tech, param) in existing
+                or tech not in templates):
+            continue
+        if not any(pd.notna(values.get(y)) and float(values[y]) > 0
+                   for y in year_cols):
+            continue
+        row = {h: None for h in headers}
+        for h in ("Tech.ID", "Tech", "Tech.Name"):
+            row[h] = templates[tech].get(h)
+        row.update({"Parameter": param, "Unit": "GW",
+                    "Projection.Mode": "User defined"})
+        for y in year_cols:
+            value = values.get(y)
+            row[y] = float(value) if pd.notna(value) else 0.0
+        ws.append([row.get(h) for h in headers])
+        color_row(ws, ws.max_row, PARAM_REFRESH_COLOR)
+        appended.append(row)
+        existing.add((tech, param))
+    if appended:
+        ao_df = pd.concat([ao_df, pd.DataFrame(appended, columns=ao_df.columns)],
+                          ignore_index=True)
+    return ao_df, len(appended)
+
+
 def replace_capacities_blocks_for_techs(ws, ao_df, wv_cap_df, color_hex=PARAM_REFRESH_COLOR):
     """
     For every tech that exists in BOTH AO Capacities and WV Capacities_CF:
@@ -987,6 +1027,14 @@ for ao_sheet, wv_sheet, key_cols, kind, scalar_col in STEP_2D_PLAN:
             ws, ao_df, wv_lookup, key_cols, value_col_intersection,
             color_hex=PARAM_REFRESH_COLOR
         )
+
+    if ao_sheet == "Secondary Techs":
+        new_ao_df, n_stock_floors = append_missing_min_capacity_rows(
+            ws, new_ao_df, wv_lookup, value_col_intersection
+        )
+        if n_stock_floors:
+            msg = f"  Appended {n_stock_floors} explicit TotalAnnualMinCapacity row(s)"
+            print(msg); log_lines.append(msg)
 
     # Sync the in-memory cache so Step 3 Pass 1 reads refreshed values.
     ao_data["Param"][ao_sheet] = new_ao_df

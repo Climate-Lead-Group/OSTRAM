@@ -963,6 +963,10 @@ def run_scenario_output_stage(
             "ostram.pipeline.execution.concatenate",
             file_path_outputs, paths.output_file,
         ]
+        from ostram.profiles import profile_policy
+        if profile_policy('reconcile_variable_cost_exports', False):
+            concatenate_command += ['--datafile', paths.data_file+'.txt',
+                                    '--parameter-csv', str(Path(file_path_template)/'VariableCost.csv')]
         if params["concat_otoole_csv"]:
             dependencies.run_process(
                 concatenate_command,

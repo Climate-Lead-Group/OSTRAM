@@ -7,6 +7,7 @@ import importlib.util
 import inspect
 import io
 import json
+import yaml
 import os
 import shutil
 import subprocess
@@ -26,7 +27,7 @@ SCENARIO_PACKAGE = REPO_ROOT / "ostram" / "pipeline" / "scenarios"
 A3_ENTRYPOINT = SCENARIO_PACKAGE / "transform.py"
 A3_ORCHESTRATOR = SCENARIO_PACKAGE / "orchestrator.py"
 SCENARIO_HELPER = SCENARIO_PACKAGE / "transformations" / "scenario_workbooks.py"
-SCENARIO_REGISTRY = REPO_ROOT / "config" / "scenarios" / "registry.json"
+SCENARIO_REGISTRY = REPO_ROOT / "config" / "profiles" / "full.yaml"
 
 ACTIVE_SCENARIOS = (
     "BAU",
@@ -109,7 +110,7 @@ class A3TraceHarness:
         self.rules_dir.mkdir()
         self.soasia = self.caller / "scenario-template.xlsx"
         self.soasia.write_bytes(b"fixture template marker")
-        payload = json.loads(SCENARIO_REGISTRY.read_text(encoding="utf-8"))
+        payload = yaml.safe_load(SCENARIO_REGISTRY.read_text(encoding="utf-8"))["scenario_registry"]
         scenario_names = (
             payload["support_scenarios"] + payload["decision_scenarios"]
         )
@@ -955,7 +956,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
             harness.close()
 
     def test_static_pin_dispatches_only_for_exact_canonical_roots(self) -> None:
-        payload = json.loads(SCENARIO_REGISTRY.read_text(encoding="utf-8"))
+        payload = yaml.safe_load(SCENARIO_REGISTRY.read_text(encoding="utf-8"))["scenario_registry"]
         scenarios = (
             payload["support_scenarios"] + payload["decision_scenarios"]
         )

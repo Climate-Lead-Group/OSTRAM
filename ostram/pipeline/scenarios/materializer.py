@@ -2,7 +2,7 @@
 
 Root scenarios are rebuilt by the maintained A3 entrypoint.  Derived
 scenarios are then rebuilt from the root declared in
-``scenario_registry.json``, receive their patch layer, and finally receive any
+``full.yaml::scenario_registry``, receive their patch layer, and finally receive any
 declared direction overlay.  This module stops before B1, B2, or a solver.
 """
 
@@ -364,9 +364,7 @@ def materialize_scenarios(
                 a1_outputs=active_paths.a1_outputs,
                 configs=resolve_paths().scenario_config_root,
                 ceiling_path=(
-                    resolve_paths().scenario_config_root
-                    / "sensitivities"
-                    / "vre_ceilings_base.json"
+                    resolve_paths().scenario_registry
                 ),
                 authority_path=active_paths.soasia,
             )

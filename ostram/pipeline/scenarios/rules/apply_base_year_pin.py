@@ -1,22 +1,23 @@
-"""Apply the audited 2023-2026 PWR/MIN calibration allowlist.
+"""Materialize the approved generation calibration and retained controls.
 
-The accepted WS-4 recipe formerly read a solver result and broadly rewrote
-whole technology bands.  Production now consumes a frozen, key-complete table
-derived from the independently audited restoration evidence.  Only an exact
-``(REGION, TECHNOLOGY, PARAMETER, YEAR)`` rule may change a workbook cell.
-
-Frozen lineage:
-
-* corrected evidence ``canonical_source_rules.csv`` SHA-256:
-  ``9c28f9d43c3037daa668554a94061e829d0974662a746efa48d4a2dc341b9ca6``
-* production projection ``pwr_min_2023_2026_pin.csv`` SHA-256:
-  ``cdcb0aeb570486b40ab96be68f6db031af54afa3ac02e4832a456522ca73a17c``
-
-The transformation is deliberately unable to create rows or columns, touch
-Maldives, write outside 2023-2026, or synthesize an absent value as zero or
-9999.  ``Projection.Mode`` is row-wide, so an EMPTY row can be activated only
-when every non-target year cell is blank; otherwise the run fails before any
-workbook mutation.
+Only explicit complete keys in the frozen table may change a workbook cell.
+Historical evidence limits follow the documented 0.98/1.02 convention;
+Nepal fallback is lower-only. The 2026 transition is lower-only at 0.95,
+except the owner's two waste-mapping waivers (2023-2026 lower limits zero).
+ABSENT operations retire replay values and expressly removed upper bounds.
+Original observations and unresolved source cells remain unchanged.
+Bangladesh 2023 coal/gas/combined-oil/hydro references are approved provisional
+fiscal-average estimates: (FY2022/23 + FY2023/24) / 2, used as calendar-2023
+proxies, not observed calendar generation. BPDB Annual Reports, both printed
+p.14 / PDF p.15, Energy Generation by Fuel Type:
+FY2022/23: https://objectstorage.ap-dcc-gazipur-1.oraclecloud15.com/n/axvjbnqprylg/b/V2Ministry/o/office-bpdb/2024/12/651fabb73895432c99a7f6760e1b381d.pdf
+FY2023/24 archived report: https://www.energytransitionbd.org/_files/ugd/315ccb_6d364c5d297344e9a02aeab743af34a1.pdf
+Pairs in GWh: coal (10081,19138), gas (46013,46579), combined oil
+(20650,11797), hydro (610,825). Bounds remain reference * 0.0036 * 0.98/1.02.
+SUPPORT.xlsx Current reference audit retains original R3 observations,
+both saved-source paths/hashes and the adopted averaging method separately.
+The original 787 India/Sri Lanka capacity and investment controls are retained.
+R3 and the supporting evidence remain outside production.
 """
 
 from __future__ import annotations
@@ -42,8 +43,9 @@ from openpyxl import load_workbook
 
 
 PARAM_FILE = "A-O_Parametrization.xlsx"
-SHEETS = ("Primary Techs", "Secondary Techs")
-PIN_YEARS = frozenset({2023, 2024, 2025, 2026})
+SHEETS = ("Primary Techs", "Secondary Techs", "Capacities")
+GENERATION_YEARS = frozenset({2023, 2024, 2025, 2026})
+CAPACITY_YEARS = frozenset(range(2023, 2051))
 PIN_ROOT_SCENARIOS = frozenset(
     {"A_Calibrated_BAU", "B_Optimised_VRE", "C_Target_VRE"}
 )
@@ -51,10 +53,16 @@ RULES_CSV = (
     resolve_paths().scenario_config_root / "rules" / "pwr_min_2023_2026_pin.csv"
 )
 RULES_SHA256 = (
+    "2aa729dd83d0b7de602e22d9eb278eac94941acc5b6afed0fc972c20b3f82f24"
+)
+INHERITED_CANONICAL_SOURCE_RULES_SHA256 = (
     "cdcb0aeb570486b40ab96be68f6db031af54afa3ac02e4832a456522ca73a17c"
 )
-CANONICAL_SOURCE_RULES_SHA256 = (
-    "9c28f9d43c3037daa668554a94061e829d0974662a746efa48d4a2dc341b9ca6"
+GENERATION_PIN_SOURCE_SHA256 = (
+    "e7c701e7e611f422df36ac627a8346b504a963a896f1ff23b99a5a133b26611c"
+)
+CAPACITY_CHRONOLOGY_SOURCE_SHA256 = (
+    "efc432d8ee11cb95d83ed0b4d83520b5c9b34ea969436cb9d7561b4dffc52fc2"
 )
 BACKUP_TAG = "_PRE_PWR_MIN_PIN_"
 
@@ -63,6 +71,7 @@ P_MAX_INV = "TotalAnnualMaxCapacityInvestment"
 P_MIN_INV = "TotalAnnualMinCapacityInvestment"
 P_ACTIVITY_LOWER = "TotalTechnologyAnnualActivityLowerLimit"
 P_ACTIVITY_UPPER = "TotalTechnologyAnnualActivityUpperLimit"
+P_RESIDUAL_CAPACITY = "ResidualCapacity"
 ALLOWED_PARAMETERS = frozenset(
     {
         P_MAX_CAP,
@@ -70,13 +79,15 @@ ALLOWED_PARAMETERS = frozenset(
         P_MIN_INV,
         P_ACTIVITY_LOWER,
         P_ACTIVITY_UPPER,
+        P_RESIDUAL_CAPACITY,
     }
 )
 ACTIVITY_PARAMETERS = frozenset({P_ACTIVITY_LOWER, P_ACTIVITY_UPPER})
+CAPACITY_PARAMETERS = frozenset({P_RESIDUAL_CAPACITY, P_MAX_INV, P_MIN_INV})
 ALLOWED_COUNTRIES = frozenset({"BGD", "BTN", "IND", "LKA", "NPL"})
 ORDERED_INDICES = ("REGION", "TECHNOLOGY", "YEAR")
-EXPECTED_AUTHORITY = "BENCHMARK_SUPPORTED"
-EXPECTED_LINEAGE = "ACCEPTED_WS4_BASE_YEAR_PIN_2023_2026"
+GENERATION_OPERATION = "GENERATION_PIN"
+CAPACITY_OPERATION = "CAPACITY_CHRONOLOGY"
 EXPECTED_FIELDS = (
     "source_rule_id",
     "parameter",
@@ -94,20 +105,14 @@ EXPECTED_FIELDS = (
     "root_scenarios_with_actual_change",
     "authority_classification",
     "authority_lineage_class",
+    "timeslice",
 )
-EXPECTED_PARAMETER_COUNTS = {
-    P_MAX_CAP: 620,
-    P_MAX_INV: 388,
-    P_MIN_INV: 144,
-    P_ACTIVITY_LOWER: 216,
-    P_ACTIVITY_UPPER: 588,
-}
-EXPECTED_STATE_COUNTS = {"POSITIVE": 1356, "ZERO": 600}
-EXPECTED_SCENARIO_COUNTS = {
-    "A_Calibrated_BAU": 1915,
-    "B_Optimised_VRE": 1956,
-    "C_Target_VRE": 1956,
-}
+EXPECTED_RULE_COUNT = 3429
+EXPECTED_PARAMETER_COUNTS = {'TotalAnnualMaxCapacity': 484, 'TotalAnnualMaxCapacityInvestment': 298, 'TotalAnnualMinCapacityInvestment': 146, 'ResidualCapacity': 502, 'TotalTechnologyAnnualActivityLowerLimit': 276, 'TotalTechnologyAnnualActivityUpperLimit': 483, 'CapacityFactor': 1240}
+EXPECTED_STATE_COUNTS = {'POSITIVE': 2717, 'ZERO': 399, 'ABSENT': 313}
+EXPECTED_COUNTRY_COUNTS = {'IND': 2497, 'LKA': 375, 'BGD': 271, 'BTN': 166, 'NPL': 120}
+EXPECTED_AUTHORITY_LINEAGE_COUNTS = {('BENCHMARK_SUPPORTED', 'ACCEPTED_WS4_BASE_YEAR_PIN_2023_2026'): 787, ('OFFICIAL_FISCAL_OPERATING_STOCK', 'BPDB_COHORTS_AND_BCRECL_ACTUAL_COD'): 4, ('R8_CAP03_CAP08_CAP16_CAP23', 'D4_R2_CAPACITY_CHRONOLOGY'): 8, ('CORRECT_PABNA_SOLAR_RETIREMENT', 'BCRECL_ACTUAL_COD_AND_RETAINED_30_YEAR_LIFE'): 16, ('EXPLICIT_GOVERNED_RESIDUAL', 'V20_USER_DEFINED_RESIDUAL_LOST_DURING_MATERIALIZATION'): 224, ('VERIFIED_OPERATING_CAPACITY', 'RMA_PRODUCTION_YEAR_END_STOCK_COD_EXPOSURE_IN_PROFILE_ONCE'): 4, ('VERIFIED_OPERATING_CAPACITY', 'DGPC_DHYE_AND_APPROVED_UNIT_COD_CALENDAR_EXPOSURE_ONCE'): 24, ('OWNER_R7_R8_CAPACITY_FREEZE', 'D4_R2_CAPACITY_FREEZE'): 65, ('Observed', 'GENERATION_CALIBRATION_EVIDENCE_R3'): 66, ('Approved fiscal-average estimate', 'BPDB_FY2022_23_FY2023_24_MEAN_APPROVED_20260913'): 8, ('2026 transition assumption', 'GENERATION_CALIBRATION_EVIDENCE_R3'): 61, ('Observed source category', 'GENERATION_CALIBRATION_EVIDENCE_R3'): 232, ('Allocated', 'GENERATION_CALIBRATION_EVIDENCE_R3'): 60, ('OWNER_MAPPING_EXCEPTION', 'OWNER_RULING_WASTE_MAPPING_20260906'): 8, ('Observed source category', 'VERIFIED_ASSEMBLY_ERRATUM_NORTH_SHP_2023'): 2, ('ALLOCATED_FALLBACK', 'R3_NEPAL_NATIONAL_TOTAL_AND_OFFICIAL_OPERATING_ROSTER'): 9, ('OWNER_FALLBACK_LOWER_ONLY', 'OWNER_RULING_NEPAL_LOWER_ONLY_20260906'): 9, ('RETIRED_SOLVER_REPLAY', 'ORIGINAL_PRODUCTION_ROW_ID_AUDIT'): 296, ('TRANSITION_UPPER_REMOVED', 'R3_2026_LOWER_ONLY'): 8, ('VERIFIED_SEPHU_AND_GOVERNED_DSP', 'MOENR_2025_07_19_AND_MOF_2026_27_P157'): 28, ('OFFICIAL_OPERATING_CAPACITY', 'NEA_OFFICIAL_ROSTER_COD_WEIGHTED_ONCE'): 84, ('HISTORICAL_STOCK_NO_DOUBLE_COUNT', 'NEA_OFFICIAL_ROSTER_REPLACES_MODEL_PLACEHOLDER_INVESTMENTS'): 18, ('CORRECT_PUMPED_STORAGE_MAPPING', 'V20_PLANNED_GENERATION_ROW_481_AND_EXISTING_STORAGE_LONG_MAPPING'): 2, ('OFFICIAL_PREVIOUS_YEAR_SOLAR_STOCK', 'CEB_SD2025_P0_P1_CEB_ROOFTOP_GRID_PLUS_GOVERNED_LECO_LESS_MANDATORY_INVESTMENT'): 26, ('GUARDED_MINIMUM_OVER_GENERIC_RESIDUAL_CEILING', 'V20_INTERCONNECTOR_PARAMS_AND_CAP_TRN_TO_RESIDUAL'): 56, ('SOURCE_YEAR_DISPATCH_PROFILE', 'CEA_MONTHLY_PLF_WITH_RETAINED_AF_DECOMPOSITION'): 800, ('SOURCE_YEAR_DISPATCH_PROFILE', 'PGCB_FISCAL_PROFILE_WITH_SAME_PERIOD_CAPACITY'): 120, ('SOURCE_YEAR_DISPATCH_PROFILE', 'PUCSL_SOURCE_YEAR_HYDRO_WITH_RETAINED_AF'): 80, ('SOURCE_YEAR_DISPATCH_PROFILE', 'CEA_GENERATION_MNRE_GRID_STOCK_NINJA_DAYLIGHT_SHAPE'): 160, ('SOURCE_YEAR_DISPATCH_PROFILE', 'RMA_VERIFIED_PRODUCTION_COD_AND_AF_COUNTED_ONCE'): 80, ('OFFICIAL_OPERATING_STOCK', 'PUCSL_YEAR_END_HYDRO_STOCK_EXPOSURE_IN_MONTHLY_PROFILE_ONCE'): 28, ('OFFICIAL_GRID_SOLAR_STOCK', 'MNRE_YEAR_END_GRID_STOCK_LESS_RETAINED_MANDATORY_INVESTMENT'): 6, ('OFFICIAL_GRID_SOLAR_STOCK', 'MNRE_OBSERVED_NET_COHORTS_RETAINED_25_YEAR_MODEL_LIFE'): 50}
+EXPECTED_SCENARIO_COUNTS = {'A_Calibrated_BAU': 3401, 'B_Optimised_VRE': 3429, 'C_Target_VRE': 3429}
 
 
 @dataclass(frozen=True)
@@ -127,10 +132,27 @@ class PinRule:
     root_scenarios: tuple[str, ...]
     authority_classification: str
     authority_lineage_class: str
+    operation_kind: str
+    timeslice: str = ""
 
     @property
-    def complete_key(self) -> tuple[str, str, str, int]:
-        return self.region, self.technology, self.parameter, self.year
+    def complete_key(self) -> tuple[str, str, str, int, str]:
+        return self.region, self.technology, self.parameter, self.year, self.timeslice
+
+
+def calibration_root(scenario: str) -> str | None:
+    """Resolve audited authority through the canonical scenario ancestry."""
+    if not profile_policy("apply_pwr_min_pin", True):
+        return None
+    from ostram.pipeline.scenarios.registry import load_registry
+    registry = load_registry()
+    seen = set()
+    while scenario in registry.derived_by_name:
+        if scenario in seen:
+            raise ValueError(f"Cyclic calibration ancestry: {scenario}")
+        seen.add(scenario)
+        scenario = registry.derived_by_name[scenario].base_scenario
+    return scenario if scenario in PIN_ROOT_SCENARIOS else None
 
 
 def _sha256(path: Path) -> str:
@@ -157,7 +179,9 @@ def _validate_units(
     physical_unit: str,
     compiled_unit: str,
 ) -> None:
-    if parameter in ACTIVITY_PARAMETERS:
+    if parameter == "CapacityFactor":
+        expected = ("fraction", "fraction")
+    elif parameter in ACTIVITY_PARAMETERS:
         expected = ("PJ_per_year_activity", "PJ_per_year")
     elif technology.startswith("MIN"):
         expected = (
@@ -176,113 +200,102 @@ def _validate_units(
 
 def _parse_rule(row: dict[str, str], row_number: int) -> PinRule:
     label = f"rules row {row_number}"
-    try:
-        indices = tuple(json.loads(row["ordered_parameter_indices"]))
-    except (json.JSONDecodeError, TypeError) as error:
-        raise ValueError(f"{label} has invalid ordered indices") from error
-    if indices != ORDERED_INDICES:
-        raise ValueError(f"{label} ordered indices are not {ORDERED_INDICES!r}")
-    if row["region"] != "GLOBAL":
-        raise ValueError(f"{label} region is not GLOBAL")
-    parameter = row["parameter"]
-    if parameter not in ALLOWED_PARAMETERS:
-        raise ValueError(f"{label} has unsupported parameter {parameter!r}")
-    try:
-        year = int(row["year"])
-    except ValueError as error:
-        raise ValueError(f"{label} has invalid year {row['year']!r}") from error
-    if year not in PIN_YEARS:
-        raise ValueError(f"{label} year {year} is outside 2023-2026")
-    technology = row["technology"]
-    if not technology.startswith(("PWR", "MIN")):
-        raise ValueError(f"{label} technology is not PWR/MIN: {technology!r}")
-    if "MDV" in technology:
-        raise ValueError(f"{label} contains a Maldives technology")
-    country = row["canonical_country"]
-    if country not in ALLOWED_COUNTRIES:
-        raise ValueError(f"{label} has unsupported country {country!r}")
-    if row["required_root_present"] != "true":
-        raise ValueError(
-            f"{label} must be explicitly present; absence cannot be encoded"
-        )
-    value = _parse_decimal(
-        row["required_root_value"],
-        label=f"{label} required_root_value",
-    )
-    if value < 0:
-        raise ValueError(f"{label} value must be non-negative")
-    state = row["required_root_state"]
-    expected_state = "ZERO" if value == 0 else "POSITIVE"
-    if state != expected_state:
-        raise ValueError(
-            f"{label} state/value mismatch: {state!r} vs {value}"
-        )
-    if value == Decimal("9999") and parameter != P_MAX_CAP:
-        raise ValueError(f"{label} uses 9999 outside {P_MAX_CAP}")
-    scenarios = tuple(
-        item
-        for item in row["root_scenarios_with_actual_change"].split(";")
-        if item
-    )
-    if not scenarios or len(scenarios) != len(set(scenarios)):
-        raise ValueError(f"{label} has invalid root-scenario membership")
-    if not set(scenarios).issubset(PIN_ROOT_SCENARIOS):
-        raise ValueError(f"{label} has an unsupported root scenario")
-    if row["authority_classification"] != EXPECTED_AUTHORITY:
-        raise ValueError(f"{label} is not benchmark-supported")
-    if row["authority_lineage_class"] != EXPECTED_LINEAGE:
-        raise ValueError(f"{label} has an unsupported authority lineage")
-    expected_id = (
-        f"PWR_MIN_PIN::{parameter}::GLOBAL::{technology}::{year}"
-    )
-    if row["source_rule_id"] != expected_id:
-        raise ValueError(
-            f"{label} source_rule_id does not match its complete key"
-        )
-    _validate_units(
-        parameter,
-        technology,
-        row["verified_physical_unit"],
-        row["verified_compiled_unit"],
-    )
-    return PinRule(
-        source_rule_id=row["source_rule_id"],
-        parameter=parameter,
-        region="GLOBAL",
-        technology=technology,
-        semantic_technology_group=row["semantic_technology_group"],
-        canonical_country=country,
-        year=year,
-        present=True,
-        value=value,
-        state=state,
-        physical_unit=row["verified_physical_unit"],
-        compiled_unit=row["verified_compiled_unit"],
-        root_scenarios=scenarios,
-        authority_classification=row["authority_classification"],
-        authority_lineage_class=row["authority_lineage_class"],
-    )
+    timeslice = row.get("timeslice", "")
+    expected_indices = ("REGION", "TECHNOLOGY", "TIMESLICE", "YEAR") if row['parameter'] == 'CapacityFactor' else ORDERED_INDICES
+    if tuple(json.loads(row["ordered_parameter_indices"])) != expected_indices:
+        raise ValueError(f"{label}: invalid complete indices")
+    if row['parameter'] != 'CapacityFactor' and timeslice:
+        raise ValueError(f"{label}: unexpected timeslice on annual parameter")
+    parameter, technology, country = row["parameter"], row["technology"], row["canonical_country"]
+    year = int(row["year"])
+    if row["region"] != "GLOBAL" or parameter not in ALLOWED_PARAMETERS | {"CapacityFactor"}:
+        raise ValueError(f"{label}: invalid region/parameter")
+    if country not in ALLOWED_COUNTRIES or "MDV" in technology:
+        raise ValueError(f"{label}: unsupported country")
+    if not technology.startswith(("PWR", "MIN", "TRN")):
+        raise ValueError(f"{label}: unsupported technology")
+    if technology.startswith("TRN") and technology not in {"TRNINDNOINDWE", "TRNINDEAINDWE"}:
+        raise ValueError(f"{label}: transmission correction is outside the reviewed scope")
+    if row["required_root_present"] not in {"true", "false"}:
+        raise ValueError(f"{label}: invalid presence")
+    present = row["required_root_present"] == "true"
+    value = _parse_decimal(row["required_root_value"], label=label) if present else Decimal(0)
+    if not present and row["required_root_value"] != "":
+        raise ValueError(f"{label}: absence must have a blank value")
+    expected_state = ("ZERO" if value == 0 else "POSITIVE") if present else "ABSENT"
+    if value < 0 or row["required_root_state"] != expected_state:
+        raise ValueError(f"{label}: invalid state/value")
+    scenarios = tuple(row["root_scenarios_with_actual_change"].split(";"))
+    if not scenarios or len(set(scenarios)) != len(scenarios) or not set(scenarios).issubset(PIN_ROOT_SCENARIOS):
+        raise ValueError(f"{label}: invalid scenarios")
+    identity = row["source_rule_id"]
+    operation = identity.split("::", 1)[0]
+    authority = (row["authority_classification"], row["authority_lineage_class"])
+    if authority not in EXPECTED_AUTHORITY_LINEAGE_COUNTS:
+        raise ValueError(f"{label}: unsupported authority lineage")
+    expected_id = f"{operation}::{parameter}::GLOBAL::{technology}::{year}"
+    if operation == "PWR_MIN_PIN":
+        if country not in {"IND", "LKA"} or parameter in ACTIVITY_PARAMETERS or not present or year not in GENERATION_YEARS:
+            raise ValueError(f"{label}: inherited replay activity cannot be retained")
+        operation_kind = "RETAINED_CONTROL"
+    elif operation == "D4_R3_GENERATION":
+        if parameter not in ACTIVITY_PARAMETERS or not present or year not in GENERATION_YEARS:
+            raise ValueError(f"{label}: invalid R3 generation operation")
+        if year == 2026 and (parameter != P_ACTIVITY_LOWER or country == "NPL"):
+            raise ValueError(f"{label}: 2026 permits only the approved non-Nepal lower transition")
+        operation_kind = GENERATION_OPERATION
+    elif operation == "D4_R3_REMOVE":
+        if present or parameter not in ACTIVITY_PARAMETERS or year not in GENERATION_YEARS:
+            raise ValueError(f"{label}: invalid activity retirement")
+        operation_kind = "ACTIVITY_RETIREMENT"
+    elif operation == "D4_PROFILE_INPUT":
+        if parameter != 'CapacityFactor' or not present or year not in GENERATION_YEARS or not timeslice or not 0 <= value <= 1:
+            raise ValueError(f"{label}: invalid time-slice profile correction")
+        expected_id = f"{operation}::{parameter}::GLOBAL::{technology}::{timeslice}::{year}"
+        operation_kind = CAPACITY_OPERATION
+    elif operation == "D4_PHYSICAL_INPUT":
+        if not technology.startswith("PWR") or parameter not in {P_RESIDUAL_CAPACITY, P_MAX_INV, P_MIN_INV} or year not in CAPACITY_YEARS or not present:
+            raise ValueError(f"{label}: invalid physical input correction")
+        operation_kind = CAPACITY_OPERATION
+    elif operation == "D4_INPUT_CORRECTION":
+        if parameter != P_MAX_CAP or technology not in {"TRNINDNOINDWE", "TRNINDEAINDWE"} or year not in CAPACITY_YEARS or not present:
+            raise ValueError(f"{label}: invalid input correction")
+        operation_kind = CAPACITY_OPERATION
+    elif operation == "D4_R2_RESIDUAL":
+        expected_id = f"{operation}::{technology}::{year}"
+        if country not in {"BGD", "BTN"} or parameter != P_RESIDUAL_CAPACITY or year not in CAPACITY_YEARS or not present:
+            raise ValueError(f"{label}: invalid approved residual operation")
+        operation_kind = CAPACITY_OPERATION
+    elif operation == "D4_R2_CAPACITY_FREEZE":
+        expected_id = f"{operation}::{technology}::{parameter}::{year}"
+        if country not in {"BGD", "BTN"} or parameter not in {P_MAX_INV, P_MIN_INV} or year not in GENERATION_YEARS or not present:
+            raise ValueError(f"{label}: invalid approved investment freeze")
+        operation_kind = CAPACITY_OPERATION
+    else:
+        raise ValueError(f"{label}: unsupported operation")
+    if identity != expected_id:
+        raise ValueError(f"{label}: ID does not match complete key")
+    _validate_units(parameter, technology, row["verified_physical_unit"], row["verified_compiled_unit"])
+    return PinRule(identity, parameter, "GLOBAL", technology, row["semantic_technology_group"], country,
+                   year, present, value, expected_state, row["verified_physical_unit"], row["verified_compiled_unit"],
+                   scenarios, *authority, operation_kind, timeslice)
 
 
 def _validate_production_contract(rules: tuple[PinRule, ...]) -> None:
-    if len(rules) != 1956:
-        raise ValueError(f"production rule count is {len(rules)}, expected 1956")
-    if len({(rule.technology, rule.parameter) for rule in rules}) != 517:
-        raise ValueError("production rules do not resolve to exactly 517 rows")
-    if len({rule.technology for rule in rules}) != 182:
-        raise ValueError("production rules do not contain exactly 182 technologies")
-    if Counter(rule.parameter for rule in rules) != EXPECTED_PARAMETER_COUNTS:
-        raise ValueError("production parameter distribution mismatch")
-    if Counter(rule.state for rule in rules) != EXPECTED_STATE_COUNTS:
-        raise ValueError("production state distribution mismatch")
-    scenario_counts = {
-        scenario: sum(scenario in rule.root_scenarios for rule in rules)
-        for scenario in PIN_ROOT_SCENARIOS
-    }
-    if scenario_counts != EXPECTED_SCENARIO_COUNTS:
-        raise ValueError(
-            f"production scenario distribution mismatch: {scenario_counts}"
-        )
+    if len(rules) != EXPECTED_RULE_COUNT:
+        raise ValueError("reviewed rule count mismatch")
+    for actual, expected in [
+        (Counter(r.parameter for r in rules), EXPECTED_PARAMETER_COUNTS),
+        (Counter(r.state for r in rules), EXPECTED_STATE_COUNTS),
+        (Counter(r.canonical_country for r in rules), EXPECTED_COUNTRY_COUNTS),
+        (Counter((r.authority_classification, r.authority_lineage_class) for r in rules), EXPECTED_AUTHORITY_LINEAGE_COUNTS),
+    ]:
+        if actual != expected:
+            raise ValueError("reviewed rule distribution mismatch")
+    if sum(r.source_rule_id.startswith("PWR_MIN_PIN::") for r in rules) != 787:
+        raise ValueError("retained control count mismatch")
+    if sum(r.present and r.year == 2026 and r.parameter == P_ACTIVITY_LOWER for r in rules) != 63:
+        raise ValueError("2026 transition count mismatch")
 
 
 def load_pin_rules(
@@ -472,15 +485,15 @@ def apply_pin_rules(
         workbook.close()
         raise FileExistsError(temp_path)
 
-    rules_by_row: dict[tuple[str, str], list[PinRule]] = defaultdict(list)
+    rules_by_row: dict[tuple[str, str, str], list[PinRule]] = defaultdict(list)
     for rule in rules:
-        rules_by_row[(rule.technology, rule.parameter)].append(rule)
+        rules_by_row[(rule.technology, rule.parameter, rule.timeslice)].append(rule)
 
     try:
         missing_sheets = [sheet for sheet in SHEETS if sheet not in workbook]
         if missing_sheets:
             raise ValueError(f"missing required sheets: {missing_sheets}")
-        locations: dict[tuple[str, str], list[tuple[object, int]]] = defaultdict(
+        locations: dict[tuple[str, str, str], list[tuple[object, int]]] = defaultdict(
             list
         )
         sheet_metadata: dict[str, tuple[dict[object, int], dict[int, int]]] = {}
@@ -509,11 +522,12 @@ def apply_pin_rules(
                         row=row_number, column=parameter_column
                     ).value,
                 )
+                key = (*key, str(worksheet.cell(row=row_number, column=headers["Timeslices"]).value) if sheet_name == "Capacities" else "")
                 if key in rules_by_row:
                     locations[key].append((worksheet, row_number))
 
         missing_rows = sorted(
-            key for key in rules_by_row if len(locations.get(key, ())) == 0
+            key for key in rules_by_row if len(locations.get(key, ())) == 0 and any(r.present for r in rules_by_row[key])
         )
         duplicate_rows = {
             key: [(worksheet.title, row) for worksheet, row in found]
@@ -528,6 +542,8 @@ def apply_pin_rules(
         assignments: list[tuple[object, int, Decimal, PinRule]] = []
         projection_flips: list[tuple[object, int]] = []
         for key, row_rules in rules_by_row.items():
+            if not locations.get(key):
+                continue  # An absent-only operation is already satisfied.
             worksheet, row_number = locations[key][0]
             headers, year_columns = sheet_metadata[worksheet.title]
             target_years = {rule.year for rule in row_rules}
@@ -540,7 +556,9 @@ def apply_pin_rules(
                 row=row_number, column=headers["Projection.Mode"]
             )
             mode = mode_cell.value
-            if mode == "User defined":
+            if not any(rule.present for rule in row_rules):
+                pass  # Clearing inactive cells must not activate their row.
+            elif mode == "User defined":
                 pass
             elif mode in (None, "", "EMPTY"):
                 non_target_values = [
@@ -597,12 +615,12 @@ def apply_pin_rules(
                     label=f"current cell for {rule.source_rule_id}",
                 )
             )
-            if current != value:
-                cell.value = _excel_number(value)
+            if (current != value) if rule.present else (cell.value is not None):
+                cell.value = _excel_number(value) if rule.present else None
                 changed_value_cells += 1
             if rule.state == "ZERO":
                 zero_cells += 1
-            else:
+            elif rule.present:
                 positive_cells += 1
         changed_projection_modes = 0
         for mode_cell, _row_number in projection_flips:
@@ -611,6 +629,10 @@ def apply_pin_rules(
                 changed_projection_modes += 1
 
         for cell, _row_number, value, rule in assignments:
+            if not rule.present:
+                if cell.value is not None:
+                    raise RuntimeError(f"retirement failed: {rule.source_rule_id}")
+                continue
             actual = _cell_decimal(
                 cell.value,
                 label=f"post-apply cell for {rule.source_rule_id}",
@@ -635,9 +657,18 @@ def apply_pin_rules(
             "workbook": str(workbook_path),
             "rules_csv": str(rules_path),
             "rules_sha256": _sha256(rules_path),
-            "canonical_source_rules_sha256": CANONICAL_SOURCE_RULES_SHA256,
+            "inherited_canonical_source_rules_sha256": (
+                INHERITED_CANONICAL_SOURCE_RULES_SHA256
+            ),
+            "generation_pin_source_sha256": GENERATION_PIN_SOURCE_SHA256,
+            "capacity_chronology_source_sha256": (
+                CAPACITY_CHRONOLOGY_SOURCE_SHA256
+            ),
             "rules_loaded": len(all_rules),
             "rules_applied": len(rules),
+            "operation_counts": dict(
+                sorted(Counter(rule.operation_kind for rule in rules).items())
+            ),
             "workbook_rows_matched": len(rules_by_row),
             "zero_rules": zero_cells,
             "positive_rules": positive_cells,

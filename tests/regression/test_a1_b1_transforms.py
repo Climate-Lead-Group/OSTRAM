@@ -1220,5 +1220,76 @@ class B1TransformProcessSafetyTests(unittest.TestCase):
                     self.assertNotIn(forbidden, source)
 
 
+
+import tempfile
+import unittest
+from pathlib import Path
+import pandas as pd
+from ostram.pipeline.compilation.transforms.effects import allocate_country_fuel_costs
+
+
+class FuelCostAllocationTests(unittest.TestCase):
+    def test_embedded_compilation_policy_matches_standalone_policy(self):
+        import yaml
+        config = yaml.safe_load(self.config.read_text())
+        embedded = allocate_country_fuel_costs(self.tables, config, self.root/'embedded.csv')
+        standalone = self.apply()
+        for name in standalone:
+            pd.testing.assert_frame_equal(embedded[name], standalone[name])
+        self.assertEqual((self.root/'embedded.csv').read_bytes(), (self.root/'audit.csv').read_bytes())
+
+    def setUp(self):
+        self.tmp=tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root=Path(self.tmp.name)
+        self.config=self.root/'fuel.yaml'
+        self.config.write_text('schema: fuel-cost-allocation-v1\nconsumer_prefix: PWR\nsupplier_prefix: MIN\nupstream_base: minimum_country_price\nfuel_families: [COA]\ndefault_nonfuel_variable_cost: 0.001\nprice_to_model_energy_factor: 1.0\n')
+        def table(parameter, rows):
+            return pd.DataFrame([dict(PARAMETER=parameter,Scenario='case',REGION='GLOBAL',MODE_OF_OPERATION=1,YEAR=2023,**r) for r in rows])
+        self.tables={
+            'VariableCost':table('VariableCost',[dict(TECHNOLOGY='MINCOAIND',Value=3),dict(TECHNOLOGY='MINCOABGD',Value=8),dict(TECHNOLOGY='MINCOAINT',Value=6),dict(TECHNOLOGY='PWRCOABGDXX',Value=.2)]),
+            'InputActivityRatio':table('InputActivityRatio',[dict(TECHNOLOGY='PWRCOAINDNO',FUEL='COAINT',Value=2.5),dict(TECHNOLOGY='PWRCOABGDXX',FUEL='COAINT',Value=3)]),
+            'OutputActivityRatio':table('OutputActivityRatio',[dict(TECHNOLOGY='MINCOAINT',FUEL='COAINT',Value=1)]),
+        }
+
+    def apply(self):return allocate_country_fuel_costs(self.tables,self.config,self.root/'audit.csv')
+
+    def test_shared_pool_pays_consumer_prices_once_with_nonfuel_retained(self):
+        result=self.apply()
+        v=result['VariableCost'].set_index('TECHNOLOGY').Value
+        self.assertEqual(v['PWRCOAINDNO'],.001)
+        self.assertEqual(v['PWRCOABGDXX'],15.2)
+        self.assertTrue((v.loc[['MINCOAIND','MINCOABGD','MINCOAINT']]==3).all())
+        # Activity 4 in India and 2 in Bangladesh consumes 16 PJ from the same
+        # pool, but expense remains 10*3 + 6*8, with separate non-fuel O&M.
+        self.assertAlmostEqual(16*v['MINCOAINT']+4*v['PWRCOAINDNO']+2*v['PWRCOABGDXX'],78.404)
+        # An extra unit of upstream supply now increases cost, preserving the
+        # original positive-price incentive against unused fuel surplus.
+        self.assertGreater(v['MINCOAINT'],0)
+        for p in ['InputActivityRatio','OutputActivityRatio']:
+            pd.testing.assert_frame_equal(result[p],self.tables[p])
+        self.assertEqual(self.tables['VariableCost'].iloc[0].Value,3)
+
+    def test_existing_country_price_sensitivity_flows_to_consumers(self):
+        self.tables['VariableCost'].loc[1,'Value']=3
+        v=self.apply()['VariableCost'].set_index('TECHNOLOGY').Value
+        self.assertEqual(v['PWRCOABGDXX'],.2)
+        self.assertEqual(v['MINCOAINT']+v['PWRCOABGDXX']/3,3+.2/3)
+
+    def test_unknown_consumer_fails(self):
+        self.tables['InputActivityRatio'].loc[0,'TECHNOLOGY']='OTHER'
+        with self.assertRaisesRegex(ValueError,'Unmapped'):self.apply()
+
+    def test_missing_country_price_fails(self):
+        self.tables['VariableCost']=self.tables['VariableCost'].iloc[1:]
+        with self.assertRaisesRegex(ValueError,'Missing country'):self.apply()
+
+    def test_conflicting_duplicate_fails(self):
+        extra=self.tables['VariableCost'].iloc[[0]].copy();extra['Value']=9
+        self.tables['VariableCost']=pd.concat([self.tables['VariableCost'],extra])
+        with self.assertRaisesRegex(ValueError,'Conflicting duplicate'):self.apply()
+
+
+
 if __name__ == "__main__":
     unittest.main()

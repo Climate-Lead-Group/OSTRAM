@@ -242,7 +242,7 @@ implausible_combinations:
   # HYD (Hydroelectric) - Flat coral atolls, no rivers or elevation
   HYD: [MDV]
   # NGS (Natural Gas unified) - No CCG/OCG/NGS power data
-  NGS: [BGD, BTN, NPL, MDV]
+  NGS: [BTN, NPL, MDV]
   # OIL (Oil/Fuel Oil) - No oil-fired grid power plants
   OIL: [BTN, NPL, MDV]
   # URN (Nuclear) - No nuclear program or plans

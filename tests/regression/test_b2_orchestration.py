@@ -1644,5 +1644,39 @@ class B2PerScenarioOutputsContractTests(unittest.TestCase):
             self.assertNotEqual(path, shared)
 
 
+class CostExportReconciliationTests(unittest.TestCase):
+    def test_default_omission_duplicates_and_raw_preservation(self):
+        import pandas as pd
+        from ostram.pipeline.execution.concatenate import reconciled_cost_frames
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            outputs = root/'Outputs'
+            outputs.mkdir()
+            data = root/'model.txt'
+            data.write_text('param default 0.1 : VariableCost :=\nGLOBAL A 1 2023 2\n;\n'
+                            'param default 0 : DiscountRate :=\n;\n'
+                            'param : YearSplit :=\nS 2023 1\n;\n')
+            costs = root/'VariableCost.csv'
+            costs.write_text('REGION,TECHNOLOGY,MODE_OF_OPERATION,YEAR,VALUE\n'
+                             'GLOBAL,A,1,2023,2\nGLOBAL,A,1,2023,2\n')
+            (outputs/'RateOfActivity.csv').write_text(
+                'REGION,TECHNOLOGY,MODE_OF_OPERATION,YEAR,TIMESLICE,VALUE\n'
+                'GLOBAL,A,1,2023,S,3\nGLOBAL,B,1,2023,S,4\n')
+            raw_vom = outputs/'AnnualVariableOperatingCost.csv'
+            raw_vom.write_text('REGION,TECHNOLOGY,YEAR,VALUE\nGLOBAL,A,2023,12\n')
+            (outputs/'TotalDiscountedCost.csv').write_text('REGION,YEAR,VALUE\nGLOBAL,2023,100\n')
+            before = {p.name:p.read_bytes() for p in outputs.iterdir()}
+            adjusted, evidence = reconciled_cost_frames(outputs, data, costs)
+            self.assertAlmostEqual(evidence['reporting_adjustment_net_MUSD'], -5.6)
+            self.assertAlmostEqual(evidence['reconciled_cost_MUSD'], 94.4)
+            corrected = adjusted['AnnualVariableOperatingCost'].set_index('TECHNOLOGY').VALUE
+            self.assertAlmostEqual(corrected['A'], 6)
+            self.assertAlmostEqual(corrected['B'], .4)
+            self.assertEqual(before, {p.name:p.read_bytes() for p in outputs.iterdir()})
+            costs.write_text(costs.read_text().replace('2023,2', '2023,9'))
+            with self.assertRaisesRegex(AssertionError, 'coefficient mismatch'):
+                reconciled_cost_frames(outputs, data, costs)
+
+
 if __name__ == "__main__":
     unittest.main()

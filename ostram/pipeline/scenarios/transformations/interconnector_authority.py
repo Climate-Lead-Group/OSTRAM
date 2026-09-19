@@ -8,6 +8,10 @@ Both supported workbook shapes are accepted:
 
 * the raw v18 sheet, whose first column is ``scenario``; and
 * a scenario-materialized sheet, from which ``scenario`` has been removed.
+
+Either shape may end with the audit-only ``IEEE Reference`` column used by the
+accepted v21 authority. The loader does not consume that column and continues
+to reject every other schema extension.
 """
 from __future__ import annotations
 
@@ -69,6 +73,7 @@ _COMMON_HEADERS = (
 )
 _RAW_HEADERS = ("scenario", *_COMMON_HEADERS)
 _MATERIALIZED_HEADERS = _COMMON_HEADERS
+_OPTIONAL_AUDIT_HEADERS = ("IEEE Reference",)
 
 # These guards identify the intended rows independently of their numeric
 # schedules.  The values were mechanically copied from the effective target
@@ -177,16 +182,24 @@ def authority_semantic_sha256(
 
 def _header_columns(ws: Worksheet) -> tuple[Dict[object, int], bool]:
     headers = tuple(cell.value for cell in ws[1])
-    if headers == _RAW_HEADERS:
+    raw_shapes = {
+        _RAW_HEADERS,
+        (*_RAW_HEADERS, *_OPTIONAL_AUDIT_HEADERS),
+    }
+    materialized_shapes = {
+        _MATERIALIZED_HEADERS,
+        (*_MATERIALIZED_HEADERS, *_OPTIONAL_AUDIT_HEADERS),
+    }
+    if headers in raw_shapes:
         raw_shape = True
-    elif headers == _MATERIALIZED_HEADERS:
+    elif headers in materialized_shapes:
         raw_shape = False
     else:
-        expected_raw = list(_RAW_HEADERS)
-        expected_materialized = list(_MATERIALIZED_HEADERS)
+        expected_raw = [list(shape) for shape in raw_shapes]
+        expected_materialized = [list(shape) for shape in materialized_shapes]
         raise ValueError(
             f"{AUTHORITY_SHEET_NAME} has an unexpected header shape; "
-            f"expected raw {expected_raw!r} or materialized "
+            f"expected one of raw {expected_raw!r} or materialized "
             f"{expected_materialized!r}, got {list(headers)!r}"
         )
     return {header: index for index, header in enumerate(headers)}, raw_shape

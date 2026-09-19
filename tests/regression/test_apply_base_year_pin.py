@@ -129,6 +129,7 @@ def _write_workbook(
     secondary = workbook.create_sheet("Secondary Techs")
     _add_headers(primary)
     _add_headers(secondary)
+    _add_headers(workbook.create_sheet("Capacities"))
     for row_number, values in enumerate(rows, start=2):
         for column, value in enumerate(values, start=1):
             secondary.cell(row=row_number, column=column, value=value)
@@ -194,8 +195,8 @@ class ProductionRuleContractTests(unittest.TestCase):
     def test_production_allowlist_is_exact_and_non_maldives(self) -> None:
         self.assertEqual(_sha256(PRODUCTION_RULES), PIN.RULES_SHA256)
         rules = PIN.load_pin_rules()
-        self.assertEqual(len(rules), 1956)
-        self.assertEqual(len({rule.complete_key for rule in rules}), 1956)
+        self.assertEqual(len(rules), 3429)
+        self.assertEqual(len({rule.complete_key for rule in rules}), 3429)
         self.assertEqual(
             Counter(rule.parameter for rule in rules),
             PIN.EXPECTED_PARAMETER_COUNTS,
@@ -204,7 +205,7 @@ class ProductionRuleContractTests(unittest.TestCase):
             Counter(rule.state for rule in rules),
             PIN.EXPECTED_STATE_COUNTS,
         )
-        self.assertEqual(len({rule.technology for rule in rules}), 182)
+        self.assertEqual(len({rule.technology for rule in rules}), 141)
         self.assertFalse(
             any(
                 rule.canonical_country == "MDV"
@@ -212,9 +213,11 @@ class ProductionRuleContractTests(unittest.TestCase):
                 for rule in rules
             )
         )
-        self.assertTrue(all(rule.present for rule in rules))
+        retained = [rule for rule in rules if rule.source_rule_id.startswith("PWR_MIN_PIN::")]
+        self.assertEqual(len(retained), 787)
+        self.assertTrue(all(rule.present for rule in retained))
         self.assertTrue(
-            all(rule.year in {2023, 2024, 2025, 2026} for rule in rules)
+            all(rule.year in {2023, 2024, 2025, 2026} for rule in retained)
         )
         scenario_counts = {
             scenario: sum(
@@ -226,13 +229,13 @@ class ProductionRuleContractTests(unittest.TestCase):
 
     def test_source_rules_collapse_to_complete_workbook_rows_without_modes(self):
         rules = PIN.load_pin_rules()
-        years_by_row: dict[tuple[str, str], set[int]] = defaultdict(set)
+        years_by_row: dict[tuple[str, str, str], set[int]] = defaultdict(set)
         for rule in rules:
-            years_by_row[(rule.technology, rule.parameter)].add(rule.year)
-        self.assertEqual(len(years_by_row), 517)
+            years_by_row[(rule.technology, rule.parameter, rule.timeslice)].add(rule.year)
+        self.assertEqual(len(years_by_row), 778)
         self.assertEqual(
             Counter(len(years) for years in years_by_row.values()),
-            {4: 432, 3: 66, 2: 11, 1: 8},
+            {4: 628, 3: 108, 2: 13, 1: 9, 28: 19, 26: 1},
         )
         with PRODUCTION_RULES.open(
             "r", encoding="utf-8", newline=""
@@ -240,7 +243,8 @@ class ProductionRuleContractTests(unittest.TestCase):
             self.assertTrue(
                 all(
                     tuple(json.loads(raw["ordered_parameter_indices"]))
-                    == PIN.ORDERED_INDICES
+                    == (("REGION", "TECHNOLOGY", "TIMESLICE", "YEAR")
+                        if raw["parameter"] == "CapacityFactor" else PIN.ORDERED_INDICES)
                     for raw in csv.DictReader(stream)
                 )
             )
@@ -567,8 +571,8 @@ class StaticPinApplicationTests(unittest.TestCase):
             "post-window": [
                 _rule(year=2027)
             ],
-            "sentinel-placeholder": [
-                _rule(value="9999")
+            "negative-value": [
+                _rule(value="-9999")
             ],
             "bad-indices": [
                 {

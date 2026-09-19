@@ -22,6 +22,19 @@ from .transforms import planning as _planning
 from .transforms import tables as _tables
 from .transforms import validation as _validation
 #
+def _parameter_number(value, parameter):
+    """Preserve explicit feasibility inputs through numeric serialization."""
+    if parameter in {
+        "TotalTechnologyAnnualActivityLowerLimit",
+        "TotalTechnologyAnnualActivityUpperLimit",
+        "ResidualCapacity", "TotalAnnualMinCapacityInvestment",
+        "TotalAnnualMaxCapacityInvestment", "TotalAnnualMaxCapacity",
+        "AvailabilityFactor", "CapacityFactor",
+    }:
+        return float(value)
+    return round(value, 4)
+
+
 start1 = time.time()
 
 normalize_year_like_columns = _tables.normalize_year_like_columns
@@ -29,6 +42,19 @@ normalize_year_like_columns = _tables.normalize_year_like_columns
 # Read yaml file with parameterization
 params = _effects.read_config(_planning.CONFIG_PATH)
 transform_plan = _planning.build_transform_plan(params)
+
+# Gate the FINAL materialized workbook, after all late pins and corrections.
+from ostram.profiles import profile_policy
+if profile_policy("validation_no_mutation", False):
+    from ostram.pipeline.scenarios.transformations.pre_solver_validation import run as validate_workbook
+    _, invalid = validate_workbook(
+        params["xtra_scen"]["Main_Scenario"],
+        transform_plan.scenario_workbook("Print_Paramet"),
+        interactive=False, report_only=True, fail_on_issues=True,
+        base_year=transform_plan.base_year,
+    )
+    if invalid:
+        raise SystemExit("Final workbook validation failed; compilation stopped without altering inputs.")
 
 baseyear = transform_plan.base_year
 endyear = transform_plan.final_year
@@ -638,7 +664,7 @@ for s in range( len( param_sheets ) ):
                 #-----------------------------------------
                 if this_projection_mode == params['user_defined']:
                     for y in range( len( time_range_vector ) ):
-                        this_df_new.loc[ n, str(time_range_vector[y]) ] = round( this_df.loc[ n, str(time_range_vector[y]) ], 4 )
+                        this_df_new.loc[ n, str(time_range_vector[y]) ] = _parameter_number(this_df.loc[n, str(time_range_vector[y])], this_param)
                         this_df_new_2.loc[ n, str(time_range_vector[y]) ] = this_df_new.loc[ n, str(time_range_vector[y]) ]
                 #-----------------------------------------
                 if this_projection_mode == params['inter_Stated_value_proj_param']:
@@ -894,7 +920,7 @@ for s in range( len( param_sheets ) ):
                                 'REGION': other_setup_params['Region'],
                                 'TECHNOLOGY': this_tech,
                                 'YEAR': time_range_vector[y],
-                                'Value': deepcopy(round(this_df_new_2.loc[n, str(time_range_vector[y])], 4)),
+                                'Value': deepcopy(_parameter_number(this_df_new_2.loc[n, str(time_range_vector[y])], this_param)),
                                 'TIMESLICE': timeslices_capacities[n]
                             }
 
@@ -906,7 +932,7 @@ for s in range( len( param_sheets ) ):
                                 'REGION': other_setup_params['Region'],
                                 'TECHNOLOGY': this_tech,
                                 'YEAR': time_range_vector[y],
-                                'Value': deepcopy(round(this_df_new_2.loc[n, str(time_range_vector[y])], 4)),
+                                'Value': deepcopy(_parameter_number(this_df_new_2.loc[n, str(time_range_vector[y])], this_param)),
                                 'TIMESLICE': other_setup_params['Timeslice']
                             }   
                             
@@ -933,7 +959,7 @@ for s in range( len( param_sheets ) ):
                                     'TECHNOLOGY': this_tech,
                                     'YEAR': time_range_vector[y],
                                     'MODE_OF_OPERATION': this_df_new_2.loc[n, 'Mode.Operation'],
-                                    'Value': deepcopy(round(this_df_new_2.loc[n, str(time_range_vector[y])], 4)),
+                                    'Value': deepcopy(_parameter_number(this_df_new_2.loc[n, str(time_range_vector[y])], this_param)),
                                 }
                                 
                                 
@@ -953,7 +979,7 @@ for s in range( len( param_sheets ) ):
                                 'REGION': other_setup_params['Region'],
                                 'TECHNOLOGY': this_tech,
                                 'YEAR': time_range_vector[y],
-                                'Value': deepcopy(round(this_df_new_2.loc[n, str(time_range_vector[y])], 4))
+                                'Value': deepcopy(_parameter_number(this_df_new_2.loc[n, str(time_range_vector[y])], this_param))
                             }
                             
                         elif this_param in params['sheets_exceptions_to_fuel']:
@@ -963,7 +989,7 @@ for s in range( len( param_sheets ) ):
                                 'REGION': other_setup_params['Region'],
                                 'FUEL': this_tech,
                                 'YEAR': time_range_vector[y],
-                                'Value': deepcopy(round(this_df_new_2.loc[n, str(time_range_vector[y])], 4))
+                                'Value': deepcopy(_parameter_number(this_df_new_2.loc[n, str(time_range_vector[y])], this_param))
                             }
         
                         # Additional conditions for specific parameters
@@ -1152,6 +1178,23 @@ if accumulated_emission_data:  # Ensure there's something to append
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=FutureWarning)
         df_Emissions = pd.concat([df_Emissions, new_emissions_df], ignore_index=True)
+# Bangladesh gas combustion uses the approved fuel factor, not a factor per
+# fuel-supply origin. Check actual mode activity bases before serialization.
+_bgd_iar = df_IAR.loc[df_IAR["TECHNOLOGY"] == "PWRNGSBGDXX"]
+if not _bgd_iar.empty:
+    from decimal import Decimal
+    for _, _r in _bgd_iar.iterrows():
+        if _r["FUEL"] not in ("GASBGD", "GASINT"):
+            raise ValueError("Unsupported Bangladesh gas combustion input mapping")
+        _m, _y = _r["MODE_OF_OPERATION"], _r["YEAR"]
+        _out = df_OAR.loc[(df_OAR["TECHNOLOGY"] == "PWRNGSBGDXX") & (df_OAR["MODE_OF_OPERATION"] == _m) & (df_OAR["YEAR"] == _y)]
+        _ear = df_Emissions.loc[(df_Emissions["TECHNOLOGY"] == "PWRNGSBGDXX") & (df_Emissions["EMISSION"] == "CO2BGD") & (df_Emissions["MODE_OF_OPERATION"] == _m) & (df_Emissions["YEAR"] == _y)]
+        if len(_out) != 1 or _out.iloc[0]["FUEL"] != "ELCBGDXX01" or float(_out.iloc[0]["Value"]) != 1:
+            raise ValueError(f"Unsupported Bangladesh gas output activity basis: mode {_m}, year {_y}")
+        _expected = Decimal("0.0561") * Decimal(str(_r["Value"]))
+        if len(_ear) != 1 or Decimal(str(_ear.iloc[0]["Value"])) != _expected:
+            raise ValueError(f"Missing, duplicate or incompatible Bangladesh gas emission factor: mode {_m}, year {_y}; expected {_expected} Mt/PJ activity")
+
 #
 df_EmissionPenalty = pd.DataFrame( columns = Wide_Param_Header )
 these_emissions_name = Emissions_ext_df['Emission'].tolist()
@@ -1581,6 +1624,16 @@ structure_dict = structure_tables.values
 #***********************************************************************************
 #
 # Clean dicts
+from ostram.paths import resolve_paths
+allocate_country_fuel_costs = _effects.allocate_country_fuel_costs
+from pathlib import Path
+overall_param_df_dict = allocate_country_fuel_costs(
+    overall_param_df_dict,
+    params.get('fuel_cost_allocation'),
+    Path(transform_plan.main_output_root()) / (
+        '_fuel_cost_allocation_' + str(other_setup_params['Main_Scenario']) + '.csv'
+    ),
+)
 overall_param_df_dict, overall_param_df_dict_ndp = (
     _delivery.clean_parameter_tables(overall_param_df_dict)
 )

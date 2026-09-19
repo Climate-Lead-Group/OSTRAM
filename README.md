@@ -66,7 +66,7 @@ Important authorities include:
 
 - `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx`
 - `inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx`
-- `config/scenarios/registry.json`
+- `config/profiles/full.yaml::scenario_registry`
 - `config/compilation/Config_MOMF_T1_A.yaml`
 - `config/execution/Config_MOMF_T1_AB.yaml`
 - `model/osemosys_fast_preprocessed.txt`
@@ -91,3 +91,15 @@ git diff --check
 See the [quickstart](docs/quickstart.md), [pipeline](docs/pipeline.md),
 [configuration](docs/configuration.md), and [lineage](docs/lineage.md) for the
 maintained operating contract.
+
+The September 2026 cost update, country fuel-price accounting, source
+limitations, and reconciled reporting convention are described in
+[lineage](docs/lineage.md#september-2026-cost-release). The external release
+review at `D4_SCAN_STATE/RELEASE_20260919/RELEASE_REVIEW.md` records the selected
+17 cases, verification gates, evidence archive, and publication state.
+For a compile-only check using the selected A result for C, use the normal
+`run --skip-pull --compile-only --a-result-seed <selected-A-run-directory>`
+command with an isolated `--workspace`. A fresh full solve must solve A before
+materialising C through its declared dependency. The transmission-freeze
+case retains its fixed historical reference; legacy and strict import caps
+remain separate definitions.

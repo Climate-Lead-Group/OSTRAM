@@ -3485,13 +3485,33 @@ def sort_csv_files_in_folder(folder_path):
     print('################################################################\n')
 
 #--------------------------------------------------------------------------------------------------#
-def main():
-    """Main execution function."""
-    INPUT_FOLDER.mkdir(parents=True, exist_ok=True)
-    for source in SOURCE_INPUT_FOLDER.glob("*.csv"):
-        target = INPUT_FOLDER / source.name
+def stage_source_inputs(source_folder, input_folder):
+    """Refresh authoritative emission keys while retaining workspace-only rows.
+
+    Country merges live in this mutable staging area. Do not erase their other
+    keys, but an existing file must not hide updated authoritative factors.
+    """
+    input_folder.mkdir(parents=True, exist_ok=True)
+    for source in source_folder.glob("*.csv"):
+        target = input_folder / source.name
         if not target.exists():
             shutil.copy2(source, target)
+        elif source.name == "EmissionActivityRatio.csv":
+            authoritative = pd.read_csv(source, dtype=str, keep_default_na=False)
+            staged = pd.read_csv(target, dtype=str, keep_default_na=False)
+            keys = ["REGION", "TECHNOLOGY", "EMISSION", "MODE_OF_OPERATION", "YEAR"]
+            for frame in (authoritative, staged):
+                if list(frame.columns) != keys + ["VALUE"] or frame.duplicated(keys).any():
+                    raise ValueError(f"Invalid or duplicate emission keys: {source} / {target}")
+            source_keys = set(map(tuple, authoritative[keys].to_numpy()))
+            keep = [tuple(row) not in source_keys for row in staged[keys].to_numpy()]
+            merged = pd.concat([staged.loc[keep], authoritative], ignore_index=True)
+            merged.to_csv(target, index=False)
+
+
+def main():
+    """Main execution function."""
+    stage_source_inputs(SOURCE_INPUT_FOLDER, INPUT_FOLDER)
     OUTPUT_FOLDER.mkdir(parents=True, exist_ok=True)
     A2_EXTRA_INPUTS_FOLDER.mkdir(parents=True, exist_ok=True)
     RUNTIME_COMPILATION_CONFIG.parent.mkdir(parents=True, exist_ok=True)

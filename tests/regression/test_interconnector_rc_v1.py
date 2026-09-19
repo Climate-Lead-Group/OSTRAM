@@ -5,6 +5,7 @@ import hashlib
 import importlib.util
 import inspect
 import json
+import yaml
 import sys
 import unittest
 from decimal import Decimal
@@ -24,9 +25,9 @@ FIX_SCRIPT = TRANSFORMATIONS / "fix_trn_residuals.py"
 AUTHORITY_SCRIPT = TRANSFORMATIONS / "interconnector_authority.py"
 A3_SCRIPT = SCENARIOS / "transform.py"
 PATCH_SCRIPT = SCENARIOS / "apply_patches.py"
-TXCAP_CONFIG = REPO_ROOT / "config" / "scenarios" / "B_Opt_TxCap150" / "patches.json"
-LINKFREEZE_CONFIG = REPO_ROOT / "config" / "scenarios" / "B_Opt_LinkFreeze" / "patches.json"
-SCENARIO_REGISTRY = REPO_ROOT / "config" / "scenarios" / "registry.json"
+TXCAP_CONFIG = REPO_ROOT / "config" / "profiles" / "full.yaml"
+LINKFREEZE_CONFIG = REPO_ROOT / "config" / "profiles" / "full.yaml"
+SCENARIO_REGISTRY = REPO_ROOT / "config" / "profiles" / "full.yaml"
 
 YEARS = tuple(range(2023, 2051))
 STUDY_YEARS = tuple(range(2027, 2051))
@@ -703,7 +704,7 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
                 None,
             ),
         )
-        registry = json.loads(SCENARIO_REGISTRY.read_text(encoding="utf-8"))
+        registry = yaml.safe_load(SCENARIO_REGISTRY.read_text(encoding="utf-8"))["scenario_registry"]
         scenarios = {
             entry["name"]: entry for entry in registry["derived_scenarios"]
         }
@@ -712,7 +713,7 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
             scenarios["B_Opt_TxCap150"]["base_scenario"],
             "B_Optimised_VRE",
         )
-        linkfreeze = json.loads(LINKFREEZE_CONFIG.read_text(encoding="utf-8"))
+        linkfreeze = yaml.safe_load(LINKFREEZE_CONFIG.read_text(encoding="utf-8"))["scenario_inputs"]["B_Opt_LinkFreeze"]
         self.assertEqual(linkfreeze["base_scenario"], "B_Optimised_VRE")
         self.assertEqual(
             linkfreeze["frozen_corridors"],
@@ -766,7 +767,7 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
 
 class TxCap150FormulaTests(unittest.TestCase):
     def test_config_preserves_formula_domain_targets_and_non_cap_edits(self) -> None:
-        config = json.loads(TXCAP_CONFIG.read_text(encoding="utf-8"))
+        config = yaml.safe_load(TXCAP_CONFIG.read_text(encoding="utf-8"))["scenario_inputs"]["B_Opt_TxCap150"]
         self.assertEqual(config["scenario"], "B_Opt_TxCap150")
         self.assertEqual(config["base_scenario"], "B_Optimised_VRE")
         dynamic = [
@@ -815,7 +816,7 @@ class TxCap150FormulaTests(unittest.TestCase):
 
     def test_dynamic_formula_reads_effective_rc_for_both_targets(self) -> None:
         module = _load_module(PATCH_SCRIPT, "txcap_formula")
-        config = json.loads(TXCAP_CONFIG.read_text(encoding="utf-8"))
+        config = yaml.safe_load(TXCAP_CONFIG.read_text(encoding="utf-8"))["scenario_inputs"]["B_Opt_TxCap150"]
         edits = [
             edit for edit in config["edits"]
             if edit.get("op") == "set_to_residual_factor_floor"
@@ -865,7 +866,7 @@ class TxCap150FormulaTests(unittest.TestCase):
         self,
     ) -> None:
         module = _load_module(PATCH_SCRIPT, "linkfreeze_minimum")
-        config = json.loads(LINKFREEZE_CONFIG.read_text(encoding="utf-8"))
+        config = yaml.safe_load(LINKFREEZE_CONFIG.read_text(encoding="utf-8"))["scenario_inputs"]["B_Opt_LinkFreeze"]
         edits = {
             edit["tech"]: edit for edit in config["edits"]
             if edit["param"] == "TotalAnnualMinCapacityInvestment"
@@ -949,7 +950,7 @@ class TxCap150FormulaTests(unittest.TestCase):
         with (
             mock.patch.object(Path, "is_file", return_value=True),
             mock.patch.object(
-                Path, "read_text", return_value=json.dumps(patches)
+                Path, "read_text", return_value=json.dumps({"scenario_inputs": {"Bad": {"scenario": "Bad", "base_scenario": "B_Optimised_VRE", **patches}}})
             ),
             mock.patch.object(module.shutil, "copytree") as copytree,
             mock.patch.object(module.shutil, "rmtree") as rmtree,

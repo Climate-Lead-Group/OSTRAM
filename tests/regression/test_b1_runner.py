@@ -618,7 +618,7 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
             REPO_ROOT / "ostram" / "pipeline" / "preparation" / "base_inputs.py"
         )
         effects_path = B1_ENTRYPOINT.parent / "transforms" / "effects.py"
-        registry_path = REPO_ROOT / "config" / "scenarios" / "registry.json"
+        registry_path = REPO_ROOT / "config" / "profiles" / "full.yaml"
         templates = REPO_ROOT / "inputs" / "preparation" / "workbook_templates"
 
         compiler_source = compiler_path.read_text(encoding="utf-8-sig")
@@ -703,8 +703,8 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
                     with self.assertRaises(FileNotFoundError):
                         b1_effects.open_workbook(plan.extra_input(key))
 
-        registry = json.loads(registry_path.read_text(encoding="utf-8"))
-        self.assertEqual(len(registry["decision_scenarios"]), 15)
+        registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))["scenario_registry"]
+        self.assertEqual(len(registry["decision_scenarios"]), 17)
         governed_sources = []
         for path in registry_path.parent.rglob("*"):
             if path.is_file() and path.suffix.lower() in {

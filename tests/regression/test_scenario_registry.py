@@ -72,8 +72,17 @@ class ScenarioRegistryTests(unittest.TestCase):
         self.assertEqual(registry.root_names, ROOT_SCENARIOS)
         self.assertEqual(registry.decision_scenarios, DECISION_SCENARIOS)
         self.assertEqual(registry.scenario_names, CANONICAL_SCENARIOS)
+        self.assertEqual(len(registry.decision_scenarios), 17)
 
         derived = registry.derived_by_name
+        self.assertEqual(
+            derived["A_Calibrated_BAU_Clipped_TxFreeze2026"].base_scenario,
+            "A_Calibrated_BAU",
+        )
+        self.assertEqual(
+            derived["B_Opt_Clipped_GrossImportCap15"].base_scenario,
+            "B_Optimised_VRE",
+        )
         self.assertEqual(
             derived["A_Calibrated_BAU_Clipped"].base_scenario,
             "A_Calibrated_BAU",
@@ -87,6 +96,7 @@ class ScenarioRegistryTests(unittest.TestCase):
             for scenario in registry.derived
             if scenario.name not in {
                 "A_Calibrated_BAU_Clipped",
+                "A_Calibrated_BAU_Clipped_TxFreeze2026",
                 "C_Target_VRE_Clipped",
             }
         ]
@@ -173,26 +183,28 @@ class ScenarioRegistryTests(unittest.TestCase):
             workbook = Workbook()
             workbook.active.title = "fixture"
             workbook.save(source / apply_patches.PARAM_FILE)
-            patch_dir = configs / "A_Calibrated_BAU_Clipped"
+            patch_dir = configs.parent / "profiles"
             patch_dir.mkdir(parents=True)
-            (patch_dir / "patches.json").write_text(
+            (patch_dir / "full.yaml").write_text(
                 json.dumps(
-                    {
+                    {"scenario_inputs": {"A_Calibrated_BAU_Clipped": {
                         "scenario": "A_Calibrated_BAU_Clipped",
                         "base_scenario": "A_Calibrated_BAU",
                         "apply_vre_ceiling_layer": False,
                         "edits": [],
-                    }
+                    }}}
                 ),
                 encoding="utf-8",
             )
 
-            log = apply_patches.build_scenario(
-                "A_Calibrated_BAU_Clipped",
-                a1_outputs=outputs,
-                configs=configs,
-                authority_path=root / "unused.xlsx",
-            )
+            with mock.patch("ostram.pipeline.scenarios.rules.apply_base_year_pin.apply_pin_rules", return_value={}) as apply_pin:
+                log = apply_patches.build_scenario(
+                    "A_Calibrated_BAU_Clipped",
+                    a1_outputs=outputs,
+                    configs=configs,
+                    authority_path=root / "unused.xlsx",
+                )
+            apply_pin.assert_called_once()
             self.assertEqual(log["source"], "A_Calibrated_BAU")
             self.assertTrue(
                 (

@@ -118,7 +118,7 @@ def load_operational_life(wb):
         if not tech or v is None:
             continue
         try:
-            out[tech] = int(round(float(v)))
+            out[tech] = float(v)
         except (TypeError, ValueError):
             pass
     return out
@@ -302,13 +302,13 @@ def compute_max_capacity(ws, tech_to_row_by_param, tech_upper, year,
     if sorted_years is None:
         sorted_years = sorted(ymap.keys())
     horizon = (max(sorted_years) - min(sorted_years) + 1) if sorted_years else op_life
-    window_start = year - min(op_life, horizon) + 1
+    window_start = year - min(op_life, horizon)
 
     cumulative = 0.0
     for y2 in sorted_years:
         if y2 > year:
             break
-        if y2 < window_start:
+        if y2 <= window_start:
             continue
         col2 = ymap.get(y2)
         if col2 is None:
@@ -374,7 +374,7 @@ def consistency_sweep(ws, sheet_name, cols, ymap, tech_to_row_by_param,
                         old_max_num = float(old_max)
                     except (TypeError, ValueError):
                         old_max_num = None
-                    if old_max_num is not None and min_y >= old_max_num:
+                    if old_max_num is not None and min_y > old_max_num:
                         new_max = min_y * MAX_MULTIPLIER
                         old_mode = ws.cell(max_row, cols["proj_mode"]).value
                         if apply_changes:
@@ -398,8 +398,8 @@ def consistency_sweep(ws, sheet_name, cols, ymap, tech_to_row_by_param,
                 old_max_tot_num = float(old_max_tot)
             except (TypeError, ValueError):
                 continue
-            window_start = y - effective_window + 1
-            accumulated = sum(v for y2, v in min_by_year.items() if window_start <= y2 <= y)
+            window_start = y - effective_window
+            accumulated = sum(v for y2, v in min_by_year.items() if window_start < y2 <= y)
             if accumulated <= 0:
                 continue
             residual = 0.0
@@ -411,7 +411,7 @@ def consistency_sweep(ws, sheet_name, cols, ymap, tech_to_row_by_param,
                     except (TypeError, ValueError):
                         residual = 0.0
             threshold = residual + accumulated
-            if old_max_tot_num > threshold:
+            if old_max_tot_num >= threshold:
                 continue
             new_max_tot = threshold * MAX_MULTIPLIER
             old_mode = ws.cell(max_tot_row, cols["proj_mode"]).value

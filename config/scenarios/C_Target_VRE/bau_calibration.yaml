@@ -1,0 +1,44 @@
+# C-only planning allowances; existing set_min_capacity_floors ceiling schema.
+# Invoked before the generic lid, which preserves explicit manual values.
+# This filename is fixed by the existing rule; floors are empty and calibration is unchanged.
+warn_on_untie: true
+floors: []
+ceilings:
+- cr: NPLXX
+  tech: PWRHYDNPLXX
+  param: max_capacity
+  schedule:
+    2023: 0.0
+    2024: 0.0
+    2025: 0.0
+    2026: 0.8389
+    2027: 0.9037
+    2028: 0.5684
+    2029: 1.983
+    2030: 2.6015
+    2031: 3.3692
+    2032: 2.0519
+    2033: 3.9528
+    2034: 1.5179
+    2035: 1.8769
+    2036: 1.3512
+    2037: 0.7923
+    2038: 1.4889
+    2039: 1.7677
+    2040: 1.6868
+    2041: 0.5781296441465428
+    2042: 0.6142627469057033
+    2043: 0.6503958496648605
+    2044: 0.6865290840285425
+    2045: 0.7226620551831803
+    2046: 0.7949282607014984
+    2047: 0.9233504530380445
+    2048: 1.155595635460757
+    2049: 1.405557751216517
+    2050: 1.673030044942914
+  note: 'Owner-approved scenario-C planning allowances from JICA/MoEWRI December 2024
+    Chapter 7.2 Figure 7.2-2, PDF p179: net annual ROR+PROR+STO additions, 2026-2040.
+    These are scenario planning allowances, not committed projects, forecasts or national
+    construction limits. Calibrated residual fleet retained; no pre-2026 catch-up.
+    Historical 2023-2025 zero controls and existing 2041-2050 model-assumption limits
+    retained. https://openjicareport.jica.go.jp/pdf/12387999_01.pdf#page=179'

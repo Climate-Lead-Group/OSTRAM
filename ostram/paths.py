@@ -296,7 +296,7 @@ class ProjectPaths:
     @property
     def scenario_registry(self) -> Path:
         return self.authority(
-            "scenario_registry", self.config_root / "scenarios" / "registry.json"
+            "scenario_registry", self.config_root / "profiles" / "full.yaml"
         )
 
     @property
@@ -437,7 +437,9 @@ class ProjectPaths:
         if missing:
             raise FileNotFoundError("Required project resources are missing: " + ", ".join(missing))
 
-        registry = json.loads(self.scenario_registry.read_text(encoding="utf-8"))
+        import yaml
+        registry = yaml.safe_load(self.scenario_registry.read_text(encoding="utf-8"))
+        registry = registry.get("scenario_registry", registry)
         with self.scenario_workbook.open("rb") as stream:
             workbook_signature = stream.read(4).hex()
         config_first_line = next(

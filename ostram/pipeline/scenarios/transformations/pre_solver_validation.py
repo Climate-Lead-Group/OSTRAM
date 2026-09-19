@@ -6,9 +6,9 @@ the workbook (and BEFORE B2 emits the .txt for glpsol). For each class
 shows the auto-fix formula and asks the user before writing.
 
 Validations:
-    V1. Per-year:    TotalAnnualMinCapacityInvestment(y) >= TotalAnnualMaxCapacityInvestment(y)
+    V1. Per-year:    TotalAnnualMinCapacityInvestment(y) > TotalAnnualMaxCapacityInvestment(y)
                      => Max_inv(y) = Min_inv(y) * 1.01
-    V2. Cumulative:  TotalAnnualMaxCapacity(y) <= ResidualCapacity(y) + Σ Min_inv(y') in [y-OL+1, y]
+    V2. Cumulative:  TotalAnnualMaxCapacity(y) < ResidualCapacity(y) + Σ Min_inv(y') in [y-OL+1, y]
                      => Max_tot(y) = (Residual + ΣMin) * 1.01
     V3. Activity:    TotalTechnologyAnnualActivityLowerLimit(y) > max_activity(y)
                      where max_activity = max_capacity × AvailabilityFactor × CapacityToActivityUnit × Σ(CF·YS)
@@ -241,20 +241,19 @@ def _to_records(max_adjusts, max_total_adjusts, act_issues):
 # Main entry point
 # -------------------------------------------------------------------
 def run(scenario, xlsx_path=None, *, interactive=True, auto_fix_all=False,
-        report_only=False, base_year=None):
-    """Run V1+V2+V3. Returns (any_fix_applied, abort).
-
-    abort=True only if the user replied with skip-all to *every* group AND the
-    caller passed interactive=True with a non-trivial issue set; in practice
-    we never abort the caller automatically — the user controls flow via
-    skip-all. Reserved for future use.
-    """
+        report_only=False, base_year=None, fail_on_issues=False):
+    """Inspect without mutation when requested; final gates fail on any issue."""
+    # Calibration must never adjust limits merely to pass a check.
+    from ostram.profiles import profile_policy
+    if profile_policy("validation_no_mutation", False):
+        report_only = True
+        auto_fix_all = False
     if xlsx_path is None:
         xlsx_path = default_xlsx_for_scenario(scenario)
     xlsx_path = Path(xlsx_path)
     if not xlsx_path.exists():
         print(f"[VALIDATE] xlsx not found: {xlsx_path}")
-        return (False, False)
+        return (False, True)
     if base_year is None:
         base_year = read_base_year_from_config()
 
@@ -363,7 +362,7 @@ def run(scenario, xlsx_path=None, *, interactive=True, auto_fix_all=False,
         print("[VALIDATE] No issues found.")
 
     wb.close()
-    return (any_fix, False)
+    return (any_fix, bool(records) and (fail_on_issues or (not interactive and not report_only)))
 
 
 # -------------------------------------------------------------------
@@ -377,6 +376,7 @@ def main():
     grp.add_argument("--non-interactive", action="store_true", help="Do not prompt; fail on issues.")
     grp.add_argument("--auto-fix-all", action="store_true", help="Apply every fix without prompting.")
     grp.add_argument("--report-only", action="store_true", help="Just write the report; do not modify the xlsx.")
+    ap.add_argument("--fail-on-issues", action="store_true", help="Fail without altering inputs when any relevant check fails.")
     args = ap.parse_args()
 
     if not args.scenario and not args.xlsx:
@@ -390,12 +390,13 @@ def main():
             print(f"[ERROR] Could not locate xlsx for scenario {scenario}: {xlsx}")
             return 2
 
-    interactive = not args.non_interactive
+    interactive = not (args.non_interactive or args.fail_on_issues)
     any_fix, abort = run(
         scenario, xlsx,
         interactive=interactive,
         auto_fix_all=args.auto_fix_all,
-        report_only=args.report_only,
+        report_only=args.report_only or args.fail_on_issues,
+        fail_on_issues=args.fail_on_issues or args.non_interactive,
     )
     return 0 if not abort else 1
 

@@ -1,6 +1,6 @@
 """Canonical OSTRAM root and derived-scenario contract.
 
-The registry is maintained in :mod:`scenario_registry.json`.  This module
+The production registry is maintained in ``config/profiles/full.yaml``.  This module
 validates that contract, resolves an exact canonical selection, and exposes the
 root prerequisites needed by A1, A2, and A3.  It deliberately performs no
 workbook or solver effects.
@@ -9,7 +9,7 @@ workbook or solver effects.
 from __future__ import annotations
 
 from dataclasses import dataclass
-import json
+import yaml
 import os
 from pathlib import Path
 import re
@@ -40,6 +40,8 @@ DECISION_SCENARIOS = (
     "B_Opt_TxCap150",
     "C_Target_VRE",
     "C_Target_VRE_Clipped",
+    "A_Calibrated_BAU_Clipped_TxFreeze2026",
+    "B_Opt_Clipped_GrossImportCap15",
 )
 CANONICAL_SCENARIOS = SUPPORT_SCENARIOS + DECISION_SCENARIOS
 _SCENARIO_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
@@ -221,12 +223,14 @@ def load_registry(
         if path is None
         else Path(path).resolve()
     )
-    raw = json.loads(registry_path.read_text(encoding="utf-8"))
+    raw = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+    consolidated = "scenario_registry" in raw
+    raw = raw.get("scenario_registry", raw)
     if raw.get("schema") != "ostram-scenario-registry-v1":
         raise ValueError(f"unsupported scenario registry schema: {raw.get('schema')}")
     support_scenarios = tuple(str(name) for name in raw.get("support_scenarios", ()))
 
-    base = registry_path.parent
+    base = registry_path.parent.parent / "scenarios" if consolidated else registry_path.parent
     roots: list[RootScenario] = []
     for entry in raw.get("root_scenarios", ()):
         dependencies: list[ResultDependency] = []
@@ -271,7 +275,7 @@ def load_registry(
     derived: list[DerivedScenario] = []
     for entry in raw.get("derived_scenarios", ()):
         overlay = entry.get("direction_overlay")
-        patches = _registry_relative(
+        patches = registry_path if consolidated else _registry_relative(
             base, entry["patches"], label=f"{entry.get('name')} patches"
         )
         direction_overlay = (
@@ -351,6 +355,7 @@ def _validate_registry(
         )
 
     root_set = set(root_names)
+    loaded_inputs = {}
     for scenario in registry.derived:
         if scenario.base_scenario not in root_set:
             raise ValueError(
@@ -362,7 +367,13 @@ def _validate_registry(
             raise FileNotFoundError(
                 f"patch file missing for {scenario.name}: {scenario.patches}"
             )
-        patch = json.loads(scenario.patches.read_text(encoding="utf-8"))
+        if scenario.patches not in loaded_inputs:
+            loaded_inputs[scenario.patches] = yaml.safe_load(
+                scenario.patches.read_text(encoding="utf-8")
+            )
+        patch = loaded_inputs[scenario.patches]
+        if "scenario_inputs" in patch:
+            patch = patch["scenario_inputs"][scenario.name]
         if patch.get("scenario") != scenario.name:
             raise ValueError(
                 f"{scenario.patches} declares scenario={patch.get('scenario')!r}; "

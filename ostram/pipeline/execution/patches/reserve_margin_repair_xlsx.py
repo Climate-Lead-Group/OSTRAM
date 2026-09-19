@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -28,6 +29,7 @@ from .reserve_margin_repair import (
     build_tag_targets,
     capacity_floors,
     fmt_number,
+    find_param_block,
     make_fallback_lookup,
     parse_assignment_list,
     parse_float,
@@ -223,6 +225,39 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def preserve_reviewed_capacity_rows(before, after, protected):
+    """Keep explicit reviewed limits when a generic fallback treats them as sentinels."""
+    result=after[:]
+    pattern=re.compile(r"^\s*GLOBAL\s+(\S+)\s+(\d{4})\s+([-+0-9.eE]+)\s*$")
+    restored=0
+    for parameter in (STOCK_PARAM,FLOW_PARAM):
+        start,end=find_param_block(before,parameter)
+        original={}
+        for line in before[start+1:end]:
+            match=pattern.match(line)
+            if match:
+                key=(parameter,match[1],int(match[2]))
+                if key in protected:original[key]=line
+        start,end=find_param_block(result,parameter)
+        for i in range(start+1,end):
+            match=pattern.match(result[i])
+            if match:
+                key=(parameter,match[1],int(match[2]))
+                if key in original and result[i]!=original[key]:
+                    result[i]=original[key];restored+=1
+    return result,restored
+
+
+def reviewed_capacity_keys(input_path):
+    from ostram.profiles import profile_policy
+    from ostram.pipeline.scenarios.rules import apply_base_year_pin as pins
+    scenario=pins.calibration_root(input_path.parent.name.removesuffix("_0"))
+    if scenario is None:return set()
+    path=Path(profile_policy("pwr_min_pin_rules_path",str(pins.RULES_CSV)))
+    rules=pins.load_pin_rules(path,enforce_production_contract=True)
+    return {(r.parameter,r.technology,r.year) for r in rules if r.parameter in (STOCK_PARAM,FLOW_PARAM) and scenario in r.root_scenarios}
+
+
 def main() -> int:
     args = parse_args()
     input_path = Path(args.input_file)
@@ -267,6 +302,8 @@ def main() -> int:
         flow_floors,
         min_investment_techs,
     )
+    patched, protected_restored = preserve_reviewed_capacity_rows(lines, patched, reviewed_capacity_keys(input_path))
+    print(f"Reviewed capacity rows protected from fallback replacement: {protected_restored}")
     consistency_warnings = stock_flow_warnings(patched, args.target_prefixes)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)

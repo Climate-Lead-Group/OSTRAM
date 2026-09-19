@@ -397,7 +397,16 @@ s.t. EBa10_EnergyBalanceEachTS4{r in REGION, rr in REGION, l in TIMESLICE, f in 
 	Trade[r,rr,l,f,y]
 	=
 	-Trade[rr,r,l,f,y];
-s.t. EBa11_EnergyBalanceEachTS5{r in REGION, l in TIMESLICE, f in FUEL, y in YEAR}: sum{(m,t) in MODExTECHNOLOGYperFUELout[f]} RateOfActivity[r,l,t,m,y]*OutputActivityRatio[r,t,f,m,y]*YearSplit[l,y] >= SpecifiedAnnualDemand[r,f,y]*SpecifiedDemandProfile[r,f,l,y] + sum{(m,t) in MODExTECHNOLOGYperFUELin[f]} RateOfActivity[r,l,t,m,y]*InputActivityRatio[r,t,f,m,y]*YearSplit[l,y] + sum{rr in REGION} Trade[r,rr,l,f,y]*TradeRoute[r,rr,f,y];
+# Approved demand accounting: upstream requirement, all documented trajectory years.
+param D4BusbarAccountingActive binary default 0;
+set D4BusbarDemandFuels within FUEL := setof {f in FUEL:
+    f = "ELCBGDXX03" or f = "ELCBTNXX03" or f = "ELCNPLXX03" or f = "ELCLKAXX03" or
+    f = "ELCINDNO03" or f = "ELCINDSO03" or f = "ELCINDEA03" or f = "ELCINDWE03" or f = "ELCINDNE03"} f;
+set D4InternalLossLinks{f in D4BusbarDemandFuels} within TECHNOLOGY := setof {t in TECHNOLOGY:
+    t = "PWRTRN" & substr(f,4,5) or t = "RNWTRN" & substr(f,4,5) or
+    t = "RNWNLI" & substr(f,4,5) or t = "RNWRPO" & substr(f,4,5) or
+    t = "TRNNLI" & substr(f,4,5) or t = "TRNRPO" & substr(f,4,5)} t;
+s.t. EBa11_EnergyBalanceEachTS5{r in REGION, l in TIMESLICE, f in FUEL, y in YEAR}: sum{(m,t) in MODExTECHNOLOGYperFUELout[f]} RateOfActivity[r,l,t,m,y]*OutputActivityRatio[r,t,f,m,y]*YearSplit[l,y] + (if D4BusbarAccountingActive = 1 and f in D4BusbarDemandFuels and y >= 2023 and y <= 2050 then sum{t in D4InternalLossLinks[f], m in MODEperTECHNOLOGY[t]} RateOfActivity[r,l,t,m,y]*YearSplit[l,y]*(sum{ff in FUEL: substr(ff,1,3) = "ELC"} (InputActivityRatio[r,t,ff,m,y]-OutputActivityRatio[r,t,ff,m,y])) else 0) >= SpecifiedAnnualDemand[r,f,y]*SpecifiedDemandProfile[r,f,l,y] + sum{(m,t) in MODExTECHNOLOGYperFUELin[f]} RateOfActivity[r,l,t,m,y]*InputActivityRatio[r,t,f,m,y]*YearSplit[l,y] + sum{rr in REGION} Trade[r,rr,l,f,y]*TradeRoute[r,rr,f,y];
 #
 #########                Energy Balance B                         #############
 #
@@ -569,6 +578,69 @@ s.t. E4_EmissionsPenaltyByTechnology{r in REGION, t in TECHNOLOGY, y in YEAR}: s
 #
 ###########################################################################################
 #
+
+
+# D4 R2 accepted gross directional trade calibration; generated from TRADE_AUTHORITY_CROSSWALK.csv.
+# Candidate aggregate import policy; empty scope leaves all existing cases unchanged.
+set D4ImportCountry;
+set D4ImportDemand{D4ImportCountry} within FUEL;
+set D4ImportFlow{D4ImportCountry} dimen 3 within TECHNOLOGY cross FUEL cross MODE_OF_OPERATION;
+param D4ImportFraction{D4ImportCountry,YEAR} default -1;
+s.t. D4_GrossImportCap{r in REGION,c in D4ImportCountry,y in YEAR: D4ImportFraction[c,y] >= 0}: sum{(t,f,m) in D4ImportFlow[c],l in TIMESLICE} RateOfActivity[r,l,t,m,y]*YearSplit[l,y]*OutputActivityRatio[r,t,f,m,y] <= D4ImportFraction[c,y]*sum{f in D4ImportDemand[c]} SpecifiedAnnualDemand[r,f,y];
+
+param D4HistoricalTradeActive binary default 0;
+
+s.t. D4_I1_TRADE_002_BGD_IND_ALL_IMPORT_2023_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBGDXXINDEA",2,2023]*YearSplit[l,2023]*OutputActivityRatio[r,"TRNBGDXXINDEA","ELCBGDXX04",2,2023] + RateOfActivity[r,l,"TRNBGDXXINDNE",2,2023]*YearSplit[l,2023]*OutputActivityRatio[r,"TRNBGDXXINDNE","ELCBGDXX04",2,2023]) >= 50.79356856;
+s.t. D4_I1_TRADE_002_BGD_IND_ALL_IMPORT_2023_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBGDXXINDEA",2,2023]*YearSplit[l,2023]*OutputActivityRatio[r,"TRNBGDXXINDEA","ELCBGDXX04",2,2023] + RateOfActivity[r,l,"TRNBGDXXINDNE",2,2023]*YearSplit[l,2023]*OutputActivityRatio[r,"TRNBGDXXINDNE","ELCBGDXX04",2,2023]) <= 52.86677544;
+s.t. D4_I1_TRADE_003_BTN_BGD_STRUCTURAL_ZERO_2023_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXBGDXX",2,2023]*YearSplit[l,2023]) >= 0.000000;
+s.t. D4_I1_TRADE_003_BTN_BGD_STRUCTURAL_ZERO_2023_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXBGDXX",2,2023]*YearSplit[l,2023]) <= 0.000000;
+s.t. D4_I1_TRADE_004_BTN_BGD_STRUCTURAL_ZERO_2023_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXBGDXX",1,2023]*YearSplit[l,2023]) >= 0.000000;
+s.t. D4_I1_TRADE_004_BTN_BGD_STRUCTURAL_ZERO_2023_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXBGDXX",1,2023]*YearSplit[l,2023]) <= 0.000000;
+s.t. D4_I1_TRADE_005_BTN_IND_ALL_EXPORT_2023_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXINDEA",1,2023]*YearSplit[l,2023]*InputActivityRatio[r,"TRNBTNXXINDEA","ELCBTNXX03",1,2023] + RateOfActivity[r,l,"TRNBTNXXINDNE",1,2023]*YearSplit[l,2023]*InputActivityRatio[r,"TRNBTNXXINDNE","ELCBTNXX03",1,2023]) >= 18.11649168;
+s.t. D4_I1_TRADE_005_BTN_IND_ALL_EXPORT_2023_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXINDEA",1,2023]*YearSplit[l,2023]*InputActivityRatio[r,"TRNBTNXXINDEA","ELCBTNXX03",1,2023] + RateOfActivity[r,l,"TRNBTNXXINDNE",1,2023]*YearSplit[l,2023]*InputActivityRatio[r,"TRNBTNXXINDNE","ELCBTNXX03",1,2023]) <= 18.85594032;
+s.t. D4_I1_TRADE_006_BTN_IND_ALL_IMPORT_2023_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXINDEA",2,2023]*YearSplit[l,2023]*OutputActivityRatio[r,"TRNBTNXXINDEA","ELCBTNXX04",2,2023] + RateOfActivity[r,l,"TRNBTNXXINDNE",2,2023]*YearSplit[l,2023]*OutputActivityRatio[r,"TRNBTNXXINDNE","ELCBTNXX04",2,2023]) >= 2.10861504;
+s.t. D4_I1_TRADE_006_BTN_IND_ALL_IMPORT_2023_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXINDEA",2,2023]*YearSplit[l,2023]*OutputActivityRatio[r,"TRNBTNXXINDEA","ELCBTNXX04",2,2023] + RateOfActivity[r,l,"TRNBTNXXINDNE",2,2023]*YearSplit[l,2023]*OutputActivityRatio[r,"TRNBTNXXINDNE","ELCBTNXX04",2,2023]) <= 2.19468096;
+s.t. D4_I1_TRADE_013_NPL_BGD_STRUCTURAL_ZERO_2023_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNNPLXXBGDXX",2,2023]*YearSplit[l,2023]) >= 0.000000;
+s.t. D4_I1_TRADE_013_NPL_BGD_STRUCTURAL_ZERO_2023_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNNPLXXBGDXX",2,2023]*YearSplit[l,2023]) <= 0.000000;
+s.t. D4_I1_TRADE_014_NPL_BGD_STRUCTURAL_ZERO_2023_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNNPLXXBGDXX",1,2023]*YearSplit[l,2023]) >= 0.000000;
+s.t. D4_I1_TRADE_014_NPL_BGD_STRUCTURAL_ZERO_2023_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNNPLXXBGDXX",1,2023]*YearSplit[l,2023]) <= 0.000000;
+s.t. D4_I1_TRADE_015_NPL_IND_ALL_IMPORT_2023_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNINDNONPLXX",1,2023]*YearSplit[l,2023]*OutputActivityRatio[r,"TRNINDNONPLXX","ELCNPLXX04",1,2023] + RateOfActivity[r,l,"TRNINDEANPLXX",1,2023]*YearSplit[l,2023]*OutputActivityRatio[r,"TRNINDEANPLXX","ELCNPLXX04",1,2023]) >= 6.466824;
+s.t. D4_I1_TRADE_015_NPL_IND_ALL_IMPORT_2023_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNINDNONPLXX",1,2023]*YearSplit[l,2023]*OutputActivityRatio[r,"TRNINDNONPLXX","ELCNPLXX04",1,2023] + RateOfActivity[r,l,"TRNINDEANPLXX",1,2023]*YearSplit[l,2023]*OutputActivityRatio[r,"TRNINDEANPLXX","ELCNPLXX04",1,2023]) <= 6.730776;
+s.t. D4_I1_TRADE_016_NPL_IND_ALL_EXPORT_2023_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNINDNONPLXX",2,2023]*YearSplit[l,2023]*InputActivityRatio[r,"TRNINDNONPLXX","ELCNPLXX03",2,2023] + RateOfActivity[r,l,"TRNINDEANPLXX",2,2023]*YearSplit[l,2023]*InputActivityRatio[r,"TRNINDEANPLXX","ELCNPLXX03",2,2023]) >= 4.748688;
+s.t. D4_I1_TRADE_016_NPL_IND_ALL_EXPORT_2023_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNINDNONPLXX",2,2023]*YearSplit[l,2023]*InputActivityRatio[r,"TRNINDNONPLXX","ELCNPLXX03",2,2023] + RateOfActivity[r,l,"TRNINDEANPLXX",2,2023]*YearSplit[l,2023]*InputActivityRatio[r,"TRNINDEANPLXX","ELCNPLXX03",2,2023]) <= 4.942512;
+s.t. D4_I1_TRADE_019_BTN_BGD_STRUCTURAL_ZERO_2024_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXBGDXX",2,2024]*YearSplit[l,2024]) >= 0.000000;
+s.t. D4_I1_TRADE_019_BTN_BGD_STRUCTURAL_ZERO_2024_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXBGDXX",2,2024]*YearSplit[l,2024]) <= 0.000000;
+s.t. D4_I1_TRADE_020_BTN_BGD_STRUCTURAL_ZERO_2024_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXBGDXX",1,2024]*YearSplit[l,2024]) >= 0.000000;
+s.t. D4_I1_TRADE_020_BTN_BGD_STRUCTURAL_ZERO_2024_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXBGDXX",1,2024]*YearSplit[l,2024]) <= 0.000000;
+s.t. D4_I1_TRADE_021_BTN_IND_ALL_EXPORT_2024_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXINDEA",1,2024]*YearSplit[l,2024]*InputActivityRatio[r,"TRNBTNXXINDEA","ELCBTNXX03",1,2024] + RateOfActivity[r,l,"TRNBTNXXINDNE",1,2024]*YearSplit[l,2024]*InputActivityRatio[r,"TRNBTNXXINDNE","ELCBTNXX03",1,2024]) >= 19.25032032;
+s.t. D4_I1_TRADE_021_BTN_IND_ALL_EXPORT_2024_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXINDEA",1,2024]*YearSplit[l,2024]*InputActivityRatio[r,"TRNBTNXXINDEA","ELCBTNXX03",1,2024] + RateOfActivity[r,l,"TRNBTNXXINDNE",1,2024]*YearSplit[l,2024]*InputActivityRatio[r,"TRNBTNXXINDNE","ELCBTNXX03",1,2024]) <= 20.03604768;
+s.t. D4_I1_TRADE_022_BTN_IND_ALL_IMPORT_2024_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXINDEA",2,2024]*YearSplit[l,2024]*OutputActivityRatio[r,"TRNBTNXXINDEA","ELCBTNXX04",2,2024] + RateOfActivity[r,l,"TRNBTNXXINDNE",2,2024]*YearSplit[l,2024]*OutputActivityRatio[r,"TRNBTNXXINDNE","ELCBTNXX04",2,2024]) >= 4.96170864;
+s.t. D4_I1_TRADE_022_BTN_IND_ALL_IMPORT_2024_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXINDEA",2,2024]*YearSplit[l,2024]*OutputActivityRatio[r,"TRNBTNXXINDEA","ELCBTNXX04",2,2024] + RateOfActivity[r,l,"TRNBTNXXINDNE",2,2024]*YearSplit[l,2024]*OutputActivityRatio[r,"TRNBTNXXINDNE","ELCBTNXX04",2,2024]) <= 5.16422736;
+s.t. D4_I1_TRADE_029_NPL_BGD_STRUCTURAL_ZERO_2024_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNNPLXXBGDXX",2,2024]*YearSplit[l,2024]) >= 0.000000;
+s.t. D4_I1_TRADE_029_NPL_BGD_STRUCTURAL_ZERO_2024_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNNPLXXBGDXX",2,2024]*YearSplit[l,2024]) <= 0.000000;
+s.t. D4_I1_TRADE_031_NPL_IND_ALL_IMPORT_2024_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNINDNONPLXX",1,2024]*YearSplit[l,2024]*OutputActivityRatio[r,"TRNINDNONPLXX","ELCNPLXX04",1,2024] + RateOfActivity[r,l,"TRNINDEANPLXX",1,2024]*YearSplit[l,2024]*OutputActivityRatio[r,"TRNINDEANPLXX","ELCNPLXX04",1,2024]) >= 6.685560;
+s.t. D4_I1_TRADE_031_NPL_IND_ALL_IMPORT_2024_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNINDNONPLXX",1,2024]*YearSplit[l,2024]*OutputActivityRatio[r,"TRNINDNONPLXX","ELCNPLXX04",1,2024] + RateOfActivity[r,l,"TRNINDEANPLXX",1,2024]*YearSplit[l,2024]*OutputActivityRatio[r,"TRNINDEANPLXX","ELCNPLXX04",1,2024]) <= 6.958440;
+s.t. D4_I1_TRADE_032_NPL_IND_ALL_EXPORT_2024_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNINDNONPLXX",2,2024]*YearSplit[l,2024]*InputActivityRatio[r,"TRNINDNONPLXX","ELCNPLXX03",2,2024] + RateOfActivity[r,l,"TRNINDEANPLXX",2,2024]*YearSplit[l,2024]*InputActivityRatio[r,"TRNINDEANPLXX","ELCNPLXX03",2,2024]) >= 6.865488;
+s.t. D4_I1_TRADE_032_NPL_IND_ALL_EXPORT_2024_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNINDNONPLXX",2,2024]*YearSplit[l,2024]*InputActivityRatio[r,"TRNINDNONPLXX","ELCNPLXX03",2,2024] + RateOfActivity[r,l,"TRNINDEANPLXX",2,2024]*YearSplit[l,2024]*InputActivityRatio[r,"TRNINDEANPLXX","ELCNPLXX03",2,2024]) <= 7.145712;
+s.t. D4_I1_TRADE_033_BGD_INDEA_IMPORT_2025_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBGDXXINDEA",2,2025]*YearSplit[l,2025]*OutputActivityRatio[r,"TRNBGDXXINDEA","ELCBGDXX04",2,2025]) >= 56.144592;
+s.t. D4_I1_TRADE_033_BGD_INDEA_IMPORT_2025_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBGDXXINDEA",2,2025]*YearSplit[l,2025]*OutputActivityRatio[r,"TRNBGDXXINDEA","ELCBGDXX04",2,2025]) <= 58.436208;
+s.t. D4_I1_TRADE_035_BGD_INDNE_IMPORT_2025_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBGDXXINDNE",2,2025]*YearSplit[l,2025]*OutputActivityRatio[r,"TRNBGDXXINDNE","ELCBGDXX04",2,2025]) >= 1.686384;
+s.t. D4_I1_TRADE_035_BGD_INDNE_IMPORT_2025_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBGDXXINDNE",2,2025]*YearSplit[l,2025]*OutputActivityRatio[r,"TRNBGDXXINDNE","ELCBGDXX04",2,2025]) <= 1.755216;
+s.t. D4_I1_TRADE_036_BTN_BGD_STRUCTURAL_ZERO_2025_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXBGDXX",2,2025]*YearSplit[l,2025]) >= 0.000000;
+s.t. D4_I1_TRADE_036_BTN_BGD_STRUCTURAL_ZERO_2025_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXBGDXX",2,2025]*YearSplit[l,2025]) <= 0.000000;
+s.t. D4_I1_TRADE_037_BTN_BGD_STRUCTURAL_ZERO_2025_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXBGDXX",1,2025]*YearSplit[l,2025]) >= 0.000000;
+s.t. D4_I1_TRADE_037_BTN_BGD_STRUCTURAL_ZERO_2025_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXBGDXX",1,2025]*YearSplit[l,2025]) <= 0.000000;
+s.t. D4_I1_TRADE_038_BTN_IND_ALL_EXPORT_2025_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXINDEA",1,2025]*YearSplit[l,2025]*InputActivityRatio[r,"TRNBTNXXINDEA","ELCBTNXX03",1,2025] + RateOfActivity[r,l,"TRNBTNXXINDNE",1,2025]*YearSplit[l,2025]*InputActivityRatio[r,"TRNBTNXXINDNE","ELCBTNXX03",1,2025]) >= 27.95830632;
+s.t. D4_I1_TRADE_038_BTN_IND_ALL_EXPORT_2025_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXINDEA",1,2025]*YearSplit[l,2025]*InputActivityRatio[r,"TRNBTNXXINDEA","ELCBTNXX03",1,2025] + RateOfActivity[r,l,"TRNBTNXXINDNE",1,2025]*YearSplit[l,2025]*InputActivityRatio[r,"TRNBTNXXINDNE","ELCBTNXX03",1,2025]) <= 29.09946168;
+s.t. D4_I1_TRADE_039_BTN_IND_ALL_IMPORT_2025_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXINDEA",2,2025]*YearSplit[l,2025]*OutputActivityRatio[r,"TRNBTNXXINDEA","ELCBTNXX04",2,2025] + RateOfActivity[r,l,"TRNBTNXXINDNE",2,2025]*YearSplit[l,2025]*OutputActivityRatio[r,"TRNBTNXXINDNE","ELCBTNXX04",2,2025]) >= 3.88919664;
+s.t. D4_I1_TRADE_039_BTN_IND_ALL_IMPORT_2025_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNBTNXXINDEA",2,2025]*YearSplit[l,2025]*OutputActivityRatio[r,"TRNBTNXXINDEA","ELCBTNXX04",2,2025] + RateOfActivity[r,l,"TRNBTNXXINDNE",2,2025]*YearSplit[l,2025]*OutputActivityRatio[r,"TRNBTNXXINDNE","ELCBTNXX04",2,2025]) <= 4.04793936;
+s.t. D4_I1_TRADE_046_NPL_BGD_STRUCTURAL_ZERO_2025_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNNPLXXBGDXX",2,2025]*YearSplit[l,2025]) >= 0.000000;
+s.t. D4_I1_TRADE_046_NPL_BGD_STRUCTURAL_ZERO_2025_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNNPLXXBGDXX",2,2025]*YearSplit[l,2025]) <= 0.000000;
+s.t. D4_I1_TRADE_047_NPL_BGD_EXPORT_2025_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNNPLXXBGDXX",1,2025]*YearSplit[l,2025]*OutputActivityRatio[r,"TRNNPLXXBGDXX","ELCBGDXX04",1,2025]) >= 0.052920;
+s.t. D4_I1_TRADE_047_NPL_BGD_EXPORT_2025_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNNPLXXBGDXX",1,2025]*YearSplit[l,2025]*OutputActivityRatio[r,"TRNNPLXXBGDXX","ELCBGDXX04",1,2025]) <= 0.055080;
+s.t. D4_I1_TRADE_049_NPL_IND_ALL_EXPORT_2025_Lower{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNINDNONPLXX",2,2025]*YearSplit[l,2025]*InputActivityRatio[r,"TRNINDNONPLXX","ELCNPLXX03",2,2025] + RateOfActivity[r,l,"TRNINDEANPLXX",2,2025]*YearSplit[l,2025]*InputActivityRatio[r,"TRNINDEANPLXX","ELCNPLXX03",2,2025]) >= 8.396640;
+s.t. D4_I1_TRADE_049_NPL_IND_ALL_EXPORT_2025_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNINDNONPLXX",2,2025]*YearSplit[l,2025]*InputActivityRatio[r,"TRNINDNONPLXX","ELCNPLXX03",2,2025] + RateOfActivity[r,l,"TRNINDEANPLXX",2,2025]*YearSplit[l,2025]*InputActivityRatio[r,"TRNINDEANPLXX","ELCNPLXX03",2,2025]) <= 8.739360;
+# End D4 R2 trade calibration.
 
 solve;
 #

@@ -391,6 +391,19 @@ print("=" * 72)
 st_v17 = pd.read_excel(TEMPLATE_PATH, sheet_name="Secondary_Techs")
 st_v17 = st_v17.dropna(subset=["Tech"]).copy()
 
+# A monetary-only authority can update an existing AO technology without
+# requesting a new time-varying capacity-factor profile. Keep the inherited
+# physical roster unchanged; the later AO refresh still reads these cost rows.
+cost_only = st_v17.get("Cost.Only", pd.Series(False, index=st_v17.index))
+cost_only = cost_only.fillna(False).astype(str).str.lower().isin({"true", "1", "1.0"})
+if cost_only.any():
+    if not st_v17.loc[cost_only, "Parameter"].isin(
+        {"CapitalCost", "FixedCost", "VariableCost"}
+    ).all():
+        raise ValueError("Cost.Only is restricted to monetary parameter rows")
+    st_v17 = st_v17.loc[~cost_only].copy()
+
+
 # Unique PWR codes -> first non-null (Tech.ID, Tech.Name)
 pwr_mask = st_v17["Tech"].astype(str).str.startswith("PWR")
 roster = (st_v17.loc[pwr_mask, ["Tech.ID", "Tech", "Tech.Name"]]
