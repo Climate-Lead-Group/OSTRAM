@@ -75,7 +75,12 @@ The maintained authorities are:
 - `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx`
 - `inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx`
 - `config/profiles/full.yaml::scenario_registry`
-- scenario-specific rule YAML/JSON files in `config/scenarios/<scenario>/`
+- scenario-specific rule YAML files in `config/scenarios/<scenario>/`
+
+Full-profile derived edits live in `config/profiles/full.yaml`; the former
+scenario JSON input files are retired. Profile-selection JSON, timeslice
+metadata, and generated change/materialization/reporting JSON remain legitimate
+configuration and provenance records.
 
 The registry declares four roots and the accepted derived scenarios. A root is
 transformed through the ordered workbook stages. A derived scenario begins

@@ -92,9 +92,13 @@ See the [quickstart](docs/quickstart.md), [pipeline](docs/pipeline.md),
 [configuration](docs/configuration.md), and [lineage](docs/lineage.md) for the
 maintained operating contract.
 
-The September 2026 cost update, country fuel-price accounting, source
-limitations, and reconciled reporting convention are described in
-[lineage](docs/lineage.md#september-2026-cost-release). The external release
+The adopted sources, conversions, assumptions, historical calibration and
+remaining evidence limitations are documented inside the existing
+[scenario workbook](inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx), in its README,
+Source/Notes/References cells and Excel cell notes. The annual values remain
+the operational inputs; the added explanations are not another input authority.
+The September 2026 cost update and reconciled reporting convention are also
+described in [lineage](docs/lineage.md#september-2026-cost-release). The external release
 review at `D4_SCAN_STATE/RELEASE_20260919/RELEASE_REVIEW.md` records the selected
 17 cases, verification gates, evidence archive, and publication state.
 For a compile-only check using the selected A result for C, use the normal
@@ -103,3 +107,16 @@ command with an isolated `--workspace`. A fresh full solve must solve A before
 materialising C through its declared dependency. The transmission-freeze
 case retains its fixed historical reference; legacy and strict import caps
 remain separate definitions.
+
+A fresh clone includes maintained inputs, but not the local `D4_SCAN_STATE`
+release archive, selected solver outputs or original country source packages.
+Those locally retained records have not been published as downloadable release
+assets. Exact historical replay requires those artifacts; a new full run obtains
+C's dependency by solving A first. The transmission-freeze coefficients are
+already embedded in the registered YAML and require no external M0 run at
+runtime. Source URLs identify publications but do not guarantee continuing
+online availability.
+
+The calibration CSV is byte-hash guarded. Its scoped `.gitattributes` rule
+preserves the released CRLF bytes on fresh checkouts; do not normalize that
+file independently or change its accepted hash to bypass the guard.
