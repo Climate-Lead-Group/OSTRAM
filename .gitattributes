@@ -1,6 +1,10 @@
 # Keep ordinary repository text deterministic on every platform.
 * text=auto eol=lf
 
+# This audited authority is byte-hash guarded against the released CRLF file.
+# Preserve its accepted bytes in fresh checkouts on every platform.
+config/scenarios/rules/pwr_min_2023_2026_pin.csv text eol=crlf
+
 # Windows command scripts require CRLF working-tree line endings.
 *.bat text eol=crlf
 *.cmd text eol=crlf

@@ -1,5 +1,7 @@
 ## C_Target_VRE: fixed external resource-specific generation shares (fractions).
-## Source and arithmetic: ../../../../RESOURCE_SHARE_EVIDENCE.md, final 2026-09-15.
+## Source and arithmetic: inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx,
+## README and RE_Targets_Policies notes (paths relative to the project root).
+## The external RESOURCE_SHARE_EVIDENCE.md is a retained local review backup.
 ## India: original CEA-observation regional allocation, not demand reweighting.
 ## Sri Lanka: authorized Scenario 3 fallback; Annexes 8.3/8.4 contain MW, not GWh.
 ## Bangladesh: ATS In-Between; Table 4.3-1 imports removed from denominator.
