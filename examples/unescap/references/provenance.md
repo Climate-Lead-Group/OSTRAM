@@ -120,6 +120,83 @@ rule's explicit unbinding value; it neither overwrites nor rounds `ResidualCapac
 
 ## Runtime integration decisions
 
+### Bangladesh gas emissions and training A3 checks
+
+The training reproduction repair starts at
+`6ff8fc91c89b81a5e44cbf6798f0ec30a0fbc77a`. At that commit the profile-owned
+`EmissionActivityRatio.csv` has **no** `PWRNGSBGDXX` rows (nor legacy Bangladesh
+CCG/OCG emissions to reconcile). A3 creates the Bangladesh gas technology from
+the maintained extension decision, but that does not create its emissions rows.
+The shared B1 combustion check therefore correctly rejects mode 1 in 2023.
+This is independent of the valid `URN` nuclear mappings.
+
+Adding the missing rows alone is insufficient: the training technology-country
+matrix deliberately excludes Bangladesh gas from A1, before A3 introduces it.
+A1 consequently discards the new emissions too. The profile now opts into
+`preserve_declared_extension_emissions`: A1 retains only emissions whose exact
+technology is an `Include=Y` A3 extension and is present in the active taxonomy.
+The other parameters still follow the matrix, so the late extension's activity
+ratios, costs and capacity data are not replaced with legacy seed values.
+The full profile retains the existing filter semantics by default.
+
+The correction adds exactly 56 rows: `GLOBAL / PWRNGSBGDXX / CO2BGD`, modes 1
+and 2, years 2023–2050. The prepared input activity ratio is `2.33765`; B1's
+existing four-decimal conversion yields `2.3376` PJ gas per PJ activity. Each
+mode produces `ELCBGDXX01` at output ratio 1, so its activity is PJ of plant
+electricity output. The compiler's approved fuel factor is `0.0561` Mt CO₂ per
+PJ gas. Thus both modes require `0.0561 × 2.3376 = 0.13113936` **Mt CO₂ per PJ
+activity**. Mode 1 consumes `GASBGD`; mode 2 consumes `GASINT`. Both combust in
+Bangladesh and emit `CO2BGD`. No emissions are added at gas mining/import, and
+no full-model rows, technologies, fuel mappings, efficiencies or capacities
+are imported. The compiler's exact factor and output-basis checks remain active.
+
+The reported A3 counts reproduce in support BAU, A and B:
+
+- Three extension failures demand all five Indian small-hydro codes in each
+  of Param, AR_Base and AR_Proj. Training declares only `PWRSHPINDEA`.
+- Sixteen manual-fix failures demand four substitutions each for
+  `PWRGEOINDNO`, `PWRNGSMDVXX`, `PWROILMDVXX` and `PWROILNPLXX`. None belongs
+  to the training domain. All four `PWRNGSBGDXX` substitutions already pass.
+
+These checks now use the active profile's explicit technology taxonomy to
+determine applicability. Out-of-domain substitutions are logged explicitly;
+missing or duplicate in-domain rows still fail. Small-hydro validation requires
+the declared set and rejects extra codes. Both stages now exit unsuccessfully
+when an applicable built-in check fails, instead of printing failure and
+returning success. The full taxonomy still requires all five Indian small-hydro
+codes and all 20 existing substitutions. Model domain contracts, URN mappings,
+training scenario assumptions and full-profile input/configuration authorities
+are unchanged.
+
+The subsequent CBC A run declared an optimum but marked seven storage activities
+with `**` bound violations (largest negative activity about `1.27e-6`). The
+training execution configuration now requests primal tolerance `1e-10` for A/B
+and a `cbc_primal_tolerance_by_scenario` override of `1e-12` for C, retaining
+dual tolerance `1e-8` and seed 12345. The shared CBC adapter keeps its existing
+`1e-8` primal default for other profiles and rejects material saved `**` bound
+violations even if the header says optimal. Tiny negative postsolve values within
+`1e-8` of zero remain within the feasibility tolerance; larger negative values,
+positive flagged values and malformed flags fail closed. No model coefficient changes
+are used to repair numerical feasibility.
+
+The intermediate `1e-10` setting resolved A and B but left C with negative
+storage-cost variables down to `-3.28e-8`. The guard rejected that solve. On the
+same C LP, `1e-12` preserved the objective and reduced the largest saved bound
+violation to below `1e-10`. Applying that tighter setting to A caused numerical
+cycling, so it is scoped to C, using an unshared parameter copy. Final acceptance
+reruns A/B and regenerates C from the newly exported A result with these settings.
+
+Training also enables the existing `reconcile_variable_cost_exports` policy.
+The first A export omitted about 60.775 MUSD of compiled default variable costs;
+there were no duplicate variable-cost keys. Reconciliation retains the raw CSVs
+and accounts for those defaults in the combined cost tables. When comparing
+reported cost to the CBC objective, include the constant recorded in GLPK's LP
+comment (26,631.6286009204 MUSD for A), which GLPK omits from the solver objective.
+The acceptance residual check distinguishes CBC's solver tolerances from the
+rounding of its text solution: exported values have about eight significant
+digits and are checked at `1e-7` scaled row/bound residual, with CBC-marked
+negative bound values additionally constrained to the `1e-8` near-zero tolerance.
+
 - `lid_rule_new_semantics: true` applies only to UNESCAP; `full` and unqualified behavior
   retain the historical semantics.
 - `storage_delay_active` reads the declared maintained model and writes a scenario-local
@@ -129,7 +206,10 @@ rule's explicit unbinding value; it neither overwrites nor rounds `ResidualCapac
   foreign/unstamped workspaces, and profile workspaces are isolated by profile id.
 - Reporting/capture and resource inspection resolve the activated profile bundle.
 
-## Integration validation record
+## Historical integration validation record
+
+The record below predates the isolated training reproduction repair. Its current
+validation results are recorded in [`release-readiness.md`](release-readiness.md).
 
 The complete solver-free suite passed. Unqualified commands were compared with
 `--profile full` and produced the same full authority bundle. Real UNESCAP preparation and

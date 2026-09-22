@@ -40,6 +40,12 @@ solver: 'cbc' # Could you use: 'glpk', 'cbc', 'cplex' and 'gurobi'
 # For CBC use
 iteration_time: 20000
 cbc_random_seed: 12345        # Random seed for reproducibility
+# The reduced storage LP needs tighter primal cleanup to avoid CBC's '**'
+# out-of-bounds activities despite an optimal header. Engineering data unchanged.
+cbc_primal_tolerance: "1e-10"
+# C needs additional storage-cost cleanup; applying this to A causes cycling.
+cbc_primal_tolerance_by_scenario:
+  C_Target_VRE: "1e-12"
 
 # For CPLEX use
 cplex_threads: 4

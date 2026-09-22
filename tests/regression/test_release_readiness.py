@@ -88,6 +88,19 @@ class PortableRuntimeTests(unittest.TestCase):
                 validate_cbc_solution(solution),
                 "Optimal - objective value 123.5",
             )
+            solution.write_text(
+                "Optimal - objective value 123.5\n"
+                "** 29312 RateOfActivity(GLOBAL,S1D5,PWRLDSINDEA,2,2044) -1.2724452e-06 0\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(RuntimeError, "out-of-bounds decision variable"):
+                validate_cbc_solution(solution)
+            solution.write_text(
+                "Optimal - objective value 123.5\n"
+                "** 154 DiscountedSalvageValueStorage(GLOBAL,LDSINDEA01,2037) -1.742701e-09 0\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(validate_cbc_solution(solution), "Optimal - objective value 123.5")
 
     def test_affected_runtime_has_no_shell_or_drive_letter_assumptions(self) -> None:
         for relative in (

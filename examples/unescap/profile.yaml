@@ -122,6 +122,11 @@ metadata:
   requires_prepare: true
 
 policies:
+  # Include compiled default variable costs omitted by sparse otoole CSVs.
+  reconcile_variable_cost_exports: true
+  # A3 introduces approved extensions after A1's technology-country filter.
+  # Preserve only their emission rows; other seed parameters stay filtered.
+  preserve_declared_extension_emissions: true
   # The training correction replaces legacy hand-entered LID cells. The full
   # profile explicitly keeps this false in config/profiles/full.yaml.
   lid_rule_new_semantics: true
