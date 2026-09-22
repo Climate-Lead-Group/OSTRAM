@@ -857,6 +857,15 @@ def stage_6_sync_og_to_ts20(wd: Path, s1: Path) -> None:
     ], cwd=wd, label="sync OSeMOSYS inputs to 20 timeslices")
 
 
+def finalize_support_bau(output_dir: Path, scenario: str) -> None:
+    """Apply the full-profile support policy after restriction export/delivery."""
+    if scenario != "BAU" or not profile_policy("support_bau_committed_transmission", False):
+        return
+    from .transformations.support_bau_transmission import apply_commitment_ceiling
+
+    apply_commitment_ceiling(output_dir / "A-O_Parametrization.xlsx")
+
+
 def deliver_outputs(s5: Path, output_dir: Path) -> None:
     banner(f"Delivering 4 final files to {output_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -993,6 +1002,7 @@ def _orchestration_dependencies(
         timestamp_now=datetime.now,
         banner=banner,
         emit=print,
+        finalize_support_bau=finalize_support_bau,
     )
 
 

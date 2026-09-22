@@ -74,7 +74,9 @@ stage is already satisfied.
 For all 17 accepted cases, use the
 [portfolio sequence](pipeline.md#accepted-17-scenario-portfolio): solve A, then
 materialize and solve the remaining decision cases using that new A result.
-Support `BAU` is not the accepted A scenario. The unfiltered default also
+Support `BAU` has a separate [standalone execution command](pipeline.md#support-bau)
+and permits existing transmission plus committed additions. It is not the
+accepted A scenario. The unfiltered default also
 includes C, which cannot be materialized before its A result exists.
 
 The interactive display is compact and updates in place on stderr. Redirected

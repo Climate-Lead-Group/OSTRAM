@@ -70,6 +70,38 @@ dependency resolution on a later date is not an exact environment replay.
 
 ## Verify the installation
 
+### Clean-clone support BAU
+
+In a Conda-enabled PowerShell, choose a new parent directory and run:
+
+```powershell
+git clone --branch fix/clean-clone-accepted-portfolio --single-branch https://github.com/Climate-Lead-Group/OSTRAM.git OSTRAM-pr35
+if ($LASTEXITCODE -ne 0) { throw 'Clone failed' }
+Set-Location OSTRAM-pr35
+Get-ChildItem Env: | Where-Object Name -Like 'OSTRAM_*' | Remove-Item
+Remove-Item Env:PYTHONPATH, Env:PYTHONHOME -ErrorAction SilentlyContinue
+$env:PYTHONUTF8 = '1'
+$env:PYTHONHASHSEED = '0'
+$env:PYTHONDONTWRITEBYTECODE = '1'
+conda env create -n ostram-pr35 -f environment.yaml -y
+if ($LASTEXITCODE -ne 0) { throw 'Conda installation failed' }
+conda activate ostram-pr35
+python -m pip install -e .
+if ($LASTEXITCODE -ne 0) { throw 'Editable installation failed' }
+python -m pip check
+python -m ostram inspect-resources
+glpsol --version
+```
+
+The maintained full profile selects CPLEX. Install licensed CPLEX separately
+and make its executable discoverable before running the
+[support BAU command](pipeline.md#support-bau). The verification environment uses
+CPLEX 22.1.2.0, GLPK 5.0, four threads and seed 12345.
+Use a fresh environment name if `ostram-pr35` already exists. Record
+`git rev-parse HEAD` and `conda list --explicit` with the execution evidence.
+
+### Installation checks
+
 ```powershell
 python -m ostram --help
 python -m ostram inspect-resources

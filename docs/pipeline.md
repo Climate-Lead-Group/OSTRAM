@@ -182,19 +182,64 @@ names, preserves canonical order, calculates required roots, and resolves
 declared result dependencies. `C_Target_VRE` requires the accepted A-result
 seed boundary; no result is discovered through caller CWD.
 
+### Support BAU
+
+The owner-authorized full-profile rule is: **BAU permits existing transmission
+plus already committed additions, with no discretionary expansion beyond those
+commitments.** Existing `TotalAnnualMinCapacityInvestment` values for the 18
+interconnector `TRN` technologies are interpreted as the commitments. Their
+year is their commissioning year. No investment minimum is removed or changed.
+
+For technology `t` and model year `y`, the final ceiling is:
+
+```text
+TotalAnnualMaxCapacity[t,y] = ResidualCapacity[t,y]
+  + sum(TotalAnnualMinCapacityInvestment[t,v]
+        for model years v where 0 <= y-v < OperationalLife[t])
+```
+
+This uses the model's vintage survival rule: a committed addition is unavailable
+before commissioning and expires at the operational-life boundary. Residual
+capacity keeps its existing year-by-year trajectory. With the unchanged annual
+investment minima, the ceiling prevents discretionary additions. The previous
+residual-only ceiling caused 156 V2 conflicts with required additions.
+
+The policy runs **only on the final full-profile `BAU` output**, after disposable
+restriction-state export and delivery. Shared preparation, post-A2 snapshots,
+and inherited Restrictions retain their existing values. Accepted A and the
+other 16 decision scenarios therefore retain their modelling contract. The
+UNESCAP profile does not enable this policy. Validation remains enabled and
+does not apply repairs. `support_bau_transmission.json` beside the final
+parametrization workbook records all 504 technology/year ceilings and sources.
+
+After the [clean-clone installation](installation.md#clean-clone-support-bau),
+run this in the activated `ostram-pr35` environment from the checkout:
+
+```powershell
+$workspace = [IO.Path]::GetFullPath('..\support-bau-workspace')
+if (Test-Path -LiteralPath $workspace) { throw 'Choose a new empty workspace path' }
+python -m ostram --profile full --workspace $workspace run --env-name ostram-pr35 --skip-pull --scenarios BAU --verbose
+if ($LASTEXITCODE -ne 0) { throw 'Support BAU preparation/compilation/solve/export failed' }
+```
+
+This performs A1, A2, A3, B1, B2, export and cost reconciliation from maintained
+checkout inputs, without an A-result seed. Keep the workspace logs and
+`execution/Executables/BAU_0` contents, including the CPLEX log/solution and
+`*_cost_reconciliation.json`. Check optimal status, primal/dual feasibility,
+transmission capacity against the commitment audit, and backstop activity.
+Support `BAU` is a separate case; it is neither `A_Calibrated_BAU` nor a member
+of the accepted 17-case portfolio. A full portfolio run still needs the A-first
+sequence below.
+
 ### Accepted 17-scenario portfolio
 
 The full-profile registry distinguishes support `BAU` from the 17 decision
 scenarios. `A_Calibrated_BAU` is the accepted A case. A1, A2, A3, B1 and B2
 name stages; B1 does not mean `B_Optimised_VRE`.
 
-Compiling support BAU at the September 2026 baseline produces 156 V2
-transmission-capacity conflicts: its shared residual-cap stage retains positive
-investment minima without the accepted A rule chain. B1 correctly rejects that
-workbook without applying fixes. Do not remove the guard, zero minima or widen
-ceilings to make this support case pass. Selecting A applies its existing
-declared transformations and preserves BAU restriction inheritance. The
-accepted portfolio does not require a BAU solve.
+Support BAU has its own [committed-transmission policy and execution command](#support-bau).
+Selecting A applies its existing declared transformations and preserves BAU
+restriction inheritance. The accepted portfolio does not require a BAU solve.
 
 Use an empty, local workspace and an editable installation of this checkout.
 The runner's default selection includes support BAU, and its single A3 pass
