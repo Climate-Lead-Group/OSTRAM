@@ -29,9 +29,17 @@ Keep the checkout, environment, package cache, logs and outputs separate from
 production. From a new checkout, the following creates the documented
 environment under an explicit local directory instead of updating an existing
 environment. Set `CONDA_EXE` to the installed Conda executable if it is not
-already available through an activated Conda prompt.
+already available through an activated Conda prompt. Use a dedicated PowerShell
+session. The recorded clean-clone execution cleared inherited OSTRAM/Python
+path overrides and fixed Python's hash seed before launching the runner:
 
 ```powershell
+Get-ChildItem Env: | Where-Object Name -Like 'OSTRAM_*' | Remove-Item
+Remove-Item Env:PYTHONPATH, Env:PYTHONHOME -ErrorAction SilentlyContinue
+$env:PYTHONUTF8 = '1'
+$env:PYTHONHASHSEED = '0'
+$env:PYTHONDONTWRITEBYTECODE = '1'
+$env:PYTHONUNBUFFERED = '1'
 $runRoot = [IO.Path]::GetFullPath('..') # parent of this isolated checkout
 $env:CONDA_ENVS_PATH = Join-Path $runRoot 'conda-envs'
 $env:CONDA_PKGS_DIRS = Join-Path $runRoot 'conda-pkgs'

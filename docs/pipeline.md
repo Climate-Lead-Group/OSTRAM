@@ -243,6 +243,26 @@ the normal export/reconciliation chain without an external solver wrapper or
 an LP edit. Always check the final solver status and certificate; a successful
 process exit alone does not establish feasibility.
 
+### Compare a reproduced portfolio
+
+Keep comparison evidence outside the checkout and production workspace. Use
+the explicit selected portfolio and solver-chain records to pair all 17 cases.
+Compare compiled data and LP hashes exactly, and compare effective parameter
+values, defaults and sets independently. Require CPLEX optimal status 1,
+primal/dual feasibility, and maximum primal/dual infeasibility at most `1e-6`.
+For objective and reconciled cost, the reproduction uses
+`abs(fresh - accepted) <= 1e-6 + 1e-10 * abs(accepted)` MUSD, a small allowance
+for floating-point summation roundoff.
+
+Compare every raw exported CSV. Byte-identical files establish exact physical
+output equality; any different table remains unresolved until its differences
+are examined. Equal objectives alone do not establish an acceptable alternative
+optimum. A complete solution-XML comparison may normalize line endings and
+exclude only the `problemName` path attribute. Keep per-case source paths,
+hashes, solver certificates, objective/cost deltas and reconciliation JSON with
+the comparison record. Wait for the runner's final cross-scenario
+post-processing and successful exit before declaring the workflow complete.
+
 ## Path and process guarantees
 
 - Project and workspace selection follow CLI > environment > editable checkout.
