@@ -90,6 +90,12 @@ stage sequence:
 `stage_6_sync_og_to_ts20` ->
 `stage_6_persist_restrictions` -> `deliver_outputs`.
 
+The final full-profile support `BAU` output additionally receives
+`finalize_support_bau` after delivery. It sets the 18 TRN total-capacity ceilings
+to residual capacity plus surviving required additions. It runs after inherited
+restriction state is exported, so accepted roots retain the sequence and
+inherited values above. See the [support BAU policy](pipeline.md#support-bau).
+
 Normal A3 execution still contains only the four active Control definitions:
 `BAU`, `A_Calibrated_BAU`, `B_Optimised_VRE`, and `C_Target_VRE`. Derived decision
 scenarios remain later, ordered scenario-specific patches; this refactor does not

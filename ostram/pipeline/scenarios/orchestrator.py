@@ -82,6 +82,7 @@ class A3Dependencies:
     timestamp_now: Callable[[], object]
     banner: Callable[[str], object]
     emit: Callable[[str], object]
+    finalize_support_bau: Callable[[Path, str], object] | None = None
 
 
 def resolve_plan(
@@ -257,6 +258,10 @@ def execute_plan(
         rules_scripts,
     )
     dependencies.deliver_outputs(stage5, plan.output_dir)
+    # Final support output only: inherited Restrictions and shared snapshots
+    # above must retain their accepted values for the decision scenarios.
+    if dependencies.finalize_support_bau is not None:
+        dependencies.finalize_support_bau(plan.output_dir, plan.scenario)
 
     if not plan.keep_workdir:
         dependencies.remove_tree(workdir, ignore_errors=True)

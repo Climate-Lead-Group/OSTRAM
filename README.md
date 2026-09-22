@@ -24,10 +24,10 @@ All supported commands begin with `python -m ostram`:
 ```powershell
 python -m ostram --help
 python -m ostram inspect-resources
-python -m ostram run --skip-pull --compile-only
-python -m ostram run --verbose
-python -m ostram transform --scenario BAU
-python -m ostram compile-inputs --scenarios "BAU,B_Optimised_VRE"
+python -m ostram run --skip-pull --compile-only --scenarios A_Calibrated_BAU
+python -m ostram run --skip-pull --scenarios A_Calibrated_BAU --verbose
+python -m ostram transform --scenario A_Calibrated_BAU
+python -m ostram compile-inputs --scenarios "A_Calibrated_BAU,B_Optimised_VRE"
 ```
 
 Global path options precede the command:
@@ -38,6 +38,18 @@ python -m ostram `
   --workspace "D:\OSTRAM work\run α" `
   inspect-resources
 ```
+
+For all 17 accepted decision scenarios, follow the
+[dependency-ordered portfolio commands](docs/pipeline.md#accepted-17-scenario-portfolio).
+`BAU` is a support scenario, distinct from `A_Calibrated_BAU`; it is not one of
+the accepted 17 outputs. Omitting `--scenarios` includes support BAU and C,
+whose materialization requires a completed A result. It is not a fresh-portfolio
+shortcut. A1/A2/A3/B1/B2 are pipeline stages, not scenario names.
+
+For support `BAU` on its own, use the
+[clean-clone installation](docs/installation.md#clean-clone-support-bau) and
+[standalone BAU command](docs/pipeline.md#support-bau). Its transmission policy
+permits existing capacity plus committed additions, with no discretionary expansion.
 
 `--project-root` overrides `OSTRAM_PROJECT_ROOT`; `--workspace` overrides
 `OSTRAM_WORKSPACE`. Without either, an editable checkout supplies the project

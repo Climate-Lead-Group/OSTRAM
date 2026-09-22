@@ -39,6 +39,8 @@ EXPECTED_DECISION_SCENARIOS = (
     "B_Opt_TxCap150",
     "C_Target_VRE",
     "C_Target_VRE_Clipped",
+    "A_Calibrated_BAU_Clipped_TxFreeze2026",
+    "B_Opt_Clipped_GrossImportCap15",
 )
 EXPECTED_IGNORE_RULES = ("/workspace/",)
 GOVERNED_MANIFEST_COLUMNS = (
@@ -106,7 +108,7 @@ def scenario_contract(
         decision_names == EXPECTED_DECISION_SCENARIOS,
         "accepted scenario order or membership drift",
     )
-    _require(len(set(decision_names)) == 15, "accepted scenarios must be unique")
+    _require(len(set(decision_names)) == 17, "accepted scenarios must be unique")
     return root_names, decision_names
 
 
@@ -133,7 +135,7 @@ def load_governed_manifest(
         raise BaselineValidationError(f"cannot load {path}: {exc}") from exc
 
     expected_names = canonical_scenarios(inventory_path)
-    _require(len(raw_rows) == 15, "governed manifest must contain exactly 15 rows")
+    _require(len(raw_rows) == 17, "governed manifest must contain exactly 17 rows")
     _require(
         tuple(row["Scenario"] for row in raw_rows) == expected_names,
         "governed scenario order or membership drift",

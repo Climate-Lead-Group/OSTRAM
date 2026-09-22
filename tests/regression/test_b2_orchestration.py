@@ -1531,6 +1531,43 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
             self.assertIn("Scenario A_0 solved successfully", result.stdout)
             self.assertIn("Outputs concatenated to A_0_Output.csv", result.stdout)
 
+    def test_cplex_numerical_recovery_is_scoped_without_changing_matrix_or_tolerances(self) -> None:
+        module = _load_b2("cplex_scoped_numerical_recovery")
+        with tempfile.TemporaryDirectory() as temp:
+            here = Path(temp).resolve() / "execution_workspace"
+            params = _base_params(
+                solver="cplex", execute_model=True, create_matrix=True,
+                concat_otoole_csv=True,
+                cplex_numerical_emphasis_scenarios=["B_Opt_TradeCap15"],
+            )
+            normal = self._run_executor(module, here, params)
+            normal_commands = [call.args[0] for call in normal.runner.call_args_list]
+            self.assertNotIn("set emphasis numerical yes", normal_commands[1])
+
+            # The harness executes A: select it to exercise the same scoped
+            # policy, then remove the selection to detect cross-case leakage.
+            params["cplex_numerical_emphasis_scenarios"] = ["A"]
+            selected = self._run_executor(module, here, params)
+            selected_commands = [call.args[0] for call in selected.runner.call_args_list]
+            expected = normal_commands[1].copy()
+            index = expected.index("optimize")
+            expected[index:index] = [
+                "set emphasis numerical yes",
+                "set simplex tolerances feasibility 1e-6",
+                "set simplex tolerances optimality 1e-6",
+                "display settings changed",
+            ]
+            self.assertEqual(selected_commands[1], expected)
+            self.assertEqual(selected_commands[0], normal_commands[0])
+            self.assertEqual(selected_commands[2:], normal_commands[2:])
+            self.assertNotIn("cplex_numerical_emphasis", params)
+            params["cplex_numerical_emphasis_scenarios"] = []
+            subsequent = self._run_executor(module, here, params)
+            self.assertEqual(
+                [call.args[0] for call in subsequent.runner.call_args_list],
+                normal_commands,
+            )
+
     def test_absolute_outputs_config_still_routes_results_per_scenario(self) -> None:
         """An absolute ``outputs`` must not collapse onto one shared directory.
 

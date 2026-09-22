@@ -860,13 +860,23 @@ class SolverAdapter:
             cplex_threads = params["cplex_threads"]
             cplex_random_seed = params.get("cplex_random_seed", 12345)
             self.dependencies.check_environment("cplex")
+            numerical_settings = (
+                [
+                    "set emphasis numerical yes",
+                    "set simplex tolerances feasibility 1e-6",
+                    "set simplex tolerances optimality 1e-6",
+                    "display settings changed",
+                ]
+                if params.get("cplex_numerical_emphasis", False)
+                else []
+            )
             return [
                 "cplex", "-c",
                 f"set logfile {paths.output_file}.cplex.log",
                 f"read {paths.output_file}.lp",
                 f"set threads {cplex_threads}",
                 f"set randomseed {cplex_random_seed}",
-                "set parallel 1", "optimize",
+                "set parallel 1", *numerical_settings, "optimize",
                 f"write {paths.output_file}.sol",
             ]
 
@@ -996,6 +1006,12 @@ def execute_scenario(
 
     paths = resolve_scenario_execution_paths(params, scenario_name, here)
     solver = params["solver"]
+    if solver == "cplex" and scenario_name in params.get(
+        "cplex_numerical_emphasis_scenarios", ()
+    ):
+        # Keep the shared run configuration unchanged for subsequent cases.
+        # This reproduces the accepted numerical recovery without editing LPs.
+        params = {**params, "cplex_numerical_emphasis": True}
 
     reuse_solution = (
         params.get("reuse_existing_sol", False)
