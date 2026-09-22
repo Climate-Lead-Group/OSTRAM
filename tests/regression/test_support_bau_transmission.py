@@ -17,7 +17,7 @@ class SupportBAUTransmissionTests(unittest.TestCase):
         wb = Workbook()
         ws = wb.active
         ws.title = "Secondary Techs"
-        ws.append(["Tech", "Parameter", 2023, 2024, 2025, 2026, 2027])
+        ws.append(["Tech", "Parameter", "Projection.Mode", 2023, 2024, 2025, 2026, 2027])
         for tech in sorted(policy.TRN_TECHS):
             for parameter, values in (
                 ("ResidualCapacity", [5, 4, 3, 2, 1]),
@@ -26,8 +26,9 @@ class SupportBAUTransmissionTests(unittest.TestCase):
                 ("TotalAnnualMaxCapacityInvestment", [9999] * 5),
                 ("CapitalCost", [100] * 5),
             ):
-                ws.append([tech, parameter, *values])
-        ws.append(["PWRTEST", "TotalAnnualMaxCapacity", 99, 98, 97, 96, 95])
+                mode = "EMPTY" if parameter == "TotalAnnualMaxCapacity" else "User defined"
+                ws.append([tech, parameter, mode, *values])
+        ws.append(["PWRTEST", "TotalAnnualMaxCapacity", "EMPTY", 99, 98, 97, 96, 95])
         fixed = wb.create_sheet("Fixed Horizon Parameters")
         fixed.append(["Tech", "Parameter", "Value"])
         for tech in sorted(policy.TRN_TECHS):
@@ -52,11 +53,14 @@ class SupportBAUTransmissionTests(unittest.TestCase):
             for old, new in zip(before["Secondary Techs"], after["Secondary Techs"]):
                 if old[0] in policy.TRN_TECHS and old[1] == "TotalAnnualMaxCapacity":
                     # A 2024 commitment lives in 2024/25, expires in 2026.
-                    self.assertEqual(new[2:], (5, 6, 5, 5, 4))
+                    self.assertEqual(new[2], "User defined")
+                    self.assertEqual(new[3:], (5, 6, 5, 5, 4))
                 else:
                     self.assertEqual(old, new)
             self.assertEqual(before["Fixed Horizon Parameters"], after["Fixed Horizon Parameters"])
             self.assertEqual(len(record["cells"]), 18 * 5)
+            self.assertTrue(all(row["previous"] == "EMPTY" and row["final"] == "User defined"
+                                for row in record["projection_modes"]))
             policy.apply_commitment_ceiling(path)
             self.assertEqual(after, self.values(path))
 

@@ -203,6 +203,11 @@ before commissioning and expires at the operational-life boundary. Residual
 capacity keeps its existing year-by-year trajectory. With the unchanged annual
 investment minima, the ceiling prevents discretionary additions. The previous
 residual-only ceiling caused 156 V2 conflicts with required additions.
+The final ceiling rows use `Projection.Mode = User defined`: B1 deliberately
+omits rows marked `EMPTY`, even when their year cells contain numbers. Both the
+compiled coefficients and solved capacity must therefore be checked against
+the commitment audit; workbook validation and optimal status alone do not
+establish that the ceiling was enforced.
 
 The policy runs **only on the final full-profile `BAU` output**, after disposable
 restriction-state export and delivery. Shared preparation, post-A2 snapshots,

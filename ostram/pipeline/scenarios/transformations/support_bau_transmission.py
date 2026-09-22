@@ -58,10 +58,15 @@ def apply_commitment_ceiling(path: Path) -> dict:
                 lives[tech] = _number(row[columns["Value"]], f"{tech} OperationalLife")
                 if lives[tech] <= 0:
                     raise ValueError(f"{tech}: OperationalLife must be positive")
-        changes, evidence = [], []
+        changes, evidence, projection_modes = [], [], []
         for tech in sorted(TRN_TECHS):
             if tech not in lives or any((tech, p) not in rows for p in parameters):
                 raise ValueError(f"support BAU: incomplete transmission parameters for {tech}")
+            mode = sheet.cell(rows[tech, "TotalAnnualMaxCapacity"], headers["Projection.Mode"])
+            projection_modes.append(dict(technology=tech, previous=mode.value, final="User defined"))
+            # B1 ignores populated values under EMPTY. Activate this final
+            # support-only ceiling explicitly, including zero-capacity years.
+            changes.append((mode, "User defined"))
             commitments = {
                 year: _number(sheet.cell(rows[tech, "TotalAnnualMinCapacityInvestment"], col).value,
                               f"{tech} commitment {year}", blank_zero=True)
@@ -87,6 +92,7 @@ def apply_commitment_ceiling(path: Path) -> dict:
     record = dict(schema="ostram-support-bau-transmission-v1", scenario="BAU",
                   commitment_source="TotalAnnualMinCapacityInvestment (unchanged)",
                   survival_rule="0 <= year - commissioning_year < OperationalLife",
+                  projection_modes=projection_modes,
                   cells=evidence)
     path.with_name("support_bau_transmission.json").write_text(
         json.dumps(record, indent=2), encoding="utf-8")
