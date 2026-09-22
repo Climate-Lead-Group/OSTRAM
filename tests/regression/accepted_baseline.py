@@ -135,7 +135,7 @@ def load_governed_manifest(
         raise BaselineValidationError(f"cannot load {path}: {exc}") from exc
 
     expected_names = canonical_scenarios(inventory_path)
-    _require(len(raw_rows) == 15, "governed manifest must contain exactly 15 rows")
+    _require(len(raw_rows) == 17, "governed manifest must contain exactly 17 rows")
     _require(
         tuple(row["Scenario"] for row in raw_rows) == expected_names,
         "governed scenario order or membership drift",
