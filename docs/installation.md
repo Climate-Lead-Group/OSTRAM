@@ -97,6 +97,17 @@ The maintained full profile selects CPLEX. Install licensed CPLEX separately
 and make its executable discoverable before running the
 [support BAU command](pipeline.md#support-bau). The verification environment uses
 CPLEX 22.1.2.0, GLPK 5.0, four threads and seed 12345.
+For the standard Windows CPLEX 22.1.2 location, make the executable available in
+this PowerShell session and confirm that it starts:
+
+```powershell
+$cplexBin = 'C:\Program Files\IBM\ILOG\CPLEX_Studio2212\cplex\bin\x64_win64'
+if (-not (Test-Path (Join-Path $cplexBin 'cplex.exe'))) { throw 'Set cplexBin to your licensed CPLEX installation' }
+$env:PATH = "$cplexBin;$env:PATH"
+cplex -c quit
+if ($LASTEXITCODE -ne 0) { throw 'CPLEX is unavailable' }
+```
+
 Use a fresh environment name if `ostram-pr35` already exists. Record
 `git rev-parse HEAD` and `conda list --explicit` with the execution evidence.
 

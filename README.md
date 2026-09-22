@@ -46,6 +46,11 @@ the accepted 17 outputs. Omitting `--scenarios` includes support BAU and C,
 whose materialization requires a completed A result. It is not a fresh-portfolio
 shortcut. A1/A2/A3/B1/B2 are pipeline stages, not scenario names.
 
+For support `BAU` on its own, use the
+[clean-clone installation](docs/installation.md#clean-clone-support-bau) and
+[standalone BAU command](docs/pipeline.md#support-bau). Its transmission policy
+permits existing capacity plus committed additions, with no discretionary expansion.
+
 `--project-root` overrides `OSTRAM_PROJECT_ROOT`; `--workspace` overrides
 `OSTRAM_WORKSPACE`. Without either, an editable checkout supplies the project
 root and `<project-root>/workspace` is selected lazily. Caller CWD is never a
