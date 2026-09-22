@@ -37,6 +37,9 @@ cbc_random_seed: 12345        # Random seed for reproducibility
 # dual-simplex thread that wins these LPs) and SLOWS the solve on this laptop.
 cplex_threads: 4
 cplex_random_seed: 12345      # Random seed for reproducibility
+# Accepted TradeCap15 recovery r/11: identical LP, numerical emphasis, and
+# unchanged 1e-6 feasibility/optimality tolerances. Other cases keep defaults.
+cplex_numerical_emphasis_scenarios: [B_Opt_TradeCap15]
 
 # For Gurobi use
 gurobi_threads: 3

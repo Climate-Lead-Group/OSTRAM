@@ -44,7 +44,7 @@ names.
 ## 3. Run a solver-free preparation gate
 
 ```powershell
-python -m ostram run --skip-pull --compile-only
+python -m ostram run --skip-pull --compile-only --scenarios A_Calibrated_BAU
 ```
 
 `--compile-only` reaches the final preprocessed text inputs and stops before
@@ -53,8 +53,8 @@ matrix creation, every solver adapter, cleanup, and result post-processing.
 Useful focused commands are:
 
 ```powershell
-python -m ostram transform --scenario BAU
-python -m ostram compile-inputs --scenarios "BAU,B_Optimised_VRE"
+python -m ostram transform --scenario A_Calibrated_BAU
+python -m ostram compile-inputs --scenarios "A_Calibrated_BAU,B_Optimised_VRE"
 ```
 
 ## 4. Run the configured workflow
@@ -63,13 +63,19 @@ After selecting and configuring a solver in
 `config/execution/Config_MOMF_T1_AB.yaml`:
 
 ```powershell
-python -m ostram run
+python -m ostram run --skip-pull --scenarios A_Calibrated_BAU
 ```
 
 The runner conditionally prepares A1/A2 snapshots, materializes the exact
 registry selection, compiles it, and executes B2. Use `--scenarios` for an
 explicit comma-separated selection and the documented `--skip-*` flags when a
 stage is already satisfied.
+
+For all 17 accepted cases, use the
+[portfolio sequence](pipeline.md#accepted-17-scenario-portfolio): solve A, then
+materialize and solve the remaining decision cases using that new A result.
+Support `BAU` is not the accepted A scenario. The unfiltered default also
+includes C, which cannot be materialized before its A result exists.
 
 The interactive display is compact and updates in place on stderr. Redirected
 output uses append-only status lines. Add `--verbose` to disable the moving

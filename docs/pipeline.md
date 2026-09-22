@@ -90,7 +90,7 @@ optional direction overlay.
 Focused root transformation uses:
 
 ```powershell
-python -m ostram transform --scenario BAU
+python -m ostram transform --scenario A_Calibrated_BAU
 ```
 
 Temporary stage directories are created under `<workspace>/scenarios/` and are
@@ -119,8 +119,8 @@ copy, and writes compiled parameter CSVs under
 `<workspace>/compilation/A2_Output_Params/`.
 
 ```powershell
-python -m ostram compile-inputs
-python -m ostram compile-inputs --scenarios "BAU,B_Optimised_VRE"
+python -m ostram compile-inputs --scenarios A_Calibrated_BAU
+python -m ostram compile-inputs --scenarios "A_Calibrated_BAU,B_Optimised_VRE"
 ```
 
 The maintained `config/compilation/Config_MOMF_T1_A.yaml` is not mutated.
@@ -141,7 +141,7 @@ when enabled).
 The solver-free boundary is:
 
 ```powershell
-python -m ostram run --skip-pull --compile-only
+python -m ostram run --skip-pull --compile-only --scenarios A_Calibrated_BAU
 ```
 
 This route stops before matrix creation, solver adapters, cleanup, and result
@@ -163,10 +163,10 @@ verification, including `TotalDiscountedCost.csv`.
 per run invocation**, in the final post-processing stage, after the last
 scenario of the selection. Because it rereads every scenario present in
 `Executables/`, its cost grows with the number of scenarios already on disk —
-so pass the whole selection to a single invocation:
+so, after completing A, pass the remaining selection to one invocation:
 
 ```powershell
-python -m ostram run --scenarios "A_Calibrated_BAU,B_Optimised_VRE,C_Target_VRE"
+python -m ostram --workspace $workspace run --skip-pull --scenarios "B_Optimised_VRE,C_Target_VRE" --a-result-seed $aResult
 ```
 
 Driving a campaign as one invocation per scenario instead makes B2 — and
@@ -181,6 +181,67 @@ seam between scenarios, and expect that cost.
 names, preserves canonical order, calculates required roots, and resolves
 declared result dependencies. `C_Target_VRE` requires the accepted A-result
 seed boundary; no result is discovered through caller CWD.
+
+### Accepted 17-scenario portfolio
+
+The full-profile registry distinguishes support `BAU` from the 17 decision
+scenarios. `A_Calibrated_BAU` is the accepted A case. A1, A2, A3, B1 and B2
+name stages; B1 does not mean `B_Optimised_VRE`.
+
+Compiling support BAU at the September 2026 baseline produces 156 V2
+transmission-capacity conflicts: its shared residual-cap stage retains positive
+investment minima without the accepted A rule chain. B1 correctly rejects that
+workbook without applying fixes. Do not remove the guard, zero minima or widen
+ceilings to make this support case pass. Selecting A applies its existing
+declared transformations and preserves BAU restriction inheritance. The
+accepted portfolio does not require a BAU solve.
+
+Use an empty, local workspace and an editable installation of this checkout.
+The runner's default selection includes support BAU, and its single A3 pass
+does not solve A before materializing C. Select the decision cases explicitly
+and complete A first. These two invocations use only maintained checkout inputs
+and the newly solved A; no accepted or private prepared inputs are copied in.
+
+```powershell
+$workspace = [IO.Path]::GetFullPath('..\w')
+if (Test-Path -LiteralPath $workspace) { throw 'Choose a new empty workspace path' }
+python -m ostram --workspace $workspace run --skip-pull --scenarios A_Calibrated_BAU --verbose
+if ($LASTEXITCODE -ne 0) { throw 'A preparation/compilation/solve/export failed' }
+
+$remaining = python -c "from ostram.pipeline.scenarios.registry import load_registry; r=load_registry(); assert len(r.decision_scenarios)==17; print(','.join(n for n in r.decision_scenarios if n!='A_Calibrated_BAU'))"
+if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve the accepted scenario selection' }
+$aResult = Join-Path $workspace 'execution\Executables\A_Calibrated_BAU_0'
+python -m ostram --workspace $workspace run --skip-pull --scenarios $remaining --a-result-seed $aResult --verbose
+if ($LASTEXITCODE -ne 0) { throw 'Remaining portfolio failed' }
+```
+
+If the isolated Conda environment has a different name, add
+`--env-name <name>` to **both** `run` invocations. Confirm A's solver status and
+feasibility before allowing dependent materialization; an output file's
+existence alone is not evidence of an accepted solve. `--compile-only` cannot
+create this result dependency. For a solver-free single-case preparation check,
+use `run --skip-pull --compile-only --scenarios A_Calibrated_BAU` in another
+workspace. A selected external A seed is appropriate only for an explicitly
+declared comparison exercise, not a fresh full solve.
+
+The normal B2 route exports each scenario's otoole tables and reconciles costs
+in its concatenated output with adjacent reconciliation evidence. Keep the raw
+tables, compiled data, LP, solution, solver log and reconciliation JSON together.
+Select historical comparisons from `selected_portfolio.csv` and
+`selected_solver_chain.csv`, never by modification time. In the September 2026
+release, TradeCap15 selects recovery `r/11` with its matching parent inputs;
+the original status-5 solution is not the accepted baseline. Recovery used
+numerical emphasis on the same LP with feasibility/optimality tolerances of
+`1e-6`, without changing model coefficients.
+
+`config/execution/Config_MOMF_T1_AB.yaml` now selects that numerical emphasis
+for `B_Opt_TradeCap15` through `cplex_numerical_emphasis_scenarios`. B2 applies
+the recorded recovery settings before optimization and prints the changed
+CPLEX settings. The selection is local to that solve; other scenarios retain
+their original commands. This makes the accepted recovery reproducible through
+the normal export/reconciliation chain without an external solver wrapper or
+an LP edit. Always check the final solver status and certificate; a successful
+process exit alone does not establish feasibility.
 
 ## Path and process guarantees
 

@@ -23,6 +23,43 @@ The editable install is important: it makes `ostram` and its package data
 import-addressable from any current directory while project authorities remain
 in the checkout.
 
+### Isolated reproduction environment
+
+Keep the checkout, environment, package cache, logs and outputs separate from
+production. From a new checkout, the following creates the documented
+environment under an explicit local directory instead of updating an existing
+environment. Set `CONDA_EXE` to the installed Conda executable if it is not
+already available through an activated Conda prompt.
+
+```powershell
+$runRoot = [IO.Path]::GetFullPath('..') # parent of this isolated checkout
+$env:CONDA_ENVS_PATH = Join-Path $runRoot 'conda-envs'
+$env:CONDA_PKGS_DIRS = Join-Path $runRoot 'conda-pkgs'
+conda env create -n ostram-reproduce -f environment.yaml -y
+if ($LASTEXITCODE -ne 0) { throw 'Conda installation failed' }
+$python = Join-Path $env:CONDA_ENVS_PATH 'ostram-reproduce\python.exe'
+& $python -m pip install -e .
+if ($LASTEXITCODE -ne 0) { throw 'Editable installation failed' }
+& $python -m pip check
+& $python -m pip freeze > (Join-Path $runRoot 'pip-freeze.txt')
+& $python -m ostram inspect-resources
+```
+
+Use `& $python` instead of `python`, and add `--env-name ostram-reproduce`
+to the `run` commands in the [portfolio sequence](pipeline.md#accepted-17-scenario-portfolio).
+Record `conda list`, the Python version, `glpsol --version` and the selected
+vendor solver version with each reproduction. Solver binaries and vendor
+licenses are external runtime dependencies; an old prepared workspace is not
+an installation dependency.
+
+The 21 September 2026 clean-clone execution installed Python 3.10.21,
+NumPy 2.2.6, pandas 2.3.3, openpyxl 3.1.5, otoole 1.1.5, PyYAML 6.0.3,
+ruamel.yaml 0.19.1, XlsxWriter 3.2.9 and DVC 3.67.1. It used Conda GLPK 5.0
+for matrix generation and the existing licensed CPLEX 22.1.2.0 installation,
+with four threads, random seed 12345 and deterministic parallel mode.
+Keep the complete environment/package export with run evidence; unbounded
+dependency resolution on a later date is not an exact environment replay.
+
 ## Verify the installation
 
 ```powershell
@@ -57,7 +94,7 @@ cbc -stop
 Use the compile-only route when validating without a solver:
 
 ```powershell
-python -m ostram run --skip-pull --compile-only
+python -m ostram run --skip-pull --compile-only --scenarios A_Calibrated_BAU
 ```
 
 ## DVC
@@ -70,7 +107,7 @@ use caller CWD to locate project data.
 
 ```powershell
 dvc remote list
-python -m ostram run --skip-pull --compile-only
+python -m ostram run --skip-pull --compile-only --scenarios A_Calibrated_BAU
 ```
 
 Generated DVC cache/tmp state and the central workspace are ignored. Maintained
