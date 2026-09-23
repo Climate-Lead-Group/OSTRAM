@@ -1469,6 +1469,31 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
                         environment_name[solver]
                     )
 
+    def test_cbc_primal_tolerance_override_does_not_change_following_default(self) -> None:
+        module = _load_b2("cbc_primal_tolerance")
+        with tempfile.TemporaryDirectory() as temp:
+            here = Path(temp).resolve() / "execution_workspace"
+            for override, expected in (("1e-10", "1e-10"), (None, "1e-8")):
+                params = _base_params(solver="cbc", execute_model=True,
+                                      create_matrix=False, concat_otoole_csv=False)
+                if override is not None:
+                    params["cbc_primal_tolerance"] = override
+                result = self._run_executor(module, here, params)
+                command = result.runner.call_args_list[0].args[0]
+                self.assertEqual(command[command.index("primalTolerance") + 1], expected)
+                self.assertEqual(command[command.index("dualTolerance") + 1], "1e-8")
+
+            params = _base_params(solver="cbc", execute_model=True,
+                                  create_matrix=False, concat_otoole_csv=False)
+            params["cbc_primal_tolerance"] = "1e-10"
+            params["cbc_primal_tolerance_by_scenario"] = {"A": "1e-12"}
+            scoped = self._run_executor(module, here, params).runner.call_args_list[0].args[0]
+            self.assertEqual(scoped[scoped.index("primalTolerance") + 1], "1e-12")
+            self.assertEqual(params["cbc_primal_tolerance"], "1e-10")
+            params["cbc_primal_tolerance_by_scenario"] = {"C_Target_VRE": "1e-12"}
+            following = self._run_executor(module, here, params).runner.call_args_list[0].args[0]
+            self.assertEqual(following[following.index("primalTolerance") + 1], "1e-10")
+
     def test_cplex_matrix_solve_results_and_concat_commands_keep_exact_order(self) -> None:
         module = _load_b2("cplex_full_chain")
         with tempfile.TemporaryDirectory() as temp:

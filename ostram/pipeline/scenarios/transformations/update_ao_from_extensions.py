@@ -61,6 +61,9 @@ import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 
+from ostram.paths import resolve_paths
+from .patch_ao_c2a import load_taxonomy
+
 # =============================================================================
 # USER CONFIGURATION
 # =============================================================================
@@ -1733,9 +1736,13 @@ for label in ("AR_Base", "AR_Proj"):
     check(f"no template region tokens leaked in {label}", len(leaks) == 0,
           f"(found {len(leaks)} leaks: {leaks[:3]})")
 
-# (f) The 5 PWRSHP codes appear in all three target workbooks
-shp_codes = ["PWRSHPINDEA", "PWRSHPINDNE", "PWRSHPINDNO",
-             "PWRSHPINDSO", "PWRSHPINDWE"]
+# (f) Require every small-hydro technology declared by the active authority.
+# Use the input taxonomy, not the generated rows: losing an in-domain code
+# must still fail. The reduced UNESCAP domain declares only PWRSHPINDEA.
+shp_codes = {
+    code for code in load_taxonomy(resolve_paths().interconnector_taxonomy)
+    if code.startswith("PWRSHP")
+}
 for label in ("Param", "AR_Base", "AR_Proj"):
     out_wb = load_workbook(OUT_FILES[label], read_only=True, data_only=True)
     found = set()
@@ -1747,11 +1754,11 @@ for label in ("Param", "AR_Base", "AR_Proj"):
             continue
         ci = hdrs.index(cc) + 1
         for r in ws.iter_rows(min_row=2, min_col=ci, max_col=ci, values_only=True):
-            if r[0] in shp_codes:
+            if isinstance(r[0], str) and r[0].startswith("PWRSHP"):
                 found.add(r[0])
     out_wb.close()
-    check(f"all 5 PWRSHP codes in {label}", found == set(shp_codes),
-          f"(missing {set(shp_codes) - found})")
+    check(f"all {len(shp_codes)} declared PWRSHP codes in {label}", found == shp_codes,
+          f"(missing {shp_codes - found}, unexpected {found - shp_codes})")
 
 # (g) PWRGEOINDNO present and template was PWRHYDINDNO
 geo_row = include_y[include_y["AO_Code_To_Add"] == "PWRGEOINDNO"]
@@ -1845,3 +1852,4 @@ if _failed == 0:
     print("  ALL TESTS PASSED")
 else:
     print(f"  {_failed} TEST(S) FAILED -- review output above")
+    raise SystemExit(1)

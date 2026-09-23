@@ -17,6 +17,7 @@ from typing import List, Dict, Any
 from pathlib import Path
 import yaml
 from ostram.paths import resolve_paths
+from ostram.profiles import profile_policy
 from .configuration import (
     get_ostram_country_mapping, get_iso_country_map, get_code_to_energy,
     get_first_year, get_add_missing_countries_from_ostram, get_pwr_cleanup_mode,
@@ -1301,6 +1302,20 @@ def filter_by_tech_country_matrix(og_data: Dict[str, pd.DataFrame], matrix_confi
     print("=" * 70)
 
     total_filtered = 0
+    emission_extensions = set()
+    if profile_policy("preserve_declared_extension_emissions", False):
+        # Reduced profiles can deliberately filter a technology from A1 and
+        # introduce it through A3. Its emissions still originate in the seed
+        # CSV: A3's structural cloning does not populate the GHG workbook.
+        decisions = pd.read_csv(_PROJECT_PATHS.ao_decisions, keep_default_na=False)
+        emission_extensions = set(decisions.loc[
+            decisions["Include"].astype(str).str.strip().str.upper() == "Y",
+            "AO_Code_To_Add",
+        ])
+        taxonomy = pd.read_csv(_PROJECT_PATHS.interconnector_taxonomy, keep_default_na=False)
+        undeclared = emission_extensions - set(taxonomy["Technology"])
+        if undeclared:
+            raise ValueError(f"Emission extensions absent from active taxonomy: {sorted(undeclared)}")
 
     for param_name, df in og_data.items():
         if "TECHNOLOGY" not in df.columns:
@@ -1328,6 +1343,12 @@ def filter_by_tech_country_matrix(og_data: Dict[str, pd.DataFrame], matrix_confi
             return True  # Default: allow if not in matrix
 
         mask = df["TECHNOLOGY"].apply(is_allowed)
+        if param_name == "EmissionActivityRatio" and emission_extensions:
+            extension_mask = df["TECHNOLOGY"].isin(emission_extensions)
+            retained = int((extension_mask & ~mask).sum())
+            mask |= extension_mask
+            if retained:
+                print(f"    EmissionActivityRatio: retained {retained} declared A3 extension rows")
         og_data[param_name] = df[mask].copy()
 
         rows_filtered = rows_before - len(og_data[param_name])

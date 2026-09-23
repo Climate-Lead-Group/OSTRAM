@@ -15,7 +15,12 @@ relaxation_schedule:
 
 ## Minimum MaxCapInv (GW) per tech per year.  Prevents the lid from
 ## collapsing to zero when retirement drives pool_delta negative.
-lid_floor_gw: 0.1
+## 0.5 matches A_Calibrated_BAU. With 0.1, the relaxation multiplier acts
+## on near-zero proportional lids (e.g. PWRSPV ~0.1-0.2 GW/yr, binding every
+## year), leaving this scenario with LESS investment room than the BAU and a
+## higher system cost than A (2026-09-22). Keep >= A's floor so this scenario
+## is a relaxation of the BAU.
+lid_floor_gw: 0.5
 
 ## Family-specific relaxation ceilings.  Caps the relaxation multiplier
 ## for techs whose family code (chars 3..6 of tech code) matches a key.

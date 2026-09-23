@@ -49,6 +49,9 @@ import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 
+from ostram.paths import resolve_paths
+from .patch_ao_c2a import load_taxonomy
+
 # =============================================================================
 # USER CONFIGURATION
 # =============================================================================
@@ -171,6 +174,15 @@ SUBSTITUTIONS = [
      "Fuel.Name", "Oil, Nepal",
      "Propagate Fuel.I.Name rename to AR_Proj Input row."),
 ]
+
+# Scope curated substitutions from the active input authority, never from
+# whether a target happened to survive in the generated workbook. Missing or
+# duplicate in-domain targets remain failures in the verification below.
+declared_technologies = set(load_taxonomy(resolve_paths().interconnector_taxonomy))
+out_of_domain_substitutions = [entry for entry in SUBSTITUTIONS
+                               if entry[2] not in declared_technologies]
+SUBSTITUTIONS = [entry for entry in SUBSTITUTIONS
+                 if entry[2] in declared_technologies]
 
 # -----------------------------------------------------------------------------
 # OAR_CORRECTIONS: fix OutputActivityRatio across ALL year columns for TRN
@@ -341,6 +353,10 @@ out_wbs = {label: load_workbook(OUT_FILES[label]) for label in AO_FILES}
 log_lines = []
 log_lines.append("=" * 72)
 log_lines.append("4_apply_manual_fixes.py -- Run log")
+for label, sheet, tech, selectors, edit_col, _, _ in out_of_domain_substitutions:
+    message = f"OUT_OF_DOMAIN  {label}/{sheet} {tech} {selectors} {edit_col} (not declared in active taxonomy)"
+    log_lines.append(message)
+    print(message)
 log_lines.append(f"Run timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 log_lines.append("=" * 72)
 log_lines.append("")
@@ -762,3 +778,4 @@ if _failed == 0:
     print("  ALL TESTS PASSED")
 else:
     print(f"  {_failed} TEST(S) FAILED -- review output above")
+    raise SystemExit(1)

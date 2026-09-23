@@ -8,7 +8,7 @@
 ##   COA 30–40 yr  →  midpoint 35
 ##   GAS 25–35 yr  →  midpoint 30
 ##   PET 20–30 yr  →  midpoint 25
-##   NUC 40–60 yr  →  midpoint 50
+##   URN 40–60 yr  →  midpoint 50
 ##
 ## Same midpoints used across BAU and Opti — no defensible basis for
 ## differentiating lifetimes between scenarios.
@@ -41,7 +41,7 @@ age_based:
   PET:
     lifetime_years: 25
     retirement_profile: linear
-  NUC:
+  URN:
     lifetime_years: 50
     retirement_profile: linear
 

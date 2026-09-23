@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 from collections import Counter
+from decimal import Decimal
 import hashlib
 from pathlib import Path
 import tempfile
@@ -71,6 +72,24 @@ class UnescapWorkbookTests(unittest.TestCase):
 
 
 class UnescapMappingTests(unittest.TestCase):
+    def test_bangladesh_gas_emissions_cover_both_combustion_modes(self) -> None:
+        # B1 rounds the maintained 2.33765 input ratio to 2.3376. Output
+        # activity is one PJ of ELCBGDXX01, not one PJ of gas supplied.
+        expected = Decimal("0.0561") * Decimal("2.3376")
+        with (UNESCAP / "inputs/osemosys_global/EmissionActivityRatio.csv").open(
+            encoding="utf-8-sig", newline=""
+        ) as stream:
+            rows = [row for row in csv.DictReader(stream)
+                    if row["TECHNOLOGY"] == "PWRNGSBGDXX"]
+        self.assertEqual(len(rows), 56)
+        self.assertEqual(
+            {(row["REGION"], row["EMISSION"], int(row["MODE_OF_OPERATION"]),
+              int(row["YEAR"])) for row in rows},
+            {("GLOBAL", "CO2BGD", mode, year)
+             for mode in (1, 2) for year in range(2023, 2051)},
+        )
+        self.assertEqual({Decimal(row["VALUE"]) for row in rows}, {expected})
+
     def test_stage_specific_domain_contract_accepts_only_the_exact_delta(self) -> None:
         manifest = load_manifest(UNESCAP / "profile.yaml")
         seed_root = UNESCAP / "inputs" / "osemosys_global"

@@ -790,7 +790,7 @@ def invoke_solver_command(
 
 
 def validate_cbc_solution(solution_file: str | os.PathLike[str]) -> str:
-    """Require CBC's solution header to declare an optimal solution.
+    """Require an optimal CBC solution without material flagged bound violations.
 
     CBC returns process status zero for model-level outcomes such as an
     infeasible linear relaxation.  The solution header is therefore the
@@ -803,11 +803,34 @@ def validate_cbc_solution(solution_file: str | os.PathLike[str]) -> str:
         raise FileNotFoundError(f"CBC solution file not found: {path}")
     with path.open("r", encoding="utf-8", errors="replace") as stream:
         status = next((line.strip() for line in stream if line.strip()), "")
+        violation = None
+        for line in stream:
+            if not line.lstrip().startswith("**"):
+                continue
+            fields = line.split()
+            # CBC's postsolve can print tiny negative nonnegative variables
+            # even after tighter primal cleanup (e.g. storage cost accounting
+            # variables of a ~1e-7 GW NewStorageCapacity landing at ~-1.6e-8).
+            # Accept violations down to 1e-6, which is negligible against
+            # activities in PJ and capacities in GW; forcing CBC to a 1e-12
+            # primalTolerance to squeeze these below 1e-8 makes the cleanup
+            # cycle without terminating (C_Target_VRE, CBC 2.10.13).
+            # Do not accept larger or positive upper-bound violations, whose
+            # bounds cannot be inferred from this format.
+            try:
+                value = float(fields[3])
+            except (IndexError, ValueError):
+                value = float("nan")
+            if not -1e-6 <= value <= 0:
+                violation = line.strip()
+                break
     if not status.lower().startswith("optimal - objective value"):
         raise RuntimeError(
             f"CBC did not produce an optimal solution: {status or '<empty status>'} "
             f"({path})"
         )
+    if violation is not None:
+        raise RuntimeError(f"CBC solution contains an out-of-bounds decision variable: {violation} ({path})")
     return status
 
 
@@ -844,7 +867,7 @@ class SolverAdapter:
                 "cbc", f"{paths.output_file}.lp",
                 "randomSeed", str(cbc_random_seed),
                 "randomCbcSeed", str(cbc_random_seed),
-                "primalTolerance", "1e-8",
+                "primalTolerance", str(params.get("cbc_primal_tolerance", "1e-8")),
                 "dualTolerance", "1e-8",
                 "-seconds", str(params["iteration_time"]),
                 "solve", "-solu", f"{paths.output_file}.sol",
@@ -1006,6 +1029,11 @@ def execute_scenario(
 
     paths = resolve_scenario_execution_paths(params, scenario_name, here)
     solver = params["solver"]
+    if solver == "cbc":
+        tolerances = params.get("cbc_primal_tolerance_by_scenario", {})
+        if scenario_name in tolerances:
+            # Numerical recovery belongs to this case, not subsequent cases.
+            params = {**params, "cbc_primal_tolerance": tolerances[scenario_name]}
     if solver == "cplex" and scenario_name in params.get(
         "cplex_numerical_emphasis_scenarios", ()
     ):

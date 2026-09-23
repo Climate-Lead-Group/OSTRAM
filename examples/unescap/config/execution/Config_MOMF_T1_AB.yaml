@@ -40,6 +40,20 @@ solver: 'cbc' # Could you use: 'glpk', 'cbc', 'cplex' and 'gurobi'
 # For CBC use
 iteration_time: 20000
 cbc_random_seed: 12345        # Random seed for reproducibility
+# The reduced storage LP needs tighter primal cleanup to avoid CBC's '**'
+# out-of-bounds activities despite an optimal header. Engineering data unchanged.
+cbc_primal_tolerance: "1e-10"
+# Per-scenario overrides. C previously used "1e-12" for extra storage-cost
+# cleanup, but that tolerance is below what this LP can reach and CBC 2.10.x
+# cycles in the post-presolve cleanup without terminating (C_Target_VRE,
+# 2026-09-22: >70 min, objective diverging). C now uses the general 1e-10.
+# B_Optimised_VRE: with lid_floor_gw 0.5 its post-presolve cleanup cycles at
+# 1e-10 on some CBC builds (macOS ARM64 acceptance hung >45 min in B2; CBC
+# 2.10.3 Linux also never finishes). 1e-9 solves to the same objective
+# (540165.9) with '**' residuals ~-1e-7, within the validator's 1e-6 bound.
+# Do not use 1e-8 for B: it leaves RateOfActivity(PWRLDSINDEA) at -1.27e-6.
+cbc_primal_tolerance_by_scenario:
+  B_Optimised_VRE: "1e-9"
 
 # For CPLEX use
 cplex_threads: 4

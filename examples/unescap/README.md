@@ -96,16 +96,25 @@ is [`TRAINING_OPERATION_COVERAGE.md`](TRAINING_OPERATION_COVERAGE.md).
 
 ## Commands
 
+Install a clean checkout with the exact Windows commands in
+[`AUTHORING_AND_ACCEPTANCE.md`](AUTHORING_AND_ACCEPTANCE.md#install-a-clean-checkout-on-windows).
+The commands below use its dedicated `ostram-unescap` environment and a new workspace.
 The profile is named, not located, so no command depends on your working directory.
 
 ```
-python -m ostram example prepare unescap                       # required first — see below
-python -m ostram --profile unescap run
-python -m ostram --profile unescap run --scenarios "A_Calibrated_BAU,B_Optimised_VRE"
-python -m ostram --profile unescap run --scenarios "C_Target_VRE"
-python -m ostram example report unescap
-python -m ostram example report unescap --capture baseline
+python -m ostram --workspace workspace/unescap example prepare unescap
+python -m ostram --workspace workspace/unescap --profile unescap run --env-name ostram-unescap --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --compile-only --skip-pull
+python -m ostram --workspace workspace/unescap --profile unescap run --env-name ostram-unescap --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --skip-pull
+python -m ostram --workspace workspace/unescap --profile unescap run --env-name ostram-unescap --scenarios "C_Target_VRE" --skip-pull
+python -m ostram --workspace workspace/unescap example report unescap --capture baseline
+python -m ostram --workspace workspace/unescap example report unescap
 ```
+
+The first run stops before matrix generation and solving. The next two runs compile,
+solve with CBC, export results and reconcile costs. C consumes the newly completed A
+result in the same workspace. Select A/B/C explicitly: support `BAU` supplies A's
+restriction materialization and is not a requested decision solve. The backstop is
+enabled by this profile; include its exported use when interpreting a feasible result.
 
 Profile-aware country commands, used by [Exercise A](exercises/add-country.html):
 

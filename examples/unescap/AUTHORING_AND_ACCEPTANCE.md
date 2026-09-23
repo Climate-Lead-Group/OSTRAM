@@ -1,36 +1,56 @@
 # Natalia's UNESCAP authoring and acceptance guide
 
 This is Natalia's starting document for authoring and testing the Windows training
-exercises. Run commands from an Anaconda or Miniforge prompt. The commands resolve
+exercises. Run commands from an Anaconda or Miniforge prompt using `cmd.exe`.
+The commands resolve
 project resources independently of the caller's current directory, but keeping the
 repository root as the prompt location makes Git review easier.
 
-## Get the published integration branch on Windows
+## Install a clean checkout on Windows
 
 ```text
-git clone <published-repository-url> OSTRAM
+git clone https://github.com/Climate-Lead-Group/OSTRAM.git OSTRAM
 cd OSTRAM
-git fetch origin feat/unescap-profile-integration
-git switch --track origin/feat/unescap-profile-integration
+git switch --track origin/fix/unescap-training-reproduction
 ```
 
 If the repository already exists, use `git fetch origin` and then switch to the same
 branch. Confirm it with `git branch --show-current`.
 
+Before that branch is published, the isolated repair can be reviewed using the
+supplied `OSTRAM-unescap-training-repair.bundle`. Place it beside the new `OSTRAM`
+checkout and replace the `git switch --track ...` command above with:
+
+```text
+git fetch ../OSTRAM-unescap-training-repair.bundle fix/unescap-training-reproduction:fix/unescap-training-reproduction
+git switch fix/unescap-training-reproduction
+```
+
+This incremental source bundle requires the starting commit
+`6ff8fc91c89b81a5e44cbf6798f0ec30a0fbc77a`, present in the GitHub clone. It contains
+the committed repair, with no generated model inputs or results.
+
 Install the supported environment once:
 
 ```text
-conda env create -f environment.yaml
-conda activate OSTRAM-env
+conda env create -n ostram-unescap -f environment.yaml
+conda activate ostram-unescap
+set PYTHONUTF8=1
+set PYTHONHASHSEED=0
 python -m pip install -e . --no-deps
+python -m pip check
 python -m ostram --help
 cbc -stop
+glpsol --version
 ```
 
-If `OSTRAM-env` already exists, replace the create command with:
+Repeat `conda activate ostram-unescap` and the two `set` commands in each new
+prompt. These match the encoding and deterministic hash seed used for acceptance.
+
+If this dedicated `ostram-unescap` environment already exists, replace the create command with:
 
 ```text
-conda env update -n OSTRAM-env -f environment.yaml --prune
+conda env update -n ostram-unescap -f environment.yaml --prune
 ```
 
 `cbc -stop` must print the CBC welcome banner and version, then exit. Report the full
@@ -43,7 +63,7 @@ Use a dedicated ignored workspace so training state never mixes with another pro
 ```text
 python -m ostram --workspace workspace/natalia example prepare unescap
 python -m ostram --workspace workspace/natalia --profile unescap inspect-resources
-python -m ostram --workspace workspace/natalia --profile unescap run --scenarios "B_Optimised_VRE" --compile-only --skip-pull
+python -m ostram --workspace workspace/natalia --profile unescap run --env-name ostram-unescap --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --compile-only --skip-pull
 ```
 
 Preparation is guarded. Repeating the first command refuses to replace existing state;
@@ -57,19 +77,22 @@ The baseline interconnector authority is exactly **2.496 GW** in 2023-2028. The 
 B scenario intentionally relaxes `TotalAnnualMaxCapacity` to **9999.0**. A 2.5 GW value
 is an exercise edit or prose approximation, not the committed seed.
 
-Run one real CBC scenario only after the compile-only baseline passes:
+Run A and B through CBC, export and cost reconciliation, then prepare and run C
+using the completed A result in this same workspace:
 
 ```text
-python -m ostram --workspace workspace/natalia --profile unescap run --scenarios "B_Optimised_VRE" --skip-pull
+python -m ostram --workspace workspace/natalia --profile unescap run --env-name ostram-unescap --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --skip-pull
+python -m ostram --workspace workspace/natalia --profile unescap run --env-name ostram-unescap --scenarios "C_Target_VRE" --skip-pull
 python -m ostram --workspace workspace/natalia example report unescap --capture windows-cbc-baseline
 python -m ostram --workspace workspace/natalia example report unescap
 ```
 
-At this release-readiness commit, the recorded Windows CBC run reaches the solver but
-reports an infeasible linear relaxation. The CLI now stops at that non-optimal solution
-header. If Natalia reproduces it, stop after the run command and send the run log; do not
-generate or capture a report from that result and do not change model assumptions. The
-two report commands above are the acceptance route once CBC produces an optimal solution.
+Select the decision scenarios explicitly. A materializes support BAU's restrictions
+without compiling or solving BAU; C requires a completed A result. Do not supply an
+accepted full-model result as a training input. Capture a report only after the run
+returns success with an optimal CBC solution and successful cost reconciliation.
+The profile enables backstop capacity; inspect its generation and capacity in the
+exports when interpreting feasibility.
 
 The final command prints the real dashboard path. All solver results, captures, logs,
 and HTML dashboards remain below `workspace/natalia/profiles/unescap/` and are ignored.
