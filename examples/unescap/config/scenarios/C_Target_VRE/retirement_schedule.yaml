@@ -3,7 +3,7 @@
 ## and do not change between scenarios.
 ##
 ## Lifetime midpoints from Natalia's research:
-##   COA 35yr, NGS 30yr, PET 25yr, NUC 50yr
+##   COA 35yr, NGS 30yr, PET 25yr, URN 50yr
 
 base_year: 2028
 
@@ -17,7 +17,7 @@ age_based:
   PET:
     lifetime_years: 25
     retirement_profile: linear
-  NUC:
+  URN:
     lifetime_years: 50
     retirement_profile: linear
 

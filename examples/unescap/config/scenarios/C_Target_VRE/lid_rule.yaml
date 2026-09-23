@@ -23,7 +23,12 @@ relaxation_schedule:
   2045: 2.0
   2050: 3.0
 
-lid_floor_gw: 0.1
+## 0.5 matches A_Calibrated_BAU. With 0.1, the relaxation multiplier acts
+## on near-zero proportional lids (e.g. PWRSPV ~0.1-0.2 GW/yr, binding every
+## year), leaving this scenario with LESS investment room than the BAU and a
+## higher system cost than A (2026-09-22). Keep >= A's floor so this scenario
+## is a relaxation of the BAU.
+lid_floor_gw: 0.5
 
 family_relaxation_ceilings:
   COA: 1.0    # coal locked to BAU proportions
