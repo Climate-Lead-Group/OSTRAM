@@ -1739,6 +1739,71 @@ class CostExportReconciliationTests(unittest.TestCase):
             with self.assertRaisesRegex(AssertionError, 'coefficient mismatch'):
                 reconciled_cost_frames(outputs, data, costs)
 
+    @staticmethod
+    def _write_reconciliation_fixture(root, *, with_discounted_operational_cost=True):
+        """Two technologies, one duplicate export row (A) and one omitted default (B).
+
+        DiscountRate 0.1 with 2023 as the base year gives a mid-year discount
+        factor of 1.1**0.5, so discounted and undiscounted deltas differ and a
+        test can tell which branch each frame went through.
+        """
+        outputs = root/'Outputs'
+        outputs.mkdir()
+        data = root/'model.txt'
+        data.write_text('param default 0.1 : VariableCost :=\nGLOBAL A 1 2023 2\n;\n'
+                        'param default 0.1 : DiscountRate :=\n;\n'
+                        'param : YearSplit :=\nS 2023 1\n;\n')
+        costs = root/'VariableCost.csv'
+        costs.write_text('REGION,TECHNOLOGY,MODE_OF_OPERATION,YEAR,VALUE\n'
+                         'GLOBAL,A,1,2023,2\nGLOBAL,A,1,2023,2\n')
+        factor = 1.1 ** 0.5
+        (outputs/'RateOfActivity.csv').write_text(
+            'REGION,TECHNOLOGY,MODE_OF_OPERATION,YEAR,TIMESLICE,VALUE\n'
+            'GLOBAL,A,1,2023,S,3\nGLOBAL,B,1,2023,S,4\n')
+        (outputs/'AnnualVariableOperatingCost.csv').write_text(
+            'REGION,TECHNOLOGY,YEAR,VALUE\nGLOBAL,A,2023,12\n')
+        (outputs/'AnnualFixedOperatingCost.csv').write_text(
+            'REGION,TECHNOLOGY,YEAR,VALUE\nGLOBAL,A,2023,5\nGLOBAL,B,2023,1\n')
+        (outputs/'OperatingCost.csv').write_text(
+            'REGION,TECHNOLOGY,YEAR,VALUE\nGLOBAL,A,2023,17\nGLOBAL,B,2023,1\n')
+        if with_discounted_operational_cost:
+            (outputs/'DiscountedOperationalCost.csv').write_text(
+                'REGION,TECHNOLOGY,YEAR,VALUE\n'
+                f'GLOBAL,A,2023,{17/factor!r}\nGLOBAL,B,2023,{1/factor!r}\n')
+        (outputs/'DiscountedCostByTechnology.csv').write_text(
+            'REGION,TECHNOLOGY,YEAR,VALUE\n'
+            f'GLOBAL,A,2023,{17/factor!r}\nGLOBAL,B,2023,{1/factor!r}\n')
+        (outputs/'TotalDiscountedCost.csv').write_text('REGION,YEAR,VALUE\nGLOBAL,2023,100\n')
+        return outputs, data, costs, factor
+
+    def test_discounted_operational_cost_is_reconciled_consistently_with_operating_cost(self):
+        from ostram.pipeline.execution.concatenate import reconciled_cost_frames
+        with tempfile.TemporaryDirectory() as temporary:
+            outputs, data, costs, factor = self._write_reconciliation_fixture(Path(temporary))
+            adjusted, evidence = reconciled_cost_frames(outputs, data, costs)
+            by_tech = lambda name: adjusted[name].set_index('TECHNOLOGY').VALUE
+            variable = by_tech('AnnualVariableOperatingCost')
+            fixed = {'A': 5.0, 'B': 1.0}
+            operating = by_tech('OperatingCost')
+            discounted = by_tech('DiscountedOperationalCost')
+            for tech in ('A', 'B'):
+                self.assertAlmostEqual(operating[tech], variable[tech] + fixed[tech], msg=tech)
+                self.assertAlmostEqual(discounted[tech], (variable[tech] + fixed[tech]) / factor, msg=tech)
+            self.assertAlmostEqual(discounted['A'], 11 / factor)
+            self.assertAlmostEqual(discounted['B'], 1.4 / factor)
+            self.assertEqual(evidence['missing_cost_frames'], [])
+            self.assertIn('DiscountedOperationalCost', evidence['reconciled_cost_frames'])
+
+    def test_missing_expected_cost_frame_is_recorded_in_evidence_and_warned(self):
+        from ostram.pipeline.execution.concatenate import reconciled_cost_frames
+        with tempfile.TemporaryDirectory() as temporary:
+            outputs, data, costs, _ = self._write_reconciliation_fixture(
+                Path(temporary), with_discounted_operational_cost=False)
+            with self.assertWarnsRegex(RuntimeWarning, 'DiscountedOperationalCost'):
+                adjusted, evidence = reconciled_cost_frames(outputs, data, costs)
+            self.assertNotIn('DiscountedOperationalCost', adjusted)
+            self.assertEqual(evidence['missing_cost_frames'], ['DiscountedOperationalCost'])
+
 
 if __name__ == "__main__":
     unittest.main()

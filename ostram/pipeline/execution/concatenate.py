@@ -9,6 +9,7 @@ import hashlib
 import json
 import math
 import re
+import warnings
 from pathlib import Path
 from typing import Sequence
 
@@ -27,6 +28,21 @@ SET_COLUMNS = (
     "DAYTYPE",
     "DAILYTIMEBRACKET",
     "STORAGE",
+)
+
+# Result frames whose values depend on VariableCost and therefore receive the
+# reconciliation delta. The names are the CSV stems otoole writes to Outputs/:
+# the solver frames (TotalDiscountedCost, OperatingCost, AnnualVariableOperatingCost)
+# and the derived ones otoole computes after the solve (DiscountedCostByTechnology,
+# DiscountedOperationalCost = (variable + fixed O&M) / mid-year discount factor).
+# The model's own DiscountedOperatingCost variable is commented out and never
+# reaches the .sol file, so it is deliberately not listed here.
+RECONCILED_COST_FRAMES = (
+    'TotalDiscountedCost',
+    'DiscountedCostByTechnology',
+    'DiscountedOperationalCost',
+    'OperatingCost',
+    'AnnualVariableOperatingCost',
 )
 
 
@@ -93,12 +109,15 @@ def reconciled_cost_frames(outputs_folder, datafile, parameter_csv):
     for (tech, year), value in correction.items():
         annual[int(year)] += value
     adjusted = {}
-    for name in ('TotalDiscountedCost', 'DiscountedCostByTechnology',
-                 'DiscountedOperatingCost', 'OperatingCost', 'AnnualVariableOperatingCost'):
+    absent_frames = []
+    for name in RECONCILED_COST_FRAMES:
         path = Path(outputs_folder)/(name+'.csv')
         if not path.is_file():
+            absent_frames.append(name)
             continue
         frame = pd.read_csv(path)
+        # otoole writes integer-looking values for some frames; corrections are floats.
+        frame['VALUE'] = frame['VALUE'].astype(float)
         for idx, row in frame.iterrows():
             year = int(row.YEAR)
             delta = annual[year] if name == 'TotalDiscountedCost' else correction.get((row.TECHNOLOGY,str(year)),0)
@@ -117,9 +136,16 @@ def reconciled_cost_frames(outputs_folder, datafile, parameter_csv):
             if missing:
                 frame = pd.concat([frame, pd.DataFrame(missing)], ignore_index=True)
         adjusted[name] = frame
+    if absent_frames:
+        warnings.warn(
+            'Cost reconciliation skipped frames absent from '
+            f'{outputs_folder}: {", ".join(absent_frames)}. Check the otoole version '
+            'and its result configuration.',
+            RuntimeWarning, stacklevel=2)
     raw = pd.read_csv(Path(outputs_folder)/'TotalDiscountedCost.csv').VALUE.sum()
     evidence.update(raw_cost_MUSD=float(raw), reporting_adjustment_net_MUSD=math.fsum(correction.values()),
                     reconciled_cost_MUSD=float(adjusted['TotalDiscountedCost'].VALUE.sum()),
+                    reconciled_cost_frames=sorted(adjusted), missing_cost_frames=absent_frames,
                     compiled_data_sha256=hashlib.sha256(Path(datafile).read_bytes()).hexdigest())
     return adjusted, evidence
 
