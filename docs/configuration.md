@@ -473,7 +473,7 @@ annualize_capital: False
 | `reuse_existing_sol` | Skip solving if a `.sol` already exists at the expected path (regenerates outputs from a previous solve); falls back to a normal solve if missing |
 | `concat_otoole_csv` | Concatenate otoole CSVs across scenarios |
 | `concat_scenarios_csv` | Concatenate scenario result CSVs |
-| `annualize_capital` | Run capital cost annualization post-processing (`Z_AUX_capital_annualization_script.py`) |
+| `annualize_capital` | Append annualized capital investment rows to the combined CSV (`ostram.pipeline.execution.annualization`, see the auxiliary tools page) |
 
 ### Other Settings
 

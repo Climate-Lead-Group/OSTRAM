@@ -25,6 +25,7 @@ from ostram.paths import resolve_paths
 from ostram.terminal import safe_print
 
 from . import orchestrator as b2_orchestrator
+from . import scenario_concatenation
 
 ########################################################################################
 def _python_module_command(script_path, *arguments):
@@ -923,208 +924,19 @@ def export_root_datafile(here, params, scenario_name, export_name=None):
 
 
 def active_output_csv_candidates(params, scenario_future_name):
-    """
-    Return output CSV names in the same suffix order used by main_executer.
-
-    The solver/otoole path can become, for example:
-      Pre_processed_BAU_0_NoStorage_OpenBCK_RMCarefulXLSX_output.csv
-
-    The final scenario concatenator used to look only for:
-      Pre_processed_BAU_0_Output.csv
-
-    Keep the active chained name first, with legacy fallbacks after it.
-    """
-    base = f"{params['preprocess_data_name']}{scenario_future_name}"
-    chain_parts = []
-
-    if params.get('storage_delay_active', False):
-        chain_parts.append(params.get('storage_delay_suffix', 'StorageDelayN5'))
-    if params.get('strip_storage_active', False):
-        chain_parts.append(params.get('strip_storage_suffix', 'NoStorage'))
-    if params.get('open_pwrbck_active', False):
-        chain_parts.append(params.get('open_pwrbck_suffix', 'OpenBCK'))
-    if params.get('reserve_margin_repair_active', False):
-        chain_parts.append(params.get('reserve_margin_repair_suffix', 'RMRepair'))
-    if params.get('reserve_margin_xlsx_active', False):
-        chain_parts.append(params.get('reserve_margin_xlsx_suffix', 'RMCarefulXLSX'))
-
-    candidates = []
-    if chain_parts:
-        candidates.append(f"{base}_{'_'.join(chain_parts)}{params['output_files']}.csv")
-
-    candidates.extend([
-        f"{base}{params['output_files']}.csv",
-        f"{base}_Output.csv",
-    ])
-
-    return candidates
-
+    """Output CSV names in the same suffix order used by main_executer."""
+    return scenario_concatenation.active_output_csv_candidates(params, scenario_future_name)
 
 
 def concatenate_all_scenarios(HERE, params):
     """
-    Iterate over all scenario folders in `base_input_path` (excluding 'Default'),
-    read *_Input.csv and *_Output.csv files, add scenario metadata columns, concatenate them
-    into single CSV files for inputs, outputs and combined, and return their paths.
+    Concatenate every scenario's inputs and outputs into the final CSV files,
+    one scenario block at a time (see ``scenario_concatenation``).
 
-    Args:
-        params (dict):
-          - executables (str): Path to the base directory containing the scenario folders.
-          - prefix_final_files (str): Folder/path where to save the results.
-          - inputs_file (str): Base name for the inputs CSV.
-          - outputs_file (str): Base name for the outputs CSV.
-          - combined_file (str, optional): Base name for the combined inputs+outputs CSV.
     Returns:
         tuple: (input_csv_path, output_csv_path, combined_csv_path)
     """
-    # Metadata columns that we move to the front
-    keys_sets_delete = [
-        'REGION','YEAR','TECHNOLOGY','FUEL','EMISSION','MODE_OF_OPERATION',
-        'TIMESLICE','STORAGE','SEASON','DAYTYPE','DAILYTIMEBRACKET'
-    ]
-
-    combined_inputs = []
-    combined_outputs = []
-    combined_inputs_outputs = []
-    base_input_path = params['executables']
-
-    for scenario_future_name in sorted(os.listdir(base_input_path)):
-        if scenario_future_name.lower() in ['default', '__pycache__', 'local_dataset_creator_0.py']:
-            continue
-
-        scenario_path = os.path.join(HERE, base_input_path, scenario_future_name)
-        parts = scenario_future_name.rsplit("_", 1)
-        scenario = parts[0]
-        future = parts[1]
-
-        input_file = os.path.join(scenario_path, f"{scenario_future_name}_Input.csv")
-        output_file = None
-        for output_name in active_output_csv_candidates(params, scenario_future_name):
-            candidate = os.path.join(scenario_path, output_name)
-            if os.path.exists(candidate):
-                output_file = candidate
-                break
-
-        if os.path.exists(input_file):
-            df_in = pd.read_csv(input_file, low_memory=False)
-            df_in.insert(0, "Future", future)
-            df_in.insert(1, "Scenario", scenario)
-            combined_inputs.append(df_in)
-            combined_inputs_outputs.append(df_in)
-
-        if output_file and os.path.exists(output_file):
-            df_out = pd.read_csv(output_file, low_memory=False)
-            df_out.insert(0, "Future", future)
-            df_out.insert(1, "Scenario", scenario)
-            combined_outputs.append(df_out)
-            combined_inputs_outputs.append(df_out)
-
-    # Concatenate inputs and outputs separately
-    df_inputs_all = pd.concat(combined_inputs, ignore_index=True) if combined_inputs else pd.DataFrame()
-    df_outputs_all = pd.concat(combined_outputs, ignore_index=True) if combined_outputs else pd.DataFrame()
-    # df_inputs_outputs_all = pd.concat(combined_inputs_outputs, ignore_index=True) if combined_inputs_outputs else pd.DataFrame()
-    # df_list = []
-    # df_list.append(combined_inputs)
-    # df_list.append(combined_outputs)
-    df_inputs_outputs_all = pd.concat([df_inputs_all,df_outputs_all], ignore_index=True, sort=True)  # Sort for deterministic column order
-    
-
-    # Function to reorder columns: metadata first, then alphabetical
-    def reorder_columns(df):
-        front = ['Future','Scenario'] + [c for c in keys_sets_delete if c in df.columns]
-        rest = sorted([c for c in df.columns if c not in front])
-        return df[front + rest]
-
-    today = date.today().isoformat()  # 'YYYY-MM-DD'
-
-    # 1) Save inputs
-    if not df_inputs_all.empty:
-        df_inputs_all = reorder_columns(df_inputs_all)
-        # Sort rows for deterministic output
-        sort_cols = [c for c in ['Future', 'Scenario', 'REGION', 'TECHNOLOGY', 'YEAR'] if c in df_inputs_all.columns]
-        if sort_cols:
-            df_inputs_all = df_inputs_all.sort_values(by=sort_cols).reset_index(drop=True)
-        path_in = os.path.join(HERE,params['prefix_final_files'] + params['inputs_file'])
-        df_inputs_all.to_csv(path_in, index=False)
-        dated = path_in.replace('.csv', f'_{today}.csv')
-        df_inputs_all.to_csv(dated, index=False)
-    else:
-        path_in = None
-
-    # 2) Save outputs
-    if not df_outputs_all.empty:
-        df_outputs_all = reorder_columns(df_outputs_all)
-        # Sort rows for deterministic output
-        sort_cols = [c for c in ['Future', 'Scenario', 'REGION', 'TECHNOLOGY', 'YEAR'] if c in df_outputs_all.columns]
-        if sort_cols:
-            df_outputs_all = df_outputs_all.sort_values(by=sort_cols).reset_index(drop=True)
-        path_out = os.path.join(HERE,params['prefix_final_files'] + params['outputs_file'])
-        df_outputs_all.to_csv(path_out, index=False)
-        dated = path_out.replace('.csv', f'_{today}.csv')
-        df_outputs_all.to_csv(dated, index=False)
-    else:
-        path_out = None
-
-    # 3) Again, combine both DataFrames into a single one and save it
-    combined_name = params.get('combined_file', 'Combined_Inputs_Outputs.csv')
-    if not df_inputs_outputs_all.empty and not df_outputs_all.empty:
-        # df_combined = pd.concat([df_inputs_all, df_outputs_all],
-        #                         ignore_index=True, sort=False)
-        df_combined = reorder_columns(df_inputs_outputs_all)
-        # Sort rows for deterministic output
-        sort_cols = [c for c in ['Future', 'Scenario', 'REGION', 'TECHNOLOGY', 'YEAR'] if c in df_combined.columns]
-        if sort_cols:
-            df_combined = df_combined.sort_values(by=sort_cols).reset_index(drop=True)
-        
-        
-        #########################################################################################
-        # Calculate AccumulatedTotalAnnualMinCapacityInvestment
-        # Must group by (Future, Scenario, TECHNOLOGY) and accumulate within each group
-        if "TotalAnnualMinCapacityInvestment" in df_combined.columns:
-            df = df_combined.copy()
-
-            # Initialize the accumulated column with NaN
-            df['AccumulatedTotalAnnualMinCapacityInvestment'] = np.nan
-
-            # Define grouping columns (exclude YEAR since we accumulate over years)
-            group_cols = ['Future', 'Scenario', 'TECHNOLOGY']
-            group_cols = [c for c in group_cols if c in df.columns]
-
-            if group_cols:
-                # Sort by group columns + YEAR to ensure correct order for cumsum
-                sort_cols = group_cols + ['YEAR']
-                df = df.sort_values(by=sort_cols).reset_index(drop=True)
-
-                # Calculate cumulative sum within each group
-                # Only for rows that have a value in TotalAnnualMinCapacityInvestment
-                mask = df['TotalAnnualMinCapacityInvestment'].notna()
-                df.loc[mask, 'AccumulatedTotalAnnualMinCapacityInvestment'] = (
-                    df.loc[mask]
-                    .groupby(group_cols, sort=False)['TotalAnnualMinCapacityInvestment']
-                    .cumsum()
-                )
-            else:
-                # Fallback: if there are no group columns, do a simple cumsum
-                mask = df['TotalAnnualMinCapacityInvestment'].notna()
-                df.loc[mask, 'AccumulatedTotalAnnualMinCapacityInvestment'] = (
-                    df.loc[mask, 'TotalAnnualMinCapacityInvestment'].cumsum()
-                )
-
-            df_combined = df
-        #########################################################################################
-        
-        
-        path_comb = os.path.join(HERE,params['prefix_final_files'] + combined_name)
-        df_combined.to_csv(path_comb, index=False)
-        # Note: the dated copy with annualized data will be created after annualization (if enabled)
-    else:
-        path_comb = None
-
-    return path_in, path_out, path_comb
-
-
-
-
+    return scenario_concatenation.concatenate_all_scenarios(HERE, params)
 
 
 def chunk_scenarios(

@@ -161,9 +161,13 @@ verification, including `TotalDiscountedCost.csv`.
 
 `concat_scenarios_csv` writes the cross-scenario combined CSVs. It runs **once
 per run invocation**, in the final post-processing stage, after the last
-scenario of the selection. Because it rereads every scenario present in
-`Executables/`, its cost grows with the number of scenarios already on disk —
-so, after completing A, pass the remaining selection to one invocation:
+scenario of the selection. It processes one scenario at a time and appends
+each sorted block to the `Inputs`, `Outputs` and `Combined_Inputs_Outputs`
+files, so peak memory is bounded by the largest single scenario rather than
+by the campaign (`ostram.pipeline.execution.scenario_concatenation`). Because
+it rereads every scenario present in `Executables/`, its time still grows
+with the number of scenarios already on disk — so, after completing A, pass
+the remaining selection to one invocation:
 
 ```powershell
 python -m ostram --workspace $workspace run --skip-pull --scenarios "B_Optimised_VRE,C_Target_VRE" --a-result-seed $aResult

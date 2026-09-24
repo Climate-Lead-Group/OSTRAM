@@ -499,12 +499,13 @@ def run_final_postprocessing_stage(
             combined_file_path = os.path.join(
                 plan.here,
                 params["prefix_final_files"]
-                + "Combined_Inputs_Outputs.csv",
+                + params.get("combined_file", "Combined_Inputs_Outputs.csv"),
             )
             if os.path.exists(combined_file_path):
                 print(f"Starting annualization for: {combined_file_path}")
                 annualize_capital_investment(
                     input_file_path=combined_file_path,
+                    executables_dir=os.path.join(plan.here, params["executables"]),
                     verbose=True,
                 )
                 print("✅ Capital investment annualization completed successfully.")
@@ -531,7 +532,8 @@ def run_final_postprocessing_stage(
     else:
         combined_file_path = os.path.join(
             plan.here,
-            params["prefix_final_files"] + "Combined_Inputs_Outputs.csv",
+            params["prefix_final_files"]
+            + params.get("combined_file", "Combined_Inputs_Outputs.csv"),
         )
         if os.path.exists(combined_file_path):
             today = date.today().isoformat()
