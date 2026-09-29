@@ -1605,6 +1605,14 @@ def create_editor_template(data, output_path):
 
 
 def main():
+    """Generate Secondary_Techs_Editor.xlsx from the scenario workbooks.
+
+    Returns:
+        0 on success, 1 when not enough data is found or an error occurs.
+
+    Side effects:
+        Writes Secondary_Techs_Editor.xlsx in the preparation workspace.
+    """
     try:
         print("=" * 80)
         print("SECONDARY TECHS EDITOR - TEMPLATE GENERATOR")

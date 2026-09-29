@@ -279,6 +279,14 @@ def fill_editor(editor_path, flow_data):
 # ============================================================================
 
 def main():
+    """Fill the editor's TRN activity limits from the bilateral flow workbook.
+
+    Reads flujos_energia_estimados_optimizacion.xlsx (GWh, converted to PJ) and
+    returns without changes when it or the editor workbook is missing.
+
+    Side effects:
+        Modifies Secondary_Techs_Editor.xlsx in place.
+    """
     runtime = resolve_paths().stage_workspace("preparation", create=True)
     flow_file = runtime / "secondary_techs" / "flujos_energia_estimados_optimizacion.xlsx"
     editor_file = runtime / "Secondary_Techs_Editor.xlsx"

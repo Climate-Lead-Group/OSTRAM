@@ -915,6 +915,12 @@ def read_shares_total_data(shares_total_path):
 
 
 class SecondaryTechsUpdater:
+    """Apply the Secondary_Techs_Editor.xlsx instructions to the A1 workbooks.
+
+    Reads the editor and the optional OSTRAM source workbooks, then edits the
+    A-O workbooks of each scenario in place (after creating backups) and keeps a
+    log of every step. Use ``run`` to execute the whole update.
+    """
     def __init__(self, editor_path, base_path, ostram_file_path=None, shares_file_path=None, generation_file_path=None, shares_total_file_path=None, trade_balance_file_path=None):
         self.editor_path = editor_path
         self.base_path = base_path
