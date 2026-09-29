@@ -1,9 +1,26 @@
 # -*- coding: utf-8 -*-
-"""
-Created on 2021
-@author: Climate Lead Group, Luis Victor-Gallardo, Andrey Salazar-Vargas
+"""Compile the materialized A-O workbooks of one scenario into OSeMOSYS parameter CSVs (B1).
 
-Updated on 2025
+Top-level script executed at import time by ``orchestrator.py`` with cwd
+``<workspace>/compilation``: it opens the scenario workbooks named by the
+runtime configuration, validates timeslices, builds the parameter and
+structure tables through ``transforms/`` and delivers the CSVs.
+
+Inputs:
+    Config_MOMF_T1_A.yaml (runtime copy in the cwd)
+    <A1_outputs>/A1_Outputs_<scenario>/A-O_*.xlsx (base year, projections, demand, parametrization)
+    <A2_extra_inputs>/A-Xtra_Emissions.xlsx, A-Xtra_Storage.xlsx
+    <workspace>/preparation/og_csvs_inputs/EMISSION.csv (else inputs/osemosys_global/EMISSION.csv)
+Outputs:
+    <A2_output_main_scen>/<scenario>/<Parameter>.csv and set CSVs
+    *_Completed.xlsx, A2_Structure_Lists.xlsx, _fuel_cost_allocation_<scenario>.csv
+Usage:
+    python -m ostram compile-inputs --scenarios <name>   # runs this module once per scenario
+Notes:
+    - Never import this module from other code: all work happens at import.
+    - Under profile policy validation_no_mutation a report-only pre-solver validation runs first.
+Authors:
+    2021 Climate Lead Group, Luis Victor-Gallardo, Andrey Salazar-Vargas; updated 2025
 """
 import pandas as pd
 import pickle
