@@ -233,6 +233,15 @@ def print_summary(log):
 
 # --------------------------------------------------------------------------- self-test
 def run_self_test() -> int:
+    """Run the in-process self-test on synthetic workbooks and return an exit code.
+
+    Returns:
+        0 when every check passes, 1 otherwise.
+
+    Side effects:
+        Prints PASS/FAIL lines; works in a temporary directory that is removed
+        afterwards.
+    """
     import tempfile
     print("=" * 68); print("apply_internal_tx_losses.py SELF-TEST"); print("=" * 68)
     ok = True

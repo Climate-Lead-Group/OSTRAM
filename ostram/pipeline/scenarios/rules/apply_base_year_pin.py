@@ -117,6 +117,12 @@ EXPECTED_SCENARIO_COUNTS = {'A_Calibrated_BAU': 3401, 'B_Optimised_VRE': 3429, '
 
 @dataclass(frozen=True)
 class PinRule:
+    """One complete-key row of the frozen base-year pin table.
+
+    Each rule targets a single (region, technology, parameter, year, timeslice) cell
+    and records the pinned value, its state (POSITIVE, ZERO or ABSENT), units and the
+    root scenarios it applies to.
+    """
     source_rule_id: str
     parameter: str
     region: str
@@ -137,6 +143,7 @@ class PinRule:
 
     @property
     def complete_key(self) -> tuple[str, str, str, int, str]:
+        """Return the (region, technology, parameter, year, timeslice) key of the rule."""
         return self.region, self.technology, self.parameter, self.year, self.timeslice
 
 
@@ -405,6 +412,14 @@ def _excel_number(value: Decimal) -> int | float:
 
 
 def make_backup(input_dir: Path) -> Path:
+    """Copy the input directory to a timestamped ``_PRE_PWR_MIN_PIN_`` sibling folder.
+
+    Returns:
+        Path of the new backup folder.
+
+    Raises:
+        FileExistsError: If the backup folder already exists.
+    """
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     backup = input_dir.parent / f"{input_dir.name}{BACKUP_TAG}{stamp}"
     if backup.exists():
@@ -414,6 +429,22 @@ def make_backup(input_dir: Path) -> Path:
 
 
 def restore(input_dir: Path | str, restore_from: Path | str | None = None) -> Path:
+    """Replace the input directory with a backup copy.
+
+    Args:
+        input_dir: Directory to overwrite.
+        restore_from: Backup folder to use; the latest ``_PRE_PWR_MIN_PIN_`` sibling
+            when None.
+
+    Returns:
+        Path of the backup that was restored.
+
+    Raises:
+        FileNotFoundError: If no backup exists or the given folder is not a directory.
+
+    Side effects:
+        Deletes ``input_dir`` and recreates it from the backup.
+    """
     destination = Path(input_dir)
     if restore_from is None:
         candidates = sorted(
@@ -702,6 +733,7 @@ def run(
 
 
 def print_summary(log: dict[str, object]) -> None:
+    """Print a one-line summary of an ``apply_pin_rules`` log."""
     print(
         "apply_base_year_pin "
         f"scenario={log['scenario']} status={log['status']} "
@@ -712,6 +744,18 @@ def print_summary(log: dict[str, object]) -> None:
 
 
 def main() -> int:
+    """Run the apply_base_year_pin command line and return a process exit code.
+
+    Requires ``--input-dir`` and ``--scenario`` unless restoring with ``--restore`` or
+    ``--restore-from``.
+
+    Returns:
+        0 on success, 1 when the pin or the restore raised an exception.
+
+    Side effects:
+        Applies the pin rules to the workbooks in ``--input-dir`` (with a backup unless
+        ``--skip-backup``), or restores the folder from a backup.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input-dir", type=Path)
     parser.add_argument("--scenario")

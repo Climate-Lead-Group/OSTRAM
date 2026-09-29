@@ -112,6 +112,22 @@ PROFILE_FUNCS = {
 # YAML config loader
 # ---------------------------------------------------------------------------
 def load_config(yaml_path: Path) -> dict:
+    """Load and validate the retirement-schedule YAML.
+
+    Reads ``base_year`` (default 2023), ``fuel_slice`` (default [3, 6]), the
+    ``age_based`` per-fuel rules (``lifetime_years`` default 30, ``retirement_profile``
+    default "linear"), the ``scheduled`` per-tech trajectories and the ``exempt``
+    patterns.
+
+    Args:
+        yaml_path: Path to retirement_schedule.yaml.
+
+    Returns:
+        Dict with base_year, fuel_slice, age_based, scheduled and exempt.
+
+    Raises:
+        ValueError: If a profile is unknown or a scheduled entry lacks cr/tech/schedule.
+    """
     cfg = _load_yaml(yaml_path)
     if cfg is None:
         cfg = {}
@@ -500,6 +516,24 @@ def edit_parametrization(filepath: Path, sheets: list, config: dict,
 # ---------------------------------------------------------------------------
 def run(input_dir, sheets: list = None, skip_backup: bool = False,
         yaml_path: Path | None = None) -> dict:
+    """Draw down ResidualCapacity of generation techs in A-O_Parametrization.xlsx.
+
+    Args:
+        input_dir: Directory holding ``A-O_Parametrization.xlsx``.
+        sheets: Sheets to edit; defaults to ``DEFAULT_TARGET_SHEETS``.
+        skip_backup: Skip the timestamped backup when true.
+        yaml_path: Rule YAML; defaults to retirement_schedule.yaml beside this file.
+
+    Returns:
+        Change log dict (includes ``log_path`` when a backup was made).
+
+    Raises:
+        FileNotFoundError: If the YAML or the parametrization workbook is missing.
+
+    Side effects:
+        Edits the workbook in place, creates a backup folder and a ``*_CHANGES.json``
+        log next to it.
+    """
     input_dir = Path(input_dir)
     sheets = sheets or DEFAULT_TARGET_SHEETS
 
@@ -544,6 +578,7 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
 # Console output
 # ---------------------------------------------------------------------------
 def print_summary(log: dict) -> None:
+    """Print a human-readable summary of a retirement-schedule run log."""
     bar = "=" * 72
     cfg = log.get("config_summary", {})
     print(bar)
@@ -613,6 +648,15 @@ def print_summary(log: dict) -> None:
 # Self-test
 # ---------------------------------------------------------------------------
 def run_self_test() -> int:
+    """Run the in-process self-test on synthetic workbooks and return an exit code.
+
+    Returns:
+        0 when every check passes, 1 otherwise.
+
+    Side effects:
+        Prints PASS/FAIL lines; works in a temporary directory that is removed
+        afterwards.
+    """
     bar = "=" * 72
     print(bar)
     print("set_retirement_schedule.py — SELF-TEST")
@@ -966,6 +1010,20 @@ def run_self_test() -> int:
 # Main
 # ---------------------------------------------------------------------------
 def main() -> int:
+    """Run the set_retirement_schedule rule from the command line and return a process exit code.
+
+    Parses the CLI flags, dispatches to the self-test, the restore path or ``run`` and prints the summary and maps any exception to exit
+    code 1 with the message on stderr.
+
+    Returns:
+        0 on success, 1 when the rule or the restore raised an exception.
+
+    Side effects:
+        Edits ``A-O_Parametrization.xlsx`` in ``--input-dir`` in place and writes a
+        timestamped backup plus a ``*_CHANGES.json`` log unless ``--skip-backup``
+        is given; ``--restore`` / ``--restore-from`` replace ``--input-dir`` with a
+        backup instead.
+    """
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )

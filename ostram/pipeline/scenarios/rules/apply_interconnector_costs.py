@@ -332,6 +332,15 @@ def print_summary(log: dict) -> None:
 
 # --------------------------------------------------------------------------- self-test
 def run_self_test() -> int:
+    """Run the in-process self-test on synthetic workbooks and return an exit code.
+
+    Returns:
+        0 when every check passes, 1 otherwise.
+
+    Side effects:
+        Prints PASS/FAIL lines; works in a temporary directory that is removed
+        afterwards.
+    """
     import tempfile
     bar = "=" * 72
     print(bar); print("apply_interconnector_costs.py — SELF-TEST"); print(bar)

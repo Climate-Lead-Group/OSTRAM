@@ -377,6 +377,31 @@ def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path
 # --------------------------------------------------------------------------- orchestration
 def run(input_dir, sheets=None, skip_backup=False, config=None, residuals=None,
         dry_run=False, desk_check_csv=None, nodes=None) -> dict:
+    """Calibrate the internal transmission families in A-O_Parametrization.xlsx.
+
+    Writes ResidualCapacity, CapitalCost, FixedCost and OperationalLife for the six
+    internal families from the YAML knobs and the per-node residuals file.
+
+    Args:
+        input_dir: Directory holding ``A-O_Parametrization.xlsx``.
+        sheets: Sheets to edit; defaults to ``DEFAULT_TARGET_SHEETS``.
+        skip_backup: Skip the timestamped backup when true.
+        config: Path to Config_country_codes.yaml; resolved by default when None.
+        residuals: Path to internal_tx_residuals.csv; resolved by default when None.
+        dry_run: Compute the changes without editing the workbook.
+        desk_check_csv: Optional path for an old-to-new CSV of every change.
+        nodes: Node codes to process; all nodes of the residuals file when None.
+
+    Returns:
+        Change log dict (includes ``log_path`` when a backup was made).
+
+    Raises:
+        FileNotFoundError: If the parametrization workbook is missing.
+
+    Side effects:
+        Edits the workbook in place unless ``dry_run``, creates a backup folder and a
+        ``*_CHANGES.json`` log next to it, and writes the desk-check CSV if requested.
+    """
     input_dir = Path(input_dir)
     sheets = sheets or DEFAULT_TARGET_SHEETS
     config_path = resolve_config(config)
@@ -445,6 +470,15 @@ def print_summary(log: dict) -> None:
 
 # --------------------------------------------------------------------------- self-test
 def run_self_test() -> int:
+    """Run the in-process self-test on synthetic workbooks and return an exit code.
+
+    Returns:
+        0 when every check passes, 1 otherwise.
+
+    Side effects:
+        Prints PASS/FAIL lines; works in a temporary directory that is removed
+        afterwards.
+    """
     import tempfile
     bar = "=" * 72
     print(bar); print("apply_internal_transmission.py — SELF-TEST"); print(bar)
@@ -540,6 +574,18 @@ def run_self_test() -> int:
 
 # --------------------------------------------------------------------------- main
 def main() -> int:
+    """Run the apply_internal_transmission command line and return an exit code.
+
+    Supports ``--self-test``, ``--restore`` / ``--restore-from`` and the normal run
+    (``--dry-run``, ``--desk-check-csv``, ``--skip-backup``).
+
+    Returns:
+        0 on success, 1 when the run or the restore raised an exception.
+
+    Side effects:
+        Edits ``A-O_Parametrization.xlsx`` in ``--input-dir`` unless ``--dry-run``,
+        writes a backup and change log, or restores the folder from a backup.
+    """
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--input-dir", type=Path, default=Path("A1_Outputs/A1_Outputs_BAU"))

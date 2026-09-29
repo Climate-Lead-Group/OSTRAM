@@ -105,6 +105,18 @@ BACKUP_TAG = "_PRE_IC_DIR_"
 # Config
 # ---------------------------------------------------------------------------
 def load_config(yaml_path: Path) -> dict:
+    """Load the direction overrides from the rule YAML.
+
+    Args:
+        yaml_path: Path to set_interconnector_direction.yaml.
+
+    Returns:
+        Dict with ``directions`` mapping tech to "forward" or "reverse"; entries set to
+        "bidirectional" are dropped because they are no-ops.
+
+    Raises:
+        ValueError: If a direction is not forward, reverse or bidirectional.
+    """
     raw = _load_yaml(yaml_path)
     if raw is None:
         raw = {}
@@ -127,6 +139,14 @@ def load_config(yaml_path: Path) -> dict:
 
 
 def load_interconnector_techs(tech_types_path: Path) -> set:
+    """Return the set of technologies categorised as INTERCONNECTORS in the taxonomy CSV.
+
+    Args:
+        tech_types_path: Path to technology_types.csv.
+
+    Raises:
+        FileNotFoundError: If the taxonomy file does not exist.
+    """
     tech_types_path = Path(tech_types_path)
     if not tech_types_path.is_file():
         raise FileNotFoundError(
@@ -154,6 +174,15 @@ def _rmtree_robust(path: Path, attempts: int = 5) -> None:
 
 
 def make_backup(input_dir: Path) -> Path:
+    """Copy the input directory to a timestamped ``_PRE_IC_DIR_`` sibling folder.
+
+    Returns:
+        Path of the new backup folder.
+
+    Raises:
+        FileNotFoundError: If the input directory does not exist.
+        FileExistsError: If the backup folder already exists.
+    """
     if not input_dir.is_dir():
         raise FileNotFoundError(f"Input directory does not exist: {input_dir}")
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -165,6 +194,7 @@ def make_backup(input_dir: Path) -> Path:
 
 
 def find_latest_backup(input_dir: Path) -> Path | None:
+    """Return the most recent ``_PRE_IC_DIR_`` backup beside the input directory, or None."""
     parent = input_dir.parent
     candidates = sorted(
         (p for p in parent.iterdir()
@@ -175,6 +205,22 @@ def find_latest_backup(input_dir: Path) -> Path | None:
 
 
 def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path:
+    """Replace the input directory with a backup copy.
+
+    Args:
+        input_dir: Directory to overwrite.
+        backup_dir: Backup folder to use; the latest ``_PRE_IC_DIR_`` sibling when None.
+
+    Returns:
+        Path of the backup that was restored.
+
+    Raises:
+        FileNotFoundError: If no backup exists or the given folder is missing.
+
+    Side effects:
+        Snapshots the current folder as ``<name>_POST_IC_DIR_pre_restore_<ts>``, then
+        deletes it and recreates it from the backup.
+    """
     input_dir = Path(input_dir)
     if backup_dir is None:
         backup_dir = find_latest_backup(input_dir)
@@ -202,6 +248,7 @@ def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path
 # Worksheet helpers
 # ---------------------------------------------------------------------------
 def find_year_columns(ws) -> dict:
+    """Map each model year found in the header row (1900-2200) to its column index."""
     year_to_col = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -218,6 +265,7 @@ def find_year_columns(ws) -> dict:
 
 
 def find_named_columns(ws, names: list) -> dict:
+    """Map each requested header name found in row 1 to its column index."""
     found = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -256,6 +304,25 @@ def determine_forward_mode(tech: str, mode_input_fuels: dict) -> int:
 # ---------------------------------------------------------------------------
 def edit_ar_projections(filepath: Path, trn_techs: set,
                         config: dict, study_start_year: int | None = None) -> dict:
+    """Zero the disabled flow mode of directed interconnectors in A-O_AR_Projections.xlsx.
+
+    For each configured tech, identifies the forward mode from its input fuels and
+    sets the input and output activity ratios of the disabled mode(s) to 0 in the
+    "Secondary" sheet, flipping Projection.Mode to "User defined" on touched rows.
+
+    Args:
+        filepath: Path to A-O_AR_Projections.xlsx.
+        trn_techs: Interconnector techs from the taxonomy; other techs are ignored.
+        config: Config from ``load_config``.
+        study_start_year: When set, years before it are left untouched so the base
+            window stays bidirectional.
+
+    Returns:
+        Log dict with per-tech ``changes`` and ``warnings``.
+
+    Side effects:
+        Saves the workbook in place (unless the sheet or columns are missing).
+    """
     wb = load_workbook(filepath)
     log = {"file": str(filepath), "changes": [], "warnings": [],
            "study_start_year": study_start_year}
@@ -462,6 +529,27 @@ def edit_ar_base_year(filepath: Path, trn_techs: set,
 def run(input_dir, skip_backup: bool = False,
         yaml_path: Path | None = None,
         study_start_year: int | None = None) -> dict:
+    """Apply the interconnector direction overrides to the AR files of a folder.
+
+    Edits A-O_AR_Projections.xlsx and, unless ``study_start_year`` is set,
+    A-O_AR_Model_Base_Year.xlsx.
+
+    Args:
+        input_dir: Directory holding the A-O workbooks.
+        skip_backup: Skip the timestamped backup when true.
+        yaml_path: Rule YAML; defaults to set_interconnector_direction.yaml beside this file.
+        study_start_year: Restrict the lever to years >= this and skip the base-year file.
+
+    Returns:
+        Change log dict, or ``{"skipped": True}`` when no overrides are configured.
+
+    Raises:
+        FileNotFoundError: If the YAML or the projections workbook is missing.
+
+    Side effects:
+        Edits the AR workbooks in place, creates a backup folder and a
+        ``*_CHANGES.json`` log next to it.
+    """
     input_dir = Path(input_dir)
 
     if yaml_path is None:
@@ -525,6 +613,7 @@ def run(input_dir, skip_backup: bool = False,
 # Console output
 # ---------------------------------------------------------------------------
 def print_summary(log: dict) -> None:
+    """Print a human-readable summary of a direction-override run log."""
     bar = "=" * 72
     print(bar)
     print("set_interconnector_direction -- directionality control applied")
@@ -558,6 +647,15 @@ def print_summary(log: dict) -> None:
 # CLI
 # ---------------------------------------------------------------------------
 def main() -> int:
+    """Run the set_interconnector_direction command line and return an exit code.
+
+    Returns:
+        0 on success, 1 when the run or the restore raised an exception.
+
+    Side effects:
+        Edits the AR workbooks in ``--input-dir`` (with backup unless ``--skip-backup``),
+        or restores the folder from a backup with ``--restore`` / ``--restore-from``.
+    """
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,

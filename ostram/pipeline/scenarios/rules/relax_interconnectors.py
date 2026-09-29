@@ -1113,6 +1113,20 @@ def run_self_test() -> int:
 # Main
 # ---------------------------------------------------------------------------
 def main() -> int:
+    """Run the relax_interconnectors rule from the command line and return a process exit code.
+
+    Parses the CLI flags, dispatches to the self-test, the restore path or ``run`` and prints the summary and maps any exception to exit
+    code 1 with the message on stderr.
+
+    Returns:
+        0 on success, 1 when the rule or the restore raised an exception.
+
+    Side effects:
+        Edits ``A-O_Parametrization.xlsx`` in ``--input-dir`` in place and writes a
+        timestamped backup plus a ``*_CHANGES.json`` log unless ``--skip-backup``
+        is given; ``--restore`` / ``--restore-from`` replace ``--input-dir`` with a
+        backup instead.
+    """
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )

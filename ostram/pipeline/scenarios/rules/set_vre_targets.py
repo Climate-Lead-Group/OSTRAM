@@ -1094,6 +1094,7 @@ def _summarize_prod(total_prod: dict) -> dict:
 # Console output
 # ---------------------------------------------------------------------------
 def print_summary(log: dict) -> None:
+    """Print a human-readable summary of a VRE-targets run log."""
     bar = "=" * 72
     cfg = log.get("config", {})
     print(bar)
@@ -1559,6 +1560,20 @@ def run_self_test() -> int:
 # Main
 # ---------------------------------------------------------------------------
 def main() -> int:
+    """Run the set_vre_targets rule from the command line and return a process exit code.
+
+    Parses the CLI flags, dispatches to the self-test, the restore path or ``run`` and prints the summary and maps any exception to exit
+    code 1 with the message on stderr.
+
+    Returns:
+        0 on success, 1 when the rule or the restore raised an exception.
+
+    Side effects:
+        Edits ``A-O_Parametrization.xlsx`` in ``--input-dir`` in place and writes a
+        timestamped backup plus a ``*_CHANGES.json`` log unless ``--skip-backup``
+        is given; ``--restore`` / ``--restore-from`` replace ``--input-dir`` with a
+        backup instead.
+    """
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
