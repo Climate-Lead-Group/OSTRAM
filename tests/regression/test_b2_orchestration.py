@@ -1,3 +1,13 @@
+"""Characterization tests for the B2 execution runner and orchestrator.
+
+Usage:
+    python -m pytest tests/regression/test_b2_orchestration.py -q
+Notes:
+    - Guards import, CLI, stage order, the frozen scenario trace, compile-only stopping before
+      every solver boundary, execution and concatenation flag combinations, solver commands,
+      failure propagation, per-scenario result routing and cost reconciliation.
+    - One test runs an isolated (-I) interpreter that must be able to import ostram.
+"""
 from __future__ import annotations
 
 import ast

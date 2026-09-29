@@ -1,3 +1,13 @@
+"""Portability and training-route release-readiness tests.
+
+Usage:
+    python -m pytest tests/regression/test_release_readiness.py -q
+Notes:
+    - Guards solver discovery without shell lookup, CBC solution validation, absence of
+      shell=True and drive-letter assumptions, profile-aware merge targets, help without a
+      prepared workspace, canonical BAU snapshot selection, fail-closed report labels and
+      link-consistent training docs under examples/unescap.
+"""
 from __future__ import annotations
 
 from contextlib import redirect_stdout

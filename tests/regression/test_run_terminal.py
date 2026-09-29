@@ -1,3 +1,13 @@
+"""Tests for the terminal reporter (RunReporter) and safe_write.
+
+Usage:
+    python -m pytest tests/regression/test_run_terminal.py -q
+Notes:
+    - Guards cp1252 degradation with UTF-8 logs, in-place versus append-only status, complete
+      tee of child output without deadlock, verbose streaming, exit-code preservation,
+      interrupt propagation, and that help and inspection create no log.
+    - Runs real child Python processes; temporary directories live under tests/regression/.
+"""
 from __future__ import annotations
 
 import io

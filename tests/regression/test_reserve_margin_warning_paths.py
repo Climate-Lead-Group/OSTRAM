@@ -1,3 +1,13 @@
+"""Tests for the bounded warnings path of the xlsx reserve-margin repair.
+
+Usage:
+    python -m pytest tests/regression/test_reserve_margin_warning_paths.py -q
+Notes:
+    - Guards that the warnings file stays within the Windows path budget, short paths are
+      unchanged, independent long paths do not collide, and short and long runs produce
+      identical CRLF output.
+    - One case is Windows-only.
+"""
 from __future__ import annotations
 
 import hashlib

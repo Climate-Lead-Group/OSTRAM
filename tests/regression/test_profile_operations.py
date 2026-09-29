@@ -1,3 +1,12 @@
+"""Tests for profile-driven operations (country sync, registry, decisions, lid policy, reports).
+
+Usage:
+    python -m pytest tests/regression/test_profile_operations.py -q
+Notes:
+    - Guards schema-driven atomic idempotent country sync, registry-selected roots, the AO
+      decision CSV schema, the lid_rule_new_semantics gate, profile-derived ELC dispatch techs,
+      dashboard metadata injection and the profile lines of the run log.
+"""
 from __future__ import annotations
 
 import json

@@ -1,3 +1,12 @@
+"""Tests for the scenario registry and materialization contract.
+
+Usage:
+    python -m pytest tests/regression/test_scenario_registry.py -q
+Notes:
+    - Guards the cached country-config loader, roots, decision order, bases and overlays,
+      canonical fail-closed selection, the C-on-A result dependency, the four root directories,
+      declared bases for patches, and a single root selection with no solver invoked.
+"""
 from __future__ import annotations
 
 import json

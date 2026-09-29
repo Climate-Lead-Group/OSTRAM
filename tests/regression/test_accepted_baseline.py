@@ -1,3 +1,11 @@
+"""Tests for the governed comparator manifest and the /workspace/ ignore rule.
+
+Usage:
+    python -m pytest tests/regression/test_accepted_baseline.py -q
+Notes:
+    - Guards that accepted_baseline.py binds root and derived outputs by authority class and
+      that /workspace/ is the only narrowly scoped .gitignore rule (real git check-ignore).
+"""
 from __future__ import annotations
 
 import csv

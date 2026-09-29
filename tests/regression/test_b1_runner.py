@@ -1,3 +1,12 @@
+"""Characterization tests for the B1 compile-inputs runner.
+
+Usage:
+    python -m pytest tests/regression/test_b1_runner.py -q
+Notes:
+    - Guards silent import, CLI codes, scenario discovery and filtering, the exact compiler
+      command and cwd, config backup and restore, and the live extra-input contract.
+    - Creates temporary directories under tests/regression/ (removed per test).
+"""
 from __future__ import annotations
 
 import argparse

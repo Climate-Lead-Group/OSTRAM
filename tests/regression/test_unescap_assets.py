@@ -1,3 +1,12 @@
+"""Tests for the committed UNESCAP training assets under examples/unescap.
+
+Usage:
+    python -m pytest tests/regression/test_unescap_assets.py -q
+Notes:
+    - Guards the 20-sheet workbook with an exact Control sheet, the retained interconnector
+      authority, both Bangladesh gas combustion modes, the seed and compiled domain contracts,
+      the reduced pin, decisions, taxonomy and timeslice authority.
+"""
 from __future__ import annotations
 
 import csv

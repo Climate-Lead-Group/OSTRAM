@@ -1,3 +1,13 @@
+"""Characterization tests for the A3 transform entry point and orchestrator.
+
+Usage:
+    PYTHONPATH=tests python -m pytest tests/regression/test_a3_orchestration.py -q
+Notes:
+    - Guards silent import, CLI defaults, exact scenario planning, the mocked stage trace,
+      --keep-workdir, fail-fast semantics and the base-year-pin wrapper's dispatch and policy gate.
+    - Exports A3TraceHarness and _load_a3 for test_support_bau_transmission.py.
+    - subprocess.run is mocked; no child process runs.
+"""
 from __future__ import annotations
 
 import argparse

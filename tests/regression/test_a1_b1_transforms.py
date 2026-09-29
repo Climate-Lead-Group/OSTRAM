@@ -1,3 +1,13 @@
+"""Characterization tests for the B1 compiler and its transforms package.
+
+Usage:
+    python -m pytest tests/regression/test_a1_b1_transforms.py -q
+Notes:
+    - Guards that compiler.py and transforms/{planning,tables,effects,validation,delivery}
+      keep predecessor-identical behaviour: silent imports, boundary order, config, path,
+      validation and delivery semantics, and fail-closed country fuel-cost allocation.
+    - Patches builtins.open, pd.read_csv and subprocess.run in the import-safety test.
+"""
 from __future__ import annotations
 
 import ast

@@ -1,3 +1,13 @@
+"""Tests for the authoritative interconnector taxonomy path.
+
+Usage:
+    python -m pytest tests/regression/test_interconnector_taxonomy_path.py -q
+Notes:
+    - Guards that config/scenarios/technology_types.csv is the only taxonomy (18 interconnectors),
+      that the direction rule loads it once from an external cwd and changes only the configured
+      cells, and that a missing taxonomy fails with a clear FileNotFoundError.
+    - Changes the working directory with os.chdir; not thread-safe.
+"""
 from __future__ import annotations
 
 import csv

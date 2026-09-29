@@ -1,3 +1,14 @@
+"""Tests for project and workspace resolution in ostram.paths.
+
+Usage:
+    python -m pytest tests/regression/test_paths.py -q
+Notes:
+    - Guards CLI over environment over package-anchor precedence, workspace precedence with
+      unicode and spaces, the lazy default workspace, clear failures for non-editable installs
+      and invalid bundles, and read-only inspect_resources.
+    - Creates workspace/stage11-lazy-test/<...> under the repository's gitignored workspace and
+      does not remove it.
+"""
 from __future__ import annotations
 
 import os

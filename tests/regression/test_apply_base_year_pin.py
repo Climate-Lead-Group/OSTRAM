@@ -1,3 +1,13 @@
+"""Tests for the frozen base-year pin table and its application.
+
+Usage:
+    python -m pytest tests/regression/test_apply_base_year_pin.py -q
+Notes:
+    - Guards the production allowlist config/scenarios/rules/pwr_min_2023_2026_pin.csv (hash,
+      rule, technology and scenario counts) and that application pins exact keys, is idempotent,
+      filters by scenario membership and fails before writing on bad input.
+    - The CSV is CRLF and byte-hash guarded; do not normalise it.
+"""
 from __future__ import annotations
 
 import csv

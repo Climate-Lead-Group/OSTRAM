@@ -1,3 +1,12 @@
+"""Tests for the Windows path budget of A3 workbook materialization.
+
+Usage:
+    python -m pytest tests/regression/test_materialization_paths.py -q
+Notes:
+    - Guards path compaction, failure for impossible parents, a real openpyxl round trip on a
+      long unicode path, and identical content for short and bounded-long routes.
+    - Creates temporary directories in the parent of the repository.
+"""
 from __future__ import annotations
 
 import argparse

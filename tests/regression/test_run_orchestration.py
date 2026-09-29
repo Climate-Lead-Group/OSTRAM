@@ -1,3 +1,15 @@
+"""Characterization tests for the python -m ostram run launcher.
+
+Usage:
+    python -m pytest tests/regression/test_run_orchestration.py -q
+Notes:
+    - Guards no import side effects, the exact CLI and environment resolution, argparse codes,
+      every --skip-* combination, the A1/A2 snapshot gate, one canonical scenario order for
+      A3/B1/B2, rejected selections, --skip-pull, failure propagation and the pinned PYTHONPATH
+      and PYTHONHASHSEED.
+    - Exports LauncherHarness and _load_launcher for test_restriction_prerequisites.py.
+    - Creates temporary directories under tests/regression/ and changes the cwd.
+"""
 from __future__ import annotations
 
 import argparse

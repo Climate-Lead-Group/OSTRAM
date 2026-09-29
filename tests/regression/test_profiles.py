@@ -1,3 +1,12 @@
+"""Tests for the fail-closed profile manifest system.
+
+Usage:
+    python -m pytest tests/regression/test_profiles.py -q
+Notes:
+    - Guards contained authority namespaces, duplicate-role and mutability errors, atomic
+      prepare and reset with the stamp written last, fail-closed interrupted state, --profile
+      handling before route import, and the completeness of the unescap manifest.
+"""
 from __future__ import annotations
 
 import json

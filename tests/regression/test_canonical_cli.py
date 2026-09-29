@@ -1,3 +1,13 @@
+"""Tests for the canonical python -m ostram command interface.
+
+Usage:
+    python -m pytest tests/regression/test_canonical_cli.py -q
+Notes:
+    - Guards route mapping and exit policies, help and exit codes, lazy silent import, exact
+      argv forwarding, cwd and environment preservation, no shell=True, and that the docs
+      record the mappings.
+    - Runs real python -m ostram --help subprocesses from the repo root and a spaced cwd.
+"""
 from __future__ import annotations
 
 import ast

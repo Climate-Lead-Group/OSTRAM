@@ -1,3 +1,12 @@
+"""Tests for the boundary activity lower caps of set_vre_targets.py.
+
+Usage:
+    python -m pytest tests/regression/test_set_vre_targets_boundary_cap.py -q
+Notes:
+    - Guards the production cap series for PWRWONINDWE (2027, 2028) in
+      config/scenarios/C_Target_VRE/set_vre_targets.yaml, that caps only reduce values, that only
+      exact transition keys qualify, and that apply changes only the authorised key.
+"""
 from __future__ import annotations
 
 import importlib.util

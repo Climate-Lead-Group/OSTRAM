@@ -1,3 +1,13 @@
+"""Tests for the interconnector residual-capacity (RC v1) authority.
+
+Usage:
+    python -m pytest tests/regression/test_interconnector_rc_v1.py -q
+Notes:
+    - Guards the 18 x 28 authority in inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx (pinned
+      digest), fail-closed loaders, additive minimum contributions, byte-identical cap and relax
+      writers, the B_Opt_TxCap150 edits and the LinkFreeze clamp.
+    - Depends on the maintained workbook content.
+"""
 from __future__ import annotations
 
 import ast

@@ -1,3 +1,11 @@
+"""Tests for the maintained AO extension decision overlay.
+
+Usage:
+    python -m pytest tests/regression/test_ao_extension_decisions.py -q
+Notes:
+    - Guards that apply_decisions overlays only the decision fields onto the generated
+      extensions and fails closed, with unchanged bytes, on unknown or duplicate decisions.
+"""
 from __future__ import annotations
 
 import importlib.util
