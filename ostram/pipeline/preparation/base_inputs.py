@@ -1,8 +1,27 @@
 # -*- coding: utf-8 -*-
-"""
-Created on 2025
+"""Prepare the base model (stage A1) from the OSeMOSYS-Global CSV authorities.
 
-@author: Climate Lead Group, Andrey Salazar-Vargas
+Stages inputs/osemosys_global into the preparation workspace, cleans and
+filters the CSVs (first year, tech-country matrix, NGS unification, region
+consolidation, PWR cleanup) and writes the A-O workbooks for every root.
+
+Inputs:
+    inputs/osemosys_global/*.csv
+    inputs/preparation/workbook_templates/A-O_*.xlsx and A-Xtra_*.xlsx
+    inputs/preparation/secondary_technologies/Tech_Country_Matrix.xlsx (and OLADE capacity workbook)
+    config/preparation/Config_country_codes.yaml, Config_region_consolidation.yaml
+Outputs:
+    <workspace>/preparation/og_csvs_inputs/*.csv
+    <workspace>/preparation/A1_Outputs/A1_Outputs_<root>/A-O_*.xlsx
+    <workspace>/preparation/extra_inputs/A-Xtra_Emissions.xlsx, A-Xtra_Storage.xlsx
+    <workspace>/compilation/Config_MOMF_T1_A.yaml (runtime copy, created if absent)
+Usage:
+    python -B -m ostram.pipeline.preparation.base_inputs   # launched by python -m ostram run
+Notes:
+    - OLADE data is converted with 1 GWh = 0.0036 PJ; LAST_YEAR is 2050.
+    - Must run before transmission.py (A2).
+Authors:
+    2025 Climate Lead Group, Andrey Salazar-Vargas
 """
 
 import os

@@ -1,8 +1,17 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue May 27 11:05:00 2025
+"""Sort every CSV in a folder by all columns and overwrite it in place.
 
-@author: Climate Lead Group, Andrey Salazar-Vargas
+Standalone utility; the pipeline uses its own copy of the routine in
+base_inputs.py.
+
+Inputs:
+    A folder path typed at the prompt
+Outputs:
+    The same CSV files, rewritten sorted (no backup)
+Usage:
+    python -B -m ostram.pipeline.preparation.sort_csv
+Authors:
+    2025-05-27 Climate Lead Group, Andrey Salazar-Vargas
 """
 
 import os

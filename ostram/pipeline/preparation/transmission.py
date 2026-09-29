@@ -1,8 +1,19 @@
 # -*- coding: utf-8 -*-
-"""
-Created on 2025
+"""Add the transmission network to the A1 workbooks (stage A2) and snapshot each root.
 
-@author: Climate Lead Group, Javier Monge-Matamoros, Andrey Salazar-Vargas
+Inputs:
+    config/preparation/Config_country_codes.yaml (countries, RNWTRN..TRNNLI parameters, enable_dsptrn)
+    <workspace>/preparation/A1_Outputs/A1_Outputs_<root>/A-O_*.xlsx
+Outputs:
+    The same A1 workbooks, edited in place
+    <workspace>/preparation/A1_Outputs/_post_a2_snapshot_<root>/ (replaced if present)
+Usage:
+    python -B -m ostram.pipeline.preparation.transmission [--yaml F] [--base F] [--proj F] [--param F] [--demand F]
+Notes:
+    - Requires every root's A1 output; raises FileNotFoundError otherwise.
+    - A3 restores its input from the post-A2 snapshot; the runner skips A1/A2 when all snapshots exist.
+Authors:
+    2025 Climate Lead Group, Javier Monge-Matamoros, Andrey Salazar-Vargas
 """
 
 import argparse
