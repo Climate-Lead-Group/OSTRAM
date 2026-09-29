@@ -210,6 +210,27 @@ def rewrite_tech_cap_block(
     allowed_value: str,
     eol: str,
 ) -> tuple[list[str], int, int]:
+    """Regenerate the cap rows of the storage-linked technologies in one param block.
+
+    Removes every existing row of ``techs`` for ``years`` and injects one row per
+    region, technology and year: 0 in ``blocked_years``, ``allowed_value`` otherwise.
+
+    Args:
+        lines: Datafile lines; not modified.
+        param_name: Block to rewrite.
+        regions: Regions to write rows for.
+        techs: Technologies to rewrite.
+        years: Years to rewrite.
+        blocked_years: Years in which the cap is 0.
+        allowed_value: Cap value written in the remaining years.
+        eol: Line terminator for the new rows.
+
+    Returns:
+        New lines, number of rows removed, and number of rows injected.
+
+    Raises:
+        RuntimeError: If the param block is not found.
+    """
     start, end = find_param_block(lines, param_name)
     if start is None or end is None:
         raise RuntimeError(f"param block {param_name!r} not found")
@@ -262,6 +283,21 @@ def drop_blocked_min_rows(
 
 
 def patch_model_lines(lines: list[str]) -> list[str]:
+    """Add the storage-delay parameter and constraint to the OSeMOSYS model lines.
+
+    Declares ``StorageBuildAllowed`` after ``ResidualStorageCapacity`` and adds
+    constraint ``SD1_StorageBuildDelay`` (``NewStorageCapacity = 0`` where the
+    parameter is 0) after ``SI3_TotalNewStorage``. Each is added only if absent.
+
+    Args:
+        lines: Model file lines; not modified.
+
+    Returns:
+        Patched model lines.
+
+    Raises:
+        RuntimeError: If the insertion anchor is not found in the model.
+    """
     eol = detect_eol(lines)
     text = "".join(lines)
     out = list(lines)
@@ -302,6 +338,23 @@ def patch_data_lines(
     storage_prefixes: list[str],
     allowed_value: str,
 ) -> tuple[list[str], dict[str, object]]:
+    """Block storage builds in the first years and reopen them afterwards in datafile lines.
+
+    Upserts ``StorageBuildAllowed`` for the target storages, rewrites the max
+    capacity blocks of their linked technologies (see
+    :func:`rewrite_tech_cap_block`) and drops blocked-year minimum-capacity rows.
+
+    Args:
+        lines: Datafile lines; not modified.
+        first_n_years: Number of earliest model years with storage builds blocked.
+        exact_storages: Exact storage names to target; overrides prefixes.
+        storage_prefixes: Storage name prefixes to target; all storage if both empty.
+        allowed_value: Cap written for the linked technologies after the blocked years.
+
+    Returns:
+        Patched lines and a summary dict (regions, years, blocked_years,
+        target_storages, target_techs, cap_stats, min_rows_dropped).
+    """
     eol = detect_eol(lines)
     regions = find_set_members(lines, "REGION")
     years = sorted(find_set_members(lines, "YEAR"), key=year_key)
@@ -354,6 +407,16 @@ def patch_data_lines(
 
 
 def main() -> int:
+    """Patch a datafile and an OSeMOSYS model file to delay storage builds.
+
+    Returns:
+        0 on success, including ``--dry-run``.
+
+    Side effects:
+        Writes the patched datafile and model file (``-o`` and ``--model-output``)
+        unless ``--dry-run``, and prints a summary. Exits with a message if an input
+        file is missing. The sources are never modified.
+    """
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,

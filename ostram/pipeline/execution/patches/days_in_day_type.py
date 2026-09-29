@@ -54,6 +54,23 @@ from collections import defaultdict
 
 
 def inject(path: Path) -> None:
+    """Rebuild the ``DaysInDayType`` block of a datafile from its ``YearSplit`` block.
+
+    Sums ``YearSplit`` per (season, year) from ``S<season>D<bracket>`` timeslices and
+    writes ``DaysInDayType[season, 1, year] = round(total * 365)``. Assumes a single
+    daytype and warns otherwise. Idempotent.
+
+    Args:
+        path: Preprocessed ``.txt`` datafile, patched in place.
+
+    Raises:
+        SystemExit: If the ``YearSplit`` or ``DaysInDayType`` block is missing, or
+            no timeslice can be parsed.
+
+    Side effects:
+        Overwrites ``path`` and prints a per-season summary that flags totals
+        different from 365 days.
+    """
     text = path.read_text(encoding='utf-8')
 
     # 1. Locate YearSplit block

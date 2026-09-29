@@ -99,6 +99,17 @@ def patch_block(lines, start, end, pattern, new_value):
 
 
 def main():
+    """Open zero caps of the matching technologies in a sibling copy of a datafile.
+
+    Reads ``input_file`` and, in the ``TotalAnnualMaxCapacity`` and
+    ``TotalAnnualMaxCapacityInvestment`` blocks (``--blocks``), replaces zero values
+    of technologies containing ``--pattern`` (default ``PWRBCK``) with ``--value``
+    (default ``9999``), preserving line endings.
+
+    Side effects:
+        Writes the ``-o`` output file (creating its folder) and prints a summary; the
+        source is never modified. Exits with status 1 if the input file is missing.
+    """
     parser = argparse.ArgumentParser(
         description='Open PWRBCK* (or other matching) cap rows in '
                     'TotalAnnualMaxCapacity and TotalAnnualMaxCapacityInvestment '

@@ -295,6 +295,21 @@ def inject_zero_max_capacity(lines: list[str], techs: set[str]) -> list[str]:
 # -----------------------------------------------------------------------------
 
 def main() -> int:
+    """Write a copy of a datafile with the selected storage facilities disabled.
+
+    Removes the facilities from the ``STORAGE`` set, the storage parameter blocks,
+    the technology-storage links and derived sets, and (unless
+    ``--no-tech-cap-zero``) sets ``TotalAnnualMaxCapacity`` to 0 for their PWR
+    technologies and drops those technologies' minimum-capacity rows.
+
+    Returns:
+        0 on success.
+
+    Side effects:
+        Writes the output file given by ``-o`` and prints a summary and next-step
+        hints. Exits with a message if the input is missing, ``--targets`` is
+        required but empty, or a target is invalid. The source is never modified.
+    """
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,

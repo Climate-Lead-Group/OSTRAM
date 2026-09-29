@@ -113,6 +113,22 @@ def pick_value(row: dict[str, object], *candidates: str) -> str | None:
 
 
 def load_fallback_xlsx(path: Path, sheet_name: str | None = None) -> list[CapFallback]:
+    """Read per-country-region capacity fallbacks from an XLSX workbook.
+
+    Uses the same columns as :func:`.reserve_margin_repair.load_fallback_csv` and
+    skips empty rows.
+
+    Args:
+        path: Workbook to read (values, not formulas).
+        sheet_name: Worksheet to read; the first sheet when omitted.
+
+    Returns:
+        One :class:`CapFallback` per stock and per flow value found.
+
+    Raises:
+        ValueError: If the sheet is missing or empty, or a row has no CR value or a
+            non-numeric value.
+    """
     workbook = load_workbook(path, data_only=True, read_only=True)
     if sheet_name:
         if sheet_name not in workbook.sheetnames:
@@ -177,6 +193,7 @@ def load_fallback_xlsx(path: Path, sheet_name: str | None = None) -> list[CapFal
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse the command line of the XLSX reserve-margin repair patcher."""
     parser = argparse.ArgumentParser(
         description=(
             "Patch reserve tags and carefully replace sentinel firm-capacity caps "
@@ -259,6 +276,20 @@ def reviewed_capacity_keys(input_path):
 
 
 def main() -> int:
+    """Patch reserve tags and sentinel capacity caps of a datafile using an XLSX fallback workbook.
+
+    Same repair as :func:`.reserve_margin_repair.main`, with fallbacks from
+    ``--fallback-xlsx``, and capacity rows pinned by the reviewed base-year pin
+    rules restored to their original values.
+
+    Returns:
+        0 on success.
+
+    Side effects:
+        Writes the patched datafile (CRLF) to ``--output`` creating its folder,
+        optionally writes ``--warnings-file`` (``No warnings.`` when empty), prints
+        warnings to stderr and a summary to stdout. The input file is not modified.
+    """
     args = parse_args()
     input_path = Path(args.input_file)
     output_path = Path(args.output)

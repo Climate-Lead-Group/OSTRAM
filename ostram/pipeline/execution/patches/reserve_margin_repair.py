@@ -154,6 +154,21 @@ def pick_column(row: dict[str, str], *candidates: str) -> str | None:
 
 
 def load_fallback_csv(path: Path) -> list[CapFallback]:
+    """Read per-country-region capacity fallbacks from a CSV.
+
+    The CR column (``CR``, ``COUNTRY_REGION``, ``REGION_CODE`` or ``REGION``) is
+    required. ``TECH_PREFIX`` and ``YEAR`` are optional and default to ``*``
+    (wildcard). Stock and flow columns give one :class:`CapFallback` each.
+
+    Args:
+        path: CSV file, read as UTF-8 (BOM allowed).
+
+    Returns:
+        One :class:`CapFallback` per stock and per flow value found.
+
+    Raises:
+        ValueError: If a row has no CR value or a value is not numeric.
+    """
     fallbacks: list[CapFallback] = []
     with path.open(newline="", encoding="utf-8-sig") as handle:
         reader = csv.DictReader(handle)
@@ -236,6 +251,22 @@ def patch_reserve_tags(
     lines: list[str],
     targets: dict[tuple[str, str], float],
 ) -> tuple[list[str], int, int]:
+    """Set ``ReserveMarginTagTechnology`` values for the target (technology, year) pairs.
+
+    Existing ``GLOBAL`` rows whose value differs are rewritten; missing pairs with a
+    non-zero value are inserted at the end of the block.
+
+    Args:
+        lines: Datafile lines; not modified.
+        targets: Reserve-margin tag value by (technology, year).
+
+    Returns:
+        Patched lines, number of rows updated, and number of rows inserted. With no
+        targets, ``lines`` is returned as is with zero counts.
+
+    Raises:
+        ValueError: If the ``ReserveMarginTagTechnology`` block is not found.
+    """
     if not targets:
         return lines, 0, 0
 
@@ -366,6 +397,29 @@ def patch_capacity_param(
     floors: dict[tuple[str, str], float] | None = None,
     skip_techs: set[str] | None = None,
 ) -> tuple[list[str], int, int, list[str]]:
+    """Replace sentinel values of one capacity cap block with per-country-region fallbacks.
+
+    Only rows of technologies matching ``target_prefixes`` whose value is one of
+    ``sentinels`` are touched. Technologies in ``skip_techs`` are skipped, and rows
+    without a fallback (see :func:`resolve_fallback`) are skipped with a warning. A
+    fallback below the existing minimum in ``floors`` is raised to that floor.
+
+    Args:
+        lines: Datafile lines; not modified.
+        parameter: Block name, ``TotalAnnualMaxCapacity`` or
+            ``TotalAnnualMaxCapacityInvestment``.
+        target_prefixes: Technology prefixes to patch.
+        sentinels: Existing values considered placeholders.
+        lookup: Fallback values from :func:`make_fallback_lookup`.
+        floors: Minimum allowed value by (technology, year).
+        skip_techs: Technologies left untouched.
+
+    Returns:
+        Patched lines, rows changed, rows skipped, and warning messages.
+
+    Raises:
+        ValueError: If the parameter block is not found.
+    """
     patched = lines[:]
     floors = floors or {}
     skip_techs = skip_techs or set()
@@ -459,6 +513,7 @@ def stock_flow_warnings(
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse the command line of the reserve-margin repair patcher."""
     parser = argparse.ArgumentParser(
         description=(
             "Patch reserve tags and carefully replace sentinel firm-capacity caps "
@@ -514,6 +569,21 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """Patch reserve tags and sentinel capacity caps of a datafile into a new file.
+
+    Sets the reserve tags of the backstop and CCS technologies, then replaces
+    sentinel ``TotalAnnualMaxCapacity`` (only 0) and
+    ``TotalAnnualMaxCapacityInvestment`` values (``--sentinel-values``) with the
+    fallbacks from the CSV, ``CR=VALUE`` options and default options.
+
+    Returns:
+        0 on success.
+
+    Side effects:
+        Writes the patched datafile (CRLF) to ``--output`` creating its folder,
+        optionally writes ``--warnings-file``, prints warnings to stderr and a
+        summary to stdout. The input file is not modified.
+    """
     args = parse_args()
     input_path = Path(args.input_file)
     output_path = Path(args.output)
