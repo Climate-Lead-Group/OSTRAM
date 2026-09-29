@@ -1,7 +1,7 @@
 ## B_Opt_DirContractual -- interconnectors locked to real contractual/physical directions
 ##
 ## Justification + primary-source citations for every corridor:
-##   sensitivity_expansion/reference/interconnector_direction_references.md
+##   docs/reference/scenarios/interconnector_direction_references.md
 ##
 ## Convention: TRN<SRC><DST>; forward = SRC->DST, reverse = DST->SRC.
 ## Corridors omitted below are bidirectional (Nepal<->India, genuinely seasonal).

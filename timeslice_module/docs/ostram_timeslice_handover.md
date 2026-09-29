@@ -2,7 +2,8 @@
 
 **Project:** OSTRAM (OSeMOSYS for Transmission — South Asia, UN ESCAP submission)
 **Scope of this document:** Everything learned during the timeslice sensitivity analysis and ranking exercise, including what was decided, why, and what the deliverables contain.
-**Decision:** 6 dayparts × 4 seasons = **24 timeslices**, with daypart boundaries `0-5 / 5-8 / 8-17 / 17-20 / 20-22 / 22-24` (scheme ID: `6dp_D_ramp`).
+**Sweep result:** 6 dayparts × 4 seasons = **24 timeslices** (`6dp_D_ramp`, boundaries `0-5 / 5-8 / 8-17 / 17-20 / 20-22 / 22-24`) is the unconstrained optimum.
+**Adopted by the model:** the five-daypart fallback `5dp_D_6_17` (**20 timeslices**, `0-6 / 6-17 / 17-20 / 20-22 / 22-24`), to stay within the solver's variable and constraint budget; `6dp_D_ramp` is the recommended upgrade path. The adopted scheme and its methods paragraph are in `../README.md`.
 
 ---
 
@@ -10,9 +11,9 @@
 
 | Budget | Winner | Blocks | Why |
 |---|---|---|---|
-| **N ≤ 6 (chosen)** | **`6dp_D_ramp`** | 0-5 / 5-8 / 8-17 / 17-20 / 20-22 / 22-24 | Best balance across all axes; wins under every tested weighting |
+| **N ≤ 6 (sweep optimum)** | **`6dp_D_ramp`** | 0-5 / 5-8 / 8-17 / 17-20 / 20-22 / 22-24 | Best balance across all axes; wins under every tested weighting |
 | N ≤ 8 | `6dp_D_ramp` | same | Under v2 weights, still beats `8dp_equal` despite having fewer blocks |
-| N ≤ 5 | `5dp_D_6_17` | 0-6 / 6-17 / 17-20 / 20-22 / 22-24 | Fallback if compute budget shrinks |
+| **N ≤ 5 (adopted)** | `5dp_D_6_17` | 0-6 / 6-17 / 17-20 / 20-22 / 22-24 | Adopted by the model under the solver budget |
 | N ≤ 4 | `4dp_shifted` | 0-5 / 5-11 / 11-17 / 17-22 / 22-24 | Fallback below that |
 
 **Why this scheme:** it places block boundaries at the three physical regime changes in South Asian load — pre-dawn (05), morning ramp end (08), evening peak onset (17), post-peak taper (20, 22) — rather than at arbitrary equal-width cuts. The result is low demand-fit error *and* clean separation of solar-available hours from dark hours, something equal-width schemes cannot achieve at any block count.
@@ -166,7 +167,7 @@ In v1 figures, the default demand overlay showed 6 schemes including both `solar
 
 ---
 
-## 7. Methods paragraph — drop-in for OSTRAM documentation
+## 7. Methods paragraph for the sweep optimum (6dp/24ts; the adopted 5dp/20ts version is in `../README.md`)
 
 > The OSTRAM model uses four seasons (Winter, Pre-monsoon, SW Monsoon, Post-monsoon) crossed with six dayparts per day, for a total of 24 timeslices per year. The daypart boundaries (00–05, 05–08, 08–17, 17–20, 20–22, 22–24 local time) were selected from a sensitivity sweep over 23 candidate schemes spanning equal-width, solar-window, morning-ramp, and physics-informed designs, evaluated against regional hourly demand profiles for the seven primary regions (Bangladesh, Sri Lanka, and five Indian sub-regions) and re-aggregated Renewables.Ninja solar and wind capacity factor series. Schemes were scored on a composite weighted by three independent information axes: demand fit (45%, split across step-reconstruction RMSE, peak preservation ratio, and worst-region RMSE), solar-hour differentiation (45%, measured as the coefficient of variation of block-mean solar capacity factors), and wind-hour differentiation (10%). The three-axis weighting avoids triple-counting the demand signal carried by the correlated RMSE/PP/maxRMSE metric cluster. Aggregation used capacity weighting across the seven primary regions, with a small defensibility penalty on blocks shorter than three hours. The chosen scheme resolves the morning demand ramp (05–08), the midday solar window (08–17), and the evening peak (17–20) as distinct regimes, achieving a capacity-weighted RMSE of 0.024 and a solar CV of 1.81 — outperforming even an 8-daypart equal-width scheme at 25% lower timeslice cost, because equal-width cuts fragment the solar window rather than aligning with its boundaries.
 
@@ -183,60 +184,11 @@ In v1 figures, the default demand overlay showed 6 schemes including both `solar
 
 ---
 
-## 9. Deliverables produced in this workstream
-
-All files in `_sensitivity/`:
-
-**Rankings and analysis:**
-- `rank_timeslice_schemes.py` — v1 ranking script (kept for reproducibility)
-- `rank_timeslice_schemes_v2.py` — v2 three-axis ranking script (**use this one**)
-- `ranking/` — v1 ranking outputs (`ranking_full.csv`, `ranking_by_budget.csv`, `ranking_report.txt`)
-- `ranking_v2/` — v2 ranking outputs (same three files)
-
-**Figures:**
-- `sensitivity_figures.py` (original)
-- `sensitivity_figures_v2.py` — regenerated figure script (**use this one**). Three changes from the original:
-  1. `OVERLAY_PREFERENCE` trimmed to top 3 v2 candidates + `8dp_equal` reference (4 lines per overlay plot)
-  2. Heatmaps extended from 2 metrics (RMSE, PP) to 4 (RMSE, PP, SCV, WCV), all using the full candidate set
-  3. New `generate_solar_overlays()` produces 45 solar-CF plots showing how each candidate scheme reconstructs the true hourly solar CF curve — companion to the demand overlays
-  4. ASCII-safe `[*]` marker and ASCII dashes used to avoid Windows matplotlib encoding issues
-- `figures/` — 103 figures total:
-  - 45 demand overlays (region × season)
-  - 45 solar-CF overlays (region × season) — new
-  - 5 convergence plots (one per metric)
-  - 4 heatmaps (one per principal metric)
-  - 1 scheme definitions
-  - 1 improvement bars vs legacy
-  - 1 regional bars
-  - 1 solve scaling
-- `figures/table_*.csv` — 3 reference tables (schemes, metrics, acronyms)
-
-**Source data (not modified in this workstream):**
-- `sensitivity_timeslice_summary.csv` — 1,035 rows, 23 schemes × 9 regions × 5 seasons
-- `sensitivity_ninja_cfs.csv` — per-scheme solar/wind CFs
-- `sensitivity_config.json` — block definitions
-
----
-
-## 10. Recommended plot selection for a deck
-
-In priority order, for a 12-16 slide OSTRAM presentation:
-
-1. **`fig_solar_INDNO_Annual.png`** — the "money plot." Shows the true hourly solar CF curve against 4 candidate schemes' block-averages. You can *see* why 8dp_equal's equal-width cuts fragment the solar window while 6dp_D_ramp's single wide block aligns with the sun envelope. Per-scheme SCV values annotated.
-2. **`fig_heatmap_scv.png`** — the SCV heatmap showing all 20 candidates × 9 regions. Immediately visible: green columns (v2 preferred) vs orange columns (v1 over-rewarded). Capacity-weighted row is primary-only, matching the ranking.
-3. **`fig_convergence_scv.png`** — shows SCV is NOT monotonic with N. Crucial for defending 6dp_D_ramp > 8dp_equal under v2.
-4. **`fig_demand_INDWE_Annual.png`** or **`fig_demand_LKA_Annual.png`** — a demand overlay for a high-capacity region showing 6dp_D_ramp hugging the profile.
-5. **`fig_scheme_definitions.png`** — visual reference of all block boundaries. Recommended scheme starred.
-6. **`fig_solve_scaling.png`** — theoretical LP solve-time scaling. Surprising asset: 6dp_D_ramp costs 1.8× the current 4dp baseline while 8dp_equal would cost 2.8× for worse results under v2.
-7. Appendix: full 103-figure set, ranking CSVs, methods paragraph from section 7.
-
----
-
-## 11. Open follow-ups (if timeslice decision gets reopened)
+## 9. Open follow-ups (if timeslice decision gets reopened)
 
 - If a reviewer challenges the v2 reweighting: the v1 ranking produces `6dp_D_ramp` at N ≤ 6 too. The N ≤ 8 result changes between v1 (`8dp_equal`) and v2 (`6dp_D_ramp`). Show both and let the metric-independence argument carry the defense.
 - If compute budget permits: `8dp_equal` (32 timeslices) is a defensible upgrade giving a further ~23% RMSE reduction. Requires benchmarking the actual solve time, not the theoretical estimate.
-- If compute budget shrinks below 24 timeslices: drop to `5dp_D_6_17` (20 timeslices). Do NOT drop below N=5 — the quality cliff from N=5 to N=4 is ~0.12 on the composite, 4× the N=6 → N=5 drop.
+- The model currently runs `5dp_D_6_17` (20 timeslices). Do NOT drop below N=5 — the quality cliff from N=5 to N=4 is ~0.12 on the composite, 4× the N=6 → N=5 drop.
 - If INDNO midday investment decisions turn out sensitive to the 8-17 block averaging: consider a 6dp variant with an additional midday split (e.g. 0-5 / 5-8 / 8-12 / 12-17 / 17-20 / 20-24). Not tested in the sweep; would need re-ranking.
 - `solar_physics` family is retired. If a research question emerges around intraday solar ramping, revisit whether a different metric (not SCV) should drive the ranking for that use case.
 

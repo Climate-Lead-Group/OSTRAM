@@ -146,9 +146,9 @@ countries:
   - "MDV"
 
 # ============================================================
-# TEMPLATE GENERATION (for Z_generate_country_template.py)
+# TEMPLATE GENERATION (for python -m ostram country template)
 # ============================================================
-# Configure here and just run: python Z_generate_country_template.py
+# Configure here and just run: python -m ostram country template
 # The script processes each entry in the list sequentially.
 #
 # Fields per entry:

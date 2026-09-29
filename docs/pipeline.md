@@ -205,8 +205,7 @@ TotalAnnualMaxCapacity[t,y] = ResidualCapacity[t,y]
 This uses the model's vintage survival rule: a committed addition is unavailable
 before commissioning and expires at the operational-life boundary. Residual
 capacity keeps its existing year-by-year trajectory. With the unchanged annual
-investment minima, the ceiling prevents discretionary additions. The previous
-residual-only ceiling caused 156 V2 conflicts with required additions.
+investment minima, the ceiling prevents discretionary additions.
 The final ceiling rows use `Projection.Mode = User defined`: B1 deliberately
 omits rows marked `EMPTY`, even when their year cells contain numbers. Both the
 compiled coefficients and solved capacity must therefore be checked against
@@ -221,13 +220,14 @@ UNESCAP profile does not enable this policy. Validation remains enabled and
 does not apply repairs. `support_bau_transmission.json` beside the final
 parametrization workbook records all 504 technology/year ceilings and sources.
 
-After the [clean-clone installation](installation.md#clean-clone-support-bau),
-run this in the activated `ostram-pr35` environment from the checkout:
+From an [isolated installation](installation.md#isolated-reproduction-environment),
+run this from the checkout (add `--env-name <name>` when the Conda environment is
+not `OSTRAM-env`):
 
 ```powershell
 $workspace = [IO.Path]::GetFullPath('..\support-bau-workspace')
 if (Test-Path -LiteralPath $workspace) { throw 'Choose a new empty workspace path' }
-python -m ostram --profile full --workspace $workspace run --env-name ostram-pr35 --skip-pull --scenarios BAU --verbose
+python -m ostram --profile full --workspace $workspace run --skip-pull --scenarios BAU --verbose
 if ($LASTEXITCODE -ne 0) { throw 'Support BAU preparation/compilation/solve/export failed' }
 ```
 
@@ -242,13 +242,10 @@ sequence below.
 
 ### Accepted 17-scenario portfolio
 
-The full-profile registry distinguishes support `BAU` from the 17 decision
-scenarios. `A_Calibrated_BAU` is the accepted A case. A1, A2, A3, B1 and B2
-name stages; B1 does not mean `B_Optimised_VRE`.
-
-Support BAU has its own [committed-transmission policy and execution command](#support-bau).
-Selecting A applies its existing declared transformations and preserves BAU
-restriction inheritance. The accepted portfolio does not require a BAU solve.
+The full-profile registry distinguishes support `BAU` (its own
+[policy and command](#support-bau)) from the 17 decision scenarios;
+`A_Calibrated_BAU` is the accepted A case. Selecting A preserves BAU restriction
+inheritance without solving BAU, so the portfolio does not require a BAU solve.
 
 Use an empty, local workspace and an editable installation of this checkout.
 The runner's default selection includes support BAU, and its single A3 pass
@@ -281,41 +278,14 @@ declared comparison exercise, not a fresh full solve.
 The normal B2 route exports each scenario's otoole tables and reconciles costs
 in its concatenated output with adjacent reconciliation evidence. Keep the raw
 tables, compiled data, LP, solution, solver log and reconciliation JSON together.
-Select historical comparisons from `selected_portfolio.csv` and
-`selected_solver_chain.csv`, never by modification time. In the September 2026
-release, TradeCap15 selects recovery `r/11` with its matching parent inputs;
-the original status-5 solution is not the accepted baseline. Recovery used
-numerical emphasis on the same LP with feasibility/optimality tolerances of
-`1e-6`, without changing model coefficients.
-
-`config/execution/Config_MOMF_T1_AB.yaml` now selects that numerical emphasis
-for `B_Opt_TradeCap15` through `cplex_numerical_emphasis_scenarios`. B2 applies
-the recorded recovery settings before optimization and prints the changed
-CPLEX settings. The selection is local to that solve; other scenarios retain
-their original commands. This makes the accepted recovery reproducible through
-the normal export/reconciliation chain without an external solver wrapper or
-an LP edit. Always check the final solver status and certificate; a successful
-process exit alone does not establish feasibility.
-
-### Compare a reproduced portfolio
-
-Keep comparison evidence outside the checkout and production workspace. Use
-the explicit selected portfolio and solver-chain records to pair all 17 cases.
-Compare compiled data and LP hashes exactly, and compare effective parameter
-values, defaults and sets independently. Require CPLEX optimal status 1,
-primal/dual feasibility, and maximum primal/dual infeasibility at most `1e-6`.
-For objective and reconciled cost, the reproduction uses
-`abs(fresh - accepted) <= 1e-6 + 1e-10 * abs(accepted)` MUSD, a small allowance
-for floating-point summation roundoff.
-
-Compare every raw exported CSV. Byte-identical files establish exact physical
-output equality; any different table remains unresolved until its differences
-are examined. Equal objectives alone do not establish an acceptable alternative
-optimum. A complete solution-XML comparison may normalize line endings and
-exclude only the `problemName` path attribute. Keep per-case source paths,
-hashes, solver certificates, objective/cost deltas and reconciliation JSON with
-the comparison record. Wait for the runner's final cross-scenario
-post-processing and successful exit before declaring the workflow complete.
+`config/execution/Config_MOMF_T1_AB.yaml` applies CPLEX numerical emphasis to
+the scenarios listed in `cplex_numerical_emphasis_scenarios` (currently
+`B_Opt_TradeCap15`; see [lineage](lineage.md#cost-conventions-and-provenance)).
+B2 applies those settings before optimization, prints the changed CPLEX
+settings, and leaves every other scenario's command unchanged. Always check the
+final solver status and certificate; a successful process exit alone does not
+establish feasibility. Reproduction comparisons are described in
+[regression](regression.md#compare-a-reproduced-portfolio).
 
 ## Path and process guarantees
 

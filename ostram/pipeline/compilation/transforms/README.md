@@ -4,7 +4,7 @@ Pure and injectable helpers extracted from the legacy B1 compiler so that its co
 planning, validation, tabular transformations, effects and output delivery can be tested without
 running the compiler. Nothing here does filesystem or pipeline work at import (package
 docstring); `../compiler.py` calls these modules in a fixed order. The B1 contract is in
-`docs/pipeline.md` ("Compile model inputs (B1)") and `docs/a1-b1-transformation-contract.md`.
+`docs/pipeline.md` ("Compile model inputs (B1)").
 
 ## Scripts
 

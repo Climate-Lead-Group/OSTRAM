@@ -72,12 +72,10 @@ explicit comma-separated selection and the documented `--skip-*` flags when a
 stage is already satisfied.
 
 For all 17 accepted cases, use the
-[portfolio sequence](pipeline.md#accepted-17-scenario-portfolio): solve A, then
-materialize and solve the remaining decision cases using that new A result.
-Support `BAU` has a separate [standalone execution command](pipeline.md#support-bau)
-and permits existing transmission plus committed additions. It is not the
-accepted A scenario. The unfiltered default also
-includes C, which cannot be materialized before its A result exists.
+[portfolio sequence](pipeline.md#accepted-17-scenario-portfolio): solve A first,
+then the remaining decision cases with `--a-result-seed`. Support `BAU` has a
+separate [standalone command](pipeline.md#support-bau) and is not one of the 17;
+omitting `--scenarios` selects it together with C, which needs a solved A.
 
 The interactive display is compact and updates in place on stderr. Redirected
 output uses append-only status lines. Add `--verbose` to disable the moving
@@ -107,5 +105,7 @@ python -B -m unittest discover -s tests -p "test_*.py"
 python -B -m tests.validation.test_scenarios_lite
 ```
 
-The scenario-lite command validates all seven compact scenarios without
-calling a matrix builder or solver.
+The scenario-lite command exercises the multi-scenario workbook reader
+(bad-configuration errors, inheritance cycles, the `BAU` materialization
+contract) on temporary copies of the workbook, without a matrix builder or
+solver.

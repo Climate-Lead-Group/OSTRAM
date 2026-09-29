@@ -26,14 +26,16 @@ in the checkout.
 ### Isolated reproduction environment
 
 Keep the checkout, environment, package cache, logs and outputs separate from
-production. From a new checkout, the following creates the documented
+production. From a fresh clone of `main`, the following creates the documented
 environment under an explicit local directory instead of updating an existing
-environment. Set `CONDA_EXE` to the installed Conda executable if it is not
-already available through an activated Conda prompt. Use a dedicated PowerShell
-session. The recorded clean-clone execution cleared inherited OSTRAM/Python
-path overrides and fixed Python's hash seed before launching the runner:
+one. Use a dedicated Conda-enabled PowerShell session; the block clears
+inherited OSTRAM/Python overrides and fixes Python's hash seed before any
+runner command:
 
 ```powershell
+git clone https://github.com/Climate-Lead-Group/OSTRAM.git OSTRAM
+if ($LASTEXITCODE -ne 0) { throw 'Clone failed' }
+Set-Location OSTRAM
 Get-ChildItem Env: | Where-Object Name -Like 'OSTRAM_*' | Remove-Item
 Remove-Item Env:PYTHONPATH, Env:PYTHONHOME -ErrorAction SilentlyContinue
 $env:PYTHONUTF8 = '1'
@@ -51,54 +53,22 @@ if ($LASTEXITCODE -ne 0) { throw 'Editable installation failed' }
 & $python -m pip check
 & $python -m pip freeze > (Join-Path $runRoot 'pip-freeze.txt')
 & $python -m ostram inspect-resources
-```
-
-Use `& $python` instead of `python`, and add `--env-name ostram-reproduce`
-to the `run` commands in the [portfolio sequence](pipeline.md#accepted-17-scenario-portfolio).
-Record `conda list`, the Python version, `glpsol --version` and the selected
-vendor solver version with each reproduction. Solver binaries and vendor
-licenses are external runtime dependencies; an old prepared workspace is not
-an installation dependency.
-
-The 21 September 2026 clean-clone execution installed Python 3.10.21,
-NumPy 2.2.6, pandas 2.3.3, openpyxl 3.1.5, otoole 1.1.5, PyYAML 6.0.3,
-ruamel.yaml 0.19.1, XlsxWriter 3.2.9 and DVC 3.67.1. It used Conda GLPK 5.0
-for matrix generation and the existing licensed CPLEX 22.1.2.0 installation,
-with four threads, random seed 12345 and deterministic parallel mode.
-Keep the complete environment/package export with run evidence; unbounded
-dependency resolution on a later date is not an exact environment replay.
-
-## Verify the installation
-
-### Clean-clone support BAU
-
-In a Conda-enabled PowerShell, choose a new parent directory and run:
-
-```powershell
-git clone --branch fix/clean-clone-accepted-portfolio --single-branch https://github.com/Climate-Lead-Group/OSTRAM.git OSTRAM-pr35
-if ($LASTEXITCODE -ne 0) { throw 'Clone failed' }
-Set-Location OSTRAM-pr35
-Get-ChildItem Env: | Where-Object Name -Like 'OSTRAM_*' | Remove-Item
-Remove-Item Env:PYTHONPATH, Env:PYTHONHOME -ErrorAction SilentlyContinue
-$env:PYTHONUTF8 = '1'
-$env:PYTHONHASHSEED = '0'
-$env:PYTHONDONTWRITEBYTECODE = '1'
-conda env create -n ostram-pr35 -f environment.yaml -y
-if ($LASTEXITCODE -ne 0) { throw 'Conda installation failed' }
-conda activate ostram-pr35
-python -m pip install -e .
-if ($LASTEXITCODE -ne 0) { throw 'Editable installation failed' }
-python -m pip check
-python -m ostram inspect-resources
 glpsol --version
 ```
 
-The maintained full profile selects CPLEX. Install licensed CPLEX separately
-and make its executable discoverable before running the
-[support BAU command](pipeline.md#support-bau). The verification environment uses
-CPLEX 22.1.2.0, GLPK 5.0, four threads and seed 12345.
-For the standard Windows CPLEX 22.1.2 location, make the executable available in
-this PowerShell session and confirm that it starts:
+Use `& $python` instead of `python`, and add `--env-name ostram-reproduce` to
+the `run` commands of the [portfolio sequence](pipeline.md#accepted-17-scenario-portfolio)
+and of the [support BAU command](pipeline.md#support-bau). Record
+`git rev-parse HEAD`, `conda list --explicit`, the Python version,
+`glpsol --version` and the selected vendor solver version with each
+reproduction; unbounded dependency resolution on a later date is not an exact
+environment replay. Solver binaries and vendor licenses are external runtime
+dependencies; an old prepared workspace is not an installation dependency.
+
+The maintained full profile selects CPLEX. Install licensed CPLEX separately and
+make its executable discoverable before running a solve. For the standard
+Windows CPLEX 22.1.2 location, make the executable available in the PowerShell
+session and confirm that it starts:
 
 ```powershell
 $cplexBin = 'C:\Program Files\IBM\ILOG\CPLEX_Studio2212\cplex\bin\x64_win64'
@@ -108,10 +78,7 @@ cplex -c quit
 if ($LASTEXITCODE -ne 0) { throw 'CPLEX is unavailable' }
 ```
 
-Use a fresh environment name if `ostram-pr35` already exists. Record
-`git rev-parse HEAD` and `conda list --explicit` with the execution evidence.
-
-### Installation checks
+## Verify the installation
 
 ```powershell
 python -m ostram --help

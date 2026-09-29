@@ -53,8 +53,7 @@ only `B_Optimised_VRE` never adds BAU.
 examples/unescap/
   profile.yaml                     the profile's authorities and resolution policy
   README.md                        this file
-  AUTHORING_AND_ACCEPTANCE.md      Natalia's Windows authoring + Actions acceptance start
-  TRAINING_OPERATION_COVERAGE.md   legacy-to-canonical operation ledger
+  AUTHORING_AND_ACCEPTANCE.md      Windows authoring guide and acceptance checklist
   exercises/
     training.html                  main guide — 4 scenario exercises + 5 interconnector sub-exercises
     add-country.html               Exercise A — add Myanmar to the model
@@ -82,8 +81,7 @@ examples/unescap/
       C_Target_VRE/*.yaml
   references/
     interconnector-direction-results.html   measured forward/reverse/bidirectional comparison
-    provenance.md                  where every file came from, and what changed
-    release-readiness.md           Windows CBC and cross-platform acceptance evidence
+    provenance.md                  where every file came from, what changed, and the accepted CBC results
 ```
 
 Nothing generated lives here. Preparation output, compiled parameters, solver inputs,
@@ -91,8 +89,7 @@ Nothing generated lives here. Preparation output, compiled parameters, solver in
 run workspace (`--workspace` / `OSTRAM_WORKSPACE`), never inside `examples/unescap/`.
 
 Training authors should start with
-[`AUTHORING_AND_ACCEPTANCE.md`](AUTHORING_AND_ACCEPTANCE.md). The audited migration map
-is [`TRAINING_OPERATION_COVERAGE.md`](TRAINING_OPERATION_COVERAGE.md).
+[`AUTHORING_AND_ACCEPTANCE.md`](AUTHORING_AND_ACCEPTANCE.md).
 
 ## Commands
 
@@ -157,10 +154,8 @@ legacy path such as `./A1_Outputs` or `../Executables/A_Calibrated_BAU_0`.
 ## Provenance and known discrepancies
 
 [`references/provenance.md`](references/provenance.md) records the source commit, the
-source path of every migrated file, the SHA-256 of the scenario workbook, and every
-transformation applied. The workbook's exact **2.496 GW** `TRNBGDXXINDEA` residual
-capacity is also the 2023 anchor in every executable scenario schedule; prose may describe
-it as approximately 2.5 GW, but no executable authority rounds it. Choosing 2.500 GW is
-an exercise edit, not the shipped seed. In the active relaxed scenario the resulting
-`TotalAnnualMaxCapacity` is intentionally unbound at exactly `9999.0`; that does not alter
-the `ResidualCapacity` series.
+source path of every migrated file, the SHA-256 of the scenario workbook, every
+transformation applied, and the accepted CBC results. The `TRNBGDXXINDEA` residual
+capacity is exactly **2.496 GW** in 2023 (prose may say "about 2.5 GW"; no executable
+authority rounds it), and the active B scenario lifts its `TotalAnnualMaxCapacity` to
+`9999.0` without altering `ResidualCapacity`; see provenance, "Interconnector authority".

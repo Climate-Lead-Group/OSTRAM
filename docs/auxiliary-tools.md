@@ -48,10 +48,9 @@ series when an explicit sensitivity is wanted.
 ## Secondary-technology helpers
 
 The modules under `ostram.pipeline.preparation.secondary_techs` create and
-apply editor workbooks and can pre-fill transmission activity limits. Their
-inputs are governed by the preparation configuration and selected workspace;
-they do not search caller CWD.
-
-Use `python -m ostram run` for supported workflow execution. Import these
-modules only when extending or testing the package; do not launch their source
-files by path.
+apply the editor workbook and can pre-fill transmission activity limits. They
+are manual tools run as modules after A1/A2, not part of `python -m ostram run`;
+see [the editor page](secondary-techs-editor.md). Their inputs come from the
+preparation configuration and the selected workspace; they do not search the
+caller's CWD. Run them as `python -B -m <module>` from the repo root, never by
+file path.

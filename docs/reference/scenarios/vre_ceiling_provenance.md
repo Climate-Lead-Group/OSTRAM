@@ -1,9 +1,9 @@
 # OSTRAM — VRE-ceiling & key-assumption provenance / citations
-### Deep-research verification pass, 2026-07-12
+**Deep-research verification pass, 2026-07-12.**
 
 **Scope & status.** Provenance for the study's load-bearing, previously-uncited assumptions — the per-node
-VRE resource ceilings, the internal-transmission loss, the discount rate/WACC, storage cost — plus a
-reference check of the D4 report's added citations. **No model value was changed by this pass**: it documents
+VRE resource ceilings, the internal-transmission loss, the discount rate/WACC, storage cost.
+**No model value was changed by this pass**: it documents
 and, where needed, corrects *provenance/wording*. All ceiling numbers remain exactly as solved. Cite-gaps are
 flagged honestly. Primary/official sources preferred; URLs checkable.
 
@@ -71,12 +71,12 @@ Lead with the **Global Solar/Wind Atlas** as the uniform baseline for the 5 non-
 
 ---
 
-## 3. Transmission-loss (3%) provenance — recast required
+## 3. Transmission-loss (3%) provenance
 
 - **Primary source:** Grid Controller of India (Grid-India/NLDC), "Applicable Transmission Losses" — weekly all-India ISTS loss notices under CERC (Sharing of ISTS Charges & Losses) Regulations 2020. https://posoco.in/en/side-menu-pages/applicable-transmission-losses/
 - **Figures:** all-India ISTS loss **3.96%** (27 Apr–3 May 2026), **4.81%** (12–18 Jan 2026); excludes distribution & intra-state. CERC tariff decomposition ~4% attributable to losses.
 - **Distinguish:** ISTS transmission-only ≈ **3.5–5%** · national transmission (CEA) ≈ 3.5–4% · **combined T&D ≈ 17–20%** (World Bank EG.ELC.LOSS.ZS) · **AT&C ≈ 15–17%** (PFC/MoP). The high figures are distribution-dominated — do NOT conflate.
-- **Action:** our flat **3% is at the low edge**; cite as "~3–4%" (Grid-India). **Drop / heavily qualify "single largest driver of system cost"** — transmission losses are small vs distribution and vs generation capital+fuel; that phrase is an over-claim (it appears in the D4 report; the methodology doc's "+4.1% on A, dwarfs the interconnector/D5 effects" is a correctly-scoped model result and stays). Note: our 3% is applied to *intra-node* internal-tx; the ISTS figure is *inter-state* — same order, slightly different layer.
+- **Assessment:** the flat **3% is at the low edge** of the ISTS range; cite as "~3–4%" (Grid-India). Transmission losses are small relative to distribution losses and to generation capital plus fuel. Note: the 3% is applied to *intra-node* internal transmission; the ISTS figure is *inter-state* — same order, slightly different layer.
 
 ## 4. WACC / discount rate (10%) provenance
 
@@ -90,30 +90,13 @@ Lead with the **Global Solar/Wind Atlas** as the uniform baseline for the 5 non-
 
 ---
 
-## 6. D4 report reference verification & corrections
-
-- **[25]** Timilsina & Toman, "Potential gains from expanding regional electricity trade in South Asia," *Energy Economics* 60:6–14, 2016. DOI 10.1016/j.eneco.2016.08.023. ✓ peer-reviewed.
-- **[26]** Timilsina, Toman, Karacsonyi & de Tena Diego, "How much could South Asia benefit from regional electricity cooperation and trade?" World Bank PRWP 7341, 2015. SSRN 2623783 / RePEc wbk:wbrwps:7341. ✓ **Add middle initials: Toman, Michael A.; Karacsonyi, Jorge G.** Note [25] is the journal version of [26] (same study).
-- **[27]** Koirala & Rahut, "Reimagining South Asia's electricity system amid growing energy market volatility," *Asia Pathways* (ADBI blog), Jul 2022. https://www.asiapathways-adbi.org/2022/07/reimagining-south-asias-electricity-system-amid-growing-energy-market-volatility/ — **NOT peer-reviewed; re-tag as grey-literature/commentary**; lean on Timilsina & Toman (2016) for any quantitative claim.
-
-**Additional verified CBET studies (directional corroboration only — never compare magnitudes):**
-- Wijayatunga, Chattopadhyay & Fernando, "Cross-Border Power Trading in South Asia: A Techno-Economic Rationale," ADB SA WP-38, 2015. https://www.adb.org/sites/default/files/publication/173198/south-asia-wp-038.pdf
-- Singh, Jamasb, Nepal & Toman, "Electricity cooperation in South Asia: Barriers to cross-border trade," *Energy Policy* 120:741–748, 2018. DOI 10.1016/j.enpol.2017.12.048
-- Timilsina & Toman, "Carbon Pricing and CBET for Climate Change Mitigation in South Asia," *EEEP* 7(2), 2018. RePEc aen:eeepjl:eeep7-2-timilsina
-- Timilsina, "Regional electricity trade for hydropower development in South Asia," *IJWRD* 37(3):392–410, 2021. DOI 10.1080/07900627.2018.1515065
-- Aryal & Dhakal, "Medium-term assessment of cross-border trading potential of Nepal's renewable energy... TIMES," *Energy Policy* 168:113109, 2022. DOI 10.1016/j.enpol.2022.113109
-- SARI/EI (IRADe/USAID), "BIMSTEC Energy Outlook 2035" (2021) https://irade.org/Bimstec%20Final%20Report%20Energy%20Outlook-2035.pdf
-- (EU analogue) Newbery, Strbac & Viehoff, "The benefits of integrating European electricity markets," *Energy Policy* 94:253–263, 2016. DOI 10.1016/j.enpol.2016.03.047
-- **Could not verify:** a standalone peer-reviewed "Rahman/Fernando" SA CBET journal article — cite the ADB report instead.
-
-## 7. Cite-gaps & caveats (state, don't paper over)
+## 6. Cite-gaps & caveats (state, don't paper over)
 1. **BGD onshore wind = 3 GW** — no direct source (only gross-unrealistic >30 GW); modeler's conservative screen. ★clip.
 2. **MDV onshore wind ≈ 0 GW** — defensible qualitatively; ~80 MW niche exists; not literally zero. ★clip.
 3. **LKA solar = 16 GW** — well-matched but a *scenario-build* figure, not technical potential (~6 GW). ★clip.
 4. **India solar ceilings** reconcile only with the **NISE-2025** vintage; the exact state→region aggregation is order-of-magnitude, not line-item verified.
-5. **"3% loss = single largest driver of system cost"** — unsupported over-claim; recast to ~3–4% (Grid-India) and remove the superlative.
-6. **WACC 10%** — no SA-specific single source; defended via IRENA rest-of-world (conservative).
-7. All cross-study comparisons are **directional only** (different horizons, discount rates, resolutions). CBET → lower cost / higher RE share is robustly corroborated in *direction*.
+5. **WACC 10%** — no SA-specific single source; defended via IRENA rest-of-world (conservative).
+6. All cross-study comparisons are **directional only** (different horizons, discount rates, resolutions). CBET → lower cost / higher RE share is robustly corroborated in *direction*.
 
 *Provenance pass 2026-07-12. No ceiling or model value changed.*
 

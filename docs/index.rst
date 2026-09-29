@@ -31,6 +31,8 @@ Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
    configuration
    data-reference
    regression
+   reference/scenarios/interconnector_direction_references
+   reference/scenarios/vre_ceiling_provenance
 
 
 Indices and tables

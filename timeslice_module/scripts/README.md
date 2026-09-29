@@ -5,7 +5,7 @@ timeslices) and its 12/16/24-timeslice variants from sub-daily demand and Renewa
 plus the checks and comparisons used to select and validate them. They are kept for training and
 are not part of `python -m ostram run`; the maintained authority the pipeline reads is
 `inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx`. Module overview and recipe:
-`../README.md`, `../OSTRAM_Timeslice_Module_Summary.md`, `../docs/00_OSTRAM_Timeslices_README.md`.
+`../README.md`; selection methodology: `../docs/ostram_timeslice_handover.md`.
 
 ## Scripts
 

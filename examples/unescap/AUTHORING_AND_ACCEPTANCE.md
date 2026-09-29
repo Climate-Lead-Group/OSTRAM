@@ -1,6 +1,6 @@
-# Natalia's UNESCAP authoring and acceptance guide
+# UNESCAP training authoring and acceptance guide
 
-This is Natalia's starting document for authoring and testing the Windows training
+This is the starting document for authoring and testing the Windows training
 exercises. Run commands from an Anaconda or Miniforge prompt using `cmd.exe`.
 The commands resolve
 project resources independently of the caller's current directory, but keeping the
@@ -11,24 +11,10 @@ repository root as the prompt location makes Git review easier.
 ```text
 git clone https://github.com/Climate-Lead-Group/OSTRAM.git OSTRAM
 cd OSTRAM
-git switch --track origin/fix/unescap-training-reproduction
 ```
 
-If the repository already exists, use `git fetch origin` and then switch to the same
-branch. Confirm it with `git branch --show-current`.
-
-Before that branch is published, the isolated repair can be reviewed using the
-supplied `OSTRAM-unescap-training-repair.bundle`. Place it beside the new `OSTRAM`
-checkout and replace the `git switch --track ...` command above with:
-
-```text
-git fetch ../OSTRAM-unescap-training-repair.bundle fix/unescap-training-reproduction:fix/unescap-training-reproduction
-git switch fix/unescap-training-reproduction
-```
-
-This incremental source bundle requires the starting commit
-`6ff8fc91c89b81a5e44cbf6798f0ec30a0fbc77a`, present in the GitHub clone. It contains
-the committed repair, with no generated model inputs or results.
+If the repository already exists, use `git fetch origin` and switch to `main` or to
+the branch under review. Confirm it with `git branch --show-current`.
 
 Install the supported environment once:
 
@@ -61,16 +47,16 @@ output if Windows cannot find `cbc`; do not substitute another solver.
 Use a dedicated ignored workspace so training state never mixes with another profile:
 
 ```text
-python -m ostram --workspace workspace/natalia example prepare unescap
-python -m ostram --workspace workspace/natalia --profile unescap inspect-resources
-python -m ostram --workspace workspace/natalia --profile unescap run --env-name ostram-unescap --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --compile-only --skip-pull
+python -m ostram --workspace workspace/training example prepare unescap
+python -m ostram --workspace workspace/training --profile unescap inspect-resources
+python -m ostram --workspace workspace/training --profile unescap run --env-name ostram-unescap --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --compile-only --skip-pull
 ```
 
 Preparation is guarded. Repeating the first command refuses to replace existing state;
 the explicit reset is:
 
 ```text
-python -m ostram --workspace workspace/natalia example prepare unescap --reset
+python -m ostram --workspace workspace/training example prepare unescap --reset
 ```
 
 The baseline interconnector authority is exactly **2.496 GW** in 2023-2028. The active
@@ -81,10 +67,10 @@ Run A and B through CBC, export and cost reconciliation, then prepare and run C
 using the completed A result in this same workspace:
 
 ```text
-python -m ostram --workspace workspace/natalia --profile unescap run --env-name ostram-unescap --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --skip-pull
-python -m ostram --workspace workspace/natalia --profile unescap run --env-name ostram-unescap --scenarios "C_Target_VRE" --skip-pull
-python -m ostram --workspace workspace/natalia example report unescap --capture windows-cbc-baseline
-python -m ostram --workspace workspace/natalia example report unescap
+python -m ostram --workspace workspace/training --profile unescap run --env-name ostram-unescap --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --skip-pull
+python -m ostram --workspace workspace/training --profile unescap run --env-name ostram-unescap --scenarios "C_Target_VRE" --skip-pull
+python -m ostram --workspace workspace/training example report unescap --capture windows-cbc-baseline
+python -m ostram --workspace workspace/training example report unescap
 ```
 
 Select the decision scenarios explicitly. A materializes support BAU's restrictions
@@ -95,7 +81,7 @@ The profile enables backstop capacity; inspect its generation and capacity in th
 exports when interpreting feasibility.
 
 The final command prints the real dashboard path. All solver results, captures, logs,
-and HTML dashboards remain below `workspace/natalia/profiles/unescap/` and are ignored.
+and HTML dashboards remain below `workspace/training/profiles/unescap/` and are ignored.
 
 ## Walk Exercise A and Exercise B
 
@@ -115,22 +101,21 @@ Open `exercises/training.html` first, then walk:
    and `bidirectional` exist, run:
 
 ```text
-python -m ostram --workspace workspace/natalia example report unescap --compare forward,reverse,bidirectional
+python -m ostram --workspace workspace/training example report unescap --compare forward,reverse,bidirectional
 ```
 
 Every command's authoritative flags are visible through `--help`, for example:
 
 ```text
-python -m ostram --workspace workspace/natalia example report unescap --help
-python -m ostram --workspace workspace/natalia --profile unescap country template --help
-python -m ostram --workspace workspace/natalia --profile unescap scenario sync-country --help
+python -m ostram --workspace workspace/training example report unescap --help
+python -m ostram --workspace workspace/training --profile unescap country template --help
+python -m ostram --workspace workspace/training --profile unescap scenario sync-country --help
 ```
 
 ## Edit and validate the exercise HTML
 
-Natalia may edit the committed authoring assets under `examples/unescap/exercises/`,
-this guide, the coverage ledger, and intentional profile seed/config authorities needed
-by the exercise. After editing HTML, run:
+Authors may edit the committed authoring assets under `examples/unescap/exercises/`,
+this guide, and intentional profile seed/config authorities needed by the exercise. After editing HTML, run:
 
 ```text
 python -m unittest tests.regression.test_release_readiness.TrainingAssetTests -v
@@ -148,12 +133,14 @@ Mutable preparation, compiled models, logs, `.sol` files, combined result CSVs, 
 captures, and dashboards live under `workspace/` and must not be committed. Before a
 commit, `git status --short --ignored` should show generated state only as ignored.
 Never add a workaround Python script to an exercise directory. Record the exact command,
-run log path, traceback, and expected behavior, then send it back as an engine defect.
+run log path, traceback, and expected behavior, and report it as an engine defect.
 
-## Natalia's macOS acceptance ownership
+## macOS acceptance through GitHub Actions
 
-Natalia owns macOS acceptance through the pull request's GitHub Actions evidence; she
-does not need a physical Mac and must not edit workflow YAML.
+`.github/workflows/unescap-macos-acceptance.yml` runs on every pull request that
+touches the profile, the package, the tests, the model or the environment, and on
+manual dispatch. macOS acceptance is read from that evidence; no physical Mac is
+needed.
 
 1. Open the integration pull request and select **Checks**, or open the repository's
    **Actions** tab and choose **UNESCAP macOS ARM64 acceptance**.
@@ -166,8 +153,8 @@ does not need a physical Mac and must not edit workflow YAML.
 5. In the run's **Artifacts** section, download `unescap-macos-arm64-acceptance`. Open
    `acceptance-summary.md` and `acceptance-summary.json`, then open the included report
    HTML locally. Check BGDXX, INDEA, and TRNBGDXXINDEA coverage.
-6. If a check fails, record the run URL, job name, failing step, and first relevant error;
-   send those details back for Codex repair. Do not create a local legacy script.
+6. If a check fails, record the run URL, job name, failing step, and first relevant error
+   with the defect report. Do not create a local workaround script.
 
 The automated gate does not claim interactive Microsoft Excel-on-Mac validation. That
 remains outside this acceptance boundary.

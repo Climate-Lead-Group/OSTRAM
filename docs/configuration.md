@@ -72,7 +72,7 @@ countries:
   - MDV
 ```
 
-Countries with sub-regions (like India split into 5 regions) use extended codes (e.g., `INDEA` for India-East). `Z_AUX_config_loader.get_multi_region_map()` derives `{iso3: [region_codes]}` (e.g. `{'IND': ['EA','NE','NO','SO','WE']}`) from this list for scripts that need to group regions back under their parent country.
+Countries with sub-regions (like India split into 5 regions) use extended codes (e.g., `INDEA` for India-East). `ostram.pipeline.preparation.configuration.get_multi_region_map()` derives `{iso3: [region_codes]}` (e.g. `{'IND': ['EA','NE','NO','SO','WE']}`) from this list for scripts that need to group regions back under their parent country.
 
 ### `first_year`
 
@@ -228,7 +228,7 @@ implausible_combinations:
 
 ### `template_generation`
 
-Configuration for the country template generator (`Z_generate_country_template.py`). This section is a **list**, so multiple countries can be generated in a single run. Each entry defines one country to create:
+Configuration for the country template generator (`python -m ostram country template`, `ostram/pipeline/preparation/country_templates.py`). This section is a **list**, so multiple countries can be generated in a single run. Each entry defines one country to create:
 
 ```yaml
 template_generation:
@@ -250,64 +250,9 @@ template_generation:
 | `centerpoint_lon` | No | Longitude for the country's geographic centerpoint |
 | `interconnections` | No | List of neighbor country codes for TRN links. **`[]` (empty list)** = generate the country with zero interconnections. **Omitting the key entirely** = legacy mode, which blindly copies the reference country's TRN rows verbatim without remapping (only correct if the new country's topology is identical to the reference's) |
 
-Multiple countries -- or multiple regions of the same new country -- can be defined as separate list entries. The `countries:` comment block in the live YAML documents two illustrative patterns beyond the single-country case above:
+Multiple countries, or multiple regions of the same new country, can be defined as separate list entries; the commented block in the live YAML shows the multi-country and multi-region patterns. The only active entry is the single MDV-from-LKA example above.
 
-```yaml
-template_generation:
-  # Multiple independent countries in one run:
-  - new_country: MMR
-    reference_country: BGD
-    region: XX
-    centerpoint_lat: 16.871311
-    centerpoint_lon: 96.199379
-    interconnections:
-      - BGD
-      - IND
-  - new_country: PAK
-    reference_country: IND
-    region: XX
-    centerpoint_lat: 24.87
-    centerpoint_lon: 66.99
-    interconnections:
-      - INDNO
-      - INDWE
-
-  # A country with multiple regions (like India): one entry per region,
-  # each with its own centerpoint. Use 5-letter codes to interconnect
-  # to a specific region of another multi-region country.
-  - new_country: CHN
-    reference_country: IND
-    region: SO                # China South -> CHNSO
-    centerpoint_lat: 23.145
-    centerpoint_lon: 113.325
-    interconnections:
-      - MMRXX
-      - CHNNO                 # connected to China North
-  - new_country: CHN
-    reference_country: IND
-    region: NO                # China North -> CHNNO
-    centerpoint_lat: 39.929
-    centerpoint_lon: 116.388
-    interconnections:
-      - CHNSO                 # connected to China South
-      - MNGXX
-```
-
-The only entry actually active in the current YAML is the single MDV-from-LKA example above; MMR/PAK/CHN are documentation-only illustrations.
-
-The package implementation consumes these entries through the preparation
-workflow. Run it with `python -m ostram run`; source files under `ostram/` are
-not public script entrypoints.
-
-| CLI Flag | Description |
-|----------|-------------|
-| `--new`, `-n` | New country code (3 letters) |
-| `--ref`, `-r` | Reference country code |
-| `--region` | Region code (2 letters) |
-| `-i`, `--interconnections` | Neighbor country codes (space-separated) |
-| `--lat` | Centerpoint latitude |
-| `--lon` | Centerpoint longitude |
-| `-o`, `--output` | Output directory (default: `templates/<new_code>`) |
+Run the generator with `python -m ostram country template`. Every YAML value can be overridden on the command line (`--new`, `--ref`, `--region`, `-i/--interconnections`, `--lat`, `--lon`, `--demand-scale`, `-o/--output`); see `python -m ostram country template --help` and {doc}`country-management`.
 
 ### Transmission Technology Parameters
 
@@ -335,7 +280,7 @@ RNWTRN:
   TotalAnnualMaxCapacityInvestment: 5
 ```
 
-DSPTRN is a virtual dispatch node with zero costs and high capacity, used to route electricity to/from cross-border interconnections (`ELC*02` → `ELC*03` on export, `ELC*04` → `ELC*03` on import -- see {doc}`pipeline` Stage A2 for the full fuel-tier routing):
+DSPTRN is a virtual dispatch node with zero costs and high capacity, used to route electricity to/from cross-border interconnections (`ELC*02` → `ELC*03` on export, `ELC*04` → `ELC*03` on import -- see {doc}`data-reference`, "Model Architecture", for the full fuel-tier routing):
 
 ```yaml
 DSPTRN:
@@ -443,7 +388,7 @@ gurobi_seed: 12345
 
 ### Pipeline Control Flags
 
-Current values (these change often between experiments -- always check the live file):
+Committed values (always check the live file):
 
 ```yaml
 del_files: False
@@ -485,7 +430,7 @@ annualize_capital: False
 
 ### Datafile Patch Chain
 
-B2 applies a fixed chain of patches to the preprocessed OSeMOSYS datafile before solving, each gated by its own flag. See {doc}`pipeline` (Stage B2) for the exact application order and how they interact.
+B2 applies a fixed chain of patches to the preprocessed OSeMOSYS datafile before solving, each gated by its own flag. The exact application order and the interactions are documented in `ostram/pipeline/execution/README.md` and `ostram/pipeline/execution/patches/README.md`.
 
 **Storage delay** -- blocks storage builds/operation for the first N years, then releases them. Mutually exclusive with storage stripping (storage delay silently wins if both are `true`):
 
@@ -503,7 +448,7 @@ storage_delay_root_datafile: "OSTRAM_data_storage_delay.txt"
 **Storage stripping** -- a diagnostic that removes storage entirely (`mode: "all"`), a single technology (`mode: "tech"`), or a whole storage class (`mode: "class"`):
 
 ```yaml
-strip_storage_active: True
+strip_storage_active: False
 strip_storage_mode: "all"
 strip_storage_targets: []
 strip_storage_suffix: "NoStorage"
@@ -588,7 +533,7 @@ Defines how parameters are combined when merging sub-regions:
 
 **Location:** `config/scenarios/<Scenario>/`
 
-Each active scenario (`A_Calibrated_BAU`, `B_Optimised_VRE`, `C_Target_VRE`) has its own subfolder with the YAML files its rule-script chain consumes. See {doc}`pipeline` (Stage A3) for which rule scripts each scenario runs and a plain-English summary of what each scenario represents. The main YAML anatomy:
+Each root scenario run through `transform` (`A_Calibrated_BAU`, `B_Optimised_VRE`, `C_Target_VRE`) has its own subfolder with the YAML files its rule-script chain consumes; `BAU` has none. Folders also exist for derived scenarios, but the materializer builds those from `config/profiles/full.yaml` and reads only `set_interconnector_direction.yaml` from them (`config/README.md`). The rule chain of each root is listed in `ostram/pipeline/scenarios/rules/README.md`. The main YAML anatomy:
 
 | YAML | Consumed by | Key fields |
 |------|--------------|------------|
@@ -610,7 +555,7 @@ Rule scripts resolve `bau_results_path` **relative to their own staged working d
 
 ### Tech_Country_Matrix.xlsx
 
-Generated by `A0_generate_tech_country_matrix.py`. Contains 5 sheets:
+Generated by `python -B -m ostram.pipeline.preparation.tech_country_matrix` into `<workspace>/preparation/`; A1 reads the tracked copy under `inputs/preparation/secondary_technologies/`. Contains 5 sheets:
 
 | Sheet | Purpose |
 |-------|---------|
@@ -622,4 +567,4 @@ Generated by `A0_generate_tech_country_matrix.py`. Contains 5 sheets:
 
 ### Secondary_Techs_Editor.xlsx
 
-Generated by `D1_generate_editor_template.py`. See {doc}`secondary-techs-editor` for full documentation.
+Generated by `python -B -m ostram.pipeline.preparation.secondary_techs.editor_template`. See {doc}`secondary-techs-editor` for full documentation.
