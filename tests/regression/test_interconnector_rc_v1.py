@@ -326,6 +326,7 @@ def _assert_finite_caps_not_below_residual(residuals, caps):
 
 
 class InterconnectorAuthorityWorkbookTests(unittest.TestCase):
+    """Guard the V18 interconnector authority workbook and its loaders."""
     def test_v18_contains_exact_dense_18_by_28_authority_and_digest(self) -> None:
         values, metadata, duplicates = _read_authority_rows(TEMPLATE)
         self.assertEqual(duplicates, [])
@@ -378,6 +379,8 @@ class InterconnectorAuthorityWorkbookTests(unittest.TestCase):
     def test_v18_contains_exact_minimum_contribution_and_boundary_domains(
         self,
     ) -> None:
+        """The V18 workbook holds the exact minimum-contribution (11 x 28) and boundary (2 x 28)
+        profiles, matching their semantic SHA-256 digests."""
         module = _load_module(AUTHORITY_SCRIPT, "minimum_domains")
         contributions = module.load_minimum_contribution_authority(TEMPLATE)
         boundaries = module.load_minimum_boundary_authority(TEMPLATE)
@@ -425,6 +428,8 @@ class InterconnectorAuthorityWorkbookTests(unittest.TestCase):
     def test_minimum_loader_fails_closed_on_schema_domain_and_value_corruption(
         self,
     ) -> None:
+        """load_minimum_contribution_authority raises ValueError for missing, duplicate, wrong-
+        domain, wrong-metadata, non-numeric, negative, formula and blank rows."""
         module = _load_module(AUTHORITY_SCRIPT, "minimum_corruptions")
         parameter = module.MINIMUM_CONTRIBUTION_PARAMETER
         tech = "TRNBTNXXBGDXX"
@@ -516,7 +521,11 @@ class InterconnectorAuthorityWorkbookTests(unittest.TestCase):
 
 
 class InterconnectorRuntimeRouteTests(unittest.TestCase):
+    """Guard how the runtime route consumes the interconnector authority."""
     def test_a3_uses_materialized_v18_authority_before_unchanged_writers(self) -> None:
+        """A3 stage_3_fix_2 runs fix_trn_residuals, clear_stale_unbinding_caps and
+        cap_trn_to_residual in that order with the materialized authority, and no retired
+        reference workbook or --reference option remains."""
         source = A3_SCRIPT.read_text(encoding="utf-8-sig")
         tree = ast.parse(source, filename=str(A3_SCRIPT))
         stage = next(
@@ -559,6 +568,9 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
     def test_exact_minimum_plan_is_additive_dense_and_includes_zero_profiles(
         self,
     ) -> None:
+        """The minimum-contribution plan covers the 11 authority techs, adds to a pre-existing
+        minimum investment value, writes dense float profiles, and fills zero-profile techs
+        with 0.0 and 'User defined'."""
         module = _load_module(FIX_SCRIPT, "minimum_participation")
         contributions = {
             tech: {
@@ -687,6 +699,9 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
                 self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), expected)
 
     def test_writer_order_and_scenario_predicates_remain_unchanged(self) -> None:
+        """The Control sheet writer order for A_Calibrated_BAU and B_Optimised_VRE is unchanged,
+        and the registry and B_Opt_LinkFreeze config keep their base scenario, frozen corridors
+        and six edits."""
         workbook = load_workbook(TEMPLATE, read_only=True, data_only=True)
         try:
             control = {
@@ -776,7 +791,11 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
 
 
 class TxCap150FormulaTests(unittest.TestCase):
+    """Guard the B_Opt_TxCap150 formula edits and the B_Opt_LinkFreeze minimum clamp."""
     def test_config_preserves_formula_domain_targets_and_non_cap_edits(self) -> None:
+        """The B_Opt_TxCap150 config holds 22 set_to_residual_factor_floor edits with factor 1.5
+        and the declared floors, and its 8 minimum and 10 activity edits hash to the pinned
+        digests."""
         config = yaml.safe_load(TXCAP_CONFIG.read_text(encoding="utf-8"))["scenario_inputs"]["B_Opt_TxCap150"]
         self.assertEqual(config["scenario"], "B_Opt_TxCap150")
         self.assertEqual(config["base_scenario"], "B_Optimised_VRE")
@@ -875,6 +894,8 @@ class TxCap150FormulaTests(unittest.TestCase):
     def test_linkfreeze_minimum_clamp_uses_v18_boundary_not_effective_rc(
         self,
     ) -> None:
+        """The LinkFreeze clamp on TotalAnnualMinCapacityInvestment sets 2033 to the V18 boundary
+        (2.5 and 0.04), not to the effective residual capacity."""
         module = _load_module(PATCH_SCRIPT, "linkfreeze_minimum")
         config = yaml.safe_load(LINKFREEZE_CONFIG.read_text(encoding="utf-8"))["scenario_inputs"]["B_Opt_LinkFreeze"]
         edits = {
@@ -972,6 +993,7 @@ class TxCap150FormulaTests(unittest.TestCase):
 
 
 class SemanticComparisonBehaviorTests(unittest.TestCase):
+    """Guard the helper semantics used to compare interconnector authority data."""
     def test_sparse_zero_serialization_canonicalizes_only_approved_zeros(self) -> None:
         serialized = {
             (tech, year): value

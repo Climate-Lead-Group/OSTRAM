@@ -125,7 +125,9 @@ def _run_smoke(arguments: list[str], cwd: Path, *, expose_repo: bool = False):
 
 
 class CanonicalCliImportAndHelpTests(unittest.TestCase):
+    """Tests for importing the canonical ostram package and for its top-level and subcommand help and error output."""
     def test_import_ostram_package_is_silent_and_imports_no_entrypoint(self) -> None:
+        """Importing the ostram package prints nothing, does not import __main__ or any historical entrypoint, and neither changes the cwd nor starts a subprocess."""
         package_names = ("ostram", "ostram.__main__")
         historical_names = (
             "run",
@@ -246,6 +248,7 @@ class CanonicalCliImportAndHelpTests(unittest.TestCase):
                 boundary.assert_not_called()
 
     def test_malformed_subcommand_arguments_keep_historical_argparse_exit_two(self) -> None:
+        """Malformed subcommand arguments exit with code 2 and the same output as the historical parser, without reaching the route's effect boundary."""
         cli = _load_cli("subcommand_errors")
         cases = (
             ("run", ["--env-name"]),
@@ -318,7 +321,9 @@ class CanonicalCliImportAndHelpTests(unittest.TestCase):
 
 
 class CanonicalCliSubprocessSmokeTests(unittest.TestCase):
+    """Smoke tests that run the real ostram command in child interpreters."""
     def test_real_top_level_help_and_unknown_from_root_and_spaced_cwd(self) -> None:
+        """python -m ostram --help exits 0 and an unknown command exits 2 with an argparse error, giving identical output from the repository root and from a cwd containing spaces."""
         with tempfile.TemporaryDirectory(
             prefix="ostram cli subprocess cwd with spaces "
         ) as temporary:
@@ -366,7 +371,9 @@ class CanonicalCliSubprocessSmokeTests(unittest.TestCase):
 
 
 class CanonicalCliDispatchTests(unittest.TestCase):
+    """Tests for how the canonical CLI dispatches each subcommand to its historical main()."""
     def test_route_registry_maps_canonical_package_modules_and_defers_b2(self) -> None:
+        """The route registry maps run, transform and compile-inputs to the canonical package modules and programs with their exit policies, and the CLI source contains no B1/B2 script names, shell or process calls and only a bare SystemExit(main()) guard."""
         cli = _load_cli("registry")
         self.assertEqual(
             {
@@ -417,6 +424,7 @@ class CanonicalCliDispatchTests(unittest.TestCase):
         self.assertEqual(main_call.keywords, [])
 
     def test_each_canonical_route_calls_historical_main_once_with_exact_argv(self) -> None:
+        """Each canonical route calls the historical main() once with sys.argv set to the route program plus the raw arguments, keeps the cwd and environment, adds the project variables, and returns the policy-specific result."""
         cli = _load_cli("one_call")
         raw = ["--scenarios", " C , A, C ", "--literal=two words"]
         for command, route in cli.ROUTES.items():
@@ -496,6 +504,7 @@ class CanonicalCliDispatchTests(unittest.TestCase):
     def test_actual_modules_reach_identical_first_boundaries_without_effects(
         self,
     ) -> None:
+        """For run, transform and compile-inputs the canonical CLI reaches the same first effect boundary as the historical main() with identical argv, cwd, environment, output and exit code."""
         cli = _load_cli("actual_boundary_trace")
         boundary_stop_message = "fixture stopped at first run effect boundary"
 
@@ -630,6 +639,7 @@ class CanonicalCliDispatchTests(unittest.TestCase):
                     self.assertEqual(canonical_result[0], direct_result[0])
 
     def test_no_downstream_arguments_keep_historical_parser_defaults(self) -> None:
+        """Invoked without downstream arguments, run, transform and compile-inputs keep the historical parser defaults and sys.argv is left untouched."""
         cli = _load_cli("no_downstream_arguments")
         original_argv = sys.argv
 
@@ -686,6 +696,7 @@ class CanonicalCliDispatchTests(unittest.TestCase):
         self.assertIs(sys.argv, original_argv)
 
     def test_caller_cwd_with_spaces_and_environment_are_preserved(self) -> None:
+        """Dispatch keeps a caller cwd containing spaces and the caller's environment, forwarding arguments with spaces intact and adding only the project root and workspace variables."""
         cli = _load_cli("cwd_env")
         starting_cwd = Path.cwd()
         with tempfile.TemporaryDirectory(
@@ -747,6 +758,7 @@ class CanonicalCliDispatchTests(unittest.TestCase):
                 os.chdir(starting_cwd)
 
     def test_sys_argv_is_restored_for_all_exit_and_interruption_routes(self) -> None:
+        """sys.argv is restored after SystemExit, KeyboardInterrupt and ordinary failures from each route, and run returns 130 on interrupt while transform and compile-inputs propagate the exception unchanged."""
         cli = _load_cli("argv_restore")
         for command in cli.ROUTES:
             failure = SystemExit(17)

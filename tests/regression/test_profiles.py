@@ -50,7 +50,11 @@ def write_project(root: Path) -> None:
 
 
 class ManifestSafetyTests(unittest.TestCase):
+    """Validate authority references and roles in profile manifests."""
     def test_namespaces_are_contained_and_explicit(self) -> None:
+        """project:, profile: and package: references resolve inside their roots, while
+        unnamespaced, http:, empty, parent-escaping, absolute and drive-letter references raise
+        AuthorityResolutionError."""
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             write_project(root)
@@ -111,6 +115,7 @@ class ManifestSafetyTests(unittest.TestCase):
 
 
 class AtomicWorkspaceTests(unittest.TestCase):
+    """Prepare profile workspaces atomically and fail closed on damaged ones."""
     def _fixture(self, root: Path):
         write_project(root)
         profile_root = root / "fixtures" / "tiny"
@@ -128,6 +133,9 @@ class AtomicWorkspaceTests(unittest.TestCase):
         return project_paths(root), load_manifest(manifest_path)
 
     def test_prepare_reset_stamp_last_and_readonly_authority(self) -> None:
+        """prepare_profile stamps the workspace, keeps read-only authorities at their project
+        path, refuses a repeat or a changed manifest unless reset=True, and prepared_profile
+        refreshes mutable sources."""
         with tempfile.TemporaryDirectory() as temp:
             paths, manifest = self._fixture(Path(temp))
             result = prepare_profile(manifest, paths=paths)
@@ -185,7 +193,10 @@ class AtomicWorkspaceTests(unittest.TestCase):
 
 
 class ProfileCliTests(unittest.TestCase):
+    """Drive the ostram CLI profile option."""
     def test_profile_is_selected_before_route_import_and_not_forwarded(self) -> None:
+        """cli.main selects the profile (OSTRAM_PROFILE=tiny) before importing the route module
+        and does not forward --profile to the route's argv."""
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             write_project(root)
@@ -247,6 +258,9 @@ class ProfileCliTests(unittest.TestCase):
         )
 
     def test_unescap_manifest_is_complete_and_namespaced(self) -> None:
+        """The unescap profile manifest declares every required authority role with existing
+        sources, keeps apply_pwr_min_pin disabled, records the effective interconnector values
+        and limits project-namespace roles to three."""
         paths = project_paths(REPO_ROOT)
         manifest = load_profile("unescap", paths=paths)
         sources = manifest.source_paths(paths)

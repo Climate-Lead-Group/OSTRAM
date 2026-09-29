@@ -47,7 +47,10 @@ def _read(path):
 
 
 class ScenarioConcatenationTests(unittest.TestCase):
+    """Check concatenation of per-scenario Executables CSVs into combined files."""
     def setUp(self) -> None:
+        """Build a temporary Executables tree with scenarios written in reverse order plus service
+        folders."""
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)
         (self.root / "Executables" / "Default").mkdir(parents=True)

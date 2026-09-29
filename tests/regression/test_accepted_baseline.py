@@ -37,7 +37,10 @@ def _git(*args: str) -> str | None:
 
 
 class AcceptedBaselineTests(unittest.TestCase):
+    """Guard the governed comparator manifest and the /workspace/ ignore rule."""
     def test_governed_manifest_binds_root_and_derived_outputs(self) -> None:
+        """A governed manifest of 17 scenarios loads and its output files validate, and swapping
+        one derived row to the root authority class raises 'authority class drift'."""
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             manifest = root / "STAGE_2_GOVERNED_COMPARATOR_MANIFEST.csv"

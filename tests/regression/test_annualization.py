@@ -33,6 +33,7 @@ class CrfTests(unittest.TestCase):
 
 
 class DatafileParameterTests(unittest.TestCase):
+    """Read discount-rate parameters from a datafile, falling back to the default value."""
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
         self.datafile = Path(self._tmp.name) / "S_0.txt"
@@ -103,6 +104,8 @@ def _rates(rows):
 
 
 class AnnualizeSeriesTests(unittest.TestCase):
+    """Annualize capex series into CRF payments over each asset lifetime, truncated at the
+    horizon."""
     def test_single_investment_pays_crf_for_lifetime_years(self) -> None:
         result = ann.annualize_series(
             _capex([[0, "S", "GLOBAL", "PWRA", 2025, 100.0]]),
@@ -222,6 +225,7 @@ COMBINED_COLUMNS = [
 
 
 class AnnualizeCombinedFileTests(unittest.TestCase):
+    """Annualize capital costs in a combined CSV file, including overrides and refusals."""
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)

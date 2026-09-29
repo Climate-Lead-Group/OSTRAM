@@ -156,6 +156,7 @@ class ClassifierTests(unittest.TestCase):
 
 
 class AggregationTests(unittest.TestCase):
+    """Aggregate snapshot CSVs into dashboard series."""
     @classmethod
     def setUpClass(cls) -> None:
         cls._tmp = tempfile.TemporaryDirectory()
@@ -256,6 +257,7 @@ class AggregationTests(unittest.TestCase):
 
 
 class EdgeCaseTests(unittest.TestCase):
+    """Check that dashboard building degrades gracefully on unusual inputs."""
     def test_missing_optional_columns_degrade_gracefully(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             tmp = Path(temp)
@@ -309,6 +311,7 @@ class EdgeCaseTests(unittest.TestCase):
 
 
 class RendererTests(unittest.TestCase):
+    """Check the rendered dashboard HTML."""
     @classmethod
     def setUpClass(cls) -> None:
         cls._tmp = tempfile.TemporaryDirectory()
@@ -373,7 +376,10 @@ class RendererTests(unittest.TestCase):
 
 
 class EscapingTests(unittest.TestCase):
+    """Check HTML and JSON escaping of dashboard content."""
     def test_hostile_scenario_names_and_titles_are_escaped(self) -> None:
+        """Hostile scenario names and titles are escaped: only the template's two script closers
+        appear and the title shows only in HTML-escaped form outside the JSON payload."""
         with tempfile.TemporaryDirectory() as temp:
             tmp = Path(temp)
             hostile = 'Evil</script><script>alert(1)_"quoted"'
@@ -408,6 +414,8 @@ class EscapingTests(unittest.TestCase):
 
 
 class ReportRouteTests(unittest.TestCase):
+    """Check that the report route writes capture, rebuild and comparison reports in the
+    workspace."""
     def _workspace(self, temp: str):
         workspace = Path(temp).resolve()
         execution = workspace / "execution"

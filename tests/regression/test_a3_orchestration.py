@@ -182,6 +182,9 @@ class A3TraceHarness:
         keep_workdir: bool = False,
         scenario: str = "A_Calibrated_BAU",
     ) -> int:
+        """Run the patched A3 main() once and return its exit code.
+        Patches every stage, the workdir builder, delivery, the clock and the shutil copy/remove calls with inert recorders that append to `events`, and captures stdout and stderr. A stage named in `fail_stage` raises `failure` (or RuntimeError).
+        """
         module = self.module
         events = self.events
         real_copy = shutil.copy
@@ -357,6 +360,7 @@ class A3TraceHarness:
 
 
 class A3ImportAndCliCharacterizationTests(unittest.TestCase):
+    """Characterization tests for the A3 import surface and command-line parser."""
     def test_import_is_silent_and_crosses_no_process_or_artifact_boundary(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -396,6 +400,7 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
         )
 
     def test_existing_callable_helper_surface_remains_available(self) -> None:
+        """Every helper, stage and entry function of the predecessor A3 script is still callable and the retired stage_0_5_rnwbio is gone."""
         module = _load_a3("callable_surface")
         expected = (
             "_resolve",
@@ -451,6 +456,7 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
         self.assertNotIn("OSTRAM_AO_Extensions_FILLED.xlsx", stage1_source)
 
     def test_cli_defaults_and_explicit_values_match_predecessor(self) -> None:
+        """parse_cli_args returns the predecessor defaults with no arguments and parses explicit values, converting path options to Path."""
         module = _load_a3("cli_values")
         with mock.patch.object(sys, "argv", ["python -m ostram transform"]):
             defaults = module.parse_cli_args()
@@ -496,6 +502,7 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
         self.assertTrue(explicit.keep_workdir)
 
     def test_help_unknown_options_and_missing_values_keep_argparse_exit_codes(self) -> None:
+        """--help exits 0 and unknown options or options missing their value exit 2 before any workdir, path, dependency or orchestration work is done."""
         module = _load_a3("argparse_exits")
         cases = (
             (["python -m ostram transform", "--help"], 0),
@@ -561,6 +568,7 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
 
 
 class A3ScenarioPlanningCharacterizationTests(unittest.TestCase):
+    """Characterization tests for scenario ordering, filtering and configuration resolution in A3."""
     @classmethod
     def setUpClass(cls) -> None:
         cls.scenarios = _load_scenarios("planning")
@@ -627,6 +635,7 @@ class A3ScenarioPlanningCharacterizationTests(unittest.TestCase):
         self.assertNotIn("BAU", ["A_Calibrated_BAU"])
 
     def test_scenario_config_preserves_control_chain_and_cli_override_order(self) -> None:
+        """_resolve_scenario_config uses the control-sheet rules scripts and inheritance for the scenario, and CLI overrides replace them in the given order with duplicates kept."""
         config = SimpleNamespace(
             scenario="A_Calibrated_BAU",
             rules_scripts=("control-first.py", "control-second.py"),
@@ -694,6 +703,7 @@ class A3ScenarioPlanningCharacterizationTests(unittest.TestCase):
 
 
 class A3IsolatedBoundaryTests(unittest.TestCase):
+    """Tests for the isolated A3 orchestrator module and its pure planning and forwarding seams."""
     def test_isolated_module_has_no_b1_b2_compiler_matrix_or_solver_boundary(self) -> None:
         source = A3_ORCHESTRATOR.read_text(encoding="utf-8-sig")
         forbidden = (
@@ -745,6 +755,7 @@ class A3IsolatedBoundaryTests(unittest.TestCase):
         )
 
     def test_resolved_path_run_planning_is_pure(self) -> None:
+        """resolve_plan only calls the injected config and path resolvers and derives scenario, scripts, inheritance, snapshot and directories from the arguments without touching disk."""
         orchestrator = _load_orchestrator("pure_plan")
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp).resolve()
@@ -802,6 +813,7 @@ class A3IsolatedBoundaryTests(unittest.TestCase):
         self.assertTrue(plan.keep_workdir)
 
     def test_default_plan_keeps_script_anchored_paths_and_in_place_delivery(self) -> None:
+        """With no overrides resolve_plan anchors the template and input paths to the script directories and delivers outputs in place, into the input directory."""
         orchestrator = _load_orchestrator("default_plan")
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp).resolve()
@@ -835,7 +847,9 @@ class A3IsolatedBoundaryTests(unittest.TestCase):
 
 
 class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
+    """Characterization tests for A3 stage effects and failure handling using inert stage doubles."""
     def test_mocked_trace_matches_frozen_predecessor_observables(self) -> None:
+        """A mocked A3 run reproduces the frozen predecessor sequence of stages, copies, banners, environment and cleanup, returns 0, and leaves cwd and OSTRAM_TEMPLATE_PATH restored."""
         module = _load_a3("predecessor_trace")
         harness = A3TraceHarness(module)
         original_cwd = Path.cwd()
@@ -996,6 +1010,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                     harness.close()
 
     def test_static_pin_wrapper_uses_exact_assets_and_cli(self) -> None:
+        """stage_ws4_pwr_min_pin runs apply_base_year_pin once per pin-root scenario with the exact input dir, scenario, rules CSV and --skip-backup arguments."""
         module = _load_a3("pin_wrapper")
         with tempfile.TemporaryDirectory() as temp:
             rules_dir = Path(temp)
@@ -1029,6 +1044,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                     )
 
     def test_static_pin_wrapper_honors_profile_policy_gate(self) -> None:
+        """The base-year pin wrapper is skipped when OSTRAM_PROFILE_POLICIES sets apply_pwr_min_pin to false and runs when it is true or the variable is absent."""
         module = _load_a3("pin_policy_gate")
         with tempfile.TemporaryDirectory() as temp:
             rules_dir = Path(temp)
@@ -1097,6 +1113,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
             harness.close()
 
     def test_expected_subprocess_failure_is_fail_fast_system_exit(self) -> None:
+        """A non-zero exit from a stage subprocess prints its stdout and stderr and raises SystemExit with the FAILED label, after a single python -B -m invocation."""
         module = _load_a3("subprocess_failure")
         completed = SimpleNamespace(
             returncode=9,
@@ -1132,6 +1149,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
         self.assertIn("--- stderr ---", stdout.getvalue())
 
     def test_stage_exit_exception_and_interrupt_leave_predecessor_cleanup_state(self) -> None:
+        """When a stage raises SystemExit, an exception or KeyboardInterrupt, the workdir and OSTRAM_TEMPLATE_PATH are left in place as the predecessor did and no later stage or delivery runs."""
         cases: tuple[BaseException, ...] = (
             SystemExit("FAILED: fixture stage"),
             RuntimeError("unexpected fixture failure"),

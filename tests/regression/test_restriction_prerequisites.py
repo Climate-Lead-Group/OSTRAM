@@ -81,6 +81,7 @@ def _root(name: str, role: str, restrictions: list[str] | None = None) -> dict:
 
 
 class RestrictionDependencyContractTests(unittest.TestCase):
+    """Validate restriction prerequisite declarations in the scenario registry."""
     def test_unescap_registry_declares_the_bau_prerequisite_for_a(self) -> None:
         registry = load_registry(UNESCAP_REGISTRY)
         roots = registry.roots_by_name
@@ -147,6 +148,8 @@ class RestrictionDependencyContractTests(unittest.TestCase):
             self.assertEqual(registry.required_roots(("Base",)), ("Base",))
 
     def test_invalid_declarations_are_rejected(self) -> None:
+        """load_registry raises ValueError for unknown, self, cyclic, reversed-order, duplicate,
+        unnamed and unsupported-type restriction dependencies."""
         cases = (
             (
                 "unknown",
@@ -240,7 +243,10 @@ class RestrictionDependencyContractTests(unittest.TestCase):
 
 
 class RestrictionPrerequisiteMaterializationTests(unittest.TestCase):
+    """Materialize scenarios together with their declared restriction prerequisites."""
     def test_a_selection_materializes_bau_first_and_keeps_selection(self) -> None:
+        """Selecting A_Calibrated_BAU materializes BAU first, keeps the recorded selection as
+        requested with required roots BAU and A_Calibrated_BAU, and never invokes the solver."""
         registry = load_registry(UNESCAP_REGISTRY)
         with tempfile.TemporaryDirectory() as temp:
             outputs = Path(temp) / "A1_Outputs"
@@ -336,7 +342,10 @@ def _restrictions_workbook(path: Path, rows: list[list]) -> None:
 
 
 class RunStateHandoffTests(unittest.TestCase):
+    """Hand restriction rows to A3 through exported run-state workbooks."""
     def test_restriction_source_parsing_is_fail_closed(self) -> None:
+        """_parse_restriction_sources and _workspace_run_state_destination accept only well-
+        formed, non-empty, in-workspace .xlsx paths and exit with SystemExit otherwise."""
         with tempfile.TemporaryDirectory() as temp:
             # Canonicalize like production does (macOS /var -> /private/var).
             workspace = (Path(temp) / "workspace").resolve()
@@ -383,6 +392,8 @@ class RunStateHandoffTests(unittest.TestCase):
                         )
 
     def test_stage_4_5_reads_prerequisite_rows_from_exported_state(self) -> None:
+        """Stage 4.5 applies inherited restrictions from the exported BAU state (T1 becomes 1.5),
+        fails on a header-only authority and rejects a source scenario outside inherit_from."""
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             soasia = root / "soasia.xlsx"
@@ -522,6 +533,7 @@ class RunStateHandoffTests(unittest.TestCase):
 
 
 class RestrictionPrerequisiteOrchestrationTests(unittest.TestCase):
+    """Check how the launcher expands restriction prerequisites across stages."""
     def _run(self, requested: str) -> LauncherHarness:
         label = requested.replace(",", "_")
         launcher = _load_launcher(f"restriction_prerequisites_{label}")
@@ -540,6 +552,8 @@ class RestrictionPrerequisiteOrchestrationTests(unittest.TestCase):
         return harness
 
     def test_snapshot_gate_expands_but_downstream_stages_do_not(self) -> None:
+        """The snapshot gate expands the selection to its prerequisite roots, while A3 and the
+        pipeline stages receive the exact user selection."""
         cases = (
             (
                 "A_Calibrated_BAU",

@@ -125,7 +125,11 @@ def _write_ao_inputs(root: Path) -> None:
 
 
 class AOExtensionDecisionTests(unittest.TestCase):
+    """Overlay reviewed extension decisions onto the generated extension workbook."""
     def test_only_maintained_decision_fields_are_overlaid(self) -> None:
+        """apply_decisions returns 2, leaves the generated AUTO_SHP row as is, overlays only the
+        maintained decision fields on MANUAL_A and MANUAL_B, and rewrites
+        2_Parameter_Rows_To_Replicate."""
         helper = _load_helper()
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp:
             root = Path(temp)

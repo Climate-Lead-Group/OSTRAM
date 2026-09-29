@@ -178,6 +178,9 @@ def _base_params(**overrides: object) -> dict[str, object]:
 
 
 class B2Fixture:
+    """Build a disposable B2 workspace with the A2 output scenario folders (or files), the AB config and the main-scenario config written from the base parameters plus overrides.
+    Acts as a context manager that deletes the workspace on exit.
+    """
     def __init__(
         self,
         *entries: str,
@@ -221,6 +224,9 @@ class B2Fixture:
 
 
 class GuardHarness:
+    """Drive the B2 entrypoint guard with recording doubles in place of every stage, solver and concatenation boundary.
+    Each double appends to `events`, and conversions and stage failures can be scripted per scenario.
+    """
     def __init__(
         self,
         module,
@@ -302,6 +308,7 @@ class GuardHarness:
         return "inputs.csv", "outputs.csv", "combined.csv"
 
     def run(self, argv: list[str]) -> None:
+        """Run the B2 main guard with `argv` against the fixture workspace, capturing stdout, stderr and the final cwd, and restoring the caller's cwd afterwards."""
         previous_cwd = Path.cwd()
         stdout = io.StringIO()
         stderr = io.StringIO()
@@ -352,6 +359,7 @@ class GuardHarness:
 
 
 class B2ImportAndCliCharacterizationTests(unittest.TestCase):
+    """Characterization tests for the B2 import surface and command-line parser."""
     def test_import_is_silent_and_crosses_no_effect_boundary(self) -> None:
         with (
             mock.patch.object(subprocess, "run") as process_runner,
@@ -378,6 +386,7 @@ class B2ImportAndCliCharacterizationTests(unittest.TestCase):
     def test_canonical_compile_only_patch_modules_import_from_external_cwd(
         self,
     ) -> None:
+        """The canonical preprocess and patch modules import in an isolated interpreter started from an unrelated cwd without PYTHONPATH."""
         module_names = (
             "ostram.pipeline.execution.preprocess",
             "ostram.pipeline.execution.patches.days_in_day_type",
@@ -442,7 +451,9 @@ class B2ImportAndCliCharacterizationTests(unittest.TestCase):
 
 
 class B2AstBoundaryCharacterizationTests(unittest.TestCase):
+    """AST-level tests that freeze the call structure of the B2 entrypoint and orchestrator."""
     def test_top_level_stage_order_includes_both_solver_routes_and_postprocessing(self) -> None:
+        """The entrypoint main delegates to orchestrate_b2, whose top-level stages and post-processing calls appear in the frozen order for both solver routes."""
         entry_tree = ast.parse(_source(), filename=str(B2_ENTRYPOINT))
         orchestrator_tree = ast.parse(
             _orchestrator_source(), filename=str(B2_ORCHESTRATOR)
@@ -558,6 +569,7 @@ class B2AstBoundaryCharacterizationTests(unittest.TestCase):
         )
 
     def test_exact_outer_and_parallel_guards_dominate_the_two_executor_routes(self) -> None:
+        """The execute_model or create_matrix outer guard and the parallel guard select between exactly one Process-based and one direct main_executer call."""
         source = _orchestrator_source()
         tree = ast.parse(source, filename=str(B2_ORCHESTRATOR))
         execution = _function(tree, "run_execution_stage")
@@ -594,6 +606,7 @@ class B2AstBoundaryCharacterizationTests(unittest.TestCase):
         self.assertEqual(target.value.id, "dependencies")
 
     def test_named_matrix_and_solver_boundaries_are_injectable(self) -> None:
+        """The matrix and solver command boundaries take an injectable process runner, called with cwd and check=True, and main_executer delegates through the scenario execution dependencies."""
         entry_tree = ast.parse(_source(), filename=str(B2_ENTRYPOINT))
         entry_executor = _function(entry_tree, "main_executer")
         self.assertEqual(
@@ -627,7 +640,9 @@ class B2AstBoundaryCharacterizationTests(unittest.TestCase):
 
 
 class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
+    """Characterization tests for B2 scenario selection, stage order and failure behaviour with recording doubles."""
     def test_predecessor_trace_freezes_scenario_order_stage_args_and_status_order(self) -> None:
+        """A filtered run processes C then A with the frozen per-scenario stage order, then export, solver boundaries and cross-scenario concatenation, reusing one params object and restoring the cwd."""
         module = _load_b2_guard_as_callable("predecessor_trace")
         with B2Fixture(
             "C",
@@ -724,6 +739,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             )
 
     def test_compile_only_stops_before_every_solver_and_result_boundary(self) -> None:
+        """With --compile-only the run stops after export, before any solver, concatenation, annualization or cleanup boundary, and forces those parameters off."""
         module = _load_b2_guard_as_callable("compile_only_gate")
         with B2Fixture(
             "A",
@@ -786,6 +802,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
     def test_required_patch_child_failure_propagates_before_all_success_boundaries(
         self,
     ) -> None:
+        """A failing required reserve-margin patch child raises CalledProcessError with its output and stops the run before combined-input generation, export, solver and the success messages."""
         runner_module = _load_b2("required_patch_child_exit")
         child_result = SimpleNamespace(
             returncode=7,
@@ -942,6 +959,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             )
 
     def test_failed_conversion_prevents_later_work_and_overall_success(self) -> None:
+        """When the otoole conversion of a scenario fails, no later stage, combined input or export runs and the run raises instead of reporting overall success."""
         module = _load_b2_guard_as_callable("conversion_continue")
         with B2Fixture("A", "B", main_scenario="A") as fixture:
             harness = GuardHarness(module, fixture, conversions={"A": False})
@@ -976,9 +994,11 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
 
 
 class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
+    """Characterization tests for B2 model-input resolution, execution and concatenation option combinations, and worker failure handling."""
     def test_b2_model_inputs_resolve_only_through_canonical_project_model_root(
         self,
     ) -> None:
+        """Model inputs resolve only against the canonical project model root (or an absolute path), never against the entrypoint directory, and a missing input raises FileNotFoundError before any stage command runs."""
         module = _load_b2("canonical_model_inputs")
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp).resolve()
@@ -1070,6 +1090,7 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
                 missing_runner.assert_not_called()
 
     def test_storage_delay_model_output_is_external_and_forwarded(self) -> None:
+        """The storage-delay model output is written under the scenario's external Executables folder, is forwarded to the later patch commands and is never placed in the package or model root."""
         module = _load_b2("external_storage_delay_model")
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp).resolve()
@@ -1149,6 +1170,7 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
             )
 
     def test_all_sixteen_execution_and_concatenation_combinations(self) -> None:
+        """For all sixteen combinations of execute_model, create_matrix and the two concatenation flags, the solver boundary and cross-scenario concatenation are reached exactly when the flags require them."""
         for execute_model, create_matrix, concat_otoole, concat_scenarios in itertools.product(
             (False, True), repeat=4
         ):
@@ -1216,6 +1238,7 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
     def test_explicit_solver_adapter_is_fail_closed_for_compile_only_and_matrix_only(
         self,
     ) -> None:
+        """With an explicit solver adapter, a compile-only or matrix-only scenario never prepares or invokes the solver and only records the glpsol matrix check."""
         module = _load_b2("solver_adapter_fail_closed")
         orchestrator = module.b2_orchestrator
 
@@ -1287,6 +1310,7 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
         self.assertNotIn("Outputs concatenated", matrix_output.getvalue())
 
     def test_parallel_worker_exitcode_prevents_cleanup_and_postprocessing(self) -> None:
+        """A non-zero exit code from a parallel worker aborts with that code before concatenation and post-processing, after launching the workers in batches of max_x_per_iter."""
         module = _load_b2_guard_as_callable("parallel_route")
         process_events: list[tuple[str, str]] = []
 
@@ -1373,6 +1397,7 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
 
 
 class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
+    """Characterization tests for the exact commands and post-command handling of main_executer."""
     def _run_executor(
         self,
         module,
@@ -1421,6 +1446,7 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
         )
 
     def test_exact_solver_command_for_every_supported_solver(self) -> None:
+        """main_executer issues the exact glpk, cbc, cplex and gurobi commands with check=True, no shell, an absolute cwd and one environment check per solver."""
         module = _load_b2("solver_commands")
         with tempfile.TemporaryDirectory() as temp:
             here = Path(temp).resolve() / "execution_workspace"
@@ -1505,6 +1531,7 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
             self.assertEqual(following[following.index("primalTolerance") + 1], "1e-10")
 
     def test_cplex_matrix_solve_results_and_concat_commands_keep_exact_order(self) -> None:
+        """For cplex with matrix, solve, results and concatenation enabled, main_executer runs glpsol, cplex, otoole and the concatenate module in that order, then removes the solution files and reports success."""
         module = _load_b2("cplex_full_chain")
         with tempfile.TemporaryDirectory() as temp:
             here = Path(temp).resolve() / "execution_workspace"
@@ -1567,6 +1594,7 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
             self.assertIn("Outputs concatenated to A_0_Output.csv", result.stdout)
 
     def test_cplex_numerical_recovery_is_scoped_without_changing_matrix_or_tolerances(self) -> None:
+        """The cplex numerical-emphasis policy adds its settings only for selected scenarios, leaving the matrix, results and concatenation commands and the params unchanged for later runs."""
         module = _load_b2("cplex_scoped_numerical_recovery")
         with tempfile.TemporaryDirectory() as temp:
             here = Path(temp).resolve() / "execution_workspace"
@@ -1717,7 +1745,9 @@ class B2PerScenarioOutputsContractTests(unittest.TestCase):
 
 
 class CostExportReconciliationTests(unittest.TestCase):
+    """Tests for reconciled_cost_frames, which corrects omitted defaults and duplicated rows in the exported cost tables."""
     def test_default_omission_duplicates_and_raw_preservation(self):
+        """Omitted default and duplicated VariableCost rows adjust the annual variable cost and total cost without altering the raw output files, and a coefficient mismatch raises AssertionError."""
         import pandas as pd
         from ostram.pipeline.execution.concatenate import reconciled_cost_frames
         with tempfile.TemporaryDirectory() as temporary:

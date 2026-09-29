@@ -68,6 +68,7 @@ def target_workbook(path: Path) -> None:
 
 
 class ScenarioCountrySyncTests(unittest.TestCase):
+    """Match technologies to countries structurally and sync scenario workbooks per country."""
     def test_structural_country_matching(self) -> None:
         self.assertTrue(technology_belongs_to_country("PWRSPVMMRXX01", "MMR"))
         self.assertTrue(technology_belongs_to_country("TRNBGDXXMMRXX", "MMR"))
@@ -152,6 +153,7 @@ class AoDecisionAuthorityTests(unittest.TestCase):
 
 
 class ProfileLidPolicyTests(unittest.TestCase):
+    """Apply the profile lid policy to a Secondary Techs worksheet."""
     def _worksheet(self):
         workbook = Workbook()
         worksheet = workbook.active
@@ -197,6 +199,7 @@ class ProfileLidPolicyTests(unittest.TestCase):
 
 
 class ProfileElcDispatchTests(unittest.TestCase):
+    """Derive ELC dispatch technologies from a profile's country regions."""
     def test_dispatch_nodes_are_derived_from_profile_country_regions(self) -> None:
         self.assertEqual(
             elc_dispatch_techs(["BGD", "INDEA", "MMR"]),
@@ -232,7 +235,10 @@ class ProfileElcDispatchTests(unittest.TestCase):
 
 
 class ProfileReportingTests(unittest.TestCase):
+    """Inject profile metadata into dashboard data and terminal logs."""
     def test_synthetic_results_inject_profile_metadata_and_exact_source_value(self) -> None:
+        """build_dashboard_data carries the profile id, effective values and the exact 2.496
+        interconnector capacity into the dashboard data and the rendered HTML."""
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             csv_path = root / "results.csv"

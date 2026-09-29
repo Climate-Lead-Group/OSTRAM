@@ -40,7 +40,10 @@ PREPARATION_WORKSPACE = REPO_ROOT / "workspace" / "preparation"
 
 
 class ScenarioRegistryTests(unittest.TestCase):
+    """Check the scenario registry, country configuration and materialization routing."""
     def test_country_yaml_loader_is_script_anchored_sorted_and_cached(self) -> None:
+        """The country YAML loader reads the script-anchored CONFIG_PATH, returns sorted
+        countries, caches the first load and reloads only after the cache is cleared."""
         original_cache = country_config._cached_config
         self.addCleanup(
             setattr,
@@ -77,6 +80,9 @@ class ScenarioRegistryTests(unittest.TestCase):
         )
 
     def test_exact_roots_decision_order_bases_and_overlays(self) -> None:
+        """The registry holds the exact roots, 17 decision scenarios and canonical order, declares
+        the non-B bases of the Clipped scenarios, and puts direction overlays only on
+        B_Opt_DirBidir and B_Opt_DirContractual."""
         registry = load_registry()
         self.assertEqual(registry.root_names, ROOT_SCENARIOS)
         self.assertEqual(registry.decision_scenarios, DECISION_SCENARIOS)
@@ -183,6 +189,8 @@ class ScenarioRegistryTests(unittest.TestCase):
             )
 
     def test_patcher_uses_declared_non_b_base_and_rejects_conflict(self) -> None:
+        """build_scenario builds A_Calibrated_BAU_Clipped from its declared A_Calibrated_BAU base
+        and raises ValueError when a conflicting source is passed."""
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             outputs = root / "A1_Outputs"
@@ -232,6 +240,8 @@ class ScenarioRegistryTests(unittest.TestCase):
                 )
 
     def test_materializer_routes_one_exact_root_selection(self) -> None:
+        """Materializing a BAU-only selection requires only the BAU root, produces no derived
+        scenarios and never invokes the solver."""
         registry = load_registry()
         with tempfile.TemporaryDirectory() as temp:
             temp_root = Path(temp)

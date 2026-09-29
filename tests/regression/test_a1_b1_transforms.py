@@ -383,7 +383,9 @@ def _run_delivery(
 
 
 class B1CandidateImportSafetyTests(unittest.TestCase):
+    """Guard that the extracted B1 transform modules are safe to import."""
     def test_all_candidate_modules_import_without_io_process_or_cwd_effects(self) -> None:
+        """Importing every transform module performs no file, subprocess, pickle or cwd side effect and prints nothing."""
         saved_modules = {
             name: module
             for name, module in list(sys.modules.items())
@@ -456,7 +458,9 @@ class B1CandidateImportSafetyTests(unittest.TestCase):
 
 
 class B1CompilerExtractionContractTests(unittest.TestCase):
+    """Contract tests for how B1_Compiler delegates to the extracted transform modules."""
     def test_compiler_delegates_each_extracted_boundary_in_predecessor_order(self) -> None:
+        """The compiler calls each extracted boundary (config, planning, validation, tables, effects, delivery) in the predecessor's order and no longer defines normalize_year_like_columns itself."""
         tree = _tree()
         calls = sorted(
             (
@@ -528,7 +532,9 @@ class B1CompilerExtractionContractTests(unittest.TestCase):
 
 
 class B1ConfigurationAndSourcePathCharacterizationTests(unittest.TestCase):
+    """Characterization tests for B1 configuration loading and source-path construction."""
     def test_config_is_cwd_relative_and_preserves_setup_mutation(self) -> None:
+        """read_config opens the config relative to the cwd, and the plan sorts Timeslices in the loaded mapping while other_setup_params is a distinct dict sharing that list."""
         modules = _candidate_modules()
         effects = modules["effects"]
         planning = modules["planning"]
@@ -629,6 +635,7 @@ class B1ConfigurationAndSourcePathCharacterizationTests(unittest.TestCase):
             )
 
     def test_workbook_and_csv_source_paths_keep_exact_formulas_and_order(self) -> None:
+        """Workbook and CSV source paths are built with the exact predecessor path formulas and opened in the predecessor's order."""
         modules = _candidate_modules()
         effects = modules["effects"]
         planning = modules["planning"]
@@ -734,6 +741,7 @@ class B1ConfigurationAndSourcePathCharacterizationTests(unittest.TestCase):
 
 
 class B1ValidationCharacterizationTests(unittest.TestCase):
+    """Characterization tests for B1 demand, capacity, yearsplit and daysplit timeslice validation."""
     @staticmethod
     def _capture_abort(function, *args) -> tuple[list[str], SystemExit]:
         messages: list[str] = []
@@ -746,6 +754,7 @@ class B1ValidationCharacterizationTests(unittest.TestCase):
         return messages, raised.exception
 
     def test_demand_and_capacity_validation_messages_and_precedence(self) -> None:
+        """Demand and capacity validation emit the exact mismatch or definition-error message and abort with a bare SystemExit, and stay silent for valid inputs."""
         validation = _candidate_modules()["validation"]
         cases = (
             (
@@ -832,7 +841,9 @@ class B1ValidationCharacterizationTests(unittest.TestCase):
 
 
 class B1YearColumnNormalizationCharacterizationTests(unittest.TestCase):
+    """Characterization tests for year-like column header normalization."""
     def test_headers_normalize_without_changing_values_index_or_dtypes(self) -> None:
+        """Year-like headers become clean strings while values, index and dtypes are unchanged and the input frame is not mutated."""
         normalize = _candidate_modules()["tables"].normalize_year_like_columns
         frame = pd.DataFrame(
             [[1, 2.5, np.nan, "x", 5, 6, 7]],
@@ -882,7 +893,9 @@ class B1YearColumnNormalizationCharacterizationTests(unittest.TestCase):
 
 
 class B1SystemParameterCharacterizationTests(unittest.TestCase):
+    """Characterization tests for loading the System Parameters sheet into the parameter dictionaries."""
     def test_rows_years_missing_values_and_duplicates_match_predecessor(self) -> None:
+        """System Parameters rows become rounded per-year ReserveMargin and EmissionPenalty tables that skip missing values, keep duplicates and are independent copies for the main and additional dictionaries."""
         frame = pd.DataFrame(
             [
                 ["ReserveMargin", 1.23456, np.nan, 1.0],
@@ -1018,7 +1031,9 @@ class B1StructureCharacterizationTests(unittest.TestCase):
 
 
 class B1OutputDeliveryCharacterizationTests(unittest.TestCase):
+    """Characterization tests for B1 workbook and CSV output delivery."""
     def test_exact_workbook_csv_scenario_and_writer_order(self) -> None:
+        """Delivery writes workbooks and CSVs in the exact predecessor order (74 events) and rounds written values without altering the source frames or writing nan and NDP-only entries."""
         namespace, recorder, demand = _delivery_fixture()
         original_main = {
             key: value.copy(deep=True)
@@ -1182,7 +1197,9 @@ class B1OutputDeliveryCharacterizationTests(unittest.TestCase):
 
 
 class B1TransformProcessSafetyTests(unittest.TestCase):
+    """Process-safety tests for the B1 compiler and its extracted transform modules."""
     def test_compiler_source_has_no_b2_matrix_solver_or_process_boundary(self) -> None:
+        """The compiler and transform sources import no subprocess, multiprocessing or asyncio, reference no B2 matrix or solver functions and embed no solver command strings."""
         sources = {"compiler.py": _source()}
         package_root = REPO_ROOT / "ostram" / "pipeline" / "compilation" / "transforms"
         for module_name in ("__init__", *TRANSFORM_MODULES):
@@ -1239,6 +1256,7 @@ from ostram.pipeline.compilation.transforms.effects import allocate_country_fuel
 
 
 class FuelCostAllocationTests(unittest.TestCase):
+    """Tests for the country fuel-cost allocation policy applied by allocate_country_fuel_costs."""
     def test_embedded_compilation_policy_matches_standalone_policy(self):
         import yaml
         config = yaml.safe_load(self.config.read_text())

@@ -59,6 +59,9 @@ def _working_directory(path: Path):
 
 
 class LauncherHarness:
+    """Patch the run launcher's environment, DVC, snapshot, registry and stage-runner functions with recording doubles.
+    Used as a context manager: each double appends (name, args, cwd) to `events`, and snapshot presence, active scenarios, DVC remote, guessed environment and pipeline failure are configurable.
+    """
     def __init__(
         self,
         launcher,
@@ -228,6 +231,7 @@ def _tree_state(root: Path) -> tuple[tuple[str, str, bytes | None], ...]:
 
 
 class ImportAndCliCharacterizationTests(unittest.TestCase):
+    """Characterization tests for the run launcher's import safety and command-line contract."""
     def test_import_has_no_process_or_pipeline_side_effects(self) -> None:
         with (
             mock.patch.object(subprocess, "check_call") as check_call,
@@ -246,6 +250,7 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
         self.assertTrue(callable(launcher.main))
 
     def test_parse_args_accepts_explicit_argv_and_preserves_cli_contract(self) -> None:
+        """parse_args reads only its explicit argv, ignoring sys.argv, and returns the documented defaults and explicit values, keeping the --scenarios string unstripped."""
         launcher = _load_launcher("parse_args")
         with mock.patch.object(sys, "argv", ["python -m ostram run", "--not-an-option"]):
             defaults = launcher.parse_args([])
@@ -300,6 +305,7 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
         )
 
     def test_defaults_and_free_form_cli_values_are_forwarded_exactly(self) -> None:
+        """Custom --env-name, --env-file and --dvc-file values are forwarded unchanged (files resolved under the project config), producing the expected setup calls, snapshot check and skip-pull messages."""
         launcher = _load_launcher("cli_values")
         argv = [
             "python -m ostram run",
@@ -425,7 +431,9 @@ class ImportAndCliCharacterizationTests(unittest.TestCase):
 
 
 class StageAndScenarioCharacterizationTests(unittest.TestCase):
+    """Characterization tests for run launcher stage selection and scenario selection."""
     def test_every_skip_flag_combination_preserves_selected_stage_order(self) -> None:
+        """For every combination of --skip-a3, --skip-b1 and --skip-b2 the launcher runs only the selected A3, B1 and B2 stages, in that order."""
         launcher = _load_launcher("skip_matrix")
         for skip_a3, skip_b1, skip_b2 in product((False, True), repeat=3):
             with self.subTest(skip_a3=skip_a3, skip_b1=skip_b1, skip_b2=skip_b2):
@@ -586,6 +594,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
         )
 
     def test_explicit_empty_string_uses_default_but_whitespace_fails(self) -> None:
+        """An explicit empty --scenarios uses the default active scenarios, whereas a whitespace-only value selects nothing and raises RuntimeError before any A3 or pipeline stage."""
         launcher = _load_launcher("empty_string_distinction")
         for raw, expected_a3, should_fail in (
             ("", ["A", "B"], False),
@@ -662,6 +671,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
         )
 
     def test_skip_pull_actual_route_keeps_fresh_explicit_project_dvc_free(self) -> None:
+        """Through the canonical CLI with --skip-pull and an explicit project root and workspace, a fresh project runs A3 and B1 with no DVC calls and the project tree and external workspace are left untouched."""
         import ostram.__main__ as canonical_cli
 
         with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
@@ -823,6 +833,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
     def test_canonical_outer_route_propagates_b1_child_failure_and_skips_b2(
         self,
     ) -> None:
+        """Through the canonical CLI, a non-zero B1 compiler exit propagates as a failure with exit code 1, B2 is never run and the original config is restored."""
         import ostram.__main__ as canonical_cli
 
         launcher = _load_launcher("b1_child_failure")
@@ -903,6 +914,7 @@ class StageAndScenarioCharacterizationTests(unittest.TestCase):
 
 
 class CommandBoundaryCharacterizationTests(unittest.TestCase):
+    """Characterization tests for the commands the run launcher builds and the process boundary they cross."""
     def test_run_pins_project_pythonpath_and_inherits_cwd(self) -> None:
         launcher = _load_launcher("run_env")
         cwd = Path.cwd()
@@ -930,6 +942,7 @@ class CommandBoundaryCharacterizationTests(unittest.TestCase):
         self.assertEqual(Path.cwd(), cwd)
 
     def test_run_pipeline_and_a3_construct_module_commands(self) -> None:
+        """run_pipeline_script and run_a3_for_scenario build python -B -m module commands from the script paths, with the scenarios argument split and the stage workspace as cwd."""
         launcher = _load_launcher("command_strings")
         with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
             cwd = Path(temp).resolve()

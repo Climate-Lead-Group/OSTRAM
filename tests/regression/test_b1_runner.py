@@ -100,6 +100,7 @@ def _patch_fixture_paths(runner, fixture):
 
 
 class B1ImportAndCliCharacterizationTests(unittest.TestCase):
+    """Characterization tests for the B1 runner import surface, command-line parser and public wrapper."""
     def test_import_is_silent_and_does_not_cross_process_or_file_boundaries(self) -> None:
         with (
             mock.patch.object(subprocess, "run") as process_run,
@@ -132,6 +133,7 @@ class B1ImportAndCliCharacterizationTests(unittest.TestCase):
         self.assertEqual(vars(explicit), {"scenarios": " C , A, C "})
 
     def test_public_wrapper_forwards_explicit_orchestration_seams(self) -> None:
+        """The public main() parses the CLI, resolves the default B1Paths and hands both to orchestrate together with the wrapper's own discoverer, updater and compiler runner."""
         module = _load_b1("wrapper_forwarding")
         cli_args = argparse.Namespace(scenarios="A")
         paths = module._impl.B1Paths(
@@ -189,6 +191,7 @@ class B1ImportAndCliCharacterizationTests(unittest.TestCase):
 
 
 class B1ScenarioCharacterizationTests(unittest.TestCase):
+    """Characterization tests for B1 scenario discovery, filtering and resolution."""
     def setUp(self) -> None:
         self.runner = _implementation(_load_b1(self.id().rsplit(".", 1)[-1]))
 
@@ -211,6 +214,7 @@ class B1ScenarioCharacterizationTests(unittest.TestCase):
             self.assertEqual(self.runner.list_scenario_suffixes(root), list(included))
 
     def test_no_filter_runs_every_discovered_scenario_in_discovery_order(self) -> None:
+        """With no --scenarios filter main() updates and compiles every discovered scenario in sorted discovery order and prints no filter notice."""
         with _b1_fixture("C", "A", "B") as fixture:
             events: list[tuple[object, ...]] = []
             with (
@@ -360,6 +364,7 @@ class B1ScenarioCharacterizationTests(unittest.TestCase):
 
 
 class B1CommandBoundaryCharacterizationTests(unittest.TestCase):
+    """Characterization tests for the compiler command and the preflight checks before it runs."""
     def setUp(self) -> None:
         self.runner = _implementation(_load_b1(self.id().rsplit(".", 1)[-1]))
 
@@ -418,6 +423,7 @@ class B1CommandBoundaryCharacterizationTests(unittest.TestCase):
 
 
 class B1IsolatedBoundaryTests(unittest.TestCase):
+    """Tests for the isolated B1 runner boundaries: paths, scenario resolution, command plan and configuration scope."""
     def setUp(self) -> None:
         self.runner = _implementation(_load_b1(self.id().rsplit(".", 1)[-1]))
 
@@ -439,6 +445,7 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
     def test_canonical_materialized_directory_handoff_uses_nested_a1_outputs(
         self,
     ) -> None:
+        """B1Paths.defaults points scenarios_root at the project's A1_Outputs so the base-year workbook is selected from the nested A1_Outputs_<scenario> directory."""
         scenario = "A_Calibrated_BAU"
         workbook_name = "A-O_AR_Model_Base_Year.xlsx"
         with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
@@ -514,6 +521,7 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
         )
 
     def test_command_plan_and_injected_runner_are_separate(self) -> None:
+        """build_compiler_command only plans the argv and cwd, and execute_command runs it through the injected runner and returns its return code."""
         compiler = Path("root") / "compiler.py"
         cwd = Path("root")
         command = self.runner.build_compiler_command(
@@ -551,6 +559,7 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
         )
 
     def test_configuration_scope_exposes_backup_and_restores_on_body_exception(self) -> None:
+        """preserved_configuration copies the config to a .bak, yields the backup path and moves it back even when the body raises."""
         config = Path("Config_MOMF_T1_A.yaml")
         backup = Path("Config_MOMF_T1_A.yaml.bak")
         events: list[tuple[object, ...]] = []
@@ -584,6 +593,7 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
         )
 
     def test_b1_production_path_has_only_the_compiler_process_boundary(self) -> None:
+        """The B1 wrapper and orchestrator run only the compiler as a process, and no B2, solver or retired projection dependency appears in the sources or config."""
         wrapper_source = B1_ENTRYPOINT.read_text(encoding="utf-8-sig")
         helper_source = (B1_ENTRYPOINT.parent / "orchestrator.py").read_text(
             encoding="utf-8-sig"
@@ -619,6 +629,7 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
     def test_fresh_b1_extra_input_contract_contains_only_live_dependencies(
         self,
     ) -> None:
+        """The B1 extra-input contract lists only the live Xtra_Emi and Xtra_Storage workbooks, and the retired Xtra_Proj and Xtra_Battery inputs are gone from the config and compiler."""
         compiler_path = B1_ENTRYPOINT.parent / "compiler.py"
         config_path = (
             REPO_ROOT / "config" / "compilation" / "Config_MOMF_T1_A.yaml"
@@ -740,6 +751,7 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
 
 
 class B1ConfigurationAndFailureCharacterizationTests(unittest.TestCase):
+    """Characterization tests for B1 configuration backup, restore and failure handling in main()."""
     def setUp(self) -> None:
         self.runner = _implementation(_load_b1(self.id().rsplit(".", 1)[-1]))
 
@@ -766,6 +778,7 @@ class B1ConfigurationAndFailureCharacterizationTests(unittest.TestCase):
             yield
 
     def test_predecessor_invocation_trace_and_status_order(self) -> None:
+        """main() with a C,A,C filter backs up the config, then updates and compiles C and A once each in that order, restores the original YAML and prints its status messages in order."""
         with _b1_fixture("C", "A", "B") as fixture:
             events: list[tuple[object, ...]] = []
             real_copy = self.runner.shutil.copy2
@@ -856,6 +869,7 @@ class B1ConfigurationAndFailureCharacterizationTests(unittest.TestCase):
             self.assertEqual(fixture.config.read_bytes(), fixture.original)
 
     def test_update_error_skips_only_that_compiler_and_continues(self) -> None:
+        """When updating the YAML for one scenario fails, main() skips only that scenario's compiler run, continues with the others and restores the config."""
         with _b1_fixture("A", "B", "C") as fixture:
             events: list[tuple[str, str]] = []
 

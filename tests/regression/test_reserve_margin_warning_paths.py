@@ -143,6 +143,7 @@ def _run_patcher(
 
 
 class ReserveMarginWarningPathTests(unittest.TestCase):
+    """Guard bounded warning-file paths in the reserve-margin repair patcher."""
     @unittest.skipUnless(
         os.name == "nt",
         "the established 260-unit failure is Windows-specific",
@@ -196,6 +197,8 @@ class ReserveMarginWarningPathTests(unittest.TestCase):
                 )
 
     def test_short_and_long_runs_preserve_warning_output_and_workbook_bytes(self) -> None:
+        """Short and over-length warning paths give identical CRLF warning text and output bytes,
+        leave the fallback workbook unchanged and leave no file at the raw long path."""
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp).resolve()
             input_path = root / "input.txt"

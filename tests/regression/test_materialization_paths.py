@@ -270,9 +270,12 @@ def _run_stage3_chain(root: Path) -> tuple[Path, Path]:
 
 
 class BoundedWorkbookPathTests(unittest.TestCase):
+    """Unit checks of bounded_workspace_workbook_path for Windows-safe workbook names."""
     def test_bounded_name_unit_behavior_preserves_safe_and_compacts_long_paths(
         self,
     ) -> None:
+        """A safe path is returned unchanged, while an over-budget path maps to a stable, distinct
+        .xlsx path under the same parent below WINDOWS_SAFE_ABSOLUTE_PATH_BUDGET."""
         with tempfile.TemporaryDirectory(dir=REPO_ROOT.parent) as temp:
             root = Path(temp).resolve()
             safe = root / "safe café workspace" / "POST_TRN_CAP.xlsx"
@@ -325,7 +328,12 @@ class BoundedWorkbookPathTests(unittest.TestCase):
 
 
 class WorkbookRoundTripAndMaterializationTests(unittest.TestCase):
+    """Round-trip and materialization checks for workbooks whose desired paths exceed the Windows
+    path budget."""
     def test_real_openpyxl_long_unicode_space_round_trip(self) -> None:
+        """cap_trn_to_residual.patch_workbook on a long Unicode path writes a bounded output
+        (18/18 TRN techs, 777 cells changed), keeps the source unchanged and preserves formulas
+        and fonts."""
         with tempfile.TemporaryDirectory(dir=REPO_ROOT.parent) as temp:
             root = Path(temp).resolve()
             parent, desired = _comparable_stage3_parent(root)
@@ -364,6 +372,9 @@ class WorkbookRoundTripAndMaterializationTests(unittest.TestCase):
     def test_actual_a_calibrated_bau_materialization_route_reaches_consumer(
         self,
     ) -> None:
+        """The A3 orchestrator route for A_Calibrated_BAU with an over-budget legacy path
+        completes and delivers the cap_trn_to_residual result to the consumer without changing
+        the scenario authority."""
         with tempfile.TemporaryDirectory(dir=REPO_ROOT.parent) as temp:
             root = Path(temp).resolve()
             stage3_parent, legacy = _comparable_stage3_parent(root)

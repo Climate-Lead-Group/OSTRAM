@@ -202,7 +202,10 @@ def _workbook_structure(path: Path) -> dict[str, tuple[object, ...]]:
 
 
 class ProductionRuleContractTests(unittest.TestCase):
+    """Guard the production base-year pin rules file."""
     def test_production_allowlist_is_exact_and_non_maldives(self) -> None:
+        """The production pin rules hash to RULES_SHA256 and hold 3429 unique non-Maldives rules
+        with the expected parameter, state and per-scenario counts."""
         self.assertEqual(_sha256(PRODUCTION_RULES), PIN.RULES_SHA256)
         rules = PIN.load_pin_rules()
         self.assertEqual(len(rules), 3429)
@@ -261,6 +264,7 @@ class ProductionRuleContractTests(unittest.TestCase):
 
 
 class StaticPinApplicationTests(unittest.TestCase):
+    """Apply base-year pin rules to a synthetic input workbook and check the resulting cells."""
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)
@@ -272,6 +276,8 @@ class StaticPinApplicationTests(unittest.TestCase):
     def test_exact_keys_zero_absence_window_idempotence_and_no_other_change(
         self,
     ) -> None:
+        """Pin rules write the exact value and an explicit zero only at their keys, other techs
+        and the workbook structure stay unchanged, and a second run saves nothing."""
         _write_rules(
             self.rules,
             [
@@ -373,6 +379,8 @@ class StaticPinApplicationTests(unittest.TestCase):
         self.assertEqual(_sha256(path), after_first_hash)
 
     def test_scenario_membership_filters_rules_without_touching_other_rows(self):
+        """Only rules listing the run scenario are applied (2 loaded, 1 applied), and the row of
+        the excluded rule is left unchanged."""
         _write_rules(
             self.rules,
             [
@@ -443,6 +451,8 @@ class StaticPinApplicationTests(unittest.TestCase):
         self.assertEqual(_workbook_structure(path), before_structure)
 
     def test_empty_projection_mode_flips_only_when_non_targets_are_blank(self):
+        """An EMPTY Projection.Mode row flips to 'User defined' with only the target year filled
+        when all non-target years are blank."""
         _write_rules(self.rules, [_rule(year=2023, value="1")])
         input_dir = self.root / "input"
         path = _write_workbook(
@@ -511,6 +521,8 @@ class StaticPinApplicationTests(unittest.TestCase):
         self.assertEqual(_sha256(path), before)
 
     def test_missing_duplicate_bad_mode_and_bad_header_fail_before_write(self):
+        """A missing target row, a duplicate target row, a bad Projection.Mode or a bad header
+        raises ValueError and leaves the workbook hash unchanged."""
         _write_rules(self.rules, [_rule(year=2023, value="1")])
         cases = ("missing", "duplicate", "mode", "header")
         for case in cases:
@@ -557,6 +569,8 @@ class StaticPinApplicationTests(unittest.TestCase):
                 self.assertEqual(_sha256(path), before)
 
     def test_rule_validation_rejects_duplicates_absence_mdv_and_bad_keys(self):
+        """load_pin_rules raises ValueError for duplicate, absence, Maldives, post-window,
+        negative-value, bad-index and non-finite rules."""
         duplicate = _rule()
         invalid_cases: dict[str, list[dict[str, str]]] = {
             "duplicate": [duplicate, dict(duplicate)],

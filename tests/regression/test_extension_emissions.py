@@ -18,6 +18,7 @@ TRAINING = ROOT / "examples/unescap"
 
 
 class ExtensionEmissionTests(unittest.TestCase):
+    """Check that filter_by_tech_country_matrix keeps declared late-A3 technology emissions."""
     def filter(self, preserve: bool):
         paths = SimpleNamespace(
             ao_decisions=TRAINING / "config/scenarios/ao_extension_decisions.csv",

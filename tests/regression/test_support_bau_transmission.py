@@ -13,6 +13,7 @@ from regression.test_a3_orchestration import A3TraceHarness, _load_a3
 
 
 class SupportBAUTransmissionTests(unittest.TestCase):
+    """Guard commissioning, retirement and inheritance behaviour of support BAU transmission."""
     def fixture(self, path):
         wb = Workbook()
         ws = wb.active

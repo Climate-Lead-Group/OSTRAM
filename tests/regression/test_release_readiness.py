@@ -56,6 +56,7 @@ def _parse_html(path: Path) -> _Links:
 
 
 class PortableRuntimeTests(unittest.TestCase):
+    """Guard the runtime against shell and drive-letter assumptions."""
     def test_environment_executable_discovers_extensionless_posix_binary(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             env_root = Path(temp) / "env"
@@ -135,6 +136,7 @@ class PortableRuntimeTests(unittest.TestCase):
 
 
 class CanonicalTrainingRouteTests(unittest.TestCase):
+    """Guard the CLI and reporting behaviour of the canonical training route."""
     def test_country_merge_targets_profile_authority_without_changing_full_default(self) -> None:
         paths = SimpleNamespace(
             osemosys_inputs=Path("prepared-authority"),
@@ -191,6 +193,9 @@ class CanonicalTrainingRouteTests(unittest.TestCase):
                 _comparison_labels(invalid)
 
     def test_capture_and_selected_comparison_use_only_workspace_results(self) -> None:
+        """Capture and comparison reports read only workspace results: forward and reverse
+        captures work, the comparison writes unescap-interconnector-comparison.html, and
+        repeating a capture raises FileExistsError."""
         with tempfile.TemporaryDirectory() as temp:
             workspace = Path(temp).resolve()
             execution = workspace / "execution"
@@ -233,6 +238,7 @@ class CanonicalTrainingRouteTests(unittest.TestCase):
 
 
 class TrainingAssetTests(unittest.TestCase):
+    """Guard the documentation and HTML assets of the training example."""
     def test_live_docs_contain_no_retired_or_invented_commands(self) -> None:
         live_documents = [
             EXAMPLE_ROOT / "README.md",

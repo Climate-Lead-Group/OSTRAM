@@ -20,7 +20,11 @@ TRAINING_TAXONOMY = ROOT / "examples/unescap/config/scenarios/technology_types.c
 
 
 class ManualFixDomainTests(unittest.TestCase):
+    """Exercise the apply_manual_fixes stage against reduced-domain workbook fixtures."""
     def run_stage(self, base_copies: int) -> subprocess.CompletedProcess[str]:
+        """Run apply_manual_fixes in a subprocess on synthetic wvaligned workbooks holding
+        `base_copies` copies of the PWRNGSBGDXX base-year row, and return the completed
+        process."""
         with tempfile.TemporaryDirectory() as tmp:
             stage = Path(tmp)
             source = stage / "wvaligned_outputs"

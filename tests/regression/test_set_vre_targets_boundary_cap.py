@@ -53,6 +53,7 @@ VRE = _load_module()
 
 
 class SetVreTargetsBoundaryCapTests(unittest.TestCase):
+    """Guard the boundary caps applied to derived VRE activity targets."""
     def test_production_config_has_exact_transition_cap_series(self):
         config = VRE.load_config(PRODUCTION_CONFIG)
 
@@ -75,6 +76,8 @@ class SetVreTargetsBoundaryCapTests(unittest.TestCase):
         )
 
     def test_caps_reduce_raw_values_but_never_increase_lower_values(self):
+        """cap_activity_lower_value lowers raw values above the cap to the cap and records the
+        evidence, but leaves values already below the cap unchanged."""
         caps = [
             {
                 "region": "GLOBAL",
@@ -151,6 +154,8 @@ class SetVreTargetsBoundaryCapTests(unittest.TestCase):
                 self.assertIsNone(evidence)
 
     def test_apply_changes_only_the_authorized_parameter_key(self):
+        """apply_vre_targets with the production caps changes only the PWRWONINDWE activity lower
+        limit in 2027 and 2028, to the capped values, and logs the caps."""
         def make_sheet():
             workbook = Workbook()
             sheet = workbook.active

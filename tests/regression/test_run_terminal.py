@@ -47,6 +47,7 @@ class EncodingStream(io.StringIO):
 
 
 class TerminalEncodingTests(unittest.TestCase):
+    """Check that terminal output degrades safely under legacy encodings."""
     def test_cp1252_terminal_degrades_but_utf8_log_preserves_unicode_path(self) -> None:
         with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
             root = Path(temp).resolve()
@@ -85,6 +86,7 @@ class TerminalEncodingTests(unittest.TestCase):
 
 
 class RunReporterDisplayTests(unittest.TestCase):
+    """Check the RunReporter status display in interactive and non-interactive modes."""
     def test_interactive_status_updates_in_place_on_stderr_only(self) -> None:
         with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
             stdout = EncodingStream("utf-8", tty=True)
@@ -145,6 +147,7 @@ class RunReporterDisplayTests(unittest.TestCase):
 
 
 class ChildProcessTeeTests(unittest.TestCase):
+    """Check RunReporter.run_child streaming and exit-code handling."""
     def _reporter(self, root: Path, *, verbose: bool):
         stdout = EncodingStream("utf-8")
         stderr = EncodingStream("utf-8")
@@ -190,6 +193,8 @@ class ChildProcessTeeTests(unittest.TestCase):
         self.assertNotIn("err-0-Ω", stderr.getvalue())
 
     def test_verbose_streams_raw_output_and_diagnostics_without_ansi(self) -> None:
+        """In verbose mode run_child streams the raw child stdout and stderr with the command and
+        working directory, and no ANSI escape reaches stdout, stderr or the log."""
         with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:
             root = Path(temp).resolve()
             reporter, stdout, stderr = self._reporter(root, verbose=True)
@@ -243,6 +248,9 @@ class ChildProcessTeeTests(unittest.TestCase):
         self.assertIn("final_process_exit_code=7", log)
 
     def test_keyboard_interrupt_signals_child_and_propagates(self) -> None:
+        """A KeyboardInterrupt while waiting signals the child (CTRL_BREAK_EVENT on Windows,
+        SIGINT to its process group elsewhere), propagates, and the log records the termination
+        and exit code 130."""
         class FakeProcess:
             def __init__(self) -> None:
                 self.pid = 4242
@@ -304,7 +312,10 @@ class ChildProcessTeeTests(unittest.TestCase):
 
 
 class SideEffectFreeCliTests(unittest.TestCase):
+    """Check that non-run CLI commands create no run logs."""
     def test_help_malformed_import_and_inspection_do_not_create_logs(self) -> None:
+        """--help, a malformed run option (exit code 2) and inspect-resources leave their
+        workspace directories uncreated."""
         import ostram.__main__ as cli
 
         with tempfile.TemporaryDirectory(dir=TEST_ROOT) as temp:

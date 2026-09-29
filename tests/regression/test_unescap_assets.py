@@ -44,6 +44,7 @@ def _write_values(path: Path, values: set[str]) -> None:
 
 
 class UnescapWorkbookTests(unittest.TestCase):
+    """Guard the UNESCAP training workbook assets."""
     def test_restrictions_is_a_header_only_seed_and_control_is_unchanged(self) -> None:
         workbook = load_workbook(
             UNESCAP / "inputs" / "scenarios" / "OSTRAM_Scenario_Inputs.xlsx",
@@ -81,6 +82,7 @@ class UnescapWorkbookTests(unittest.TestCase):
 
 
 class UnescapMappingTests(unittest.TestCase):
+    """Guard the UNESCAP reduced-model mappings and domains."""
     def test_bangladesh_gas_emissions_cover_both_combustion_modes(self) -> None:
         # B1 rounds the maintained 2.33765 input ratio to 2.3376. Output
         # activity is one PJ of ELCBGDXX01, not one PJ of gas supplied.
@@ -100,6 +102,9 @@ class UnescapMappingTests(unittest.TestCase):
         self.assertEqual({Decimal(row["VALUE"]) for row in rows}, {expected})
 
     def test_stage_specific_domain_contract_accepts_only_the_exact_delta(self) -> None:
+        """The seed domain validates, the compiled domain accepts only the declared delta
+        (PWRSHPINDEA plus six ELC fuels, 90 technologies and 49 fuels), and an undeclared
+        PWRUNDECLARED raises ProfileDomainError."""
         manifest = load_manifest(UNESCAP / "profile.yaml")
         seed_root = UNESCAP / "inputs" / "osemosys_global"
         seed = validate_seed_domain(manifest, seed_root)
@@ -188,6 +193,8 @@ class UnescapMappingTests(unittest.TestCase):
         # The projection stays frozen as reference evidence, but the profile
         # disables its application (policies.apply_pwr_min_pin: false): the
         # full-model calibration is infeasible on the reduced domain.
+        """The frozen reduced PWR minimum pin table matches its SHA-256 and holds 510 rules over
+        50 technologies (BGD 252, IND 258) with the expected per-scenario change counts."""
         authority = (
             UNESCAP / "config" / "scenarios" / "rules"
             / "pwr_min_2023_2026_pin.csv"
@@ -228,6 +235,9 @@ class UnescapMappingTests(unittest.TestCase):
         self.assertEqual(codes, {"PWRNGSBGDXX", "PWRSHPINDEA"})
 
     def test_reduced_taxonomy_is_complete_without_full_model_padding(self) -> None:
+        """The reduced technology_types.csv has 90 unique mappings including TRNBGDXXINDEA and
+        covering every raw technology that is not deliberately filtered, with no full-model
+        padding."""
         taxonomy_path = UNESCAP / "config" / "scenarios" / "technology_types.csv"
         with taxonomy_path.open("r", encoding="utf-8-sig", newline="") as stream:
             rows = list(csv.DictReader(stream))

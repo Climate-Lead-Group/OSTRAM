@@ -16,6 +16,8 @@ exec(compile(ast.Module(body=[n for n in tree.body if isinstance(n, ast.Function
 
 
 class MinCapacityMappingTests(unittest.TestCase):
+    """Check append_missing_min_capacity_rows from update_ao_from_extensions.py on a one-row
+    worksheet."""
     def setUp(self):
         self.ws = Workbook().active
         self.headers = ["Tech.ID", "Tech", "Tech.Name", "Parameter.ID", "Parameter",

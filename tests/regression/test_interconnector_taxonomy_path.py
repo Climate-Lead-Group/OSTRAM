@@ -208,6 +208,8 @@ def _expected_snapshot(before: tuple, intended: dict[tuple[str, str], object]) -
 
 
 class InterconnectorTaxonomyPathTests(unittest.TestCase):
+    """Guard the authoritative technology taxonomy path used by the interconnector direction rule.
+"""
     def test_authoritative_path_columns_and_classification_are_unchanged(self) -> None:
         paths = path_module.resolve_paths(project_root=REPO_ROOT, environ={})
         taxonomy = paths.scenario_config_root / rule.TECH_TYPES_FILE
@@ -228,6 +230,9 @@ class InterconnectorTaxonomyPathTests(unittest.TestCase):
         self.assertLessEqual(set(configured), EXPECTED_INTERCONNECTORS)
 
     def test_configured_rule_from_external_cwd_changes_only_direction_cells(self) -> None:
+        """Running the configured direction rule from an unrelated cwd loads the authoritative
+        taxonomy once, changes only the nine configured direction cells and leaves the base-
+        year workbook unchanged."""
         configured = rule.load_config(CONTRACTUAL_OVERLAY)["directions"]
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp).resolve()
@@ -283,6 +288,8 @@ class InterconnectorTaxonomyPathTests(unittest.TestCase):
             self.assertFalse(OBSOLETE_TAXONOMY.exists())
 
     def test_missing_authoritative_taxonomy_fails_clearly(self) -> None:
+        """With no taxonomy under config/scenarios, rule.run raises FileNotFoundError naming the
+        missing path and creates neither it nor the obsolete copy."""
         with tempfile.TemporaryDirectory() as temp:
             project = Path(temp).resolve() / "valid project without taxonomy"
             for directory in (

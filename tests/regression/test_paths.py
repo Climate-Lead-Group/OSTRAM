@@ -28,6 +28,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 class ProjectPathResolutionTests(unittest.TestCase):
+    """Resolve project, workspace and package resource paths by precedence."""
     def test_cli_project_root_precedes_environment_and_anchor(self) -> None:
         resolved = path_module.resolve_paths(
             project_root=REPO_ROOT,
@@ -92,6 +93,8 @@ class ProjectPathResolutionTests(unittest.TestCase):
             self.assertFalse(candidate.exists())
 
     def test_representative_real_resources_are_read_absolute_and_read_only(self) -> None:
+        """inspect_resources leaves the real registry, workbooks and configs unmodified and
+        reports the registry schema, xlsx signature, four root scenarios and absolute paths."""
         resolved = path_module.resolve_paths(project_root=REPO_ROOT, environ={})
         before = {
             path: path.stat().st_mtime_ns
