@@ -32,10 +32,12 @@ class TransformPlan:
 
     @property
     def years(self) -> list[int]:
+        """Return the model year vector (``time_range_vector``)."""
         return self.time_range_vector
 
     @property
     def setup(self) -> dict[str, Any]:
+        """Return the ``other_setup_params`` mapping."""
         return self.other_setup_params
 
     def scenario_workbook(self, suffix_key: str) -> str:
@@ -62,12 +64,15 @@ class TransformPlan:
         return str(mutable if mutable.is_file() else paths.osemosys_inputs / "EMISSION.csv")
 
     def structure_workbook(self) -> Any:
+        """Return the ``Print_A2_Struct_List`` configuration entry."""
         return self.params["Print_A2_Struct_List"]
 
     def main_output_root(self) -> Any:
+        """Return the ``A2_output_main_scen`` configuration entry."""
         return self.params["A2_output_main_scen"]
 
     def additional_output_root(self) -> Any:
+        """Return the ``A2_output`` configuration entry."""
         return self.params["A2_output"]
 
 

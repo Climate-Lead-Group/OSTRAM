@@ -30,12 +30,14 @@ def read_config(
 def open_workbook(
     path: Any, *, factory: Callable[[Any], Any] | None = None
 ) -> Any:
+    """Open an Excel workbook with ``factory`` (default ``pandas.ExcelFile``)."""
     if factory is None:
         factory = pd.ExcelFile
     return factory(path)
 
 
 def read_csv(path: Any, *, reader: Callable[[Any], Any] | None = None) -> Any:
+    """Read a CSV file with ``reader`` (default ``pandas.read_csv``)."""
     if reader is None:
         reader = pd.read_csv
     return reader(path)
@@ -118,6 +120,11 @@ def write_structure_workbook(
     writer_factory: Callable[..., Any] | None = None,
     write_frame: Callable[..., Any] | None = None,
 ) -> None:
+    """Write one frame to a new xlsxwriter workbook and close it.
+
+    Side effects:
+        Creates or overwrites the workbook at ``path``.
+    """
     if writer_factory is None:
         writer_factory = pd.ExcelWriter
     writer = writer_factory(path, engine="xlsxwriter")
@@ -126,6 +133,35 @@ def write_structure_workbook(
 
 
 def allocate_country_fuel_costs(tables, config_path, audit_path):
+    """Allocate country fuel prices to consumer ``VariableCost`` rows and write an audit CSV.
+
+    Each fuel-family/region/year gets a common upstream base equal to the lowest
+    country price (``upstream_base: minimum_country_price``) after multiplying by
+    ``price_to_model_energy_factor``. The supplier (MIN) technologies are set to
+    that base, and each consumer technology is charged ``InputActivityRatio *
+    (country price - base)`` on top of its non-fuel variable cost (the existing
+    ``VariableCost`` row or ``default_nonfuel_variable_cost``).
+
+    Args:
+        tables: Parameter tables by name; needs ``VariableCost``,
+            ``InputActivityRatio`` and ``OutputActivityRatio``, and optionally
+            ``SpecifiedAnnualDemand``.
+        config_path: Path to the ``fuel-cost-allocation-v1`` YAML, or the
+            already loaded mapping. ``None`` or a missing path disables the step.
+        audit_path: Destination of the per-row audit CSV.
+
+    Returns:
+        ``tables`` unchanged when the step is disabled; otherwise a shallow copy
+        whose ``VariableCost`` is replaced by the allocated table.
+
+    Raises:
+        ValueError: If the schema or upstream rule is unsupported, a price is
+            missing or non-positive, a coefficient is non-finite or conflicting,
+            or the fossil consumer/supplier/demand boundary is not the supported one.
+
+    Side effects:
+        Writes the audit CSV to ``audit_path``, creating parent folders.
+    """
     # Existing compilation YAML embeds this policy; standalone paths remain
     # supported for the accepted focused regression fixtures.
     if config_path is None:
