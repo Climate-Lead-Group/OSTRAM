@@ -1,8 +1,25 @@
 # -*- coding: utf-8 -*-
-"""
-Created on 2025
+"""Run stage B2: otoole conversion, datafile patch chain, solver, results and cleanup.
 
-@author: Climate Lead Group, Andrey Salazar-Vargas
+Entry point launched by ``python -m ostram run``; it defines the concrete
+operations and injects them into ``orchestrator.orchestrate_b2``.
+
+Inputs:
+    config/execution/Config_MOMF_T1_AB.yaml and config/compilation/Config_MOMF_T1_A.yaml
+    <workspace>/compilation/A2_Output_Params/<scenario>/*.csv (through A2_output_otoole)
+    model/osemosys_fast_preprocessed.txt (trade marker) and the otoole config
+Outputs:
+    <workspace>/execution/Executables/<scenario>_0/: <scenario>_0.txt, Pre_processed_*.txt
+    siblings per patch, <scenario>_0_Input.csv, solver artefacts and Outputs/
+    OSTRAM_data.txt or OSTRAM_data_storage_delay.txt at the project root (root datafile export)
+Usage:
+    python -B -m ostram.pipeline.execution.runner --scenarios A,B [--compile-only]
+Notes:
+    - Patch order: days_in_day_type, storage_delay, strip_storage, open_pwrbck_caps,
+      reserve_margin_repair, reserve_margin_repair_xlsx (see README.md).
+    - storage_delay_active silently disables strip_storage_active (orchestrator.py).
+Authors:
+    2025 Climate Lead Group, Andrey Salazar-Vargas
 """
 
 import argparse
