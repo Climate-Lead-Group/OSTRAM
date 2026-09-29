@@ -122,6 +122,7 @@ def storage_prefixes(metadata: Mapping[str, object] | None) -> tuple[str, ...]:
 
 
 def is_storage_tech(technology: object, storage: tuple[str, ...]) -> bool:
+    """Return whether ``technology`` starts with one of the storage prefixes."""
     return str(technology).startswith(storage)
 
 
@@ -136,6 +137,7 @@ def is_generation_tech(technology: object, storage: tuple[str, ...]) -> bool:
 
 
 def is_vre_tech(technology: object) -> bool:
+    """Return whether ``technology`` is variable renewable (``PWRSPV``, ``PWRWON`` or ``PWRWOF``)."""
     return str(technology).startswith(VRE_PREFIXES)
 
 
@@ -1147,6 +1149,20 @@ def generate_report(
     output: Path,
     **context,
 ) -> Path:
+    """Build the dashboard data and write the self-contained HTML report.
+
+    Args:
+        snapshots: Explicit ``(label, csv_path)`` pairs to aggregate.
+        output: Destination HTML file.
+        **context: Keyword arguments of :func:`build_dashboard_data`
+            (``profile_id``, ``manifest``, ``workspace``, ``metadata``).
+
+    Returns:
+        The resolved output path.
+
+    Side effects:
+        Creates parent folders and writes ``output`` (UTF-8, LF).
+    """
     data = build_dashboard_data(snapshots, **context)
     output = Path(output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)

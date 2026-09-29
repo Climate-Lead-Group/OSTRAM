@@ -977,6 +977,15 @@ def _load_manifest_metadata(path: Path) -> Mapping[str, object]:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Build the multi-sheet summary workbook from result CSVs, folders or zip archives.
+
+    Returns:
+        0 on success.
+
+    Side effects:
+        Writes ``OSTRAM_Summary_<timestamp>.xlsx`` (or ``--out``) and prints its
+        path. Exits with a parser error rather than overwriting an existing file.
+    """
     parser = argparse.ArgumentParser(
         prog="python -m ostram.reporting.summary_workbook",
         description=__doc__.splitlines()[0],
