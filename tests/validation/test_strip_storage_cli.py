@@ -85,6 +85,8 @@ def collect_param_block_rows(lines, param_name, key_col_1indexed, key_set):
 
 
 def main():
+    """Run strip_storage as a subprocess and validate its output structurally, exiting with an
+    error on any failed check."""
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("input")
