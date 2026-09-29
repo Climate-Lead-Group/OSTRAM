@@ -314,8 +314,13 @@ reports as `PytestReturnNotNoneWarning` (harmless today).
 - **`docs/regression.md` lists 15 governed scenarios; the registry has 17.**
   `A_Calibrated_BAU_Clipped_TxFreeze2026` and `B_Opt_Clipped_GrossImportCap15` are in
   `DECISION_SCENARIOS` (`registry.py`) but not in that page. The registry is the authority.
-- **`tests/regression/test_b1_runner.py` creates temporary directories under `tests/regression/`**
-  (`tempfile.TemporaryDirectory(dir=TEST_ROOT)`); they are removed at the end of each test.
+- **Some tests write inside the tree.** `test_b1_runner.py`, `test_run_orchestration.py` and
+  `test_run_terminal.py` create temporary directories under `tests/regression/`
+  (`tempfile.TemporaryDirectory(dir=TEST_ROOT)`, removed per test); `test_materialization_paths.py`
+  creates them in the parent of the repo; `test_paths.py` creates
+  `workspace/stage11-lazy-test/<Scenario With Space uuid>/` under the gitignored `workspace/` and
+  never removes it, and needs `workspace/` to exist. The full suite is therefore not free of
+  writes under `workspace/`; none of them touches tracked files.
 - **Pre-existing test failures (2026-09-29, base environment above; not caused by documentation
   work).** File-lock `PermissionError` on temporary `.xlsx` (13 tests, including 3 teardown errors):
   `test_apply_base_year_pin.py::StaticPinApplicationTests` (5 tests + 3 teardown errors),
