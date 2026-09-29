@@ -1,3 +1,19 @@
+"""Build OSTRAM_AO_Extensions.xlsx from the WV workbook and the A-O workbooks (A3 Stage 1, script 2).
+
+Inputs:
+    $OSTRAM_STAGE_WORKDIR/SOASIA_OSeMOSYS_WV.xlsx
+    $OSTRAM_STAGE_WORKDIR/A-O_Parametrization.xlsx, A-O_AR_Model_Base_Year.xlsx,
+    A-O_AR_Projections.xlsx, A-O_Demand.xlsx
+Outputs:
+    $OSTRAM_STAGE_WORKDIR/OSTRAM_AO_Extensions.xlsx (sheets 1_Extensions_To_Add,
+    2_Parameter_Rows_To_Replicate, 3_Signal_Disagreements)
+Usage:
+    python -B -m ostram.pipeline.scenarios.transformations.extract_ao_extensions   # OSTRAM_STAGE_WORKDIR set
+Notes:
+    - Top-level script with no __main__ guard: importing it runs the step.
+    - Runs after merge_timeslices and before ao_extension_decisions, which overlays the decisions.
+    - The text block below the first import is the historical header, kept verbatim.
+"""
 from pathlib import Path
 # -*- coding: utf-8 -*-
 """

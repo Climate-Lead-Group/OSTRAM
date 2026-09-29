@@ -1,3 +1,17 @@
+"""Apply human-curated cell corrections to the *_wvaligned workbooks (A3 Stage 1, script 4).
+
+Inputs:
+    $OSTRAM_STAGE_WORKDIR/wvaligned_outputs/*_wvaligned.xlsx
+    ProjectPaths.interconnector_taxonomy (config/scenarios/technology_types.csv)
+Outputs:
+    $OSTRAM_STAGE_WORKDIR/wvaligned_outputs_v2/*_wvaligned_v2.xlsx and manual_fixes_log.txt
+Usage:
+    python -B -m ostram.pipeline.scenarios.transformations.apply_manual_fixes   # OSTRAM_STAGE_WORKDIR set
+Notes:
+    - Top-level script with no __main__ guard: importing it runs the step.
+    - Runs after update_ao_from_extensions and before propagate_timeslice_fabric.
+    - The text block below the first import is the historical header, kept verbatim.
+"""
 from pathlib import Path
 # -*- coding: utf-8 -*-
 """
