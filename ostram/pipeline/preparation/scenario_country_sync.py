@@ -31,6 +31,7 @@ SHEET_MAP = (
 
 @dataclass(frozen=True)
 class SyncChange:
+    """Record of the rows copied into one scenario workbook sheet during a country sync."""
     source_sheet: str
     target_sheet: str
     scenarios: tuple[str, ...]
@@ -83,6 +84,13 @@ def technology_regions(technology: object) -> tuple[str, ...]:
 
 
 def technology_belongs_to_country(technology: object, country: str) -> bool:
+    """Return whether any region encoded in a technology code belongs to the country.
+
+    Args:
+        technology: Technology code; regions are parsed by ``technology_regions``.
+        country: ISO-3 country code, matched against the first three characters
+            of each region.
+    """
     return any(region[:3] == country for region in technology_regions(technology))
 
 
@@ -210,6 +218,29 @@ def synchronize_country(
     scenario_path: Path,
     dry_run: bool = False,
 ) -> tuple[SyncChange, ...]:
+    """Copy a country's technology rows from an A-O workbook into a scenario workbook.
+
+    Rows are tagged for the BAU scenario only (or the first Control scenario when
+    BAU is absent); other scenarios inherit them from the BAU base.
+
+    Args:
+        country: ISO-3 country code.
+        ao_path: A-O_Parametrization.xlsx workbook that supplies the rows.
+        scenario_path: Scenario workbook that receives the rows.
+        dry_run: If True, compute the changes without saving.
+
+    Returns:
+        One ``SyncChange`` per synchronized sheet pair.
+
+    Raises:
+        ValueError: If the country code is not ISO-3 or a required sheet is missing.
+        FileNotFoundError: If either workbook does not exist.
+        FileExistsError: If an interrupted sync output is left next to the target.
+
+    Side effects:
+        Unless ``dry_run``, saves the scenario workbook in place via a temporary
+        file that replaces the original.
+    """
     country = country.strip().upper()
     if not COUNTRY.fullmatch(country):
         raise ValueError(f"country must be an ISO-3 code: {country!r}")
@@ -274,6 +305,21 @@ def _default_ao(paths) -> Path:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Run the ``scenario sync-country`` command line.
+
+    Args:
+        argv: Command-line arguments; ``None`` reads ``sys.argv``.
+
+    Returns:
+        0 on completion.
+
+    Raises:
+        RuntimeError: If no profile workspace is active.
+        ValueError: If the target workbook lies outside the profile workspace.
+
+    Side effects:
+        Updates the scenario workbook in place unless ``--dry-run`` is given.
+    """
     parser = argparse.ArgumentParser(prog="python -m ostram scenario")
     subparsers = parser.add_subparsers(dest="action", required=True)
     sync = subparsers.add_parser("sync-country")

@@ -91,6 +91,21 @@ def ensure_columns(df, cols):
 # 1. Process A-O_AR_Model_Base_Year.xlsx
 # ---------------------------------------------------------------------------
 def process_base_year(path, pairs, enable_dsptrn=False):
+    """Add the transmission network to A-O_AR_Model_Base_Year.xlsx.
+
+    Rewrites the ``Secondary`` output fuels of PWR plants to ELC<country><region>00
+    (renewable) or 01, and rebuilds the ``Demand Techs`` sheet with the RNW*, PWR*,
+    TRN* transmission technologies per country-region pair (plus DSPTRN when enabled).
+
+    Args:
+        path: Base-year workbook, edited in place.
+        pairs: (country, region) code pairs from Config_country_codes.yaml.
+        enable_dsptrn: If True, add the DSPTRN dispatch layer and move
+            interconnector fuels to ELC..03 (input) and ELC..04 (output).
+
+    Side effects:
+        Overwrites the ``Secondary`` and ``Demand Techs`` sheets of ``path``.
+    """
     print(f"Processing '{path}' …")
     with pd.ExcelWriter(path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
         # ---------- Secondary sheet ----------
@@ -254,6 +269,20 @@ def process_base_year(path, pairs, enable_dsptrn=False):
 # 2. Process A-O_AR_Projections.xlsx
 # ---------------------------------------------------------------------------
 def process_projections(path, pairs, enable_dsptrn=False):
+    """Add the transmission network to A-O_AR_Projections.xlsx.
+
+    Same rewrite as ``process_base_year`` for the projections layout: PWR output
+    fuels in ``Secondary`` and the transmission block in ``Demand Techs``.
+
+    Args:
+        path: Projections workbook, edited in place.
+        pairs: (country, region) code pairs from Config_country_codes.yaml.
+        enable_dsptrn: If True, add the DSPTRN dispatch layer and move
+            interconnector fuels to ELC..03 (input) and ELC..04 (output).
+
+    Side effects:
+        Overwrites the ``Secondary`` and ``Demand Techs`` sheets of ``path``.
+    """
     print(f"Processing '{path}' …")
     with pd.ExcelWriter(path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
         # ---------- Secondary sheet ----------
@@ -441,6 +470,22 @@ PARAM_LIST = [
 ]
 
 def process_parametrization(path, pairs, yaml_data, enable_dsptrn=False):
+    """Add the transmission technologies to A-O_Parametrization.xlsx.
+
+    Assigns sequential Tech.IDs to the transmission technologies of every
+    country-region pair, updates or creates their CapacityToActivityUnit and
+    OperationalLife rows in ``Fixed Horizon Parameters``, and rebuilds their
+    ``Demand Techs`` parameter block (``PARAM_LIST``) from the YAML values.
+
+    Args:
+        path: Parametrization workbook, edited in place.
+        pairs: (country, region) code pairs from Config_country_codes.yaml.
+        yaml_data: Parsed Config_country_codes.yaml, keyed by technology prefix.
+        enable_dsptrn: If True, include the DSPTRN prefix.
+
+    Side effects:
+        Replaces the ``Fixed Horizon Parameters`` and ``Demand Techs`` sheets of ``path``.
+    """
     print(f"Processing '{path}' …")
 
     # ───── 1. Load sheets ────────────────────────────────────────────────────
@@ -642,6 +687,20 @@ def list_scenario_suffixes(base_dir: Path) -> List[str]:
 # CLI interface
 # ---------------------------------------------------------------------------
 def main():
+    """Run stage A2 on every root scenario's A1 output and snapshot the result.
+
+    For each root in the scenario registry, applies the transmission edits to
+    its A-O_AR_Model_Base_Year, A-O_AR_Projections, A-O_Parametrization and
+    A-O_Demand workbooks, then copies the folder to ``_post_a2_snapshot_<root>``.
+
+    Raises:
+        FileNotFoundError: If a root's A1_Outputs folder is missing.
+
+    Side effects:
+        Edits the A1 workbooks in place and replaces any existing
+        ``_post_a2_snapshot_<root>`` directory. Exits when the YAML has no valid
+        country/region codes.
+    """
     paths = resolve_paths()
     OUTPUT_FOLDER = paths.a1_outputs
     from ..scenarios.registry import load_registry

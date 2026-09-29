@@ -813,6 +813,17 @@ def process_entry(new_cc, ref_cc, new_rr, ixn_raw, ixn_source,
 
 
 def main():
+    """Generate country template CSVs from the command line or from the YAML config.
+
+    With ``--new`` a single template is built, with CLI arguments overriding the
+    first ``template_generation`` entry of Config_country_codes.yaml; without it
+    every YAML entry is processed.
+
+    Side effects:
+        Writes template CSV files under the templates output directory (one
+        subfolder per country or country+region) through ``process_entry``.
+        Exits with status 1 when no configuration is found.
+    """
     parser = argparse.ArgumentParser(
         description="Generate country template for OG_csvs_inputs. "
                     "Reads from Config_country_codes.yaml by default; "

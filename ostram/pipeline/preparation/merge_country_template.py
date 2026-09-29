@@ -161,6 +161,20 @@ def _find_a1_outputs(paths) -> Path:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Merge a generated country template into the input CSV directories.
+
+    Args:
+        argv: Command-line arguments; ``None`` reads ``sys.argv``.
+
+    Returns:
+        0 on completion.
+
+    Side effects:
+        Merges the template into the authority input directory and, when it
+        differs, into the workspace ``og_csvs_inputs`` (backing up each existing
+        destination once). Renames stale post-A2 snapshots in the A1 outputs so
+        the next run regenerates A1 and A2.
+    """
     paths = resolve_paths()
     parser = argparse.ArgumentParser(prog="python -m ostram country merge")
     parser.add_argument(

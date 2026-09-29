@@ -579,6 +579,15 @@ def generate_summary(country_code, results):
 
 
 def main(argv=None):
+    """Validate country data in OG_csvs_inputs and print a per-country report.
+
+    Args:
+        argv: Command-line arguments; ``None`` reads ``sys.argv``.
+
+    Returns:
+        0 when every validated country passes, 1 otherwise (also when the input
+        directory is missing).
+    """
     parser = argparse.ArgumentParser(
         description="Validate country data in OG_csvs_inputs"
     )
