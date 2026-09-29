@@ -169,6 +169,15 @@ def block_duration(start, end):
 # SCORING
 # ======================================================================
 def compute_aggregates(df, cfg):
+    """Aggregate the sweep metrics per scheme over the primary regions of the ranking season.
+
+    Args:
+        df: Sweep summary with one row per scheme, region and season.
+        cfg: Sweep configuration holding the block definitions of each scheme.
+
+    Returns:
+        DataFrame with one row per scheme, excluding ``EXCLUDE_SCHEMES``.
+    """
     sub = df[(df['season'] == RANKING_SEASON) &
              (df['label'].isin(PRIMARY_REGIONS))].copy()
 
@@ -289,6 +298,19 @@ def winners_by_budget(ranked):
 
 
 def write_report(ranked, winners, path):
+    """Write the plain-text ranking report.
+
+    Args:
+        ranked: Ranked scheme table.
+        winners: Winning scheme per timeslice budget.
+        path: Text file to write.
+
+    Returns:
+        The report text.
+
+    Side effects:
+        Writes the report at ``path``.
+    """
     lines = []
     lines.append("OSTRAM TIMESLICE SCHEME RANKING — v2 (three-axis)")
     lines.append("=" * 70)

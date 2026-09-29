@@ -23,6 +23,20 @@ def load(path):
     return openpyxl.load_workbook(path, data_only=True, read_only=False)
 
 def compare(ref_path, new_path, label_ref, label_new):
+    """Compare two workbooks cell by cell.
+
+    Numeric cells match within ``RTOL``, text cells exactly; sheet names, order
+    and used ranges are compared as well.
+
+    Args:
+        ref_path: Reference workbook path.
+        new_path: Workbook to compare against the reference.
+        label_ref: Label for the reference workbook.
+        label_new: Label for the new workbook.
+
+    Returns:
+        Report dict with per-sheet differences and an overall PARITY or NO-PARITY verdict.
+    """
     wb_r, wb_n = load(ref_path), load(new_path)
     rs, ns = wb_r.sheetnames, wb_n.sheetnames
 

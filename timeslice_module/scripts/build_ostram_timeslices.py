@@ -289,6 +289,19 @@ def validate_demand_fractions(fracs, country, tol=0.001):
     return True
 
 def validate_capacity_factors(cf_rows, country):
+    """Finalize and validate the capacity-factor rows of one country.
+
+    Args:
+        cf_rows: Capacity-factor row dicts; ``finalize_cf_row`` updates them in place.
+        country: Country or region code used in the messages.
+
+    Returns:
+        True when no capacity factor is above 1 or below 0, False otherwise.
+
+    Side effects:
+        Prints a warning for each violation and for solar capacity factors above
+        0.01 in the first daypart.
+    """
     # Pass 1: apply provenance rules (non-RES -> cf_default=1.0; RES -> clip/prefer-ninja)
     for row in cf_rows:
         finalize_cf_row(row, verbose=False)
@@ -357,6 +370,19 @@ def ts_now():
 # ======================================================================
 
 def load_ninja_cfs(ninja_ts_file, ninja_config_file=None):
+    """Load Renewables.ninja capacity factors averaged per resource, region and timeslice.
+
+    If the Ninja daypart definition differs from the current ``DAYPART_DEF`` the
+    values are remapped to the current dayparts.
+
+    Args:
+        ninja_ts_file: Path of compiled_reninja_ts.csv.
+        ninja_config_file: Optional timeslice_config.json used to compare the
+            Ninja daypart definition with the current one.
+
+    Returns:
+        Dict keyed by (resource, region, timeslice); empty when the file is missing.
+    """
     if not os.path.exists(ninja_ts_file):
         print(f"\n  WARNING: Ninja file not found: {ninja_ts_file}")
         return {}
@@ -468,6 +494,16 @@ def bgd_extract_date(fp, hrow):
     return pd.to_datetime(m.group()) if m else None
 
 def bgd_parse_en_curve(fp, hrow):
+    """Parse the ``En-Curve`` sheet of a PGCB daily workbook into hourly generation by technology.
+
+    Args:
+        fp: Path of the PGCB Excel file.
+        hrow: Zero-based row index of the header row in the sheet.
+
+    Returns:
+        DataFrame with one row per hour, its daypart and the generation columns
+        Gas, Coal, Oil_HFO, Oil_HSD, Hydro, Solar, Wind and Import.
+    """
     ec = pd.read_excel(fp, sheet_name='En-Curve', header=None)
     raw = [str(ec.iloc[hrow, c]).strip() if pd.notna(ec.iloc[hrow, c]) else ''
            for c in range(min(20, ec.shape[1]))]
@@ -631,6 +667,19 @@ def bgd_compile_all_files():
     return df, ic_avg
 
 def run_bgd_adapter(ninja_cfs):
+    """Build the Bangladesh demand fractions and capacity factors from PGCB dispatch data.
+
+    Args:
+        ninja_cfs: Renewables.ninja capacity factors keyed by
+            (resource, region, timeslice), as returned by ``load_ninja_cfs``.
+
+    Returns:
+        Tuple ``(demand_fractions, capacity_factor_rows, metadata)``; None, None, None if no PGCB data can be compiled.
+
+    Side effects:
+        Reads the compiled half-hourly CSV when present; otherwise parses the PGCB
+        Excel files, which writes the compiled CSVs next to them.
+    """
     print(f"\n{'='*70}\n[{ts_now()}] BGD -- Bangladesh\n{'='*70}")
     csv_path = os.path.normpath(BGD_COMPILED_CSV)
     ic_path = os.path.normpath(BGD_COMPILED_IC)
@@ -752,6 +801,15 @@ def lka_detect_layout(ws, mx=80):
     return fr, tr
 
 def lka_process_file(fp):
+    """Parse one PUCSL monthly workbook into per-day records.
+
+    Args:
+        fp: Path of the PUCSL Excel file.
+
+    Returns:
+        List of dicts (date, month, day, fuel MW by column, total MW and energy)
+        for each daily sheet whose layout is recognized.
+    """
     wb = openpyxl.load_workbook(fp, data_only=True)
     recs = []
     for sn in wb.sheetnames:
@@ -788,6 +846,18 @@ def lka_process_file(fp):
 LKA_COMPILED_CSV = os.path.join(BASE_DIR, r"Sri Lanka\lka_hourly_compiled.csv")
 
 def run_lka_adapter(ninja_cfs):
+    """Build the Sri Lanka demand fractions and capacity factors from PUCSL dispatch data.
+
+    Args:
+        ninja_cfs: Renewables.ninja capacity factors keyed by
+            (resource, region, timeslice), as returned by ``load_ninja_cfs``.
+
+    Returns:
+        Tuple ``(demand_fractions, capacity_factor_rows, metadata)``; None, None, None if no PUCSL files or records are found.
+
+    The compiled hourly CSV is used when present; otherwise the PUCSL workbooks are
+    parsed with openpyxl (slow).
+    """
     print(f"\n{'='*70}\n[{ts_now()}] LKA -- Sri Lanka\n{'='*70}")
     csv_path = os.path.normpath(LKA_COMPILED_CSV)
 
@@ -947,6 +1017,19 @@ def ind_parse_region(region_str):
     return None, year
 
 def run_ind_adapter(ninja_cfs):
+    """Build the demand fractions and capacity factors of the five India regions.
+
+    Reads the Grid-India hourly demand files and the CEA hydro capacity factors;
+    solar and wind come from Ninja and thermal capacity factors default to 1.0.
+
+    Args:
+        ninja_cfs: Renewables.ninja capacity factors keyed by
+            (resource, region, timeslice), as returned by ``load_ninja_cfs``.
+
+    Returns:
+        Tuple of dicts ``(demand, capacity_factor_rows, metadata)`` keyed by region
+        code; empty dicts when no demand data can be loaded.
+    """
     print(f"\n{'='*70}\n[{ts_now()}] IND -- India (5 regions)\n{'='*70}")
     dfs = sorted(glob.glob(os.path.join(IND_DEMAND_DIR,'year_demand_*.xlsx')))
     if not dfs: print(f"  ERROR: No files in {IND_DEMAND_DIR}"); return {},{},{}
@@ -1074,6 +1157,16 @@ NPL_DP3 = {
 }
 
 def run_npl_adapter(ninja_cfs):
+    """Build the Nepal demand fractions and capacity factors.
+
+    Args:
+        ninja_cfs: Renewables.ninja capacity factors keyed by
+            (resource, region, timeslice), as returned by ``load_ninja_cfs``.
+
+    Returns:
+        Tuple ``(demand_fractions, capacity_factor_rows, metadata)``; always populated. Demand combines the NDOR seasonal shares with the Simkhada 2022 hourly profile, or
+    falls back to a legacy 3-daypart remap when the hourly CSV is missing.
+    """
     print(f"\n{'='*70}\n[{ts_now()}] NPL -- Nepal\n{'='*70}")
 
     # --- Try hourly profiles CSV (Simkhada 2022 literature) ---
@@ -1161,6 +1254,18 @@ def run_npl_adapter(ninja_cfs):
 # ======================================================================
 
 def run_btn_adapter(ninja_cfs):
+    """Build the Bhutan demand fractions and capacity factors.
+
+    Args:
+        ninja_cfs: Renewables.ninja capacity factors keyed by
+            (resource, region, timeslice), as returned by ``load_ninja_cfs``.
+
+    Returns:
+        Tuple ``(demand_fractions, capacity_factor_rows, metadata)``; None, None, None when neither BTN_Profiles.xlsx nor BTN_DA_v4.xlsx exists.
+
+    Demand comes from the hourly profiles and seasonal weights in BTN_Profiles.xlsx;
+    the legacy BTN_DA_v4.xlsx fallback uses the year split as demand fractions.
+    """
     print(f"\n{'='*70}\n[{ts_now()}] BTN -- Bhutan\n{'='*70}")
 
     # --- Try BTN_Profiles.xlsx first (hourly, any DAYPART_DEF) ---
@@ -1301,6 +1406,18 @@ MDV_IC = {'Diesel': 531.5, 'Solar': 68.5, 'Wind': 1.5}
 
 
 def run_mdv_adapter(ninja_cfs):
+    """Build the Maldives demand fractions and capacity factors.
+
+    Demand combines the STELCO seasonal weights with a season-invariant hourly
+    profile; solar is scaled by seasonal GHI around the annual capacity factor.
+
+    Args:
+        ninja_cfs: Renewables.ninja capacity factors keyed by
+            (resource, region, timeslice), as returned by ``load_ninja_cfs``.
+
+    Returns:
+        Tuple ``(demand_fractions, capacity_factor_rows, metadata)``.
+    """
     print(f"\n{'='*70}\n[{ts_now()}] MDV -- Maldives\n{'='*70}")
 
     # Seasonal demand weights from monthly production

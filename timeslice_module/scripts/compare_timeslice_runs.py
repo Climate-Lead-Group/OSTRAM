@@ -119,6 +119,18 @@ def ts_profile(df: pd.DataFrame, run: dict, year: int, season: int,
 
 
 def plot_dispatch(runs, labels, year, season, out_path):
+    """Plot stacked intra-day generation by technology class, one panel per run.
+
+    Args:
+        runs: Loaded run dicts with production data and bracket hours.
+        labels: Panel titles, one per run.
+        year: Model year to plot.
+        season: Season to plot.
+        out_path: PNG file to write.
+
+    Side effects:
+        Saves the figure at ``out_path``.
+    """
     n = len(runs)
     fig, axes = plt.subplots(1, n, figsize=(6.5 * n, 5), sharey=True)
     if n == 1:

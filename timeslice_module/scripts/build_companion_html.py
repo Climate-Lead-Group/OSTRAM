@@ -240,6 +240,16 @@ def json_for_html(obj):
 
 
 def build(out_path):
+    """Patch the design template with workbook data and write the companion HTML.
+
+    Args:
+        out_path: Destination HTML file; its parent directory is created if needed.
+
+    Side effects:
+        Reads the four fabric workbooks and the fabric summary JSON, then writes
+        ``out_path``. Aborts through ``fail`` if the template, a workbook or any
+        template anchor is missing.
+    """
     if not TEMPLATE.exists():
         fail(f"design template not found: {TEMPLATE}")
     html = TEMPLATE.read_text(encoding="utf-8")

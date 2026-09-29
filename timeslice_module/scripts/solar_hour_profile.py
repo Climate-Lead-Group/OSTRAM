@@ -105,6 +105,14 @@ def block_mean(prof, start, end):
 
 
 def main():
+    """Score every candidate daypart fabric against the hourly solar capacity-factor truth.
+
+    Returns:
+        0 on completion.
+
+    Side effects:
+        Writes the results as JSON when ``--json`` is given.
+    """
     ap = argparse.ArgumentParser()
     ap.add_argument('--hourly', default=DEFAULT_HOURLY)
     ap.add_argument('--json', default=None)

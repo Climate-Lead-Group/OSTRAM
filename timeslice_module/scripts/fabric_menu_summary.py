@@ -29,6 +29,14 @@ ZONES = ['BGD', 'BTN', 'INDEA', 'INDNE', 'INDNO', 'INDSO', 'INDWE',
 
 
 def main():
+    """Print the four-fabric summary table (12, 16, 20 and 24 timeslices).
+
+    Returns:
+        0 on completion.
+
+    Side effects:
+        Writes the summary as JSON when ``--json`` is given.
+    """
     ap = argparse.ArgumentParser()
     ap.add_argument('--json', default=None)
     args = ap.parse_args()

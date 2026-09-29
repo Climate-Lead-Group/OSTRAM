@@ -50,6 +50,11 @@ def structural_check(dp, label):
 
 
 def main():
+    """Check that DAYPART_DEF matches in the generator and the Ninja rebuilder.
+
+    Returns:
+        0 when the boundaries are in sync and tile 0-24 h, 1 otherwise.
+    """
     gen_dp, gen_line = parse_daypart_def(GEN)
     reb_dp, reb_line = parse_daypart_def(REB)
 

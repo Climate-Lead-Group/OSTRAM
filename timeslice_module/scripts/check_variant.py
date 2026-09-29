@@ -87,6 +87,14 @@ class Checks:
 
 # ----------------------------------------------------------------------
 def main():
+    """Run the variant check suite on a timeslice workbook against the reference.
+
+    Returns:
+        0 when every check passes, 1 otherwise.
+
+    Side effects:
+        Writes a JSON report when ``--json`` is given.
+    """
     ap = argparse.ArgumentParser()
     ap.add_argument('workbook')
     ap.add_argument('--ref', default=DEFAULT_REF)
