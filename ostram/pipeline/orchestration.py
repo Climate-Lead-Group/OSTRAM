@@ -136,6 +136,12 @@ def check_tool_available(tool: str) -> None:
 
 # ---------- Conda environment management ----------
 def env_exists(name: str) -> bool:
+    """Return True if a conda environment named ``name`` exists (case-insensitive).
+
+    Tries ``conda env list --json`` first and falls back to the plain-text
+    listing. Returns False when conda cannot be queried.
+    """
+
     target = name.lower()
 
     try:
@@ -373,6 +379,8 @@ def format_duration(start_time: dt.datetime, end_time: dt.datetime) -> str:
 
 # ---------- Main ----------
 def parse_args(argv=None):
+    """Parse the OSTRAM orchestration command line (environment, DVC, ``--skip-*``, ``--scenarios``, ``--compile-only``, ``--verbose`` options) and return the namespace."""
+
     parser = argparse.ArgumentParser(
         description=(
             "Run OSTRAM through base-model preparation (A1), transmission "
@@ -453,6 +461,24 @@ def _create_run_reporter(
 
 
 def main() -> None:
+    """Run the OSTRAM pipeline stages A1, A2, A3, B1 and B2 in order.
+
+    A1 and A2 are skipped when the post-A2 root snapshots required by the
+    selected scenarios already exist; A3, B1 and B2 can be skipped with
+    ``--skip-a3``, ``--skip-b1`` and ``--skip-b2``. Each stage runs as a
+    subprocess in the conda environment.
+
+    Raises:
+        RuntimeError: if ``--scenarios`` selects no canonical scenario.
+        subprocess.CalledProcessError: if a stage subprocess fails.
+        KeyboardInterrupt: if the run is interrupted.
+
+    Side effects:
+        May create the conda environment and run ``dvc pull``. Creates a run log
+        under ``<workspace>/logs``, redirects stdout/stderr through the run
+        reporter, and lets the stage scripts write to the workspace.
+    """
+
     args = parse_args()
     paths = resolve_paths()
     pipeline_dir = paths.package_root / "pipeline"

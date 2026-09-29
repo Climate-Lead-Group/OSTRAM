@@ -106,6 +106,21 @@ def _report(
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Run the ``python -m ostram example`` command (``prepare`` or ``report``).
+
+    Args:
+        argv: arguments to parse; defaults to ``sys.argv[1:]``.
+
+    Returns:
+        Exit code 0.
+
+    Side effects:
+        ``prepare`` builds the profile workspace (``--reset`` rebuilds it).
+        ``report`` writes an HTML report under ``<workspace>/reports`` and, with
+        ``--capture``, copies the latest combined result CSV into
+        ``<workspace>/reports/snapshots``. Prints the resulting path.
+    """
+
     parser = argparse.ArgumentParser(prog="python -m ostram example")
     subparsers = parser.add_subparsers(dest="action", required=True)
     prepare = subparsers.add_parser("prepare")

@@ -83,6 +83,8 @@ EXTENDED_ROUTES = {
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build the top-level argparse parser for ``python -m ostram``, with the global ``--project-root``, ``--workspace`` and ``--profile`` options and one subcommand per route."""
+
     parser = argparse.ArgumentParser(
         prog="python -m ostram",
         description="Canonical command interface for the OSTRAM workflow.",
@@ -280,6 +282,23 @@ def _activate_profile(
 
 
 def main(argv: Sequence[str] | None = None) -> int | None:
+    """Run the ``python -m ostram`` command line and return its exit code.
+
+    Resolves the project paths and profile, activates the profile environment,
+    and dispatches to the selected route or ``inspect-resources``.
+
+    Args:
+        argv: arguments to parse; defaults to ``sys.argv[1:]``.
+
+    Returns:
+        Exit code of the invoked route (0 for help and ``inspect-resources``).
+
+    Side effects:
+        Sets the profile and project environment variables while the route runs
+        and may prepare a profile workspace. ``inspect-resources`` prints JSON
+        to stdout. Parser errors exit through ``argparse``.
+    """
+
     arguments = list(sys.argv[1:] if argv is None else argv)
     parser = build_parser()
     if not arguments:

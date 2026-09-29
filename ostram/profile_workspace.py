@@ -26,6 +26,8 @@ class ProfileWorkspaceError(ProfileError):
 
 @dataclass(frozen=True)
 class PreparedProfile:
+    """Result of preparing a profile workspace: profile id, workspace path, authority paths and the stamp contents."""
+
     profile_id: str
     workspace: Path
     authorities: Mapping[str, Path]
@@ -33,10 +35,14 @@ class PreparedProfile:
 
 
 def profiles_root(paths: ProjectPaths) -> Path:
+    """Return the ``profiles`` directory inside the workspace."""
+
     return (paths.workspace / "profiles").resolve()
 
 
 def profile_workspace(paths: ProjectPaths, profile_id: str) -> Path:
+    """Return the prepared workspace directory of ``profile_id``."""
+
     return (profiles_root(paths) / profile_id).resolve()
 
 

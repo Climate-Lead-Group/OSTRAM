@@ -388,6 +388,25 @@ def validate_profile(
     *,
     paths: ProjectPaths,
 ) -> dict[str, Any]:
+    """Validate a profile manifest and return its reportable summary.
+
+    Resolves all authorities (which must exist), checks that every
+    ``effective_values`` metadata entry is a finite number, and validates the
+    seed domain of the ``osemosys_inputs`` authority.
+
+    Args:
+        manifest: profile to validate.
+        paths: project paths used to resolve the authorities.
+
+    Returns:
+        Dict with the profile id, manifest path and SHA-256, authorities,
+        policies, effective values and domain result.
+
+    Raises:
+        ProfileManifestError: if an authority is invalid or missing.
+        ValueError: if an effective value is not numeric or not finite.
+    """
+
     authorities = manifest.source_paths(paths, require_exists=True)
     effective = dict(manifest.metadata.get("effective_values", {}))
     for name, value in effective.items():

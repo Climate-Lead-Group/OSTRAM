@@ -29,12 +29,16 @@ SENSITIVE_ARGUMENT = re.compile(
 
 @dataclass(frozen=True)
 class StageDefinition:
+    """One of the five pipeline stages shown in the live status line: number, code and description."""
+
     number: int
     code: str
     description: str
 
     @property
     def label(self) -> str:
+        """Return the status-line label, for example ``[1/5 · A1] Preparing the base model``."""
+
         return f"[{self.number}/5 · {self.code}] {self.description}"
 
 
@@ -246,12 +250,21 @@ class RunReporter:
             self._log.flush()
 
     def record_output(self, stream_name: str, line: str) -> None:
+        """Write one line of captured output to the run log and update the recent status, after stripping terminal control sequences."""
+
         clean = _strip_terminal_controls(line)
         self._write_log(f"OUTPUT {stream_name}", clean)
         self.recent_status(clean)
 
     @contextmanager
     def capture_output(self) -> Iterator[None]:
+        """Tee ``sys.stdout`` and ``sys.stderr`` into the run log for the duration of the context.
+
+        Side effects:
+            Replaces ``sys.stdout`` and ``sys.stderr`` and restores them on exit.
+            Closes the log on exit if the reporter has already finished.
+        """
+
         previous_stdout = sys.stdout
         previous_stderr = sys.stderr
         captured_stdout = _CapturedStream(self, "stdout", previous_stdout)
@@ -297,6 +310,8 @@ class RunReporter:
             self._render()
 
     def recent_status(self, message: str) -> None:
+        """Set the latest status text (truncated to 140 characters) and detect which selected scenario it mentions."""
+
         clean = " ".join(str(message).split())
         if not clean:
             return
@@ -309,6 +324,8 @@ class RunReporter:
         self._render()
 
     def stage_start(self, code: str, *, scenario: str | None = None) -> None:
+        """Mark stage ``code`` as running, optionally for one scenario, and log and show it."""
+
         stage = next(item for item in STAGES if item.code == code)
         with self._lock:
             self._current = stage
@@ -320,6 +337,8 @@ class RunReporter:
         self._emit_status(f"{stage.label} | STARTED")
 
     def stage_complete(self, code: str, *, detail: str | None = None) -> None:
+        """Mark stage ``code`` as completed with its elapsed time and optional ``detail``, and log and show it."""
+
         stage = next(item for item in STAGES if item.code == code)
         elapsed = time.monotonic() - self._stage_started
         with self._lock:
@@ -335,6 +354,8 @@ class RunReporter:
         )
 
     def stage_skip(self, code: str, reason: str) -> None:
+        """Mark stage ``code`` as skipped for ``reason``, and log and show it."""
+
         stage = next(item for item in STAGES if item.code == code)
         with self._lock:
             self._current = stage
@@ -346,6 +367,8 @@ class RunReporter:
         self._emit_status(f"{stage.label} | SKIPPED | {reason}")
 
     def stage_fail(self, detail: str) -> None:
+        """Mark the current stage, if any, as failed with ``detail``, and log and show it."""
+
         with self._lock:
             stage = self._current
             if stage is not None:
@@ -356,6 +379,8 @@ class RunReporter:
             self._emit_status(f"{stage.label} | FAILED | {detail}")
 
     def note(self, message: str) -> None:
+        """Write ``message`` to the run log and show it as the latest status."""
+
         self._write_log("STATUS", message)
         self.recent_status(message)
 
@@ -416,6 +441,23 @@ class RunReporter:
         cwd: Path | None,
         env: dict[str, str],
     ) -> None:
+        """Run a child process, logging its redacted command and its output.
+
+        Args:
+            command: program and arguments (no shell is used).
+            cwd: working directory of the child, or None for the current one.
+            env: child environment; ``PYTHONIOENCODING`` is set to ``utf-8`` and
+                ``NO_COLOR`` defaults to ``1``.
+
+        Raises:
+            subprocess.CalledProcessError: if the child exits with a non-zero code.
+            KeyboardInterrupt: re-raised after the child has been terminated.
+
+        Side effects:
+            Starts a subprocess and appends its stdout, stderr and exit code to the
+            run log; echoes them when the reporter is verbose.
+        """
+
         tokens = [str(token) for token in command]
         child_env = dict(env)
         child_env["PYTHONIOENCODING"] = "utf-8"
@@ -473,6 +515,20 @@ class RunReporter:
             raise subprocess.CalledProcessError(returncode, tokens)
 
     def finish(self, *, outcome: str, exit_code: int, final_message: str) -> None:
+        """Close the run: log the outcome and elapsed time and print the final message.
+
+        Does nothing if the run has already finished.
+
+        Args:
+            outcome: outcome label written to the log.
+            exit_code: final process exit code written to the log.
+            final_message: line printed to stderr, followed by the log path.
+
+        Side effects:
+            Stops the status heartbeat and closes the log unless output capture is
+            still active.
+        """
+
         if self._finished:
             return
         self._stop.set()
@@ -500,6 +556,8 @@ _ACTIVE_REPORTER: ContextVar[RunReporter | None] = ContextVar(
 
 @contextmanager
 def activate_reporter(reporter: RunReporter) -> Iterator[None]:
+    """Make ``reporter`` the active reporter for the duration of the context."""
+
     token = _ACTIVE_REPORTER.set(reporter)
     try:
         yield
@@ -508,4 +566,6 @@ def activate_reporter(reporter: RunReporter) -> Iterator[None]:
 
 
 def active_reporter() -> RunReporter | None:
+    """Return the active RunReporter, or None outside an activated run."""
+
     return _ACTIVE_REPORTER.get()
