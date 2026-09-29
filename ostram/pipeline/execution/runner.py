@@ -802,6 +802,21 @@ def main_executer(params, scenario_name, HERE):
         execution_dependencies,
     )
 def delete_files(file, data_file, solver):
+    """Delete the intermediate files of one scenario solve.
+
+    Removes the solution file and the data file, an empty ``.log`` next to the
+    solution, the ``.glp`` (glpk) or ``.lp`` (other solvers) file, and the solver
+    log files in the current directory (``cplex.log``, ``clone1.log``,
+    ``clone2.log`` for cplex; ``gurobi.log`` for gurobi).
+
+    Args:
+        file: Path of the ``.sol`` solution file.
+        data_file: Path of the datafile.
+        solver: Solver name (``glpk``, ``cbc``, ``cplex`` or ``gurobi``).
+
+    Side effects:
+        Deletes files from disk.
+    """
     # Delete files
     if file and os.path.exists(file):
         shutil.os.remove(file)

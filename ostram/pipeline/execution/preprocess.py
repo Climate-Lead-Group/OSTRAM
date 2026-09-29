@@ -37,6 +37,20 @@ from collections import defaultdict
 
 
 def main(data_infile, data_outfile):
+    """Write a preprocessed copy of an OSeMOSYS datafile with the MODE/TECHNOLOGY lookup sets.
+
+    Drops any existing ``set MODEper*``, ``set MODEx*`` and ``end;`` lines, then
+    appends the ``MODExTECHNOLOGYperFUELin/out``, ``MODEperTECHNOLOGY``,
+    ``MODExTECHNOLOGYperSTORAGEto/from`` and ``MODExTECHNOLOGYperEMISSION`` sets
+    derived from the activity-ratio and storage-link blocks, and a final ``end;``.
+
+    Args:
+        data_infile: Datafile to read.
+        data_outfile: Preprocessed datafile to write.
+
+    Side effects:
+        Creates or overwrites ``data_outfile``.
+    """
 
     lines = []
 

@@ -78,6 +78,7 @@ class CapitalSeries:
 
     @property
     def key_columns(self) -> list[str]:
+        """Return the columns that identify one asset series: ``Future``, ``Scenario``, ``REGION`` and the asset column."""
         return ["Future", "Scenario", "REGION", self.asset_column]
 
 
@@ -129,6 +130,7 @@ class ParameterTable:
     values: dict[tuple[str, ...], float]
 
     def lookup(self, key: tuple[str, ...]) -> float | None:
+        """Return the explicit value for ``key``, else the block default (``None`` if neither exists)."""
         return self.values.get(tuple(key), self.default)
 
 
@@ -456,6 +458,15 @@ def annualize_capital_investment(
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Run the annualization command line and return the process exit code.
+
+    Returns:
+        0 on success; 1 after printing an ``ERROR`` line to stderr when the input
+        file is missing or a required value cannot be found.
+
+    Side effects:
+        Appends the annualized rows to the ``--input`` CSV in place.
+    """
     parser = argparse.ArgumentParser(description="Append annualized capital investment rows to a combined OSTRAM CSV.")
     parser.add_argument("--input", default=INPUT_FILENAME, help="combined inputs/outputs CSV (updated in place)")
     parser.add_argument("--executables", default=None, help="folder with <Scenario>_<Future>/<Scenario>_<Future>.txt datafiles")
