@@ -46,6 +46,7 @@ REQUIRED_AO_FILES = (
 
 @dataclass(frozen=True)
 class MaterializationPaths:
+    """Filesystem locations used to materialize scenarios through A3."""
     preparation_workspace: Path
     a1_outputs: Path
     a3_entrypoint: Path
@@ -54,6 +55,7 @@ class MaterializationPaths:
 
     @classmethod
     def defaults(cls) -> "MaterializationPaths":
+        """Return the paths resolved from the active project configuration."""
         paths = resolve_paths()
         a3_process = Path(__file__).with_name("transformations")
         return cls(
@@ -428,6 +430,7 @@ def materialize_scenarios(
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build the argument parser for the materializer CLI (``--scenarios``, ``--a-result-seed``)."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--scenarios",
@@ -450,6 +453,22 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Materialize the selected scenarios and print the provenance record as JSON.
+
+    Args:
+        argv: CLI arguments; defaults to ``sys.argv[1:]`` when None.
+
+    Returns:
+        0 on success.
+
+    Raises:
+        FileNotFoundError: If ``--a-result-seed`` points to a missing path.
+
+    Side effects:
+        Rebuilds the A1_Outputs folders of the selected scenarios; passes
+        ``OSTRAM_A_CALIBRATED_BAU_RESULT`` to the child steps through a copy of the
+        environment (``os.environ`` itself is not modified).
+    """
     args = build_parser().parse_args(argv)
     environment = dict(os.environ)
     if args.a_result_seed is not None:

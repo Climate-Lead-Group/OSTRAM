@@ -107,6 +107,12 @@ INPUT_FILES = (
 
 
 def parse_cli_args() -> argparse.Namespace:
+    """Parse the ``python -m ostram transform`` command-line arguments.
+
+    Returns:
+        Namespace with scenario, soasia, rules_script, inherit_from, input_dir,
+        output_dir, keep_workdir, run_state_out and restrictions_source.
+    """
     p = argparse.ArgumentParser(
         prog="python -m ostram transform",
         description=__doc__,
@@ -238,11 +244,13 @@ def _load_scenarios_module():
 # CLI helpers
 # ---------------------------------------------------------------------------
 def banner(msg: str) -> None:
+    """Print a message framed by two rules of "=" characters."""
     bar = "=" * 78
     print(f"\n{bar}\n{msg}\n{bar}")
 
 
 def step(label: str) -> None:
+    """Print a step label prefixed with ">>>"."""
     print(f"\n>>> {label}")
 
 
@@ -420,6 +428,17 @@ def build_workdir(
 # Pipeline stages
 # ---------------------------------------------------------------------------
 def stage_1_scripts_1_to_5(s1: Path) -> None:
+    """Run Stage 1: the AO/WV alignment scripts 1 to 5 in the stage 1 folder.
+
+    Chains merge_timeslices, extract_ao_extensions, ao_extension_decisions,
+    update_ao_from_extensions, apply_manual_fixes and propagate_timeslice_fabric.
+
+    Args:
+        s1: Stage 1 working directory.
+
+    Side effects:
+        Runs each script as a subprocess in ``s1`` and writes its outputs there.
+    """
     banner("Stage 1 — scripts 1-5 (AO/WV alignment pipeline)")
     run_subproc("ostram.pipeline.scenarios.transformations.merge_timeslices", cwd=s1, label="merge timeslices")
     run_subproc("ostram.pipeline.scenarios.transformations.extract_ao_extensions", cwd=s1, label="extract AO extensions")
@@ -438,6 +457,18 @@ def stage_1_scripts_1_to_5(s1: Path) -> None:
 
 
 def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
+    """Run Stage 1b: reserve margin, add_max fill-zeros, ELC revert and B1b validation.
+
+    Args:
+        wd: Runtime working directory.
+        s1: Stage 1 folder holding ``wvaligned_outputs_v2``.
+        s1b: Stage 1b folder that receives the four A-O workbooks.
+
+    Side effects:
+        Copies the Stage 1 outputs into ``s1b`` and edits ``A-O_Parametrization.xlsx``
+        there through subprocess steps (insert_reserve_margin,
+        add_max_capacity_investment_rule, fix_elc_pmode_revert, pre_solver_validation).
+    """
     banner("Stage 1b — A0 + add_max (fill-zeros) + ELC revert + B1b")
 
     # Move stage1 outputs into stage1b/
@@ -479,6 +510,19 @@ def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
 
 
 def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
+    """Run Stage 2 and 2.5: patch_ao_c2a followed by fix_pwrpet_clear.
+
+    If patch_ao_c2a writes no output, the original workbook is copied as the patched
+    one so later stages can continue.
+
+    Args:
+        wd: Runtime working directory.
+        s1b: Stage 1b folder holding the input workbook.
+        s2: Stage 2 folder.
+
+    Side effects:
+        Copies and edits ``A-O_Parametrization`` workbooks in ``s2`` via subprocesses.
+    """
     banner("Stage 2 + 2.5 — patch_ao_c2a + fix_pwrpet_clear")
 
     # Move Stage 1b output into stage2/ as the input to patch_ao_c2a
@@ -507,6 +551,27 @@ def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
 
 
 def stage_3_fix_2(s2: Path, s3: Path) -> Path:
+    """Run Stage 3: fix_trn_residuals, clear_stale_unbinding_caps, cap_trn_to_residual.
+
+    The residual authority comes from the resolved interconnector authority when
+    profile authorities are active, otherwise from ``OSTRAM_TEMPLATE_PATH``.
+    fix_trn_residuals runs with ``--mode min`` and ``--cutoff-year 2023``.
+
+    Args:
+        s2: Stage 2 folder holding ``A-O_Parametrization_c2a_patched.xlsx``.
+        s3: Stage 3 folder.
+
+    Returns:
+        Path of the final ``*_POST_TRN_CAP`` workbook.
+
+    Raises:
+        RuntimeError: If no authority path is available.
+        FileNotFoundError: If the authority file does not exist.
+
+    Side effects:
+        Copies the Stage 2 workbook into ``s3`` and writes the FIXED, POST_CAP_RESET
+        and POST_TRN_CAP workbooks plus diff_log.csv/diff_log.md there.
+    """
     banner("Stage 3 — FIX_2 pipeline (fix_trn + clear_stale + cap_trn)")
 
     authority_path_raw = os.environ.get("OSTRAM_TEMPLATE_PATH")
@@ -867,6 +932,15 @@ def finalize_support_bau(output_dir: Path, scenario: str) -> None:
 
 
 def deliver_outputs(s5: Path, output_dir: Path) -> None:
+    """Copy the four final A-O workbooks from the Stage 5 folder to the output directory.
+
+    Args:
+        s5: Stage 5 folder holding the workbooks listed in ``INPUT_FILES``.
+        output_dir: Destination folder, created if missing.
+
+    Side effects:
+        Creates ``output_dir`` and overwrites the four files in it.
+    """
     banner(f"Delivering 4 final files to {output_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
     for f in INPUT_FILES:
@@ -1007,6 +1081,18 @@ def _orchestration_dependencies(
 
 
 def main() -> int:
+    """Run the A3 scenario transformation pipeline and return its exit code.
+
+    Activates the profile paths when profile authorities are enabled, parses the CLI
+    and delegates to ``orchestrate_a3``.
+
+    Returns:
+        Exit code from the orchestrator.
+
+    Side effects:
+        Rewrites the delivered A-O workbooks of the selected scenario; see
+        ``orchestrate_a3``.
+    """
     if os.environ.get(PROFILE_AUTHORITIES_ENV):
         _configure_profile_paths()
     cli_args = parse_cli_args()

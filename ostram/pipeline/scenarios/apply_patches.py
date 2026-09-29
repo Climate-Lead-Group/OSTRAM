@@ -137,6 +137,14 @@ def scan_columns(ws):
 
 
 def find_row(ws, col_map, tech, param):
+    """Return the first worksheet row whose tech and parameter cells match, or None.
+
+    Args:
+        ws: openpyxl worksheet to scan (header in row 1).
+        col_map: Column map from ``scan_columns`` (uses the "tech" and "param" keys).
+        tech: Technology code to match after stripping whitespace.
+        param: Parameter name to match after stripping whitespace.
+    """
     tc, pc = col_map["tech"], col_map["param"]
     for r in range(2, ws.max_row + 1):
         t = ws.cell(row=r, column=tc).value
@@ -149,6 +157,17 @@ def find_row(ws, col_map, tech, param):
 
 
 def find_unique_row(ws, col_map, tech, param):
+    """Return the single worksheet row for a tech/parameter pair.
+
+    Args:
+        ws: openpyxl worksheet to scan (header in row 1).
+        col_map: Column map from ``scan_columns`` (uses the "tech" and "param" keys).
+        tech: Technology code to match after stripping whitespace.
+        param: Parameter name to match after stripping whitespace.
+
+    Raises:
+        ValueError: If the pair does not appear exactly once.
+    """
     rows = []
     tc, pc = col_map["tech"], col_map["param"]
     for r in range(2, ws.max_row + 1):
@@ -165,6 +184,15 @@ def find_unique_row(ws, col_map, tech, param):
 
 
 def finite_nonnegative(value, context):
+    """Convert a value to a finite, non-negative float.
+
+    Args:
+        value: Candidate numeric value; booleans and None are rejected.
+        context: Label included in the error message.
+
+    Raises:
+        ValueError: If the value is not numeric, not finite or negative.
+    """
     if isinstance(value, bool) or value is None:
         raise ValueError(f"{context}: expected numeric value, got {value!r}")
     try:
@@ -214,6 +242,29 @@ def residual_values_for_edit(
     edit,
     minimum_boundaries=None,
 ):
+    """Return the per-year residual capacity used by a residual-based edit.
+
+    Reads the effective ``ResidualCapacity`` row of the tech, or, when the edit sets
+    ``residual_source: minimum_investment_boundary``, the v18 minimum-investment
+    boundary profile (allowed only for ``TotalAnnualMinCapacityInvestment``).
+
+    Args:
+        ws: openpyxl worksheet holding the tech rows.
+        col_map: Column map from ``scan_columns``.
+        year_cols: Mapping of model year to worksheet column index.
+        tech: Technology code being edited.
+        param: Parameter being edited.
+        edit: Edit dict from the scenario YAML (reads ``residual_source``).
+        minimum_boundaries: Preloaded boundary profiles; loaded from the authority
+            when None.
+
+    Returns:
+        Mapping of model year to a finite non-negative residual value.
+
+    Raises:
+        ValueError: If the source is unsupported, the boundary is not permitted for
+            ``param``, the tech or some years are missing, or a value is invalid.
+    """
     source = edit.get("residual_source", "effective")
     if source == "effective":
         row = find_unique_row(ws, col_map, tech, RES_PARAM)
@@ -256,6 +307,7 @@ def residual_values_for_edit(
 
 
 def find_any_row_for_tech(ws, col_map, tech):
+    """Return the first worksheet row of a tech regardless of parameter, or None."""
     tc = col_map["tech"]
     for r in range(2, ws.max_row + 1):
         t = ws.cell(row=r, column=tc).value
@@ -289,6 +341,15 @@ def techs_matching(ws, col_map, edit):
 
 
 def read_row_values(ws, col_map, year_cols, tech, param):
+    """Return the per-year values of a tech/parameter row, or None when the row is absent.
+
+    Args:
+        ws: openpyxl worksheet to scan.
+        col_map: Column map from ``scan_columns``.
+        year_cols: Mapping of model year to worksheet column index.
+        tech: Technology code to match.
+        param: Parameter name to match.
+    """
     r = find_row(ws, col_map, tech, param)
     if r is None:
         return None
@@ -313,6 +374,13 @@ def create_param_row(ws, col_map, tech, param):
 
 
 def flip_proj_mode(ws, col_map, row):
+    """Set the Projection.Mode cell of a row to "User defined" when it is empty.
+
+    Cells that already carry a mode other than None, "EMPTY" or "" are left as is.
+
+    Side effects:
+        Mutates the worksheet cell in place.
+    """
     if "proj" in col_map:
         cell = ws.cell(row=row, column=col_map["proj"])
         if cell.value in (None, "EMPTY", ""):
@@ -330,6 +398,28 @@ def apply_edit(
     log,
     minimum_boundaries=None,
 ):
+    """Apply one scenario-YAML edit to every matching tech row of a worksheet.
+
+    Supported operations are ``values``, ``multiply`` (optionally restricted to
+    ``years``), ``set_flat``, ``set_to_residual``, ``clamp_to_residual`` and
+    ``set_to_residual_factor_floor``. Absent rows are created only when
+    ``create_if_absent`` is true (the factor-floor operation requires the row).
+
+    Args:
+        ws: openpyxl worksheet to edit.
+        col_map: Column map from ``scan_columns``.
+        year_cols: Mapping of model year to worksheet column index.
+        edit: Edit dict from ``scenario_inputs`` in the profile YAML.
+        log: Audit log mutated in place (``cells``, ``rows_created``, ``skipped``).
+        minimum_boundaries: Preloaded minimum-investment boundary profiles.
+
+    Raises:
+        ValueError: If the edit has no valid operation or its inputs are invalid.
+
+    Side effects:
+        Mutates worksheet cells (unsaved), appends rows for created parameters and
+        flips Projection.Mode to "User defined" on changed rows.
+    """
     param = edit["param"]
     validate_residual_source(edit)
     create = bool(edit.get("create_if_absent", False))
@@ -539,6 +629,20 @@ def scale_activity_to_ceiling(ws, col_map, year_cols, tech, ceil, maxcap_orig, l
 
 
 def apply_ceiling_layer(wb, log, ceiling_path=CEIL_BASE):
+    """Apply the shared VRE physical-potential ceiling layer to the workbook.
+
+    Reads ``vre_ceilings`` from the ceiling YAML, sets the total-capacity parameter of
+    each listed tech flat to its ceiling in GW, clamps the annual investment lid and
+    floor to it, and scales down activity floors that exceed the ceiling.
+
+    Args:
+        wb: Loaded A-O_Parametrization workbook.
+        log: Audit log mutated in place; receives the ``ceiling_layer`` summary.
+        ceiling_path: YAML file holding the ceilings (defaults to ``CEIL_BASE``).
+
+    Side effects:
+        Mutates the workbook sheet named in the YAML (unsaved).
+    """
     ceiling_path = Path(ceiling_path)
     base = yaml.safe_load(ceiling_path.read_text(encoding="utf-8"))
     base = base.get("vre_ceilings", base)
@@ -566,6 +670,17 @@ def apply_ceiling_layer(wb, log, ceiling_path=CEIL_BASE):
 
 
 def apply_run_patches(wb, patches, log, minimum_boundaries=None):
+    """Apply the run-specific ``edits`` of a scenario patch set to the workbook.
+
+    Args:
+        wb: Loaded A-O_Parametrization workbook.
+        patches: ``scenario_inputs[scenario]`` dict; each edit names its own sheet.
+        log: Audit log mutated in place.
+        minimum_boundaries: Preloaded minimum-investment boundary profiles.
+
+    Side effects:
+        Mutates the workbook (unsaved).
+    """
     for edit in patches.get("edits", []):
         ws = wb[edit["sheet"]]
         col_map, year_cols = scan_columns(ws)
@@ -682,6 +797,17 @@ def build_scenario(
 
 
 def restore_scenario(scenario):
+    """Restore the A1_Outputs folder of a scenario from its latest PREPATCH backup.
+
+    Args:
+        scenario: Scenario name; the folder is ``A1_Outputs_<scenario>``.
+
+    Raises:
+        FileNotFoundError: If no ``*_PREPATCH_*`` backup exists.
+
+    Side effects:
+        Deletes the current target folder and replaces it with a copy of the backup.
+    """
     tgt_dir = A1_OUTPUTS / f"A1_Outputs_{scenario}"
     backups = sorted(tgt_dir.parent.glob(f"{tgt_dir.name}_PREPATCH_*"))
     if not backups:
@@ -694,6 +820,7 @@ def restore_scenario(scenario):
 
 
 def print_summary(log):
+    """Print a human-readable summary of an apply_patches run log."""
     print("=" * 64)
     print(f"apply_patches  --  {log['scenario']}  (from {log['source']})")
     print("=" * 64)
@@ -764,6 +891,18 @@ def self_test():
 
 # --------------------------------------------------------------------------
 def main():
+    """Run the apply_patches command line and return a process exit code.
+
+    Supports ``--scenario`` (with optional ``--source-scenario`` and ``--skip-backup``),
+    ``--restore`` and ``--self-test``.
+
+    Returns:
+        0 on success, or the self-test result when ``--self-test`` is given.
+
+    Side effects:
+        Rebuilds ``A1_Outputs_<scenario>`` (with backup and change log) or restores it
+        from backup; see ``build_scenario`` and ``restore_scenario``.
+    """
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--scenario", help="scenario name (config folder under configs/)")
     ap.add_argument(
