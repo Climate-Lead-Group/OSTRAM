@@ -29,6 +29,18 @@ class B1Paths:
 
     @classmethod
     def defaults(cls) -> "B1Paths":
+        """Build the B1 paths from the resolved project layout and refresh the runtime config.
+
+        Returns:
+            B1Paths pointing at the ``compilation`` stage workspace, its
+            ``Config_MOMF_T1_A.yaml`` and the ``compiler.py`` next to this module.
+
+        Side effects:
+            Creates the ``compilation`` stage workspace, copies the project compilation
+            config into it when missing, and rewrites that copy so ``A1_outputs``,
+            ``A2_extra_inputs``, ``A2_output`` and ``A2_output_main_scen`` point at the
+            project paths.
+        """
         import yaml
 
         project = resolve_paths()
@@ -77,6 +89,12 @@ class CompilerCommand:
 
 
 def try_import_yaml_handlers():
+    """Return the available YAML handlers as ``(ruamel_YAML_class, pyyaml_module)``.
+
+    Returns:
+        ``ruamel.yaml.YAML`` when importable; PyYAML is tried only when ruamel is
+        missing, so at most one element is not ``None``.
+    """
     ruamel_yaml = None
     pyyaml = None
     try:
@@ -306,6 +324,7 @@ def preserved_configuration(
 
 
 def parse_cli_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
+    """Parse the B1 command line (``--scenarios`` comma-separated suffix filter)."""
     parser = argparse.ArgumentParser(description="Run B1 compiler across scenarios")
     parser.add_argument(
         "--scenarios",
@@ -407,4 +426,5 @@ def orchestrate(
 
 
 def main() -> None:
+    """Run B1 compilation for the scenarios given on the command line, using default paths."""
     return orchestrate(parse_cli_args(), B1Paths.defaults())
