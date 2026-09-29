@@ -696,6 +696,21 @@ def write_diff_md(
     cutoff_year: int,
     path: Path,
 ) -> None:
+    """Write the human-readable TRN interconnector diff log as Markdown.
+
+    Args:
+        diffs: Cell-level changes, split into commissioning-schedule and
+            RC Authority V1 sources.
+        plans: Per-tech fix plans.
+        skipped: Techs that needed no change.
+        warnings: Warnings raised while planning the fixes.
+        mode: ``min`` or ``max`` destination parameter mode.
+        cutoff_year: Year up to which values stay in ResidualCapacity.
+        path: Markdown file to write.
+
+    Side effects:
+        Writes the Markdown file at ``path``.
+    """
     split_diffs = [d for d in diffs if d.source == "split"]
     authority_diffs = [d for d in diffs if d.source == "authority_v1"]
 
@@ -817,6 +832,18 @@ def run_fix(
 
 # ---------------------------------------------------------------- CLI
 def main(argv: Optional[List[str]] = None) -> int:
+    """Run the TRN residual and commissioning fix from the command line.
+
+    Args:
+        argv: Command-line arguments; ``None`` reads ``sys.argv``.
+
+    Returns:
+        0 on completion.
+
+    Side effects:
+        Writes the corrected workbook (``--output``) and, when requested, the
+        diff log CSV and Markdown files.
+    """
     p = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     p.add_argument("--input", type=Path, required=True,
                    help="path to input A-O_Parametrization.xlsx")

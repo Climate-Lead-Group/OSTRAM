@@ -369,6 +369,17 @@ def run(scenario, xlsx_path=None, *, interactive=True, auto_fix_all=False,
 # CLI
 # -------------------------------------------------------------------
 def main():
+    """Validate A-O_Parametrization.xlsx before compilation, from the command line.
+
+    Returns:
+        0 when no blocking issue is found, 1 when validation aborts on issues,
+        2 when the workbook for ``--scenario`` cannot be located.
+
+    Side effects:
+        Unless report-only, applies the accepted fixes to the workbook after a
+        ``.backup_pre_validate_<timestamp>`` copy; always writes a CSV report when
+        issues are found.
+    """
     ap = argparse.ArgumentParser(description="Pre-solver validation for A-O_Parametrization.xlsx")
     ap.add_argument("--scenario", help="Scenario name (e.g. BAU). Used to derive default xlsx path.")
     ap.add_argument("--xlsx", help="Override xlsx path directly.")

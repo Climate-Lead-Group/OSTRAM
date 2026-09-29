@@ -76,6 +76,15 @@ def elc_dispatch_techs(countries: object) -> frozenset[str]:
 
 
 def configured_country_region_map(config_path: Path | None = None) -> dict[str, str]:
+    """Return the region-to-country map from the country configuration YAML.
+
+    Args:
+        config_path: Config_country_codes.yaml path; defaults to the configured
+            country config.
+
+    Raises:
+        ValueError: If the YAML is not a mapping or its ``countries`` list is invalid.
+    """
     path = resolve_paths().country_config if config_path is None else Path(config_path)
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
@@ -84,6 +93,12 @@ def configured_country_region_map(config_path: Path | None = None) -> dict[str, 
 
 
 def configured_elc_dispatch_techs(config_path: Path | None = None) -> frozenset[str]:
+    """Return the ELC<region>01 dispatch nodes of the configured countries.
+
+    Args:
+        config_path: Config_country_codes.yaml path; defaults to the configured
+            country config.
+    """
     return frozenset(
         f"ELC{region}01"
         for region in configured_country_region_map(config_path)

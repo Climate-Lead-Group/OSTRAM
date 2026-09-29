@@ -236,6 +236,16 @@ def build_daysplit_rows(wv_df, ao_header):
 # Step 3: rewrite A-O Parametrization
 # -----------------------------------------------------------------------------
 def main():
+    """Propagate the WV Yearsplit and DaySplit fabric into the A-O workbook.
+
+    Copies the input A-O workbook to the output path and rewrites only its
+    ``Yearsplit`` and ``DaySplit`` sheets from SOASIA_OSeMOSYS_WV.xlsx (DaySplit
+    scaled by 365 to fraction-of-day).
+
+    Side effects:
+        Writes the output A-O workbook; exits with an error if an input file or
+        required sheet is missing.
+    """
     if not WV_FILE.is_file():
         sys.exit(f"[ERROR] WV file not found: {WV_FILE}")
     if not AO_IN.is_file():

@@ -127,6 +127,24 @@ def patch_workbook(
     dry_run: bool,
     output_path: Path | None = None,
 ) -> Path | None:
+    """Cap each TRN tech's TotalAnnualMaxCapacity to its ResidualCapacity, year by year.
+
+    Also resets TotalAnnualMaxCapacityInvestment to the 9999 placeholder over the
+    2023-2050 horizon for the allowlisted TRN techs in the ``Secondary Techs`` sheet.
+
+    Args:
+        input_path: Workbook to patch (read only).
+        dry_run: If True, report the changes without writing.
+        output_path: Explicit workspace path for the patched workbook; a default
+            name derived from ``input_path`` is used when None.
+
+    Returns:
+        Path of the written workbook, or None on a dry run.
+
+    Side effects:
+        Saves the patched workbook to a new file; exits with an error when the
+        input, sheet or required headers are missing.
+    """
     if not input_path.is_file():
         sys.exit(f"ERROR: input file not found: {input_path}")
 
@@ -287,6 +305,11 @@ def patch_workbook(
 
 
 def main() -> None:
+    """Run the TRN residual-cap patch from the command line.
+
+    Side effects:
+        Writes a patched copy of the workbook unless ``--dry-run`` is given.
+    """
     p = argparse.ArgumentParser(description=__doc__.split("\n")[2])
     p.add_argument(
         "--input", type=Path, default=DEFAULT_INPUT,

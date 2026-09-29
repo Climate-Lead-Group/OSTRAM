@@ -137,6 +137,25 @@ def patch_workbook(
     dry_run: bool,
     output_path: Path | None = None,
 ) -> Path | None:
+    """Reset stale flat TotalAnnualMaxCapacityInvestment caps of PWR techs to 9999.
+
+    Targets the techs in ``TECHS_TO_PATCH`` whose 2023 value is 9999 and whose
+    reset-year cells hold a single distinct non-9999 value; other techs are
+    skipped and reported.
+
+    Args:
+        input_path: Workbook to patch (read only).
+        dry_run: If True, report the changes without writing.
+        output_path: Explicit workspace path for the patched workbook; a default
+            name derived from ``input_path`` is used when None.
+
+    Returns:
+        Path of the written workbook, or None on a dry run.
+
+    Side effects:
+        Saves the patched workbook to a new file; exits with an error when the
+        input, sheet, headers or year columns are missing.
+    """
     if not input_path.is_file():
         sys.exit(f"ERROR: input file not found: {input_path}")
 

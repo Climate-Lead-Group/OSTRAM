@@ -416,6 +416,16 @@ def print_summary(log: dict) -> None:
 
 
 def main() -> int:
+    """Run the MaxCapacityInvestment guard rule from the command line.
+
+    Returns:
+        0 on success, 1 when the rule fails.
+
+    Side effects:
+        Edits A-O_Parametrization.xlsx in ``--input-dir`` in place, after a
+        backup unless ``--skip-backup`` is given, and writes a ``*_CHANGES.json``
+        log next to the backup.
+    """
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )

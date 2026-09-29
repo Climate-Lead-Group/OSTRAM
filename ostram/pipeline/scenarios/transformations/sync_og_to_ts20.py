@@ -204,6 +204,15 @@ def write_conversion_csvs(out_dir: Path) -> None:
 # preserve formatting and comments)
 # ---------------------------------------------------------------------------
 def update_yaml_xtra_scen(yaml_path: Path) -> None:
+    """Rewrite xtra_scen.DailyTimeBracket and xtra_scen.Timeslices in a YAML file.
+
+    Args:
+        yaml_path: Config YAML edited in place, line by line, so comments and
+            layout are preserved.
+
+    Side effects:
+        Overwrites ``yaml_path`` with the module's BRACKETS and TIMESLICES values.
+    """
     with open(yaml_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
 
@@ -253,6 +262,17 @@ def update_yaml_xtra_scen(yaml_path: Path) -> None:
 # Main
 # ---------------------------------------------------------------------------
 def main() -> int:
+    """Sync the timeslice fabric from the WV workbook into OG_csvs_inputs and the YAML.
+
+    Returns:
+        0 on completion.
+
+    Side effects:
+        Rewrites TIMESLICE, DAILYTIMEBRACKET, YearSplit, DaySplit,
+        SpecifiedDemandProfile and Conversionls/ld/lh CSVs in ``--og-csvs-dir`` and
+        the xtra_scen lists of ``--yaml``. CapacityFactor.csv is intentionally
+        left untouched.
+    """
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--wv", type=Path, required=True,

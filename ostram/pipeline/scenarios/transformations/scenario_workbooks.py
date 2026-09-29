@@ -168,6 +168,7 @@ DEFAULT_RESTRICTION_SOURCE_SHEET = "Secondary Techs"
 
 @dataclass
 class ScenarioConfig:
+    """One row of the ``Control`` sheet: a scenario's activation, rules chain and inheritance."""
     scenario: str
     active: bool
     rules_scripts: list[str] = field(default_factory=list)

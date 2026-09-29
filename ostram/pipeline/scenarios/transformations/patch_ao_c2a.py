@@ -142,6 +142,18 @@ def copy_row_style(ws, src_row: int, dst_row: int, ncols: int) -> None:
 
 # ---------- main ----------
 def main() -> int:
+    """Add CapacityToActivityUnit = 31.536 to generation and storage techs that lack it.
+
+    Reads the technology taxonomy (TECH_TYPES.csv) and appends the missing rows to
+    the ``Fixed Horizon Parameters`` sheet; existing values are never overwritten.
+
+    Returns:
+        0 on success or dry run, 1 when an input is missing or ``--out`` equals ``--src``.
+
+    Side effects:
+        Saves the patched workbook to ``--out`` (the source is left untouched);
+        nothing is written with ``--dry-run``.
+    """
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--src", default=DEFAULT_SRC,
