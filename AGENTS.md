@@ -50,8 +50,21 @@ The pipeline runs in this order:
 - Do not run the solver unless the task asks for it. Use `--compile-only`.
 - Changes under `config/`, `inputs/` or `ostram/pipeline/` need the compile gate below before they are pushed.
 - Rule order in A3 is load-bearing. Retirement runs before the build cap, because the build cap reads the ResidualCapacity that retirement writes.
-- In the LP, `TotalAnnualMaxCapacityInvestment = 0` forbids new capacity. Only -1, the default for a row that B1 does not write, leaves it unconstrained. B1 does not write rows whose `Projection.Mode` is `Zero`, `EMPTY` or blank. Some explicit zeros are rewritten before the LP: in A3 by Stage 1b `--fill-zeros` and the build-cap (lid) rule, and in B2 for `PWRBCK*`, `PWRPET*`, `PWROIL*` and `PWRNGS*`. Before relying on a 0, check the final `Pre_processed_*` datafile in `Executables/<S>_0/`.
-- To freeze capacity at its existing level, set `TotalAnnualMaxCapacity` equal to `ResidualCapacity`, as `cap_trn_to_residual` does.
+- In the final datafile, `TotalAnnualMaxCapacityInvestment = 0` forbids new
+  capacity for that technology and year. Only -1 skips this cap. 9999 is a
+  large finite cap. The otoole configuration gives -1 to entries absent from
+  the datafile.
+- A 0 in the A-O workbook may not reach the solver as 0. B1 omits rows whose
+  `Projection.Mode` is `Zero`, `EMPTY`, blank or `According to demand`. A3
+  rules can overwrite zeros. B2 rewrites storage-linked caps, turns
+  `PWRBCK*` zeros into 9999, and replaces some fossil zeros with fallback
+  values. Reviewed calibration zeros are kept.
+- `TotalAnnualMaxCapacity` caps residual plus surviving new capacity. A final
+  0 means zero total capacity. -1 skips the cap. Setting it equal to
+  `ResidualCapacity` prevents capacity above the residual path, provided later
+  rules and B2 patches keep it.
+- Before relying on either value, read the final datafile:
+  `Executables/<S>_0/Pre_processed_<S>_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt`.
 - Scripts you write read their inputs and write new files beside them. They never modify files in `inputs/` or `config/` in place. Deliberate edits to those files are commits and go through the compile gate.
 - Do not add machine-specific paths such as `C:\Users\...` to tracked files.
 
