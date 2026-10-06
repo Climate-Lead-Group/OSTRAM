@@ -26,7 +26,7 @@ AUTHORITY_SCRIPT = TRANSFORMATIONS / "interconnector_authority.py"
 A3_SCRIPT = SCENARIOS / "transform.py"
 PATCH_SCRIPT = SCENARIOS / "apply_patches.py"
 TXCAP_CONFIG = REPO_ROOT / "config" / "profiles" / "full.yaml"
-LINKFREEZE_CONFIG = REPO_ROOT / "config" / "profiles" / "full.yaml"
+LINKFREEZE_CONFIG = TEST_ROOT / "fixtures" / "link_freeze_min_boundary.yaml"
 SCENARIO_REGISTRY = REPO_ROOT / "config" / "profiles" / "full.yaml"
 
 YEARS = tuple(range(2023, 2051))
