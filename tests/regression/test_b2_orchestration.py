@@ -299,12 +299,12 @@ class GuardHarness:
             "process_scenario_folder": self._process,
             "run_otoole_conversion": self._convert,
             "run_preprocessing_script": self._stage("preprocess"),
-            "run_days_in_day_type_patcher": self._stage("days"),
-            "run_storage_delay_patcher": self._stage("storage_delay"),
-            "run_strip_storage_patcher": self._stage("strip_storage"),
-            "run_open_pwrbck_patcher": self._stage("open_pwrbck"),
-            "run_reserve_margin_repair_patcher": self._stage("reserve_margin"),
-            "run_reserve_margin_xlsx_patcher": self._stage("reserve_margin_xlsx"),
+            "run_days_in_day_type_adjustment": self._stage("days"),
+            "run_storage_delay_adjustment": self._stage("storage_delay"),
+            "run_strip_storage_adjustment": self._stage("strip_storage"),
+            "run_open_pwrbck_adjustment": self._stage("open_pwrbck"),
+            "run_reserve_margin_repair_adjustment": self._stage("reserve_margin"),
+            "run_reserve_margin_xlsx_adjustment": self._stage("reserve_margin_xlsx"),
             "generate_combined_input_file": self._combined,
             "export_root_datafile": self._export,
             "main_executer": self._solver,
@@ -365,15 +365,15 @@ class B2ImportAndCliCharacterizationTests(unittest.TestCase):
         self.assertEqual(stderr.getvalue(), "")
         self.assertTrue(callable(module.main_executer))
 
-    def test_canonical_compile_only_patch_modules_import_from_external_cwd(
+    def test_canonical_compile_only_adjustment_modules_import_from_external_cwd(
         self,
     ) -> None:
         module_names = (
             "ostram.pipeline.execution.preprocess",
-            "ostram.pipeline.execution.patches.days_in_day_type",
-            "ostram.pipeline.execution.patches.storage_delay",
-            "ostram.pipeline.execution.patches.open_pwrbck_caps",
-            "ostram.pipeline.execution.patches.reserve_margin_repair_xlsx",
+            "ostram.pipeline.execution.model_file_adjustments.days_in_day_type",
+            "ostram.pipeline.execution.model_file_adjustments.storage_delay",
+            "ostram.pipeline.execution.model_file_adjustments.open_pwrbck_caps",
+            "ostram.pipeline.execution.model_file_adjustments.reserve_margin_repair_xlsx",
         )
         import_script = (
             "import importlib; "
@@ -476,12 +476,12 @@ class B2AstBoundaryCharacterizationTests(unittest.TestCase):
             "validate_active_compiled_domain",
             "dependencies.run_otoole_conversion",
             "dependencies.run_preprocessing_script",
-            "dependencies.run_days_in_day_type_patcher",
-            "dependencies.run_storage_delay_patcher",
-            "dependencies.run_strip_storage_patcher",
-            "dependencies.run_open_pwrbck_patcher",
-            "dependencies.run_reserve_margin_repair_patcher",
-            "dependencies.run_reserve_margin_xlsx_patcher",
+            "dependencies.run_days_in_day_type_adjustment",
+            "dependencies.run_storage_delay_adjustment",
+            "dependencies.run_strip_storage_adjustment",
+            "dependencies.run_open_pwrbck_adjustment",
+            "dependencies.run_reserve_margin_repair_adjustment",
+            "dependencies.run_reserve_margin_xlsx_adjustment",
             "dependencies.generate_combined_input_file",
             "dependencies.export_root_datafile",
         }
@@ -492,12 +492,12 @@ class B2AstBoundaryCharacterizationTests(unittest.TestCase):
                 "validate_active_compiled_domain",
                 "dependencies.run_otoole_conversion",
                 "dependencies.run_preprocessing_script",
-                "dependencies.run_days_in_day_type_patcher",
-                "dependencies.run_storage_delay_patcher",
-                "dependencies.run_strip_storage_patcher",
-                "dependencies.run_open_pwrbck_patcher",
-                "dependencies.run_reserve_margin_repair_patcher",
-                "dependencies.run_reserve_margin_xlsx_patcher",
+                "dependencies.run_days_in_day_type_adjustment",
+                "dependencies.run_storage_delay_adjustment",
+                "dependencies.run_strip_storage_adjustment",
+                "dependencies.run_open_pwrbck_adjustment",
+                "dependencies.run_reserve_margin_repair_adjustment",
+                "dependencies.run_reserve_margin_xlsx_adjustment",
                 "dependencies.generate_combined_input_file",
                 "dependencies.export_root_datafile",
             ],
@@ -773,10 +773,10 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
                 harness.stdout,
             )
 
-    def test_required_patch_child_failure_propagates_before_all_success_boundaries(
+    def test_required_adjustment_child_failure_propagates_before_all_success_boundaries(
         self,
     ) -> None:
-        runner_module = _load_b2("required_patch_child_exit")
+        runner_module = _load_b2("required_adjustment_child_exit")
         child_result = SimpleNamespace(
             returncode=7,
             stdout="reserve child stdout",
@@ -789,7 +789,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
                 return_value=[
                     sys.executable,
                     "-m",
-                    "ostram.pipeline.execution.patches.reserve_margin_repair_xlsx",
+                    "ostram.pipeline.execution.model_file_adjustments.reserve_margin_repair_xlsx",
                 ],
             ),
             mock.patch.object(
@@ -801,7 +801,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
             redirect_stderr(io.StringIO()) as child_stderr,
             self.assertRaises(subprocess.CalledProcessError) as child_failure,
         ):
-            runner_module.run_reserve_margin_xlsx_patcher(
+            runner_module.run_reserve_margin_xlsx_adjustment(
                 _base_params(reserve_margin_xlsx_active=True),
                 "A",
             )
@@ -813,7 +813,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
         self.assertIn("reserve child stdout", child_stdout.getvalue())
         self.assertIn("reserve child stderr", child_stderr.getvalue())
 
-        module = _load_b2_guard_as_callable("required_patch_failure")
+        module = _load_b2_guard_as_callable("required_adjustment_failure")
         with B2Fixture(
             "A",
             execute_model=True,
@@ -826,7 +826,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
                 fixture,
                 stage_failures={"reserve_margin_xlsx": 7},
                 solver_boundary=lambda *_args: self.fail(
-                    "solver boundary followed a required patch failure"
+                    "solver boundary followed a required adjustment failure"
                 ),
             )
             with self.assertRaises(subprocess.CalledProcessError) as raised:
@@ -1027,7 +1027,7 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
                             "_run_stage_command",
                             stage_runner,
                         ):
-                            module.run_storage_delay_patcher(params, "A")
+                            module.run_storage_delay_adjustment(params, "A")
 
                         command = stage_runner.call_args.args[0]
                         resolved = command[command.index("--model-input") + 1]
@@ -1050,7 +1050,7 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
                         re.escape(str(missing)),
                     ),
                 ):
-                    module.run_storage_delay_patcher(
+                    module.run_storage_delay_adjustment(
                         _base_params(
                             storage_delay_active=True,
                             storage_delay_model_input="missing.txt",
@@ -1100,9 +1100,9 @@ class B2ConfigurationMatrixCharacterizationTests(unittest.TestCase):
                 mock.patch.object(module, "resolve_paths", return_value=project_paths),
                 mock.patch.object(module, "_run_stage_command", stage_runner),
             ):
-                module.run_storage_delay_patcher(params, "A_Calibrated_BAU")
-                module.run_open_pwrbck_patcher(params, "A_Calibrated_BAU")
-                module.run_reserve_margin_xlsx_patcher(
+                module.run_storage_delay_adjustment(params, "A_Calibrated_BAU")
+                module.run_open_pwrbck_adjustment(params, "A_Calibrated_BAU")
+                module.run_reserve_margin_xlsx_adjustment(
                     params, "A_Calibrated_BAU"
                 )
 

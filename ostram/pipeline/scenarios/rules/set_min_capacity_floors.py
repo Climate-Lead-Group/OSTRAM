@@ -2,7 +2,7 @@
 set_min_capacity_floors.py
 ==========================
 
-Independent patch — writes minimum capacity/generation floors and
+Independent rule — writes minimum capacity/generation floors and
 optional maximum ceilings from exogenous policy documents (CCDRs,
 national energy plans, IRPs) into the parametrization workbook.
 

@@ -483,9 +483,9 @@ annualize_capital: False
 | `prefix_final_files` | `"OSTRAM_"` | Prefix for final output file names (overridden when `storage_delay_active: true` -- see below) |
 | `osemosys_model` | `"osemosys_fast_preprocessed.txt"` | OSeMOSYS model file (GMPL) |
 
-### Datafile Patch Chain
+### Model-File Adjustment Chain
 
-B2 applies a fixed chain of patches to the preprocessed OSeMOSYS datafile before solving, each gated by its own flag. See {doc}`pipeline` (Stage B2) for the exact application order and how they interact.
+B2 applies a fixed chain of model-file adjustments to the preprocessed OSeMOSYS datafile before solving, each gated by its own flag. See {doc}`pipeline` (Stage B2) for the exact application order and how they interact.
 
 **Storage delay** -- blocks storage builds/operation for the first N years, then releases them. Mutually exclusive with storage stripping (storage delay silently wins if both are `true`):
 
@@ -523,7 +523,7 @@ open_pwrbck_suffix: "OpenBCK"
 ```yaml
 reserve_margin_repair_active: False        # older, blunt text/datafile-rule version
 
-reserve_margin_xlsx_active: True           # current: workbook-driven, via patch_reserve_margin_repair_careful_xlsx.py
+reserve_margin_xlsx_active: True           # current: workbook-driven, via model_file_adjustments/reserve_margin_repair_xlsx.py
 reserve_margin_xlsx_suffix: "RMCarefulXLSX"
 reserve_margin_xlsx_workbook: "firm_capacity_fallbacks_by_cr.xlsx"
 reserve_margin_xlsx_sheet: "fallbacks"

@@ -24,7 +24,7 @@ TEMPLATE = REPO_ROOT / "inputs" / "scenarios" / "OSTRAM_Scenario_Inputs.xlsx"
 FIX_SCRIPT = TRANSFORMATIONS / "fix_trn_residuals.py"
 AUTHORITY_SCRIPT = TRANSFORMATIONS / "interconnector_authority.py"
 A3_SCRIPT = SCENARIOS / "transform.py"
-PATCH_SCRIPT = SCENARIOS / "apply_patches.py"
+SCENARIO_EDITS_SCRIPT = SCENARIOS / "scenario_edits.py"
 TXCAP_CONFIG = REPO_ROOT / "config" / "profiles" / "full.yaml"
 LINKFREEZE_CONFIG = TEST_ROOT / "fixtures" / "link_freeze_min_boundary.yaml"
 SCENARIO_REGISTRY = REPO_ROOT / "config" / "profiles" / "full.yaml"
@@ -259,7 +259,7 @@ def _secondary_fixture():
     return workbook, worksheet
 
 
-def _patch_fixture(tech: str, residual: object, target_value: object = -1.0):
+def _edit_fixture(tech: str, residual: object, target_value: object = -1.0):
     workbook = Workbook()
     worksheet = workbook.active
     worksheet.title = "Secondary Techs"
@@ -279,7 +279,7 @@ def _patch_fixture(tech: str, residual: object, target_value: object = -1.0):
     return workbook, worksheet
 
 
-def _patch_log():
+def _edit_log():
     return {"cells": [], "rows_created": [], "skipped": []}
 
 
@@ -815,16 +815,16 @@ class TxCap150FormulaTests(unittest.TestCase):
         )
 
     def test_dynamic_formula_reads_effective_rc_for_both_targets(self) -> None:
-        module = _load_module(PATCH_SCRIPT, "txcap_formula")
+        module = _load_module(SCENARIO_EDITS_SCRIPT, "txcap_formula")
         config = yaml.safe_load(TXCAP_CONFIG.read_text(encoding="utf-8"))["scenario_inputs"]["B_Opt_TxCap150"]
         edits = [
             edit for edit in config["edits"]
             if edit.get("op") == "set_to_residual_factor_floor"
             and edit["tech"] == "TRNBTNXXINDNE"
         ]
-        workbook, worksheet = _patch_fixture("TRNBTNXXINDNE", 0.170)
+        workbook, worksheet = _edit_fixture("TRNBTNXXINDNE", 0.170)
         columns, year_columns = module.scan_columns(worksheet)
-        log = _patch_log()
+        log = _edit_log()
         for edit in edits:
             module.apply_edit(worksheet, columns, year_columns, edit, log)
         for parameter in CAP_TARGETS:
@@ -841,7 +841,7 @@ class TxCap150FormulaTests(unittest.TestCase):
         workbook.close()
 
     def test_dynamic_formula_fails_closed_on_missing_or_invalid_rc(self) -> None:
-        module = _load_module(PATCH_SCRIPT, "txcap_fail_closed")
+        module = _load_module(SCENARIO_EDITS_SCRIPT, "txcap_fail_closed")
         edit = {
             "sheet": "Secondary Techs",
             "tech": "TRNBTNXXINDNE",
@@ -854,18 +854,18 @@ class TxCap150FormulaTests(unittest.TestCase):
         }
         for invalid in (None, -0.1, float("nan"), float("inf")):
             with self.subTest(invalid=invalid):
-                workbook, worksheet = _patch_fixture("TRNBTNXXINDNE", invalid)
+                workbook, worksheet = _edit_fixture("TRNBTNXXINDNE", invalid)
                 columns, year_columns = module.scan_columns(worksheet)
                 with self.assertRaises(ValueError):
                     module.apply_edit(
-                        worksheet, columns, year_columns, edit, _patch_log()
+                        worksheet, columns, year_columns, edit, _edit_log()
                     )
                 workbook.close()
 
     def test_linkfreeze_minimum_clamp_uses_v18_boundary_not_effective_rc(
         self,
     ) -> None:
-        module = _load_module(PATCH_SCRIPT, "linkfreeze_minimum")
+        module = _load_module(SCENARIO_EDITS_SCRIPT, "linkfreeze_minimum")
         config = yaml.safe_load(LINKFREEZE_CONFIG.read_text(encoding="utf-8"))["scenario_inputs"]["B_Opt_LinkFreeze"]
         edits = {
             edit["tech"]: edit for edit in config["edits"]
@@ -882,7 +882,7 @@ class TxCap150FormulaTests(unittest.TestCase):
         )
         for tech, effective_rc, minimum, expected in cases:
             with self.subTest(tech=tech):
-                workbook, worksheet = _patch_fixture(
+                workbook, worksheet = _edit_fixture(
                     tech, effective_rc, minimum
                 )
                 columns, year_columns = module.scan_columns(worksheet)
@@ -891,7 +891,7 @@ class TxCap150FormulaTests(unittest.TestCase):
                     columns,
                     year_columns,
                     edits[tech],
-                    _patch_log(),
+                    _edit_log(),
                     minimum_boundaries=boundaries,
                 )
                 row = module.find_row(
@@ -913,7 +913,7 @@ class TxCap150FormulaTests(unittest.TestCase):
                 workbook.close()
 
     def test_boundary_source_rejects_wrong_parameter_and_operation(self) -> None:
-        module = _load_module(PATCH_SCRIPT, "boundary_source_contract")
+        module = _load_module(SCENARIO_EDITS_SCRIPT, "boundary_source_contract")
         base = {
             "sheet": "Secondary Techs",
             "tech": "TRNBGDXXINDEA",
@@ -937,8 +937,8 @@ class TxCap150FormulaTests(unittest.TestCase):
     def test_invalid_boundary_source_fails_before_target_directory_mutation(
         self,
     ) -> None:
-        module = _load_module(PATCH_SCRIPT, "boundary_before_mutation")
-        patches = {
+        module = _load_module(SCENARIO_EDITS_SCRIPT, "boundary_before_mutation")
+        inputs = {
             "edits": [{
                 "sheet": "Secondary Techs",
                 "tech": "TRNBGDXXINDEA",
@@ -950,7 +950,7 @@ class TxCap150FormulaTests(unittest.TestCase):
         with (
             mock.patch.object(Path, "is_file", return_value=True),
             mock.patch.object(
-                Path, "read_text", return_value=json.dumps({"scenario_inputs": {"Bad": {"scenario": "Bad", "base_scenario": "B_Optimised_VRE", **patches}}})
+                Path, "read_text", return_value=json.dumps({"scenario_inputs": {"Bad": {"scenario": "Bad", "base_scenario": "B_Optimised_VRE", **inputs}}})
             ),
             mock.patch.object(module.shutil, "copytree") as copytree,
             mock.patch.object(module.shutil, "rmtree") as rmtree,

@@ -100,54 +100,42 @@ scenario_registry:
   derived_scenarios:
   - name: A_Calibrated_BAU_Clipped
     base_scenario: A_Calibrated_BAU
-    patches: full-profile:scenario_inputs/A_Calibrated_BAU_Clipped
   - name: B_Opt_Clipped
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_Clipped
   - name: B_Opt_DirBidir
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_DirBidir
     direction_overlay: B_Opt_DirBidir/set_interconnector_direction.yaml
     direction_study_start_year: 2027
   - name: B_Opt_DirContractual
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_DirContractual
     direction_overlay: B_Opt_DirContractual/set_interconnector_direction.yaml
     direction_study_start_year: 2027
   - name: B_Opt_IndiaCosts
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_IndiaCosts
   - name: B_Opt_IndiaCostsFuel
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_IndiaCostsFuel
   - name: B_Opt_SolarCapex130
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_SolarCapex130
   - name: B_Opt_SolarCapexHi
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_SolarCapexHi
   - name: B_Opt_SolarCapexSpike
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_SolarCapexSpike
   - name: B_Opt_TradeCap15
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_TradeCap15
   - name: B_Opt_TxCap150
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_TxCap150
   - name: C_Target_VRE_Clipped
     base_scenario: C_Target_VRE
-    patches: full-profile:scenario_inputs/C_Target_VRE_Clipped
   - name: A_Calibrated_BAU_Clipped_TxFreeze2026
     base_scenario: A_Calibrated_BAU
-    patches: full-profile:scenario_inputs/A_Calibrated_BAU_Clipped_TxFreeze2026
   - name: B_Opt_Clipped_GrossImportCap15
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_Clipped_GrossImportCap15
 vre_ceilings:
-  description: Shared VRE physical-potential ceiling layer. TotalAnnualMaxCapacity
-    (GW), flat 2023-2050. ceiling = min(atlas, B_Opt MaxCap) per Luis decision (pure-guard
-    for confounds; atlas-enforced on clips).
+  description: Shared VRE ceilings. Each value sets TotalAnnualMaxCapacity (GW) of
+    one solar or onshore wind technology to the same value in every year. The values
+    were chosen once as the lower of an atlas-based estimate and the historical
+    B_Optimised_VRE limit. The pipeline applies them as fixed values and does not
+    recalculate them.
   param: TotalAnnualMaxCapacity
   sheet: Secondary Techs
   ceilings_gw:
@@ -197,7 +185,7 @@ scenario_inputs:
     description: 'Interconnector-direction validation anchor: shared VRE ceiling layer
       + all cross-border corridors left bidirectional (set_interconnector_direction.py
       no-op). Must reproduce B_Opt_Clipped (2,113,984 -> clipped 2,115,082). Direction
-      overlay applied post-apply_patches.'
+      overlay applied post-scenario_edits.'
     apply_vre_ceiling_layer: true
     edits: []
   B_Opt_DirContractual:
@@ -205,18 +193,19 @@ scenario_inputs:
     base_scenario: B_Optimised_VRE
     description: Interconnector directions locked to real contractual/physical flows
       (9 corridors one-way, Nepal<->India pair bidirectional). Shared VRE ceiling
-      layer via patches; direction overlay via set_interconnector_direction.py. Full
+      layer via scenario edits; direction overlay via set_interconnector_direction.py. Full
       per-corridor justification + citations in sensitivity_expansion/reference/interconnector_direction_references.md.
     apply_vre_ceiling_layer: true
     edits: []
   B_Opt_IndiaCosts:
     scenario: B_Opt_IndiaCosts
     base_scenario: B_Optimised_VRE
-    description: 'CapitalCost + FixedCost of every non-India generation/storage tech
-      set to the India reference (per family/year; INDNO anchor where India nodes
-      disagree: PWRCOA/PWRHYD/PWRWOF). Transmission (TRN corridors) excluded. Over
-      shared VRE-ceiling layer. Fuel/VariableCost NOT changed (include_fuel=false).'
-    include_fuel: false
+    description: 'CapitalCost and FixedCost of the existing non-India generation
+      and storage technologies, except the backstop, set to the India values for
+      each family and year. Where the India regions differ (coal, hydro and offshore
+      wind), the INDNO values are used. Transmission and fuel prices are unchanged.
+      Applied after the shared VRE ceilings. The values were first copied from the
+      B_Optimised_VRE workbook and were updated in the September 2026 cost release.'
     apply_vre_ceiling_layer: true
     edits:
     - sheet: Secondary Techs
@@ -3918,13 +3907,14 @@ scenario_inputs:
   B_Opt_IndiaCostsFuel:
     scenario: B_Opt_IndiaCostsFuel
     base_scenario: B_Optimised_VRE
-    description: 'CapitalCost + FixedCost of every non-India generation/storage tech
-      set to the India reference (per family/year; INDNO anchor where India nodes
-      disagree: PWRCOA/PWRHYD/PWRWOF). Transmission (TRN corridors) excluded. Over
-      shared VRE-ceiling layer. FUEL ON: non-India MIN* fuel-supply VariableCost also
-      set to the India (MIN*IND) price -- note India has cheap coal / dear gas, so
-      this is a MIXED shift.'
-    include_fuel: true
+    description: 'CapitalCost and FixedCost of the existing non-India generation
+      and storage technologies, except the backstop, set to the India values for
+      each family and year. Where the India regions differ (coal, hydro and offshore
+      wind), the INDNO values are used. Transmission is unchanged. Non-India fuel
+      prices (VariableCost of the MIN fuel-supply technologies) are also set to the
+      India prices; these are higher for some fuels and years and lower for others.
+      Applied after the shared VRE ceilings. The values were first copied from the
+      B_Optimised_VRE workbook and were updated in the September 2026 cost release.'
     apply_vre_ceiling_layer: true
     edits:
     - sheet: Secondary Techs
@@ -8797,7 +8787,7 @@ scenario_inputs:
   B_Opt_SolarCapexHi:
     scenario: B_Opt_SolarCapexHi
     base_scenario: B_Optimised_VRE
-    description: 'Solar CapitalCost multiplied by ''factor'' (KNOB, default 1.10)
+    description: 'Solar CapitalCost multiplied by ''factor'' (setting, default 1.10)
       for all PWRSPV<node>, all 10 nodes, all years. Over the shared VRE-ceiling layer
       (expected not to bind: dearer solar -> less solar). To change the stress level
       before CPLEX, edit the single ''factor'' value below.'
@@ -8808,15 +8798,15 @@ scenario_inputs:
       param: CapitalCost
       op: multiply
       factor: 1.1
-      note: KNOB -- solar CAPEX multiplier. Default 1.10 (+10%). Edit this one number
+      note: 'Setting: solar CAPEX multiplier. Default 1.10 (+10%). Edit this one number
         to rescale the shock; rides on top of per-node cost multipliers already in
-        the A-O.
+        the A-O.'
   B_Opt_SolarCapexSpike:
     scenario: B_Opt_SolarCapexSpike
     base_scenario: B_Optimised_VRE
-    description: Transient severe solar CAPEX spike x1.50 for 2028-2030 ONLY (reverts
-      to 1.0 elsewhere). Uses the multiply op's optional per-year 'years' filter (added
-      to apply_patches.py for this scenario). Over the shared VRE-ceiling layer.
+    description: Transient severe solar CAPEX spike x1.50 for 2028-2030 ONLY (other
+      years keep the parent cost). Uses the multiply op's optional per-year 'years' filter (added
+      to scenario_edits.py for this scenario). Over the shared VRE-ceiling layer.
     apply_vre_ceiling_layer: true
     edits:
     - sheet: Secondary Techs
@@ -8833,13 +8823,13 @@ scenario_inputs:
   B_Opt_TradeCap15:
     scenario: B_Opt_TradeCap15
     base_scenario: B_Optimised_VRE
-    cap_fraction: 0.15
-    export_factor: 0.0
-    description: BGD cross-border imports capped to 15% of demand (per-year, split
-      by B_Opt import share) (strict cap, no export allowance); backstop imports (TRNNLIBGDXX/TRNRPOBGDXX)
-      zeroed. Region-wide 15% import cap binds on Bangladesh only (sole net importer;
-      LKA/NPL/BTN export, IND/MDV self-sufficient). Over shared VRE-ceiling layer.
-      Tracked canonical patch.
+    description: Fixed upper limits on the yearly flow of Bangladesh's four import
+      corridors from 2027 to 2050. They were calculated once as 15 per cent of
+      Bangladesh's demand, split by each corridor's share of imports in a historical
+      B_Optimised_VRE run, with no allowance for exports. Backstop imports to
+      Bangladesh (TRNNLIBGDXX, TRNRPOBGDXX) are set to zero from 2027. Applied after
+      the shared VRE ceilings. This scenario differs from the gross import cap of
+      B_Opt_Clipped_GrossImportCap15.
     apply_vre_ceiling_layer: true
     edits:
     - sheet: Secondary Techs
@@ -10325,10 +10315,9 @@ scenario_inputs:
   C_Target_VRE_Clipped:
     scenario: C_Target_VRE_Clipped
     base_scenario: C_Target_VRE
-    description: 'Ceiling-only scenario: applies the shared VRE physical-potential
-      ceiling layer (min(atlas, B_Opt MaxCap)) to the validated C_Target_VRE A-O.
-      No run-specific lever. Measures the cost of physical VRE realism on the target
-      pathway.'
+    description: 'The shared VRE ceilings applied to C_Target_VRE, plus one Maldives
+      solar correction for 2028: the annual minimum investment is replaced by a minimum
+      total capacity of 0.3841 GW, so earlier builds count towards it.'
     apply_vre_ceiling_layer: true
     edits:
     - sheet: Secondary Techs
@@ -10348,9 +10337,11 @@ scenario_inputs:
   A_Calibrated_BAU_Clipped_TxFreeze2026:
     scenario: A_Calibrated_BAU_Clipped_TxFreeze2026
     base_scenario: A_Calibrated_BAU
-    description: Clipped A with all eleven defined international corridors fixed to
-      accepted A end-2026 capacity from 2027; 2023-2026 investments fixed. Includes
-      dormant zero-capacity corridors.
+    description: Clipped A with all eleven international corridors limited from 2027
+      to their end-2026 capacity in the historical M0 A_Calibrated_BAU_Clipped run.
+      This is an upper limit. New investment in 2023 to 2026 is fixed to the values
+      of that run. Corridors with zero capacity are included. The reference values
+      are fixed and are not recalculated from a new A run.
     apply_vre_ceiling_layer: true
     edits:
     - sheet: Secondary Techs
@@ -10382,7 +10373,7 @@ scenario_inputs:
         '2049': 3.8523256661294
         '2050': 3.8523256661294
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNBGDXXINDEA
@@ -10393,14 +10384,14 @@ scenario_inputs:
         '2025': 0
         '2026': 1.3563256661294003
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNBGDXXINDEA
       param: TotalAnnualMaxCapacityInvestment
       values: *id001
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNBGDXXINDNE
@@ -10431,7 +10422,7 @@ scenario_inputs:
         '2049': 0.4667618377913747
         '2050': 0.4667618377913747
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNBGDXXINDNE
@@ -10442,14 +10433,14 @@ scenario_inputs:
         '2025': 0
         '2026': 0.3067618377913746
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNBGDXXINDNE
       param: TotalAnnualMaxCapacityInvestment
       values: *id002
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNBTNXXBGDXX
@@ -10480,7 +10471,7 @@ scenario_inputs:
         '2049': 0.0
         '2050': 0.0
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNBTNXXBGDXX
@@ -10492,14 +10483,14 @@ scenario_inputs:
         '2026': 0
         '2035': 0
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNBTNXXBGDXX
       param: TotalAnnualMaxCapacityInvestment
       values: *id003
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNBTNXXINDEA
@@ -10530,7 +10521,7 @@ scenario_inputs:
         '2049': 5.992
         '2050': 5.992
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNBTNXXINDEA
@@ -10541,14 +10532,14 @@ scenario_inputs:
         '2025': 0
         '2026': 0
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNBTNXXINDEA
       param: TotalAnnualMaxCapacityInvestment
       values: *id004
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNBTNXXINDNE
@@ -10579,7 +10570,7 @@ scenario_inputs:
         '2049': 0.17
         '2050': 0.17
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNBTNXXINDNE
@@ -10590,14 +10581,14 @@ scenario_inputs:
         '2025': 0
         '2026': 0
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNBTNXXINDNE
       param: TotalAnnualMaxCapacityInvestment
       values: *id005
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNINDEANPLXX
@@ -10628,7 +10619,7 @@ scenario_inputs:
         '2049': 1.2
         '2050': 1.2
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNINDEANPLXX
@@ -10639,14 +10630,14 @@ scenario_inputs:
         '2025': 0
         '2026': 0
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNINDEANPLXX
       param: TotalAnnualMaxCapacityInvestment
       values: *id006
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNINDNONPLXX
@@ -10677,7 +10668,7 @@ scenario_inputs:
         '2049': 0.6928936599143154
         '2050': 0.6928936599143154
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNINDNONPLXX
@@ -10688,14 +10679,14 @@ scenario_inputs:
         '2025': 0.0490786409188217
         '2026': 0.1438150189954936
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNINDNONPLXX
       param: TotalAnnualMaxCapacityInvestment
       values: *id007
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNINDSOLKAXX
@@ -10726,7 +10717,7 @@ scenario_inputs:
         '2049': 0.0
         '2050': 0.0
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNINDSOLKAXX
@@ -10737,14 +10728,14 @@ scenario_inputs:
         '2025': 0
         '2026': 0
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNINDSOLKAXX
       param: TotalAnnualMaxCapacityInvestment
       values: *id008
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNLKAXXMDVXX
@@ -10775,7 +10766,7 @@ scenario_inputs:
         '2049': 0.0
         '2050': 0.0
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNLKAXXMDVXX
@@ -10786,14 +10777,14 @@ scenario_inputs:
         '2025': 0
         '2026': 0
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNLKAXXMDVXX
       param: TotalAnnualMaxCapacityInvestment
       values: *id009
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNMDVXXINDSO
@@ -10824,7 +10815,7 @@ scenario_inputs:
         '2049': 0.0
         '2050': 0.0
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNMDVXXINDSO
@@ -10835,14 +10826,14 @@ scenario_inputs:
         '2025': 0
         '2026': 0
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNMDVXXINDSO
       param: TotalAnnualMaxCapacityInvestment
       values: *id010
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNNPLXXBGDXX
@@ -10873,7 +10864,7 @@ scenario_inputs:
         '2049': 0.0031504799155706
         '2050': 0.0031504799155706
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNNPLXXBGDXX
@@ -10885,14 +10876,14 @@ scenario_inputs:
         '2026': 0
         '2033': 0
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
     - sheet: Secondary Techs
       tech: TRNNPLXXBGDXX
       param: TotalAnnualMaxCapacityInvestment
       values: *id011
       create_if_absent: true
-      note: Accepted A-clipped end-2026 model-window freeze; historical new vintages
+      note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
         fixed; original retirement schedule retained.
   B_Opt_Clipped_GrossImportCap15:
     scenario: B_Opt_Clipped_GrossImportCap15

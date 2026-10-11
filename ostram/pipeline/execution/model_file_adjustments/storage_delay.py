@@ -1,9 +1,9 @@
 #! python3
 """
-patch_storage_delay.py
+storage_delay.py
 ======================
 
-Non-destructive storage-delay patcher for OSTRAM preprocessed datafiles.
+Non-destructive storage-delay adjustment for OSTRAM preprocessed datafiles.
 
 This keeps storage in the model, but blocks storage builds for the first N
 model years. After those early years, linked storage technologies are opened
@@ -165,7 +165,7 @@ def linked_storage_techs(lines: list[str], target_storages: set[str]) -> list[st
             if len(parts) >= 5 and parts[2] in target_storages and is_nonzero(parts[4]):
                 techs.add(parts[1])
 
-    # Naming convention fallback covers sparse link tables and keeps the patch
+    # Naming convention fallback covers sparse link tables and keeps the adjustment
     # useful on partially stripped/debug datafiles.
     for storage in target_storages:
         techs.add(storage_to_tech(storage))
@@ -261,7 +261,7 @@ def drop_blocked_min_rows(
     return lines[: start + 1] + kept + lines[end:], dropped
 
 
-def patch_model_lines(lines: list[str]) -> list[str]:
+def adjust_model_lines(lines: list[str]) -> list[str]:
     eol = detect_eol(lines)
     text = "".join(lines)
     out = list(lines)
@@ -295,7 +295,7 @@ def patch_model_lines(lines: list[str]) -> list[str]:
     return out
 
 
-def patch_data_lines(
+def adjust_data_lines(
     lines: list[str],
     first_n_years: int,
     exact_storages: list[str],
@@ -359,9 +359,9 @@ def main() -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("input", help="Input preprocessed .txt datafile")
-    parser.add_argument("-o", "--output", required=True, help="Output patched datafile")
+    parser.add_argument("-o", "--output", required=True, help="Output adjusted datafile")
     parser.add_argument("--model-input", required=True, help="Input OSeMOSYS model file")
-    parser.add_argument("--model-output", required=True, help="Output patched model file")
+    parser.add_argument("--model-output", required=True, help="Output adjusted model file")
     parser.add_argument(
         "--first-n-years",
         type=int,
@@ -388,7 +388,7 @@ def main() -> int:
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Parse and report the patch without writing output files.",
+        help="Parse and report the adjustment without writing output files.",
     )
     args = parser.parse_args()
 
@@ -404,17 +404,17 @@ def main() -> int:
 
     data_lines = read_lines(input_path)
     model_lines = read_lines(model_input)
-    patched_data, summary = patch_data_lines(
+    adjusted_data, summary = adjust_data_lines(
         data_lines,
         first_n_years=args.first_n_years,
         exact_storages=args.storages,
         storage_prefixes=args.storage_prefixes,
         allowed_value=str(args.allowed_value),
     )
-    patched_model = patch_model_lines(model_lines)
+    adjusted_model = adjust_model_lines(model_lines)
 
     print("=" * 72)
-    print("patch_storage_delay.py")
+    print("storage_delay.py")
     print(f"  Input data:      {input_path}")
     print(f"  Output data:     {output_path}")
     print(f"  Input model:     {model_input}")
@@ -436,8 +436,8 @@ def main() -> int:
         print("  dry-run: no files written")
         return 0
 
-    write_lines(output_path, patched_data)
-    write_lines(model_output, patched_model)
+    write_lines(output_path, adjusted_data)
+    write_lines(model_output, adjusted_model)
     print(f"  wrote data:  {output_path} ({output_path.stat().st_size:,} bytes)")
     print(f"  wrote model: {model_output} ({model_output.stat().st_size:,} bytes)")
     return 0

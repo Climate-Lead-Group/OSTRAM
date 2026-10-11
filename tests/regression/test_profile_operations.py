@@ -96,11 +96,6 @@ class SelectedRegistryTests(unittest.TestCase):
     def test_registry_content_drives_non_full_scenarios(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            patch_dir = root / "Derived"
-            patch_dir.mkdir()
-            (patch_dir / "patches.json").write_text(json.dumps({
-                "scenario": "Derived", "base_scenario": "Decision", "edits": []
-            }), encoding="utf-8")
             registry_path = root / "registry.json"
             registry_path.write_text(json.dumps({
                 "schema": "ostram-scenario-registry-v1",
@@ -112,8 +107,10 @@ class SelectedRegistryTests(unittest.TestCase):
                 "decision_scenarios": ["Decision", "Derived"],
                 "derived_scenarios": [{
                     "name": "Derived", "base_scenario": "Decision",
-                    "patches": "Derived/patches.json",
                 }],
+                "scenario_inputs": {"Derived": {
+                    "scenario": "Derived", "base_scenario": "Decision", "edits": []
+                }},
             }), encoding="utf-8")
             registry = load_registry(registry_path)
             self.assertEqual(registry.scenario_names, ("Seed", "Decision", "Derived"))

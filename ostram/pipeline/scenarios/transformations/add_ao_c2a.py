@@ -1,7 +1,7 @@
 """
-patch_ao_c2a.py
+add_ao_c2a.py
 ================
-Patch the A-O parametrization workbook to set CapacityToActivityUnit = 31.536
+Update the A-O parametrization workbook to set CapacityToActivityUnit = 31.536
 for every GENERATION and STORAGE technology that doesn't already have it.
 
 Why:
@@ -25,14 +25,14 @@ Behaviour:
     - Cell formatting is copied from a reference existing c2a row so the
       new rows blend in.
     - Writes a sibling output file. The source file is never modified.
-    - Idempotent: re-running on an already-patched file is a no-op.
+    - Idempotent: re-running on an already-updated file is a no-op.
 
 Usage:
-    python patch_ao_c2a.py
-    python patch_ao_c2a.py --src A-O_Parametrization.xlsx \\
+    python add_ao_c2a.py
+    python add_ao_c2a.py --src A-O_Parametrization.xlsx \\
                            --tax TECH_TYPES.csv \\
                            --out A-O_Parametrization_c2a_patched.xlsx
-    python patch_ao_c2a.py --dry-run   # show plan, write nothing
+    python add_ao_c2a.py --dry-run   # show plan, write nothing
 """
 
 from __future__ import annotations
@@ -193,16 +193,16 @@ def main() -> int:
     in_sheet = [t for t in target_techs if t in meta]
     not_in_sheet = sorted(t for t in target_techs if t not in meta)
     already_ok = sorted(t for t in in_sheet if meta[t]["has_c2a"])
-    to_patch = sorted(t for t in in_sheet if not meta[t]["has_c2a"])
+    to_add = sorted(t for t in in_sheet if not meta[t]["has_c2a"])
 
     print(f"\nPlan:")
     print(f"  Target techs in sheet:        {len(in_sheet)}")
     print(f"  Already have c2a (skipped):   {len(already_ok)}")
-    print(f"  Will add c2a row:             {len(to_patch)}")
+    print(f"  Will add c2a row:             {len(to_add)}")
     print(f"  Target techs NOT in sheet:    {len(not_in_sheet)}")
     if not_in_sheet:
         # Should be 0 for this model — flag if not.
-        print(f"    (these will not be patched — verify they don't need it):")
+        print(f"    (these will not be updated — verify they don't need it):")
         for t in not_in_sheet[:20]:
             print(f"      {t}  [{tech_type[t]}]")
         if len(not_in_sheet) > 20:
@@ -210,13 +210,13 @@ def main() -> int:
 
     # Breakdown by family
     from collections import Counter
-    fam = Counter(tech_type[t] for t in to_patch)
+    fam = Counter(tech_type[t] for t in to_add)
     print(f"  Breakdown by tech type:")
     for k, v in sorted(fam.items()):
         print(f"    {k}: {v}")
 
-    if not to_patch:
-        print("\nNothing to patch. (Re-run is a no-op — the file already has "
+    if not to_add:
+        print("\nNothing to add. (Re-run is a no-op — the file already has "
               "c2a set for every target tech.)")
         return 0
 
@@ -225,10 +225,10 @@ def main() -> int:
         return 0
 
     # 5. Append rows. Sort by Tech.ID for tidiness.
-    to_patch_sorted = sorted(to_patch, key=lambda t: (meta[t]["id"] or 0, t))
+    to_add_sorted = sorted(to_add, key=lambda t: (meta[t]["id"] or 0, t))
     next_row = ws.max_row + 1
     first_new_row = next_row
-    for tech in to_patch_sorted:
+    for tech in to_add_sorted:
         m = meta[tech]
         new_pid = (m["max_paramid"] or 0) + 1
         ws.cell(next_row, COL_TYPE, m["type"])
@@ -249,7 +249,7 @@ def main() -> int:
     # 6. Save
     wb.save(out)
     print(f"\nWrote: {out}")
-    print(f"  Added {len(to_patch_sorted)} rows (rows {first_new_row}–{next_row - 1})")
+    print(f"  Added {len(to_add_sorted)} rows (rows {first_new_row}–{next_row - 1})")
     print(f"  Source file untouched: {src}")
     return 0
 

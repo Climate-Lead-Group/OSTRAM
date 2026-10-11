@@ -89,8 +89,8 @@ annualize_capital: False
 # === Storage delay (block storage builds for first N years, then release) ===
 # Master switch. False (or absent) = pipeline runs unchanged.
 # When True: mutually exclusive with strip_storage_active (strip is silently
-# turned off). The solver is redirected to the patched OSeMOSYS model file
-# produced by patch_storage_delay.py, and combined inputs/outputs are written
+# turned off). The solver is redirected to the adjusted OSeMOSYS model file
+# produced by model_file_adjustments/storage_delay.py, and combined inputs/outputs are written
 # with `storage_delay_prefix_final_files` so baseline OSTRAM_* artifacts are
 # not overwritten.
 storage_delay_active: True
@@ -140,12 +140,12 @@ open_pwrbck_suffix: "OpenBCK"
 ########################################################################################
 # === Older blunt reserve-margin repair ===
 # Keep this disabled for the XLSX careful path. It is preserved in the B2 copy
-# for compatibility, but the XLSX patcher below is the one intended for this config.
+# for compatibility, but the XLSX adjustment below is the one intended for this config.
 reserve_margin_repair_active: False
 
 ########################################################################################
 # === Careful XLSX reserve-margin repair ===
-# This calls patch_reserve_margin_repair_careful_xlsx.py.
+# This calls model_file_adjustments/reserve_margin_repair_xlsx.py.
 # It produces e.g.:
 #   Pre_processed_BAU_0_NoStorage_OpenBCK_RMCarefulXLSX.txt
 reserve_margin_xlsx_active: True
@@ -176,7 +176,7 @@ reserve_margin_xlsx_sentinel_values:
 # Use ONE of these after the diagnostic case solves.
 #
 # Alternative A: leave PWRBCK at default/no reserve credit.
-# reserve_margin_xlsx_patch_backstop: False
+# reserve_margin_xlsx_adjust_backstop: False
 #
 # Alternative B: explicitly set PWRBCK reserve credit to zero.
 # reserve_margin_xlsx_backstop_credit: 0

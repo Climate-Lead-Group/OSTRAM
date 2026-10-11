@@ -13,7 +13,7 @@
 ## differentiating lifetimes between scenarios.
 ##
 ## OPTION B (cliff profile) remains deferred — requires set_retirement_schedule.py
-## patch. Once supported, cliff would give physically more realistic behavior:
+## changes. Once supported, cliff would give physically more realistic behavior:
 ## full nameplate until late-life, then linear tail. See v1 for commented params.
 ##
 ## Scenario differentiation from BAU is via the lid relaxation_schedule

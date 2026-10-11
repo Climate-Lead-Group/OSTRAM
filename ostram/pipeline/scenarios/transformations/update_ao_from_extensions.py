@@ -62,7 +62,7 @@ from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 
 from ostram.paths import resolve_paths
-from .patch_ao_c2a import load_taxonomy
+from .add_ao_c2a import load_taxonomy
 
 # =============================================================================
 # USER CONFIGURATION

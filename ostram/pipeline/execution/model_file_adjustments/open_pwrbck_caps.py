@@ -2,7 +2,7 @@
 """
 open_pwrbck_caps.py
 ===================
-Diagnostic patcher for OSTRAM. Opens TotalAnnualMaxCapacity and
+Diagnostic model-file adjustment for OSTRAM. Opens TotalAnnualMaxCapacity and
 TotalAnnualMaxCapacityInvestment caps for backstop technologies (PWRBCK*)
 that are currently hardcapped at 0.
 
@@ -61,7 +61,7 @@ def find_block_range(lines, block_name):
     return start, None  # malformed block (no terminator)
 
 
-def patch_block(lines, start, end, pattern, new_value):
+def adjust_block(lines, start, end, pattern, new_value):
     """
     Within lines[start+1 .. end-1], find rows of the form
         REGION TECH YEAR VALUE
@@ -102,20 +102,20 @@ def main():
     parser = argparse.ArgumentParser(
         description='Open PWRBCK* (or other matching) cap rows in '
                     'TotalAnnualMaxCapacity and TotalAnnualMaxCapacityInvestment '
-                    'parameter blocks. Diagnostic, non-destructive sibling-output patcher.'
+                    'parameter blocks. Diagnostic, non-destructive sibling-output adjustment.'
     )
     parser.add_argument('input_file',
                         help='Path to preprocessed datafile to read from.')
     parser.add_argument('-o', '--output', required=True,
-                        help='Path to write the patched sibling datafile.')
+                        help='Path to write the adjusted sibling datafile.')
     parser.add_argument('--pattern', default=DEFAULT_PATTERN,
                         help=f'Substring that must appear in the TECH token '
-                             f'for a row to be patched. Default: {DEFAULT_PATTERN}.')
+                             f'for a row to be adjusted. Default: {DEFAULT_PATTERN}.')
     parser.add_argument('--value', default=DEFAULT_VALUE,
                         help=f'Replacement value for cells currently 0. '
                              f'Default: {DEFAULT_VALUE} (matches TRN* sentinel convention).')
     parser.add_argument('--blocks', nargs='+', default=DEFAULT_BLOCKS,
-                        help=f'Parameter block names to patch. Default: {DEFAULT_BLOCKS}.')
+                        help=f'Parameter block names to adjust. Default: {DEFAULT_BLOCKS}.')
     args = parser.parse_args()
 
     if not os.path.exists(args.input_file):
@@ -144,7 +144,7 @@ def main():
         if end is None:
             print(f'  [ERROR] block {block_name} has no terminating semicolon; skipped')
             continue
-        n, skipped = patch_block(lines, start, end, args.pattern, args.value)
+        n, skipped = adjust_block(lines, start, end, args.pattern, args.value)
         total_changed += n
         print(f'  {block_name}: {n} rows opened '
               f'(block lines {start + 1}..{end + 1})')

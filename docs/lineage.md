@@ -45,7 +45,7 @@ execution workspace (preprocessed text, optional matrix/solve, results)
 ```
 
 `config/profiles/full.yaml::scenario_registry` defines the four roots, the accepted derived
-scenarios, selection order, patch layers, direction overlays, and explicit
+scenarios, selection order, scenario edits, direction overlays, and explicit
 result dependencies. Derived scenarios reuse their declared root source and do
 not become competing workbook authorities.
 
@@ -87,7 +87,7 @@ MUSD/GW and MUSD/GW-year conventions. `VariableCost` country MIN rows provide
 fuel prices, including the existing IndiaCostsFuel substitution. The compiler
 reads `Config_MOMF_T1_A.yaml::fuel_cost_allocation`; its implementation is in
 the existing compilation `transforms/effects.py` and its focused checks in
-`test_a1_b1_transforms.py`. No additional input authority or scenario patch is
+`test_a1_b1_transforms.py`. No additional input authority or scenario edit is
 required. CSV and workbook redundancy remains part of the existing workflow.
 
 For each fuel/year the positive minimum mapped national price is charged

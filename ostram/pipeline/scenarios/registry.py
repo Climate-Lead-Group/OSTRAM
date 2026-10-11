@@ -73,7 +73,6 @@ class DerivedScenario:
 
     name: str
     base_scenario: str
-    patches: Path
     direction_overlay: Path | None = None
     direction_study_start_year: int | None = None
 
@@ -275,9 +274,6 @@ def load_registry(
     derived: list[DerivedScenario] = []
     for entry in raw.get("derived_scenarios", ()):
         overlay = entry.get("direction_overlay")
-        patches = registry_path if consolidated else _registry_relative(
-            base, entry["patches"], label=f"{entry.get('name')} patches"
-        )
         direction_overlay = (
             _registry_relative(
                 base, overlay, label=f"{entry.get('name')} direction overlay"
@@ -288,7 +284,6 @@ def load_registry(
             DerivedScenario(
                 name=str(entry["name"]),
                 base_scenario=str(entry["base_scenario"]),
-                patches=patches,
                 direction_overlay=direction_overlay,
                 direction_study_start_year=entry.get(
                     "direction_study_start_year"
@@ -355,7 +350,11 @@ def _validate_registry(
         )
 
     root_set = set(root_names)
-    loaded_inputs = {}
+    scenario_inputs = {}
+    if validate_files and registry.derived:
+        scenario_inputs = yaml.safe_load(
+            registry.path.read_text(encoding="utf-8")
+        ).get("scenario_inputs", {})
     for scenario in registry.derived:
         if scenario.base_scenario not in root_set:
             raise ValueError(
@@ -363,26 +362,20 @@ def _validate_registry(
             )
         if not validate_files:
             continue
-        if not scenario.patches.is_file():
-            raise FileNotFoundError(
-                f"patch file missing for {scenario.name}: {scenario.patches}"
-            )
-        if scenario.patches not in loaded_inputs:
-            loaded_inputs[scenario.patches] = yaml.safe_load(
-                scenario.patches.read_text(encoding="utf-8")
-            )
-        patch = loaded_inputs[scenario.patches]
-        if "scenario_inputs" in patch:
-            patch = patch["scenario_inputs"][scenario.name]
-        if patch.get("scenario") != scenario.name:
+        inputs = scenario_inputs.get(scenario.name)
+        if inputs is None:
             raise ValueError(
-                f"{scenario.patches} declares scenario={patch.get('scenario')!r}; "
-                f"expected {scenario.name!r}"
+                f"{registry.path} has no scenario_inputs block for {scenario.name}"
             )
-        if patch.get("base_scenario") != scenario.base_scenario:
+        if inputs.get("scenario") != scenario.name:
             raise ValueError(
-                f"{scenario.patches} declares "
-                f"base_scenario={patch.get('base_scenario')!r}; expected "
+                f"scenario_inputs/{scenario.name} declares scenario="
+                f"{inputs.get('scenario')!r}; expected {scenario.name!r}"
+            )
+        if inputs.get("base_scenario") != scenario.base_scenario:
+            raise ValueError(
+                f"scenario_inputs/{scenario.name} declares "
+                f"base_scenario={inputs.get('base_scenario')!r}; expected "
                 f"{scenario.base_scenario!r}"
             )
         if (

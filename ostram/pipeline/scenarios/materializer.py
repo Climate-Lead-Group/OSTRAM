@@ -2,7 +2,7 @@
 
 Root scenarios are rebuilt by the maintained A3 entrypoint.  Derived
 scenarios are then rebuilt from the root declared in
-``full.yaml::scenario_registry``, receive their patch layer, and finally receive any
+``full.yaml::scenario_registry``, receive their scenario edits, and finally receive any
 declared direction overlay.  This module stops before B1, B2, or a solver.
 """
 
@@ -27,7 +27,7 @@ from .registry import (
     load_registry,
     root_snapshots_exist,
 )
-from . import apply_patches
+from . import scenario_edits
 
 
 _PROJECT_PATHS = resolve_paths()
@@ -357,7 +357,7 @@ def materialize_scenarios(
             derived = derived_by_name.get(scenario)
             if derived is None:
                 continue
-            log = apply_patches.build_scenario(
+            log = scenario_edits.build_scenario(
                 scenario,
                 source=derived.base_scenario,
                 skip_backup=True,
@@ -391,9 +391,8 @@ def materialize_scenarios(
                 {
                     "scenario": scenario,
                     "base_scenario": derived.base_scenario,
-                    "patches": str(derived.patches),
-                    "patch_cells": len(log.get("cells", [])),
-                    "patch_rows_created": len(log.get("rows_created", [])),
+                    "edit_cells": len(log.get("cells", [])),
+                    "edit_rows_created": len(log.get("rows_created", [])),
                     "target": str(target),
                     "direction": direction_record,
                 }
@@ -457,10 +456,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         if not seed.exists():
             raise FileNotFoundError(f"A result seed not found: {seed}")
         environment["OSTRAM_A_CALIBRATED_BAU_RESULT"] = str(seed)
-    record = materialize_scenarios(
-        args.scenarios,
-        environment=environment,
-    )
+    try:
+        record = materialize_scenarios(
+            args.scenarios,
+            environment=environment,
+        )
+    except scenario_edits.ScenarioEditError as error:
+        print(error, file=sys.stderr)
+        return 1
     print(json.dumps(record, indent=2))
     return 0
 

@@ -37,11 +37,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-from ostram.pipeline.execution.patches import strip_storage as ss
+from ostram.pipeline.execution.model_file_adjustments import strip_storage as ss
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_STRIP_SCRIPT = (
-    REPO_ROOT / "ostram" / "pipeline" / "execution" / "patches" / "strip_storage.py"
+    REPO_ROOT / "ostram" / "pipeline" / "execution" / "model_file_adjustments" / "strip_storage.py"
 )
 
 
@@ -115,7 +115,7 @@ def main():
     _, _, in_storages = ss.find_storage_set(in_lines)
 
     # --- Run strip_storage.py as a subprocess ---
-    cmd = [sys.executable, "-B", "-m", "ostram.pipeline.execution.patches.strip_storage", str(in_path),
+    cmd = [sys.executable, "-B", "-m", "ostram.pipeline.execution.model_file_adjustments.strip_storage", str(in_path),
            "-o", str(out_path), "--mode", args.mode]
     if args.targets:
         cmd += ["--targets", *args.targets]

@@ -1,9 +1,9 @@
 """
-apply_patches.py  --  OSTRAM sensitivity post-A3 patcher   (CLG / OSTRAM)
+scenario_edits.py  --  OSTRAM sensitivity post-A3 scenario edits   (CLG / OSTRAM)
 ========================================================================
 
 Builds a sensitivity scenario's A-O_Parametrization.xlsx by branching from
-the ``base_scenario`` declared by its canonical registry/patch contract and
+the ``base_scenario`` declared by its canonical registry/scenario-edit contract and
 applying, in order:
 
     1. the SHARED VRE physical-potential ceiling layer
@@ -14,10 +14,10 @@ applying, in order:
 Design (patterned on the rules_scripts):
   * Non-destructive to the SOURCE: the declared root A-O is never mutated.
   * Idempotent: every run rebuilds the target folder from a FRESH copy of the
-    source A1_Outputs folder, so the result depends only on (source + patches),
-    never on a prior patched state.
+    source A1_Outputs folder, so the result depends only on (source + scenario edits),
+    never on a prior edited state.
   * Timestamped backup of any pre-existing target folder before overwrite.
-  * Writes a *_CHANGES.json audit log.
+  * Writes a *_CHANGES.json edit log.
   * --self-test runs in-process unit tests; --restore reverts the target from
     its most recent backup.
 
@@ -25,11 +25,11 @@ This is INPUT GENERATION (post-A3). It does NOT run A3/B1/B2.
 
 USAGE
 -----
-    python apply_patches.py --scenario B_Opt_TradeCap50
-    python apply_patches.py --scenario B_Opt_SolarHi10
-    python apply_patches.py --scenario B_Opt_LinkFreeze
-    python apply_patches.py --self-test
-    python apply_patches.py --scenario B_Opt_TradeCap50 --restore
+    python -B -m ostram.pipeline.scenarios.scenario_edits --scenario B_Opt_TxCap150
+    python -B -m ostram.pipeline.scenarios.scenario_edits --scenario B_Opt_SolarCapexHi
+    python -B -m ostram.pipeline.scenarios.scenario_edits --scenario B_Opt_TradeCap15
+    python -B -m ostram.pipeline.scenarios.scenario_edits --self-test
+    python -B -m ostram.pipeline.scenarios.scenario_edits --scenario B_Opt_TxCap150 --restore
 
 scenario YAML edit schema (one dict per edit):
     sheet            : worksheet name (e.g. "Secondary Techs", "Demand Techs")
@@ -64,6 +64,7 @@ import shutil
 import sys
 import tempfile
 from datetime import datetime
+from difflib import get_close_matches
 from pathlib import Path
 
 from openpyxl import load_workbook, Workbook
@@ -187,7 +188,7 @@ def load_minimum_investment_boundaries(authority_path=None):
 
 
 def validate_residual_source(edit):
-    """Validate a patch's optional external residual source."""
+    """Validate an edit's optional external residual source."""
     source = edit.get("residual_source")
     if source is None or source == "effective":
         return False
@@ -322,6 +323,39 @@ def flip_proj_mode(ws, col_map, row):
 # --------------------------------------------------------------------------
 # Edit application
 # --------------------------------------------------------------------------
+class ScenarioEditError(ValueError):
+    """A scenario edit or a VRE ceiling matched nothing in the workbook."""
+
+
+def scenario_edit_error(ws, log, subject, param, name, kind="tech"):
+    """Return the error for an edit that matched nothing; None for a valid "create"."""
+    techs, params = set(), set()
+    for sheet in ws.parent.worksheets:
+        try:
+            cols = scan_columns(sheet)[0]
+        except ValueError:
+            continue
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            for names, col in ((techs, cols["tech"]), (params, cols["param"])):
+                if row[col - 1] is not None:
+                    names.add(str(row[col - 1]).strip())
+    close = []
+    if kind == "years":
+        reason = f"None of the years {', '.join(map(str, name))} is a column in the workbook."
+    elif param not in params:
+        reason, close = f'Sheet "{ws.title}" has no parameter "{param}".', get_close_matches(param, sorted(params), n=1)
+    elif kind == "prefix" and not any(tech.startswith(name) for tech in techs):
+        reason = f'No technology starts with "{name}".'
+    elif kind != "prefix" and name not in techs:
+        reason, close = "No technology has that name.", get_close_matches(name, sorted(techs), n=1)
+    elif kind == "create":
+        return None
+    else:
+        reason = f'Sheet "{ws.title}" has no {param} row for it.'
+    hint = f" Did you mean {close[0]}?" if close else ""
+    return ScenarioEditError(f"Scenario {log.get('scenario')}: {subject} changed nothing. {reason}{hint}")
+
+
 def apply_edit(
     ws,
     col_map,
@@ -333,17 +367,28 @@ def apply_edit(
     param = edit["param"]
     validate_residual_source(edit)
     create = bool(edit.get("create_if_absent", False))
+    selector = edit.get("tech") or edit.get("tech_prefix") or ", ".join(edit.get("techs", []))
+    if edit.get("op") == "multiply" and edit.get("years"):
+        years = sorted(int(y) for y in edit["years"])
+        if not set(years) & set(year_cols):
+            raise scenario_edit_error(ws, log, f'the edit to {param} for "{selector}"', param, years, "years")
+    matched = 0
     for tech in techs_matching(ws, col_map, edit):
         r = find_row(ws, col_map, tech, param)
         if r is None:
             if edit.get("op") == "set_to_residual_factor_floor":
                 raise ValueError(f"required target row missing: {tech}/{param}")
             if not create:
+                if "tech_prefix" not in edit:
+                    raise scenario_edit_error(ws, log, f'the edit to {param} for "{tech}"', param, tech)
                 log["skipped"].append({"tech": tech, "param": param,
                                        "reason": "row absent, create_if_absent=false"})
                 continue
+            if error := scenario_edit_error(ws, log, f'the edit to {param} for "{tech}"', param, tech, "create"):
+                raise error
             r = create_param_row(ws, col_map, tech, param)
             log["rows_created"].append({"tech": tech, "param": param, "row": r})
+        matched += 1
 
         # compute new value per year
         if edit.get("op") == "set_to_residual_factor_floor":
@@ -439,6 +484,8 @@ def apply_edit(
                                      "old": _num(old), "new": _num(nv)})
         if changed:
             flip_proj_mode(ws, col_map, r)
+    if "tech_prefix" in edit and not matched:
+        raise scenario_edit_error(ws, log, f'the edit to {param} for "{selector}"', param, selector, "prefix")
 
 
 def _num(v):
@@ -548,6 +595,8 @@ def apply_ceiling_layer(wb, log, ceiling_path=CEIL_BASE):
     col_map, year_cols = scan_columns(ws)
     for tech, ceil in ceilings.items():
         ceil = float(ceil)
+        if find_row(ws, col_map, tech, param) is None:
+            raise scenario_edit_error(ws, log, f'the VRE ceiling for "{tech}"', param, tech)
         # capture pre-clip MaxCap BEFORE overwriting, so any activity floor/pin
         # sized to the un-clipped capacity can be scaled back into feasibility.
         maxcap_orig = read_row_values(ws, col_map, year_cols, tech, param) or {}
@@ -565,8 +614,8 @@ def apply_ceiling_layer(wb, log, ceiling_path=CEIL_BASE):
     }
 
 
-def apply_run_patches(wb, patches, log, minimum_boundaries=None):
-    for edit in patches.get("edits", []):
+def apply_scenario_edits(wb, scenario_inputs, log, minimum_boundaries=None):
+    for edit in scenario_inputs.get("edits", []):
         ws = wb[edit["sheet"]]
         col_map, year_cols = scan_columns(ws)
         apply_edit(
@@ -579,10 +628,10 @@ def apply_run_patches(wb, patches, log, minimum_boundaries=None):
         )
 
 
-def validate_patch_authorities(patches, authority_path=None):
-    """Validate external patch authorities before target-directory mutation."""
+def validate_edit_authorities(scenario_inputs, authority_path=None):
+    """Validate external edit authorities before target-directory mutation."""
     requires_minimum_boundary = False
-    for edit in patches.get("edits", []):
+    for edit in scenario_inputs.get("edits", []):
         requires_minimum_boundary |= validate_residual_source(edit)
     if not requires_minimum_boundary:
         return None
@@ -612,17 +661,17 @@ def build_scenario(
 
     a1_outputs = Path(a1_outputs)
     configs = Path(configs)
-    patches_path = configs.parent / "profiles" / "full.yaml"
-    if not patches_path.is_file():
-        raise FileNotFoundError(f"scenario YAML not found: {patches_path}")
-    patches = yaml.safe_load(patches_path.read_text(encoding="utf-8"))["scenario_inputs"][scenario]
-    declared_source = patches.get("base_scenario")
+    profile_path = configs.parent / "profiles" / "full.yaml"
+    if not profile_path.is_file():
+        raise FileNotFoundError(f"scenario YAML not found: {profile_path}")
+    scenario_inputs = yaml.safe_load(profile_path.read_text(encoding="utf-8"))["scenario_inputs"][scenario]
+    declared_source = scenario_inputs.get("base_scenario")
     if not declared_source:
-        raise ValueError(f"{patches_path} does not declare base_scenario")
+        raise ValueError(f"{profile_path} does not declare base_scenario")
     if source is not None and source != declared_source:
         raise ValueError(
             f"source override {source!r} conflicts with "
-            f"{patches_path.name}::base_scenario={declared_source!r}"
+            f"{profile_path.name}::base_scenario={declared_source!r}"
         )
     source = declared_source
 
@@ -631,8 +680,8 @@ def build_scenario(
 
     if not (src_dir / PARAM_FILE).is_file():
         raise FileNotFoundError(f"source A-O not found: {src_dir/PARAM_FILE}")
-    minimum_boundaries = validate_patch_authorities(
-        patches,
+    minimum_boundaries = validate_edit_authorities(
+        scenario_inputs,
         authority_path=authority_path,
     )
 
@@ -647,16 +696,16 @@ def build_scenario(
     shutil.copytree(src_dir, tgt_dir)
 
     log = {"scenario": scenario, "source": source, "timestamp": stamp,
-           "scenario_yaml": str(patches_path), "target": str(tgt_dir),
+           "scenario_yaml": str(profile_path), "target": str(tgt_dir),
            "backup_dir": str(backup_dir) if backup_dir else None,
            "cells": [], "rows_created": [], "skipped": []}
 
     wb = load_workbook(tgt_dir / PARAM_FILE)
-    if patches.get("apply_vre_ceiling_layer", True):
+    if scenario_inputs.get("apply_vre_ceiling_layer", True):
         apply_ceiling_layer(wb, log, ceiling_path=ceiling_path)
-    apply_run_patches(
+    apply_scenario_edits(
         wb,
-        patches,
+        scenario_inputs,
         log,
         minimum_boundaries=minimum_boundaries,
     )
@@ -695,7 +744,7 @@ def restore_scenario(scenario):
 
 def print_summary(log):
     print("=" * 64)
-    print(f"apply_patches  --  {log['scenario']}  (from {log['source']})")
+    print(f"scenario_edits  --  {log['scenario']}  (from {log['source']})")
     print("=" * 64)
     print(f"target        : {log['target']}")
     print(f"backup        : {log.get('backup_dir') or '(none)'}")
@@ -704,7 +753,7 @@ def print_summary(log):
     print(f"cells written : {len(log['cells'])}")
     print(f"rows created  : {len(log['rows_created'])}  {[r['tech']+'/'+r['param'] for r in log['rows_created']]}")
     print(f"skipped       : {len(log['skipped'])}")
-    print(f"audit log     : {log.get('log_path')}")
+    print(f"edit log      : {log.get('log_path')}")
 
 
 # --------------------------------------------------------------------------

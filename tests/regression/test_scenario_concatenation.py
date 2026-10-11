@@ -105,7 +105,7 @@ class ScenarioConcatenationTests(unittest.TestCase):
     def _run(self, **overrides):
         return concat.concatenate_all_scenarios(str(self.root), _params(**overrides))
 
-    def test_output_candidates_prefer_active_patch_chain_then_legacy_names(self) -> None:
+    def test_output_candidates_prefer_active_adjustment_chain_then_legacy_names(self) -> None:
         params = _params(storage_delay_active=True, reserve_margin_xlsx_active=True)
         self.assertEqual(
             concat.active_output_csv_candidates(params, "A_0"),

@@ -13,7 +13,7 @@ from unittest import mock
 from openpyxl import Workbook
 
 from ostram import paths as path_module
-from ostram.pipeline.execution.patches import reserve_margin_repair_xlsx
+from ostram.pipeline.execution.model_file_adjustments import reserve_margin_repair_xlsx
 
 
 FAILED_WARNING_NAME = (
@@ -87,7 +87,7 @@ GLOBAL PWRNGSTSTXX 2023 0
     )
 
 
-def _run_patcher(
+def _run_adjustment(
     input_path: Path,
     output_path: Path,
     workbook: Path,
@@ -202,9 +202,9 @@ class ReserveMarginWarningPathTests(unittest.TestCase):
                 long_warnings
             )
 
-            _run_patcher(input_path, short_output, workbook, short_warnings)
+            _run_adjustment(input_path, short_output, workbook, short_warnings)
             self.assertEqual(_sha256(workbook), workbook_hash)
-            _run_patcher(input_path, long_output, workbook, long_warnings)
+            _run_adjustment(input_path, long_output, workbook, long_warnings)
             self.assertEqual(_sha256(workbook), workbook_hash)
 
             expected_warning_text = (

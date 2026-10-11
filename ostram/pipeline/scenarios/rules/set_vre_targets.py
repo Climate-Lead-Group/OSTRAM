@@ -2,7 +2,7 @@
 set_vre_targets.py
 ==================
 
-Independent patch — sets minimum renewable generation (or capacity)
+Independent rule — sets minimum renewable generation (or capacity)
 floors per country-region and technology, expressed as absolute values
 derived from a prior BAU solve's total production.
 
