@@ -568,8 +568,8 @@ def run_reserve_margin_repair_adjustment(params, scenario_name):
         reserve_margin_ccs_credit: num      -- PWRCCS reserve credit (default 0.9)
         reserve_margin_open_capacity_value: num -- cap value for selected techs (default 9999)
         reserve_margin_open_capacity_prefixes: list -- default ["PWRPET", "PWROIL", "PWRNGS"]
-        reserve_margin_patch_backstop: bool -- set PWRBCK tags (default True)
-        reserve_margin_patch_ccs: bool      -- set PWRCCS tags (default True)
+        reserve_margin_adjust_backstop: bool -- set PWRBCK tags (default True)
+        reserve_margin_adjust_ccs: bool      -- set PWRCCS tags (default True)
         reserve_margin_open_capacity: bool  -- open selected caps (default True)
 
     This chains after strip_storage/open_pwrbck when those adjustments are active.
@@ -618,9 +618,9 @@ def run_reserve_margin_repair_adjustment(params, scenario_name):
     )
     command += ['--open-capacity-prefixes'] + list(open_prefixes)
 
-    if not params.get('reserve_margin_patch_backstop', True):
+    if not params.get('reserve_margin_adjust_backstop', True):
         command.append('--skip-backstop-credit')
-    if not params.get('reserve_margin_patch_ccs', True):
+    if not params.get('reserve_margin_adjust_ccs', True):
         command.append('--skip-ccs-credit')
     if not params.get('reserve_margin_open_capacity', True):
         command.append('--skip-capacity-opening')
@@ -713,9 +713,9 @@ def run_reserve_margin_xlsx_adjustment(params, scenario_name):
     sentinel_values = params.get('reserve_margin_xlsx_sentinel_values', [0, 9999])
     command += ['--sentinel-values'] + [str(value) for value in sentinel_values]
 
-    if not params.get('reserve_margin_xlsx_patch_backstop', True):
+    if not params.get('reserve_margin_xlsx_adjust_backstop', True):
         command.append('--skip-backstop-credit')
-    if not params.get('reserve_margin_xlsx_patch_ccs', True):
+    if not params.get('reserve_margin_xlsx_adjust_ccs', True):
         command.append('--skip-ccs-credit')
 
     print(f"Repairing reserve margin data from XLSX for '{scenario_name}_0' (suffix={suffix}):")
