@@ -2,7 +2,7 @@
 inject_DaysInDayType.py
 =======================
 
-Patches the DaysInDayType block of an OSeMOSYS .txt datafile in place.
+Adjusts the DaysInDayType block of an OSeMOSYS .txt datafile in place.
 
 WHY THIS EXISTS
 ---------------
@@ -31,7 +31,7 @@ WHAT THIS SCRIPT DOES
 3. Computes DaysInDayType[season, 1, year] = round(weight * 365).
 4. Replaces the (probably empty) DaysInDayType block in place.
 
-Idempotent. Safe to re-run on an already-patched file.
+Idempotent. Safe to re-run on an already-adjusted file.
 
 USAGE
 -----
@@ -70,7 +70,7 @@ def inject(path: Path) -> None:
     daytypes = [t for t in dt_match.group(1).split() if t] if dt_match else []
     if len(daytypes) != 1:
         print(f"  WARNING: expected 1 daytype, found {len(daytypes)}: {daytypes}")
-        print(f"  This patcher hard-codes daytype=1; revisit if multi-daytype.")
+        print(f"  This adjustment hard-codes daytype=1; revisit if multi-daytype.")
 
     # 3. Sum YearSplit per (season, year)
     season_year_total = defaultdict(float)

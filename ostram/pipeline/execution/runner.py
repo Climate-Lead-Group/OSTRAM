@@ -330,7 +330,7 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
     print('#------------------------------------------------------------------------------#')
     return True
 
-def run_days_in_day_type_patcher(params, scenario_name):
+def run_days_in_day_type_adjustment(params, scenario_name):
     """
     Runs inject_DaysInDayType.py against the preprocessed datafile to fix
     the empty DaysInDayType block (which would otherwise default to 7,
@@ -349,14 +349,14 @@ def run_days_in_day_type_patcher(params, scenario_name):
         f"{params['preprocess_data_name']}{scenario_name}_0.txt",
     )
     command = _python_module_command(script_path, target_file)
-    print(f"Patching DaysInDayType for '{scenario_name}_0':")
+    print(f"Adjusting DaysInDayType for '{scenario_name}_0':")
     safe_print(' '.join(command))
     result = _run_stage_command(command)
-    _require_stage_success(result, command, "DaysInDayType patcher", scenario_name)
+    _require_stage_success(result, command, "DaysInDayType adjustment", scenario_name)
     print(result.stdout)
     print('#------------------------------------------------------------------------------#')
 
-def run_strip_storage_patcher(params, scenario_name):
+def run_strip_storage_adjustment(params, scenario_name):
     """
     OPTIONAL diagnostic step: strips selected storage facilities (and their
     feeding PWR techs) from the preprocessed datafile, writing a SIBLING file
@@ -371,7 +371,7 @@ def run_strip_storage_patcher(params, scenario_name):
         strip_storage_suffix:  str    -- filename suffix (default "NoStorage")
 
     When active, main_executer redirects data_file/output_file to use the
-    suffixed sibling, so the solver builds and solves the patched LP and
+    suffixed sibling, so the solver builds and solves the adjusted LP and
     writes outputs alongside the originals.
     """
     if not params.get('strip_storage_active', False):
@@ -401,15 +401,15 @@ def run_strip_storage_patcher(params, scenario_name):
     print(f"Stripping storage for '{scenario_name}_0' (mode={mode}, suffix={suffix}):")
     safe_print(' '.join(command))
     result = _run_stage_command(command)
-    _require_stage_success(result, command, "strip_storage patcher", scenario_name)
+    _require_stage_success(result, command, "strip_storage adjustment", scenario_name)
     print(result.stdout)
     print('#------------------------------------------------------------------------------#')
 
-def run_storage_delay_patcher(params, scenario_name):
+def run_storage_delay_adjustment(params, scenario_name):
     """
     OPTIONAL storage-delay step: keeps storage in the model but blocks storage
     builds for the first N model years, then reopens the linked PWRLDS*/PWRSDS*
-    caps in later years. Writes SIBLING files (datafile + patched OSeMOSYS
+    caps in later years. Writes SIBLING files (datafile + adjusted OSeMOSYS
     model); originals are never modified.
 
     Controlled by params['storage_delay_active'] (default False = no-op).
@@ -422,11 +422,11 @@ def run_storage_delay_patcher(params, scenario_name):
         storage_delay_allowed_value:    str   -- PWR cap value in open years (default "-1")
         storage_delay_suffix:           str   -- chained filename suffix (default "StorageDelayN5")
         storage_delay_model_input:      str   -- source OSeMOSYS model file (default params['osemosys_model'])
-        storage_delay_model_output:     str   -- patched model file written next to B2 (default "osemosys_fast_preprocessed_storage_delay.txt")
+        storage_delay_model_output:     str   -- adjusted model file written next to B2 (default "osemosys_fast_preprocessed_storage_delay.txt")
 
     Mutually exclusive with strip_storage. When storage_delay_active is True,
     main_executer's __main__ already disables strip_storage and switches the
-    solver model to the patched output produced here.
+    solver model to the adjusted output produced here.
     """
     if not params.get('storage_delay_active', False):
         return  # No-op when disabled
@@ -479,12 +479,12 @@ def run_storage_delay_patcher(params, scenario_name):
         command += ['--storage-prefixes'] + list(storage_prefixes)
 
     safe_print(
-        f"Applying storage-delay patch for '{scenario_name}_0' "
+        f"Applying storage-delay adjustment for '{scenario_name}_0' "
         f"(N={first_n_years}, suffix={suffix}):"
     )
     safe_print(' '.join(command))
     result = _run_stage_command(command)
-    _require_stage_success(result, command, "storage_delay patcher", scenario_name)
+    _require_stage_success(result, command, "storage_delay adjustment", scenario_name)
     params['storage_delay_model_output'] = model_output
     params['osemosys_model'] = model_output
     print(result.stdout)
@@ -492,7 +492,7 @@ def run_storage_delay_patcher(params, scenario_name):
         print(result.stderr)
     print('#------------------------------------------------------------------------------#')
 
-def run_open_pwrbck_patcher(params, scenario_name):
+def run_open_pwrbck_adjustment(params, scenario_name):
     """
     OPTIONAL diagnostic step: opens PWRBCK* (backstop) caps in
     TotalAnnualMaxCapacity and TotalAnnualMaxCapacityInvestment by rewriting
@@ -510,7 +510,7 @@ def run_open_pwrbck_patcher(params, scenario_name):
         open_pwrbck_suffix:  str   -- filename suffix to chain (default "OpenBCK")
 
     When active, main_executer chains OpenBCK on top of any active strip
-    suffix, so the solver builds and solves the patched LP and writes outputs
+    suffix, so the solver builds and solves the adjusted LP and writes outputs
     alongside the originals.
     """
     if not params.get('open_pwrbck_active', False):
@@ -521,7 +521,7 @@ def run_open_pwrbck_patcher(params, scenario_name):
     suffix  = params.get('open_pwrbck_suffix',  'OpenBCK')
 
     # Anchor open_pwrbck_caps.py to B2's own directory (same pattern as the
-    # strip and DaysInDayType patchers).
+    # strip and DaysInDayType adjustments).
     script_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         'model_file_adjustments',
@@ -529,7 +529,7 @@ def run_open_pwrbck_patcher(params, scenario_name):
     )
 
     base = f"{params['preprocess_data_name']}{scenario_name}_0"
-    # Input is the previous patcher's output (storage_delay or strip) if active;
+    # Input is the previous adjustment's output (storage_delay or strip) if active;
     # otherwise the vanilla file.
     _chain = []
     if params.get('storage_delay_active', False):
@@ -550,13 +550,13 @@ def run_open_pwrbck_patcher(params, scenario_name):
     print(f"Opening PWRBCK caps for '{scenario_name}_0' (pattern={pattern}, value={value}):")
     safe_print(' '.join(command))
     result = _run_stage_command(command)
-    _require_stage_success(result, command, "open_pwrbck patcher", scenario_name)
+    _require_stage_success(result, command, "open_pwrbck adjustment", scenario_name)
     print(result.stdout)
     print('#------------------------------------------------------------------------------#')
 
-def run_reserve_margin_repair_patcher(params, scenario_name):
+def run_reserve_margin_repair_adjustment(params, scenario_name):
     """
-    OPTIONAL diagnostic/final-ish step: patches ReserveMarginTagTechnology and
+    OPTIONAL diagnostic/final-ish step: adjusts ReserveMarginTagTechnology and
     opens selected firm capacity caps in the preprocessed datafile.
 
     Controlled by params['reserve_margin_repair_active'] (default False = no-op).
@@ -572,7 +572,7 @@ def run_reserve_margin_repair_patcher(params, scenario_name):
         reserve_margin_patch_ccs: bool      -- set PWRCCS tags (default True)
         reserve_margin_open_capacity: bool  -- open selected caps (default True)
 
-    This chains after strip_storage/open_pwrbck when those patchers are active.
+    This chains after strip_storage/open_pwrbck when those adjustments are active.
     """
     if not params.get('reserve_margin_repair_active', False):
         return  # No-op when disabled
@@ -629,12 +629,12 @@ def run_reserve_margin_repair_patcher(params, scenario_name):
     safe_print(' '.join(command))
     result = _run_stage_command(command)
     _require_stage_success(
-        result, command, "reserve_margin_repair patcher", scenario_name
+        result, command, "reserve_margin_repair adjustment", scenario_name
     )
     print(result.stdout)
     print('#------------------------------------------------------------------------------#')
 
-def run_reserve_margin_xlsx_patcher(params, scenario_name):
+def run_reserve_margin_xlsx_adjustment(params, scenario_name):
     """
     OPTIONAL careful reserve-margin repair step using an XLSX fallback workbook.
 
@@ -651,7 +651,7 @@ def run_reserve_margin_xlsx_patcher(params, scenario_name):
         reserve_margin_xlsx_sentinel_values: list -- default [0, 9999]
 
     This chains after strip_storage/open_pwrbck and also after the older
-    reserve_margin_repair patch if that older patch is active.
+    reserve_margin_repair adjustment if that older adjustment is active.
     """
     if not params.get('reserve_margin_xlsx_active', False):
         return
@@ -722,7 +722,7 @@ def run_reserve_margin_xlsx_patcher(params, scenario_name):
     safe_print(' '.join(command))
     result = _run_stage_command(command)
     _require_stage_success(
-        result, command, "reserve_margin_xlsx patcher", scenario_name
+        result, command, "reserve_margin_xlsx adjustment", scenario_name
     )
     print(result.stdout)
     if result.stderr:
@@ -880,8 +880,8 @@ def export_root_datafile(here, params, scenario_name, export_name=None):
     Copy the preprocessed main-scenario datafile to the project root so the
     user has a single easy-to-find model datafile.
 
-    When patchers (storage_delay, strip_storage, open_pwrbck, reserve_margin_*)
-    are active, exports the final patched sibling — not the vanilla preprocessed
+    When adjustments (storage_delay, strip_storage, open_pwrbck, reserve_margin_*)
+    are active, exports the final adjusted sibling — not the vanilla preprocessed
     file — so the root datafile matches what the solver actually consumed.
     """
     if export_name is None:
@@ -986,12 +986,12 @@ def _orchestration_dependencies():
         process_scenario_folder=process_scenario_folder,
         run_otoole_conversion=run_otoole_conversion,
         run_preprocessing_script=run_preprocessing_script,
-        run_days_in_day_type_patcher=run_days_in_day_type_patcher,
-        run_storage_delay_patcher=run_storage_delay_patcher,
-        run_strip_storage_patcher=run_strip_storage_patcher,
-        run_open_pwrbck_patcher=run_open_pwrbck_patcher,
-        run_reserve_margin_repair_patcher=run_reserve_margin_repair_patcher,
-        run_reserve_margin_xlsx_patcher=run_reserve_margin_xlsx_patcher,
+        run_days_in_day_type_adjustment=run_days_in_day_type_adjustment,
+        run_storage_delay_adjustment=run_storage_delay_adjustment,
+        run_strip_storage_adjustment=run_strip_storage_adjustment,
+        run_open_pwrbck_adjustment=run_open_pwrbck_adjustment,
+        run_reserve_margin_repair_adjustment=run_reserve_margin_repair_adjustment,
+        run_reserve_margin_xlsx_adjustment=run_reserve_margin_xlsx_adjustment,
         generate_combined_input_file=generate_combined_input_file,
         export_root_datafile=export_root_datafile,
         main_executer=main_executer,

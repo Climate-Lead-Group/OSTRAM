@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-strip_storage.py - Diagnostic patcher for OSTRAM Pre_processed_*.txt files.
+strip_storage.py - Diagnostic model-file adjustment for OSTRAM Pre_processed_*.txt files.
 
 Produces a NEW .txt file with selected storage facilities + their feeding
 PWR technologies disabled. The source file is never modified.
@@ -46,10 +46,10 @@ Usage:
         -o Pre_processed_BAU_0_NoSDS.txt \
         --mode class --targets SDS
 
-After patching, run the rest of the pipeline manually:
-    glpsol -m <osemosys_model.txt> -d <patched.txt> \
-        --wlp <patched>.lp --check
-    cplex -c "read <patched>.lp" "optimize" "write <patched>.sol"
+After the adjustment, run the rest of the pipeline manually:
+    glpsol -m <osemosys_model.txt> -d <adjusted.txt> \
+        --wlp <adjusted>.lp --check
+    cplex -c "read <adjusted>.lp" "optimize" "write <adjusted>.sol"
 """
 
 from __future__ import annotations

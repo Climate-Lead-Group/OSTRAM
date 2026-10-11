@@ -28,12 +28,12 @@ class B2Dependencies:
     process_scenario_folder: Callable[..., Any]
     run_otoole_conversion: Callable[..., bool]
     run_preprocessing_script: Callable[..., Any]
-    run_days_in_day_type_patcher: Callable[..., Any]
-    run_storage_delay_patcher: Callable[..., Any]
-    run_strip_storage_patcher: Callable[..., Any]
-    run_open_pwrbck_patcher: Callable[..., Any]
-    run_reserve_margin_repair_patcher: Callable[..., Any]
-    run_reserve_margin_xlsx_patcher: Callable[..., Any]
+    run_days_in_day_type_adjustment: Callable[..., Any]
+    run_storage_delay_adjustment: Callable[..., Any]
+    run_strip_storage_adjustment: Callable[..., Any]
+    run_open_pwrbck_adjustment: Callable[..., Any]
+    run_reserve_margin_repair_adjustment: Callable[..., Any]
+    run_reserve_margin_xlsx_adjustment: Callable[..., Any]
     generate_combined_input_file: Callable[..., Any]
     export_root_datafile: Callable[..., Any]
     main_executer: Callable[..., Any]
@@ -77,7 +77,7 @@ def build_cli_parser() -> argparse.ArgumentParser:
         "--compile-only",
         action="store_true",
         help=(
-            "Generate the final preprocessed and patched text inputs, then "
+            "Generate the final preprocessed and adjusted text inputs, then "
             "stop before matrix creation, every solver adapter, cleanup, and "
             "result post-processing."
         ),
@@ -304,7 +304,7 @@ def run_compiled_input_stage(
     plan: B2RunPlan,
     dependencies: B2Dependencies,
 ) -> None:
-    """Generate the preprocessed, patched, solver-consumed text inputs."""
+    """Generate the preprocessed, adjusted, solver-consumed text inputs."""
 
     params = plan.params
     for scenario_name in plan.scenarios:
@@ -335,14 +335,14 @@ def run_compiled_input_stage(
 
             if conversion_ok:
                 dependencies.run_preprocessing_script(params, scenario_name)
-                dependencies.run_days_in_day_type_patcher(params, scenario_name)
-                dependencies.run_storage_delay_patcher(params, scenario_name)
-                dependencies.run_strip_storage_patcher(params, scenario_name)
-                dependencies.run_open_pwrbck_patcher(params, scenario_name)
-                dependencies.run_reserve_margin_repair_patcher(
+                dependencies.run_days_in_day_type_adjustment(params, scenario_name)
+                dependencies.run_storage_delay_adjustment(params, scenario_name)
+                dependencies.run_strip_storage_adjustment(params, scenario_name)
+                dependencies.run_open_pwrbck_adjustment(params, scenario_name)
+                dependencies.run_reserve_margin_repair_adjustment(
                     params, scenario_name
                 )
-                dependencies.run_reserve_margin_xlsx_patcher(
+                dependencies.run_reserve_margin_xlsx_adjustment(
                     params, scenario_name
                 )
             else:
@@ -628,7 +628,7 @@ def resolve_scenario_execution_paths(
     scenario_name: str,
     here: Any,
 ) -> ScenarioExecutionPaths:
-    """Resolve the active patched data and output bases, preserving redirects."""
+    """Resolve the active adjusted data and output bases, preserving redirects."""
 
     folder_scenario = os.path.join(
         here,

@@ -6,7 +6,7 @@ It does not edit the input datafile in place.
 Main differences:
 - Reserve tags can still be added for PWRBCK and PWRCCS.
 - TotalAnnualMaxCapacity (stock) and TotalAnnualMaxCapacityInvestment (flow)
-  are patched independently.
+  are adjusted independently.
 - Firm fossil cap values come from per-country-region fallbacks.
 - Only sentinel values are replaced by default: 0 and 9999.
 - Suspicious stock/flow combinations are reported as warnings.
@@ -232,7 +232,7 @@ def is_sentinel(value: float, sentinels: list[float], tolerance: float = 1e-9) -
     return any(abs(value - sentinel) <= tolerance for sentinel in sentinels)
 
 
-def patch_reserve_tags(
+def adjust_reserve_tags(
     lines: list[str],
     targets: dict[tuple[str, str], float],
 ) -> tuple[list[str], int, int]:
@@ -243,10 +243,10 @@ def patch_reserve_tags(
     row_pattern = re.compile(r"^(\s*GLOBAL\s+)(\S+)(\s+)(\d{4})(\s+)([-+0-9.eE]+)(\s*)$")
     seen: set[tuple[str, str]] = set()
     updated = 0
-    patched = lines[:]
+    adjusted = lines[:]
 
     for idx in range(start + 1, end):
-        match = row_pattern.match(patched[idx])
+        match = row_pattern.match(adjusted[idx])
         if not match:
             continue
         tech = match.group(2)
@@ -257,7 +257,7 @@ def patch_reserve_tags(
         seen.add(key)
         new_value = fmt_number(targets[key])
         if match.group(6) != new_value:
-            patched[idx] = (
+            adjusted[idx] = (
                 f"{match.group(1)}{tech}{match.group(3)}{year}"
                 f"{match.group(5)}{new_value}{match.group(7)}"
             )
@@ -273,9 +273,9 @@ def patch_reserve_tags(
         missing_lines.append(f"GLOBAL {tech} {year} {fmt_number(value)}\n")
 
     if missing_lines:
-        patched = patched[:end] + missing_lines + patched[end:]
+        adjusted = adjusted[:end] + missing_lines + adjusted[end:]
 
-    return patched, updated, len(missing_lines)
+    return adjusted, updated, len(missing_lines)
 
 
 def build_tag_targets(
@@ -357,7 +357,7 @@ def techs_with_any_min_investment(
     }
 
 
-def patch_capacity_param(
+def adjust_capacity_param(
     lines: list[str],
     parameter: str,
     target_prefixes: list[str],
@@ -366,17 +366,17 @@ def patch_capacity_param(
     floors: dict[tuple[str, str], float] | None = None,
     skip_techs: set[str] | None = None,
 ) -> tuple[list[str], int, int, list[str]]:
-    patched = lines[:]
+    adjusted = lines[:]
     floors = floors or {}
     skip_techs = skip_techs or set()
-    start, end = find_param_block(patched, parameter)
+    start, end = find_param_block(adjusted, parameter)
     row_pattern = re.compile(r"^(\s*GLOBAL\s+)(\S+)(\s+)(\d{4})(\s+)([-+0-9.eE]+)(\s*)$")
     changed = 0
     skipped = 0
     warnings: list[str] = []
 
     for idx in range(start + 1, end):
-        match = row_pattern.match(patched[idx])
+        match = row_pattern.match(adjusted[idx])
         if not match:
             continue
 
@@ -417,13 +417,13 @@ def patch_capacity_param(
 
         replacement_text = fmt_number(replacement)
         if replacement_text != match.group(6):
-            patched[idx] = (
+            adjusted[idx] = (
                 f"{match.group(1)}{tech}{match.group(3)}{year}"
                 f"{match.group(5)}{replacement_text}{match.group(7)}"
             )
             changed += 1
 
-    return patched, changed, skipped, warnings
+    return adjusted, changed, skipped, warnings
 
 
 def stock_flow_warnings(
@@ -461,12 +461,12 @@ def stock_flow_warnings(
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Patch reserve tags and carefully replace sentinel firm-capacity caps "
+            "Adjust reserve tags and carefully replace sentinel firm-capacity caps "
             "using per-country-region fallbacks."
         )
     )
     parser.add_argument("input_file", help="Input OSeMOSYS datafile.")
-    parser.add_argument("-o", "--output", required=True, help="Patched output datafile.")
+    parser.add_argument("-o", "--output", required=True, help="Adjusted output datafile.")
 
     parser.add_argument("--backstop-credit", type=float, default=1.0)
     parser.add_argument("--ccs-credit", type=float, default=0.9)
@@ -548,20 +548,20 @@ def main() -> int:
 
     fallback_lookup = make_fallback_lookup(fallbacks)
 
-    patched, tag_updates, tag_inserts = patch_reserve_tags(lines, tag_targets)
-    stock_floors, flow_floors = capacity_floors(patched, args.target_prefixes)
-    min_investment_techs = techs_with_any_min_investment(patched, args.target_prefixes)
+    adjusted, tag_updates, tag_inserts = adjust_reserve_tags(lines, tag_targets)
+    stock_floors, flow_floors = capacity_floors(adjusted, args.target_prefixes)
+    min_investment_techs = techs_with_any_min_investment(adjusted, args.target_prefixes)
 
-    patched, stock_changed, stock_skipped, stock_warnings = patch_capacity_param(
-        patched,
+    adjusted, stock_changed, stock_skipped, stock_warnings = adjust_capacity_param(
+        adjusted,
         STOCK_PARAM,
         args.target_prefixes,
         [0.0],
         fallback_lookup,
         stock_floors,
     )
-    patched, flow_changed, flow_skipped, flow_warnings = patch_capacity_param(
-        patched,
+    adjusted, flow_changed, flow_skipped, flow_warnings = adjust_capacity_param(
+        adjusted,
         FLOW_PARAM,
         args.target_prefixes,
         args.sentinel_values,
@@ -569,11 +569,11 @@ def main() -> int:
         flow_floors,
         min_investment_techs,
     )
-    consistency_warnings = stock_flow_warnings(patched, args.target_prefixes)
+    consistency_warnings = stock_flow_warnings(adjusted, args.target_prefixes)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
-        "".join(patched),
+        "".join(adjusted),
         encoding="utf-8",
         newline="\r\n",
     )
@@ -589,8 +589,8 @@ def main() -> int:
                 newline="\r\n",
             )
 
-    print(f"Wrote patched datafile: {output_path}")
-    print(f"Years patched for reserve tags: {len(years)} ({years[0]}-{years[-1]})")
+    print(f"Wrote adjusted datafile: {output_path}")
+    print(f"Years adjusted for reserve tags: {len(years)} ({years[0]}-{years[-1]})")
     if backstop_credit is not None:
         print(
             "Backstop reserve tag: "

@@ -33,8 +33,8 @@ from .reserve_margin_repair import (
     make_fallback_lookup,
     parse_assignment_list,
     parse_float,
-    patch_capacity_param,
-    patch_reserve_tags,
+    adjust_capacity_param,
+    adjust_reserve_tags,
     select_years,
     stock_flow_warnings,
     techs_with_any_min_investment,
@@ -179,12 +179,12 @@ def load_fallback_xlsx(path: Path, sheet_name: str | None = None) -> list[CapFal
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Patch reserve tags and carefully replace sentinel firm-capacity caps "
+            "Adjust reserve tags and carefully replace sentinel firm-capacity caps "
             "using an XLSX fallback workbook."
         )
     )
     parser.add_argument("input_file", help="Input OSeMOSYS datafile.")
-    parser.add_argument("-o", "--output", required=True, help="Patched output datafile.")
+    parser.add_argument("-o", "--output", required=True, help="Adjusted output datafile.")
 
     parser.add_argument("--fallback-xlsx", required=True, help="XLSX fallback workbook.")
     parser.add_argument("--xlsx-sheet", help="Worksheet name. Defaults to the first sheet.")
@@ -282,19 +282,19 @@ def main() -> int:
     fallbacks.extend(parse_assignment_list(args.flow_fallback, FLOW_PARAM))
     fallback_lookup = make_fallback_lookup(fallbacks)
 
-    patched, tag_updates, tag_inserts = patch_reserve_tags(lines, tag_targets)
-    stock_floors, flow_floors = capacity_floors(patched, args.target_prefixes)
-    min_investment_techs = techs_with_any_min_investment(patched, args.target_prefixes)
-    patched, stock_changed, stock_skipped, stock_warnings = patch_capacity_param(
-        patched,
+    adjusted, tag_updates, tag_inserts = adjust_reserve_tags(lines, tag_targets)
+    stock_floors, flow_floors = capacity_floors(adjusted, args.target_prefixes)
+    min_investment_techs = techs_with_any_min_investment(adjusted, args.target_prefixes)
+    adjusted, stock_changed, stock_skipped, stock_warnings = adjust_capacity_param(
+        adjusted,
         STOCK_PARAM,
         args.target_prefixes,
         [0.0],
         fallback_lookup,
         stock_floors,
     )
-    patched, flow_changed, flow_skipped, flow_warnings = patch_capacity_param(
-        patched,
+    adjusted, flow_changed, flow_skipped, flow_warnings = adjust_capacity_param(
+        adjusted,
         FLOW_PARAM,
         args.target_prefixes,
         args.sentinel_values,
@@ -302,13 +302,13 @@ def main() -> int:
         flow_floors,
         min_investment_techs,
     )
-    patched, protected_restored = preserve_reviewed_capacity_rows(lines, patched, reviewed_capacity_keys(input_path))
+    adjusted, protected_restored = preserve_reviewed_capacity_rows(lines, adjusted, reviewed_capacity_keys(input_path))
     print(f"Reviewed capacity rows protected from fallback replacement: {protected_restored}")
-    consistency_warnings = stock_flow_warnings(patched, args.target_prefixes)
+    consistency_warnings = stock_flow_warnings(adjusted, args.target_prefixes)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
-        "".join(patched),
+        "".join(adjusted),
         encoding="utf-8",
         newline="\r\n",
     )
@@ -325,9 +325,9 @@ def main() -> int:
             newline="\r\n",
         )
 
-    print(f"Wrote patched datafile: {output_path}")
+    print(f"Wrote adjusted datafile: {output_path}")
     print(f"Fallback workbook: {Path(args.fallback_xlsx)}")
-    print(f"Years patched for reserve tags: {len(years)} ({years[0]}-{years[-1]})")
+    print(f"Years adjusted for reserve tags: {len(years)} ({years[0]}-{years[-1]})")
     if backstop_credit is not None:
         print(
             "Backstop reserve tag: "
