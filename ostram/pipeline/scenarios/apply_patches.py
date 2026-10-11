@@ -64,6 +64,7 @@ import shutil
 import sys
 import tempfile
 from datetime import datetime
+from difflib import get_close_matches
 from pathlib import Path
 
 from openpyxl import load_workbook, Workbook
@@ -322,6 +323,39 @@ def flip_proj_mode(ws, col_map, row):
 # --------------------------------------------------------------------------
 # Edit application
 # --------------------------------------------------------------------------
+class ScenarioEditError(ValueError):
+    """A scenario edit or a VRE ceiling matched nothing in the workbook."""
+
+
+def scenario_edit_error(ws, log, subject, param, name, kind="tech"):
+    """Return the error for an edit that matched nothing; None for a valid "create"."""
+    techs, params = set(), set()
+    for sheet in ws.parent.worksheets:
+        try:
+            cols = scan_columns(sheet)[0]
+        except ValueError:
+            continue
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            for names, col in ((techs, cols["tech"]), (params, cols["param"])):
+                if row[col - 1] is not None:
+                    names.add(str(row[col - 1]).strip())
+    close = []
+    if kind == "years":
+        reason = f"None of the years {', '.join(map(str, name))} is a column in the workbook."
+    elif param not in params:
+        reason, close = f'Sheet "{ws.title}" has no parameter "{param}".', get_close_matches(param, sorted(params), n=1)
+    elif kind == "prefix" and not any(tech.startswith(name) for tech in techs):
+        reason = f'No technology starts with "{name}".'
+    elif kind != "prefix" and name not in techs:
+        reason, close = "No technology has that name.", get_close_matches(name, sorted(techs), n=1)
+    elif kind == "create":
+        return None
+    else:
+        reason = f'Sheet "{ws.title}" has no {param} row for it.'
+    hint = f" Did you mean {close[0]}?" if close else ""
+    return ScenarioEditError(f"Scenario {log.get('scenario')}: {subject} changed nothing. {reason}{hint}")
+
+
 def apply_edit(
     ws,
     col_map,
@@ -333,17 +367,28 @@ def apply_edit(
     param = edit["param"]
     validate_residual_source(edit)
     create = bool(edit.get("create_if_absent", False))
+    selector = edit.get("tech") or edit.get("tech_prefix") or ", ".join(edit.get("techs", []))
+    if edit.get("op") == "multiply" and edit.get("years"):
+        years = sorted(int(y) for y in edit["years"])
+        if not set(years) & set(year_cols):
+            raise scenario_edit_error(ws, log, f'the edit to {param} for "{selector}"', param, years, "years")
+    matched = 0
     for tech in techs_matching(ws, col_map, edit):
         r = find_row(ws, col_map, tech, param)
         if r is None:
             if edit.get("op") == "set_to_residual_factor_floor":
                 raise ValueError(f"required target row missing: {tech}/{param}")
             if not create:
+                if "tech_prefix" not in edit:
+                    raise scenario_edit_error(ws, log, f'the edit to {param} for "{tech}"', param, tech)
                 log["skipped"].append({"tech": tech, "param": param,
                                        "reason": "row absent, create_if_absent=false"})
                 continue
+            if error := scenario_edit_error(ws, log, f'the edit to {param} for "{tech}"', param, tech, "create"):
+                raise error
             r = create_param_row(ws, col_map, tech, param)
             log["rows_created"].append({"tech": tech, "param": param, "row": r})
+        matched += 1
 
         # compute new value per year
         if edit.get("op") == "set_to_residual_factor_floor":
@@ -439,6 +484,8 @@ def apply_edit(
                                      "old": _num(old), "new": _num(nv)})
         if changed:
             flip_proj_mode(ws, col_map, r)
+    if "tech_prefix" in edit and not matched:
+        raise scenario_edit_error(ws, log, f'the edit to {param} for "{selector}"', param, selector, "prefix")
 
 
 def _num(v):
@@ -548,6 +595,8 @@ def apply_ceiling_layer(wb, log, ceiling_path=CEIL_BASE):
     col_map, year_cols = scan_columns(ws)
     for tech, ceil in ceilings.items():
         ceil = float(ceil)
+        if find_row(ws, col_map, tech, param) is None:
+            raise scenario_edit_error(ws, log, f'the VRE ceiling for "{tech}"', param, tech)
         # capture pre-clip MaxCap BEFORE overwriting, so any activity floor/pin
         # sized to the un-clipped capacity can be scaled back into feasibility.
         maxcap_orig = read_row_values(ws, col_map, year_cols, tech, param) or {}

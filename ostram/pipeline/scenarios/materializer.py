@@ -457,10 +457,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         if not seed.exists():
             raise FileNotFoundError(f"A result seed not found: {seed}")
         environment["OSTRAM_A_CALIBRATED_BAU_RESULT"] = str(seed)
-    record = materialize_scenarios(
-        args.scenarios,
-        environment=environment,
-    )
+    try:
+        record = materialize_scenarios(
+            args.scenarios,
+            environment=environment,
+        )
+    except apply_patches.ScenarioEditError as error:
+        print(error, file=sys.stderr)
+        return 1
     print(json.dumps(record, indent=2))
     return 0
 
