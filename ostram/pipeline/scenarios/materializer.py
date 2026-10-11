@@ -391,7 +391,6 @@ def materialize_scenarios(
                 {
                     "scenario": scenario,
                     "base_scenario": derived.base_scenario,
-                    "patches": str(derived.patches),
                     "edit_cells": len(log.get("cells", [])),
                     "edit_rows_created": len(log.get("rows_created", [])),
                     "target": str(target),

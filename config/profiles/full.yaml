@@ -100,50 +100,36 @@ scenario_registry:
   derived_scenarios:
   - name: A_Calibrated_BAU_Clipped
     base_scenario: A_Calibrated_BAU
-    patches: full-profile:scenario_inputs/A_Calibrated_BAU_Clipped
   - name: B_Opt_Clipped
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_Clipped
   - name: B_Opt_DirBidir
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_DirBidir
     direction_overlay: B_Opt_DirBidir/set_interconnector_direction.yaml
     direction_study_start_year: 2027
   - name: B_Opt_DirContractual
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_DirContractual
     direction_overlay: B_Opt_DirContractual/set_interconnector_direction.yaml
     direction_study_start_year: 2027
   - name: B_Opt_IndiaCosts
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_IndiaCosts
   - name: B_Opt_IndiaCostsFuel
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_IndiaCostsFuel
   - name: B_Opt_SolarCapex130
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_SolarCapex130
   - name: B_Opt_SolarCapexHi
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_SolarCapexHi
   - name: B_Opt_SolarCapexSpike
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_SolarCapexSpike
   - name: B_Opt_TradeCap15
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_TradeCap15
   - name: B_Opt_TxCap150
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_TxCap150
   - name: C_Target_VRE_Clipped
     base_scenario: C_Target_VRE
-    patches: full-profile:scenario_inputs/C_Target_VRE_Clipped
   - name: A_Calibrated_BAU_Clipped_TxFreeze2026
     base_scenario: A_Calibrated_BAU
-    patches: full-profile:scenario_inputs/A_Calibrated_BAU_Clipped_TxFreeze2026
   - name: B_Opt_Clipped_GrossImportCap15
     base_scenario: B_Optimised_VRE
-    patches: full-profile:scenario_inputs/B_Opt_Clipped_GrossImportCap15
 vre_ceilings:
   description: Shared VRE ceilings. Each value sets TotalAnnualMaxCapacity (GW) of
     one solar or onshore wind technology to the same value in every year. The values
