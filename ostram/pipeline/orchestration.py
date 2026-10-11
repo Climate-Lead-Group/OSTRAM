@@ -106,15 +106,20 @@ def conda_exe() -> str:
     argv; inside an activated non-base env, often only condabin\\conda.bat is
     on PATH, so literal "conda" fails there. Conda's own activation scripts
     export CONDA_EXE with the full path to conda.exe in every activated
-    prompt (base or not), so that is the authoritative answer. Fall back to
-    PATH resolution of a real executable, then to the bare name (POSIX).
+    prompt (base or not), so that is the authoritative answer. Then search
+    PATH. A standard install puts only condabin\\conda.bat on PATH, so a .bat
+    or .cmd hit resolves to <root>\\Scripts\\conda.exe when that exists. Fall
+    back to the bare name (POSIX).
     """
     exe = os.environ.get("CONDA_EXE")
     if exe and Path(exe).is_file():
         return exe
-    for name in ("conda.exe", "conda"):
+    for name in ("conda.exe", "conda", "conda.bat"):
         found = shutil.which(name)
-        if found and not found.lower().endswith((".bat", ".cmd")):
+        if found and found.lower().endswith((".bat", ".cmd")):
+            scripts = Path(found).parent.parent / "Scripts" / "conda.exe"
+            found = str(scripts) if scripts.is_file() else found
+        if found:
             return found
     return "conda"
 
