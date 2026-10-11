@@ -489,14 +489,14 @@ def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
         "--src", "A-O_Parametrization_ORIGINAL.xlsx",
         "--tax", "TECH_TYPES.csv",
         "--out", "A-O_Parametrization_c2a_patched.xlsx",
-    ], cwd=s2, label="patch capacity-to-activity units")
+    ], cwd=s2, label="add capacity-to-activity units")
 
-    # Fallback: when there's nothing to patch (target techs aren't present),
+    # Fallback: when there's nothing to add (target techs aren't present),
     # add_ao_c2a doesn't write the output file. Copy the original so
     # downstream stages have something to consume.
-    patched_xlsx = s2 / "A-O_Parametrization_c2a_patched.xlsx"
-    if not patched_xlsx.exists():
-        shutil.copy(s2 / "A-O_Parametrization_ORIGINAL.xlsx", patched_xlsx)
+    c2a_xlsx = s2 / "A-O_Parametrization_c2a_patched.xlsx"
+    if not c2a_xlsx.exists():
+        shutil.copy(s2 / "A-O_Parametrization_ORIGINAL.xlsx", c2a_xlsx)
         print("    [FALLBACK] add_ao_c2a produced no output; copied ORIGINAL "
               "to *_c2a_patched.xlsx so pipeline can continue.")
 

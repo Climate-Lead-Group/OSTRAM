@@ -2,14 +2,14 @@
 add_max_cap_investment_lid_rule.py
 ===================================
 
-Independent patch — applies a per-year LID and the V1 UNTIE RULE to
+Independent rule — applies a per-year LID and the V1 UNTIE RULE to
 TotalAnnualMaxCapacityInvestment for GENERATION technologies that have
 either ResidualCapacity > 0 or TotalAnnualMinCapacityInvestment > 0 in any
 year.
 
 This script is INDEPENDENT of add_max_capacity_investment_rule.py. It can run:
   - On a fresh A-O_Parametrization.xlsx (operates on empty MaxInv cells).
-  - On the output of the first-patch script (recognizes 9999 placeholders and
+  - On the output of the first rule script (recognizes 9999 placeholders and
     replaces them with the lid).
   - Repeatedly (idempotent — second run produces no changes).
 
@@ -99,7 +99,7 @@ SCOPE
 - TRN* transmission interconnects (length-13 codes) are SKIPPED entirely —
   they span two country+region pairs and don't fit a single pool. Their
   manually-calibrated MaxInv values are left untouched.
-- Non-allowed techs are also untouched (handled by a separate patch).
+- Non-allowed techs are also untouched (handled by a separate rule).
 
 CONFIGURATION
 -------------
@@ -186,7 +186,7 @@ PROJ_MODE_COL = "Projection.Mode"
 PROJ_MODE_EMPTY = "EMPTY"
 PROJ_MODE_USER = "User defined"
 
-# A leftover sentinel from the first-patch script. If we encounter this value,
+# A leftover sentinel from the first rule script. If we encounter this value,
 # treat the cell as a placeholder and replace it with the lid (rather than as
 # a manually calibrated value to preserve).
 PLACEHOLDER_VALUE = 9999
@@ -197,7 +197,7 @@ TRN_TECH_LENGTH = 13    # transmission interconnects, e.g. TRNINDEAINDNE -- skip
 COUNTRY_REGION_SLICE = slice(6, 11)  # for length-11 PWR* codes: chars 6..10
 
 # ---------------------------------------------------------------------------
-# Tech-type filter — only patch GENERATION technologies
+# Tech-type filter — only change GENERATION technologies
 # ---------------------------------------------------------------------------
 # TECH_TYPES.csv lives next to this script. It lists techs by category
 # (GENERATION, INTERCONNECTORS, STORAGE_LONG, STORAGE_SHORT, etc.). Only

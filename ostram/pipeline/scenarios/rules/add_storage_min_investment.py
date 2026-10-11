@@ -2,12 +2,12 @@
 add_storage_min_investment.py
 ==============================
 
-Independent patch — writes small TotalAnnualMinCapacityInvestment values
+Independent rule — writes small TotalAnnualMinCapacityInvestment values
 for storage technologies into A-O_Parametrization.xlsx, nudging the
 optimizer to deploy storage gradually rather than deferring to end-of-
 horizon.
 
-This is a non-destructive patcher: reads input, writes a timestamped
+This is a non-destructive rule: reads input, writes a timestamped
 sibling output, never mutates the source file.
 
 USAGE
@@ -128,7 +128,7 @@ def load_config(yaml_path: Path) -> dict[str, dict[int, float]]:
 
 
 # ---------------------------------------------------------------------------
-# Main patch logic
+# Main rule logic
 # ---------------------------------------------------------------------------
 def run(input_dir: Path, yaml_path: Path | None = None,
         skip_backup: bool = False) -> dict:
@@ -302,7 +302,7 @@ def print_summary(log: dict) -> None:
         # Summary by tech
         from collections import Counter
         tech_counts = Counter(c["tech"] for c in log["changes"])
-        print(f"\nTechs patched ({len(tech_counts)}):")
+        print(f"\nTechs changed ({len(tech_counts)}):")
         for t, n in sorted(tech_counts.items()):
             print(f"  {t}: {n} year-cells")
 

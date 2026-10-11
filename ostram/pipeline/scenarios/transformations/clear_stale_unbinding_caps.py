@@ -11,7 +11,7 @@ into them.
 Background
 ----------
 The lid script preserves any existing non-9999 cell value as a
-'manual calibration'. A subset of PWR techs in the c2a-patched
+'manual calibration'. A subset of PWR techs in the c2a-updated
 workbook have flat (non-9999) numbers in MaxCapInv for some
 contiguous block starting at 2024. Two variants of the same
 disease:
@@ -36,14 +36,14 @@ matching plant commit dates). The lid script's untie rule
 those floors automatically, so resetting the MaxCapInv values
 does not lose any planning information.
 
-This patch resets MaxCapInv 2024-2050 to 9999 for all 27 affected
+This script resets MaxCapInv 2024-2050 to 9999 for all 27 affected
 techs. On the next lid-script run, the year-schedule writes into
 every cell, with the untie rule raising the lid above the MinCap
 floor wherever a real project commitment is scheduled.
 
 Scope
 -----
-ONLY patches techs in TECHS_TO_PATCH (27 techs) that satisfy ALL of:
+ONLY changes techs in TECHS_TO_RESET (27 techs) that satisfy ALL of:
   - Parameter == 'TotalAnnualMaxCapacityInvestment'
   - 2023 cell == 9999
   - At least one cell in 2024-2050 has a non-9999 value
@@ -53,12 +53,12 @@ Does NOT touch:
   - TotalAnnualMinCapacityInvestment (where real project floors live)
   - Any other parameter or sheet
   - TRN* transmission interconnects (lid script skips these by design)
-  - Any tech outside TECHS_TO_PATCH, even if it matches the
+  - Any tech outside TECHS_TO_RESET, even if it matches the
     pattern -- explicit allowlist for safety
 
 Output
 ------
-- Patched workbook written as a sibling with `_POST_CAP_RESET` appended to the
+- Changed workbook written as a sibling with `_POST_CAP_RESET` appended to the
   stem. Long mutable-workspace paths are deterministically compacted while
   retaining that stage identity. The input file is left untouched.
 - Per-tech summary printed to stdout.
@@ -105,7 +105,7 @@ RESET_YEARS = list(range(2024, 2051))  # 2024 through 2050 inclusive
 #   Real project floors are in MinCapInv; resetting MaxCapInv loses
 #   no planning data because the lid script's untie rule re-derives
 #   a lid above MinCap automatically.
-TECHS_TO_PATCH = {
+TECHS_TO_RESET = {
     # Pattern A
     "PWRSPVBGDXX", "PWRSPVBTNXX", "PWRSPVINDEA", "PWRSPVINDNE",
     "PWRSPVINDNO", "PWRSPVINDSO", "PWRSPVINDWE", "PWRSPVNPLXX",
@@ -143,7 +143,7 @@ def patch_workbook(
     print(f"Input: {input_path}")
     print(f"Sheet: {SHEET_NAME}")
     print(f"Parameter: {TARGET_PARAMETER}")
-    print(f"Allowlisted techs: {len(TECHS_TO_PATCH)}")
+    print(f"Allowlisted techs: {len(TECHS_TO_RESET)}")
     print(f"Year range to reset: {RESET_YEARS[0]}-{RESET_YEARS[-1]}")
     print(f"Dry run: {dry_run}")
     print()
@@ -197,7 +197,7 @@ def patch_workbook(
         param = row[param_col - 1].value
         if param != TARGET_PARAMETER:
             continue
-        if tech not in TECHS_TO_PATCH:
+        if tech not in TECHS_TO_RESET:
             continue
         seen_techs.add(tech)
 
@@ -232,8 +232,8 @@ def patch_workbook(
         log.append((tech, flat_val, n_changed))
 
     # Report
-    print(f"Techs matched in sheet: {len(seen_techs)} / {len(TECHS_TO_PATCH)} allowlisted")
-    not_seen = TECHS_TO_PATCH - seen_techs
+    print(f"Techs matched in sheet: {len(seen_techs)} / {len(TECHS_TO_RESET)} allowlisted")
+    not_seen = TECHS_TO_RESET - seen_techs
     if not_seen:
         print(f"  Not found in sheet: {sorted(not_seen)}")
     print()
@@ -270,7 +270,7 @@ def main() -> None:
     p = argparse.ArgumentParser(description=__doc__.split("\n")[2])
     p.add_argument(
         "--input", type=Path, default=DEFAULT_INPUT,
-        help=f"Path to the workbook to patch (default: {DEFAULT_INPUT})",
+        help=f"Path to the workbook to change (default: {DEFAULT_INPUT})",
     )
     p.add_argument(
         "--dry-run", action="store_true",
