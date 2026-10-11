@@ -279,7 +279,7 @@ def _patch_fixture(tech: str, residual: object, target_value: object = -1.0):
     return workbook, worksheet
 
 
-def _patch_log():
+def _edit_log():
     return {"cells": [], "rows_created": [], "skipped": []}
 
 
@@ -824,7 +824,7 @@ class TxCap150FormulaTests(unittest.TestCase):
         ]
         workbook, worksheet = _patch_fixture("TRNBTNXXINDNE", 0.170)
         columns, year_columns = module.scan_columns(worksheet)
-        log = _patch_log()
+        log = _edit_log()
         for edit in edits:
             module.apply_edit(worksheet, columns, year_columns, edit, log)
         for parameter in CAP_TARGETS:
@@ -858,7 +858,7 @@ class TxCap150FormulaTests(unittest.TestCase):
                 columns, year_columns = module.scan_columns(worksheet)
                 with self.assertRaises(ValueError):
                     module.apply_edit(
-                        worksheet, columns, year_columns, edit, _patch_log()
+                        worksheet, columns, year_columns, edit, _edit_log()
                     )
                 workbook.close()
 
@@ -891,7 +891,7 @@ class TxCap150FormulaTests(unittest.TestCase):
                     columns,
                     year_columns,
                     edits[tech],
-                    _patch_log(),
+                    _edit_log(),
                     minimum_boundaries=boundaries,
                 )
                 row = module.find_row(

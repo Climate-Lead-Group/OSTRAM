@@ -17,7 +17,7 @@ Design (patterned on the rules_scripts):
     source A1_Outputs folder, so the result depends only on (source + patches),
     never on a prior patched state.
   * Timestamped backup of any pre-existing target folder before overwrite.
-  * Writes a *_CHANGES.json audit log.
+  * Writes a *_CHANGES.json edit log.
   * --self-test runs in-process unit tests; --restore reverts the target from
     its most recent backup.
 
@@ -753,7 +753,7 @@ def print_summary(log):
     print(f"cells written : {len(log['cells'])}")
     print(f"rows created  : {len(log['rows_created'])}  {[r['tech']+'/'+r['param'] for r in log['rows_created']]}")
     print(f"skipped       : {len(log['skipped'])}")
-    print(f"audit log     : {log.get('log_path')}")
+    print(f"edit log      : {log.get('log_path')}")
 
 
 # --------------------------------------------------------------------------
