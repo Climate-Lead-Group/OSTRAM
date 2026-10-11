@@ -1,6 +1,6 @@
 #! python3
 """
-patch_storage_delay.py
+storage_delay.py
 ======================
 
 Non-destructive storage-delay patcher for OSTRAM preprocessed datafiles.
@@ -414,7 +414,7 @@ def main() -> int:
     patched_model = patch_model_lines(model_lines)
 
     print("=" * 72)
-    print("patch_storage_delay.py")
+    print("storage_delay.py")
     print(f"  Input data:      {input_path}")
     print(f"  Output data:     {output_path}")
     print(f"  Input model:     {model_input}")

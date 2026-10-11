@@ -13,7 +13,7 @@ from unittest import mock
 from openpyxl import Workbook
 
 from ostram import paths as path_module
-from ostram.pipeline.execution.patches import reserve_margin_repair_xlsx
+from ostram.pipeline.execution.model_file_adjustments import reserve_margin_repair_xlsx
 
 
 FAILED_WARNING_NAME = (

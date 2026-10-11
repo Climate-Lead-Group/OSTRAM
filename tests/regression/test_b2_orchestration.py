@@ -370,10 +370,10 @@ class B2ImportAndCliCharacterizationTests(unittest.TestCase):
     ) -> None:
         module_names = (
             "ostram.pipeline.execution.preprocess",
-            "ostram.pipeline.execution.patches.days_in_day_type",
-            "ostram.pipeline.execution.patches.storage_delay",
-            "ostram.pipeline.execution.patches.open_pwrbck_caps",
-            "ostram.pipeline.execution.patches.reserve_margin_repair_xlsx",
+            "ostram.pipeline.execution.model_file_adjustments.days_in_day_type",
+            "ostram.pipeline.execution.model_file_adjustments.storage_delay",
+            "ostram.pipeline.execution.model_file_adjustments.open_pwrbck_caps",
+            "ostram.pipeline.execution.model_file_adjustments.reserve_margin_repair_xlsx",
         )
         import_script = (
             "import importlib; "
@@ -789,7 +789,7 @@ class B2ScenarioAndTraceCharacterizationTests(unittest.TestCase):
                 return_value=[
                     sys.executable,
                     "-m",
-                    "ostram.pipeline.execution.patches.reserve_margin_repair_xlsx",
+                    "ostram.pipeline.execution.model_file_adjustments.reserve_margin_repair_xlsx",
                 ],
             ),
             mock.patch.object(

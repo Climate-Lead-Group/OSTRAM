@@ -340,7 +340,7 @@ def run_days_in_day_type_patcher(params, scenario_name):
     # Anchor to B2's own directory so it works regardless of how B2 is invoked
     script_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        'patches',
+        'model_file_adjustments',
         'days_in_day_type.py',
     )
     target_file = os.path.join(
@@ -384,7 +384,7 @@ def run_strip_storage_patcher(params, scenario_name):
     # Anchor strip_storage.py to B2's own directory (same pattern as DaysInDayType).
     script_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        'patches',
+        'model_file_adjustments',
         'strip_storage.py',
     )
 
@@ -438,7 +438,7 @@ def run_storage_delay_patcher(params, scenario_name):
     exact_storages = params.get('storage_delay_storages', [])
 
     here = os.path.dirname(os.path.abspath(__file__))
-    script_path = os.path.join(here, 'patches', 'storage_delay.py')
+    script_path = os.path.join(here, 'model_file_adjustments', 'storage_delay.py')
 
     base = f"{params['preprocess_data_name']}{scenario_name}_0"
     in_file = os.path.join(params['executables'], scenario_name + '_0', f"{base}.txt")
@@ -524,7 +524,7 @@ def run_open_pwrbck_patcher(params, scenario_name):
     # strip and DaysInDayType patchers).
     script_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        'patches',
+        'model_file_adjustments',
         'open_pwrbck_caps.py',
     )
 
@@ -580,7 +580,7 @@ def run_reserve_margin_repair_patcher(params, scenario_name):
     suffix = params.get('reserve_margin_repair_suffix', 'RMRepair')
     script_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        'patches',
+        'model_file_adjustments',
         'reserve_margin_repair.py',
     )
 
@@ -658,7 +658,7 @@ def run_reserve_margin_xlsx_patcher(params, scenario_name):
 
     suffix = params.get('reserve_margin_xlsx_suffix', 'RMCarefulXLSX')
     here = os.path.dirname(os.path.abspath(__file__))
-    script_path = os.path.join(here, 'patches', 'reserve_margin_repair_xlsx.py')
+    script_path = os.path.join(here, 'model_file_adjustments', 'reserve_margin_repair_xlsx.py')
 
     workbook = params.get(
         'reserve_margin_xlsx_workbook',

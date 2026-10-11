@@ -523,7 +523,7 @@ open_pwrbck_suffix: "OpenBCK"
 ```yaml
 reserve_margin_repair_active: False        # older, blunt text/datafile-rule version
 
-reserve_margin_xlsx_active: True           # current: workbook-driven, via patch_reserve_margin_repair_careful_xlsx.py
+reserve_margin_xlsx_active: True           # current: workbook-driven, via model_file_adjustments/reserve_margin_repair_xlsx.py
 reserve_margin_xlsx_suffix: "RMCarefulXLSX"
 reserve_margin_xlsx_workbook: "firm_capacity_fallbacks_by_cr.xlsx"
 reserve_margin_xlsx_sheet: "fallbacks"

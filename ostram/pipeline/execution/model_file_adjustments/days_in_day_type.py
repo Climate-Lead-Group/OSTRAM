@@ -39,7 +39,7 @@ Standalone (Windows):
     python inject_DaysInDayType.py path\\to\\Pre_processed_BAU_0.txt
 
 From B2:
-    python -B -m ostram.pipeline.execution.patches.days_in_day_type TARGET
+    python -B -m ostram.pipeline.execution.model_file_adjustments.days_in_day_type TARGET
 
 ASSUMPTIONS
 -----------

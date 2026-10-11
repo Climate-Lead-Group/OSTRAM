@@ -90,7 +90,7 @@ annualize_capital: False
 # Master switch. False (or absent) = pipeline runs unchanged.
 # When True: mutually exclusive with strip_storage_active (strip is silently
 # turned off). The solver is redirected to the patched OSeMOSYS model file
-# produced by patch_storage_delay.py, and combined inputs/outputs are written
+# produced by model_file_adjustments/storage_delay.py, and combined inputs/outputs are written
 # with `storage_delay_prefix_final_files` so baseline OSTRAM_* artifacts are
 # not overwritten.
 storage_delay_active: True
@@ -145,7 +145,7 @@ reserve_margin_repair_active: False
 
 ########################################################################################
 # === Careful XLSX reserve-margin repair ===
-# This calls patch_reserve_margin_repair_careful_xlsx.py.
+# This calls model_file_adjustments/reserve_margin_repair_xlsx.py.
 # It produces e.g.:
 #   Pre_processed_BAU_0_NoStorage_OpenBCK_RMCarefulXLSX.txt
 reserve_margin_xlsx_active: True
