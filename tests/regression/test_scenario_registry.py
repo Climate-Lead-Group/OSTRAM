@@ -173,7 +173,7 @@ class ScenarioRegistryTests(unittest.TestCase):
                 sorted(f"A1_Outputs_{name}" for name in ROOT_SCENARIOS),
             )
 
-    def test_patcher_uses_declared_non_b_base_and_rejects_conflict(self) -> None:
+    def test_scenario_edits_use_declared_non_b_base_and_reject_conflict(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             outputs = root / "A1_Outputs"
@@ -183,9 +183,9 @@ class ScenarioRegistryTests(unittest.TestCase):
             workbook = Workbook()
             workbook.active.title = "fixture"
             workbook.save(source / scenario_edits.PARAM_FILE)
-            patch_dir = configs.parent / "profiles"
-            patch_dir.mkdir(parents=True)
-            (patch_dir / "full.yaml").write_text(
+            profile_dir = configs.parent / "profiles"
+            profile_dir.mkdir(parents=True)
+            (profile_dir / "full.yaml").write_text(
                 json.dumps(
                     {"scenario_inputs": {"A_Calibrated_BAU_Clipped": {
                         "scenario": "A_Calibrated_BAU_Clipped",

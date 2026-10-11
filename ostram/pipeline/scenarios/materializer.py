@@ -2,7 +2,7 @@
 
 Root scenarios are rebuilt by the maintained A3 entrypoint.  Derived
 scenarios are then rebuilt from the root declared in
-``full.yaml::scenario_registry``, receive their patch layer, and finally receive any
+``full.yaml::scenario_registry``, receive their scenario edits, and finally receive any
 declared direction overlay.  This module stops before B1, B2, or a solver.
 """
 

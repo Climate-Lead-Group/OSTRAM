@@ -1,9 +1,9 @@
 """
-scenario_edits.py  --  OSTRAM sensitivity post-A3 patcher   (CLG / OSTRAM)
+scenario_edits.py  --  OSTRAM sensitivity post-A3 scenario edits   (CLG / OSTRAM)
 ========================================================================
 
 Builds a sensitivity scenario's A-O_Parametrization.xlsx by branching from
-the ``base_scenario`` declared by its canonical registry/patch contract and
+the ``base_scenario`` declared by its canonical registry/scenario-edit contract and
 applying, in order:
 
     1. the SHARED VRE physical-potential ceiling layer
@@ -14,8 +14,8 @@ applying, in order:
 Design (patterned on the rules_scripts):
   * Non-destructive to the SOURCE: the declared root A-O is never mutated.
   * Idempotent: every run rebuilds the target folder from a FRESH copy of the
-    source A1_Outputs folder, so the result depends only on (source + patches),
-    never on a prior patched state.
+    source A1_Outputs folder, so the result depends only on (source + scenario edits),
+    never on a prior edited state.
   * Timestamped backup of any pre-existing target folder before overwrite.
   * Writes a *_CHANGES.json edit log.
   * --self-test runs in-process unit tests; --restore reverts the target from
@@ -188,7 +188,7 @@ def load_minimum_investment_boundaries(authority_path=None):
 
 
 def validate_residual_source(edit):
-    """Validate a patch's optional external residual source."""
+    """Validate an edit's optional external residual source."""
     source = edit.get("residual_source")
     if source is None or source == "effective":
         return False
@@ -614,8 +614,8 @@ def apply_ceiling_layer(wb, log, ceiling_path=CEIL_BASE):
     }
 
 
-def apply_run_patches(wb, patches, log, minimum_boundaries=None):
-    for edit in patches.get("edits", []):
+def apply_scenario_edits(wb, scenario_inputs, log, minimum_boundaries=None):
+    for edit in scenario_inputs.get("edits", []):
         ws = wb[edit["sheet"]]
         col_map, year_cols = scan_columns(ws)
         apply_edit(
@@ -628,10 +628,10 @@ def apply_run_patches(wb, patches, log, minimum_boundaries=None):
         )
 
 
-def validate_patch_authorities(patches, authority_path=None):
-    """Validate external patch authorities before target-directory mutation."""
+def validate_edit_authorities(scenario_inputs, authority_path=None):
+    """Validate external edit authorities before target-directory mutation."""
     requires_minimum_boundary = False
-    for edit in patches.get("edits", []):
+    for edit in scenario_inputs.get("edits", []):
         requires_minimum_boundary |= validate_residual_source(edit)
     if not requires_minimum_boundary:
         return None
@@ -661,17 +661,17 @@ def build_scenario(
 
     a1_outputs = Path(a1_outputs)
     configs = Path(configs)
-    patches_path = configs.parent / "profiles" / "full.yaml"
-    if not patches_path.is_file():
-        raise FileNotFoundError(f"scenario YAML not found: {patches_path}")
-    patches = yaml.safe_load(patches_path.read_text(encoding="utf-8"))["scenario_inputs"][scenario]
-    declared_source = patches.get("base_scenario")
+    profile_path = configs.parent / "profiles" / "full.yaml"
+    if not profile_path.is_file():
+        raise FileNotFoundError(f"scenario YAML not found: {profile_path}")
+    scenario_inputs = yaml.safe_load(profile_path.read_text(encoding="utf-8"))["scenario_inputs"][scenario]
+    declared_source = scenario_inputs.get("base_scenario")
     if not declared_source:
-        raise ValueError(f"{patches_path} does not declare base_scenario")
+        raise ValueError(f"{profile_path} does not declare base_scenario")
     if source is not None and source != declared_source:
         raise ValueError(
             f"source override {source!r} conflicts with "
-            f"{patches_path.name}::base_scenario={declared_source!r}"
+            f"{profile_path.name}::base_scenario={declared_source!r}"
         )
     source = declared_source
 
@@ -680,8 +680,8 @@ def build_scenario(
 
     if not (src_dir / PARAM_FILE).is_file():
         raise FileNotFoundError(f"source A-O not found: {src_dir/PARAM_FILE}")
-    minimum_boundaries = validate_patch_authorities(
-        patches,
+    minimum_boundaries = validate_edit_authorities(
+        scenario_inputs,
         authority_path=authority_path,
     )
 
@@ -696,16 +696,16 @@ def build_scenario(
     shutil.copytree(src_dir, tgt_dir)
 
     log = {"scenario": scenario, "source": source, "timestamp": stamp,
-           "scenario_yaml": str(patches_path), "target": str(tgt_dir),
+           "scenario_yaml": str(profile_path), "target": str(tgt_dir),
            "backup_dir": str(backup_dir) if backup_dir else None,
            "cells": [], "rows_created": [], "skipped": []}
 
     wb = load_workbook(tgt_dir / PARAM_FILE)
-    if patches.get("apply_vre_ceiling_layer", True):
+    if scenario_inputs.get("apply_vre_ceiling_layer", True):
         apply_ceiling_layer(wb, log, ceiling_path=ceiling_path)
-    apply_run_patches(
+    apply_scenario_edits(
         wb,
-        patches,
+        scenario_inputs,
         log,
         minimum_boundaries=minimum_boundaries,
     )

@@ -259,7 +259,7 @@ def _secondary_fixture():
     return workbook, worksheet
 
 
-def _patch_fixture(tech: str, residual: object, target_value: object = -1.0):
+def _edit_fixture(tech: str, residual: object, target_value: object = -1.0):
     workbook = Workbook()
     worksheet = workbook.active
     worksheet.title = "Secondary Techs"
@@ -822,7 +822,7 @@ class TxCap150FormulaTests(unittest.TestCase):
             if edit.get("op") == "set_to_residual_factor_floor"
             and edit["tech"] == "TRNBTNXXINDNE"
         ]
-        workbook, worksheet = _patch_fixture("TRNBTNXXINDNE", 0.170)
+        workbook, worksheet = _edit_fixture("TRNBTNXXINDNE", 0.170)
         columns, year_columns = module.scan_columns(worksheet)
         log = _edit_log()
         for edit in edits:
@@ -854,7 +854,7 @@ class TxCap150FormulaTests(unittest.TestCase):
         }
         for invalid in (None, -0.1, float("nan"), float("inf")):
             with self.subTest(invalid=invalid):
-                workbook, worksheet = _patch_fixture("TRNBTNXXINDNE", invalid)
+                workbook, worksheet = _edit_fixture("TRNBTNXXINDNE", invalid)
                 columns, year_columns = module.scan_columns(worksheet)
                 with self.assertRaises(ValueError):
                     module.apply_edit(
@@ -882,7 +882,7 @@ class TxCap150FormulaTests(unittest.TestCase):
         )
         for tech, effective_rc, minimum, expected in cases:
             with self.subTest(tech=tech):
-                workbook, worksheet = _patch_fixture(
+                workbook, worksheet = _edit_fixture(
                     tech, effective_rc, minimum
                 )
                 columns, year_columns = module.scan_columns(worksheet)
@@ -938,7 +938,7 @@ class TxCap150FormulaTests(unittest.TestCase):
         self,
     ) -> None:
         module = _load_module(SCENARIO_EDITS_SCRIPT, "boundary_before_mutation")
-        patches = {
+        inputs = {
             "edits": [{
                 "sheet": "Secondary Techs",
                 "tech": "TRNBGDXXINDEA",
@@ -950,7 +950,7 @@ class TxCap150FormulaTests(unittest.TestCase):
         with (
             mock.patch.object(Path, "is_file", return_value=True),
             mock.patch.object(
-                Path, "read_text", return_value=json.dumps({"scenario_inputs": {"Bad": {"scenario": "Bad", "base_scenario": "B_Optimised_VRE", **patches}}})
+                Path, "read_text", return_value=json.dumps({"scenario_inputs": {"Bad": {"scenario": "Bad", "base_scenario": "B_Optimised_VRE", **inputs}}})
             ),
             mock.patch.object(module.shutil, "copytree") as copytree,
             mock.patch.object(module.shutil, "rmtree") as rmtree,
