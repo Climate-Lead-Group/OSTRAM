@@ -24,7 +24,7 @@ TEMPLATE = REPO_ROOT / "inputs" / "scenarios" / "OSTRAM_Scenario_Inputs.xlsx"
 FIX_SCRIPT = TRANSFORMATIONS / "fix_trn_residuals.py"
 AUTHORITY_SCRIPT = TRANSFORMATIONS / "interconnector_authority.py"
 A3_SCRIPT = SCENARIOS / "transform.py"
-PATCH_SCRIPT = SCENARIOS / "apply_patches.py"
+SCENARIO_EDITS_SCRIPT = SCENARIOS / "scenario_edits.py"
 TXCAP_CONFIG = REPO_ROOT / "config" / "profiles" / "full.yaml"
 LINKFREEZE_CONFIG = TEST_ROOT / "fixtures" / "link_freeze_min_boundary.yaml"
 SCENARIO_REGISTRY = REPO_ROOT / "config" / "profiles" / "full.yaml"
@@ -815,7 +815,7 @@ class TxCap150FormulaTests(unittest.TestCase):
         )
 
     def test_dynamic_formula_reads_effective_rc_for_both_targets(self) -> None:
-        module = _load_module(PATCH_SCRIPT, "txcap_formula")
+        module = _load_module(SCENARIO_EDITS_SCRIPT, "txcap_formula")
         config = yaml.safe_load(TXCAP_CONFIG.read_text(encoding="utf-8"))["scenario_inputs"]["B_Opt_TxCap150"]
         edits = [
             edit for edit in config["edits"]
@@ -841,7 +841,7 @@ class TxCap150FormulaTests(unittest.TestCase):
         workbook.close()
 
     def test_dynamic_formula_fails_closed_on_missing_or_invalid_rc(self) -> None:
-        module = _load_module(PATCH_SCRIPT, "txcap_fail_closed")
+        module = _load_module(SCENARIO_EDITS_SCRIPT, "txcap_fail_closed")
         edit = {
             "sheet": "Secondary Techs",
             "tech": "TRNBTNXXINDNE",
@@ -865,7 +865,7 @@ class TxCap150FormulaTests(unittest.TestCase):
     def test_linkfreeze_minimum_clamp_uses_v18_boundary_not_effective_rc(
         self,
     ) -> None:
-        module = _load_module(PATCH_SCRIPT, "linkfreeze_minimum")
+        module = _load_module(SCENARIO_EDITS_SCRIPT, "linkfreeze_minimum")
         config = yaml.safe_load(LINKFREEZE_CONFIG.read_text(encoding="utf-8"))["scenario_inputs"]["B_Opt_LinkFreeze"]
         edits = {
             edit["tech"]: edit for edit in config["edits"]
@@ -913,7 +913,7 @@ class TxCap150FormulaTests(unittest.TestCase):
                 workbook.close()
 
     def test_boundary_source_rejects_wrong_parameter_and_operation(self) -> None:
-        module = _load_module(PATCH_SCRIPT, "boundary_source_contract")
+        module = _load_module(SCENARIO_EDITS_SCRIPT, "boundary_source_contract")
         base = {
             "sheet": "Secondary Techs",
             "tech": "TRNBGDXXINDEA",
@@ -937,7 +937,7 @@ class TxCap150FormulaTests(unittest.TestCase):
     def test_invalid_boundary_source_fails_before_target_directory_mutation(
         self,
     ) -> None:
-        module = _load_module(PATCH_SCRIPT, "boundary_before_mutation")
+        module = _load_module(SCENARIO_EDITS_SCRIPT, "boundary_before_mutation")
         patches = {
             "edits": [{
                 "sheet": "Secondary Techs",

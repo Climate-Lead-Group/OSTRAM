@@ -8,7 +8,7 @@ import unittest
 
 from openpyxl import Workbook
 
-from ostram.pipeline.scenarios import apply_patches as edits
+from ostram.pipeline.scenarios import scenario_edits as edits
 
 
 YEARS = list(range(2023, 2051))

@@ -1,5 +1,5 @@
 """
-apply_patches.py  --  OSTRAM sensitivity post-A3 patcher   (CLG / OSTRAM)
+scenario_edits.py  --  OSTRAM sensitivity post-A3 patcher   (CLG / OSTRAM)
 ========================================================================
 
 Builds a sensitivity scenario's A-O_Parametrization.xlsx by branching from
@@ -25,11 +25,11 @@ This is INPUT GENERATION (post-A3). It does NOT run A3/B1/B2.
 
 USAGE
 -----
-    python apply_patches.py --scenario B_Opt_TradeCap50
-    python apply_patches.py --scenario B_Opt_SolarHi10
-    python apply_patches.py --scenario B_Opt_LinkFreeze
-    python apply_patches.py --self-test
-    python apply_patches.py --scenario B_Opt_TradeCap50 --restore
+    python -B -m ostram.pipeline.scenarios.scenario_edits --scenario B_Opt_TxCap150
+    python -B -m ostram.pipeline.scenarios.scenario_edits --scenario B_Opt_SolarCapexHi
+    python -B -m ostram.pipeline.scenarios.scenario_edits --scenario B_Opt_TradeCap15
+    python -B -m ostram.pipeline.scenarios.scenario_edits --self-test
+    python -B -m ostram.pipeline.scenarios.scenario_edits --scenario B_Opt_TxCap150 --restore
 
 scenario YAML edit schema (one dict per edit):
     sheet            : worksheet name (e.g. "Secondary Techs", "Demand Techs")
@@ -744,7 +744,7 @@ def restore_scenario(scenario):
 
 def print_summary(log):
     print("=" * 64)
-    print(f"apply_patches  --  {log['scenario']}  (from {log['source']})")
+    print(f"scenario_edits  --  {log['scenario']}  (from {log['source']})")
     print("=" * 64)
     print(f"target        : {log['target']}")
     print(f"backup        : {log.get('backup_dir') or '(none)'}")

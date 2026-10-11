@@ -41,7 +41,7 @@ The pipeline runs in this order:
 ## Commands
 
 - Build model inputs without solving: `python -m ostram run --skip-pull --compile-only --env-name <env> --scenarios <name1,name2> [--a-result-seed <dir>]`. `--scenarios` takes one comma-separated list.
-- Rebuild one derived scenario from an existing root output: `python -B -m ostram.pipeline.scenarios.apply_patches --scenario <name> --source-scenario <root>`, then `python -m ostram compile-inputs --scenarios <name>`. Direction variants also need the direction overlay (`set_interconnector_direction.run`).
+- Rebuild one derived scenario from an existing root output: `python -B -m ostram.pipeline.scenarios.scenario_edits --scenario <name> --source-scenario <root>`, then `python -m ostram compile-inputs --scenarios <name>`. Direction variants also need the direction overlay (`set_interconnector_direction.run`).
 - Tests, no solver: `python -m unittest discover -s tests -p 'test_*.py'`
 - Documentation: `python -m sphinx -b html docs <out-dir>`, with the packages in `docs/requirements.txt`. Put `<out-dir>` outside the clone; `docs/_build` is not git-ignored.
 

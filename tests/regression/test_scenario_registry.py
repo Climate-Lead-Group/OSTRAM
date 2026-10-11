@@ -23,7 +23,7 @@ from ostram.pipeline.scenarios.registry import (
     ensure_root_output_directories,
     load_registry,
 )
-from ostram.pipeline.scenarios import apply_patches
+from ostram.pipeline.scenarios import scenario_edits
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -182,7 +182,7 @@ class ScenarioRegistryTests(unittest.TestCase):
             source.mkdir(parents=True)
             workbook = Workbook()
             workbook.active.title = "fixture"
-            workbook.save(source / apply_patches.PARAM_FILE)
+            workbook.save(source / scenario_edits.PARAM_FILE)
             patch_dir = configs.parent / "profiles"
             patch_dir.mkdir(parents=True)
             (patch_dir / "full.yaml").write_text(
@@ -198,7 +198,7 @@ class ScenarioRegistryTests(unittest.TestCase):
             )
 
             with mock.patch("ostram.pipeline.scenarios.rules.apply_base_year_pin.apply_pin_rules", return_value={}) as apply_pin:
-                log = apply_patches.build_scenario(
+                log = scenario_edits.build_scenario(
                     "A_Calibrated_BAU_Clipped",
                     a1_outputs=outputs,
                     configs=configs,
@@ -210,11 +210,11 @@ class ScenarioRegistryTests(unittest.TestCase):
                 (
                     outputs
                     / "A1_Outputs_A_Calibrated_BAU_Clipped"
-                    / apply_patches.PARAM_FILE
+                    / scenario_edits.PARAM_FILE
                 ).is_file()
             )
             with self.assertRaisesRegex(ValueError, "conflicts"):
-                apply_patches.build_scenario(
+                scenario_edits.build_scenario(
                     "A_Calibrated_BAU_Clipped",
                     source="B_Optimised_VRE",
                     a1_outputs=outputs,

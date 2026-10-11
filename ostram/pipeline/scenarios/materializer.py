@@ -27,7 +27,7 @@ from .registry import (
     load_registry,
     root_snapshots_exist,
 )
-from . import apply_patches
+from . import scenario_edits
 
 
 _PROJECT_PATHS = resolve_paths()
@@ -357,7 +357,7 @@ def materialize_scenarios(
             derived = derived_by_name.get(scenario)
             if derived is None:
                 continue
-            log = apply_patches.build_scenario(
+            log = scenario_edits.build_scenario(
                 scenario,
                 source=derived.base_scenario,
                 skip_backup=True,
@@ -462,7 +462,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.scenarios,
             environment=environment,
         )
-    except apply_patches.ScenarioEditError as error:
+    except scenario_edits.ScenarioEditError as error:
         print(error, file=sys.stderr)
         return 1
     print(json.dumps(record, indent=2))

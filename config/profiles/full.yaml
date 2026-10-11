@@ -199,7 +199,7 @@ scenario_inputs:
     description: 'Interconnector-direction validation anchor: shared VRE ceiling layer
       + all cross-border corridors left bidirectional (set_interconnector_direction.py
       no-op). Must reproduce B_Opt_Clipped (2,113,984 -> clipped 2,115,082). Direction
-      overlay applied post-apply_patches.'
+      overlay applied post-scenario_edits.'
     apply_vre_ceiling_layer: true
     edits: []
   B_Opt_DirContractual:
@@ -8820,7 +8820,7 @@ scenario_inputs:
     base_scenario: B_Optimised_VRE
     description: Transient severe solar CAPEX spike x1.50 for 2028-2030 ONLY (other
       years keep the parent cost). Uses the multiply op's optional per-year 'years' filter (added
-      to apply_patches.py for this scenario). Over the shared VRE-ceiling layer.
+      to scenario_edits.py for this scenario). Over the shared VRE-ceiling layer.
     apply_vre_ceiling_layer: true
     edits:
     - sheet: Secondary Techs
