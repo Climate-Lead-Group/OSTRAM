@@ -1436,7 +1436,7 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
         raise FileNotFoundError(f"{paramfile} not found")
 
     # Load the GENERATION tech list. TECH_TYPES.csv is shared by other A3
-    # stages (e.g. patch_ao_c2a.py), so it lives in A3_process/, one level
+    # stages (e.g. add_ao_c2a.py), so it lives in A3_process/, one level
     # above this script (which now lives in A3_process/rules_scripts/).
     generation_techs = None
     tech_types_path = None

@@ -12,7 +12,7 @@ import unittest
 from openpyxl import Workbook
 
 from ostram.paths import PROFILE_AUTHORITIES_ENV
-from ostram.pipeline.scenarios.transformations.patch_ao_c2a import load_taxonomy
+from ostram.pipeline.scenarios.transformations.add_ao_c2a import load_taxonomy
 
 
 ROOT = Path(__file__).resolve().parents[2]

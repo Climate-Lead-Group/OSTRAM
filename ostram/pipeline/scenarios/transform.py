@@ -18,7 +18,7 @@ Pipeline:
              add_max NEW (2be1616)          flips Projection.Mode
              fix_elc_pmode_revert           reverts 20 ELC*01 PM cells
              B1b_Pre_solver_validation      V2 fix (PWRHYDLKAXX)
-  Stage 2    patch_ao_c2a                   adds CapacityToActivityUnit
+  Stage 2    add_ao_c2a                     adds CapacityToActivityUnit
   Stage 2.5  fix_pwrpet_clear               clears 336 PWRPETBGDXX cells
   Stage 3    fix_trn_residuals              + clear_stale_unbinding_caps
                                             + cap_trn_to_residual
@@ -479,25 +479,25 @@ def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
 
 
 def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
-    banner("Stage 2 + 2.5 — patch_ao_c2a + fix_pwrpet_clear")
+    banner("Stage 2 + 2.5 — add_ao_c2a + fix_pwrpet_clear")
 
-    # Move Stage 1b output into stage2/ as the input to patch_ao_c2a
+    # Move Stage 1b output into stage2/ as the input to add_ao_c2a
     shutil.copy(s1b / "A-O_Parametrization.xlsx", s2 / "A-O_Parametrization_ORIGINAL.xlsx")
 
-    # patch_ao_c2a (output: A-O_Parametrization_c2a_patched.xlsx in s2)
-    run_subproc("ostram.pipeline.scenarios.transformations.patch_ao_c2a", [
+    # add_ao_c2a (output: A-O_Parametrization_c2a_patched.xlsx in s2)
+    run_subproc("ostram.pipeline.scenarios.transformations.add_ao_c2a", [
         "--src", "A-O_Parametrization_ORIGINAL.xlsx",
         "--tax", "TECH_TYPES.csv",
         "--out", "A-O_Parametrization_c2a_patched.xlsx",
     ], cwd=s2, label="patch capacity-to-activity units")
 
     # Fallback: when there's nothing to patch (target techs aren't present),
-    # patch_ao_c2a doesn't write the output file. Copy the original so
+    # add_ao_c2a doesn't write the output file. Copy the original so
     # downstream stages have something to consume.
     patched_xlsx = s2 / "A-O_Parametrization_c2a_patched.xlsx"
     if not patched_xlsx.exists():
         shutil.copy(s2 / "A-O_Parametrization_ORIGINAL.xlsx", patched_xlsx)
-        print("    [FALLBACK] patch_ao_c2a produced no output; copied ORIGINAL "
+        print("    [FALLBACK] add_ao_c2a produced no output; copied ORIGINAL "
               "to *_c2a_patched.xlsx so pipeline can continue.")
 
     # fix_pwrpet_clear — the manual edit Luis did

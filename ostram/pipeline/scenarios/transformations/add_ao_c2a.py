@@ -1,5 +1,5 @@
 """
-patch_ao_c2a.py
+add_ao_c2a.py
 ================
 Patch the A-O parametrization workbook to set CapacityToActivityUnit = 31.536
 for every GENERATION and STORAGE technology that doesn't already have it.
@@ -28,11 +28,11 @@ Behaviour:
     - Idempotent: re-running on an already-patched file is a no-op.
 
 Usage:
-    python patch_ao_c2a.py
-    python patch_ao_c2a.py --src A-O_Parametrization.xlsx \\
+    python add_ao_c2a.py
+    python add_ao_c2a.py --src A-O_Parametrization.xlsx \\
                            --tax TECH_TYPES.csv \\
                            --out A-O_Parametrization_c2a_patched.xlsx
-    python patch_ao_c2a.py --dry-run   # show plan, write nothing
+    python add_ao_c2a.py --dry-run   # show plan, write nothing
 """
 
 from __future__ import annotations
