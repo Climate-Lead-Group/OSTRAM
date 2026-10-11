@@ -8,7 +8,7 @@ section, including the zone-level demand chart, the CF chart and the heatmap,
 to that fabric's real per-zone data.
 
 The hand-built companion at the module root is the design template. It is read
-at build time and patched with strictly anchored replacements; if any anchor is
+at build time and updated with strictly anchored replacements; if any anchor is
 not found exactly once, the build aborts rather than emit a wrong page.
 
 SCHEMA MAPPING (validated against the ground-truth DATA object embedded in
@@ -219,7 +219,7 @@ def load_summary_meta():
     return {e["n_ts"]: e for e in entries}
 
 
-def patch(html, old, new, what, count=1):
+def replace_anchored(html, old, new, what, count=1):
     """Anchored replacement; abort unless the anchor occurs exactly `count` times.
 
     `old` may be a plain string (literal match) or a compiled regex pattern
@@ -259,7 +259,7 @@ def build(out_path):
     # 1. Embedded data: one DATA object per fabric, same contract as the explainer.
     data_js = ("const FABRIC_DATA = " + json_for_html(fabric_data) + ";\n"
                "let DATA = FABRIC_DATA['5dp20ts'];")
-    html = patch(html, re.compile(r"^const DATA = \{.*\};$", re.M),
+    html = replace_anchored(html, re.compile(r"^const DATA = \{.*\};$", re.M),
                  lambda m: data_js, "embedded DATA object")
 
     # 2. FABRICS stats: peak CF from the summary JSON; phantom solar is not in
@@ -286,7 +286,7 @@ def build(out_path):
         peak_js = "null" if peak is None else repr(peak)
         return f"phantom:null,peakCF:{peak_js},fabricName:'{fabric_name}'"
 
-    html = patch(html, re.compile(r"phantom:[\d.]+,peakCF:[\d.]+"), stat_sub,
+    html = replace_anchored(html, re.compile(r"phantom:[\d.]+,peakCF:[\d.]+"), stat_sub,
                  "FABRICS stat fields", count=4)
 
     # 3. Stat cards: built conditionally so a missing stat is omitted, not faked.
@@ -304,24 +304,24 @@ def build(out_path):
   }
   cards += '<div class="stat"><div class="lab">Build time</div><div class="val">~45s</div><div class="sub">Fabric-independent</div></div>';
   document.getElementById('statsArea').innerHTML = cards;"""
-    html = patch(html, old_stats, lambda m: new_stats, "stat cards block")
+    html = replace_anchored(html, old_stats, lambda m: new_stats, "stat cards block")
 
     # 4. The fabric tabs drive the whole page, not just the grid.
-    html = patch(html,
+    html = replace_anchored(html,
                  "b.onclick = () => { activeFab=i; renderGrid(); };",
                  "b.onclick = () => { setFabric(i); };",
                  "tab onclick")
 
     # 5. Zone-level section heading and prose follow the selected fabric.
-    html = patch(html,
+    html = replace_anchored(html,
                  "<!-- SECTION 3: Zone-level explorer (20ts only, real data) -->",
                  "<!-- SECTION 3: Zone-level explorer (per fabric, real data) -->",
                  "section 3 comment")
-    html = patch(html,
+    html = replace_anchored(html,
                  "<h2>Zone-level explorer (adopted 5dp/20ts)</h2>",
                  '<h2>Zone-level explorer <span id="zoneFabricLabel" style="color:#0F8B7D"></span></h2>',
                  "section 3 heading")
-    html = patch(html,
+    html = replace_anchored(html,
                  "<p>Real pipeline data for all ten model zones. This section uses the "
                  "adopted fabric's computed values. The variant workbooks contain "
                  "equivalent per-zone data for each fabric.</p>",
@@ -330,20 +330,20 @@ def build(out_path):
                  "the tabs above: the demand profile, the capacity factors and the "
                  "heatmap all switch to that fabric's per-zone values.</p>",
                  "section 3 intro")
-    html = patch(html,
+    html = replace_anchored(html,
                  "how each responds to the 20-timeslice grid.",
                  "how each responds to the selected timeslice grid.",
                  "CF prose")
 
     # 6. A zone without the selected technology clears the chart rather than
     #    leaving the previous zone's data on screen.
-    html = patch(html,
+    html = replace_anchored(html,
                  "  if(!cfData) return;",
                  "  if(!cfData) { if(cfChart) { cfChart.destroy(); cfChart = null; } return; }",
                  "missing-tech chart guard")
 
     # 7. Init goes through setFabric so every section starts consistent.
-    html = patch(html,
+    html = replace_anchored(html,
                  """// Init
 renderGrid();
 renderDemandZones();
