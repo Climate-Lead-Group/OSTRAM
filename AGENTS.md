@@ -12,12 +12,12 @@ The pipeline runs in this order:
 2. A2 `ostram.pipeline.preparation.transmission`: adds transmission.
 3. A3 `ostram.pipeline.scenarios.materializer`: builds each root with its rule scripts, then each derived scenario from its root.
 4. B1 `ostram.pipeline.compilation.runner`: A-O workbooks become OSeMOSYS CSVs.
-5. B2 `ostram.pipeline.execution.runner`: CSVs become the patched solver datafile. B2 then solves and collects results: `glpsol --wlp` writes the LP, and CPLEX solves it (the `unescap` profile uses CBC). `--compile-only` stops B2 after the datafile.
+5. B2 `ostram.pipeline.execution.runner`: CSVs become the adjusted solver datafile. B2 then solves and collects results: `glpsol --wlp` writes the LP, and CPLEX solves it (the `unescap` profile uses CBC). `--compile-only` stops B2 after the datafile.
 
 ## Layout
 
 - `ostram/`: the package.
-- `config/profiles/full.yaml`: scenario registry, derived-scenario patches, VRE ceilings and run policies.
+- `config/profiles/full.yaml`: scenario registry, scenario edits, VRE ceilings and run policies.
 - `config/scenarios/<root>/`: rule YAMLs for the roots `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE`. The fourth root, support `BAU`, has no folder; its rule script runs on its built-in defaults.
 - `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx`: the scenario workbook. Its Control sheet lists each root's rule scripts in run order.
 - `tests/`: tests. `docs/`: Sphinx documentation.
@@ -62,7 +62,7 @@ The pipeline runs in this order:
 - `TotalAnnualMaxCapacity` caps residual plus surviving new capacity. A final
   0 means zero total capacity. -1 skips the cap. Setting it equal to
   `ResidualCapacity` prevents capacity above the residual path, provided later
-  rules and B2 patches keep it.
+  rules and B2 model-file adjustments keep it.
 - Before relying on either value, read the final datafile:
   `Executables/<S>_0/Pre_processed_<S>_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt`.
 - Scripts you write read their inputs and write new files beside them. They never modify files in `inputs/` or `config/` in place. Deliberate edits to those files are commits and go through the compile gate.

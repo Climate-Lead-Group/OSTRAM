@@ -107,7 +107,7 @@ annualize_capital: False
 # === Storage delay (block storage builds for first N years, then release) ===
 # Master switch. False (or absent) = pipeline runs unchanged.
 # When True: mutually exclusive with strip_storage_active (strip is silently
-# turned off). The solver is redirected to a patched copy of the OSeMOSYS model
+# turned off). The solver is redirected to an adjusted copy of the OSeMOSYS model
 # written into the execution workspace, and combined inputs/outputs are written
 # with `storage_delay_prefix_final_files` so baseline OSTRAM_* artifacts are
 # not overwritten. The maintained model at ${project.maintained_model} is never

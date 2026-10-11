@@ -89,7 +89,7 @@ annualize_capital: False
 # === Storage delay (block storage builds for first N years, then release) ===
 # Master switch. False (or absent) = pipeline runs unchanged.
 # When True: mutually exclusive with strip_storage_active (strip is silently
-# turned off). The solver is redirected to the patched OSeMOSYS model file
+# turned off). The solver is redirected to the adjusted OSeMOSYS model file
 # produced by model_file_adjustments/storage_delay.py, and combined inputs/outputs are written
 # with `storage_delay_prefix_final_files` so baseline OSTRAM_* artifacts are
 # not overwritten.
@@ -140,7 +140,7 @@ open_pwrbck_suffix: "OpenBCK"
 ########################################################################################
 # === Older blunt reserve-margin repair ===
 # Keep this disabled for the XLSX careful path. It is preserved in the B2 copy
-# for compatibility, but the XLSX patcher below is the one intended for this config.
+# for compatibility, but the XLSX adjustment below is the one intended for this config.
 reserve_margin_repair_active: False
 
 ########################################################################################

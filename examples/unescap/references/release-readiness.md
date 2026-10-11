@@ -118,8 +118,8 @@ Infeasible - objective value 559384.17921019
 Otoole independently warned that the CBC solution contains decision variables out of
 bounds. The exact boundary is the active execution chain for
 `B_Optimised_VRE`: the compiled domain validates, preprocessing and the storage-delay,
-open-backstop, and careful reserve-margin patches complete, GLPK writes the 90,384-column
-LP, and CBC finds its linear relaxation infeasible. The careful reserve-margin patch also
+open-backstop, and careful reserve-margin adjustments complete, GLPK writes the 90,384-column
+LP, and CBC finds its linear relaxation infeasible. The careful reserve-margin adjustment also
 records 10 warnings, including zero early investment caps for `PWRNGSBGDXX` and
 `PWRNGSINDEA`; those warnings are evidence, not proof of the infeasibility's modelling
 cause. No assumption was changed and no second solver run was made.
@@ -154,7 +154,7 @@ workflow starts. Interactive Microsoft Excel-on-Mac is outside the automated bou
 - Complete solver-free suite: 252 tests passed in 116.430 seconds.
 - Focused portability, report, capture, B2, and governed-newline tests: passed.
 - The changed reserve-margin writer was replayed over the canonical 15 full-model
-  prepatch inputs. All 15 regenerated final `.txt` files were byte-exact to the accepted
+  pre-adjustment inputs. All 15 regenerated final `.txt` files were byte-exact to the accepted
   artifacts, including their explicit CRLF convention; no matrix or solver ran.
 - Compileall and imports passed from outside the repository caller CWD.
 - Canonical help and `inspect-resources` routes passed from outside the repository CWD.

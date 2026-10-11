@@ -84,7 +84,7 @@ configuration and provenance records.
 
 The registry declares four roots and the accepted derived scenarios. A root is
 transformed through the ordered workbook stages. A derived scenario begins
-from its declared root output and then receives only its registered patch and
+from its declared root output and then receives only its registered scenario edits and
 optional direction overlay.
 
 Focused root transformation uses:

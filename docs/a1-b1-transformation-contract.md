@@ -98,8 +98,8 @@ inherited values above. See the [support BAU policy](pipeline.md#support-bau).
 
 Normal A3 execution still contains only the four active Control definitions:
 `BAU`, `A_Calibrated_BAU`, `B_Optimised_VRE`, and `C_Target_VRE`. Derived decision
-scenarios remain later, ordered scenario-specific patches; this refactor does not
-promote them into the active A3 loop or change patch precedence. A3 helper failure
+scenarios remain later, ordered scenario-specific edits; this refactor does not
+promote them into the active A3 loop or change edit precedence. A3 helper failure
 remains fail-fast, while work-directory and `OSTRAM_TEMPLATE_PATH` cleanup remain
 success-path-only.
 
@@ -109,7 +109,7 @@ version-controlled `pwr_min_2023_2026_pin.csv` allowlist to existing workbook
 rows before Stage 6. The transformer validates the allowlist digest and contract,
 writes only its explicit 2023--2026 PWR/MIN cells, never reads solver output, and
 does not emit a generic `*_CHANGES.json`. Plain `BAU` is untouched; derived
-scenarios inherit their corrected root before their bounded sensitivity patches.
+scenarios inherit their corrected root before their bounded sensitivity edits.
 
 The materialized v18 `Interconnector_Params` sheet is the sole runtime authority
 for three distinct interconnector families: final `ResidualCapacity`, additive
@@ -182,7 +182,7 @@ does not repair it.
 [`B2 execution module`](../ostram/pipeline/execution/runner.py) and
 [`b2_orchestrator.py`](../ostram/pipeline/execution/orchestrator.py) retain the compile path
 from B1 CSV directories through `process_scenario_folder`, otoole conversion, and
-the ordered preprocessing/patch chain documented in the core workflow
+the ordered preprocessing and model-file adjustment chain documented in the core workflow
 characterization. The canonical final filename suffix remains
 `Pre_processed_<scenario>_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt`.
 

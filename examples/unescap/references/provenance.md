@@ -200,8 +200,8 @@ negative bound values additionally constrained to the `1e-8` near-zero tolerance
 - `lid_rule_new_semantics: true` applies only to UNESCAP; `full` and unqualified behavior
   retain the historical semantics.
 - `storage_delay_active` reads the declared maintained model and writes a scenario-local
-  patched model under `Executables/<scenario>_0/`; it never resolves a removed legacy
-  patched-model path or modifies the maintained model.
+  adjusted model under `Executables/<scenario>_0/`; it never resolves a removed legacy
+  adjusted-model path or modifies the maintained model.
 - Preparation is stamped atomically. Repeated preparation requires `--reset`, refuses
   foreign/unstamped workspaces, and profile workspaces are isolated by profile id.
 - Reporting/capture and resource inspection resolve the activated profile bundle.
