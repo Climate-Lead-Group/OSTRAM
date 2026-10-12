@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-_scenarios.py — multi-scenario reader/writer for SOASIA Template v18.
+scenario_workbooks.py: multi-scenario reader/writer for SOASIA Template v18.
 
 This module isolates all scenario-aware logic so the rest of the A3 pipeline
 (stage-1 timeslice merge, ao extensions, lid rules, etc.) keeps consuming a
@@ -394,7 +394,7 @@ def _materialize_parametric_sheet(
 
     keys = SCENARIO_OVERRIDE_KEYS.get(sheet_name)
     if keys is None:
-        # Unknown sheet — leave alone after dropping the scenario column.
+        # Unknown sheet: leave alone after dropping the scenario column.
         ws.delete_cols(1)
         return
 
@@ -603,7 +603,7 @@ def persist_run_restrictions(
     """After a rules_script run, rewrite the Restrictions rows for `scenario`.
 
     `changes_json_path` may be a single path or a list of paths (the latter
-    is used when a scenario runs a chain of rules_scripts — all their change
+    is used when a scenario runs a chain of rules_scripts: all their change
     logs are aggregated into a single clear-and-write).
 
     Translates each 'changes' entry into a Restrictions row. The `parameter`

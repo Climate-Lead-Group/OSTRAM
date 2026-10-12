@@ -56,7 +56,7 @@ TARGET_TYPES = {"GENERATION", "STORAGE_SHORT", "STORAGE_LONG"}
 C2A_PARAM_NAME = "CapacityToActivityUnit"
 C2A_VALUE = 31.536
 
-# Column layout (1-indexed) — verified against this workbook
+# Column layout (1-indexed): verified against this workbook
 COL_TYPE = 1     # 'Tech.Type'      (e.g. 'Secondary', 'Demand')
 COL_TECHID = 2   # 'Tech.ID'        (numeric, unique per tech)
 COL_TECH = 3     # 'Tech'           (e.g. 'PWRCOABGDXX')
@@ -207,7 +207,7 @@ def main() -> int:
     print(f"  Will add c2a row:             {len(to_add)}")
     print(f"  Target techs NOT in sheet:    {len(not_in_sheet)}")
     if not_in_sheet:
-        # Should be 0 for this model — flag if not.
+        # Should be 0 for this model: flag if not.
         print(f"    (these will not be updated; verify they don't need it):")
         for t in not_in_sheet[:20]:
             print(f"      {t}  [{tech_type[t]}]")

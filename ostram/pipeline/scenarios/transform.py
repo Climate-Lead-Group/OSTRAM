@@ -84,7 +84,7 @@ def _configure_profile_paths() -> None:
     SOASIA_V18 = _PROJECT_PATHS.scenario_workbook
 
 # =============================================================================
-# USER CONFIGURATION — defaults; can be overridden via CLI
+# USER CONFIGURATION: defaults; can be overridden via CLI
 # =============================================================================
 DEFAULT_SCENARIO = "BAU"
 
@@ -470,7 +470,7 @@ def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
         "--input", s1b / "A-O_Parametrization.xlsx",
     ], label="insert reserve margin")
 
-    # 2) add_max_capacity_investment_rule — single pass with --fill-zeros.
+    # 2) add_max_capacity_investment_rule: single pass with --fill-zeros.
     #    Equivalent to the historical OLD (8ee8056: cell values, zeros->9999)
     #    followed by NEW (2be1616: Projection.Mode flips) sequence; merged
     #    into one script in Sept 2026 (the two copies shared a backup name
@@ -479,7 +479,7 @@ def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
         "--input-dir", s1b, "--fill-zeros",
     ], cwd=wd, label="add_max_capacity_investment_rule (--fill-zeros)")
 
-    # 3) fix_elc_pmode_revert — manual ELC*01 revert
+    # 3) fix_elc_pmode_revert: manual ELC*01 revert
     run_subproc("ostram.pipeline.scenarios.transformations.fix_elc_pmode_revert", [
         "--input", s1b / "A-O_Parametrization.xlsx",
     ], label="fix ELC projection mode")
@@ -519,7 +519,7 @@ def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
         print("    [FALLBACK] add_ao_c2a produced no output; copied ORIGINAL "
               "to *_c2a_patched.xlsx so pipeline can continue.")
 
-    # fix_pwrpet_clear — the manual edit Luis did
+    # fix_pwrpet_clear: the manual edit Luis did
     run_subproc("ostram.pipeline.scenarios.transformations.fix_pwrpet_clear", [
         "--input", s2 / "A-O_Parametrization_c2a_patched.xlsx",
     ], label="clear PWRPET values")
@@ -617,7 +617,7 @@ def stage_4_5_apply_inherited_restrictions(
     Applied AFTER stage 4 (where the file is consolidated into stage5/) and
     BEFORE stage 5 (where this scenario's rules_script runs on top). Stages 1b
     earlier in the pipeline may have written 9999 placeholders into the same
-    MaxCapInv cells — overwriting them here is the intended behavior.
+    MaxCapInv cells: overwriting them here is the intended behavior.
 
     `restriction_sources` maps an inherited scenario to an alternative
     workbook (a prerequisite's exported run state) whose Restrictions rows

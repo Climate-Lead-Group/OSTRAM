@@ -887,8 +887,8 @@ def export_root_datafile(here, params, scenario_name, export_name=None):
     user has a single easy-to-find model datafile.
 
     When adjustments (storage_delay, strip_storage, open_pwrbck, reserve_margin_*)
-    are active, exports the final adjusted sibling — not the vanilla preprocessed
-    file — so the root datafile matches what the solver actually consumed.
+    are active, exports the final adjusted sibling in place of the vanilla
+    preprocessed file, so the root datafile matches what the solver actually consumed.
     """
     if export_name is None:
         if params.get('storage_delay_active', False):

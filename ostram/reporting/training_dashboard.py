@@ -7,8 +7,8 @@ into the profile/capture architecture:
 
 * scenarios come from the snapshot data (or profile metadata hints);
 * country regions, labels, storage families, interconnectors and effective
-  values come from profile metadata — nothing model-specific is hardcoded;
-* snapshots are the explicit ``(label, path)`` pairs handed in by the caller —
+  values come from profile metadata: nothing model-specific is hardcoded;
+* snapshots are the explicit ``(label, path)`` pairs handed in by the caller;
   the module never discovers inputs from the working directory.
 
 The generated HTML embeds the ``ostram-profile-report-v1`` payload in a stable
