@@ -9,7 +9,7 @@ baseline, controlled by a YAML configuration file.
 This script is the complement of cap_trn_to_residual.py. Where that
 script freezes interconnectors at ResidualCapacity, this one opens them
 up — by a multiplicative factor, an additive headroom, absolute
-per-link overrides, or full unconstrain (9999).
+per-link overrides, or a cap of 9999 (mode "unconstrained").
 
 RULE
 ----
@@ -24,15 +24,16 @@ of config/scenarios/technology_types.csv staged in the run folder:
         mode == "additive":
             MaxCapInv = ResidualCapacity + headroom_gw
         mode == "unconstrained":
-            MaxCapInv = 9999
+            MaxCapInv = 9999   (a finite cap)
 
     Safety floor: MaxCapInv = max(MaxCapInv, ResidualCapacity)
 
     Second pass (MaxCap opening):
         For any overridden tech whose schedule has at least one non-zero
         investment value, TotalAnnualMaxCapacity is set to 9999 across
-        all years. This removes the total-capacity ceiling that
-        cap_trn_to_residual imposed (MaxCap = ResCap) so that the
+        all years. This replaces the total-capacity ceiling that
+        cap_trn_to_residual imposed (MaxCap = ResCap) with a finite cap of
+        9999, so that the
         override-controlled MaxCapInv is the sole investment constraint.
         Techs without overrides or with all-zero overrides are untouched.
 

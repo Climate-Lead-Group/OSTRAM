@@ -5,7 +5,7 @@ cap_trn_to_residual.py
 Pre-lid data fix for transmission interconnection (TRN*) techs in
 the 'Secondary Techs' sheet. Caps each TRN tech's TotalAnnualMaxCapacity
 to its ResidualCapacity year-by-year, and resets TotalAnnualMaxCapacityInvestment
-to 9999 across the full 2023-2050 horizon.
+to 9999, a finite cap, across the full 2023-2050 horizon.
 
 Background
 ----------
@@ -27,9 +27,8 @@ across the horizon (no expansion of cross-border interconnects), so:
     MaxCap = 0 disables the tech entirely.
   - TotalAnnualMaxCapacityInvestment := 9999 across all years.
     With MaxCap pinned to ResCap, no investment can ever push total
-    capacity above the cap, so the per-year investment limit is moot.
-    Setting it to 9999 just removes a separate (and now redundant)
-    constraint that the lid script would otherwise stomp on.
+    capacity above the cap, so the per-year investment limit does not bind.
+    9999 is a finite cap far above it.
 
 Scope
 -----

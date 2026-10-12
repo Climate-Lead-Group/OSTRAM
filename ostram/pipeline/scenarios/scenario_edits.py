@@ -547,8 +547,8 @@ def scale_activity_to_ceiling(ws, col_map, year_cols, tech, ceil, maxcap_orig, l
     ONLY the lower limit is touched -- never the pinned upper limit:
       * B_Opt-derived scenarios have lower limit == 0 on every VRE tech (they
         use investment lids, not activity floors), so scaling is a pure no-op
-        for them (0 -> 0), and their upper limit is the -1 'unconstrained'
-        sentinel which must NOT be scaled into a bogus negative bound.
+        for them (0 -> 0), and their upper limit is -1, which skips the
+        constraint and must NOT be scaled into a bogus negative bound.
       * Leaving C_Target's upper pin unscaled just makes it non-binding above
         physical max (lower <= upper still holds, line-184 check safe); the
         tech lands at ~physical maximum -- the correct 'NDC capped at physical

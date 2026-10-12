@@ -9,15 +9,15 @@ year.
 
 This script is INDEPENDENT of add_max_capacity_investment_rule.py. It can run:
   - On a fresh A-O_Parametrization.xlsx (operates on empty MaxInv cells).
-  - On the output of the first rule script (recognizes 9999 placeholders and
-    replaces them with the lid).
+  - On the output of the first rule script (treats blank, 0 and 9999 cells
+    as placeholders and replaces them with the lid).
   - Repeatedly (idempotent — second run produces no changes).
 
 PROBLEM
 -------
 For ALLOWED generation techs (those with residual or planned capacity), MaxInv
-was being left effectively unbounded — either NaN (no constraint at all) or
-9999 (a placeholder that's far above any realistic ramp). Without a real upper
+was left either blank, which reaches the model as -1 and skips the
+constraint, or at 9999, a finite cap far above any realistic ramp. Without a real upper
 bound, the optimizer can over-invest in candidate techs whose annual ramp
 should be physically constrained. And without a year-by-year *ramp* tied to
 demand, a constant lid either binds in late years (when demand has scaled
@@ -84,7 +84,7 @@ Demand rows are summed within each cr and divided by the value at the
 reference year (default 2024) to obtain mult(cr, y).
 
 Cell-by-cell, for each MaxInv cell of an ALLOWED tech:
-    1. Empty (None) or 9999 placeholder  ->  proposed = lid
+    1. Blank (None), 0 or 9999 placeholder  ->  proposed = lid
     2. Other explicit value (manual cal)  ->  proposed = current value (preserved)
     3. V1 UNTIE RULE (cf. check V1 of pre_solver_validation.py):
          if MinCapacityInvestment(tech, y) >= proposed:
@@ -186,9 +186,9 @@ PROJ_MODE_COL = "Projection.Mode"
 PROJ_MODE_EMPTY = "EMPTY"
 PROJ_MODE_USER = "User defined"
 
-# A leftover sentinel from the first rule script. If we encounter this value,
-# treat the cell as a placeholder and replace it with the lid (rather than as
-# a manually calibrated value to preserve).
+# The 9999 written by add_max_capacity_investment_rule.py. A cell holding
+# blank, 0 or this value is a placeholder and is replaced with the lid; any
+# other value is a manually calibrated value and is preserved.
 PLACEHOLDER_VALUE = 9999
 
 # Tech naming conventions
@@ -297,17 +297,17 @@ LID_FAMILY_RELAXATION_CEILINGS: dict = {}
 
 # --- Exempt prefixes (used by both modes) ------------------------------------
 # When non-empty, any tech whose code starts with one of these prefixes gets
-# MaxCapInv = 9999 (uncapped) instead of the computed lid.
+# MaxCapInv = 9999, a finite cap, in place of the computed lid.
 # Kept for backward compatibility; relaxation_schedule is the preferred
 # mechanism.  Default: empty list (all techs get the lid).
 LID_EXEMPT_PREFIXES: list = []
 
 # --- Exempt max capacity (optional, per-prefix) ----------------------------
 # When an exempt prefix has an entry here, TotalAnnualMaxCapacity is set to the
-# interpolated schedule value (GW) instead of 9999.  MaxCapInv stays uncapped
-# (9999) — the total-cap ceiling is the binding constraint.
+# interpolated schedule value (GW) in place of 9999.  MaxCapInv stays at
+# 9999, a finite cap; the total-cap ceiling is the binding constraint.
 # Format: { "PWRSPV": {2023: 80, 2030: 200, 2050: 500}, ... }
-# Prefixes not listed get the default 9999 (fully uncapped, backward-compatible).
+# Prefixes not listed get the default 9999, a finite cap.
 # A single number (e.g. "PWRSPV": 200) is treated as a flat constant.
 EXEMPT_MAX_CAP: dict = {}
 
@@ -1004,7 +1004,7 @@ def compute_adequacy_scale_factors(
             # Replicate the lid computation for each tech (same as main loop).
             total_lid = 0.0
             for tech in techs:
-                # Exempt techs are uncapped (9999) — not part of the gen lid.
+                # Exempt techs get 9999 and are outside the gen lid.
                 if LID_EXEMPT_PREFIXES and any(
                     tech.startswith(p) for p in LID_EXEMPT_PREFIXES
                 ):
@@ -1153,8 +1153,9 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             and any(tech.startswith(p) for p in LID_EXEMPT_PREFIXES)
         ) if tech else False
         # Normal rows: must be allowed (or exempt) AND MaxCapInv param.
-        # Exempt techs also get TotalAnnualMaxCapacity uncapped (the total
-        # installed-cap ceiling, not the per-year investment lid).
+        # Exempt techs also get TotalAnnualMaxCapacity set, to 9999 or to the
+        # exempt_max_cap schedule (the total installed-cap ceiling, separate
+        # from the per-year investment lid).
         _is_target_param = (
             param == MAX_INV_PARAM
             or (_is_exempt_prefix and param == MAX_CAP_PARAM)
@@ -1177,7 +1178,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
 
             # --- Short-circuit: TotalAnnualMaxCapacity for exempt techs.
             #     Use exempt_max_cap schedule if defined for this prefix,
-            #     otherwise 9999 (fully uncapped, backward-compatible).
+            #     otherwise 9999, a finite cap.
             if param == MAX_CAP_PARAM:
                 proposed = _exempt_max_cap_for(tech, year)
                 reason = ("exempt_maxcap_capped" if proposed < PLACEHOLDER_VALUE

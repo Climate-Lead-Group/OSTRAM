@@ -790,8 +790,8 @@ def apply_vre_targets(ws, config: dict, total_prod: dict,
 
             # --- Capacity envelope (bounded MaxCap + MaxCapInv) ---
             # When a target opts in (cap_envelope: true), bound the tech from
-            # ABOVE so it follows the floor's capacity trajectory rather than
-            # being exempted/uncapped. The reference each year is the MAX of:
+            # ABOVE so it follows the floor's capacity trajectory. The reference
+            # each year is the MAX of:
             #   - cap_needed(y) = floor_pj(y) / yield   (the NDC requirement), and
             #   - bau_cap(y)    = CalBAU's installed capacity (reflects planned
             #     builds + the calibrated baseline)

@@ -15,7 +15,7 @@ What it writes:
      - PWRLDS*/PWRSDS* TotalAnnualMaxCapacity and
        TotalAnnualMaxCapacityInvestment set to 0 in blocked years.
      - Those same PWR storage caps set to the configured open value
-       (default -1, i.e. unconstrained) in later years.
+       (default -1, which skips the constraint) in later years.
      - Blocking-year minimum capacity/investment rows for those storage
        technologies dropped to avoid min-vs-max conflicts.
   2. A sibling model file with one new parameter and one new constraint:
