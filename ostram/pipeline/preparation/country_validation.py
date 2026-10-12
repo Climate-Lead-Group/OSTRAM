@@ -387,7 +387,7 @@ def validate_tech_types(country_code):
     else:
         results.append(ValidationResult(
             "TECH:Backstop", "WARN",
-            "No backstop (BCK) technology found — model may be infeasible"
+            "No backstop (BCK) technology found; model may be infeasible"
         ))
 
     # Check intranational transmission

@@ -844,7 +844,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                     ("set_retirement_schedule.py", "set_min_capacity_floors.py"),
                     "A_Calibrated_BAU",
                 ),
-                ("banner", "Stage 0 — materialize scenario template for 'A_Calibrated_BAU'"),
+                ("banner", "Stage 0: materialize scenario template for 'A_Calibrated_BAU'"),
                 (
                     "materialize",
                     harness.soasia,

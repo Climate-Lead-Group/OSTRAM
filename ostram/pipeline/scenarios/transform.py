@@ -420,7 +420,7 @@ def build_workdir(
 # Pipeline stages
 # ---------------------------------------------------------------------------
 def stage_1_scripts_1_to_5(s1: Path) -> None:
-    banner("Stage 1 — scripts 1-5 (AO/WV alignment pipeline)")
+    banner("Stage 1: scripts 1-5 (AO/WV alignment pipeline)")
     run_subproc("ostram.pipeline.scenarios.transformations.merge_timeslices", cwd=s1, label="merge timeslices")
     run_subproc("ostram.pipeline.scenarios.transformations.extract_ao_extensions", cwd=s1, label="extract AO extensions")
     run_subproc(
@@ -438,7 +438,7 @@ def stage_1_scripts_1_to_5(s1: Path) -> None:
 
 
 def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
-    banner("Stage 1b — A0 + add_max (fill-zeros) + ELC revert + B1b")
+    banner("Stage 1b: A0 + add_max (fill-zeros) + ELC revert + B1b")
 
     # Move stage1 outputs into stage1b/
     src_dir = s1 / "wvaligned_outputs_v2"
@@ -479,7 +479,7 @@ def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
 
 
 def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
-    banner("Stage 2 + 2.5 — add_ao_c2a + fix_pwrpet_clear")
+    banner("Stage 2 + 2.5: add_ao_c2a + fix_pwrpet_clear")
 
     # Move Stage 1b output into stage2/ as the input to add_ao_c2a
     shutil.copy(s1b / "A-O_Parametrization.xlsx", s2 / "A-O_Parametrization_ORIGINAL.xlsx")
@@ -507,7 +507,7 @@ def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
 
 
 def stage_3_fix_2(s2: Path, s3: Path) -> Path:
-    banner("Stage 3 — FIX_2 pipeline (fix_trn + clear_stale + cap_trn)")
+    banner("Stage 3: FIX_2 pipeline (fix_trn + clear_stale + cap_trn)")
 
     authority_path_raw = os.environ.get("OSTRAM_TEMPLATE_PATH")
     authority_path = (
@@ -567,7 +567,7 @@ def stage_3_fix_2(s2: Path, s3: Path) -> Path:
 def stage_4_consolidate(s1: Path, s3: Path, s5: Path, post_trn_cap: Path) -> None:
     """Stage 4: consolidate the 4 final files into stage5/. Separate from stage 5
     so stage 4.5 (inherit restrictions) can run between them."""
-    banner("Stage 4 — consolidate 4 final files into stage5/")
+    banner("Stage 4: consolidate 4 final files into stage5/")
     shutil.copy(post_trn_cap, s5 / "A-O_Parametrization.xlsx")
     src_dir = s1 / "wvaligned_outputs_v2"
     shutil.copy(src_dir / "A-O_AR_Model_Base_Year_wvaligned_v2.xlsx",
@@ -608,7 +608,7 @@ def stage_4_5_apply_inherited_restrictions(
             f"inherit_restrictions_from: {unknown}"
         )
     banner(
-        f"Stage 4.5 — apply inherited restrictions from {', '.join(inherit_from)}"
+        f"Stage 4.5: apply inherited restrictions from {', '.join(inherit_from)}"
     )
     _scenarios = _load_scenarios_module()
 
@@ -644,9 +644,9 @@ def stage_5_rules_scripts(
     inherit restrictions and apply no rule of its own).
     """
     if not rules_scripts:
-        banner("Stage 5 — SKIPPED (no rules_scripts for this scenario)")
+        banner("Stage 5: SKIPPED (no rules_scripts for this scenario)")
         return
-    banner(f"Stage 5 — rules_scripts chain ({len(rules_scripts)} script(s))")
+    banner(f"Stage 5: rules_scripts chain ({len(rules_scripts)} script(s))")
     for i, script in enumerate(rules_scripts, start=1):
         source = RULES_SCRIPTS_DIR / script
         if not source.is_file():
@@ -811,7 +811,7 @@ def stage_6_persist_restrictions(
         return
     if not soasia.is_file():
         return
-    banner("Stage 6 — persist run restrictions to disposable scenario state")
+    banner("Stage 6: persist run restrictions to disposable scenario state")
     search_dir = s5.parent
     candidates = sorted(
         search_dir.glob(f"{s5.name}_PRE_*_CHANGES.json"),
@@ -843,7 +843,7 @@ def stage_6_sync_og_to_ts20(wd: Path, s1: Path) -> None:
     """Propagate the 20-ts fabric from WV down to OG_csvs_inputs and the YAML,
     so the next A1 run produces consistent 20-ts CSVs and B1_Compiler stops
     aborting on the YAML-vs-xlsx timeslice mismatch."""
-    banner("Stage 6 — sync OG_csvs_inputs + YAML to 20-ts fabric")
+    banner("Stage 6: sync OG_csvs_inputs + YAML to 20-ts fabric")
     wv_file = s1 / "SOASIA_OSeMOSYS_WV.xlsx"
     og_csvs_dir = _PROJECT_PATHS.preparation_workspace / "og_csvs_inputs"
     yaml_file = _PROJECT_PATHS.compilation_workspace / "Config_MOMF_T1_A.yaml"

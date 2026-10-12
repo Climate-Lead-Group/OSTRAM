@@ -950,7 +950,7 @@ class B1SystemParameterCharacterizationTests(unittest.TestCase):
         self.assertEqual(no_sheet.parse_calls, [])
         self.assertEqual(
             output,
-            "   NOTE: No System Parameters sheet found — ReserveMargin not included.\n",
+            "   NOTE: No System Parameters sheet found; ReserveMargin not included.\n",
         )
 
         all_missing = _WorkbookFixture(

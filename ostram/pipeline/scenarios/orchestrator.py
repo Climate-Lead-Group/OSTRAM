@@ -190,7 +190,7 @@ def execute_plan(
             workdir / f"_materialized_{plan.scenario}.xlsx"
         )
         dependencies.banner(
-            f"Stage 0 — materialize scenario template for '{plan.scenario}'"
+            f"Stage 0: materialize scenario template for '{plan.scenario}'"
         )
         dependencies.materialize_scenario_template(
             plan.soasia,
