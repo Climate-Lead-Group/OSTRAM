@@ -65,7 +65,7 @@ under `config/` and fails when a file is added, removed or left unregistered.
 | `inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx` | Year splits, demand profiles and capacity factors for the 20 timeslices. | A3. |
 | `inputs/execution/firm_capacity_fallbacks_by_cr.xlsx` | The fallback caps of the gas and oil allowance per country-region. | B2. |
 
-## ostram
+## The ostram package
 
 | Path | What it holds |
 |---|---|
