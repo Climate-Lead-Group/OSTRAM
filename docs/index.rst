@@ -43,6 +43,7 @@ Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
    full-yaml
    reference/scenarios/scenario_catalogue
    history/a1-b1-transformation-contract
+   reference/scenarios/vre_ceiling_provenance
 
 
 Indices and tables
