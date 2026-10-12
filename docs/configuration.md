@@ -503,7 +503,7 @@ storage_delay_root_datafile: "OSTRAM_data_storage_delay.txt"
 **Storage stripping** -- a diagnostic that removes storage entirely (`mode: "all"`), a single technology (`mode: "tech"`), or a whole storage class (`mode: "class"`):
 
 ```yaml
-strip_storage_active: True
+strip_storage_active: False
 strip_storage_mode: "all"
 strip_storage_targets: []
 strip_storage_suffix: "NoStorage"
@@ -588,7 +588,7 @@ Defines how parameters are combined when merging sub-regions:
 
 **Location:** `config/scenarios/<Scenario>/`
 
-Each active scenario (`A_Calibrated_BAU`, `B_Optimised_VRE`, `C_Target_VRE`) has its own subfolder with the YAML files its rule-script chain consumes. See {doc}`pipeline` (Stage A3) for which rule scripts each scenario runs and a plain-English summary of what each scenario represents. The main YAML anatomy:
+The three decision roots `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE` each have a subfolder with the YAML files of their rule chain. `BAU` has none; its build-cap rule runs on its defaults. `B_Opt_DirBidir` and `B_Opt_DirContractual` each have a subfolder with one direction overlay. The {doc}`rules` page lists which rules each root runs, and the [scenario catalogue](reference/scenarios/scenario_catalogue.md) summarises every scenario. The main YAML anatomy:
 
 | YAML | Consumed by | Key fields |
 |------|--------------|------------|
@@ -598,7 +598,7 @@ Each active scenario (`A_Calibrated_BAU`, `B_Optimised_VRE`, `C_Target_VRE`) has
 | `bau_calibration.yaml` (or `storage_floors.yaml`) | `set_min_capacity_floors.py` | `floors`, `ceilings`, each with `cr` (country-region), `tech`, `param`, `schedule` |
 | `set_vre_targets.yaml` | `set_vre_targets.py` | `bau_results_path` (relative path to a prior solved scenario's output, typically `A_Calibrated_BAU`), `constraint_type`, `max_floor_share`, `targets`, `pin_generation_to_target`, `cap_envelope` |
 
-Each `<Scenario>/` folder may also contain a `deprecate/` subfolder and `*_v2`-suffixed duplicates -- these are inert backups, not read by the pipeline (only the exact filename each rule script expects, e.g. `lid_rule.yaml`, is loaded).
+A rule reads only the exact file name it expects, for example `lid_rule.yaml`. The test `tests/regression/test_config_files.py` lists every file under `config/` and fails when another file appears there.
 
 :::{warning}
 Rule scripts resolve `bau_results_path` **relative to their own staged working directory** inside the A3 run, not relative to the repo root. Don't "fix" it to an absolute path from a different machine -- verify it still resolves correctly if you move or rename `Executables/` output folders.

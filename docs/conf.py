@@ -37,7 +37,6 @@ html_theme_options = {
     "collapse_navigation": False,
     "titles_only": False,
 }
-html_static_path = ["_static"]
 
 html_context = {
     "display_github": True,

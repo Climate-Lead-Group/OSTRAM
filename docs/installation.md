@@ -2,28 +2,77 @@
 
 ## Supported environment
 
-OSTRAM requires Python 3.10 or newer. The maintained Conda definition is
-`environment.yaml`; Python package requirements are also declared in
-`pyproject.toml`.
+OSTRAM requires Python 3.10 or newer, conda, Git and a solver. The conda
+environment is defined in `environment.yaml`, and the Python package
+requirements are also declared in `pyproject.toml`. The steps below are for
+Windows PowerShell. Terms are in the [glossary](glossary.md).
+
+## Install
+
+1. Install Miniconda or Anaconda, and Git. Open a PowerShell window in which
+   `conda --version` works. An Anaconda Prompt is such a window.
+
+2. Clone into a short path, such as a folder directly under the root of a
+   drive. Some output paths of the scenario
+   `A_Calibrated_BAU_Clipped_TxFreeze2026` come close to the Windows path
+   limit, and a long clone path makes them fail.
+
+   ```powershell
+   git clone https://github.com/Climate-Lead-Group/OSTRAM.git OSTRAM
+   cd OSTRAM
+   ```
+
+3. Create the environment and install the package in editable mode. The
+   editable install makes `ostram` importable from any folder while the
+   inputs and the configuration stay in the clone.
+
+   ```powershell
+   conda env create -n ostram -f environment.yaml
+   conda activate ostram
+   python -m pip install -e .
+   python -m pip check
+   ```
+
+4. Set the encoding and check the installation. Set `PYTHONUTF8` again in
+   every new window before a pipeline command.
+
+   ```powershell
+   $env:PYTHONUTF8 = '1'
+   python -m ostram --help
+   python -m ostram inspect-resources
+   glpsol --version
+   cbc -stop
+   ```
+
+5. Run the solver-free tests:
+
+   ```powershell
+   python -B -m unittest discover -s tests -p "test_*.py"
+   ```
+
+Pass `--env-name ostram` to every `python -m ostram run`. Without it, the
+command checks the environment named in `environment.yaml` and creates that
+environment when it is missing. Every stage runs under the Python that
+called the command, so run the commands from the activated environment.
+
+For an existing environment, update it with:
 
 ```powershell
-conda env create -f environment.yaml
-conda activate OSTRAM-env
+conda env update -n ostram -f environment.yaml --prune
 python -m pip install -e .
 ```
 
-For an existing environment:
+## How the command finds conda
 
-```powershell
-conda env update -f environment.yaml --prune
-python -m pip install -e .
-```
+`python -m ostram run` calls conda to check the environment. It takes conda
+from `CONDA_EXE` when that variable names an existing file; conda sets it in
+every activated prompt. Otherwise it takes the first of `conda.exe`, `conda`
+and `conda.bat` found on `PATH`. A `.bat` or `.cmd` hit, such as
+`condabin\conda.bat` of a standard install, resolves to `Scripts\conda.exe`
+of the same installation when that file exists. With no hit it runs the bare
+name `conda`.
 
-The editable install is important: it makes `ostram` and its package data
-import-addressable from any current directory while project authorities remain
-in the checkout.
-
-### Isolated reproduction environment
+## Isolated reproduction environment
 
 Keep the checkout, environment, package cache, logs and outputs separate from
 production. From a new checkout, the following creates the documented
@@ -53,11 +102,11 @@ if ($LASTEXITCODE -ne 0) { throw 'Editable installation failed' }
 & $python -m ostram inspect-resources
 ```
 
-Use `& $python` instead of `python`, and add `--env-name ostram-reproduce`
+Use `& $python` instead of `python`, and pass `--env-name ostram-reproduce`
 to the `run` commands in the [portfolio sequence](pipeline.md#accepted-17-scenario-portfolio).
 Record `conda list`, the Python version, `glpsol --version` and the selected
 vendor solver version with each reproduction. Solver binaries and vendor
-licenses are external runtime dependencies; an old prepared workspace is not
+licences are external runtime dependencies; an old prepared workspace is not
 an installation dependency.
 
 The 21 September 2026 clean-clone execution installed Python 3.10.21,
@@ -70,82 +119,47 @@ dependency resolution on a later date is not an exact environment replay.
 
 ## Verify the installation
 
-### Clean-clone support BAU
-
-In a Conda-enabled PowerShell, choose a new parent directory and run:
-
-```powershell
-git clone --branch fix/clean-clone-accepted-portfolio --single-branch https://github.com/Climate-Lead-Group/OSTRAM.git OSTRAM-pr35
-if ($LASTEXITCODE -ne 0) { throw 'Clone failed' }
-Set-Location OSTRAM-pr35
-Get-ChildItem Env: | Where-Object Name -Like 'OSTRAM_*' | Remove-Item
-Remove-Item Env:PYTHONPATH, Env:PYTHONHOME -ErrorAction SilentlyContinue
-$env:PYTHONUTF8 = '1'
-$env:PYTHONHASHSEED = '0'
-$env:PYTHONDONTWRITEBYTECODE = '1'
-conda env create -n ostram-pr35 -f environment.yaml -y
-if ($LASTEXITCODE -ne 0) { throw 'Conda installation failed' }
-conda activate ostram-pr35
-python -m pip install -e .
-if ($LASTEXITCODE -ne 0) { throw 'Editable installation failed' }
-python -m pip check
-python -m ostram inspect-resources
-glpsol --version
-```
-
-The maintained full profile selects CPLEX. Install licensed CPLEX separately
-and make its executable discoverable before running the
-[support BAU command](pipeline.md#support-bau). The verification environment uses
-CPLEX 22.1.2.0, GLPK 5.0, four threads and seed 12345.
-For the standard Windows CPLEX 22.1.2 location, make the executable available in
-this PowerShell session and confirm that it starts:
-
-```powershell
-$cplexBin = 'C:\Program Files\IBM\ILOG\CPLEX_Studio2212\cplex\bin\x64_win64'
-if (-not (Test-Path (Join-Path $cplexBin 'cplex.exe'))) { throw 'Set cplexBin to your licensed CPLEX installation' }
-$env:PATH = "$cplexBin;$env:PATH"
-cplex -c quit
-if ($LASTEXITCODE -ne 0) { throw 'CPLEX is unavailable' }
-```
-
-Use a fresh environment name if `ostram-pr35` already exists. Record
-`git rev-parse HEAD` and `conda list --explicit` with the execution evidence.
-
-### Installation checks
-
 ```powershell
 python -m ostram --help
 python -m ostram inspect-resources
 python -B -m unittest discover -s tests -p "test_*.py"
+python -m ostram run --skip-pull --compile-only --env-name ostram --scenarios A_Calibrated_BAU
 ```
 
-From outside the checkout, supply the bundle explicitly:
+The last command prepares the base model, builds `A_Calibrated_BAU`, compiles
+its inputs and stops after the solver datafile. It runs no solver.
+
+From outside the checkout, name the project root explicitly:
 
 ```powershell
-python -m ostram --project-root C:\path\to\OSTRAM inspect-resources
+python -m ostram --project-root <path to the clone> inspect-resources
 ```
 
 Use `--workspace` or `OSTRAM_WORKSPACE` to place mutable state elsewhere.
 Explicit command-line values override environment variables. Inspection is
-read-only and does not create the workspace.
+read-only and does not create the workspace. The support `BAU` command is on
+the [pipeline](pipeline.md#support-bau) page.
 
 ## Solvers
 
 `environment.yaml` installs GLPK and CBC. CPLEX and Gurobi require their vendor
-installations and licenses. Select the solver in
-`config/execution/Config_MOMF_T1_AB.yaml`.
+installations and licences. Select the solver in
+`config/execution/Config_MOMF_T1_AB.yaml`. The tracked full profile selects
+CPLEX, and the training profile selects CBC. For CPLEX, add the folder that
+holds `cplex.exe` to `PATH` in the session.
 
-Verify an external solver before a production run:
+Verify a solver before a production run:
 
 ```powershell
 glpsol --version
 cbc -stop
+cplex -c quit
 ```
 
 Use the compile-only route when validating without a solver:
 
 ```powershell
-python -m ostram run --skip-pull --compile-only --scenarios A_Calibrated_BAU
+python -m ostram run --skip-pull --compile-only --env-name ostram --scenarios A_Calibrated_BAU
 ```
 
 ## DVC
@@ -158,7 +172,7 @@ use caller CWD to locate project data.
 
 ```powershell
 dvc remote list
-python -m ostram run --skip-pull --compile-only --scenarios A_Calibrated_BAU
+python -m ostram run --skip-pull --compile-only --env-name ostram --scenarios A_Calibrated_BAU
 ```
 
 Generated DVC cache/tmp state and the central workspace are ignored. Maintained

@@ -1,5 +1,5 @@
 # OSTRAM — VRE-ceiling & key-assumption provenance / citations
-### Deep-research verification pass, 2026-07-12
+## Deep-research verification pass, 2026-07-12
 
 **Scope & status.** Provenance for the study's load-bearing, previously-uncited assumptions — the per-node
 VRE resource ceilings, the internal-transmission loss, the discount rate/WACC, storage cost — plus a
@@ -11,9 +11,12 @@ flagged honestly. Primary/official sources preferred; URLs checkable.
 
 ## 1. VRE resource-potential ceilings — reference list
 
-**Label correction (important):** the model's `vre_ceilings.csv` `atlas_source` column tags all solar
-"NISE-2025" and all wind "NIWE 150 m", but **NISE and NIWE are MNRE-India bodies (India only)** — the five
-non-India nodes (BGD, LKA, NPL, BTN, MDV) must be cited to their own national studies or a uniform atlas.
+**Label correction (important):** the historical decision table
+`config/scenarios/sensitivities/vre_ceilings.csv`, tracked at commit `7a27787` and deleted since,
+tagged all solar "NISE-2025" and all wind "NIWE 150 m" in its `atlas_source` column, but
+**NISE and NIWE are MNRE-India bodies (India only)**. The five non-India nodes (BGD, LKA, NPL, BTN, MDV)
+must be cited to their own national studies or a uniform atlas. The applied values are the
+`vre_ceilings` section of `config/profiles/full.yaml`.
 
 **India — solar (NISE):**
 - NISE/MNRE state-wise solar potential (2014): **748.98 GWp** (3% of wasteland + Census 2011). https://mnre.gov.in/en/solar-overview/ · PIB https://www.pib.gov.in/Pressreleaseshare.aspx?PRID=2003561
@@ -22,7 +25,7 @@ non-India nodes (BGD, LKA, NPL, BTN, MDV) must be cited to their own national st
 
 **India — wind (NIWE):**
 - NIWE India Wind Potential Atlas at 150 m agl: **1,163.9 GW** (695.50 GW at 120 m). https://maps.niwe.res.in/media/150m-report.pdf · map https://maps.niwe.res.in/resource_map/map/150m/ · https://mnre.gov.in/en/wind-overview/
-- Model India-wind ceilings sum ~1,149 GW ≈ the NIWE 150 m national total (strong concordance).
+- The applied India wind ceilings sum to 1,140 GW (INDNO 285, INDSO 445, INDWE 410, INDEA 0 and INDNE 0), close to the NIWE 150 m national total. The atlas-valued table, with 8 GW for INDEA and 0.5 GW for INDNE, summed to about 1,149 GW.
 
 **Non-India (per country):**
 - **BANGLADESH** — SREDA/Power Division (NREL/USAID), National Solar Energy Roadmap 2021–2041 https://rise.esmap.org/sites/default/files/library/bangladesh/Renewable%20Energy/Bangladesh_National-Solar-Energy-Roadmap.pdf ; land-screened solar ~53 GW (2019). Wind: NREL/SREDA gross ">30,000 MW" over 20,000 km² — source-flagged as unfiltered/unrealistic.
@@ -48,18 +51,31 @@ non-India nodes (BGD, LKA, NPL, BTN, MDV) must be cited to their own national st
 | BGD | Solar | 40 | SREDA / ~53 GW land-screened | ✓ (conservative) | verified (dir) |
 | LKA | Solar | 16 ★ | ADB/UNDP 2050 (~16,000 MW) | ✓ near-exact | verified |
 | NPL | Solar | 40 | SWERA / provincial | ✓ (very conservative) | verified (dir) |
-| BTN | Solar | 5 | Bhutan RE Master Plan (~12 GW) | ✓ (conservative) | verified (dir) |
+| BTN | Solar | 1.8102 | Historical B_Optimised_VRE limit; the atlas figure was 5 (Bhutan RE Master Plan ~12 GW) | ✓ (conservative) | verified (dir) |
 | MDV | Solar | 1 | Maldives Energy Roadmap | ✓ (island-constrained) | partial |
 | INDNO | Wind | 285 | NIWE 150 m (N incl. Rajasthan) | ✓ direction | partial |
 | INDSO | Wind | 445 | NIWE 150 m (TN/KA/AP/TS) | ✓ direction | partial |
 | INDWE | Wind | 410 | NIWE 150 m (GJ/MH/MP) | ✓ direction | partial |
-| INDEA | Wind | 8 | NIWE 150 m (OD/WB/BR/JH) | ✓ (small) | partial |
-| INDNE | Wind | 0.5 | NIWE 150 m (NE negligible) | ✓ | partial |
+| INDEA | Wind | 0 | Historical B_Optimised_VRE limit; the atlas figure was 8 (NIWE 150 m, OD/WB/BR/JH) | ✓ (small) | partial |
+| INDNE | Wind | 0 | Historical B_Optimised_VRE limit; the atlas figure was 0.5 (NIWE 150 m, NE negligible) | ✓ | partial |
 | BGD | Wind | 3 ★ | NREL/SREDA (>30 GW gross, unrealistic) | **cite-gap** — modeler screen | flag |
 | LKA | Wind | 15 | ADB/UNDP 2050 (15,000 MW); ADB tech ~5,600 MW | ✓ vs 2050 scenario | partial |
-| NPL | Wind | 2 | SWERA / provincial | ✓ direction | partial |
+| NPL | Wind | 0 | Historical B_Optimised_VRE limit; the atlas figure was 2 (SWERA / provincial) | ✓ direction | partial |
 | BTN | Wind | 0.5 | Bhutan RE Master Plan (~760 MW) | ✓ (conservative) | verified (dir) |
 | MDV | Wind | 0 ★ | Maldives Roadmap (~80 MW niche) | **flag** — ≈0 defensible, not literally 0 | flag |
+
+### The applied values and the historical limits
+
+Each ceiling in `full.yaml` was chosen once as the lower of the atlas-based figure and the
+historical `B_Optimised_VRE` limit recorded in the retired decision table. Four values therefore
+hold the historical limit in place of the atlas figure: BTN solar 1.8102 GW (atlas figure 5),
+INDEA wind 0 (atlas figure 8), INDNE wind 0 (atlas figure 0.5) and NPL wind 0 (atlas figure 2).
+The three clips below are the cases where the atlas figure itself binds.
+
+The pipeline applies every ceiling as a fixed value in all years of a derived scenario. It never
+computes the lower of the previous workbook value and the ceiling, and a ceiling above the
+previous value raises it. The annual investment bounds of the same technology are lowered to the
+ceiling where they exceed it. The [scenario edits](../../scenario-edits.md) page describes the step.
 
 ### The three clips
 - **LKA solar 16 ★ — well supported**, but it matches a 2050 *scenario build* (ADB/UNDP), not pure technical potential (ADB technical ≈ 6 GW). State which concept the ceiling represents.
@@ -78,35 +94,35 @@ Lead with the **Global Solar/Wind Atlas** as the uniform baseline for the 5 non-
 - **Distinguish:** ISTS transmission-only ≈ **3.5–5%** · national transmission (CEA) ≈ 3.5–4% · **combined T&D ≈ 17–20%** (World Bank EG.ELC.LOSS.ZS) · **AT&C ≈ 15–17%** (PFC/MoP). The high figures are distribution-dominated — do NOT conflate.
 - **Action:** our flat **3% is at the low edge**; cite as "~3–4%" (Grid-India). **Drop / heavily qualify "single largest driver of system cost"** — transmission losses are small vs distribution and vs generation capital+fuel; that phrase is an over-claim (it appears in the D4 report; the methodology doc's "+4.1% on A, dwarfs the interconnector/D5 effects" is a correctly-scoped model result and stays). Note: our 3% is applied to *intra-node* internal-tx; the ISTS figure is *inter-state* — same order, slightly different layer.
 
+### The current demand accounting
+
+Since the September 2026 release, the demand of Bangladesh, Bhutan, the five India regions,
+Nepal and Sri Lanka for 2023 to 2050 is an upstream requirement. The demand balance of the
+model credits the actual internal transfer losses once, while the physical input and output
+ratios of the internal transmission families stay as they are. Border losses receive no such
+credit, and the Maldives is excluded. The 3% above is the physical loss of the internal
+transmission families, and this accounting does not remove it. The sources are the demand
+balance in `model/osemosys_fast_preprocessed.txt` and the row "Trade and upstream-demand
+accounting" of the README sheet in `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx`.
+
 ## 4. WACC / discount rate (10%) provenance
 
 - **Primary anchor:** IRENA, "Renewable Power Generation Costs in 2018" — "a real cost of capital of 7.5% in OECD countries and China, and **10% in the rest of the world**." https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2019/May/IRENA_Renewable-Power-Generations-Costs-in-2018.pdf
 - **Range brackets:** OECD/IEA real cost-of-capital ~**4–9%** (up to ~18% stressed) https://one.oecd.org/document/ENV/WKP(2024)15/REV1/en/pdf ; World Bank "Demystifying the Costs..." used **6%** https://documents1.worldbank.org/curated/en/125521593437517815/pdf/Demystifying-the-Costs-of-Electricity-Generation-Technologies.pdf ; IRENA (2023) trends lower (→5% OECD / 7.5% RoW by 2021) https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2023/May/IRENA_The_cost_of_financing_renewable_power_2023.pdf
 - **Verdict:** 10% real is defensible as IRENA's rest-of-world default, at the **conservative/higher** end of current estimates. No SA-specific single "10%" source exists. Country-level dataset for sensitivity: "Historical and future projected costs of capital..." https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12678392/
+- In the model the 10% is a study discount convention, recorded in the row "Sets, defaults and empty inputs" of the README sheet in the scenario workbook. It applies to every technology. The sources above are benchmarks for that convention; they do not establish the financing cost of any one technology or source.
 
 ## 5. Storage cost basis
 
-- NREL, "Utility-Scale Battery Storage," **2024 ATB** (2022 USD; Li-ion; 2–10 h; 85% RTE; FOM 2.5% capex). https://atb.nrel.gov/electricity/2024/utility-scale_battery_storage ; projections: Cole & Karmakar, NREL 2023 update https://www.nrel.gov/docs/fy23osti/85332.pdf . Corroborate with BNEF/IRENA.
+- The storage costs come from NREL, "Utility-Scale Battery Storage", **2024 ATB** v3, rows 20 (energy) and 26 (power), Moderate trajectories 2023 to 2050, in 2022 US dollars. https://atb.nrel.gov/electricity/2024/utility-scale_battery_storage ; projections: Cole & Karmakar, NREL 2023 update https://www.nrel.gov/docs/fy23osti/85332.pdf
+- The 2022 values are converted once to constant 2023 US dollars with the DESNZ 2024 US GDP deflator ratio 131.902/127.224. The power component carries the node factors; the energy component is shared across nodes and converted to the model's energy unit.
+- The fixed operating cost is 2.5% of a four-hour reference system per year, including augmentation. This is a power-based approximation, because the model chooses the storage duration.
+- The generic long-duration storage is a study assumption with separate power and energy components. ATB does not establish its costs or lifetimes.
+- Sources in the repository: the rows "Monetary basis and interpretation" and "Storage costs and service" of the README sheet in `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx`, and the cell notes of the storage cost rows on its `Secondary_Techs` sheet.
 
 ---
 
-## 6. D4 report reference verification & corrections
-
-- **[25]** Timilsina & Toman, "Potential gains from expanding regional electricity trade in South Asia," *Energy Economics* 60:6–14, 2016. DOI 10.1016/j.eneco.2016.08.023. ✓ peer-reviewed.
-- **[26]** Timilsina, Toman, Karacsonyi & de Tena Diego, "How much could South Asia benefit from regional electricity cooperation and trade?" World Bank PRWP 7341, 2015. SSRN 2623783 / RePEc wbk:wbrwps:7341. ✓ **Add middle initials: Toman, Michael A.; Karacsonyi, Jorge G.** Note [25] is the journal version of [26] (same study).
-- **[27]** Koirala & Rahut, "Reimagining South Asia's electricity system amid growing energy market volatility," *Asia Pathways* (ADBI blog), Jul 2022. https://www.asiapathways-adbi.org/2022/07/reimagining-south-asias-electricity-system-amid-growing-energy-market-volatility/ — **NOT peer-reviewed; re-tag as grey-literature/commentary**; lean on Timilsina & Toman (2016) for any quantitative claim.
-
-**Additional verified CBET studies (directional corroboration only — never compare magnitudes):**
-- Wijayatunga, Chattopadhyay & Fernando, "Cross-Border Power Trading in South Asia: A Techno-Economic Rationale," ADB SA WP-38, 2015. https://www.adb.org/sites/default/files/publication/173198/south-asia-wp-038.pdf
-- Singh, Jamasb, Nepal & Toman, "Electricity cooperation in South Asia: Barriers to cross-border trade," *Energy Policy* 120:741–748, 2018. DOI 10.1016/j.enpol.2017.12.048
-- Timilsina & Toman, "Carbon Pricing and CBET for Climate Change Mitigation in South Asia," *EEEP* 7(2), 2018. RePEc aen:eeepjl:eeep7-2-timilsina
-- Timilsina, "Regional electricity trade for hydropower development in South Asia," *IJWRD* 37(3):392–410, 2021. DOI 10.1080/07900627.2018.1515065
-- Aryal & Dhakal, "Medium-term assessment of cross-border trading potential of Nepal's renewable energy... TIMES," *Energy Policy* 168:113109, 2022. DOI 10.1016/j.enpol.2022.113109
-- SARI/EI (IRADe/USAID), "BIMSTEC Energy Outlook 2035" (2021) https://irade.org/Bimstec%20Final%20Report%20Energy%20Outlook-2035.pdf
-- (EU analogue) Newbery, Strbac & Viehoff, "The benefits of integrating European electricity markets," *Energy Policy* 94:253–263, 2016. DOI 10.1016/j.enpol.2016.03.047
-- **Could not verify:** a standalone peer-reviewed "Rahman/Fernando" SA CBET journal article — cite the ADB report instead.
-
-## 7. Cite-gaps & caveats (state, don't paper over)
+## 6. Cite-gaps & caveats (state, don't paper over)
 1. **BGD onshore wind = 3 GW** — no direct source (only gross-unrealistic >30 GW); modeler's conservative screen. ★clip.
 2. **MDV onshore wind ≈ 0 GW** — defensible qualitatively; ~80 MW niche exists; not literally zero. ★clip.
 3. **LKA solar = 16 GW** — well-matched but a *scenario-build* figure, not technical potential (~6 GW). ★clip.
@@ -119,4 +135,4 @@ Lead with the **Global Solar/Wind Atlas** as the uniform baseline for the 5 non-
 
 ---
 
-**NISE vintage note (added 2026-07-12).** The India solar ceilings (150 / 25 / 600 / 500 / 650 GW) are deliberately-round **non-binding headroom guards** — set well above B_Opt's actual buildout (e.g. INDNO 600 vs buildout 319; INDWE 650 vs 185; INDEA 150 vs 19) and benchmarked to the **NISE-2025 order of magnitude**, *not* a precise NISE state-aggregation and *not* an average of the 2014/2025 vintages (the round hundreds are the tell; a real aggregation gives messy decimals). Because India-solar buildout sits far below these caps, their exact value **does not affect any result** — only the three *binding* non-India clips (LKA solar 16, BGD wind 3, MDV wind 0) require precise sourcing. So the "which NISE vintage?" question is immaterial for the India nodes.
+**NISE vintage note (added 2026-07-12).** The India solar ceilings (INDEA 150, INDNE 25, INDNO 600, INDSO 500 and INDWE 650 GW) are round values benchmarked to the order of magnitude of NISE-2025. They are neither a precise aggregation of NISE state values nor an average of the 2014 and 2025 vintages.

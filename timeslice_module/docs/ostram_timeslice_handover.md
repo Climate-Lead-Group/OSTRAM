@@ -1,6 +1,6 @@
 # OSTRAM Timeslice Selection — Handover
 
-**Project:** OSTRAM (OSeMOSYS for Transmission — South Asia, UN ESCAP submission)
+**Project:** OSTRAM (OSeMOSYS for Transmission – Framework to represent power systems connectivity)
 **Scope of this document:** Everything learned during the timeslice sensitivity analysis and ranking exercise, including what was decided, why, and what the deliverables contain.
 **Decision:** 6 dayparts × 4 seasons = **24 timeslices**, with daypart boundaries `0-5 / 5-8 / 8-17 / 17-20 / 20-22 / 22-24` (scheme ID: `6dp_D_ramp`).
 

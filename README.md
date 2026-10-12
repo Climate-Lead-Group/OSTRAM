@@ -1,96 +1,81 @@
 # OSTRAM
 
-OSTRAM prepares, transforms, compiles, and executes OSeMOSYS scenarios. The
-repository is an installable Python project: maintained inputs, configuration,
-model text, package resources, and mutable outputs have separate locations.
+OSTRAM, OSeMOSYS for Transmission – Framework to represent power systems
+connectivity, is a framework for power-system scenario studies. It builds on
+[OSeMOSYS](https://osemosys.readthedocs.io/) and OSeMOSYS Global, adds detail
+on internal transmission and on the interconnectors between countries, and
+supports "what if" comparisons between scenarios. The South Asia model is its
+reference application: Bangladesh, Bhutan, India in five regions, Nepal, Sri
+Lanka and the Maldives, from 2023 to 2050 in 20 timeslices. A reduced
+two-region training model lives in [`examples/unescap/`](examples/unescap/README.md).
 
 ## Install
 
-Create the Conda environment and install the checkout in editable mode:
+Follow the [installation](docs/installation.md) page. In short: clone to a
+short path, create the conda environment from `environment.yaml`, install the
+package in editable mode and set `PYTHONUTF8=1`.
 
 ```powershell
-conda env create -f environment.yaml
-conda activate OSTRAM-env
+git clone https://github.com/Climate-Lead-Group/OSTRAM.git OSTRAM
+cd OSTRAM
+conda env create -n ostram -f environment.yaml
+conda activate ostram
 python -m pip install -e .
+$env:PYTHONUTF8 = '1'
+python -m ostram inspect-resources
 ```
 
-The package metadata declares the Python dependencies. GLPK, CBC, CPLEX, and
-Gurobi remain external solver choices; see [installation](docs/installation.md).
+GLPK and CBC come with the environment. CPLEX and Gurobi are external solver
+choices.
 
-## Canonical interface
+## Commands
 
-All supported commands begin with `python -m ostram`:
+Every command starts with `python -m ostram`. Pass the name of the environment
+created above to `run`, so that the command checks that environment and
+creates none.
 
 ```powershell
 python -m ostram --help
 python -m ostram inspect-resources
-python -m ostram run --skip-pull --compile-only --scenarios A_Calibrated_BAU
-python -m ostram run --skip-pull --scenarios A_Calibrated_BAU --verbose
+python -m ostram run --skip-pull --compile-only --env-name ostram --scenarios A_Calibrated_BAU
+python -m ostram run --skip-pull --env-name ostram --scenarios A_Calibrated_BAU --verbose
 python -m ostram transform --scenario A_Calibrated_BAU
 python -m ostram compile-inputs --scenarios "A_Calibrated_BAU,B_Optimised_VRE"
 ```
 
-Global path options precede the command:
+`run` prepares the base model (A1), adds the transmission network (A2),
+builds the selected scenarios (A3), compiles the model inputs (B1), and runs
+the model and collects the results (B2). `--compile-only` stops after the
+solver datafile and runs no solver. `--scenarios` takes one comma-separated
+list. `C_Target_VRE` needs a solved `A_Calibrated_BAU` result, passed with
+`--a-result-seed`. The [pipeline](docs/pipeline.md) page walks through the
+stages, and the [scenario catalogue](docs/reference/scenarios/scenario_catalogue.md)
+lists the 18 registered scenarios: the support scenario `BAU` and the 17
+decision scenarios.
 
-```powershell
-python -m ostram `
-  --project-root C:\path\to\OSTRAM `
-  --workspace "D:\OSTRAM work\run α" `
-  inspect-resources
-```
-
-For all 17 accepted decision scenarios, follow the
-[dependency-ordered portfolio commands](docs/pipeline.md#accepted-17-scenario-portfolio).
-`BAU` is a support scenario, distinct from `A_Calibrated_BAU`; it is not one of
-the accepted 17 outputs. Omitting `--scenarios` includes support BAU and C,
-whose materialization requires a completed A result. It is not a fresh-portfolio
-shortcut. A1/A2/A3/B1/B2 are pipeline stages, not scenario names.
-
-For support `BAU` on its own, use the
-[clean-clone installation](docs/installation.md#clean-clone-support-bau) and
-[standalone BAU command](docs/pipeline.md#support-bau). Its transmission policy
-permits existing capacity plus committed additions, with no discretionary expansion.
-
-`--project-root` overrides `OSTRAM_PROJECT_ROOT`; `--workspace` overrides
-`OSTRAM_WORKSPACE`. Without either, an editable checkout supplies the project
-root and `<project-root>/workspace` is selected lazily. Caller CWD is never a
-resource root.
-
-An actual run reports live progress through preparing the base model (A1),
-adding the transmission network (A2), building scenarios (A3), compiling model
-inputs (B1), and running the model/collecting results (B2). Redirected output is
-plain and append-only. `--verbose` streams complete child output and command
-diagnostics. Every mode retains a detailed UTF-8 log at
-`<workspace>/logs/<run-id>/run.log`; help and resource inspection create no log.
+The global options `--project-root` and `--workspace` go before the command.
+They override `OSTRAM_PROJECT_ROOT` and `OSTRAM_WORKSPACE`. Without them, the
+clone is the project root and `workspace/` under it holds the generated
+files. Every run writes `<workspace>/logs/<run-id>/run.log`.
 
 ## Layout
 
 ```text
-ostram/       Python package and read-only package resources
-inputs/       authoritative model and scenario inputs
-config/       preparation, scenario, compilation, and execution configuration
-model/        maintained OSeMOSYS model source
-workspace/    ignored mutable runtime state, created only when needed
-tests/        solver-free regression and validation suites
+ostram/       the Python package
+inputs/       model inputs
+config/       configuration, including config/profiles/full.yaml
+model/        the OSeMOSYS model file
+docs/         documentation
+examples/     the two-region training profile
+tests/        solver-free tests
+workspace/    generated files, ignored by Git
 ```
 
-Important authorities include:
+The [file map](docs/file-map.md) describes each folder and key file.
 
-- `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx`
-- `inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx`
-- `config/profiles/full.yaml::scenario_registry`
-- `config/compilation/Config_MOMF_T1_A.yaml`
-- `config/execution/Config_MOMF_T1_AB.yaml`
-- `model/osemosys_fast_preprocessed.txt`
-- `ostram/resources/compilation/conversion_format.yaml`
+## Checks
 
-Code reads these locations through `ostram.paths`; generated state belongs
-under the selected workspace. Package resources are opened read-only through
-the installed package.
-
-## Safe validation
-
-The compact checks below do not invoke a solver or build a matrix:
+These commands run no solver and build no matrix.
 
 ```powershell
 python -B -m compileall -q ostram tests
@@ -100,35 +85,19 @@ python -m ostram inspect-resources
 git diff --check
 ```
 
-See the [quickstart](docs/quickstart.md), [pipeline](docs/pipeline.md),
-[configuration](docs/configuration.md), and [lineage](docs/lineage.md) for the
-maintained operating contract.
+## Documentation
 
-The adopted sources, conversions, assumptions, historical calibration and
-remaining evidence limitations are documented inside the existing
-[scenario workbook](inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx), in its README,
-Source/Notes/References cells and Excel cell notes. The annual values remain
-the operational inputs; the added explanations are not another input authority.
-The September 2026 cost update and reconciled reporting convention are also
-described in [lineage](docs/lineage.md#september-2026-cost-release). The external release
-review at `D4_SCAN_STATE/RELEASE_20260919/RELEASE_REVIEW.md` records the selected
-17 cases, verification gates, evidence archive, and publication state.
-For a compile-only check using the selected A result for C, use the normal
-`run --skip-pull --compile-only --a-result-seed <selected-A-run-directory>`
-command with an isolated `--workspace`. A fresh full solve must solve A before
-materialising C through its declared dependency. The transmission-freeze
-case retains its fixed historical reference; legacy and strict import caps
-remain separate definitions.
+The documentation is in [`docs/`](docs/index.rst): [installation](docs/installation.md),
+[quickstart](docs/quickstart.md), [pipeline](docs/pipeline.md),
+[scenario rules](docs/rules.md), [scenario edits](docs/scenario-edits.md),
+[scenario catalogue](docs/reference/scenarios/scenario_catalogue.md),
+[adding a scenario](docs/adding-a-scenario.md),
+[adapting OSTRAM to another system](docs/adapting.md),
+[configuration](docs/configuration.md), [file map](docs/file-map.md) and
+[glossary](docs/glossary.md).
 
-A fresh clone includes maintained inputs, but not the local `D4_SCAN_STATE`
-release archive, selected solver outputs or original country source packages.
-Those locally retained records have not been published as downloadable release
-assets. Exact historical replay requires those artifacts; a new full run obtains
-C's dependency by solving A first. The transmission-freeze coefficients are
-already embedded in the registered YAML and require no external M0 run at
-runtime. Source URLs identify publications but do not guarantee continuing
-online availability.
-
-The calibration CSV is byte-hash guarded. Its scoped `.gitattributes` rule
-preserves the released CRLF bytes on fresh checkouts; do not normalize that
-file independently or change its accepted hash to bypass the guard.
+The sources, conversions and assumptions behind the inputs are documented in
+the scenario workbook `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx`: in its
+README sheet, in its Source, Notes and References cells and in its cell
+notes. `AGENTS.md` holds the rules for AI coding agents and `CONTRIBUTING.md`
+the rules for changes.

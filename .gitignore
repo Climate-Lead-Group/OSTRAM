@@ -17,6 +17,7 @@ venv/
 
 # Local tool metadata and DVC runtime state.
 .claude/
+CLAUDE.local.md
 .dvc/cache/
 .dvc/tmp/
 

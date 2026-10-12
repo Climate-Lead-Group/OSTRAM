@@ -163,29 +163,23 @@ scenario_inputs:
   A_Calibrated_BAU_Clipped:
     scenario: A_Calibrated_BAU_Clipped
     base_scenario: A_Calibrated_BAU
-    description: 'Ceiling-only scenario: applies the shared VRE physical-potential
-      ceiling layer (min(atlas, B_Opt MaxCap)) to the validated A_Calibrated_BAU A-O.
-      No run-specific lever. Measures the cost of physical VRE realism on the BAU
-      pathway.'
+    description: 'The shared VRE ceilings applied to A_Calibrated_BAU. No other
+      changes.'
     apply_vre_ceiling_layer: true
     edits: []
   B_Opt_Clipped:
     scenario: B_Opt_Clipped
     base_scenario: B_Optimised_VRE
-    description: 'Ceiling-only reference scenario: applies ONLY the shared VRE physical-potential
-      ceiling layer (min(atlas, B_Opt MaxCap)) with no run-specific lever. The four
-      sensitivities are measured against B_Opt_Clipped (not validated B_Opt) so each
-      lever''s effect is isolated from the ceiling/clip effect. B_Opt_Clipped - B_Opt
-      = the cost of physical VRE realism.'
+    description: 'The shared VRE ceilings applied to B_Optimised_VRE. No other
+      changes.'
     apply_vre_ceiling_layer: true
     edits: []
   B_Opt_DirBidir:
     scenario: B_Opt_DirBidir
     base_scenario: B_Optimised_VRE
-    description: 'Interconnector-direction validation anchor: shared VRE ceiling layer
-      + all cross-border corridors left bidirectional (set_interconnector_direction.py
-      no-op). Must reproduce B_Opt_Clipped (2,113,984 -> clipped 2,115,082). Direction
-      overlay applied post-scenario_edits.'
+    description: 'The shared VRE ceilings applied to B_Optimised_VRE. Every
+      interconnector may carry power in both directions; its direction file lists no
+      one-way corridors.'
     apply_vre_ceiling_layer: true
     edits: []
   B_Opt_DirContractual:
@@ -194,7 +188,7 @@ scenario_inputs:
     description: Interconnector directions locked to real contractual/physical flows
       (9 corridors one-way, Nepal<->India pair bidirectional). Shared VRE ceiling
       layer via scenario edits; direction overlay via set_interconnector_direction.py. Full
-      per-corridor justification + citations in sensitivity_expansion/reference/interconnector_direction_references.md.
+      per-corridor justification + citations in docs/reference/scenarios/interconnector_direction_references.md.
     apply_vre_ceiling_layer: true
     edits: []
   B_Opt_IndiaCosts:
@@ -10315,9 +10309,10 @@ scenario_inputs:
   C_Target_VRE_Clipped:
     scenario: C_Target_VRE_Clipped
     base_scenario: C_Target_VRE
-    description: 'The shared VRE ceilings applied to C_Target_VRE, plus one Maldives
-      solar correction for 2028: the annual minimum investment is replaced by a minimum
-      total capacity of 0.3841 GW, so earlier builds count towards it.'
+    description: 'The shared VRE ceilings applied to C_Target_VRE. It also restates
+      the Maldives solar assumption for 2028 that C_Target_VRE already carries: a
+      minimum total of 0.3841 GW, with earlier builds counting towards it. This is a
+      legacy modelling assumption. It is not an official target.'
     apply_vre_ceiling_layer: true
     edits:
     - sheet: Secondary Techs

@@ -136,7 +136,7 @@ policies:
   # model it is provably infeasible: pinned BGD activity (~270.7 PJ in 2023,
   # backstop pinned to 0) plus the single 2.496 GW interconnector cannot meet
   # the 427.3 PJ 2023 BGD demand tier, and CBC certifies primal infeasibility.
-  # The pinned training pipeline (training-unescap@6e00e8b) applies no
+  # The earlier training pipeline (source commit 6e00e8b) applies no
   # base-year pin to any scenario of this model, so the profile disables the
   # stage. config/scenarios/rules/pwr_min_2023_2026_pin.csv is retained as the
   # frozen reference projection only; it is not applied.

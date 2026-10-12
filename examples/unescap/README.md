@@ -53,8 +53,8 @@ only `B_Optimised_VRE` never adds BAU.
 examples/unescap/
   profile.yaml                     the profile's authorities and resolution policy
   README.md                        this file
-  AUTHORING_AND_ACCEPTANCE.md      Natalia's Windows authoring + Actions acceptance start
-  TRAINING_OPERATION_COVERAGE.md   legacy-to-canonical operation ledger
+  AUTHORING_AND_ACCEPTANCE.md      Windows authoring + Actions acceptance guide
+  TRAINING_OPERATION_COVERAGE.md   legacy scripts and the current commands
   exercises/
     training.html                  main guide — 4 scenario exercises + 5 interconnector sub-exercises
     add-country.html               Exercise A — add Myanmar to the model
@@ -91,8 +91,8 @@ Nothing generated lives here. Preparation output, compiled parameters, solver in
 run workspace (`--workspace` / `OSTRAM_WORKSPACE`), never inside `examples/unescap/`.
 
 Training authors should start with
-[`AUTHORING_AND_ACCEPTANCE.md`](AUTHORING_AND_ACCEPTANCE.md). The audited migration map
-is [`TRAINING_OPERATION_COVERAGE.md`](TRAINING_OPERATION_COVERAGE.md).
+[`AUTHORING_AND_ACCEPTANCE.md`](AUTHORING_AND_ACCEPTANCE.md). The table of legacy
+scripts and current commands is [`TRAINING_OPERATION_COVERAGE.md`](TRAINING_OPERATION_COVERAGE.md).
 
 ## Commands
 
@@ -162,5 +162,5 @@ transformation applied. The workbook's exact **2.496 GW** `TRNBGDXXINDEA` residu
 capacity is also the 2023 anchor in every executable scenario schedule; prose may describe
 it as approximately 2.5 GW, but no executable authority rounds it. Choosing 2.500 GW is
 an exercise edit, not the shipped seed. In the active relaxed scenario the resulting
-`TotalAnnualMaxCapacity` is intentionally unbound at exactly `9999.0`; that does not alter
-the `ResidualCapacity` series.
+`TotalAnnualMaxCapacity` is exactly `9999.0`, a finite cap of up to 9999 GW in total. It
+does not alter the `ResidualCapacity` series.

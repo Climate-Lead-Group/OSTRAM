@@ -4,7 +4,7 @@ Instructions for AI coding agents working on OSTRAM. People should start with `R
 
 ## Project
 
-OSTRAM (OSeMOSYS Transmission Model) builds on OSeMOSYS and OSeMOSYS Global. It adds detail on internal transmission and interconnectors, and supports "what if" comparisons between scenarios. The South Asia model, the default `full` profile, is the reference application. `examples/unescap` is a separate, reduced two-region training profile.
+OSTRAM (OSeMOSYS for Transmission – Framework to represent power systems connectivity) builds on OSeMOSYS and OSeMOSYS Global. It adds detail on internal transmission and interconnectors, and supports "what if" comparisons between scenarios. The South Asia model, the default `full` profile, is the reference application. `examples/unescap` is a separate, reduced two-region training profile.
 
 The pipeline runs in this order:
 
@@ -29,10 +29,18 @@ The pipeline runs in this order:
 - A derived scenario copies its root's finished A3 output, applies the VRE ceiling layer, applies its ordered edits from `full.yaml` under `scenario_inputs/<name>`, then re-applies the base-year pin. Its parent is always a root. `B_Opt_DirBidir` and `B_Opt_DirContractual` then also get their direction overlay.
 - `C_Target_VRE` and `C_Target_VRE_Clipped` need a solved `A_Calibrated_BAU` result, passed with `--a-result-seed`.
 
+## Which config is live
+
+- Every file under `config/` is read by the pipeline. `tests/regression/test_config_files.py` lists the 25 files and fails when a file is added, missing or left unregistered.
+- A root's rule YAML is read only when the Control sheet names the rule script for that root. A3 copies the root's YAMLs into its run folder and each rule reads its own file by name.
+- `config/profiles/full.yaml` is the source of record for the scenario registry, the shared VRE ceilings and the scenario edits. Its `description`, `rule` and `note` strings are documentation; nothing reads them.
+- B2 reads `config/execution/Config_MOMF_T1_AB.yaml`, unless `workspace/execution/Config_MOMF_T1_AB.yaml` exists; then that copy and the `Config_MOMF_T1_A.yaml` beside it are read instead.
+- `examples/unescap/` holds the training profile's own config. The `full` profile never reads it.
+
 ## Environment (Windows)
 
-- Pass an existing conda env with `--env-name <env>`, after `run`, and run `python -m ostram` with that env's Python: every stage runs under the calling interpreter. Without the flag, the CLI checks `OSTRAM-env`, the `name:` in `environment.yaml`. Whichever env it checks, it runs `conda env create` if that env is missing and installs any missing dependency into it. `--skip-pull` skips only DVC.
-- The CLI takes conda from `CONDA_EXE` if that names an existing file, otherwise `conda.exe` or `conda` on `PATH`, skipping `.bat` and `.cmd` matches such as those in `condabin`. Set `CONDA_EXE`, or add `<anaconda>\Scripts` to `PATH`.
+- Pass an existing conda env with `--env-name <env>`, after `run`, and run `python -m ostram` with that env's Python: every stage runs under the calling interpreter. Without the flag, the CLI checks the environment named by `name:` in `environment.yaml`. Whichever env it checks, it runs `conda env create` if that env is missing and installs any missing dependency into it. `--skip-pull` skips only DVC.
+- The CLI takes conda from `CONDA_EXE` if that names an existing file. Otherwise it takes the first of `conda.exe`, `conda` and `conda.bat` found on `PATH`. A `.bat` or `.cmd` hit, such as `condabin\conda.bat` of a standard install, resolves to `<root>\Scripts\conda.exe` when that file exists. With no hit it runs the bare name `conda`. An activated conda prompt sets `CONDA_EXE`.
 - Before pipeline commands, set `PYTHONUTF8=1`, as `docs/installation.md` and CI do.
 - If the env holds another editable install of `ostram`, set `PYTHONPATH` to the clone root and run from the clone root. Check with `python -c "import ostram; print(ostram.__file__)"`.
 - Unset every `OSTRAM_*` environment variable unless the task sets one on purpose.
@@ -67,6 +75,7 @@ The pipeline runs in this order:
   `Executables/<S>_0/Pre_processed_<S>_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt`.
 - Scripts you write read their inputs and write new files beside them. They never modify files in `inputs/` or `config/` in place. Deliberate edits to those files are commits and go through the compile gate.
 - Do not add machine-specific paths such as `C:\Users\...` to tracked files.
+- No hash or checksum files, no pins of file bytes in tests, and no re-pinning. Checks compare outputs live. The base-year pin (`apply_base_year_pin`) is a model rule and stays.
 
 ## Git
 
