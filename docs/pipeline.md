@@ -1,6 +1,6 @@
 # Pipeline
 
-```mermaid
+```text
 flowchart TB
     subgraph MAIN["GitHub main · tracked and reproducible"]
         direction LR
@@ -252,7 +252,7 @@ with the number of scenarios already on disk — so, after completing A, pass
 the remaining selection to one invocation:
 
 ```powershell
-python -m ostram --workspace $workspace run --skip-pull --scenarios "B_Optimised_VRE,C_Target_VRE" --a-result-seed $aResult
+python -m ostram --workspace $workspace run --skip-pull --env-name ostram --scenarios "B_Optimised_VRE,C_Target_VRE" --a-result-seed $aResult
 ```
 
 Driving a campaign as one invocation per scenario instead makes B2 — and
@@ -303,13 +303,13 @@ UNESCAP profile does not enable this policy. Validation remains enabled and
 does not apply repairs. `support_bau_transmission.json` beside the final
 parametrization workbook records all 504 technology/year ceilings and sources.
 
-After the [clean-clone installation](installation.md#clean-clone-support-bau),
-run this in the activated `ostram-pr35` environment from the checkout:
+After the [installation](installation.md), run this from the clone in the
+activated environment:
 
 ```powershell
 $workspace = [IO.Path]::GetFullPath('..\support-bau-workspace')
 if (Test-Path -LiteralPath $workspace) { throw 'Choose a new empty workspace path' }
-python -m ostram --profile full --workspace $workspace run --env-name ostram-pr35 --skip-pull --scenarios BAU --verbose
+python -m ostram --profile full --workspace $workspace run --env-name ostram --skip-pull --scenarios BAU --verbose
 if ($LASTEXITCODE -ne 0) { throw 'Support BAU preparation/compilation/solve/export failed' }
 ```
 
@@ -341,18 +341,18 @@ and the newly solved A; no accepted or private prepared inputs are copied in.
 ```powershell
 $workspace = [IO.Path]::GetFullPath('..\w')
 if (Test-Path -LiteralPath $workspace) { throw 'Choose a new empty workspace path' }
-python -m ostram --workspace $workspace run --skip-pull --scenarios A_Calibrated_BAU --verbose
+python -m ostram --workspace $workspace run --skip-pull --env-name ostram --scenarios A_Calibrated_BAU --verbose
 if ($LASTEXITCODE -ne 0) { throw 'A preparation/compilation/solve/export failed' }
 
 $remaining = python -c "from ostram.pipeline.scenarios.registry import load_registry; r=load_registry(); assert len(r.decision_scenarios)==17; print(','.join(n for n in r.decision_scenarios if n!='A_Calibrated_BAU'))"
 if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve the accepted scenario selection' }
 $aResult = Join-Path $workspace 'execution\Executables\A_Calibrated_BAU_0'
-python -m ostram --workspace $workspace run --skip-pull --scenarios $remaining --a-result-seed $aResult --verbose
+python -m ostram --workspace $workspace run --skip-pull --env-name ostram --scenarios $remaining --a-result-seed $aResult --verbose
 if ($LASTEXITCODE -ne 0) { throw 'Remaining portfolio failed' }
 ```
 
-If the isolated Conda environment has a different name, add
-`--env-name <name>` to **both** `run` invocations. Confirm A's solver status and
+If the environment has another name, pass that name with `--env-name` in
+both `run` invocations. Confirm A's solver status and
 feasibility before allowing dependent materialization; an output file's
 existence alone is not evidence of an accepted solve. `--compile-only` cannot
 create this result dependency. For a solver-free single-case preparation check,
