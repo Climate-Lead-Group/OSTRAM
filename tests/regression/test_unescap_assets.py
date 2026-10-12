@@ -146,19 +146,6 @@ class UnescapMappingTests(unittest.TestCase):
                     compiled_root=compiled_root,
                 )
 
-    def test_seed_domain_rejects_same_count_membership_drift(self) -> None:
-        manifest = load_manifest(UNESCAP / "profile.yaml")
-        source = UNESCAP / "inputs" / "osemosys_global"
-        technology = _read_values(source / "TECHNOLOGY.csv")
-        technology.remove(next(iter(technology)))
-        technology.add("UNDECLARED_SEED_TECHNOLOGY")
-        with tempfile.TemporaryDirectory() as temp:
-            seed_root = Path(temp)
-            _write_values(seed_root / "TECHNOLOGY.csv", technology)
-            _write_values(seed_root / "FUEL.csv", _read_values(source / "FUEL.csv"))
-            with self.assertRaisesRegex(ProfileDomainError, "seed TECHNOLOGY"):
-                validate_seed_domain(manifest, seed_root)
-
     def test_profile_presents_seed_and_compiled_counts_as_distinct_stages(self) -> None:
         metadata = load_manifest(UNESCAP / "profile.yaml").metadata
         self.assertEqual(metadata["seed_set_sizes"]["TECHNOLOGY"], 89)

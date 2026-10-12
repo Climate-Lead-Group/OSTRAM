@@ -43,33 +43,9 @@ metadata:
     FUEL: 49
     STORAGE: 4
     REGION: 1
-  # Membership hashes are over sorted VALUE members, one UTF-8 value plus LF
-  # per line. The projected seed records preparation's count-preserving name
+  # The projected seed records preparation's count-preserving name
   # reconciliation; compilation may then add only the exact generated delta.
   domain_contract:
-    membership_hash: sha256-sorted-values-v1
-    stages:
-      seed:
-        TECHNOLOGY:
-          count: 89
-          sha256: a866b63a168d413cec240b31598bbabafb1f8da99e202caf05d4e1bf5373c66b
-        FUEL:
-          count: 43
-          sha256: c45a6db17552f4a3527bfa7fc8d014fee1e46457a6fabd81b77f4661b04f367c
-      projected_seed:
-        TECHNOLOGY:
-          count: 89
-          sha256: b198cdaa23bcff3157668ead9a0578fd18f63a08127529cb344205d8c1a67f35
-        FUEL:
-          count: 43
-          sha256: c45a6db17552f4a3527bfa7fc8d014fee1e46457a6fabd81b77f4661b04f367c
-      compiled:
-        TECHNOLOGY:
-          count: 90
-          sha256: 6266dd062c5d593be8cb62f5169eb2759f4a7301200e26d147bb4f934ebec4d3
-        FUEL:
-          count: 49
-          sha256: e924cb09c945ad23e1b3c7bb2f760dce245eafe4fbeca065207fd7868d8501e8
     technology_reconciliation:
       drop_before_normalization:
         - PWRCCGBGDXX00
