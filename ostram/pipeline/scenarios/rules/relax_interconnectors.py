@@ -13,7 +13,8 @@ per-link overrides, or full unconstrain (9999).
 
 RULE
 ----
-For each TRN tech in TECH_TYPES.csv (category = INTERCONNECTORS):
+For each TRN tech in TECH_TYPES.csv (category = INTERCONNECTORS), the copy
+of config/scenarios/technology_types.csv staged in the run folder:
 
     IF tech is listed in yaml.overrides:
         MaxCapInv(tech, year) = interpolated override value

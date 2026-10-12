@@ -13,7 +13,7 @@ it is purely a "policy injection" layer.
 RULE
 ----
 For each entry in the YAML (floors and ceilings):
-    Expand the tech pattern + cr to matching techs in TECH_TYPES.csv.
+    Expand the tech pattern + cr to matching techs in technology_types.csv.
     Interpolate the schedule to all horizon years.
     Write the value into the appropriate parameter row:
         min_capacity  → TotalAnnualMinCapacityInvestment (GW)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-3_update_ao_from_extensions.py  (v18 / pipeline stage 3)
+update_ao_from_extensions.py    (v18 / pipeline stage 3)
 
 Reads the freshly generated, maintained-decision-overlaid
 OSTRAM_AO_Extensions.xlsx and the four A-O parametrization workbooks, then
@@ -10,11 +10,11 @@ writes "_wvaligned" copies of each A-O workbook. Each output combines:
   * a wholesale-replaced Profiles sheet drawn from WV             (Step 2c)
 
 Pipeline:
-  1_merge_timeslices_into_WV.py    timeslices source     -> WV
-  2_extract_ao_extensions.py       WV  + A-O             -> Extensions xlsx
-  apply_ao_extension_decisions.py  maintained decisions  -> overlaid Extensions
-  3_update_ao_from_extensions.py   Extensions + A-O      -> *_wvaligned    <- THIS
-  4_apply_manual_fixes.py          *_wvaligned           -> *_wvaligned_v2
+  merge_timeslices.py              timeslices source     -> WV
+  extract_ao_extensions.py         WV  + A-O             -> Extensions xlsx
+  ao_extension_decisions.py        maintained decisions  -> overlaid Extensions
+  update_ao_from_extensions.py     Extensions + A-O      -> *_wvaligned    <- THIS
+  apply_manual_fixes.py            *_wvaligned           -> *_wvaligned_v2
 
 Design B (non-negotiable)
 -------------------------

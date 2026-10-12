@@ -1,6 +1,6 @@
 """Apply maintained AO extension decisions to a freshly generated review file.
 
-``2_extract_ao_extensions.py`` owns the mechanically derived columns and rows.
+``extract_ao_extensions.py`` owns the mechanically derived columns and rows.
 This helper overlays only the five human-decision fields maintained in
 ``OSTRAM_Scenario_Inputs.xlsx::AO_Extension_Decisions`` and excludes generated
 copies of ``Interconnector_Params`` rows that are applied by later governed

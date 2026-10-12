@@ -8,7 +8,7 @@ output activity ratio in the A-O_AR files).
 
 Background
 ----------
-A2_AddTx injects the internal families (RNWTRN/RNWNLI/RNWRPO, PWRTRN/TRNNLI/
+A2 (transmission.py) injects the internal families (RNWTRN/RNWNLI/RNWRPO, PWRTRN/TRNNLI/
 TRNRPO) with output activity = 1.0 -> 0% loss, which is not physical. The
 interconnectors already carry per-corridor losses (OAR 0.93-0.98) in
 A-O_AR_Projections "Demand Techs" (year-indexed Direction=Output rows) and

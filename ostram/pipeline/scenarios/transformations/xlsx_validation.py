@@ -2,8 +2,7 @@
 Shared helpers for validating A-O_Parametrization.xlsx upper-bound invariants.
 
 Used by:
-    - Z_AUX_apply_parametrization_review.py (consistency sweep after review writes)
-    - B1b_Pre_solver_validation.py            (pre-solver validation in B1)
+    - pre_solver_validation.py  (pre-solver validation in A3 stage 1b)
 
 Constants, indexing, and the cumulative-capacity sweep originated in
 Z_AUX_apply_parametrization_review.py. The activity-vs-capacity helpers

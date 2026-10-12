@@ -1,6 +1,6 @@
 """
-inject_DaysInDayType.py
-=======================
+days_in_day_type.py
+===================
 
 Adjusts the DaysInDayType block of an OSeMOSYS .txt datafile in place.
 

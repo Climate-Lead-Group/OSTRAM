@@ -80,7 +80,7 @@ CATEGORY_FALLBACKS = {
 }
 
 # WV sheets scanned for tech codes when building / verifying the roster.
-# Mirrors V17_TECH_SHEETS in 1_merge_timeslices_into_WV.py.
+# Mirrors V17_TECH_SHEETS in merge_timeslices.py.
 WV_TECH_SHEETS = [
     "Primary_Techs", "Secondary_Techs", "Capacities_CF",
     "VariableCost", "Demand_Techs", "Emissions",

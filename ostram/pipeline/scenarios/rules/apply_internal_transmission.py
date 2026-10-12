@@ -18,12 +18,12 @@ for the six internal-transmission families (10 nodes each = 60 techs):
 
 Background / why a late A3 stage
 --------------------------------
-A2_AddTx injects these families flat from the YAML (CapEx 100, FOM 4, ResCap 5,
+A2 (transmission.py) injects these families flat from the YAML (CapEx 100, FOM 4, ResCap 5,
 life 20) into `Demand Techs` / `Fixed Horizon Parameters`. But:
   * ResidualCapacity is a flat 5 GW placeholder for every node (Maldives ~=
     India-West), which is not physical.
   * OperationalLife is rewritten to 50/20 by the Stage-1 template merge
-    (3_update_ao_from_extensions.py), so a YAML/snapshot life edit does NOT
+    (update_ao_from_extensions.py), so a YAML/snapshot life edit does NOT
     stick.
   * There is no RE-vs-non-RE cost differentiation.
 

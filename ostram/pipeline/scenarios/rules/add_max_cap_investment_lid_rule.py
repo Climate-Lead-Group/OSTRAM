@@ -70,10 +70,10 @@ invariant MinCapInv < MaxCapInv whenever MinCapInv > 0.
 
 GENERATION FILTER
 -----------------
-"Generation" is defined by TECH_TYPES.csv (columns: 'Technology (PWR)',
-'Technology'). Only techs categorized as 'GENERATION' are eligible. This
-correctly excludes storage (e.g. PWRSDSLKAXX), interconnectors, primary
-fuels, etc., which need separate lid policies.
+"Generation" is defined by config/scenarios/technology_types.csv (columns:
+'Technology (PWR)', 'Technology'). Only techs categorized as 'GENERATION'
+are eligible. This correctly excludes storage (e.g. PWRSDSLKAXX),
+interconnectors, primary fuels, etc., which need separate lid policies.
 
 DEMAND-ANCHORED RAMP
 --------------------
@@ -86,7 +86,7 @@ reference year (default 2024) to obtain mult(cr, y).
 Cell-by-cell, for each MaxInv cell of an ALLOWED tech:
     1. Empty (None) or 9999 placeholder  ->  proposed = lid
     2. Other explicit value (manual cal)  ->  proposed = current value (preserved)
-    3. V1 UNTIE RULE (cf. B1b_Pre_solver_validation.py):
+    3. V1 UNTIE RULE (cf. check V1 of pre_solver_validation.py):
          if MinCapacityInvestment(tech, y) >= proposed:
              proposed = MinCapacityInvestment(tech, y) * UNTIE_MULTIPLIER
 
@@ -170,8 +170,8 @@ DEFAULT_TARGET_SHEETS = ["Secondary Techs"]
 PARAM_FILE_NAME = "A-O_Parametrization.xlsx"
 
 # Optional YAML override. The scenario orchestrator detects this
-# constant and stages the matching YAML from rules_scripts/configs/<scenario>/
-# alongside this script when the scenario provides one. When present, its
+# constant, copies the matching YAML from config/scenarios/<scenario>/ into
+# the run folder and passes it with --yaml when the scenario provides one. When present, its
 # values override the module-level constants below for the lifetime of this
 # process. Absent YAML = current module defaults remain in effect (so BAU and
 # scenarios without a YAML override behave exactly as before).
@@ -199,7 +199,8 @@ COUNTRY_REGION_SLICE = slice(6, 11)  # for length-11 PWR* codes: chars 6..10
 # ---------------------------------------------------------------------------
 # Tech-type filter — only change GENERATION technologies
 # ---------------------------------------------------------------------------
-# TECH_TYPES.csv lives next to this script. It lists techs by category
+# The technology taxonomy, config/scenarios/technology_types.csv, is read
+# through resolve_paths().interconnector_taxonomy. It lists techs by category
 # (GENERATION, INTERCONNECTORS, STORAGE_LONG, STORAGE_SHORT, etc.). Only
 # techs in GENERATION_CATEGORY are eligible for the lid + untie rule.
 # Set RESTRICT_TO_GENERATION = False to fall back to the prior behavior
@@ -697,9 +698,9 @@ def lid_pct_for_year(year: int) -> float:
 
 
 def load_generation_techs(tech_types_path: Path) -> set:
-    """Load TECH_TYPES.csv and return the set of techs in GENERATION_CATEGORY.
+    """Load the technology taxonomy and return the techs in GENERATION_CATEGORY.
 
-    Raises FileNotFoundError if the file is missing — TECH_TYPES.csv is the
+    Raises FileNotFoundError if the file is missing. The taxonomy is the
     authoritative source for what counts as a generation tech, and silently
     falling back to a heuristic would be a footgun. To opt out, set
     RESTRICT_TO_GENERATION = False at the top of this script.
@@ -1420,8 +1421,9 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
     input_dir = Path(input_dir)
     sheets = sheets or DEFAULT_TARGET_SHEETS
 
-    # Optional YAML override (per-scenario). Located next to this script —
-    # the orchestrator stages it there from rules_scripts/configs/<scenario>/.
+    # Optional YAML override (per-scenario). The orchestrator passes the copy
+    # it staged from config/scenarios/<scenario>/; without --yaml, the file
+    # next to this script is read.
     if yaml_path is None:
         yaml_path = Path(__file__).resolve().parent / YAML_FILE_NAME
     yaml_loaded = False
@@ -1435,9 +1437,9 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
     if not paramfile.exists():
         raise FileNotFoundError(f"{paramfile} not found")
 
-    # Load the GENERATION tech list. TECH_TYPES.csv is shared by other A3
-    # stages (e.g. add_ao_c2a.py), so it lives in A3_process/, one level
-    # above this script (which now lives in A3_process/rules_scripts/).
+    # Load the GENERATION tech list from the technology taxonomy,
+    # config/scenarios/technology_types.csv, which other A3 stages
+    # (e.g. add_ao_c2a.py) also read.
     generation_techs = None
     tech_types_path = None
     if RESTRICT_TO_GENERATION:

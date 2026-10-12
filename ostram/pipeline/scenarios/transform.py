@@ -13,11 +13,12 @@ Pipeline:
   Stage 0    materialize scenario template  v18 -> flat v17-shaped per scenario
   Stage 1    scripts 1-5                    AO/WV alignment pipeline, with
                                             maintained AO decision overlay
-  Stage 1b   A0_insert_reserve_margin       adds System Parameters sheet
-             add_max OLD (8ee8056)          fills 9999 / zeroes
-             add_max NEW (2be1616)          flips Projection.Mode
-             fix_elc_pmode_revert           reverts 20 ELC*01 PM cells
-             B1b_Pre_solver_validation      V2 fix (PWRHYDLKAXX)
+  Stage 1b   insert_reserve_margin          adds System Parameters sheet
+             add_max_capacity_investment_rule --fill-zeros
+                                            fills 9999 / zeroes and flips
+                                            Projection.Mode
+             fix_elc_pmode_revert           sets ELC*01 PM cells to EMPTY
+             pre_solver_validation          V2 fix (PWRHYDLKAXX)
   Stage 2    add_ao_c2a                     adds CapacityToActivityUnit
   Stage 2.5  fix_pwrpet_clear               clears 336 PWRPETBGDXX cells
   Stage 3    fix_trn_residuals              + clear_stale_unbinding_caps
@@ -87,7 +88,7 @@ def _configure_profile_paths() -> None:
 # =============================================================================
 DEFAULT_SCENARIO = "BAU"
 
-# Don't auto-clean the runtime workdir (A3_process/_run_<ts>/) — useful for debugging.
+# Don't auto-clean the runtime workdir (workspace/scenarios/_run_<ts>/); useful for debugging.
 KEEP_WORKDIR_DEFAULT = False
 # =============================================================================
 
@@ -312,9 +313,10 @@ def _resolve_script_yaml(script_name: str, scenario: str) -> Path | None:
     """Locate the YAML config to use for `script_name` under `scenario`.
 
     Resolution order:
-      1. rules_scripts/configs/<scenario>/<YAML_FILE_NAME>   (per-scenario override)
-      2. rules_scripts/<YAML_FILE_NAME>                       (default next-to-script)
-      3. None — script has no YAML or no file present.
+      1. config/scenarios/<scenario>/<YAML_FILE_NAME>
+      2. <YAML_FILE_NAME> next to the rule module in
+         ostram/pipeline/scenarios/rules/
+      3. None: the script has no YAML or no file is present.
     """
     src = RULES_SCRIPTS_DIR / script_name
     yaml_name = _read_script_yaml_name(src)
@@ -703,7 +705,7 @@ def stage_interconnector_costs(
 def stage_internal_transmission(s5: Path) -> None:
     """WS-3 D5: calibrate the six INTERNAL (intra-node) transmission families.
 
-    A2_AddTx injects RNWTRN/RNWNLI/RNWRPO (RE) and PWRTRN/TRNNLI/TRNRPO (non-RE)
+    A2 (transmission.py) injects RNWTRN/RNWNLI/RNWRPO (RE) and PWRTRN/TRNNLI/TRNRPO (non-RE)
     flat (CapEx 100, FOM 4, ResidualCapacity 5, life 20); the Stage-1 template
     merge then rewrites their OperationalLife to 50/20. This late stage makes
     Config_country_codes.yaml + a desk-checked per-node residuals file the source

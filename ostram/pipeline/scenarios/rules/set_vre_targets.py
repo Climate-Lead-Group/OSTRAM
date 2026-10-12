@@ -278,7 +278,7 @@ def load_bau_total_production(bau_results_path: Path, gen_techs: set) -> dict:
     """Read BAU production and return {(cr, year): total_pj}.
 
     Aggregates production across electricity GENERATION technologies (per
-    TECH_TYPES.csv) per country-region per year. Country-region is extracted
+    technology_types.csv) per country-region per year. Country-region is extracted
     from the TECHNOLOGY column (chars 6..11 for 11-char PWR* codes).
 
     Reads either otoole's 'ProductionByTechnology.csv' or the combined B2
@@ -313,7 +313,7 @@ def load_bau_total_production(bau_results_path: Path, gen_techs: set) -> dict:
                         as_index=False)[value_col].max()
 
     # Keep only electricity generation techs (length-11 PWR* in the
-    # GENERATION category from TECH_TYPES.csv).
+    # GENERATION category from technology_types.csv).
     df = df[df[PROD_COL_TECH].str.len() == PWR_TECH_LENGTH]
     df = df[df[PROD_COL_TECH].isin(gen_techs)]
     df["_cr"] = df[PROD_COL_TECH].str[COUNTRY_REGION_SLICE]
@@ -431,7 +431,7 @@ def interpolate_production(total_prod: dict, cr: str, years: list) -> dict:
 # Tech-type loading and pattern matching
 # ---------------------------------------------------------------------------
 def load_generation_techs(tech_types_path: Path) -> set:
-    """Load TECH_TYPES.csv and return the set of GENERATION techs."""
+    """Load technology_types.csv and return the set of GENERATION techs."""
     if not tech_types_path.is_file():
         raise FileNotFoundError(f"TECH_TYPES.csv not found at {tech_types_path}")
     df = pd.read_csv(tech_types_path)
@@ -1028,7 +1028,7 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
         )
     config = load_config(yaml_path)
 
-    # Load TECH_TYPES.csv — needed both to gate target tech matching and to
+    # Load technology_types.csv, needed both to gate target tech matching and to
     # filter the BAU production aggregate to electricity generation only.
     tech_types_path = resolve_paths().interconnector_taxonomy
     gen_techs = load_generation_techs(tech_types_path)
