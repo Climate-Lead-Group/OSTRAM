@@ -2,7 +2,7 @@
 relax_interconnectors.py
 ========================
 
-Independent patch — relaxes TotalAnnualMaxCapacityInvestment for
+Independent rule: relaxes TotalAnnualMaxCapacityInvestment for
 INTERCONNECTOR (TRN*) technologies beyond their ResidualCapacity
 baseline, controlled by a YAML configuration file.
 

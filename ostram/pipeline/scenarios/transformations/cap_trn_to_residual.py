@@ -33,7 +33,7 @@ across the horizon (no expansion of cross-border interconnects), so:
 
 Scope
 -----
-ONLY patches the 18 TRN* techs in TRN_TECHS (allowlist for safety).
+Changes only the 18 TRN* techs in TRN_TECHS (allowlist for safety).
 For each, requires all three parameter rows present:
   - ResidualCapacity              (read-only, source for MaxCap copy)
   - TotalAnnualMaxCapacity        (overwritten with ResCap values)
@@ -53,11 +53,11 @@ Notable cases
   identical (MaxCap=0 dominates) but worth knowing -- printed
   prominently in the run summary.
 - TRNINDSOLKAXX, TRNLKAXXMDVXX have ResCap=0 (never-built lines).
-  These too will be capped at MaxCap=0 after the patch.
+  These too will be capped at MaxCap=0 after this step.
 
 Output
 ------
-- Patched workbook written as a sibling with `_POST_TRN_CAP` appended to the
+- Changed workbook written as a sibling with `_POST_TRN_CAP` appended to the
   stem. Long mutable-workspace paths are deterministically compacted while
   retaining that final-stage identity. The input file is left untouched.
 - Per-tech summary printed to stdout.
@@ -259,7 +259,7 @@ def apply_trn_caps(
     print()
 
     if log:
-        print(f"Patch summary ({len(log)} techs, "
+        print(f"Change summary ({len(log)} techs, "
               f"{sum(a + b for _, _, a, b, _ in log)} cells changed):")
         print(f"  {'Tech':16s} {'ResCap':28s} "
               f"{'MaxCap cells':>12s} {'MaxCapInv cells':>16s}")
@@ -290,7 +290,7 @@ def main() -> None:
     p = argparse.ArgumentParser(description=__doc__.split("\n")[2])
     p.add_argument(
         "--input", type=Path, default=DEFAULT_INPUT,
-        help=f"Path to the workbook to patch (default: {DEFAULT_INPUT})",
+        help=f"Path to the workbook to change (default: {DEFAULT_INPUT})",
     )
     p.add_argument(
         "--dry-run", action="store_true",
