@@ -2,12 +2,10 @@
 
 ## 1. Install the editable package
 
-From the project root:
+Follow the [installation](installation.md) page, then check from the project
+root:
 
 ```powershell
-conda env create -f environment.yaml
-conda activate OSTRAM-env
-python -m pip install -e .
 python -m ostram inspect-resources
 ```
 
@@ -21,8 +19,8 @@ an external working directory, provide the project bundle explicitly:
 
 ```powershell
 python -m ostram `
-  --project-root C:\path\to\OSTRAM `
-  --workspace "D:\OSTRAM work\run α" `
+  --project-root <path to the clone> `
+  --workspace "<path to a workspace>" `
   inspect-resources
 ```
 
@@ -44,7 +42,7 @@ names.
 ## 3. Run a solver-free preparation gate
 
 ```powershell
-python -m ostram run --skip-pull --compile-only --scenarios A_Calibrated_BAU
+python -m ostram run --skip-pull --compile-only --env-name ostram --scenarios A_Calibrated_BAU
 ```
 
 `--compile-only` reaches the final preprocessed text inputs and stops before
@@ -63,7 +61,7 @@ After selecting and configuring a solver in
 `config/execution/Config_MOMF_T1_AB.yaml`:
 
 ```powershell
-python -m ostram run --skip-pull --scenarios A_Calibrated_BAU
+python -m ostram run --skip-pull --env-name ostram --scenarios A_Calibrated_BAU
 ```
 
 The runner conditionally prepares A1/A2 snapshots, materializes the exact

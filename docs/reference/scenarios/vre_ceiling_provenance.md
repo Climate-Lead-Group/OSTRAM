@@ -14,7 +14,7 @@ flagged honestly. Primary/official sources preferred; URLs checkable.
 **Label correction (important):** the historical decision table
 `config/scenarios/sensitivities/vre_ceilings.csv`, tracked at commit `7a27787` and deleted since,
 tagged all solar "NISE-2025" and all wind "NIWE 150 m" in its `atlas_source` column, but
-**NISE and NIWE are MNRE-India bodies (India only)** — the five non-India nodes (BGD, LKA, NPL, BTN, MDV)
+**NISE and NIWE are MNRE-India bodies (India only)**. The five non-India nodes (BGD, LKA, NPL, BTN, MDV)
 must be cited to their own national studies or a uniform atlas. The applied values are the
 `vre_ceilings` section of `config/profiles/full.yaml`.
 

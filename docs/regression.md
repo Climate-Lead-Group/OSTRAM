@@ -37,8 +37,7 @@ The 17 decision scenarios, in the order of `EXPECTED_DECISION_SCENARIOS` in
 
 The A-result seed for the C dependency is the solved `A_Calibrated_BAU`
 result folder passed with `--a-result-seed`. The comparator and seed
-locations are recorded with the external evidence. They are read-only
-validation inputs, not production dependencies.
+locations are recorded with the external evidence. They are read-only validation inputs.
 
 ## Maintained checks
 

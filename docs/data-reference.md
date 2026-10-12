@@ -103,7 +103,7 @@ Example: `CO2BGD` = CO2 emissions for Bangladesh. Note `OG_csvs_inputs/EMISSION.
 
 SET files define the elements of each OSeMOSYS set. They have a single column:
 
-```csv
+```text
 VALUE
 MINCOABGD
 MINCOABTN
@@ -132,7 +132,7 @@ Parameter files contain data values indexed by OSeMOSYS dimensions. The column s
 
 **4-column format** (Region, Technology, Year, Value):
 
-```csv
+```text
 REGION,TECHNOLOGY,YEAR,VALUE
 GLOBAL,PWRBCKBGDXX,2023,999999.0
 GLOBAL,PWRBIOBGDXX,2023,1500.0
@@ -142,7 +142,7 @@ Used by: `CapitalCost`, `FixedCost`, `VariableCost`, `ResidualCapacity`, `TotalA
 
 **6-column format** (Region, Technology, Fuel, Mode, Year, Value):
 
-```csv
+```text
 REGION,TECHNOLOGY,FUEL,MODE_OF_OPERATION,YEAR,VALUE
 GLOBAL,PWRBIOBGDXX,BIOBGDXX,1,2023,3.67
 ```

@@ -44,6 +44,7 @@ Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
    reference/scenarios/scenario_catalogue
    history/a1-b1-transformation-contract
    reference/scenarios/vre_ceiling_provenance
+   reference/scenarios/interconnector_direction_references
 
 
 Indices and tables
