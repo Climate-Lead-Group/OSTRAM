@@ -24,6 +24,7 @@ Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
    country-management
    auxiliary-tools
    rules
+   scenario-edits
 
 .. toctree::
    :maxdepth: 2
