@@ -33,18 +33,6 @@ The authoritative counts are stage-specific:
 | Projected seed | 89 | 43 | count-preserving preparation reconciliation |
 | Prepared/compiled | 90 | 49 | valid B2 CSV domain before matrix/solver work |
 
-Membership hashes use `sha256-sorted-values-v1`: sorted `VALUE` members, each encoded as
-UTF-8 and terminated by LF.
-
-| Stage / set | SHA-256 |
-|---|---|
-| Seed TECHNOLOGY | `a866b63a168d413cec240b31598bbabafb1f8da99e202caf05d4e1bf5373c66b` |
-| Seed FUEL | `c45a6db17552f4a3527bfa7fc8d014fee1e46457a6fabd81b77f4661b04f367c` |
-| Projected-seed TECHNOLOGY | `b198cdaa23bcff3157668ead9a0578fd18f63a08127529cb344205d8c1a67f35` |
-| Projected-seed FUEL | `c45a6db17552f4a3527bfa7fc8d014fee1e46457a6fabd81b77f4661b04f367c` |
-| Compiled TECHNOLOGY | `6266dd062c5d593be8cb62f5169eb2759f4a7301200e26d147bb4f934ebec4d3` |
-| Compiled FUEL | `e924cb09c945ad23e1b3c7bb2f760dce245eafe4fbeca065207fd7868d8501e8` |
-
 Preparation first removes four duplicate legacy `*00` technology identities, normalizes
 the declared `PWR...01` identities, removes ten matrix-filtered identities, and adds the
 fourteen A1/A2 canonical dispatch/transmission identities listed in `profile.yaml`. That
@@ -71,7 +59,6 @@ Source:
 | Property | Source | Integrated seed |
 |---|---:|---:|
 | Size | 257,429 bytes | 162,918 bytes |
-| SHA-256 | `f9e3ed1fc720c3c2906cd3ffc18e0023ea18df7f977260580c6d7f37a82019a8` | `4cf3323f28fe3da2c552433a9083ee4d4ee03d7c249a14d1925fa4afb3b41253` |
 | `Restrictions` data rows | 2,537 generated rows | 0; header retained |
 
 The cleanup was archive-preserving rather than a workbook resave. The source and result
@@ -89,9 +76,8 @@ dispatch/transmission technologies, four storage technologies, and the single ph
 interconnector `TRNBGDXXINDEA`. Irrelevant full-model rows were not restored.
 
 `config/scenarios/ao_extension_decisions.csv` contains only the live reduced decisions:
-`PWRNGSBGDXX` and `PWRSHPINDEA`. The reduced base-year pin authority contains 510 rules
-over 50 technologies and has SHA-256
-`984c3885f7bcee992d634c602402e3c6183a2f3bc8a1d8a0620ae214c1a1d872`.
+`PWRNGSBGDXX` and `PWRSHPINDEA`. The reduced base-year pin table contains 510 rules
+over 50 technologies.
 
 The profile also carries the required preparation sources absent from the initial asset
 copy: `Tech_Country_Matrix.xlsx`, the reduced timeslice workbook, country centerpoints,
@@ -188,11 +174,11 @@ cycling, so it is scoped to C, using an unshared parameter copy. Final acceptanc
 reruns A/B and regenerates C from the newly exported A result with these settings.
 
 Training also enables the existing `reconcile_variable_cost_exports` policy.
-The first A export omitted about 60.775 MUSD of compiled default variable costs;
+The first A export omitted some compiled default variable costs;
 there were no duplicate variable-cost keys. Reconciliation retains the raw CSVs
 and accounts for those defaults in the combined cost tables. When comparing
 reported cost to the CBC objective, include the constant recorded in GLPK's LP
-comment (26,631.6286009204 MUSD for A), which GLPK omits from the solver objective.
+comment, which GLPK omits from the solver objective.
 The acceptance residual check distinguishes CBC's solver tolerances from the
 rounding of its text solution: exported values have about eight significant
 digits and are checked at `1e-7` scaled row/bound residual, with CBC-marked
@@ -229,12 +215,11 @@ production text inputs:
 - `B_Opt_TradeCap15`, `B_Opt_TxCap150`
 - `C_Target_VRE`, `C_Target_VRE_Clipped`
 
-All 15 matched the accepted governed manifest byte-for-byte. The governed manifest
-SHA-256 was `9c5c01526049d38cdfe9cedb0505c10ead1b09a83514a7877f98495620617aab`.
+All 15 matched the accepted manifest byte for byte.
 No solver was invoked during any integration gate.
 
 The later release-readiness continuation was explicitly authorized to run one reduced
-Windows CBC solve. Its environment, duration, hashes, and genuine infeasible linear-
+Windows CBC solve. Its environment, duration and genuine infeasible linear-
 relaxation boundary are recorded separately in
 [`release-readiness.md`](release-readiness.md). That result led to fail-closed CBC status
 propagation; it did not change any model authority or the accepted full compile artifacts.
