@@ -294,7 +294,7 @@ def _assert_finite_caps_not_below_residual(residuals, caps):
 
 
 class InterconnectorAuthorityWorkbookTests(unittest.TestCase):
-    def test_v18_contains_exact_dense_18_by_28_authority_and_digest(self) -> None:
+    def test_v18_contains_exact_dense_18_by_28_authority(self) -> None:
         values, metadata, duplicates = _read_authority_rows(TEMPLATE)
         self.assertEqual(duplicates, [])
         self.assertEqual(set(values), set(AUTHORITY))
