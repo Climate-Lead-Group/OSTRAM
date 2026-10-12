@@ -11,7 +11,7 @@ profile engine. Generated workspaces remain outside `examples/unescap/`.
 | Profile engine component | `49bf4c6a4ade7a9f0e88ce7625964ab071ea123d` (cherry-picked here as `c6293c2`) |
 | Training operations component | `1f323b17d55574e465fcd9263843847491e217d3` (cherry-picked here as `15573ba`) |
 | UNESCAP seed/assets component | `cecf7f776d9890f5897fa83d66d083c7f7f55716` (cherry-picked here as `ef66110`) |
-| Asset source repository | `OSTRAM_training_source`, read-only source commit `6e00e8b00144b6859344f54022df34417c075ae9` |
+| Asset source | The earlier training repository, at its source commit `6e00e8b00144b6859344f54022df34417c075ae9`. It is kept outside this repository. |
 
 The integrated manifest uses only explicit `profile:`, `project:`, and `package:`
 authorities. Missing profile assets fail closed; a same-named full-model resource is never
@@ -20,7 +20,8 @@ resources are declared explicitly.
 
 ## Seed inputs and stage-specific domain authority
 
-The 64 OSeMOSYS Global CSVs came from `t1_confection/OG_csvs_inputs/*.csv`. Git's
+The 64 OSeMOSYS Global CSVs came from the `OG_csvs_inputs/*.csv` folder of the earlier
+training repository at that commit. Git's
 repository-wide text normalization changes CRLF to LF where applicable but does not change
 CSV members or values.
 
@@ -64,7 +65,7 @@ undeclared additions, and removals all fail closed.
 ## Scenario workbook transformation
 
 Source:
-`t1_confection/A3_process/SOASIA_OSeMOSYS_Template_v18.xlsx` at source commit
+`SOASIA_OSeMOSYS_Template_v18.xlsx` in the earlier training repository at source commit
 `6e00e8b00144b6859344f54022df34417c075ae9`.
 
 | Property | Source | Integrated seed |
