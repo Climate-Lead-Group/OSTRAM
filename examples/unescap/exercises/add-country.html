@@ -195,7 +195,7 @@
 
   <h3>Configure <code>profile.yaml</code> for the dashboard</h3>
 
-  <p>Before preparing the workspace, the new country&rsquo;s metadata must be present in <code>examples/unescap/profile.yaml</code>. The dashboard reads this file to know which countries, interconnectors, and storage technologies to display. Editing <code>profile.yaml</code> after <code>example prepare</code> makes the next command prepare the workspace again from the sources, so make any change now.</p>
+  <p>Before preparing the workspace, the new country&rsquo;s metadata must be present in <code>examples/unescap/profile.yaml</code>. The dashboard reads this file to know which countries, interconnectors, and storage technologies to display. Editing <code>profile.yaml</code> after <code>example prepare</code> keeps the workspace while the set of mutable authorities stays the same. If that set changes, the next command moves the workspace to a dated folder beside it (<code>unescap_previous_&lt;UTC timestamp&gt;</code>) and prepares it again from the sources.</p>
 
   <div class="callout tip">
     <div class="tag">Add the metadata yourself</div>

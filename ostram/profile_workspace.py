@@ -103,6 +103,34 @@ def _authority_digest(source: Path, kind: str) -> str:
     return digest.hexdigest()
 
 
+def _keep_or_move_workspace(target: Path, stamp: dict, manifest: ProfileManifest) -> bool:
+    """Handle a workspace whose stamp records another manifest digest.
+
+    When the manifest's mutable authority roles equal the stamp's, the
+    workspace is kept, the stamp takes the new digest and the result is True.
+    Otherwise the workspace moves to a dated folder beside it and the result
+    is False.
+    """
+
+    mutable_roles = {
+        role for role, spec in manifest.authorities.items() if spec.mutable
+    }
+    recorded = stamp.get("mutable_authorities")
+    if isinstance(recorded, dict) and set(recorded) == mutable_roles:
+        stamp["manifest_sha256"] = manifest.digest
+        (target / STAMP_NAME).write_text(
+            json.dumps(stamp, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        print(f"[profile] Kept {target} (manifest changed, same mutable authority roles)")
+        return True
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    previous = target.with_name(f"{manifest.profile_id}_previous_{timestamp}")
+    os.replace(target, previous)
+    print(f"[profile] Mutable authority roles changed; previous workspace moved to {previous}")
+    return False
+
+
 def prepare_profile(
     manifest: ProfileManifest,
     *,
@@ -144,10 +172,8 @@ def prepare_profile(
                 raise FileExistsError(
                     f"profile workspace already exists: {target}; pass --reset to replace it"
                 )
-            print(
-                f"[profile] Re-preparing {target} "
-                f"(manifest changed since preparation)"
-            )
+            if _keep_or_move_workspace(target, stamp, manifest):
+                return prepared_profile(manifest, paths=paths)
 
     root.mkdir(parents=True, exist_ok=True)
     staging.mkdir()
@@ -229,12 +255,10 @@ def prepared_profile(
         )
 
     stamp = _validate_stamp(target, manifest)
-    if stamp.get("manifest_sha256") != manifest.digest:
-        print(
-            f"[profile] Re-preparing {target} "
-            f"(manifest changed since preparation)"
-        )
-        return prepare_profile(manifest, paths=paths, reset=True)
+    if stamp.get("manifest_sha256") != manifest.digest and not _keep_or_move_workspace(
+        target, stamp, manifest
+    ):
+        return prepare_profile(manifest, paths=paths)
     mapping = stamp.get("mutable_authorities")
     source_digests = stamp.get("mutable_source_sha256")
     if not isinstance(mapping, dict) or set(mapping) != mutable_roles:
