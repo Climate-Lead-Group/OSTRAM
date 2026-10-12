@@ -135,4 +135,4 @@ accounting" of the README sheet in `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
 
 ---
 
-**NISE vintage note (added 2026-07-12).** The India solar ceilings (150 / 25 / 600 / 500 / 650 GW) are deliberately-round **non-binding headroom guards** — set well above B_Opt's actual buildout (e.g. INDNO 600 vs buildout 319; INDWE 650 vs 185; INDEA 150 vs 19) and benchmarked to the **NISE-2025 order of magnitude**, *not* a precise NISE state-aggregation and *not* an average of the 2014/2025 vintages (the round hundreds are the tell; a real aggregation gives messy decimals). Because India-solar buildout sits far below these caps, their exact value **does not affect any result** — only the three *binding* non-India clips (LKA solar 16, BGD wind 3, MDV wind 0) require precise sourcing. So the "which NISE vintage?" question is immaterial for the India nodes.
+**NISE vintage note (added 2026-07-12).** The India solar ceilings (INDEA 150, INDNE 25, INDNO 600, INDSO 500 and INDWE 650 GW) are round values benchmarked to the order of magnitude of NISE-2025. They are neither a precise aggregation of NISE state values nor an average of the 2014 and 2025 vintages.
