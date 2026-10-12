@@ -1,14 +1,15 @@
 """Careful reserve-margin repair with per-country-region firm capacity caps.
 
-This is a more conservative sibling to patch_reserve_margin_repair.py.
 It does not edit the input datafile in place.
 
-Main differences:
+Behaviour:
 - Reserve tags can still be added for PWRBCK and PWRCCS.
 - TotalAnnualMaxCapacity (stock) and TotalAnnualMaxCapacityInvestment (flow)
   are adjusted independently.
 - Firm fossil cap values come from per-country-region fallbacks.
-- Only sentinel values are replaced by default: 0 and 9999.
+- Only sentinel values are replaced: TotalAnnualMaxCapacity where it is 0,
+  and TotalAnnualMaxCapacityInvestment where it holds one of
+  --sentinel-values, by default 0 and 9999.
 - Suspicious stock/flow combinations are reported as warnings.
 """
 

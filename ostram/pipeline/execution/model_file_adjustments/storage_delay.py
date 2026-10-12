@@ -1,7 +1,7 @@
 #! python3
 """
 storage_delay.py
-======================
+================
 
 Non-destructive storage-delay adjustment for OSTRAM preprocessed datafiles.
 

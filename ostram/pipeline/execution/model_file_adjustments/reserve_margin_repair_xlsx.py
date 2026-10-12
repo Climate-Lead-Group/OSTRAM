@@ -1,8 +1,9 @@
 """Careful reserve-margin repair using an XLSX fallback workbook.
 
-This script is the XLSX sibling of patch_reserve_margin_repair_careful.py.
 It keeps stock and flow capacity limits separate and only replaces sentinel
-values, by default 0 and 9999.
+values: TotalAnnualMaxCapacity where it is 0, and
+TotalAnnualMaxCapacityInvestment where it holds one of --sentinel-values,
+by default 0 and 9999.
 """
 
 from __future__ import annotations

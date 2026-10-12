@@ -1,8 +1,8 @@
 """
-scenario_edits.py  --  OSTRAM sensitivity post-A3 scenario edits   (CLG / OSTRAM)
-========================================================================
+scenario_edits.py  --  builds OSTRAM derived scenarios   (CLG / OSTRAM)
+=======================================================================
 
-Builds a sensitivity scenario's A-O_Parametrization.xlsx by branching from
+Builds a derived scenario's A-O_Parametrization.xlsx by branching from
 the ``base_scenario`` declared by its canonical registry/scenario-edit contract and
 applying, in order:
 
