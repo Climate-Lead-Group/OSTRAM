@@ -122,7 +122,7 @@ def make_output_path(input_path: Path) -> Path:
     )
 
 
-def patch_workbook(
+def apply_trn_caps(
     input_path: Path,
     dry_run: bool,
     output_path: Path | None = None,
@@ -301,7 +301,7 @@ def main() -> None:
         help="Explicit mutable-workspace workbook output path",
     )
     args = p.parse_args()
-    patch_workbook(args.input, args.dry_run, args.output)
+    apply_trn_caps(args.input, args.dry_run, args.output)
 
 
 if __name__ == "__main__":

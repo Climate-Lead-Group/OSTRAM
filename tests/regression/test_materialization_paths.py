@@ -207,14 +207,14 @@ def _stage3_dispatch(module: str, arguments=None, cwd=None, label=None) -> str:
         )
         return ""
     if module.endswith("clear_stale_unbinding_caps"):
-        clear_stale_unbinding_caps.patch_workbook(
+        clear_stale_unbinding_caps.reset_stale_caps(
             resolve(values["--input"]),
             False,
             resolve(values["--output"]),
         )
         return ""
     if module.endswith("cap_trn_to_residual"):
-        cap_trn_to_residual.patch_workbook(
+        cap_trn_to_residual.apply_trn_caps(
             resolve(values["--input"]),
             False,
             resolve(values["--output"]),
@@ -325,7 +325,7 @@ class WorkbookRoundTripAndMaterializationTests(unittest.TestCase):
             source_hash = _sha256(source)
             output = io.StringIO()
             with redirect_stdout(output):
-                actual = cap_trn_to_residual.patch_workbook(
+                actual = cap_trn_to_residual.apply_trn_caps(
                     source,
                     False,
                     desired,
