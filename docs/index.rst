@@ -36,6 +36,7 @@ Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
    glossary
    file-map
    full-yaml
+   reference/scenarios/scenario_catalogue
 
 
 Indices and tables
