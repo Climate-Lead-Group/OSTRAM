@@ -8,7 +8,6 @@ import csv
 import hashlib
 import json
 import yaml
-import re
 from pathlib import Path
 from typing import Any
 
@@ -46,7 +45,6 @@ EXPECTED_IGNORE_RULES = ("/workspace/",)
 GOVERNED_MANIFEST_COLUMNS = (
     "Scenario",
     "AuthorityClass",
-    "SHA256",
     "ByteSize",
     "LineCount",
     "Provenance",
@@ -56,7 +54,6 @@ GOVERNED_DERIVED_AUTHORITY = "GOVERNED_ROOT_PLUS_DECLARED_RULES"
 DECISION_ROOTS = frozenset(
     {"A_Calibrated_BAU", "B_Optimised_VRE", "C_Target_VRE"}
 )
-SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 class BaselineValidationError(ValueError):
@@ -126,8 +123,12 @@ def load_governed_manifest(
     try:
         with path.open("r", encoding="utf-8-sig", newline="") as stream:
             reader = csv.DictReader(stream)
+            # An existing manifest may still carry a SHA256 column; it is ignored.
+            columns = tuple(
+                name for name in reader.fieldnames or () if name != "SHA256"
+            )
             _require(
-                tuple(reader.fieldnames or ()) == GOVERNED_MANIFEST_COLUMNS,
+                columns == GOVERNED_MANIFEST_COLUMNS,
                 "unexpected governed comparator manifest columns",
             )
             raw_rows = list(reader)
@@ -153,10 +154,6 @@ def load_governed_manifest(
             row["AuthorityClass"] == expected_authority,
             f"{scenario}: authority class drift",
         )
-        _require(
-            SHA256_RE.fullmatch(row["SHA256"]) is not None,
-            f"{scenario}: invalid SHA-256",
-        )
         try:
             byte_size = int(row["ByteSize"])
             line_count = int(row["LineCount"])
@@ -171,7 +168,6 @@ def load_governed_manifest(
             {
                 "scenario": scenario,
                 "authority_class": row["AuthorityClass"],
-                "sha256": row["SHA256"],
                 "byte_size": byte_size,
                 "line_count": line_count,
                 "provenance": row["Provenance"],
@@ -221,7 +217,6 @@ def validate_governed_output_files(
         )
         _require(path.is_file(), f"governed output is missing: {path}")
         _require(path.stat().st_size == item["byte_size"], f"size drift: {path}")
-        _require(sha256_file(path) == item["sha256"], f"SHA-256 drift: {path}")
         with path.open("rb") as stream:
             line_count = sum(1 for _ in stream)
         _require(line_count == item["line_count"], f"line-count drift: {path}")

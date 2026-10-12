@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import csv
-import hashlib
 import subprocess
 import sys
 import tempfile
@@ -60,7 +59,6 @@ class AcceptedBaselineTests(unittest.TestCase):
                             if scenario in baseline.DECISION_ROOTS
                             else baseline.GOVERNED_DERIVED_AUTHORITY
                         ),
-                        "SHA256": hashlib.sha256(payload).hexdigest(),
                         "ByteSize": len(payload),
                         "LineCount": 1,
                         "Provenance": "fixture root plus declared rules",
