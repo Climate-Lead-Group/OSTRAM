@@ -162,5 +162,5 @@ transformation applied. The workbook's exact **2.496 GW** `TRNBGDXXINDEA` residu
 capacity is also the 2023 anchor in every executable scenario schedule; prose may describe
 it as approximately 2.5 GW, but no executable authority rounds it. Choosing 2.500 GW is
 an exercise edit, not the shipped seed. In the active relaxed scenario the resulting
-`TotalAnnualMaxCapacity` is intentionally unbound at exactly `9999.0`; that does not alter
-the `ResidualCapacity` series.
+`TotalAnnualMaxCapacity` is exactly `9999.0`, a finite cap of up to 9999 GW in total. It
+does not alter the `ResidualCapacity` series.

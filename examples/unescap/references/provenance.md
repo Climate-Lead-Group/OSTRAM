@@ -116,8 +116,8 @@ value, including the historical embedded direction-results snapshot, is an exerc
 or rounded reference result, not the baseline authority.
 
 The active `B_Optimised_VRE` relaxation intentionally lifts
-`TotalAnnualMaxCapacity(TRNBGDXXINDEA, 2023..2050)` to exactly `9999.0`. This is the lid
-rule's explicit unbinding value; it neither overwrites nor rounds `ResidualCapacity`.
+`TotalAnnualMaxCapacity(TRNBGDXXINDEA, 2023..2050)` to exactly `9999.0`. This is a
+finite cap of up to 9999 GW in total. It neither overwrites nor rounds `ResidualCapacity`.
 
 ## Runtime integration decisions
 
