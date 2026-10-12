@@ -689,7 +689,7 @@ def stage_interconnector_costs(
     script = RULES_SCRIPTS_DIR / "apply_interconnector_costs.py"
     if not script.is_file():
         sys.exit(f"ERROR: apply_interconnector_costs.py not found at {script}")
-    banner("WS-3 — apply v18 Interconnector_Params costs (CapitalCost / FixedCost / OperationalLife)")
+    banner("stage_interconnector_costs: apply v18 Interconnector_Params costs (CapitalCost / FixedCost / OperationalLife)")
     arguments: list[object] = ["--input-dir", s5, "--skip-backup"]
     if materialized_template is not None:
         arguments += ["--template", materialized_template]
@@ -722,7 +722,7 @@ def stage_internal_transmission(s5: Path) -> None:
     if not (script.is_file() and config.is_file() and residuals.is_file()):
         print("    [SKIP] internal-transmission stage: script/config/residuals missing")
         return
-    banner("WS-3 — calibrate internal transmission (per-node ResidualCapacity / RE CapEx / OperationalLife=40)")
+    banner("stage_internal_transmission: calibrate internal transmission (per-node ResidualCapacity / RE CapEx / OperationalLife=40)")
     run_subproc("ostram.pipeline.scenarios.rules.apply_internal_transmission", [
         "--input-dir", s5, "--skip-backup",
         "--config", config, "--residuals", residuals,
@@ -744,7 +744,7 @@ def stage_internal_tx_losses(s5: Path) -> None:
     if not (script.is_file() and config.is_file()):
         print("    [SKIP] internal-tx losses stage: script/config missing")
         return
-    banner("WS-4 — internal transmission losses (OutputActivityRatio = 1 - loss)")
+    banner("stage_internal_tx_losses: internal transmission losses (OutputActivityRatio = 1 - loss)")
     run_subproc("ostram.pipeline.scenarios.rules.apply_internal_tx_losses", [
         "--input-dir", s5, "--skip-backup", "--config", config,
     ], label="apply internal transmission losses")
@@ -761,7 +761,7 @@ def stage_base_year_pin(s5: Path, scenario: str) -> None:
         raise ValueError(f"unsupported PWR/MIN pin scenario: {scenario!r}")
     if not profile_policy("apply_pwr_min_pin", True):
         print(
-            "    [SKIP] WS-4 PWR/MIN pin: profile policy "
+            "    [SKIP] stage_base_year_pin: profile policy "
             "apply_pwr_min_pin=false (calibration authority not valid "
             "for this profile's domain)"
         )
@@ -775,7 +775,7 @@ def stage_base_year_pin(s5: Path, scenario: str) -> None:
             + ", ".join(str(path) for path in missing)
         )
     banner(
-        "WS-4 — restore audited non-Maldives 2023-2026 PWR/MIN calibration"
+        "stage_base_year_pin: restore audited non-Maldives 2023-2026 PWR/MIN calibration"
     )
     run_subproc(
         "ostram.pipeline.scenarios.rules.apply_base_year_pin",

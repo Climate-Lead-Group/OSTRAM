@@ -1,4 +1,4 @@
-"# WS-3 D5 internal-transmission ResidualCapacity (GW), per node.",,,
+"# stage_internal_transmission: internal-transmission ResidualCapacity (GW), per node.",,,
 "# Method: existing grid sized at peak x 1.2; RNWTRN = RE-avail-at-peak x 1.2,",,,
 #   PWRTRN = peak x 1.2 - RE x 1.2. NLI/RPO families = 0 (build mechanisms).,,,
 # Source: maintained frozen Stage 1 input (desk-checked).,,,
