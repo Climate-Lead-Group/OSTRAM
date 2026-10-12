@@ -361,7 +361,7 @@ def lid_diagnostic(
         regions = technology_regions(tech)
         region_code = regions[0] if regions else ""
         region_label = region_labels.get(region_code, region_code)
-        label = f"{family} — {region_label}" if region_label else family
+        label = f"{family} ({region_label})" if region_label else family
         out[str(tech)] = {
             "label": label,
             "family": family,
@@ -599,7 +599,7 @@ _DASH_JS = r"""
 
   if(!LABELS.length || !SCENARIOS.length){
     app.innerHTML = '<div class="panel"><div class="empty">' +
-      'No captured result snapshots are available yet — run a scenario ' +
+      'No captured result snapshots are available yet; run a scenario ' +
       'and capture it first.</div></div>';
     return;
   }
@@ -841,7 +841,7 @@ _DASH_JS = r"""
 
     if(!mA && !mB){
       app.innerHTML = '<div class="panel"><div class="empty">No results for ' +
-        'this scenario in the selected snapshots — run it first.</div></div>';
+        'this scenario in the selected snapshots; run it first.</div></div>';
       return;
     }
 
@@ -897,7 +897,7 @@ _DASH_JS = r"""
       lineChart((mB && mB.emissions) || {}, (mA && mA.emissions) || {}, eMax, "") +
       "</div>";
     const sMax = maxOfSeries(mB && mB.storage, mA && mA.storage);
-    app.innerHTML += '<div class="panel"><h2>Storage capacity (GW) — ' +
+    app.innerHTML += '<div class="panel"><h2>Storage capacity (GW): ' +
       "dashed = Before, solid = After</h2>" +
       lineChart((mB && mB.storage) || {}, (mA && mA.storage) || {}, sMax, "GW") +
       "</div>";
@@ -913,7 +913,7 @@ _DASH_JS = r"""
         : '<p class="note">Declared effective interconnector seed capacity: ' +
           esc(seed) + " GW.</p>";
       app.innerHTML += '<div class="panel"><h2>Interconnector capacity (GW) ' +
-        "— dashed = Before, solid = After</h2>" +
+        "(dashed = Before, solid = After)</h2>" +
         lineChart(icB || {}, icA || {}, icMax, "GW") + seedNote + "</div>";
     }
     const ipB = icSeries(mB, "ProductionByTechnologyAnnual");
@@ -921,12 +921,12 @@ _DASH_JS = r"""
     if(ipB || ipA){
       const ipMax = maxOfSeries(ipB, ipA);
       app.innerHTML += '<div class="panel"><h2>Interconnector trade flow (PJ) ' +
-        "— dashed = Before, solid = After</h2>" +
+        "(dashed = Before, solid = After)</h2>" +
         lineChart(ipB || {}, ipA || {}, ipMax, "PJ") + "</div>";
     }
 
     // VRE share
-    app.innerHTML += '<div class="panel"><h2>VRE share of generation — ' +
+    app.innerHTML += '<div class="panel"><h2>VRE share of generation: ' +
       "dashed = Before, solid = After</h2>" +
       lineChart(scaleShare(mB && mB.vre_share), scaleShare(mA && mA.vre_share),
         100, "%") + "</div>";
@@ -941,7 +941,7 @@ _DASH_JS = r"""
       const techList = Object.entries(allTechs)
         .sort((a, b) => a[1].localeCompare(b[1]));
       if(techList.length){
-        let h = '<div class="panel"><h2>Lid diagnostic — NewCapacity vs ' +
+        let h = '<div class="panel"><h2>Lid diagnostic: NewCapacity vs ' +
           "MaxCapacityInvestment (GW)</h2>" +
           '<p class="note">Pick a technology. When the solid line touches the ' +
           "dashed line the technology is <strong>lid-bound</strong> (the lid " +
@@ -996,7 +996,7 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>__TITLE__ — Results Dashboard</title>
+<title>__TITLE__: Results Dashboard</title>
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root {
@@ -1131,8 +1131,8 @@ def render_html(data: Mapping[str, object]) -> str:
         str(data.get("title") or f"OSTRAM {data['profile_id']} profile report")
     )
     meta = html_text.escape(
-        f"Profile {data['profile_id']} — Manifest {data['manifest']} "
-        f"— Workspace {data['workspace']}"
+        f"Profile {data['profile_id']}; Manifest {data['manifest']}; "
+        f"Workspace {data['workspace']}"
     )
     document = _HTML_TEMPLATE
     document = document.replace("__JS__", _DASH_JS)
