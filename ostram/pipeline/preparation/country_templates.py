@@ -813,6 +813,12 @@ def process_entry(new_cc, ref_cc, new_rr, ixn_raw, ixn_source,
 
 
 def main():
+    """Generate country templates from command-line options or YAML.
+
+    Without ``--new``, a template is generated for each entry of the
+    ``template_generation`` section of Config_country_codes.yaml. Exits with
+    status 1 when no configuration is found.
+    """
     parser = argparse.ArgumentParser(
         description="Generate country template for OG_csvs_inputs. "
                     "Reads from Config_country_codes.yaml by default; "

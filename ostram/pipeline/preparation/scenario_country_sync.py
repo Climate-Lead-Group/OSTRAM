@@ -31,6 +31,7 @@ SHEET_MAP = (
 
 @dataclass(frozen=True)
 class SyncChange:
+    """Rows that a country sync adds from one A-O sheet to one target sheet."""
     source_sheet: str
     target_sheet: str
     scenarios: tuple[str, ...]
@@ -83,6 +84,11 @@ def technology_regions(technology: object) -> tuple[str, ...]:
 
 
 def technology_belongs_to_country(technology: object, country: str) -> bool:
+    """Return whether ``technology`` encodes a region of ``country``.
+
+    ``country`` is an ISO-3 code, compared with the first three letters of each
+    region.
+    """
     return any(region[:3] == country for region in technology_regions(technology))
 
 
@@ -210,6 +216,18 @@ def synchronize_country(
     scenario_path: Path,
     dry_run: bool = False,
 ) -> tuple[SyncChange, ...]:
+    """Add the rows of ``country`` to the scenario workbook.
+
+    Rows of the A-O workbook at ``ao_path`` are copied to the scenario workbook
+    at ``scenario_path`` for each sheet pair in SHEET_MAP. They are tagged BAU
+    when the Control sheet lists BAU, else with the first Control scenario.
+    Rows already present are skipped. Unless ``dry_run`` is set, the workbook
+    is saved through a temporary file.
+
+    Returns one SyncChange for each sheet pair. Raises ValueError for an
+    invalid country code, a missing sheet or a header mismatch, and
+    FileNotFoundError for a missing workbook.
+    """
     country = country.strip().upper()
     if not COUNTRY.fullmatch(country):
         raise ValueError(f"country must be an ISO-3 code: {country!r}")
@@ -274,6 +292,10 @@ def _default_ao(paths) -> Path:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Run the ``scenario sync-country`` command and return 0.
+
+    The target workbook must lie inside the active profile workspace.
+    """
     parser = argparse.ArgumentParser(prog="python -m ostram scenario")
     subparsers = parser.add_subparsers(dest="action", required=True)
     sync = subparsers.add_parser("sync-country")

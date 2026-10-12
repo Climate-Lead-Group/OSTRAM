@@ -122,6 +122,7 @@ def storage_prefixes(metadata: Mapping[str, object] | None) -> tuple[str, ...]:
 
 
 def is_storage_tech(technology: object, storage: tuple[str, ...]) -> bool:
+    """Return whether ``technology`` starts with a ``storage`` prefix."""
     return str(technology).startswith(storage)
 
 
@@ -136,6 +137,7 @@ def is_generation_tech(technology: object, storage: tuple[str, ...]) -> bool:
 
 
 def is_vre_tech(technology: object) -> bool:
+    """Return whether ``technology`` is a PWRSPV, PWRWON or PWRWOF code."""
     return str(technology).startswith(VRE_PREFIXES)
 
 
@@ -1147,6 +1149,11 @@ def generate_report(
     output: Path,
     **context,
 ) -> Path:
+    """Write the HTML dashboard of ``snapshots`` to ``output``.
+
+    Returns the resolved output path. Extra keyword arguments are passed to
+    build_dashboard_data.
+    """
     data = build_dashboard_data(snapshots, **context)
     output = Path(output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)

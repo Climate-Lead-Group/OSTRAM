@@ -98,6 +98,11 @@ def validate_yearsplit_timeslices(
     emit: Callable[[str], Any] | None = None,
     stop: Callable[[], Any] | None = None,
 ) -> None:
+    """Apply the predecessor year-split timeslice check.
+
+    Reports an error and stops when the mode is Some and no timeslices are
+    configured.
+    """
     if timeslice_mode == "Some" and configured_timeslices == []:
         _abort(YEARSPLIT_TIMESLICE_ERROR, emit, stop)
 

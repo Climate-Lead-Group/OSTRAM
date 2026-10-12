@@ -1328,6 +1328,11 @@ def filter_by_tech_country_matrix(og_data: Dict[str, pd.DataFrame], matrix_confi
         rows_before = len(df)
 
         def is_allowed(tech):
+            """Return whether the matrix allows technology ``tech``.
+
+            CCG and OCG are looked up as NGS. A code that gives no sub-code or
+            country, and a pair absent from the matrix, are allowed.
+            """
             sub_code, country = extract_tech_country_from_code(tech)
             if sub_code is None or country is None:
                 return True  # Allow non-PWR technologies
@@ -1575,6 +1580,13 @@ def update_sheet_year_headers(output_excel_path, sheet_name, model_years, fixed_
     print(f"[Success] Sheet '{sheet_name}' year headers updated to {model_years[0]}-{model_years[-1]}.")
 
 def write_sheet(sheet_name, records, all_years, output_excel_path):
+    """Replace sheet ``sheet_name`` with ``records`` and year columns.
+
+    The records are sorted by Tech.ID and Parameter.ID and written to the
+    workbook at ``output_excel_path`` with one column for each year in
+    ``all_years``. With no records, only the year headers of the sheet are
+    updated.
+    """
     if not records:
         # Even without data, update the year headers
         print(f"[Info] No data to write to sheet '{sheet_name}'. Updating year headers only.")
@@ -1681,6 +1693,11 @@ def parse_fuel_name(fuel):
     return ", ".join(name_parts)
 
 def assign_tech_type(tech):
+    """Return the Tech.Type of technology ``tech``.
+
+    MIN and RNW codes are Primary, PWRTRN codes are Demand and every other
+    technology is Secondary.
+    """
     if tech.startswith("MIN") or tech.startswith("RNW"):
         return "Primary"
     elif tech.startswith("PWRTRN"):
@@ -2759,6 +2776,13 @@ def update_projection_primary(og_data, workbook):
     all_years = sorted(years_set) if years_set else MODEL_YEARS
 
     def build_records(df, direction):
+        """Return the projection records of ``df`` for one direction.
+
+        One record is built for each technology, mode and fuel, tagged with
+        ``direction``, with a value for each year in ``all_years``.
+        Projection.Mode is EMPTY with no value, Flat with one value, User
+        defined with a value in every year and interpolation otherwise.
+        """
         records = []
         for (tech, mode, fuel), group in df.groupby(["TECHNOLOGY", "MODE_OF_OPERATION", "FUEL"]):
             row = {
@@ -2836,6 +2860,13 @@ def update_projection_secondary(og_data, workbook):
     all_years = sorted(years_set) if years_set else MODEL_YEARS
 
     def build_records(df, direction):
+        """Return the projection records of ``df`` for one direction.
+
+        One record is built for each technology, mode and fuel, tagged with
+        ``direction``, with a value for each year in ``all_years``.
+        Projection.Mode is EMPTY with no value, Flat with one value, User
+        defined with a value in every year and interpolation otherwise.
+        """
         records = []
         for (tech, mode, fuel), group in df.groupby(["TECHNOLOGY", "MODE_OF_OPERATION", "FUEL"]):
             row = {
@@ -2912,6 +2943,13 @@ def update_projection_demand_techs(og_data, workbook):
     all_years = sorted(years_set) if years_set else MODEL_YEARS
 
     def build_records(df, direction):
+        """Return the projection records of ``df`` for one direction.
+
+        One record is built for each technology, mode and fuel, tagged with
+        ``direction``, with a value for each year in ``all_years``.
+        Projection.Mode is EMPTY with no value, Flat with one value, User
+        defined with a value in every year and interpolation otherwise.
+        """
         records = []
         for (tech, mode, fuel), group in df.groupby(["TECHNOLOGY", "MODE_OF_OPERATION", "FUEL"]):
             row = {
@@ -3123,6 +3161,10 @@ def update_xtra_storage_technology_storage(og_data, workbook):
 
     # Common fields
     def prepare_df(df, param_name, param_id):
+        """Return ``df`` in the TechnologyStorage sheet layout.
+
+        Each row is tagged with ``param_name`` and ``param_id``.
+        """
         return pd.DataFrame({
             "MODE_OF_OPERATION": df["MODE_OF_OPERATION"],
             "TECHNOLOGY": df["TECHNOLOGY"],
@@ -3481,6 +3523,11 @@ def update_yaml_structure(og_data, yaml_path):
     print("-------------------------------------------------------------------------\n")
 
 def sort_csv_files_in_folder(folder_path):
+    """Sort each CSV file in ``folder_path`` by all columns, in place.
+
+    An invalid folder path is reported and nothing is sorted. A file that fails
+    to process is reported and the remaining files are still processed.
+    """
     if not os.path.isdir(folder_path):
         print(f"The path is invalid: {folder_path}")
         return

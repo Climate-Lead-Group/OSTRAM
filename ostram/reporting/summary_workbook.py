@@ -977,6 +977,10 @@ def _load_manifest_metadata(path: Path) -> Mapping[str, object]:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Write the summary workbook for the given inputs and return 0.
+
+    Stops with a parser error when the output file exists.
+    """
     parser = argparse.ArgumentParser(
         prog="python -m ostram.reporting.summary_workbook",
         description=__doc__.splitlines()[0],

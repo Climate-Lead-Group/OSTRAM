@@ -30,12 +30,20 @@ def read_config(
 def open_workbook(
     path: Any, *, factory: Callable[[Any], Any] | None = None
 ) -> Any:
+    """Open the workbook at ``path`` with ``factory``.
+
+    ``factory`` defaults to ``pandas.ExcelFile``.
+    """
     if factory is None:
         factory = pd.ExcelFile
     return factory(path)
 
 
 def read_csv(path: Any, *, reader: Callable[[Any], Any] | None = None) -> Any:
+    """Read the CSV at ``path`` with ``reader``.
+
+    ``reader`` defaults to ``pandas.read_csv``.
+    """
     if reader is None:
         reader = pd.read_csv
     return reader(path)
@@ -118,6 +126,7 @@ def write_structure_workbook(
     writer_factory: Callable[..., Any] | None = None,
     write_frame: Callable[..., Any] | None = None,
 ) -> None:
+    """Write ``frame`` to one sheet of a new workbook at ``path``."""
     if writer_factory is None:
         writer_factory = pd.ExcelWriter
     writer = writer_factory(path, engine="xlsxwriter")
@@ -126,6 +135,18 @@ def write_structure_workbook(
 
 
 def allocate_country_fuel_costs(tables, config_path, audit_path):
+    """Split country fuel prices into an upstream base and uplifts.
+
+    For each region, fuel family and year, the base is the lowest country price
+    that a consumer of that family pays, and the supplier rows of the family
+    take it as VariableCost. Each consumer row gets its non-fuel VariableCost
+    plus its input ratio times the difference between its country price and the
+    base. One audit row for each consumer input is written to ``audit_path``.
+
+    ``config_path`` is a policy mapping or a YAML path. When it is None or
+    names a missing file, ``tables`` is returned unchanged. Raises ValueError
+    for an unsupported policy or inconsistent tables.
+    """
     # Existing compilation YAML embeds this policy; standalone paths remain
     # supported for the accepted focused regression fixtures.
     if config_path is None:
@@ -164,6 +185,10 @@ def allocate_country_fuel_costs(tables, config_path, audit_path):
         raise ValueError("Fuel supply boundary is not unit-output MIN supply")
 
     def unique_values(frame, columns):
+        """Map each ``columns`` key of ``frame`` to its Value.
+
+        Raises ValueError for a non-finite value or conflicting duplicates.
+        """
         values = {}
         for row in frame.to_dict("records"):
             key = tuple(row[c] for c in columns)

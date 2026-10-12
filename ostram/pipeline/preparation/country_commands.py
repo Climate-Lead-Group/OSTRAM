@@ -27,6 +27,11 @@ def _arguments(action: str, arguments: Sequence[str]) -> Iterator[None]:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Run one ``python -m ostram country`` action and return its exit code.
+
+    The action selects the template, merge or validate module. Returns 0 when
+    the module returns no integer.
+    """
     arguments = list(sys.argv[1:] if argv is None else argv)
     parser = argparse.ArgumentParser(prog="python -m ostram country", add_help=False)
     parser.add_argument("action", choices=sorted(MODULES))

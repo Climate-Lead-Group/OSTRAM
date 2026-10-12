@@ -9,6 +9,11 @@ import os
 import pandas as pd
 
 def sort_csv_files_in_folder(folder_path):
+    """Sort each CSV file in ``folder_path`` by all columns, in place.
+
+    An invalid folder path is reported and nothing is sorted. A file that fails
+    to process is reported and the remaining files are still processed.
+    """
     if not os.path.isdir(folder_path):
         print(f"The provided path is not valid: {folder_path}")
         return

@@ -63,6 +63,10 @@ def load_country_region_pairs(yaml_path):
     return ordered
 
 def parse_pwr_code(tech_code):  
+    """Split a PWR code into its fuel, country and region codes.
+
+    The region is XX when the code has no region part.
+    """
     remainder = tech_code[3:]
     fuel     = remainder[:3]
     country  = remainder[3:6]
@@ -80,6 +84,16 @@ def ensure_columns(df, cols):
 # 1. Process A-O_AR_Model_Base_Year.xlsx
 # ---------------------------------------------------------------------------
 def process_base_year(path, pairs, enable_dsptrn=False):
+    """Add transmission to the base-year A-O workbook at ``path``.
+
+    In the Secondary sheet, PWR plant outputs take fuel ELC...00 for renewable
+    fuels and ELC...01 otherwise, and storage technologies take ELC...00 as
+    mode 1 input and mode 2 output. The Demand Techs sheet is rebuilt with the
+    RNWTRN, RNWRPO, RNWNLI, PWRTRN, TRNRPO and TRNNLI technologies of each
+    country-region in ``pairs``. With ``enable_dsptrn``, interconnector inputs
+    move to ELC...03, outputs move to ELC...04 and a DSPTRN technology is added
+    for each country-region.
+    """
     print(f"Processing '{path}' …")
     with pd.ExcelWriter(path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
         # ---------- Secondary sheet ----------
@@ -161,6 +175,7 @@ def process_base_year(path, pairs, enable_dsptrn=False):
         dtech = dtech.iloc[0:0]  # clear rows
 
         def add_row(lst):
+            """Append a copy of the enclosing ``row`` dictionary to ``lst``."""
             lst.append({k:v for k,v in row.items()})
 
         rows = []
@@ -243,6 +258,15 @@ def process_base_year(path, pairs, enable_dsptrn=False):
 # 2. Process A-O_AR_Projections.xlsx
 # ---------------------------------------------------------------------------
 def process_projections(path, pairs, enable_dsptrn=False):
+    """Add transmission to the projections A-O workbook at ``path``.
+
+    In the Secondary sheet, PWR plant outputs take fuel ELC...00 for renewable
+    fuels and ELC...01 otherwise, and storage technologies take ELC...00. The
+    Demand Techs sheet is rebuilt with an input row and an output row, valued 1
+    in every year, for each transmission technology of each country-region in
+    ``pairs``. With ``enable_dsptrn``, interconnector inputs move to ELC...03,
+    outputs move to ELC...04 and DSPTRN rows are added for each country-region.
+    """
     print(f"Processing '{path}' …")
     with pd.ExcelWriter(path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
         # ---------- Secondary sheet ----------
@@ -430,6 +454,16 @@ PARAM_LIST = [
 ]
 
 def process_parametrization(path, pairs, yaml_data, enable_dsptrn=False):
+    """Add transmission to the parametrization A-O workbook at ``path``.
+
+    Each transmission technology of each country-region in ``pairs`` gets a
+    sequential Tech.ID, CapacityToActivityUnit and OperationalLife rows in the
+    Fixed Horizon Parameters sheet, and one row for each parameter in
+    PARAM_LIST in the Demand Techs sheet. Values come from the ``yaml_data``
+    entry of the technology prefix. A parameter with no value gets
+    Projection.Mode EMPTY. With ``enable_dsptrn``, DSPTRN technologies are
+    included.
+    """
     print(f"Processing '{path}' …")
 
     # ───── 1. Load sheets ────────────────────────────────────────────────────
@@ -631,6 +665,12 @@ def list_scenario_suffixes(base_dir: Path) -> List[str]:
 # CLI interface
 # ---------------------------------------------------------------------------
 def main():
+    """Run A2 on the A1 output folder of every root scenario.
+
+    Each updated folder is then copied to its post-A2 snapshot. Command-line
+    options override the default workbook and YAML paths. Raises
+    FileNotFoundError when the A1 output folder of a root is missing.
+    """
     paths = resolve_paths()
     OUTPUT_FOLDER = paths.a1_outputs
     from ..scenarios.registry import load_registry
