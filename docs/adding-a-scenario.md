@@ -63,7 +63,7 @@ Only direction changes need an overlay.
 | File | Change |
 |---|---|
 | `ostram/pipeline/scenarios/registry.py` | Append the name to `DECISION_SCENARIOS`. |
-| `tests/regression/accepted_baseline.py` | Append the name to `EXPECTED_DECISION_SCENARIOS`. |
+| `tests/regression/accepted_baseline.py` | Append the name to `EXPECTED_DECISION_SCENARIOS`, and raise the two counts of 17 by one: the uniqueness check in `scenario_contract` and the row count of the manifest check. |
 | `tests/regression/test_scenario_registry.py` | Raise the expected count of decision scenarios by one. |
 | `tests/regression/test_b1_runner.py` | Raise the expected count of decision scenarios by one. |
 | `tests/regression/test_config_files.py` | Add the overlay file to `EXPECTED_CONFIG_FILES`, when the scenario has one. |
