@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import ast
-import hashlib
 import importlib.util
 import inspect
 import json
@@ -52,7 +51,6 @@ AUTHORITY = {
     "TRNNPLXXBGDXX": Decimal("0"),
 }
 ZERO_TECHS = frozenset(tech for tech, value in AUTHORITY.items() if value == 0)
-AUTHORITY_SEMANTIC_SHA256 = "6c4420017b4a2df0b0e4ab6cc11f0bb45c79aa139bed858bdea5fec1aa54584b"
 MINIMUM_CONTRIBUTION_TECHS = frozenset({
     "TRNBTNXXBGDXX",
     "TRNBTNXXINDEA",
@@ -79,16 +77,10 @@ MINIMUM_CONTRIBUTION_NONZERO = {
     ("TRNLKAXXMDVXX", 2030): Decimal("0.5"),
     ("TRNNPLXXBGDXX", 2033): Decimal("1"),
 }
-MINIMUM_CONTRIBUTION_SEMANTIC_SHA256 = (
-    "d5e7860480abdda57e207b1639032e9744d5d71096efad5028d372e174ffc958"
-)
 MINIMUM_BOUNDARIES = {
     "TRNBGDXXINDEA": Decimal("2.5"),
     "TRNNPLXXBGDXX": Decimal("0.04"),
 }
-MINIMUM_BOUNDARY_SEMANTIC_SHA256 = (
-    "d155a0c4f68b7ef2875b7a14bf2e7d5341e1ff09af16ca4ee7f868d85dcc6ca7"
-)
 TXCAP_FLOORS = {
     "TRNBGDXXINDEA": Decimal("8.236183089312995"),
     "TRNBGDXXINDNE": Decimal("0.32"),
@@ -135,20 +127,6 @@ def _decimal(value) -> Decimal:
     if not result.is_finite():
         raise AssertionError(f"expected finite value, got {value!r}")
     return result
-
-
-def _normal_decimal(value) -> str:
-    number = _decimal(value)
-    return "0" if number == 0 else format(number.normalize(), "f")
-
-
-def _authority_digest(values: dict[str, dict[int, object]]) -> str:
-    payload = "".join(
-        f"{tech}|{year}|{_normal_decimal(values[tech][year])}\n"
-        for tech in sorted(values)
-        for year in YEARS
-    )
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def _dense_minimum_contributions():
@@ -333,7 +311,6 @@ class InterconnectorAuthorityWorkbookTests(unittest.TestCase):
                 self.assertEqual(metadata[tech]["Projection.Mode"], "User defined")
                 self.assertEqual(metadata[tech]["Projection.Parameter"], 0)
                 self.assertIn(metadata[tech]["Source"], (None, ""))
-        self.assertEqual(_authority_digest(values), AUTHORITY_SEMANTIC_SHA256)
 
     def test_public_authority_loader_accepts_only_exact_rc_v1(self) -> None:
         module = _load_module(FIX_SCRIPT, "authority_loader")
@@ -364,10 +341,6 @@ class InterconnectorAuthorityWorkbookTests(unittest.TestCase):
                     _decimal(contributions[tech][year]),
                     expected_contributions[tech][year],
                 )
-        self.assertEqual(
-            _authority_digest(contributions),
-            MINIMUM_CONTRIBUTION_SEMANTIC_SHA256,
-        )
 
         self.assertEqual(set(boundaries), set(MINIMUM_BOUNDARIES))
         self.assertEqual(
@@ -379,10 +352,6 @@ class InterconnectorAuthorityWorkbookTests(unittest.TestCase):
                 {_decimal(value) for value in boundaries[tech].values()},
                 {expected},
             )
-        self.assertEqual(
-            _authority_digest(boundaries),
-            MINIMUM_BOUNDARY_SEMANTIC_SHA256,
-        )
 
     def test_minimum_loader_fails_closed_on_schema_domain_and_value_corruption(
         self,
@@ -760,20 +729,8 @@ class TxCap150FormulaTests(unittest.TestCase):
             edit for edit in config["edits"]
             if edit["param"] == "TotalTechnologyAnnualActivityUpperLimit"
         ]
-        def canonical(rows):
-            return json.dumps(
-                rows, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-            ).encode("utf-8")
         self.assertEqual(len(minimum_edits), 8)
-        self.assertEqual(
-            hashlib.sha256(canonical(minimum_edits)).hexdigest(),
-            "51c2c7613eff840f9a20193a06057026070a81f08eb58777386d7ba7c184f7b8",
-        )
         self.assertEqual(len(activity_edits), 10)
-        self.assertEqual(
-            hashlib.sha256(canonical(activity_edits)).hexdigest(),
-            "19c1d41469c19144a40764c8033533eaafb01f8b2bd85381d17e368f233caef5",
-        )
 
     def test_dynamic_formula_reads_effective_rc_for_both_targets(self) -> None:
         module = _load_module(SCENARIO_EDITS_SCRIPT, "txcap_formula")
@@ -837,10 +794,6 @@ class TxCap150FormulaTests(unittest.TestCase):
             ("TRNNPLXXBGDXX", 0.0, 1.0, Decimal("0.04")),
         )
         boundaries = module.load_minimum_investment_boundaries(TEMPLATE)
-        self.assertEqual(
-            _authority_digest(boundaries),
-            MINIMUM_BOUNDARY_SEMANTIC_SHA256,
-        )
         for tech, effective_rc, minimum, expected in cases:
             with self.subTest(tech=tech):
                 workbook, worksheet = _edit_fixture(

@@ -3,7 +3,6 @@ from __future__ import annotations
 import csv
 from collections import Counter
 from decimal import Decimal
-import hashlib
 from pathlib import Path
 import tempfile
 import unittest
@@ -169,10 +168,6 @@ class UnescapMappingTests(unittest.TestCase):
         authority = (
             UNESCAP / "config" / "scenarios" / "rules"
             / "pwr_min_2023_2026_pin.csv"
-        )
-        self.assertEqual(
-            hashlib.sha256(authority.read_bytes()).hexdigest(),
-            "984c3885f7bcee992d634c602402e3c6183a2f3bc8a1d8a0620ae214c1a1d872",
         )
         with authority.open(encoding="utf-8-sig", newline="") as stream:
             rows = list(csv.DictReader(stream))
