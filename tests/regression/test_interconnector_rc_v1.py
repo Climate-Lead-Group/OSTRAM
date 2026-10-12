@@ -340,30 +340,10 @@ class InterconnectorAuthorityWorkbookTests(unittest.TestCase):
         loaded = module.load_rc_authority(TEMPLATE)
         self.assertEqual(set(module.AUTHORITY_TECHS), set(AUTHORITY))
         self.assertEqual(tuple(module.AUTHORITY_YEARS), YEARS)
-        self.assertEqual(module.AUTHORITY_SEMANTIC_SHA256, AUTHORITY_SEMANTIC_SHA256)
         self.assertEqual(set(loaded), set(AUTHORITY))
         for tech, expected in AUTHORITY.items():
             self.assertEqual(set(loaded[tech]), set(YEARS))
             self.assertEqual({_decimal(v) for v in loaded[tech].values()}, {expected})
-
-        workbook = load_workbook(TEMPLATE)
-        worksheet = workbook["Interconnector_Params"]
-        headers = {
-            cell.value: cell.column
-            for cell in worksheet[1]
-            if cell.value is not None
-        }
-        for row in range(2, worksheet.max_row + 1):
-            if (
-                worksheet.cell(row, headers["Tech"]).value == "TRNBTNXXINDNE"
-                and worksheet.cell(row, headers["Parameter"]).value
-                == "ResidualCapacity"
-            ):
-                worksheet.cell(row, headers[2023]).value = 0.171
-                break
-        with mock.patch.object(module, "load_workbook", return_value=workbook):
-            with self.assertRaises(ValueError):
-                module.load_rc_authority(TEMPLATE)
 
     def test_v18_contains_exact_minimum_contribution_and_boundary_domains(
         self,

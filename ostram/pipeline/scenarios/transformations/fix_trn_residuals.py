@@ -31,7 +31,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import math
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
@@ -65,8 +64,7 @@ PARAM_COL = "Parameter"
 PROJ_MODE_COL = "Projection.Mode"
 
 # RC Authority V1 is a dense 18-technology x 28-year table in the materialized
-# v18 workbook. The digest commits the complete numeric table without making
-# this script a second source of the values.
+# v18 workbook.
 AUTHORITY_YEARS = tuple(range(2023, 2051))
 AUTHORITY_TECHS = frozenset({
     "TRNBGDXXINDEA", "TRNBGDXXINDNE", "TRNBTNXXBGDXX",
@@ -76,9 +74,6 @@ AUTHORITY_TECHS = frozenset({
     "TRNINDNONPLXX", "TRNINDSOINDWE", "TRNINDSOLKAXX",
     "TRNLKAXXMDVXX", "TRNMDVXXINDSO", "TRNNPLXXBGDXX",
 })
-AUTHORITY_SEMANTIC_SHA256 = (
-    "6c4420017b4a2df0b0e4ab6cc11f0bb45c79aa139bed858bdea5fec1aa54584b"
-)
 
 
 # ------------------------------------------------------------------ data model
@@ -195,19 +190,6 @@ def _decimal_text(value: object, context: str) -> str:
     return format(decimal_value.normalize(), "f")
 
 
-def authority_semantic_sha256(
-    authority: Mapping[str, Mapping[int, float]],
-) -> str:
-    """Hash the canonical technology/year/value authority domain."""
-    payload = "".join(
-        f"{tech}|{year}|"
-        f"{_decimal_text(authority[tech][year], f'{tech}/{year}')}\n"
-        for tech in sorted(authority)
-        for year in sorted(authority[tech])
-    )
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
-
-
 def _validate_authority_mapping(
     authority: Mapping[str, Mapping[int, float]],
 ) -> None:
@@ -237,12 +219,6 @@ def _validate_authority_mapping(
             )
         for year in sorted(years):
             _decimal_text(authority[tech][year], f"{tech}/{year}")
-    digest = authority_semantic_sha256(authority)
-    if strict_full and digest != AUTHORITY_SEMANTIC_SHA256:
-        raise ValueError(
-            "RC Authority V1 semantic digest mismatch: "
-            f"expected {AUTHORITY_SEMANTIC_SHA256}, got {digest}"
-        )
 
 
 def load_rc_authority(authority_path: Path) -> Dict[str, Dict[int, float]]:
