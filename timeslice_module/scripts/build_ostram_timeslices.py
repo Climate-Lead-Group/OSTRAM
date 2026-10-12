@@ -29,8 +29,9 @@ import time
 # USER CONFIGURATION
 # ======================================================================
 
-BASE_DIR = r"C:\Users\luisfernando\Desktop\timeslice_module\inputs"
-OUTPUT_DIR = r"C:\Users\luisfernando\Desktop\timeslice_module\outputs\run_5dp20ts"
+MODULE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.join(MODULE, "inputs")
+OUTPUT_DIR = os.path.join(MODULE, "outputs", "run_5dp20ts")
 
 BGD_PGCB_DIR = os.path.join(BASE_DIR, r"Bangladesh\pgcb_analysis\pgcb_daily_files")
 LKA_PUCSL_DIR = os.path.join(BASE_DIR, r"Sri Lanka\PUCSL")
