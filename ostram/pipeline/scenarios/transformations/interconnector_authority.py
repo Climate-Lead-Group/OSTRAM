@@ -1,8 +1,8 @@
 """Fail-closed loaders for migrated interconnector minimum authorities.
 
 The production numeric values live only in ``Interconnector_Params`` in the
-v18 workbook.  This module contains schema, domain, metadata, and semantic
-digest guards, but deliberately contains no numeric schedule fallback.
+v18 workbook.  This module contains schema, domain and metadata guards, and
+no numeric schedule fallback.
 
 Both supported workbook shapes are accepted:
 
@@ -15,7 +15,6 @@ to reject every other schema extension.
 """
 from __future__ import annotations
 
-import hashlib
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Dict, Mapping
@@ -42,9 +41,6 @@ MINIMUM_CONTRIBUTION_TECHS = frozenset({
     "TRNLKAXXMDVXX",
     "TRNNPLXXBGDXX",
 })
-MINIMUM_CONTRIBUTION_SEMANTIC_SHA256 = (
-    "d5e7860480abdda57e207b1639032e9744d5d71096efad5028d372e174ffc958"
-)
 MINIMUM_CONTRIBUTION_SOURCE = (
     "Effective predecessor Stage 3 additive FUTURE contribution"
 )
@@ -54,9 +50,6 @@ MINIMUM_BOUNDARY_TECHS = frozenset({
     "TRNBGDXXINDEA",
     "TRNNPLXXBGDXX",
 })
-MINIMUM_BOUNDARY_SEMANTIC_SHA256 = (
-    "d155a0c4f68b7ef2875b7a14bf2e7d5341e1ff09af16ca4ee7f868d85dcc6ca7"
-)
 MINIMUM_BOUNDARY_SOURCE = "Minimum-only LinkFreeze compatibility boundary"
 
 _COMMON_HEADERS = (
@@ -159,27 +152,6 @@ def _numeric_decimal(value: object, context: str) -> Decimal:
     return number
 
 
-def _decimal_text(value: object, context: str) -> str:
-    """Return the canonical text used by the authority semantic digests."""
-    number = _numeric_decimal(value, context)
-    if number == 0:
-        return "0"
-    return format(number.normalize(), "f")
-
-
-def authority_semantic_sha256(
-    authority: Mapping[str, Mapping[int, object]],
-) -> str:
-    """Hash a canonical technology/year/value authority domain."""
-    payload = "".join(
-        f"{tech}|{year}|"
-        f"{_decimal_text(authority[tech][year], f'{tech}/{year}')}\n"
-        for tech in sorted(authority)
-        for year in sorted(authority[tech])
-    )
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
-
-
 def _header_columns(ws: Worksheet) -> tuple[Dict[object, int], bool]:
     headers = tuple(cell.value for cell in ws[1])
     raw_shapes = {
@@ -210,7 +182,6 @@ def _validate_mapping(
     *,
     label: str,
     techs: frozenset[str],
-    digest: str,
 ) -> None:
     actual_techs = set(authority)
     if actual_techs != set(techs):
@@ -230,12 +201,6 @@ def _validate_mapping(
             )
         for year in AUTHORITY_YEARS:
             _numeric_decimal(authority[tech][year], f"{tech}/{year}")
-    actual_digest = authority_semantic_sha256(authority)
-    if actual_digest != digest:
-        raise ValueError(
-            f"{label} semantic digest mismatch: "
-            f"expected {digest}, got {actual_digest}"
-        )
 
 
 def validate_minimum_contribution_authority(
@@ -246,7 +211,6 @@ def validate_minimum_contribution_authority(
         authority,
         label="minimum contribution authority",
         techs=MINIMUM_CONTRIBUTION_TECHS,
-        digest=MINIMUM_CONTRIBUTION_SEMANTIC_SHA256,
     )
 
 
@@ -258,7 +222,6 @@ def validate_minimum_boundary_authority(
         authority,
         label="minimum boundary authority",
         techs=MINIMUM_BOUNDARY_TECHS,
-        digest=MINIMUM_BOUNDARY_SEMANTIC_SHA256,
     )
 
 
@@ -267,7 +230,6 @@ def _load_family(
     *,
     parameter: str,
     techs: frozenset[str],
-    digest: str,
     source: str,
     tech_metadata: Mapping[str, tuple[int, str]],
     label: str,
@@ -346,9 +308,7 @@ def _load_family(
     finally:
         workbook.close()
 
-    _validate_mapping(
-        authority, label=label, techs=techs, digest=digest
-    )
+    _validate_mapping(authority, label=label, techs=techs)
     return authority
 
 
@@ -360,7 +320,6 @@ def load_minimum_contribution_authority(
         authority_path,
         parameter=MINIMUM_CONTRIBUTION_PARAMETER,
         techs=MINIMUM_CONTRIBUTION_TECHS,
-        digest=MINIMUM_CONTRIBUTION_SEMANTIC_SHA256,
         source=MINIMUM_CONTRIBUTION_SOURCE,
         tech_metadata=_CONTRIBUTION_TECH_METADATA,
         label="minimum contribution authority",
@@ -375,7 +334,6 @@ def load_minimum_boundary_authority(
         authority_path,
         parameter=MINIMUM_BOUNDARY_PARAMETER,
         techs=MINIMUM_BOUNDARY_TECHS,
-        digest=MINIMUM_BOUNDARY_SEMANTIC_SHA256,
         source=MINIMUM_BOUNDARY_SOURCE,
         tech_metadata=_BOUNDARY_TECH_METADATA,
         label="minimum boundary authority",

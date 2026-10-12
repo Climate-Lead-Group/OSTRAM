@@ -815,7 +815,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                         "to override the selected commissioning schedule")
     p.add_argument("--authority", type=Path, required=True,
                    help="raw or materialized v18 workbook containing the "
-                        "digest-validated interconnector authorities")
+                        "validated interconnector authorities")
     args = p.parse_args(argv)
 
     diffs, plans, skipped, warnings = run_fix(

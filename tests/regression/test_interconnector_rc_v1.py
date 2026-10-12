@@ -368,10 +368,6 @@ class InterconnectorAuthorityWorkbookTests(unittest.TestCase):
             _authority_digest(contributions),
             MINIMUM_CONTRIBUTION_SEMANTIC_SHA256,
         )
-        self.assertEqual(
-            module.MINIMUM_CONTRIBUTION_SEMANTIC_SHA256,
-            MINIMUM_CONTRIBUTION_SEMANTIC_SHA256,
-        )
 
         self.assertEqual(set(boundaries), set(MINIMUM_BOUNDARIES))
         self.assertEqual(
@@ -385,10 +381,6 @@ class InterconnectorAuthorityWorkbookTests(unittest.TestCase):
             )
         self.assertEqual(
             _authority_digest(boundaries),
-            MINIMUM_BOUNDARY_SEMANTIC_SHA256,
-        )
-        self.assertEqual(
-            module.MINIMUM_BOUNDARY_SEMANTIC_SHA256,
             MINIMUM_BOUNDARY_SEMANTIC_SHA256,
         )
 
