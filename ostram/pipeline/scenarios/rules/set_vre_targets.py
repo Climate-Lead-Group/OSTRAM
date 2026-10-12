@@ -471,6 +471,7 @@ def _rmtree_robust(path: Path, attempts: int = 5) -> None:
 
 
 def find_latest_backup(input_dir: Path) -> Path | None:
+    """Return the newest _PRE_VRE_TARGETS_ backup beside input_dir, or None if there is none."""
     parent = input_dir.parent
     candidates = sorted(
         (p for p in parent.iterdir()
@@ -481,6 +482,12 @@ def find_latest_backup(input_dir: Path) -> Path | None:
 
 
 def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path:
+    """Replace input_dir with a backup copy and return the backup used.
+
+    Without backup_dir, the newest _PRE_VRE_TARGETS_ backup is used. The
+    current input_dir is first copied to a _POST_VRE_TARGETS_pre_restore_
+    snapshot.
+    """
     input_dir = Path(input_dir)
     if backup_dir is None:
         backup_dir = find_latest_backup(input_dir)
@@ -503,6 +510,7 @@ def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path
 
 
 def make_backup(input_dir: Path) -> Path:
+    """Copy input_dir to a timestamped _PRE_VRE_TARGETS_ folder beside it and return that path."""
     if not input_dir.is_dir():
         raise FileNotFoundError(f"Input directory does not exist: {input_dir}")
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -517,6 +525,7 @@ def make_backup(input_dir: Path) -> Path:
 # Worksheet helpers
 # ---------------------------------------------------------------------------
 def find_year_columns(ws) -> dict:
+    """Map each integer year header (1900 to 2200) in row 1 of ws to its column index."""
     year_to_col = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -526,6 +535,7 @@ def find_year_columns(ws) -> dict:
 
 
 def find_named_columns(ws, names) -> dict:
+    """Map each header in names found in row 1 of ws to its column index."""
     found = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -535,6 +545,7 @@ def find_named_columns(ws, names) -> dict:
 
 
 def values_differ(a, b, tol: float = 1e-12) -> bool:
+    """Return True when a and b differ by more than tol, as floats where possible."""
     if a is None and b is None:
         return False
     if a is None or b is None:
@@ -1094,6 +1105,7 @@ def _summarize_prod(total_prod: dict) -> dict:
 # Console output
 # ---------------------------------------------------------------------------
 def print_summary(log: dict) -> None:
+    """Print the BAU production, targets, changes, caps and warnings of a run log."""
     bar = "=" * 72
     cfg = log.get("config", {})
     print(bar)
@@ -1559,6 +1571,7 @@ def run_self_test() -> int:
 # Main
 # ---------------------------------------------------------------------------
 def main() -> int:
+    """Run the command-line interface and return its exit code."""
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )

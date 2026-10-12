@@ -112,6 +112,11 @@ PROFILE_FUNCS = {
 # YAML config loader
 # ---------------------------------------------------------------------------
 def load_config(yaml_path: Path) -> dict:
+    """Load and validate retirement_schedule.yaml.
+
+    Raises ValueError for an unknown retirement profile or a scheduled entry
+    without cr, tech or schedule.
+    """
     cfg = _load_yaml(yaml_path)
     if cfg is None:
         cfg = {}
@@ -191,6 +196,7 @@ def interpolate_schedule(schedule: dict, years: list) -> dict:
 # Tech helpers
 # ---------------------------------------------------------------------------
 def load_generation_techs(tech_types_path: Path) -> set:
+    """Return the technologies that the technology taxonomy lists as GENERATION."""
     if not tech_types_path.is_file():
         raise FileNotFoundError(f"TECH_TYPES.csv not found at {tech_types_path}")
     df = pd.read_csv(tech_types_path)
@@ -199,6 +205,10 @@ def load_generation_techs(tech_types_path: Path) -> set:
 
 
 def expand_tech_pattern(pattern: str, cr: str, gen_techs: set) -> list:
+    """Expand 'PWRCOA*' + 'INDEA' to the matching technologies in gen_techs.
+
+    A pattern without '*' is returned as is when it is in gen_techs.
+    """
     if pattern.endswith("*"):
         prefix = pattern[:-1]
         matched = [t for t in gen_techs
@@ -240,6 +250,7 @@ def _rmtree_robust(path: Path, attempts: int = 5) -> None:
 
 
 def find_latest_backup(input_dir: Path) -> Path | None:
+    """Return the newest _PRE_RETIRE_ backup beside input_dir, or None if there is none."""
     parent = input_dir.parent
     candidates = sorted(
         (p for p in parent.iterdir()
@@ -250,6 +261,11 @@ def find_latest_backup(input_dir: Path) -> Path | None:
 
 
 def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path:
+    """Replace input_dir with a backup copy and return the backup used.
+
+    Without backup_dir, the newest _PRE_RETIRE_ backup is used. The current
+    input_dir is first copied to a _POST_RETIRE_pre_restore_ snapshot.
+    """
     input_dir = Path(input_dir)
     if backup_dir is None:
         backup_dir = find_latest_backup(input_dir)
@@ -270,6 +286,7 @@ def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path
 
 
 def make_backup(input_dir: Path) -> Path:
+    """Copy input_dir to a timestamped _PRE_RETIRE_ folder beside it and return that path."""
     if not input_dir.is_dir():
         raise FileNotFoundError(f"Input directory does not exist: {input_dir}")
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -284,6 +301,7 @@ def make_backup(input_dir: Path) -> Path:
 # Worksheet helpers
 # ---------------------------------------------------------------------------
 def find_year_columns(ws) -> dict:
+    """Map each integer year header (1900 to 2200) in row 1 of ws to its column index."""
     year_to_col = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -293,6 +311,7 @@ def find_year_columns(ws) -> dict:
 
 
 def find_named_columns(ws, names) -> dict:
+    """Map each header in names found in row 1 of ws to its column index."""
     found = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -302,6 +321,7 @@ def find_named_columns(ws, names) -> dict:
 
 
 def values_differ(a, b, tol: float = 1e-12) -> bool:
+    """Return True when a and b differ by more than tol, as floats where possible."""
     if a is None and b is None:
         return False
     if a is None or b is None:
@@ -469,6 +489,7 @@ def apply_retirement(ws, config: dict, gen_techs: set,
 
 def edit_parametrization(filepath: Path, sheets: list, config: dict,
                          gen_techs: set) -> dict:
+    """Apply the retirement schedule to each listed sheet of the workbook and return a log."""
     wb = load_workbook(filepath)
     file_log = {"file": str(filepath), "sheets": []}
 
@@ -500,6 +521,11 @@ def edit_parametrization(filepath: Path, sheets: list, config: dict,
 # ---------------------------------------------------------------------------
 def run(input_dir, sheets: list = None, skip_backup: bool = False,
         yaml_path: Path | None = None) -> dict:
+    """Apply the retirement schedule to A-O_Parametrization.xlsx in input_dir.
+
+    Returns the change log. With a backup, the log is also written as JSON
+    beside it.
+    """
     input_dir = Path(input_dir)
     sheets = sheets or DEFAULT_TARGET_SHEETS
 
@@ -544,6 +570,7 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
 # Console output
 # ---------------------------------------------------------------------------
 def print_summary(log: dict) -> None:
+    """Print the change counts, skipped technologies and per-technology drawdown of a run log."""
     bar = "=" * 72
     cfg = log.get("config_summary", {})
     print(bar)
@@ -613,6 +640,7 @@ def print_summary(log: dict) -> None:
 # Self-test
 # ---------------------------------------------------------------------------
 def run_self_test() -> int:
+    """Run five checks on temporary workbooks and return 0 if all pass, else 1."""
     bar = "=" * 72
     print(bar)
     print("set_retirement_schedule.py: SELF-TEST")
@@ -966,6 +994,7 @@ def run_self_test() -> int:
 # Main
 # ---------------------------------------------------------------------------
 def main() -> int:
+    """Run the command-line interface and return its exit code."""
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )

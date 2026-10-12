@@ -108,6 +108,11 @@ BACKUP_TAG = "_PRE_IC_DIR_"
 # Config
 # ---------------------------------------------------------------------------
 def load_config(yaml_path: Path) -> dict:
+    """Read the overlay YAML and return its forward and reverse directions.
+
+    Bidirectional entries are dropped. Raises ValueError for a direction
+    outside VALID_DIRECTIONS.
+    """
     raw = _load_yaml(yaml_path)
     if raw is None:
         raw = {}
@@ -130,6 +135,7 @@ def load_config(yaml_path: Path) -> dict:
 
 
 def load_interconnector_techs(tech_types_path: Path) -> set:
+    """Return the technologies that the technology taxonomy lists as INTERCONNECTORS."""
     tech_types_path = Path(tech_types_path)
     if not tech_types_path.is_file():
         raise FileNotFoundError(
@@ -157,6 +163,7 @@ def _rmtree_robust(path: Path, attempts: int = 5) -> None:
 
 
 def make_backup(input_dir: Path) -> Path:
+    """Copy input_dir to a timestamped _PRE_IC_DIR_ folder beside it and return that path."""
     if not input_dir.is_dir():
         raise FileNotFoundError(f"Input directory does not exist: {input_dir}")
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -168,6 +175,7 @@ def make_backup(input_dir: Path) -> Path:
 
 
 def find_latest_backup(input_dir: Path) -> Path | None:
+    """Return the newest _PRE_IC_DIR_ backup beside input_dir, or None if there is none."""
     parent = input_dir.parent
     candidates = sorted(
         (p for p in parent.iterdir()
@@ -178,6 +186,11 @@ def find_latest_backup(input_dir: Path) -> Path | None:
 
 
 def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path:
+    """Replace input_dir with a backup copy and return the backup used.
+
+    Without backup_dir, the newest _PRE_IC_DIR_ backup is used. The current
+    input_dir is first copied to a _POST_IC_DIR_pre_restore_ snapshot.
+    """
     input_dir = Path(input_dir)
     if backup_dir is None:
         backup_dir = find_latest_backup(input_dir)
@@ -205,6 +218,7 @@ def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path
 # Worksheet helpers
 # ---------------------------------------------------------------------------
 def find_year_columns(ws) -> dict:
+    """Map each year header (1900 to 2200) in row 1 of ws to its column index."""
     year_to_col = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -221,6 +235,7 @@ def find_year_columns(ws) -> dict:
 
 
 def find_named_columns(ws, names: list) -> dict:
+    """Map each header in names found in row 1 of ws to its column index."""
     found = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -259,6 +274,13 @@ def determine_forward_mode(tech: str, mode_input_fuels: dict) -> int:
 # ---------------------------------------------------------------------------
 def edit_ar_projections(filepath: Path, trn_techs: set,
                         config: dict, study_start_year: int | None = None) -> dict:
+    """Zero the disabled mode's rows in the AR Projections workbook and return a log.
+
+    Each disabled row is set to 0.0 in every year column, from
+    study_start_year on when it is given, and its Projection.Mode becomes
+    "User defined". Each log change records the forward mode, which run
+    passes on to edit_ar_base_year.
+    """
     wb = load_workbook(filepath)
     log = {"file": str(filepath), "changes": [], "warnings": [],
            "study_start_year": study_start_year}
@@ -465,6 +487,12 @@ def edit_ar_base_year(filepath: Path, trn_techs: set,
 def run(input_dir, skip_backup: bool = False,
         yaml_path: Path | None = None,
         study_start_year: int | None = None) -> dict:
+    """Apply the overlay to the AR workbooks in input_dir and return the change log.
+
+    Returns {"skipped": True} when the YAML sets no forward or reverse
+    direction. The AR Base Year edit is skipped when study_start_year is
+    given. With a backup, the log is also written as JSON beside it.
+    """
     input_dir = Path(input_dir)
 
     if yaml_path is None:
@@ -528,6 +556,7 @@ def run(input_dir, skip_backup: bool = False,
 # Console output
 # ---------------------------------------------------------------------------
 def print_summary(log: dict) -> None:
+    """Print the changes and warnings of a run log to the console."""
     bar = "=" * 72
     print(bar)
     print("set_interconnector_direction -- directionality control applied")
@@ -561,6 +590,7 @@ def print_summary(log: dict) -> None:
 # CLI
 # ---------------------------------------------------------------------------
 def main() -> int:
+    """Run the command-line interface and return its exit code."""
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
