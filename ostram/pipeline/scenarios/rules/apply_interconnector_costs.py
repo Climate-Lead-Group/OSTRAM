@@ -2,7 +2,8 @@
 apply_interconnector_costs.py
 =============================
 
-WS-3 wiring fix. Makes the v18 `Interconnector_Params` sheet the SOURCE OF TRUTH
+Late A3 stage stage_interconnector_costs. Makes the v18 `Interconnector_Params`
+sheet the SOURCE OF TRUTH
 for interconnector CapitalCost / FixedCost / OperationalLife.
 
 Background
@@ -20,7 +21,7 @@ the sheet's values, across two sheets with different layouts:
 Scope (intentionally narrow): CapitalCost, FixedCost, OperationalLife only.
 ResidualCapacity and the *Max*Capacity/Investment caps are owned by
 fix_trn_residuals / cap_trn_to_residual / relax_interconnectors and are left
-untouched; TransmissionLossFactor / CapacityFactor are out of WS-3 scope.
+untouched; TransmissionLossFactor / CapacityFactor are out of scope.
 
 Scenario support: when run inside A3, the template read is the per-scenario
 MATERIALIZED template ($OSTRAM_TEMPLATE_PATH), which already has BAU + any

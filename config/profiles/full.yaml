@@ -9018,7 +9018,7 @@ scenario_inputs:
       capacity) for every cross-border TRN corridor, applied to the STUDY PERIOD 2027+
       only (base years 2023-2026 revert to the source/pinned calibrated mix). The
       base-window grandfather is required because interconnector capacity is cumulative
-      and long-lived: the WS-4 base-year pin fixes each node''s base-year net import,
+      and long-lived: the base-year pin fixes each node''s base-year net import,
       which needs the calibrated base-window corridor capacity, so a bare 1.5x-residual
       cap on 2027 would retroactively starve the pinned base years (genuine demand-balance
       infeasibility). India-internal corridors kept at B_Opt. Non-India TRNNLI*/TRNRPO*

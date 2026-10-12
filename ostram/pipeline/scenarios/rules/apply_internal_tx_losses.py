@@ -2,14 +2,15 @@
 apply_internal_tx_losses.py
 ===========================
 
-WS-4. Give the six INTERNAL (intra-node) transmission families a non-zero
+Late A3 stage stage_internal_tx_losses. Gives the six INTERNAL (intra-node)
+transmission families a non-zero
 transmission loss, matching how the interconnectors carry losses (via the
 output activity ratio in the A-O_AR files).
 
 Background
 ----------
-A2 (transmission.py) injects the internal families (RNWTRN/RNWNLI/RNWRPO, PWRTRN/TRNNLI/
-TRNRPO) with output activity = 1.0 -> 0% loss, which is not physical. The
+A2 (transmission.py) injects the internal families (RNWTRN/RNWNLI/RNWRPO,
+PWRTRN/TRNNLI/TRNRPO) with output activity = 1.0 -> 0% loss, which is not physical. The
 interconnectors already carry per-corridor losses (OAR 0.93-0.98) in
 A-O_AR_Projections "Demand Techs" (year-indexed Direction=Output rows) and
 A-O_AR_Model_Base_Year "Demand Techs" (Value.Fuel.O). This stage sets the
@@ -18,7 +19,8 @@ OutputActivityRatio = 1 - loss for them.
 
 Loss value: `internal_transmission.transmission_loss` in Config_country_codes.yaml
 (default 0.03 = 3%, CEA all-India *transmission* loss ~3-4%; distribution is out
-of scope). Uniform across nodes (per the WS-3 uniform-cost decision). OAR = 0.97.
+of scope). Uniform across nodes, as the costs of stage_internal_transmission
+are. OAR = 0.97.
 
 Scope: the 6 internal families only, on the two AR files' "Demand Techs" sheet.
 Interconnectors, DSPTRN, generators, storage untouched.

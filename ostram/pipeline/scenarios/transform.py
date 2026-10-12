@@ -27,7 +27,7 @@ Pipeline:
   Stage 4.5  apply_inherited_restrictions   write Restrictions rows from
                                             inherit_restrictions_from scenarios
   Stage 5    <rules_script>                 applies the scenario's rules
-  Late WS-4  apply_base_year_pin            exact audited 2023-2026 PWR/MIN
+  Late       apply_base_year_pin            exact audited 2023-2026 PWR/MIN
                                             keys on the three canonical roots
   Stage 6    persist_run_restrictions       write CHANGES.json into a
                                             disposable scenario-state copy
@@ -675,7 +675,7 @@ def stage_interconnector_costs(
     soasia: Path,
     materialized_template: Path | None,
 ) -> None:
-    """WS-3: wire v18 Interconnector_Params cost columns into the model.
+    """Wire v18 Interconnector_Params cost columns into the model.
 
     Interconnector CapitalCost/FixedCost historically came from the OG_csvs base
     (distance-computed predecessor values) and the sourced Interconnector_Params sheet
@@ -703,7 +703,7 @@ def stage_interconnector_costs(
 
 
 def stage_internal_transmission(s5: Path) -> None:
-    """WS-3 D5: calibrate the six INTERNAL (intra-node) transmission families.
+    """Calibrate the six INTERNAL (intra-node) transmission families.
 
     A2 (transmission.py) injects RNWTRN/RNWNLI/RNWRPO (RE) and PWRTRN/TRNNLI/TRNRPO (non-RE)
     flat (CapEx 100, FOM 4, ResidualCapacity 5, life 20); the Stage-1 template
@@ -732,7 +732,7 @@ def stage_internal_transmission(s5: Path) -> None:
 
 
 def stage_internal_tx_losses(s5: Path) -> None:
-    """WS-4: give the six internal transmission families a non-zero loss.
+    """Give the six internal transmission families a non-zero loss.
 
     A2 injects internal-tx output activity = 1.0 (0% loss). This stage sets
     OutputActivityRatio = 1 - internal_transmission.transmission_loss (default

@@ -2,7 +2,8 @@
 apply_internal_transmission.py
 ==============================
 
-WS-3 D5. Calibrates the INTERNAL (intra-node) transmission families in the
+Late A3 stage stage_internal_transmission. Calibrates the INTERNAL (intra-node)
+transmission families in the
 model's `A-O_Parametrization.xlsx`, making `Config_country_codes.yaml` +
 a desk-checked per-node residuals file the source of truth for:
 
