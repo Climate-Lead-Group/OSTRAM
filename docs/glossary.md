@@ -9,7 +9,7 @@ maps the terms to the names used in the code.
 | A-result seed | The folder of a solved `A_Calibrated_BAU` result. `C_Target_VRE` reads it to size its generation floors. It is passed with `--a-result-seed`. |
 | Adequacy top-up | The last step of the build-cap rule. When the build caps of a country-region in one year add up to less than a set share of its demand-scaled fleet, every cap is multiplied by one factor so that the sum reaches that share. |
 | Backstop | A very expensive generation technology, `PWRBCK` followed by the country-region, that the solver uses only when the other limits leave demand unmet. |
-| Base-year pin | The A3 rule that writes reviewed values for 2023 to 2026 from `config/scenarios/rules/pwr_min_2023_2026_pin.csv`. It runs last for each root and again after the scenario edits of a derived scenario. |
+| Base-year pin | The A3 rule that writes reviewed values for 2023 to 2026 from `config/scenarios/rules/pwr_min_2023_2026_pin.csv`. It runs after the shared rules of `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE`, the roots listed in `PWR_MIN_PIN_ROOT_SCENARIOS`, and again after the scenario edits of a derived scenario. Support `BAU` does not run it. |
 | Build cap | The most new capacity of one technology that the model may build in one country-region in one year. Model parameter `TotalAnnualMaxCapacityInvestment`. |
 | Cap multiplier | A factor on the build cap that rises over time. |
 | Country-region | One of the ten nodes of the South Asia model: BGDXX, BTNXX, INDEA, INDNE, INDNO, INDSO, INDWE, LKAXX, MDVXX and NPLXX. File and column names abbreviate it as `cr`. |

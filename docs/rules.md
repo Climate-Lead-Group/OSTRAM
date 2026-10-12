@@ -1,8 +1,9 @@
 # Scenario rules
 
 A3 builds each root scenario by running rule scripts in the order that the
-Control sheet of the scenario workbook lists them, followed by four shared
-rules. A derived scenario is then built from its root by the
+Control sheet of the scenario workbook lists them, followed by three shared
+rules and, for three of the roots, the base-year pin. A derived scenario is
+then built from its root by the
 [scenario edits](scenario-edits.md). Terms are in the [glossary](glossary.md).
 
 ## The eleven A3 rules
@@ -37,8 +38,11 @@ inheritance.
 | `B_Optimised_VRE` | retirement, build cap, relax interconnectors, storage minimum investment |
 | `C_Target_VRE` | retirement, minimum capacity floors, build cap, VRE targets, relax interconnectors, storage minimum investment |
 
-After the chain, every root runs interconnector costs, internal transmission,
-internal transmission losses and the base-year pin, in that order. A derived
+After the chain, every root runs interconnector costs, internal transmission
+and internal transmission losses, in that order. The base-year pin then runs
+for the roots listed in `PWR_MIN_PIN_ROOT_SCENARIOS` in
+`ostram/pipeline/scenarios/orchestrator.py`: `A_Calibrated_BAU`,
+`B_Optimised_VRE` and `C_Target_VRE`. Support `BAU` does not run it. A derived
 scenario then receives the shared VRE ceilings, its scenario edits and the
 base-year pin again. The two direction variants receive their overlay last.
 
