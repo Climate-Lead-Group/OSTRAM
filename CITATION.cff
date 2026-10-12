@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: If you use OSTRAM, cite it as below.
+title: "OSTRAM: OSeMOSYS for Transmission – Framework to represent power systems connectivity"
+repository-code: https://github.com/Climate-Lead-Group/OSTRAM
+license: Apache-2.0
+version: v2026.09-release
+date-released: 2026-09-19
+authors:
+  - name: Climate Lead Group
