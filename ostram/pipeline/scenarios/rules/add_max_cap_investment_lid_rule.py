@@ -1180,7 +1180,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             if param == MAX_CAP_PARAM:
                 proposed = _exempt_max_cap_for(tech, year)
                 reason = ("exempt_maxcap_capped" if proposed < PLACEHOLDER_VALUE
-                          else "exempt_maxcap_uncapped")
+                          else "exempt_maxcap_9999")
                 if values_differ(old, proposed):
                     cell.value = proposed
                     row_was_modified = True
@@ -1283,7 +1283,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             ):
                 proposed = lid
                 if is_exempt:
-                    reason = "exempt_uncapped"
+                    reason = "exempt_9999"
                 elif adequacy_scaled:
                     reason = "lid_adequacy_scaled"
                 elif floored:
@@ -1302,7 +1302,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                 # Exempt techs ALWAYS get 9999, even if the cell had a
                 # manual value (e.g. 0 set by upstream add_max scripts).
                 proposed = lid  # lid is already 9999 for exempt techs
-                reason = "exempt_uncapped"
+                reason = "exempt_9999"
             else:
                 proposed = float(old) if isinstance(old, (int, float)) else old
                 reason = "preserved_manual"
