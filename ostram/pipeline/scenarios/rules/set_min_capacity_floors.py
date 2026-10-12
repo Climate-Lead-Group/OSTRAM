@@ -2,18 +2,18 @@
 set_min_capacity_floors.py
 ==========================
 
-Independent rule — writes minimum capacity/generation floors and
+Independent rule: writes minimum capacity/generation floors and
 optional maximum ceilings from exogenous policy documents (CCDRs,
 national energy plans, IRPs) into the parametrization workbook.
 
 All target values come from a user-curated YAML file. Unlike
-set_vre_targets.py this script has NO dependency on prior model runs —
+set_vre_targets.py this script has NO dependency on prior model runs;
 it is purely a "policy injection" layer.
 
 RULE
 ----
 For each entry in the YAML (floors and ceilings):
-    Expand the tech pattern + cr to matching techs in TECH_TYPES.csv.
+    Expand the tech pattern + cr to matching techs in technology_types.csv.
     Interpolate the schedule to all horizon years.
     Write the value into the appropriate parameter row:
         min_capacity  → TotalAnnualMinCapacityInvestment (GW)
@@ -176,6 +176,7 @@ def interpolate_schedule(schedule: dict, years: list,
 # Tech-type loading and pattern matching
 # ---------------------------------------------------------------------------
 def load_generation_techs(tech_types_path: Path) -> set:
+    """Return the technologies that the technology taxonomy lists as GENERATION."""
     if not tech_types_path.is_file():
         raise FileNotFoundError(f"TECH_TYPES.csv not found at {tech_types_path}")
     df = pd.read_csv(tech_types_path)
@@ -210,6 +211,7 @@ def _rmtree_robust(path: Path, attempts: int = 5) -> None:
 
 
 def find_latest_backup(input_dir: Path) -> Path | None:
+    """Return the newest _PRE_BAU_CAL_ backup beside input_dir, or None if there is none."""
     parent = input_dir.parent
     candidates = sorted(
         (p for p in parent.iterdir()
@@ -220,6 +222,11 @@ def find_latest_backup(input_dir: Path) -> Path | None:
 
 
 def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path:
+    """Replace input_dir with a backup copy and return the backup used.
+
+    Without backup_dir, the newest _PRE_BAU_CAL_ backup is used. The current
+    input_dir is first copied to a _POST_BAU_CAL_pre_restore_ snapshot.
+    """
     input_dir = Path(input_dir)
     if backup_dir is None:
         backup_dir = find_latest_backup(input_dir)
@@ -240,6 +247,7 @@ def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path
 
 
 def make_backup(input_dir: Path) -> Path:
+    """Copy input_dir to a timestamped _PRE_BAU_CAL_ folder beside it and return that path."""
     if not input_dir.is_dir():
         raise FileNotFoundError(f"Input directory does not exist: {input_dir}")
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -254,6 +262,7 @@ def make_backup(input_dir: Path) -> Path:
 # Worksheet helpers
 # ---------------------------------------------------------------------------
 def find_year_columns(ws) -> dict:
+    """Map each integer year header (1900 to 2200) in row 1 of ws to its column index."""
     year_to_col = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -263,6 +272,7 @@ def find_year_columns(ws) -> dict:
 
 
 def find_named_columns(ws, names) -> dict:
+    """Map each header in names found in row 1 of ws to its column index."""
     found = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -272,6 +282,7 @@ def find_named_columns(ws, names) -> dict:
 
 
 def values_differ(a, b, tol: float = 1e-12) -> bool:
+    """Return True when a and b differ by more than tol, as floats where possible."""
     if a is None and b is None:
         return False
     if a is None or b is None:
@@ -284,6 +295,7 @@ def values_differ(a, b, tol: float = 1e-12) -> bool:
 
 def find_param_row(ws, tech: str, param: str, tech_col: int,
                    param_col: int) -> int | None:
+    """Return the row of ws holding tech and param, or None if there is none."""
     for row_idx in range(2, ws.max_row + 1):
         t = ws.cell(row=row_idx, column=tech_col).value
         p = ws.cell(row=row_idx, column=param_col).value
@@ -294,6 +306,10 @@ def find_param_row(ws, tech: str, param: str, tech_col: int,
 
 def find_or_create_param_row(ws, tech: str, param: str, tech_col: int,
                              param_col: int, proj_mode_col: int | None) -> int:
+    """Return the row of ws holding tech and param, appending one if there is none.
+
+    A new row gets Projection.Mode EMPTY when that column exists.
+    """
     existing = find_param_row(ws, tech, param, tech_col, param_col)
     if existing is not None:
         return existing
@@ -500,6 +516,11 @@ def edit_parametrization(filepath: Path, sheets: list, config: dict,
 # ---------------------------------------------------------------------------
 def run(input_dir, sheets: list = None, skip_backup: bool = False,
         yaml_path: Path | None = None) -> dict:
+    """Apply the floors and ceilings of the YAML to A-O_Parametrization.xlsx in input_dir.
+
+    Returns the change log. With a backup, the log is also written as JSON
+    beside it.
+    """
     input_dir = Path(input_dir)
     sheets = sheets or DEFAULT_TARGET_SHEETS
 
@@ -543,10 +564,11 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
 # Console output
 # ---------------------------------------------------------------------------
 def print_summary(log: dict) -> None:
+    """Print the entries, change counts and warnings of a run log to the console."""
     bar = "=" * 72
     cfg = log.get("config_summary", {})
     print(bar)
-    print("set_min_capacity_floors — BAU calibration floors/ceilings applied")
+    print("set_min_capacity_floors: BAU calibration floors/ceilings applied")
     print(bar)
     print(f"Backup folder    : {log.get('backup_dir', '(skipped)')}")
     print(f"Edited file      : {log['file']}")
@@ -574,7 +596,7 @@ def print_summary(log: dict) -> None:
             print(f"\n  [{section_name.upper()}]")
             for ep in entries:
                 print(f"    {ep['cr']} / {ep['tech_pattern']} → "
-                      f"{ep['wb_param']} — matched {len(ep['matched_techs'])} techs "
+                      f"{ep['wb_param']}: matched {len(ep['matched_techs'])} techs "
                       f"({', '.join(ep['matched_techs'])})")
                 if ep.get("note"):
                     print(f"      note: {ep['note']}")
@@ -603,9 +625,10 @@ def print_summary(log: dict) -> None:
 # Self-test
 # ---------------------------------------------------------------------------
 def run_self_test() -> int:
+    """Run six checks on temporary workbooks and return 0 if all pass, else 1."""
     bar = "=" * 72
     print(bar)
-    print("set_min_capacity_floors.py — SELF-TEST")
+    print("set_min_capacity_floors.py: SELF-TEST")
     print(bar)
 
     passed = 0
@@ -707,7 +730,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 1: Floor writes MinCapInv
     # ======================================================================
-    print("\nTest 1 — Floor writes MinCapInv")
+    print("\nTest 1: Floor writes MinCapInv")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir)
@@ -753,7 +776,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 2: Floor triggers untie rule
     # ======================================================================
-    print("\nTest 2 — Floor triggers untie rule")
+    print("\nTest 2: Floor triggers untie rule")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir, maxinv_presets={"PWRSPVINDEA": 2.0})
@@ -805,7 +828,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 3: Ceiling tightens MaxCapInv
     # ======================================================================
-    print("\nTest 3 — Ceiling tightens MaxCapInv")
+    print("\nTest 3: Ceiling tightens MaxCapInv")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         # MaxCapInv for PWRCOAINDEA = 9999 (or empty → we use 9999)
@@ -839,7 +862,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 4: Ceiling does not loosen
     # ======================================================================
-    print("\nTest 4 — Ceiling does not loosen existing MaxCapInv")
+    print("\nTest 4: Ceiling does not loosen existing MaxCapInv")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         # MaxCapInv for PWRCOAINDEA: 0.5 at all years
@@ -874,7 +897,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 5: Interpolation
     # ======================================================================
-    print("\nTest 5 — Interpolation between milestones")
+    print("\nTest 5: Interpolation between milestones")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir)
@@ -920,7 +943,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 6: Tech pattern expansion (cr filter)
     # ======================================================================
-    print("\nTest 6 — Tech pattern expansion respects cr filter")
+    print("\nTest 6: Tech pattern expansion respects cr filter")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         # Add an extra tech to prove cr filtering works
@@ -999,6 +1022,7 @@ def run_self_test() -> int:
 # Main
 # ---------------------------------------------------------------------------
 def main() -> int:
+    """Run the command-line interface and return its exit code."""
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )

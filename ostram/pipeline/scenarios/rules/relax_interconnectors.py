@@ -2,18 +2,19 @@
 relax_interconnectors.py
 ========================
 
-Independent patch — relaxes TotalAnnualMaxCapacityInvestment for
+Independent rule: relaxes TotalAnnualMaxCapacityInvestment for
 INTERCONNECTOR (TRN*) technologies beyond their ResidualCapacity
 baseline, controlled by a YAML configuration file.
 
 This script is the complement of cap_trn_to_residual.py. Where that
 script freezes interconnectors at ResidualCapacity, this one opens them
-up — by a multiplicative factor, an additive headroom, absolute
-per-link overrides, or full unconstrain (9999).
+up by a multiplicative factor, an additive headroom, absolute
+per-link overrides, or a cap of 9999 (mode "unconstrained").
 
 RULE
 ----
-For each TRN tech in TECH_TYPES.csv (category = INTERCONNECTORS):
+For each TRN tech in TECH_TYPES.csv (category = INTERCONNECTORS), the copy
+of config/scenarios/technology_types.csv staged in the run folder:
 
     IF tech is listed in yaml.overrides:
         MaxCapInv(tech, year) = interpolated override value
@@ -23,15 +24,16 @@ For each TRN tech in TECH_TYPES.csv (category = INTERCONNECTORS):
         mode == "additive":
             MaxCapInv = ResidualCapacity + headroom_gw
         mode == "unconstrained":
-            MaxCapInv = 9999
+            MaxCapInv = 9999   (a finite cap)
 
     Safety floor: MaxCapInv = max(MaxCapInv, ResidualCapacity)
 
     Second pass (MaxCap opening):
         For any overridden tech whose schedule has at least one non-zero
         investment value, TotalAnnualMaxCapacity is set to 9999 across
-        all years. This removes the total-capacity ceiling that
-        cap_trn_to_residual imposed (MaxCap = ResCap) so that the
+        all years. This replaces the total-capacity ceiling that
+        cap_trn_to_residual imposed (MaxCap = ResCap) with a finite cap of
+        9999, so that the
         override-controlled MaxCapInv is the sole investment constraint.
         Techs without overrides or with all-zero overrides are untouched.
 
@@ -121,7 +123,7 @@ def load_config(yaml_path: Path) -> dict:
     """Load and validate the YAML configuration.
 
     Returns a dict with keys:
-        mode             : str — "multiplicative", "additive", or "unconstrained"
+        mode             : str, one of "multiplicative", "additive", or "unconstrained"
         headroom_factor  : float (used by multiplicative)
         headroom_gw      : float (used by additive)
         overrides        : dict {tech: {year: value}}
@@ -252,6 +254,7 @@ def _rmtree_robust(path: Path, attempts: int = 5) -> None:
 
 
 def find_latest_backup(input_dir: Path) -> Path | None:
+    """Return the newest `_PRE_TRN_RELAX_` backup beside the input folder, or None."""
     parent = input_dir.parent
     candidates = sorted(
         (p for p in parent.iterdir()
@@ -262,6 +265,7 @@ def find_latest_backup(input_dir: Path) -> Path | None:
 
 
 def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path:
+    """Replace the input folder with the given backup, or the newest one, after saving the current folder as a `_POST_TRN_RELAX_pre_restore_` snapshot; return the backup used."""
     input_dir = Path(input_dir)
     if backup_dir is None:
         backup_dir = find_latest_backup(input_dir)
@@ -285,6 +289,7 @@ def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path
 
 
 def make_backup(input_dir: Path) -> Path:
+    """Copy the input folder to a timestamped `_PRE_TRN_RELAX_` sibling and return its path."""
     if not input_dir.is_dir():
         raise FileNotFoundError(f"Input directory does not exist: {input_dir}")
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -309,6 +314,7 @@ def find_year_columns(ws) -> dict:
 
 
 def find_named_columns(ws, names) -> dict:
+    """Return {header: column index} for the row-1 headers listed in names."""
     found = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -318,6 +324,7 @@ def find_named_columns(ws, names) -> dict:
 
 
 def values_differ(a, b, tol: float = 1e-12) -> bool:
+    """Return True when two cell values differ by more than tol, compared as numbers where possible."""
     if a is None and b is None:
         return False
     if a is None or b is None:
@@ -768,7 +775,7 @@ def print_summary(log: dict) -> None:
     bar = "=" * 72
     cfg = log.get("config", {})
     print(bar)
-    print("relax_interconnectors — TRN MaxCapInv relaxation applied")
+    print("relax_interconnectors: TRN MaxCapInv relaxation applied")
     print(bar)
     print(f"Backup folder : {log.get('backup_dir', '(skipped)')}")
     print(f"Edited file   : {log['file']}")
@@ -836,7 +843,7 @@ def run_self_test() -> int:
 
     bar = "=" * 72
     print(bar)
-    print("relax_interconnectors.py — SELF-TEST")
+    print("relax_interconnectors.py: SELF-TEST")
     print(bar)
 
     passed = 0
@@ -939,12 +946,12 @@ def run_self_test() -> int:
         if not condition:
             print(f"  FAIL: {msg}")
             failed += 1
-        # Don't increment passed here — we count per-test, not per-assertion
+        # Don't increment passed here; passes are counted once per test
 
     # ======================================================================
     # TEST 1: Multiplicative mode (factor = 2.0)
     # ======================================================================
-    print("\nTest 1 — Multiplicative mode (factor = 2.0)")
+    print("\nTest 1: Multiplicative mode (factor = 2.0)")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir)
@@ -982,7 +989,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 2: Additive mode (headroom_gw = 1.0)
     # ======================================================================
-    print("\nTest 2 — Additive mode (headroom_gw = 1.0)")
+    print("\nTest 2: Additive mode (headroom_gw = 1.0)")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir)
@@ -1016,7 +1023,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 3: Per-link override with interpolation
     # ======================================================================
-    print("\nTest 3 — Per-link override with interpolation")
+    print("\nTest 3: Per-link override with interpolation")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir)
@@ -1061,7 +1068,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 4: Safety floor (override below ResCap)
     # ======================================================================
-    print("\nTest 4 — Safety floor (override below ResCap, clamped)")
+    print("\nTest 4: Safety floor (override below ResCap, clamped)")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir)
@@ -1113,6 +1120,7 @@ def run_self_test() -> int:
 # Main
 # ---------------------------------------------------------------------------
 def main() -> int:
+    """Parse the command line, then run the rule, the self-test or a restore; return the exit code."""
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -1131,7 +1139,7 @@ def main() -> int:
     parser.add_argument(
         "--skip-backup",
         action="store_true",
-        help="Skip backup creation (DANGEROUS — for testing only)",
+        help="Skip backup creation (DANGEROUS, for testing only)",
     )
     parser.add_argument(
         "--self-test",

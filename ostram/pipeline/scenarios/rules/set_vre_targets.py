@@ -2,7 +2,7 @@
 set_vre_targets.py
 ==================
 
-Independent rule — sets minimum renewable generation (or capacity)
+Independent rule: sets minimum renewable generation (or capacity)
 floors per country-region and technology, expressed as absolute values
 derived from a prior BAU solve's total production.
 
@@ -106,7 +106,7 @@ UNTIE_MULTIPLIER = 1.01
 BACKUP_TAG = "_PRE_VRE_TARGETS_"
 
 # ---------------------------------------------------------------------------
-# BAU production source — column names and accepted file layouts
+# BAU production source: column names and accepted file layouts
 # ---------------------------------------------------------------------------
 # Two layouts are supported transparently:
 #   1. otoole's separate-parameter file 'ProductionByTechnology.csv'
@@ -165,7 +165,7 @@ def load_config(yaml_path: Path) -> dict:
     # pin_generation_to_target: when true, cap_envelope targets also get a
     # TotalTechnologyAnnualActivityUpperLimit = max(target_gen, CalBAU_gen),
     # which pins generation AT the NDC share (not above it) while leaving the
-    # capacity envelope generous — so the solver keeps its room (no degenerate
+    # capacity envelope generous, so the solver keeps its room (no degenerate
     # narrow capacity band). The max() guard prevents force-curtailing planned
     # capacity in regions whose baseline already exceeds the early floor.
     pin_generation_to_target = bool(cfg.get("pin_generation_to_target", False))
@@ -278,7 +278,7 @@ def load_bau_total_production(bau_results_path: Path, gen_techs: set) -> dict:
     """Read BAU production and return {(cr, year): total_pj}.
 
     Aggregates production across electricity GENERATION technologies (per
-    TECH_TYPES.csv) per country-region per year. Country-region is extracted
+    technology_types.csv) per country-region per year. Country-region is extracted
     from the TECHNOLOGY column (chars 6..11 for 11-char PWR* codes).
 
     Reads either otoole's 'ProductionByTechnology.csv' or the combined B2
@@ -313,7 +313,7 @@ def load_bau_total_production(bau_results_path: Path, gen_techs: set) -> dict:
                         as_index=False)[value_col].max()
 
     # Keep only electricity generation techs (length-11 PWR* in the
-    # GENERATION category from TECH_TYPES.csv).
+    # GENERATION category from technology_types.csv).
     df = df[df[PROD_COL_TECH].str.len() == PWR_TECH_LENGTH]
     df = df[df[PROD_COL_TECH].isin(gen_techs)]
     df["_cr"] = df[PROD_COL_TECH].str[COUNTRY_REGION_SLICE]
@@ -334,7 +334,7 @@ def load_bau_tech_yield(bau_results_path: Path, techs: set,
     cap_traj  : {tech: {year: TotalCapacityAnnual GW}}  (CalBAU's installed path)
 
     The cap trajectory is used by the cap_envelope feature so the envelope is
-    never sized below what CalBAU actually built — which reflects planned
+    never sized below what CalBAU actually built, which reflects planned
     capacity (e.g. Bangladesh's planned solar) and the calibrated baseline.
     Yield falls back to default_cf * C2AU for techs CalBAU never built.
     Reads the same file as load_bau_total_production (otoole or combined B2).
@@ -354,7 +354,7 @@ def load_bau_tech_yield(bau_results_path: Path, techs: set,
     df[PROD_COL_TECH] = df[PROD_COL_TECH].astype(str)
     df[PROD_COL_YEAR] = df[PROD_COL_YEAR].astype(float).astype(int)
 
-    # Production and capacity sit on different rows in the wide format —
+    # Production and capacity sit on different rows in the wide format;
     # aggregate each to one value per (tech, year), then merge.
     p = (df.dropna(subset=[prod_col])
            .groupby([PROD_COL_TECH, PROD_COL_YEAR], as_index=False)[prod_col].max())
@@ -390,7 +390,7 @@ def interpolate_schedule(schedule: dict, years: list,
                          pre_first: float = 0.0) -> dict:
     """Linearly interpolate a sparse {year: value} schedule.
 
-    Years before first key: pre_first (default 0 — no floor before
+    Years before first key: pre_first (default 0, no floor before
     the first target milestone).
     Years after last key: hold last value flat.
     """
@@ -431,7 +431,7 @@ def interpolate_production(total_prod: dict, cr: str, years: list) -> dict:
 # Tech-type loading and pattern matching
 # ---------------------------------------------------------------------------
 def load_generation_techs(tech_types_path: Path) -> set:
-    """Load TECH_TYPES.csv and return the set of GENERATION techs."""
+    """Load technology_types.csv and return the set of GENERATION techs."""
     if not tech_types_path.is_file():
         raise FileNotFoundError(f"TECH_TYPES.csv not found at {tech_types_path}")
     df = pd.read_csv(tech_types_path)
@@ -471,6 +471,7 @@ def _rmtree_robust(path: Path, attempts: int = 5) -> None:
 
 
 def find_latest_backup(input_dir: Path) -> Path | None:
+    """Return the newest _PRE_VRE_TARGETS_ backup beside input_dir, or None if there is none."""
     parent = input_dir.parent
     candidates = sorted(
         (p for p in parent.iterdir()
@@ -481,6 +482,12 @@ def find_latest_backup(input_dir: Path) -> Path | None:
 
 
 def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path:
+    """Replace input_dir with a backup copy and return the backup used.
+
+    Without backup_dir, the newest _PRE_VRE_TARGETS_ backup is used. The
+    current input_dir is first copied to a _POST_VRE_TARGETS_pre_restore_
+    snapshot.
+    """
     input_dir = Path(input_dir)
     if backup_dir is None:
         backup_dir = find_latest_backup(input_dir)
@@ -503,6 +510,7 @@ def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path
 
 
 def make_backup(input_dir: Path) -> Path:
+    """Copy input_dir to a timestamped _PRE_VRE_TARGETS_ folder beside it and return that path."""
     if not input_dir.is_dir():
         raise FileNotFoundError(f"Input directory does not exist: {input_dir}")
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -517,6 +525,7 @@ def make_backup(input_dir: Path) -> Path:
 # Worksheet helpers
 # ---------------------------------------------------------------------------
 def find_year_columns(ws) -> dict:
+    """Map each integer year header (1900 to 2200) in row 1 of ws to its column index."""
     year_to_col = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -526,6 +535,7 @@ def find_year_columns(ws) -> dict:
 
 
 def find_named_columns(ws, names) -> dict:
+    """Map each header in names found in row 1 of ws to its column index."""
     found = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -535,6 +545,7 @@ def find_named_columns(ws, names) -> dict:
 
 
 def values_differ(a, b, tol: float = 1e-12) -> bool:
+    """Return True when a and b differ by more than tol, as floats where possible."""
     if a is None and b is None:
         return False
     if a is None or b is None:
@@ -790,8 +801,8 @@ def apply_vre_targets(ws, config: dict, total_prod: dict,
 
             # --- Capacity envelope (bounded MaxCap + MaxCapInv) ---
             # When a target opts in (cap_envelope: true), bound the tech from
-            # ABOVE so it follows the floor's capacity trajectory rather than
-            # being exempted/uncapped. The reference each year is the MAX of:
+            # ABOVE so it follows the floor's capacity trajectory. The reference
+            # each year is the MAX of:
             #   - cap_needed(y) = floor_pj(y) / yield   (the NDC requirement), and
             #   - bau_cap(y)    = CalBAU's installed capacity (reflects planned
             #     builds + the calibrated baseline)
@@ -1028,7 +1039,7 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
         )
     config = load_config(yaml_path)
 
-    # Load TECH_TYPES.csv — needed both to gate target tech matching and to
+    # Load technology_types.csv, needed both to gate target tech matching and to
     # filter the BAU production aggregate to electricity generation only.
     tech_types_path = resolve_paths().interconnector_taxonomy
     gen_techs = load_generation_techs(tech_types_path)
@@ -1094,10 +1105,11 @@ def _summarize_prod(total_prod: dict) -> dict:
 # Console output
 # ---------------------------------------------------------------------------
 def print_summary(log: dict) -> None:
+    """Print the BAU production, targets, changes, caps and warnings of a run log."""
     bar = "=" * 72
     cfg = log.get("config", {})
     print(bar)
-    print("set_vre_targets — VRE generation/capacity floors applied")
+    print("set_vre_targets: VRE generation/capacity floors applied")
     print(bar)
     print(f"Backup folder      : {log.get('backup_dir', '(skipped)')}")
     print(f"Edited file        : {log['file']}")
@@ -1163,7 +1175,7 @@ def run_self_test() -> int:
     """Build synthetic data, run all tests, verify assertions."""
     bar = "=" * 72
     print(bar)
-    print("set_vre_targets.py — SELF-TEST")
+    print("set_vre_targets.py: SELF-TEST")
     print(bar)
 
     passed = 0
@@ -1187,7 +1199,7 @@ def run_self_test() -> int:
 
         row = 2
         for tech in techs_gen:
-            # ResidualCapacity (dummy — not used by this script but present
+            # ResidualCapacity (dummy: not used by this script but present
             # for structural consistency)
             ws.cell(row=row, column=1, value=tech)
             ws.cell(row=row, column=2, value="ResidualCapacity")
@@ -1273,7 +1285,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 1: Activity floor computation
     # ======================================================================
-    print("\nTest 1 — Activity floor computation")
+    print("\nTest 1: Activity floor computation")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir, years_3)
@@ -1333,7 +1345,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 2: Interpolation (pct and production)
     # ======================================================================
-    print("\nTest 2 — Interpolation between milestones")
+    print("\nTest 2: Interpolation between milestones")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir, years_5)
@@ -1402,7 +1414,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 3: Max floor share safety cap
     # ======================================================================
-    print("\nTest 3 — Max floor share safety cap")
+    print("\nTest 3: Max floor share safety cap")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir, [2030])
@@ -1458,7 +1470,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 4: Missing BAU results
     # ======================================================================
-    print("\nTest 4 — Missing BAU results (hard fail)")
+    print("\nTest 4: Missing BAU results (hard fail)")
     test_ok = True
     try:
         load_bau_total_production(Path("/nonexistent/path/to/bau"), set())
@@ -1480,7 +1492,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 5: Untie rule on capacity mode
     # ======================================================================
-    print("\nTest 5 — Untie rule (capacity mode, MaxCapInv < MinCapInv)")
+    print("\nTest 5: Untie rule (capacity mode, MaxCapInv < MinCapInv)")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         # Pre-set MaxCapInv = 3.0 for PWRSPVINDEA
@@ -1497,7 +1509,7 @@ def run_self_test() -> int:
         # Target 50% of 100 PJ = 50 PJ → GW = 50 / (31.536 × 1.0) ≈ 1.585
         # But that's less than 3.0, so untie won't fire.
         # Let's use a bigger target to trigger untie: 80% of 100 = 80 PJ
-        # GW = 80 / 31.536 ≈ 2.537 — still less than 3.0.
+        # GW = 80 / 31.536 ≈ 2.537: still less than 3.0.
         # Use an even bigger target or lower MaxCapInv.
         # Simpler: set MaxCapInv = 0.5, target = 50%
         wb_path2 = _build_workbook(tmpdir, [2030],
@@ -1559,6 +1571,7 @@ def run_self_test() -> int:
 # Main
 # ---------------------------------------------------------------------------
 def main() -> int:
+    """Run the command-line interface and return its exit code."""
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )

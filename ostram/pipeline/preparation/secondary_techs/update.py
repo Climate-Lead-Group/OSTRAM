@@ -915,6 +915,11 @@ def read_shares_total_data(shares_total_path):
 
 
 class SecondaryTechsUpdater:
+    """Apply the Secondary Techs editor to the A1 output A-O workbooks.
+
+    The editor instructions and the optional source workbooks are applied to
+    the A-O workbooks of each scenario, and a log is saved.
+    """
     def __init__(self, editor_path, base_path, ostram_file_path=None, shares_file_path=None, generation_file_path=None, shares_total_file_path=None, trade_balance_file_path=None):
         self.editor_path = editor_path
         self.base_path = base_path
@@ -4084,6 +4089,10 @@ class SecondaryTechsUpdater:
 
 
 def main():
+    """Run SecondaryTechsUpdater on the workspace and source paths.
+
+    Returns its exit code, or 1 on an error.
+    """
     try:
         # Paths
         paths = resolve_paths()

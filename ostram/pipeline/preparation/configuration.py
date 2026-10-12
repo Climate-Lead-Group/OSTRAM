@@ -131,7 +131,7 @@ def get_enable_dsptrn():
 
 
 def get_model_countries_list():
-    """Returns the 'countries' list from config (used by A2_AddTx).
+    """Returns the 'countries' list from config (used by A2, transmission.py).
     May contain 3-char (BGD) or 5-char (INDEA) codes for regions."""
     return _load_raw().get("countries", [])
 
@@ -158,5 +158,5 @@ def get_multi_region_map():
     return {iso3: sorted(regions) for iso3, regions in by_iso3.items()
             if not (len(regions) == 1 and regions[0] == 'XX')}
 def get_raw_config():
-    """Returns the full raw YAML dict (for A2_AddTx transmission params)."""
+    """Returns the full raw YAML dict (for the A2 transmission parameters)."""
     return _load_raw()

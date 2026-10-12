@@ -223,10 +223,10 @@ class AggregationTests(unittest.TestCase):
     def test_lid_diagnostic_labels_use_profile_region_names(self) -> None:
         lid = self.alpha["System"]["lid_diagnostic"]
         self.assertIn("PWRSPVMMRXX01", lid)
-        self.assertEqual(lid["PWRSPVMMRXX01"]["label"], "Solar PV — Myanmar")
+        self.assertEqual(lid["PWRSPVMMRXX01"]["label"], "Solar PV (Myanmar)")
         self.assertEqual(lid["PWRSPVMMRXX01"]["newcap"], {2030: 1.0, 2050: 2.0})
         self.assertEqual(lid["PWRSPVMMRXX01"]["lid"], {2030: 3.0, 2050: 3.0})
-        self.assertEqual(lid["PWRCOALKAXX01"]["label"], "Coal — Sri Lanka")
+        self.assertEqual(lid["PWRCOALKAXX01"]["label"], "Coal (Sri Lanka)")
         self.assertNotIn("PWRSPVMMRXX01", self.alpha["LKAXX"]["lid_diagnostic"])
 
     def test_scenarios_and_regions_come_from_data_and_metadata(self) -> None:

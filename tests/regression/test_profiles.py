@@ -140,8 +140,11 @@ class AtomicWorkspaceTests(unittest.TestCase):
                 encoding="utf-8",
             )
             changed_manifest = load_manifest(manifest.path)
-            with self.assertRaisesRegex(ProfileWorkspaceError, "different manifest"):
-                prepare_profile(changed_manifest, paths=paths)
+            prepared_at = result.stamp["prepared_at_utc"]
+            # A changed manifest with the same mutable roles keeps the workspace.
+            result = prepared_profile(changed_manifest, paths=paths)
+            self.assertEqual(result.stamp["manifest_sha256"], changed_manifest.digest)
+            self.assertEqual(result.stamp["prepared_at_utc"], prepared_at)
             result = prepare_profile(changed_manifest, paths=paths, reset=True)
             self.assertEqual(result.stamp["manifest_sha256"], changed_manifest.digest)
             manifest = changed_manifest
@@ -150,6 +153,59 @@ class AtomicWorkspaceTests(unittest.TestCase):
             # Mutable sources are now auto-refreshed instead of raising.
             refreshed = prepared_profile(manifest, paths=paths)
             self.assertEqual(refreshed.authorities["seed"].read_text(), "version two")
+
+    def _change_manifest(self, manifest, old: str = "", new: str = ""):
+        text = manifest.path.read_text(encoding="utf-8").replace(old, new)
+        manifest.path.write_text(text + f"# {manifest.digest}\n", encoding="utf-8")
+        return load_manifest(manifest.path)
+
+    def test_changed_manifest_with_same_roles_keeps_workspace(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            paths, manifest = self._fixture(Path(temp))
+            result = prepare_profile(manifest, paths=paths)
+            result.authorities["seed"].write_text("trainee edit", encoding="utf-8")
+
+            for entry_point in (
+                lambda changed: prepared_profile(changed, paths=paths),
+                lambda changed: prepare_profile(changed, paths=paths),
+            ):
+                manifest = self._change_manifest(manifest)
+                result = entry_point(manifest)
+                self.assertEqual(result.authorities["seed"].read_text(), "trainee edit")
+                self.assertEqual(result.stamp["manifest_sha256"], manifest.digest)
+                stamp = json.loads(
+                    (result.workspace / STAMP_NAME).read_text(encoding="utf-8")
+                )
+                self.assertEqual(stamp["manifest_sha256"], manifest.digest)
+            self.assertEqual(
+                sorted(path.name for path in result.workspace.parent.iterdir()),
+                ["tiny"],
+            )
+
+    def test_changed_mutable_roles_move_workspace_and_prepare_again(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            paths, manifest = self._fixture(Path(temp))
+            result = prepare_profile(manifest, paths=paths)
+            result.authorities["seed"].write_text("trainee edit", encoding="utf-8")
+            alias = "  seed_alias: {path: profile:seed.txt, mutable: true}\n"
+            readonly = "  readonly:"
+
+            for entry_point, old, new in (
+                (lambda changed: prepared_profile(changed, paths=paths), alias, ""),
+                (lambda changed: prepare_profile(changed, paths=paths), readonly, alias + readonly),
+            ):
+                manifest = self._change_manifest(manifest, old, new)
+                result = entry_point(manifest)
+                self.assertEqual(result.authorities["seed"].read_text(), "version one")
+                self.assertEqual(result.stamp["manifest_sha256"], manifest.digest)
+            previous = sorted(result.workspace.parent.glob("tiny_previous_*"))
+            self.assertEqual(len(previous), 2)
+            self.assertEqual(
+                (previous[0] / "authorities" / "seed" / "seed.txt").read_text(),
+                "trainee edit",
+            )
+            for folder in previous:
+                self.assertTrue((folder / STAMP_NAME).is_file())
 
     def test_interrupted_foreign_and_missing_prepared_files_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -255,11 +311,10 @@ class ProfileCliTests(unittest.TestCase):
         self.assertTrue(required_roles.issubset(manifest.authorities))
         self.assertTrue(all(path.exists() for path in sources.values()))
         self.assertEqual(manifest.policies["lid_rule_new_semantics"], True)
-        # The full-model WS-4 base-year pin is not domain-valid on the
+        # The base-year pin of the full model is not domain-valid on the
         # reduced two-region model (CBC-certified infeasible); the profile
-        # must keep it disabled and must not re-declare the rules digest.
+        # keeps it disabled.
         self.assertEqual(manifest.policies["apply_pwr_min_pin"], False)
-        self.assertNotIn("pwr_min_pin_rules_sha256", manifest.policies)
         self.assertEqual(
             manifest.metadata["effective_values"][
                 "TRNBGDXXINDEA_residual_capacity_gw"

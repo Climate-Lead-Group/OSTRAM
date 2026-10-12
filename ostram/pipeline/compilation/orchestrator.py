@@ -29,6 +29,9 @@ class B1Paths:
 
     @classmethod
     def defaults(cls) -> "B1Paths":
+        """Copy the B1 config into the compilation workspace if absent, point its
+        paths at the workspace and return the B1 paths.
+        """
         import yaml
 
         project = resolve_paths()
@@ -77,6 +80,10 @@ class CompilerCommand:
 
 
 def try_import_yaml_handlers():
+    """Return the ruamel.yaml ``YAML`` class and the PyYAML module, ``None`` where not importable.
+
+    PyYAML is tried only when ruamel.yaml cannot be imported.
+    """
     ruamel_yaml = None
     pyyaml = None
     try:
@@ -189,6 +196,7 @@ def regex_update_main_scenario(yaml_text: str, new_value: str) -> str:
         )
 
     def replace_first_after_xtra(text: str) -> str:
+        """Replace the first ``Main_Scenario`` value in ``text`` with ``new_value``."""
         return re.sub(
             r"(Main_Scenario:\s*)['\"]?.*?['\"]?",
             rf"\1'{new_value}'",
@@ -306,6 +314,7 @@ def preserved_configuration(
 
 
 def parse_cli_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
+    """Parse the B1 command line."""
     parser = argparse.ArgumentParser(description="Run B1 compiler across scenarios")
     parser.add_argument(
         "--scenarios",
@@ -337,6 +346,7 @@ def orchestrate(
     compile_scenario = run_compiler if compiler_runner is None else compiler_runner
 
     def default_configuration_scope(path: Path):
+        """Back up the config at ``path`` and restore it on exit (``preserved_configuration``)."""
         return preserved_configuration(path, emit=emit)
 
     config_scope = (
@@ -407,4 +417,5 @@ def orchestrate(
 
 
 def main() -> None:
+    """Run B1 for the selected scenarios with the default B1 paths."""
     return orchestrate(parse_cli_args(), B1Paths.defaults())

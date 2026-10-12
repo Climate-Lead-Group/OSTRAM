@@ -272,17 +272,17 @@ class A3TraceHarness:
                 "stage_4_5_apply_inherited_restrictions"
             ),
             "stage_5_rules_scripts": inert_stage("stage_5_rules_scripts"),
-            "stage_ws3_interconnector_costs": inert_stage(
-                "stage_ws3_interconnector_costs"
+            "stage_interconnector_costs": inert_stage(
+                "stage_interconnector_costs"
             ),
-            "stage_ws3_internal_transmission": inert_stage(
-                "stage_ws3_internal_transmission"
+            "stage_internal_transmission": inert_stage(
+                "stage_internal_transmission"
             ),
-            "stage_ws3_internal_tx_losses": inert_stage(
-                "stage_ws3_internal_tx_losses"
+            "stage_internal_tx_losses": inert_stage(
+                "stage_internal_tx_losses"
             ),
-            "stage_ws4_pwr_min_pin": inert_stage(
-                "stage_ws4_pwr_min_pin"
+            "stage_base_year_pin": inert_stage(
+                "stage_base_year_pin"
             ),
             "stage_6_sync_og_to_ts20": inert_stage("stage_6_sync_og_to_ts20"),
             "stage_6_persist_restrictions": inert_stage(
@@ -403,10 +403,10 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
             "stage_4_consolidate",
             "stage_4_5_apply_inherited_restrictions",
             "stage_5_rules_scripts",
-            "stage_ws3_interconnector_costs",
-            "stage_ws3_internal_transmission",
-            "stage_ws3_internal_tx_losses",
-            "stage_ws4_pwr_min_pin",
+            "stage_interconnector_costs",
+            "stage_internal_transmission",
+            "stage_internal_tx_losses",
+            "stage_base_year_pin",
             "stage_6_sync_og_to_ts20",
             "stage_6_persist_restrictions",
             "deliver_outputs",
@@ -844,7 +844,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                     ("set_retirement_schedule.py", "set_min_capacity_floors.py"),
                     "A_Calibrated_BAU",
                 ),
-                ("banner", "Stage 0 — materialize scenario template for 'A_Calibrated_BAU'"),
+                ("banner", "Stage 0: materialize scenario template for 'A_Calibrated_BAU'"),
                 (
                     "materialize",
                     harness.soasia,
@@ -891,17 +891,17 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                         harness.caller,
                     ),
                     (
-                        "stage_ws3_interconnector_costs",
+                        "stage_interconnector_costs",
                         harness.paths["s5"],
                         harness.soasia,
                         materialized,
                         template_value,
                         harness.caller,
                     ),
-                    ("stage_ws3_internal_transmission", harness.paths["s5"], template_value, harness.caller),
-                    ("stage_ws3_internal_tx_losses", harness.paths["s5"], template_value, harness.caller),
+                    ("stage_internal_transmission", harness.paths["s5"], template_value, harness.caller),
+                    ("stage_internal_tx_losses", harness.paths["s5"], template_value, harness.caller),
                     (
-                        "stage_ws4_pwr_min_pin",
+                        "stage_base_year_pin",
                         harness.paths["s5"],
                         "A_Calibrated_BAU",
                         template_value,
@@ -974,7 +974,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                     pin_events = [
                         event
                         for event in harness.events
-                        if event[0] == "stage_ws4_pwr_min_pin"
+                        if event[0] == "stage_base_year_pin"
                     ]
                     self.assertEqual(len(pin_events), int(scenario in expected_roots))
                     if pin_events:
@@ -1003,7 +1003,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                         mock.patch.object(module, "banner"),
                         mock.patch.object(module, "run_subproc") as run_subproc,
                     ):
-                        module.stage_ws4_pwr_min_pin(stage5, scenario)
+                        module.stage_base_year_pin(stage5, scenario)
                     run_subproc.assert_called_once_with(
                         "ostram.pipeline.scenarios.rules.apply_base_year_pin",
                         [
@@ -1047,7 +1047,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                     ):
                         if policies is None:
                             os.environ.pop("OSTRAM_PROFILE_POLICIES", None)
-                        module.stage_ws4_pwr_min_pin(stage5, "B_Optimised_VRE")
+                        module.stage_base_year_pin(stage5, "B_Optimised_VRE")
                     self.assertEqual(run_subproc.call_count, expected_calls)
 
     def test_static_pin_wrapper_fails_closed_on_scenario_or_missing_asset(self):
@@ -1059,9 +1059,9 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                 mock.patch.object(module, "run_subproc") as run_subproc,
             ):
                 with self.assertRaisesRegex(ValueError, "unsupported"):
-                    module.stage_ws4_pwr_min_pin(rules_dir, "BAU")
+                    module.stage_base_year_pin(rules_dir, "BAU")
                 with self.assertRaisesRegex(FileNotFoundError, "asset missing"):
-                    module.stage_ws4_pwr_min_pin(
+                    module.stage_base_year_pin(
                         rules_dir,
                         "A_Calibrated_BAU",
                     )
@@ -1074,11 +1074,11 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
         try:
             with self.assertRaisesRegex(RuntimeError, "pin fixture failure"):
                 harness.run(
-                    fail_stage="stage_ws4_pwr_min_pin",
+                    fail_stage="stage_base_year_pin",
                     failure=failure,
                 )
             names = [event[0] for event in harness.events]
-            self.assertIn("stage_ws4_pwr_min_pin", names)
+            self.assertIn("stage_base_year_pin", names)
             self.assertNotIn("stage_6_sync_og_to_ts20", names)
             self.assertNotIn("stage_6_persist_restrictions", names)
             self.assertNotIn("deliver_outputs", names)

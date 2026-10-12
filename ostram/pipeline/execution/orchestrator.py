@@ -61,6 +61,8 @@ class B2RunPlan:
 
 
 def build_cli_parser() -> argparse.ArgumentParser:
+    """Build the B2 argument parser with ``--scenarios`` and ``--compile-only``."""
+
     parser = argparse.ArgumentParser(
         description="Execute OSeMOSYS model across scenarios"
     )
@@ -86,6 +88,8 @@ def build_cli_parser() -> argparse.ArgumentParser:
 
 
 def parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
+    """Parse the B2 command line."""
+
     return build_cli_parser().parse_args(argv)
 
 
@@ -618,6 +622,8 @@ class ScenarioExecutionDependencies:
 
 @dataclass(frozen=True)
 class ScenarioExecutionPaths:
+    """Scenario folder and the paths, without extension, of its solver datafile and outputs."""
+
     folder_scenario: str
     data_file: str
     output_file: str
@@ -922,6 +928,8 @@ class SolverAdapter:
         return None
 
     def invoke(self, command: list[str]) -> None:
+        """Run a solver command through ``invoke_solver_command``."""
+
         invoke_solver_command(command, self.dependencies.run_process)
 
 

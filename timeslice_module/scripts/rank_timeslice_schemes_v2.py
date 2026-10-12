@@ -78,9 +78,10 @@ compensates for its poor solar alignment (SCV 1.23 vs 1.81 for
 automatically produce a better scheme when solar alignment is
 weighted commensurate with its independent information content.
 
-Open in Spyder and press F5.
+Run: python rank_timeslice_schemes_v2.py --base-dir <data folder>
 Author: CLG / Luis Victor-Gallardo
 """
+import argparse
 import os, json
 import numpy as np
 import pandas as pd
@@ -88,7 +89,14 @@ import pandas as pd
 # ======================================================================
 # USER CONFIGURATION
 # ======================================================================
-BASE_DIR    = r"C:\Users\luisfernando\Desktop\OSeMOSYS\asia_ostram\asia_ostram_data"
+_parser = argparse.ArgumentParser(
+    description="Rank timeslice schemes from the sensitivity sweep summary."
+)
+_parser.add_argument(
+    "--base-dir", required=True,
+    help="Data folder outside the repository that holds _sensitivity/.",
+)
+BASE_DIR    = _parser.parse_args().base_dir
 SENS_DIR    = os.path.join(BASE_DIR, "_sensitivity")
 OUTPUT_DIR  = os.path.join(SENS_DIR, "ranking_v2")
 

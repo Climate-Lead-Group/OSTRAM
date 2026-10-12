@@ -132,6 +132,17 @@ class ProjectPaths:
         workspace: str | os.PathLike[str] | None = None,
         environ: Mapping[str, str] | None = None,
     ) -> "ProjectPaths":
+        """Resolve the project root and the workspace into one instance.
+
+        The project root is ``project_root``, else ``OSTRAM_PROJECT_ROOT``, else
+        the folder that holds the installed package. The workspace is
+        ``workspace``, else ``OSTRAM_WORKSPACE``, else ``<project_root>/workspace``.
+
+        Raises:
+            ProjectResolutionError: If the chosen root is not a valid project
+                bundle, or if no root is given and the package folder holds none.
+        """
+
         environment = os.environ if environ is None else environ
         if project_root is not None:
             root = _validated_root(project_root, "--project-root")
@@ -165,6 +176,8 @@ class ProjectPaths:
 
     @property
     def package_root(self) -> Path:
+        """Return the package folder, ``<project_root>/ostram``."""
+
         return (self.project_root / "ostram").resolve()
 
     def authority(self, role: str, default: Path) -> Path:
@@ -202,28 +215,59 @@ class ProjectPaths:
 
     @property
     def inputs_root(self) -> Path:
+        """Return the inputs folder, ``<project_root>/inputs``."""
+
         return (self.project_root / "inputs").resolve()
 
     @property
     def osemosys_inputs(self) -> Path:
+        """Return the OSeMOSYS Global inputs folder.
+
+        The default is ``<project_root>/inputs/osemosys_global``. The active
+        profile's ``osemosys_inputs`` authority replaces it when a profile is
+        active.
+        """
+
         return self.authority(
             "osemosys_inputs", self.inputs_root / "osemosys_global"
         )
 
     @property
     def preparation_inputs(self) -> Path:
+        """Return the A1 preparation inputs folder.
+
+        The default is ``<project_root>/inputs/preparation``. The active
+        profile's ``preparation_inputs`` authority replaces it when a profile is
+        active.
+        """
+
         return self.authority(
             "preparation_inputs", self.inputs_root / "preparation"
         )
 
     @property
     def preparation_templates(self) -> Path:
+        """Return the workbook templates folder.
+
+        The default is ``<preparation_inputs>/workbook_templates``. The active
+        profile's ``preparation_templates`` authority replaces it when a profile
+        is active.
+        """
+
         return self.authority(
             "preparation_templates", self.preparation_inputs / "workbook_templates"
         )
 
     @property
     def secondary_technology_inputs(self) -> Path:
+        """Return the secondary technology inputs folder.
+
+        The default is
+        ``<project_root>/inputs/preparation/secondary_technologies``. The active
+        profile's ``secondary_technology_inputs`` authority replaces it when a
+        profile is active.
+        """
+
         return self.authority(
             "secondary_technology_inputs",
             self.inputs_root / "preparation" / "secondary_technologies",
@@ -231,30 +275,65 @@ class ProjectPaths:
 
     @property
     def scenario_inputs(self) -> Path:
+        """Return the scenario inputs folder.
+
+        The default is ``<project_root>/inputs/scenarios``. The active profile's
+        ``scenario_inputs`` authority replaces it when a profile is active.
+        """
+
         return self.authority("scenario_inputs", self.inputs_root / "scenarios")
 
     @property
     def execution_inputs(self) -> Path:
+        """Return the execution inputs folder.
+
+        The default is ``<project_root>/inputs/execution``. The active profile's
+        ``execution_inputs`` authority replaces it when a profile is active.
+        """
+
         return self.authority("execution_inputs", self.inputs_root / "execution")
 
     @property
     def config_root(self) -> Path:
+        """Return the configuration folder, ``<project_root>/config``."""
+
         return (self.project_root / "config").resolve()
 
     @property
     def scenario_config_root(self) -> Path:
+        """Return the scenario configuration folder.
+
+        The default is ``<project_root>/config/scenarios``. The active profile's
+        ``scenario_config_root`` authority replaces it when a profile is active.
+        """
+
         return self.authority(
             "scenario_config_root", self.config_root / "scenarios"
         )
 
     @property
     def preparation_config(self) -> Path:
+        """Return the preparation configuration folder.
+
+        The default is ``<project_root>/config/preparation``. The active
+        profile's ``preparation_config`` authority replaces it when a profile is
+        active.
+        """
+
         return self.authority(
             "preparation_config", self.config_root / "preparation"
         )
 
     @property
     def country_config(self) -> Path:
+        """Return the country code configuration.
+
+        The default is
+        ``<project_root>/config/preparation/Config_country_codes.yaml``. The
+        active profile's ``country_config`` authority replaces it when a profile
+        is active.
+        """
+
         return self.authority(
             "country_config",
             self.config_root / "preparation" / "Config_country_codes.yaml",
@@ -262,6 +341,14 @@ class ProjectPaths:
 
     @property
     def region_config(self) -> Path:
+        """Return the region consolidation configuration.
+
+        The default is
+        ``<project_root>/config/preparation/Config_region_consolidation.yaml``.
+        The active profile's ``region_config`` authority replaces it when a
+        profile is active.
+        """
+
         return self.authority(
             "region_config",
             self.config_root / "preparation" / "Config_region_consolidation.yaml",
@@ -269,38 +356,78 @@ class ProjectPaths:
 
     @property
     def model_root(self) -> Path:
+        """Return the model folder, ``<project_root>/model``."""
+
         return (self.project_root / "model").resolve()
 
     @property
     def maintained_model(self) -> Path:
+        """Return the OSeMOSYS model file.
+
+        The default is ``<project_root>/model/osemosys_fast_preprocessed.txt``.
+        The active profile's ``maintained_model`` authority replaces it when a
+        profile is active.
+        """
+
         return self.authority(
             "maintained_model", self.model_root / "osemosys_fast_preprocessed.txt"
         )
 
     @property
     def package_resources_root(self) -> Path:
+        """Return the package resources folder, ``<project_root>/ostram/resources``."""
+
         return (self.package_root / "resources").resolve()
 
     @property
     def compilation_resources(self) -> Path:
+        """Return the compilation resources folder.
+
+        The default is ``<project_root>/ostram/resources/compilation``. The
+        active profile's ``compilation_resources`` authority replaces it when a
+        profile is active.
+        """
+
         return self.authority(
             "compilation_resources", self.package_resources_root / "compilation"
         )
 
     @property
     def preparation_resources(self) -> Path:
+        """Return the preparation resources folder.
+
+        The default is ``<project_root>/ostram/resources/preparation``. The
+        active profile's ``preparation_resources`` authority replaces it when a
+        profile is active.
+        """
+
         return self.authority(
             "preparation_resources", self.package_resources_root / "preparation"
         )
 
     @property
     def scenario_registry(self) -> Path:
+        """Return the scenario registry file.
+
+        The default is ``<project_root>/config/profiles/full.yaml``. The active
+        profile's ``scenario_registry`` authority replaces it when a profile is
+        active.
+        """
+
         return self.authority(
             "scenario_registry", self.config_root / "profiles" / "full.yaml"
         )
 
     @property
     def scenario_workbook(self) -> Path:
+        """Return the scenario workbook.
+
+        The default is
+        ``<project_root>/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx``. The
+        active profile's ``scenario_workbook`` authority replaces it when a
+        profile is active.
+        """
+
         return self.authority(
             "scenario_workbook",
             self.inputs_root / "scenarios" / "OSTRAM_Scenario_Inputs.xlsx",
@@ -308,6 +435,14 @@ class ProjectPaths:
 
     @property
     def timeslice_workbook(self) -> Path:
+        """Return the timeslice workbook.
+
+        The default is
+        ``<project_root>/inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx``. The
+        active profile's ``timeslice_workbook`` authority replaces it when a
+        profile is active.
+        """
+
         return self.authority(
             "timeslice_workbook",
             self.inputs_root / "scenarios" / "OSTRAM_Timeslice_Inputs.xlsx",
@@ -315,6 +450,14 @@ class ProjectPaths:
 
     @property
     def ao_decisions(self) -> Path:
+        """Return the A-O decisions source.
+
+        The default is
+        ``<project_root>/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx``. The
+        active profile's ``ao_decisions`` authority replaces it when a profile
+        is active.
+        """
+
         return self.authority(
             "ao_decisions",
             self.inputs_root / "scenarios" / "OSTRAM_Scenario_Inputs.xlsx",
@@ -322,6 +465,14 @@ class ProjectPaths:
 
     @property
     def interconnector_authority(self) -> Path:
+        """Return the interconnector source.
+
+        The default is
+        ``<project_root>/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx``. The
+        active profile's ``interconnector_authority`` authority replaces it when
+        a profile is active.
+        """
+
         return self.authority(
             "interconnector_authority",
             self.inputs_root / "scenarios" / "OSTRAM_Scenario_Inputs.xlsx",
@@ -329,6 +480,13 @@ class ProjectPaths:
 
     @property
     def interconnector_taxonomy(self) -> Path:
+        """Return the technology taxonomy.
+
+        The default is ``<project_root>/config/scenarios/technology_types.csv``.
+        The active profile's ``interconnector_taxonomy`` authority replaces it
+        when a profile is active.
+        """
+
         return self.authority(
             "interconnector_taxonomy",
             self.config_root / "scenarios" / "technology_types.csv",
@@ -336,6 +494,14 @@ class ProjectPaths:
 
     @property
     def execution_config(self) -> Path:
+        """Return the execution configuration.
+
+        The default is
+        ``<project_root>/config/execution/Config_MOMF_T1_AB.yaml``. The active
+        profile's ``execution_config`` authority replaces it when a profile is
+        active.
+        """
+
         return self.authority(
             "execution_config",
             self.config_root / "execution" / "Config_MOMF_T1_AB.yaml",
@@ -343,6 +509,14 @@ class ProjectPaths:
 
     @property
     def compilation_config(self) -> Path:
+        """Return the compilation configuration.
+
+        The default is
+        ``<project_root>/config/compilation/Config_MOMF_T1_A.yaml``. The active
+        profile's ``compilation_config`` authority replaces it when a profile is
+        active.
+        """
+
         return self.authority(
             "compilation_config",
             self.config_root / "compilation" / "Config_MOMF_T1_A.yaml",
@@ -350,50 +524,77 @@ class ProjectPaths:
 
     @property
     def preparation_workspace(self) -> Path:
+        """Return the preparation workspace, ``<workspace>/preparation``."""
+
         return self.stage_workspace("preparation")
 
     @property
     def a1_outputs(self) -> Path:
+        """Return the A1 output folder, ``<workspace>/preparation/A1_Outputs``."""
+
         return (self.preparation_workspace / "A1_Outputs").resolve()
 
     @property
     def generated_extra_inputs(self) -> Path:
+        """Return the extra inputs folder, ``<workspace>/preparation/extra_inputs``."""
+
         return (self.preparation_workspace / "extra_inputs").resolve()
 
     @property
     def scenarios_workspace(self) -> Path:
+        """Return the scenarios workspace, ``<workspace>/scenarios``."""
+
         return self.stage_workspace("scenarios")
 
     @property
     def compilation_workspace(self) -> Path:
+        """Return the compilation workspace, ``<workspace>/compilation``."""
+
         return self.stage_workspace("compilation")
 
     @property
     def compiled_parameters(self) -> Path:
+        """Return the B1 output folder, ``<workspace>/compilation/A2_Output_Params``."""
+
         return (self.compilation_workspace / "A2_Output_Params").resolve()
 
     @property
     def execution_workspace(self) -> Path:
+        """Return the execution workspace, ``<workspace>/execution``."""
+
         return self.stage_workspace("execution")
 
     @property
     def otoole_outputs(self) -> Path:
+        """Return the otoole output folder.
+
+        The folder is ``<workspace>/execution/A2_Outputs_Params_otoole``.
+        """
+
         return (self.execution_workspace / "A2_Outputs_Params_otoole").resolve()
 
     @property
     def executables(self) -> Path:
+        """Return the executables folder, ``<workspace>/execution/Executables``."""
+
         return (self.execution_workspace / "Executables").resolve()
 
     @property
     def outputs(self) -> Path:
+        """Return the results folder, ``<workspace>/execution/Outputs``."""
+
         return (self.execution_workspace / "Outputs").resolve()
 
     @property
     def environment_file(self) -> Path:
+        """Return the conda environment file, ``<project_root>/environment.yaml``."""
+
         return (self.project_root / "environment.yaml").resolve()
 
     @property
     def dvc_file(self) -> Path:
+        """Return the DVC pipeline file, ``<project_root>/dvc.yaml``."""
+
         return (self.project_root / "dvc.yaml").resolve()
 
     def resolve_project_file(
@@ -402,6 +603,12 @@ class ProjectPaths:
         *,
         base: Path | None = None,
     ) -> Path:
+        """Return ``value`` as an absolute path.
+
+        A relative ``value`` is resolved against ``base``, or against the project
+        root when ``base`` is ``None``.
+        """
+
         path = Path(value).expanduser()
         if path.is_absolute():
             return path.resolve()
@@ -414,6 +621,17 @@ class ProjectPaths:
         *,
         create: bool = False,
     ) -> Path:
+        """Return the workspace folder of ``stage``, or of ``scenario`` within it.
+
+        The folder is ``<workspace>/<stage>`` or
+        ``<workspace>/<stage>/<scenario>``, and it is created when ``create`` is
+        true.
+
+        Raises:
+            ValueError: If a component is empty, starts with a dot or contains a
+                path separator.
+        """
+
         components = [stage] if scenario is None else [stage, scenario]
         if any(not _SAFE_COMPONENT.fullmatch(component) for component in components):
             raise ValueError(f"unsafe workspace component: {components!r}")

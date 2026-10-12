@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-3_update_ao_from_extensions.py  (v18 / pipeline stage 3)
+update_ao_from_extensions.py    (v18 / pipeline stage 3)
 
 Reads the freshly generated, maintained-decision-overlaid
 OSTRAM_AO_Extensions.xlsx and the four A-O parametrization workbooks, then
@@ -10,11 +10,11 @@ writes "_wvaligned" copies of each A-O workbook. Each output combines:
   * a wholesale-replaced Profiles sheet drawn from WV             (Step 2c)
 
 Pipeline:
-  1_merge_timeslices_into_WV.py    timeslices source     -> WV
-  2_extract_ao_extensions.py       WV  + A-O             -> Extensions xlsx
-  apply_ao_extension_decisions.py  maintained decisions  -> overlaid Extensions
-  3_update_ao_from_extensions.py   Extensions + A-O      -> *_wvaligned    <- THIS
-  4_apply_manual_fixes.py          *_wvaligned           -> *_wvaligned_v2
+  merge_timeslices.py              timeslices source     -> WV
+  extract_ao_extensions.py         WV  + A-O             -> Extensions xlsx
+  ao_extension_decisions.py        maintained decisions  -> overlaid Extensions
+  update_ao_from_extensions.py     Extensions + A-O      -> *_wvaligned    <- THIS
+  apply_manual_fixes.py            *_wvaligned           -> *_wvaligned_v2
 
 Design B (non-negotiable)
 -------------------------
@@ -178,14 +178,17 @@ def parse_code(code):
 
 
 def find_code_col(headers):
+    """Return the first entry of ``CODE_COLS`` present in ``headers``, or None."""
     return next((c for c in CODE_COLS if c in headers), None)
 
 
 def find_name_col(headers):
+    """Return the first entry of ``NAME_COLS`` present in ``headers``, or None."""
     return next((c for c in NAME_COLS if c in headers), None)
 
 
 def md5_of(path):
+    """Return the MD5 hex digest of the file at ``path``, or None when the file does not exist."""
     if not os.path.exists(path):
         return None
     h = hashlib.md5()
@@ -283,6 +286,7 @@ def is_year_col(c):
 
 
 def col_as_year_int(c):
+    """Return a year column header as an int."""
     if isinstance(c, int):
         return c
     return int(c)
@@ -341,6 +345,7 @@ def lookup_tab2(tab2, tech, parameter, ao_dest_sheet, timeslice=None):
 
 
 def color_row(ws, row_num, color_hex):
+    """Fill every cell of row ``row_num`` in ``ws`` with the solid colour ``color_hex``."""
     fill = PatternFill(start_color=color_hex, end_color=color_hex,
                        fill_type="solid")
     for cell in ws[row_num]:
@@ -369,6 +374,9 @@ src_hashes = {
 
 # Output filenames.
 def out_path_of(src):
+    """Return the output path for ``src``: its file name with ``OUTPUT_SUFFIX``
+    before the extension, in ``out_dir``.
+    """
     base = os.path.basename(src)
     stem, ext = os.path.splitext(base)
     return os.path.join(out_dir, stem + OUTPUT_SUFFIX + ext)
@@ -1401,6 +1409,7 @@ print("=" * 72)
 # ---- Helpers ----------------------------------------------------------------
 
 def ts_sort_key(ts):                                       # "S1D3" -> (1, 3)
+    """Return a (season, bracket) sort key for a timeslice tag such as ``S1D3``; (0, 0) for other tags."""
     parts = str(ts).replace("S", "").replace("D", " ").split()
     return (int(parts[0]), int(parts[1])) if len(parts) == 2 else (0, 0)
 
@@ -1627,6 +1636,7 @@ print("=" * 72)
 
 _passed, _failed = 0, 0
 def check(name, cond, detail=""):
+    """Count and print one built-in test result as PASS or FAIL."""
     global _passed, _failed
     if cond:
         _passed += 1

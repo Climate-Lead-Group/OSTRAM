@@ -51,7 +51,7 @@ def clear_pwrpet(input_path: Path, output_path: Path | None = None) -> int:
         # Capacities sheet doesn't yet have the full year header, we can't
         # safely target the right cells. No-op rather than aborting the
         # pipeline.
-        print(f"  SKIP — expected {YEAR_MAX-YEAR_MIN+1} year columns in "
+        print(f"  SKIP: expected {YEAR_MAX-YEAR_MIN+1} year columns in "
               f"'{TARGET_SHEET}' header, found {len(year_cols)}. "
               f"No cells cleared.")
         wb.save(output_path)

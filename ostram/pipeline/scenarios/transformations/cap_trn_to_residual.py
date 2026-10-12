@@ -5,7 +5,7 @@ cap_trn_to_residual.py
 Pre-lid data fix for transmission interconnection (TRN*) techs in
 the 'Secondary Techs' sheet. Caps each TRN tech's TotalAnnualMaxCapacity
 to its ResidualCapacity year-by-year, and resets TotalAnnualMaxCapacityInvestment
-to 9999 across the full 2023-2050 horizon.
+to 9999, a finite cap, across the full 2023-2050 horizon.
 
 Background
 ----------
@@ -27,13 +27,12 @@ across the horizon (no expansion of cross-border interconnects), so:
     MaxCap = 0 disables the tech entirely.
   - TotalAnnualMaxCapacityInvestment := 9999 across all years.
     With MaxCap pinned to ResCap, no investment can ever push total
-    capacity above the cap, so the per-year investment limit is moot.
-    Setting it to 9999 just removes a separate (and now redundant)
-    constraint that the lid script would otherwise stomp on.
+    capacity above the cap, so the per-year investment limit does not bind.
+    9999 is a finite cap far above it.
 
 Scope
 -----
-ONLY patches the 18 TRN* techs in TRN_TECHS (allowlist for safety).
+Changes only the 18 TRN* techs in TRN_TECHS (allowlist for safety).
 For each, requires all three parameter rows present:
   - ResidualCapacity              (read-only, source for MaxCap copy)
   - TotalAnnualMaxCapacity        (overwritten with ResCap values)
@@ -53,11 +52,11 @@ Notable cases
   identical (MaxCap=0 dominates) but worth knowing -- printed
   prominently in the run summary.
 - TRNINDSOLKAXX, TRNLKAXXMDVXX have ResCap=0 (never-built lines).
-  These too will be capped at MaxCap=0 after the patch.
+  These too will be capped at MaxCap=0 after this step.
 
 Output
 ------
-- Patched workbook written as a sibling with `_POST_TRN_CAP` appended to the
+- Changed workbook written as a sibling with `_POST_TRN_CAP` appended to the
   stem. Long mutable-workspace paths are deterministically compacted while
   retaining that final-stage identity. The input file is left untouched.
 - Per-tech summary printed to stdout.
@@ -122,11 +121,20 @@ def make_output_path(input_path: Path) -> Path:
     )
 
 
-def patch_workbook(
+def apply_trn_caps(
     input_path: Path,
     dry_run: bool,
     output_path: Path | None = None,
 ) -> Path | None:
+    """Set TotalAnnualMaxCapacity equal to ResidualCapacity and
+    TotalAnnualMaxCapacityInvestment to 9999 for the allowlisted TRN
+    technologies in every year from 2023 to 2050.
+
+    A technology with a missing parameter row or a blank ResidualCapacity
+    year is skipped. Returns the path of the saved workbook, or None for a
+    dry run. Exits when the input file, the sheet, a required header or a
+    year column is missing.
+    """
     if not input_path.is_file():
         sys.exit(f"ERROR: input file not found: {input_path}")
 
@@ -259,7 +267,7 @@ def patch_workbook(
     print()
 
     if log:
-        print(f"Patch summary ({len(log)} techs, "
+        print(f"Change summary ({len(log)} techs, "
               f"{sum(a + b for _, _, a, b, _ in log)} cells changed):")
         print(f"  {'Tech':16s} {'ResCap':28s} "
               f"{'MaxCap cells':>12s} {'MaxCapInv cells':>16s}")
@@ -287,10 +295,11 @@ def patch_workbook(
 
 
 def main() -> None:
+    """Parse the command line and run ``apply_trn_caps``."""
     p = argparse.ArgumentParser(description=__doc__.split("\n")[2])
     p.add_argument(
         "--input", type=Path, default=DEFAULT_INPUT,
-        help=f"Path to the workbook to patch (default: {DEFAULT_INPUT})",
+        help=f"Path to the workbook to change (default: {DEFAULT_INPUT})",
     )
     p.add_argument(
         "--dry-run", action="store_true",
@@ -301,7 +310,7 @@ def main() -> None:
         help="Explicit mutable-workspace workbook output path",
     )
     args = p.parse_args()
-    patch_workbook(args.input, args.dry_run, args.output)
+    apply_trn_caps(args.input, args.dry_run, args.output)
 
 
 if __name__ == "__main__":

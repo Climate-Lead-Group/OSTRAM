@@ -146,6 +146,7 @@ def read_lines(path: Path) -> list[str]:
 
 
 def write_lines(path: Path, lines: list[str]) -> None:
+    """Write the lines to ``path`` as UTF-8 with their line endings kept."""
     with open(path, "wb") as f:
         f.write("".join(lines).encode("utf-8"))
 
@@ -188,6 +189,9 @@ def find_year_set(lines: list[str]) -> list[str]:
 
 
 def strip_set_storage(lines: list[str], to_remove: set[str]) -> list[str]:
+    """Return the lines with the members of ``to_remove`` dropped from set
+    STORAGE.
+    """
     start, end, members = find_storage_set(lines)
     kept = [m for m in members if m not in to_remove]
     new_block = [lines[start]]  # header `set STORAGE :=`
@@ -295,6 +299,9 @@ def inject_zero_max_capacity(lines: list[str], techs: set[str]) -> list[str]:
 # -----------------------------------------------------------------------------
 
 def main() -> int:
+    """Disable the selected storage facilities and their PWR technologies in a
+    copy of the datafile, and return 0.
+    """
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,

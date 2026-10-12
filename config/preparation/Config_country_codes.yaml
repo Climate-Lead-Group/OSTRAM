@@ -258,8 +258,8 @@ implausible_combinations:
 
 # Technology parameters
 #
-# WARNING (WS-3, 2026-07-09) — DEAD KEY: `TotalAnnualMaxCapacityInvestment` in the six
-#   family blocks below is NOT compiled for transmission. A2_AddTx.process_parametrization
+# WARNING: DEAD KEY: `TotalAnnualMaxCapacityInvestment` in the six
+#   family blocks below is NOT compiled for transmission. transmission.py process_parametrization
 #   reads PARAM_LIST = [CapitalCost, FixedCost, ResidualCapacity,
 #   TotalAnnualMinCapacityInvestment, TotalAnnualMaxCapacity] — which OMITS it. Do NOT
 #   rename it to a live key (e.g. TotalAnnualMaxCapacity): that would cap internal
@@ -317,11 +317,11 @@ TRNNLI:
   TotalAnnualMaxCapacityInvestment: 5
 
 # ============================================================
-# WS-3 D5 — INTERNAL (intra-node) transmission calibration
+# INTERNAL (intra-node) transmission calibration
 # ============================================================
-# Applied by the late A3 stage `stage_ws3_internal_transmission`
-# (rules_scripts/apply_internal_transmission.py), which is authoritative for the
-# delivered model: it overrides the flat A2 placeholders and the Stage-1
+# Applied by the late A3 stage `stage_internal_transmission`
+# (ostram/pipeline/scenarios/rules/apply_internal_transmission.py), which is
+# authoritative for the delivered model: it overrides the flat A2 placeholders and the Stage-1
 # OperationalLife (50/20) with the values below, on the six internal families
 # (RE: RNWTRN/RNWNLI/RNWRPO, non-RE: PWRTRN/TRNNLI/TRNRPO).
 #   * CapitalCost/FixedCost are UNIFORM across nodes (intra-node tx is just
@@ -331,14 +331,15 @@ TRNNLI:
 #     LBNL 2019; default 2.0). Set 1.5 / 1.8 / 2.0 / 3.0 to sensitise.
 #   * OperationalLife applies to all 6 families (fixes the 50/20 drift).
 #   * Per-node ResidualCapacity comes from the maintained, desk-checked
-#     rules_scripts/internal_tx_residuals.csv (peak x residual_margin; NLI/RPO = 0).
+#     config/scenarios/rules/internal_tx_residuals.csv (peak x residual_margin;
+#     NLI/RPO = 0).
 internal_transmission:
   base_capital_cost: 100        # non-RE $/kW
   base_fixed_cost: 4            # non-RE $/kW/yr (4% of CapEx)
   re_capex_multiplier: 2.0      # WS-1 slider: 1.5 / 1.8 / 2.0 / 3.0
   operational_life: 40          # years, all 6 internal families
   residual_margin: 1.2          # peak x margin (documentation; residuals precomputed)
-  transmission_loss: 0.03       # WS-4: intra-node tx loss -> OutputActivityRatio = 1-loss = 0.97 (CEA ~3-4%, distribution excluded)
+  transmission_loss: 0.03       # intra-node tx loss -> OutputActivityRatio = 1-loss = 0.97 (CEA ~3-4%, distribution excluded)
 
 # Enable DSPTRN dispatch technology (adds ELC03/ELC04 tier for interconnections)
 enable_dsptrn: true

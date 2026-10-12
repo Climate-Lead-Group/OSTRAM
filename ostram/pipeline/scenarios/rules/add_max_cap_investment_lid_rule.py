@@ -2,22 +2,22 @@
 add_max_cap_investment_lid_rule.py
 ===================================
 
-Independent rule — applies a per-year LID and the V1 UNTIE RULE to
+Independent rule: applies a per-year LID and the V1 UNTIE RULE to
 TotalAnnualMaxCapacityInvestment for GENERATION technologies that have
 either ResidualCapacity > 0 or TotalAnnualMinCapacityInvestment > 0 in any
 year.
 
 This script is INDEPENDENT of add_max_capacity_investment_rule.py. It can run:
   - On a fresh A-O_Parametrization.xlsx (operates on empty MaxInv cells).
-  - On the output of the first rule script (recognizes 9999 placeholders and
-    replaces them with the lid).
-  - Repeatedly (idempotent — second run produces no changes).
+  - On the output of the first rule script (treats blank, 0 and 9999 cells
+    as placeholders and replaces them with the lid).
+  - Repeatedly (idempotent: second run produces no changes).
 
 PROBLEM
 -------
 For ALLOWED generation techs (those with residual or planned capacity), MaxInv
-was being left effectively unbounded — either NaN (no constraint at all) or
-9999 (a placeholder that's far above any realistic ramp). Without a real upper
+was left either blank, which reaches the model as -1 and skips the
+constraint, or at 9999, a finite cap far above any realistic ramp. Without a real upper
 bound, the optimizer can over-invest in candidate techs whose annual ramp
 should be physically constrained. And without a year-by-year *ramp* tied to
 demand, a constant lid either binds in late years (when demand has scaled
@@ -46,7 +46,7 @@ Mode "uniform" (default):
 
     The base_pct schedule is a per-decade plateau encoding "tight while we
     have planning data, looser as the horizon gets speculative." Demand
-    growth is layered on linearly via mult — fast-growing crs get
+    growth is layered on linearly via mult: fast-growing crs get
     proportionally more headroom.
 
 Mode "proportional":
@@ -70,10 +70,10 @@ invariant MinCapInv < MaxCapInv whenever MinCapInv > 0.
 
 GENERATION FILTER
 -----------------
-"Generation" is defined by TECH_TYPES.csv (columns: 'Technology (PWR)',
-'Technology'). Only techs categorized as 'GENERATION' are eligible. This
-correctly excludes storage (e.g. PWRSDSLKAXX), interconnectors, primary
-fuels, etc., which need separate lid policies.
+"Generation" is defined by config/scenarios/technology_types.csv (columns:
+'Technology (PWR)', 'Technology'). Only techs categorized as 'GENERATION'
+are eligible. This correctly excludes storage (e.g. PWRSDSLKAXX),
+interconnectors, primary fuels, etc., which need separate lid policies.
 
 DEMAND-ANCHORED RAMP
 --------------------
@@ -84,9 +84,9 @@ Demand rows are summed within each cr and divided by the value at the
 reference year (default 2024) to obtain mult(cr, y).
 
 Cell-by-cell, for each MaxInv cell of an ALLOWED tech:
-    1. Empty (None) or 9999 placeholder  ->  proposed = lid
+    1. Blank (None), 0 or 9999 placeholder  ->  proposed = lid
     2. Other explicit value (manual cal)  ->  proposed = current value (preserved)
-    3. V1 UNTIE RULE (cf. B1b_Pre_solver_validation.py):
+    3. V1 UNTIE RULE (cf. check V1 of pre_solver_validation.py):
          if MinCapacityInvestment(tech, y) >= proposed:
              proposed = MinCapacityInvestment(tech, y) * UNTIE_MULTIPLIER
 
@@ -96,7 +96,7 @@ infeasibility.
 SCOPE
 -----
 - ALLOWED set: techs with residual > 0 OR min-cap-investment > 0 in any year.
-- TRN* transmission interconnects (length-13 codes) are SKIPPED entirely —
+- TRN* transmission interconnects (length-13 codes) are SKIPPED entirely;
   they span two country+region pairs and don't fit a single pool. Their
   manually-calibrated MaxInv values are left untouched.
 - Non-allowed techs are also untouched (handled by a separate rule).
@@ -170,8 +170,8 @@ DEFAULT_TARGET_SHEETS = ["Secondary Techs"]
 PARAM_FILE_NAME = "A-O_Parametrization.xlsx"
 
 # Optional YAML override. The scenario orchestrator detects this
-# constant and stages the matching YAML from rules_scripts/configs/<scenario>/
-# alongside this script when the scenario provides one. When present, its
+# constant, copies the matching YAML from config/scenarios/<scenario>/ into
+# the run folder and passes it with --yaml when the scenario provides one. When present, its
 # values override the module-level constants below for the lifetime of this
 # process. Absent YAML = current module defaults remain in effect (so BAU and
 # scenarios without a YAML override behave exactly as before).
@@ -186,9 +186,9 @@ PROJ_MODE_COL = "Projection.Mode"
 PROJ_MODE_EMPTY = "EMPTY"
 PROJ_MODE_USER = "User defined"
 
-# A leftover sentinel from the first rule script. If we encounter this value,
-# treat the cell as a placeholder and replace it with the lid (rather than as
-# a manually calibrated value to preserve).
+# The 9999 written by add_max_capacity_investment_rule.py. A cell holding
+# blank, 0 or this value is a placeholder and is replaced with the lid; any
+# other value is a manually calibrated value and is preserved.
 PLACEHOLDER_VALUE = 9999
 
 # Tech naming conventions
@@ -197,9 +197,10 @@ TRN_TECH_LENGTH = 13    # transmission interconnects, e.g. TRNINDEAINDNE -- skip
 COUNTRY_REGION_SLICE = slice(6, 11)  # for length-11 PWR* codes: chars 6..10
 
 # ---------------------------------------------------------------------------
-# Tech-type filter — only change GENERATION technologies
+# Tech-type filter: only change GENERATION technologies
 # ---------------------------------------------------------------------------
-# TECH_TYPES.csv lives next to this script. It lists techs by category
+# The technology taxonomy, config/scenarios/technology_types.csv, is read
+# through resolve_paths().interconnector_taxonomy. It lists techs by category
 # (GENERATION, INTERCONNECTORS, STORAGE_LONG, STORAGE_SHORT, etc.). Only
 # techs in GENERATION_CATEGORY are eligible for the lid + untie rule.
 # Set RESTRICT_TO_GENERATION = False to fall back to the prior behavior
@@ -217,13 +218,13 @@ RESTRICT_TO_GENERATION = True
 # pool definition and demand multiplier; they differ in *how* the lid is
 # distributed among techs. See top-of-file RULE block for full formulas.
 #
-#   "uniform"      — Per-decade pct schedule, applied uniformly across all
+#   "uniform"     : Per-decade pct schedule, applied uniformly across all
 #                    techs in the same cr. Same lid value for every allowed
 #                    gen tech in cr per year. Use this for "let the optimizer
 #                    pick winners" scenarios and for late-horizon stress tests
 #                    where the planning anchor is intentionally relaxed.
 #
-#   "proportional" — Each tech gets a lid sized to its 2024 fleet share,
+#   "proportional": Each tech gets a lid sized to its 2024 fleet share,
 #                    times the year-over-year growth in scaled_pool, times
 #                    a slack factor. Use this when the BAU narrative is
 #                    "fleet evolves proportionally to current composition."
@@ -277,7 +278,7 @@ LID_SECURITY_FACTOR = 1.1
 #
 # This lets the optimizer gradually diverge from the BAU fleet-share trajectory
 # without a spike (near-term ≈ BAU) and without single-tech dominance (the
-# proportional structure is preserved — all families get the same multiplier).
+# proportional structure is preserved: all families get the same multiplier).
 LID_RELAXATION_SCHEDULE: dict = {}
 
 # --- Family-specific relaxation ceilings (used by both modes) ----------------
@@ -296,17 +297,17 @@ LID_FAMILY_RELAXATION_CEILINGS: dict = {}
 
 # --- Exempt prefixes (used by both modes) ------------------------------------
 # When non-empty, any tech whose code starts with one of these prefixes gets
-# MaxCapInv = 9999 (uncapped) instead of the computed lid.
+# MaxCapInv = 9999, a finite cap, in place of the computed lid.
 # Kept for backward compatibility; relaxation_schedule is the preferred
 # mechanism.  Default: empty list (all techs get the lid).
 LID_EXEMPT_PREFIXES: list = []
 
 # --- Exempt max capacity (optional, per-prefix) ----------------------------
 # When an exempt prefix has an entry here, TotalAnnualMaxCapacity is set to the
-# interpolated schedule value (GW) instead of 9999.  MaxCapInv stays uncapped
-# (9999) — the total-cap ceiling is the binding constraint.
+# interpolated schedule value (GW) in place of 9999.  MaxCapInv stays at
+# 9999, a finite cap; the total-cap ceiling is the binding constraint.
 # Format: { "PWRSPV": {2023: 80, 2030: 200, 2050: 500}, ... }
-# Prefixes not listed get the default 9999 (fully uncapped, backward-compatible).
+# Prefixes not listed get the default 9999, a finite cap.
 # A single number (e.g. "PWRSPV": 200) is treated as a flat constant.
 EXEMPT_MAX_CAP: dict = {}
 
@@ -349,7 +350,7 @@ LID_FLOOR_GW: float = 0.0
 # fraction of scaled_pool.  When the sum of per-tech lids in a cr is below
 # this threshold, ALL lids in that cr are scaled up by the same factor so the
 # total meets the floor.  The proportional tech-share structure and family
-# ceilings are preserved — the floor only sets a system-level minimum.
+# ceilings are preserved: the floor only sets a system-level minimum.
 #
 # Years between anchors are linearly interpolated (same logic as
 # relaxation_schedule).  Default {} = no adequacy floor (BAU behaviour).
@@ -357,7 +358,7 @@ LID_FLOOR_GW: float = 0.0
 # Typical usage: zero through the planning horizon, ramping up in later years
 # to prevent backstop activation when pool_delta shrinks due to retirements:
 #   adequacy_floor_schedule:
-#     2040: 0.0       # no floor through 2040 — preserve BAU calibration
+#     2040: 0.0       # no floor through 2040: preserve BAU calibration
 #     2045: 0.08      # 8% by 2045
 #     2050: 0.20      # 20% by 2050
 LID_ADEQUACY_FLOOR_SCHEDULE: dict = {}
@@ -402,7 +403,7 @@ def _rmtree_robust(path: Path, attempts: int = 5) -> None:
         except PermissionError:
             gc.collect()
             time.sleep(0.1 * (i + 1))
-    # Final attempt — let it raise if the lock still hasn't released.
+    # Final attempt: let it raise if the lock still hasn't released.
     shutil.rmtree(path)
 
 
@@ -663,7 +664,7 @@ def lid_pct_for_cr_year(cr: str, year: int,
     """Return the *uniform-mode* lid percentage for (country_region, year).
 
     This function is used by uniform mode to compute pct(cr, y). Proportional
-    mode does not call this — it computes lid directly via tech_share and
+    mode does not call this: it computes lid directly via tech_share and
     pool_delta (see proportional_lid_for_tech_year).
 
     Formula:
@@ -697,9 +698,9 @@ def lid_pct_for_year(year: int) -> float:
 
 
 def load_generation_techs(tech_types_path: Path) -> set:
-    """Load TECH_TYPES.csv and return the set of techs in GENERATION_CATEGORY.
+    """Load the technology taxonomy and return the techs in GENERATION_CATEGORY.
 
-    Raises FileNotFoundError if the file is missing — TECH_TYPES.csv is the
+    Raises FileNotFoundError if the file is missing. The taxonomy is the
     authoritative source for what counts as a generation tech, and silently
     falling back to a heuristic would be a footgun. To opt out, set
     RESTRICT_TO_GENERATION = False at the top of this script.
@@ -729,7 +730,7 @@ def build_demand_multiplier_map(demand_path: Path,
 
     Aggregates demand-type rows by country+region (chars 3..7 of the Fuel/Tech
     code, e.g. ELCBGDXX03 -> BGDXX). Returns an empty dict if the demand file
-    is missing or doesn't have the expected structure — callers should treat
+    is missing or doesn't have the expected structure: callers should treat
     an empty map as 'no ramp data, fall back to flat default'.
     """
     demand_path = Path(demand_path)
@@ -810,7 +811,7 @@ def identify_allowed_techs(df: pd.DataFrame, year_cols: list,
     AND (in `generation_techs` if RESTRICT_TO_GENERATION and the set is given).
 
     `generation_techs` is the set returned by load_generation_techs(). When
-    None, no category filter is applied — useful for tests of the unfiltered
+    None, no category filter is applied: useful for tests of the unfiltered
     behavior. Production callers should always pass it.
     """
     res = df[df["Parameter"] == RES_PARAM]
@@ -828,7 +829,7 @@ def country_region_for(tech: str) -> str | None:
 
     Returns e.g. 'BGDXX' for PWRHYDBGDXX, 'INDNE' for PWRHYDINDNE.
     Returns None for tech codes that don't fit the PWR* length-11 convention
-    (e.g. TRN* transmission interconnects of length 13) — those should be
+    (e.g. TRN* transmission interconnects of length 13): those should be
     excluded from pool computation and pool-based lid application.
     """
     if not isinstance(tech, str) or len(tech) != PWR_TECH_LENGTH:
@@ -872,7 +873,7 @@ def build_tech_share_map(df: pd.DataFrame, allowed: set,
     pool growth among allowed gen techs in a cr.
 
     Shares for techs in the same cr sum to 1.0 (modulo float). Techs with
-    zero residual at ref_year get share=0 — they receive no proportional
+    zero residual at ref_year get share=0: they receive no proportional
     allocation, only whatever the untie rule provides via MinCapInv.
     """
     res = df[(df["Parameter"] == RES_PARAM) & (df["Tech"].isin(allowed))].copy()
@@ -969,7 +970,7 @@ def compute_adequacy_scale_factors(
 
     For each (cr, year) where the adequacy floor schedule is active:
       1. Compute the per-tech lid (same formula as the main loop, including
-         relaxation, family ceiling, and per-tech floor — but NOT the untie
+         relaxation, family ceiling, and per-tech floor, and without the untie
          rule, which is a downstream correction).
       2. Sum across all gen techs in that cr to get total_lid.
       3. Compare total_lid against adequacy_floor_pct(y) × scaled_pool(cr, y).
@@ -1003,7 +1004,7 @@ def compute_adequacy_scale_factors(
             # Replicate the lid computation for each tech (same as main loop).
             total_lid = 0.0
             for tech in techs:
-                # Exempt techs are uncapped (9999) — not part of the gen lid.
+                # Exempt techs get 9999 and are outside the gen lid.
                 if LID_EXEMPT_PREFIXES and any(
                     tech.startswith(p) for p in LID_EXEMPT_PREFIXES
                 ):
@@ -1107,7 +1108,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
     proj_mode_col = headers.get(PROJ_MODE_COL)
 
     # Snapshot the uniform-mode lid pct per (cr, year). Always logged for
-    # traceability — under proportional mode this is informational only.
+    # traceability: under proportional mode this is informational only.
     pct_used = {
         f"{cr}_{y}": lid_pct_for_cr_year(cr, y, demand_mult_map)
         for (cr, y) in pool_map.keys()
@@ -1152,8 +1153,9 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             and any(tech.startswith(p) for p in LID_EXEMPT_PREFIXES)
         ) if tech else False
         # Normal rows: must be allowed (or exempt) AND MaxCapInv param.
-        # Exempt techs also get TotalAnnualMaxCapacity uncapped (the total
-        # installed-cap ceiling, not the per-year investment lid).
+        # Exempt techs also get TotalAnnualMaxCapacity set, to 9999 or to the
+        # exempt_max_cap schedule (the total installed-cap ceiling, separate
+        # from the per-year investment lid).
         _is_target_param = (
             param == MAX_INV_PARAM
             or (_is_exempt_prefix and param == MAX_CAP_PARAM)
@@ -1163,7 +1165,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
 
         cr = country_region_for(tech)
         if cr is None:
-            # TRN* and other non-PWR* techs: skip — leave manual cal alone.
+            # TRN* and other non-PWR* techs: skip and leave manual cal alone.
             if tech not in log["skipped_non_pwr_techs"]:
                 log["skipped_non_pwr_techs"].append(tech)
             continue
@@ -1176,11 +1178,11 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
 
             # --- Short-circuit: TotalAnnualMaxCapacity for exempt techs.
             #     Use exempt_max_cap schedule if defined for this prefix,
-            #     otherwise 9999 (fully uncapped, backward-compatible).
+            #     otherwise 9999, a finite cap.
             if param == MAX_CAP_PARAM:
                 proposed = _exempt_max_cap_for(tech, year)
                 reason = ("exempt_maxcap_capped" if proposed < PLACEHOLDER_VALUE
-                          else "exempt_maxcap_uncapped")
+                          else "exempt_maxcap_9999")
                 if values_differ(old, proposed):
                     cell.value = proposed
                     row_was_modified = True
@@ -1230,9 +1232,9 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                     family_capped = True
             # A "locked" family has ceiling <= 1.0 (i.e. stays at or below BAU
             # proportions).  Locked families do NOT receive the lid_floor_gw
-            # rescue — otherwise families with near-zero BAU share (e.g. BIO,
+            # rescue: otherwise families with near-zero BAU share (e.g. BIO,
             # WAS) accumulate 0.5 GW/yr of spurious build from the floor alone.
-            # NOTE: do NOT gate on family_capped here — when relax_mult ==
+            # NOTE: do NOT gate on family_capped here: when relax_mult ==
             # family_ceiling (both 1.0, as in A_CalBAU), family_capped is False
             # but the family is still locked.  Matches the logic in
             # compute_adequacy_scale_factors().
@@ -1283,7 +1285,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             ):
                 proposed = lid
                 if is_exempt:
-                    reason = "exempt_uncapped"
+                    reason = "exempt_9999"
                 elif adequacy_scaled:
                     reason = "lid_adequacy_scaled"
                 elif floored:
@@ -1302,7 +1304,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                 # Exempt techs ALWAYS get 9999, even if the cell had a
                 # manual value (e.g. 0 set by upstream add_max scripts).
                 proposed = lid  # lid is already 9999 for exempt techs
-                reason = "exempt_uncapped"
+                reason = "exempt_9999"
             else:
                 proposed = float(old) if isinstance(old, (int, float)) else old
                 reason = "preserved_manual"
@@ -1420,8 +1422,9 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
     input_dir = Path(input_dir)
     sheets = sheets or DEFAULT_TARGET_SHEETS
 
-    # Optional YAML override (per-scenario). Located next to this script —
-    # the orchestrator stages it there from rules_scripts/configs/<scenario>/.
+    # Optional YAML override (per-scenario). The orchestrator passes the copy
+    # it staged from config/scenarios/<scenario>/; without --yaml, the file
+    # next to this script is read.
     if yaml_path is None:
         yaml_path = Path(__file__).resolve().parent / YAML_FILE_NAME
     yaml_loaded = False
@@ -1435,9 +1438,9 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
     if not paramfile.exists():
         raise FileNotFoundError(f"{paramfile} not found")
 
-    # Load the GENERATION tech list. TECH_TYPES.csv is shared by other A3
-    # stages (e.g. add_ao_c2a.py), so it lives in A3_process/, one level
-    # above this script (which now lives in A3_process/rules_scripts/).
+    # Load the GENERATION tech list from the technology taxonomy,
+    # config/scenarios/technology_types.csv, which other A3 stages
+    # (e.g. add_ao_c2a.py) also read.
     generation_techs = None
     tech_types_path = None
     if RESTRICT_TO_GENERATION:
@@ -1495,7 +1498,7 @@ def print_summary(log: dict) -> None:
     """Pretty-print the run summary."""
     bar = "=" * 72
     print(bar)
-    print("MaxCapacityInvestment lid + untie rule — applied")
+    print("MaxCapacityInvestment lid + untie rule: applied")
     print(bar)
     print(f"Backup folder : {log.get('backup_dir', '(skipped)')}")
     print(f"Edited file   : {log['file']}")
@@ -1606,6 +1609,7 @@ def print_summary(log: dict) -> None:
 
 
 def main() -> int:
+    """Parse the command line, then apply the build-cap rule or restore a backup; return the exit code."""
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -1624,7 +1628,7 @@ def main() -> int:
     parser.add_argument(
         "--skip-backup",
         action="store_true",
-        help="Skip backup creation (DANGEROUS — for testing only)",
+        help="Skip backup creation (DANGEROUS, for testing only)",
     )
     parser.add_argument(
         "--restore",

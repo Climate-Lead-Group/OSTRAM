@@ -83,6 +83,7 @@ EXTENDED_ROUTES = {
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build the top-level argument parser for ``python -m ostram``."""
     parser = argparse.ArgumentParser(
         prog="python -m ostram",
         description="Canonical command interface for the OSTRAM workflow.",
@@ -280,6 +281,7 @@ def _activate_profile(
 
 
 def main(argv: Sequence[str] | None = None) -> int | None:
+    """Resolve the project paths and profile, then dispatch the command to its route."""
     arguments = list(sys.argv[1:] if argv is None else argv)
     parser = build_parser()
     if not arguments:

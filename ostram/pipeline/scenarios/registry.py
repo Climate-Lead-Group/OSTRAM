@@ -89,18 +89,26 @@ class ScenarioRegistry:
 
     @property
     def root_names(self) -> tuple[str, ...]:
+        """Return the root scenario names in registry order."""
+
         return tuple(root.name for root in self.roots)
 
     @property
     def roots_by_name(self) -> dict[str, RootScenario]:
+        """Return the root scenarios keyed by name."""
+
         return {root.name: root for root in self.roots}
 
     @property
     def derived_by_name(self) -> dict[str, DerivedScenario]:
+        """Return the derived scenarios keyed by name."""
+
         return {scenario.name: scenario for scenario in self.derived}
 
     @property
     def scenario_names(self) -> tuple[str, ...]:
+        """Return the support scenarios followed by the decision scenarios."""
+
         return self.support_scenarios + self.decision_scenarios
 
     def select(self, requested: str | Sequence[str] | None) -> tuple[str, ...]:

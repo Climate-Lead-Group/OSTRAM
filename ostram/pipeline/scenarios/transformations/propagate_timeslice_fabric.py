@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-5_propagate_timeslice_fabric.py
+propagate_timeslice_fabric.py
 
 Propagates the timeslice fabric (shape derived from the WV workbook) from
 SOASIA_OSeMOSYS_WV.xlsx into A-O_Parametrization_wvaligned_v2.xlsx.
@@ -236,6 +236,9 @@ def build_daysplit_rows(wv_df, ao_header):
 # Step 3: rewrite A-O Parametrization
 # -----------------------------------------------------------------------------
 def main():
+    """Copy the A-O Parametrization workbook to its ts20 name and rewrite its
+    Yearsplit and DaySplit sheets from the WV workbook.
+    """
     if not WV_FILE.is_file():
         sys.exit(f"[ERROR] WV file not found: {WV_FILE}")
     if not AO_IN.is_file():

@@ -369,6 +369,9 @@ def run(scenario, xlsx_path=None, *, interactive=True, auto_fix_all=False,
 # CLI
 # -------------------------------------------------------------------
 def main():
+    """Parse the command line and run the validation; return 0, 1 when the
+    run aborts, or 2 when the default workbook for the scenario is missing.
+    """
     ap = argparse.ArgumentParser(description="Pre-solver validation for A-O_Parametrization.xlsx")
     ap.add_argument("--scenario", help="Scenario name (e.g. BAU). Used to derive default xlsx path.")
     ap.add_argument("--xlsx", help="Override xlsx path directly.")

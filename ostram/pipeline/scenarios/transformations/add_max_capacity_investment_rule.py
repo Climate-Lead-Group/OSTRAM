@@ -19,7 +19,7 @@ For each technology in the target sheet(s), check if it has either of:
 
 If yes ("ALLOWED"):
     For TotalAnnualMaxCapacityInvestment, fill EMPTY (None/blank) cells with
-    9999. Existing explicit values are PRESERVED — including explicit zeros,
+    9999. Existing explicit values are PRESERVED, including explicit zeros,
     which encode real modeling decisions (e.g. "no investment in 2023 base
     year because residual covers it", "transmission interconnect not online
     until 2030"). Only blank cells mean "no upper bound was set."
@@ -38,7 +38,7 @@ PROJECTION MODE
 For every row we touch (above), if Projection.Mode is "EMPTY", flip it to
 "User defined" so the values get picked up downstream. Rows whose Projection
 Mode is already something else (e.g. linear projection, growth rate) are left
-alone — those are deliberate.
+alone: those are deliberate.
 
 Additionally, MinCapacityInvestment rows whose year cells are non-null but
 mode is "EMPTY" also get flipped to "User defined". This activates planned-
@@ -85,7 +85,7 @@ USAGE
         --input-dir A1_Outputs/A1_Outputs_BAU \\
         --sheets "Secondary Techs"
 
-    # Pipeline (Stage 1b) call — legacy OLD+NEW equivalent:
+    # Pipeline (Stage 1b) call: legacy OLD+NEW equivalent:
     python -m ostram.pipeline.scenarios.transformations.add_max_capacity_investment_rule \\
         --input-dir stage1b --fill-zeros
 """
@@ -248,7 +248,7 @@ def apply_rule_to_sheet(
                     )
 
         # ALLOWED techs: fill EMPTY MaxInv cells with 9999. Preserve every
-        # explicit value, including explicit 0s — those encode real modeling
+        # explicit value, including explicit 0s: those encode real modeling
         # decisions (e.g. "no investment in 2023 base year", "transmission
         # interconnect can't come online until 2030"). Only None/blank means
         # "no upper bound was set," which is what 9999 stands in for.
@@ -379,7 +379,7 @@ def print_summary(log: dict) -> None:
     """Pretty-print the run summary."""
     bar = "=" * 72
     print(bar)
-    print("MaxCapacityInvestment guard rule — applied")
+    print("MaxCapacityInvestment guard rule: applied")
     print(bar)
     print(f"Backup folder : {log.get('backup_dir', '(skipped)')}")
     print(f"Edited file   : {log['file']}")
@@ -416,6 +416,10 @@ def print_summary(log: dict) -> None:
 
 
 def main() -> int:
+    """Parse the command line, apply the rule to the A-O workbooks in
+    ``--input-dir`` and print a summary; return 0 on success and 1 on an
+    error.
+    """
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -434,7 +438,7 @@ def main() -> int:
     parser.add_argument(
         "--skip-backup",
         action="store_true",
-        help="Skip backup creation (DANGEROUS — for testing only)",
+        help="Skip backup creation (DANGEROUS, for testing only)",
     )
     parser.add_argument(
         "--fill-zeros",

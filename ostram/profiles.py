@@ -135,6 +135,13 @@ def resolve_authority_reference(
 
 @dataclass(frozen=True)
 class AuthoritySpec:
+    """One authority of a profile manifest.
+
+    ``reference`` is a ``scheme:path`` reference, ``mutable`` marks an authority
+    that is copied into the profile workspace, and ``kind`` is ``file`` or
+    ``directory``.
+    """
+
     role: str
     reference: str
     mutable: bool = False
@@ -142,12 +149,16 @@ class AuthoritySpec:
 
     @property
     def namespace(self) -> str:
+        """Return the scheme of the reference, or an empty string when it has none."""
+
         match = _REFERENCE.fullmatch(self.reference)
         return match.group(1) if match else ""
 
 
 @dataclass(frozen=True)
 class ProfileManifest:
+    """One loaded profile manifest with its authorities, metadata and policies."""
+
     profile_id: str
     path: Path
     authorities: Mapping[str, AuthoritySpec]
@@ -156,10 +167,14 @@ class ProfileManifest:
 
     @property
     def root(self) -> Path:
+        """Return the folder that holds the manifest file."""
+
         return self.path.parent
 
     @property
     def digest(self) -> str:
+        """Return the SHA-256 hex digest of the manifest file bytes."""
+
         return hashlib.sha256(self.path.read_bytes()).hexdigest()
 
     def source_paths(
@@ -201,6 +216,12 @@ class ProfileManifest:
         return resolved
 
     def require_roles(self, *roles: str) -> None:
+        """Check that the manifest declares an authority for every role in ``roles``.
+
+        Raises:
+            ProfileManifestError: If any role has no authority.
+        """
+
         missing = [role for role in roles if role not in self.authorities]
         if missing:
             raise ProfileManifestError(
@@ -239,6 +260,14 @@ def load_manifest(
     *,
     expected_profile: str | None = None,
 ) -> ProfileManifest:
+    """Load and validate one profile manifest file.
+
+    Raises:
+        FileNotFoundError: If ``path`` is not a file.
+        ProfileManifestError: If the schema, id, authorities, metadata or
+            policies are invalid, or if the id differs from ``expected_profile``.
+    """
+
     manifest_path = Path(path).resolve()
     if not manifest_path.is_file():
         raise FileNotFoundError(f"profile manifest not found: {manifest_path}")
@@ -276,6 +305,12 @@ def load_manifest(
 
 
 def default_registry_path(paths: ProjectPaths) -> Path:
+    """Return the path of the profile registry.
+
+    This is the project's ``config/profiles/registry.json`` when it exists,
+    else the ``config/profiles/registry.json`` beside the installed package.
+    """
+
     project_registry = (paths.config_root / "profiles" / "registry.json").resolve()
     if project_registry.is_file():
         return project_registry
@@ -291,6 +326,19 @@ def load_profile(
     paths: ProjectPaths,
     registry_path: Path | str | None = None,
 ) -> ProfileManifest:
+    """Load the manifest of ``profile_id`` through the profile registry.
+
+    The registry is ``registry_path``, or :func:`default_registry_path` when it
+    is ``None``. When the installed registry is used for the ``full`` profile,
+    the manifest is the ``full.yaml`` beside that registry.
+
+    Raises:
+        FileNotFoundError: If the registry or the manifest file is missing.
+        ProfileManifestError: If the id, the registry or the manifest is invalid,
+            or if the registry lists no such profile.
+        AuthorityResolutionError: If the manifest reference is unsafe.
+    """
+
     if not _PROFILE_ID.fullmatch(profile_id):
         raise ProfileManifestError(f"invalid profile id: {profile_id!r}")
     registry = (
@@ -356,11 +404,21 @@ def encoded_environment(
 
 
 def active_profile_id(environ: Mapping[str, str] | None = None) -> str:
+    """Return the profile id in ``OSTRAM_PROFILE``, or ``full`` when it is unset."""
+
     environment = os.environ if environ is None else environ
     return environment.get(PROFILE_ENV, DEFAULT_PROFILE)
 
 
 def active_policies(environ: Mapping[str, str] | None = None) -> dict[str, Any]:
+    """Return the profile policies decoded from ``OSTRAM_PROFILE_POLICIES``.
+
+    An unset or empty value gives an empty dict.
+
+    Raises:
+        ProfileError: If the value is not a JSON object.
+    """
+
     environment = os.environ if environ is None else environ
     raw = environment.get(PROFILE_POLICIES_ENV)
     if not raw:
@@ -380,4 +438,6 @@ def profile_policy(
     *,
     environ: Mapping[str, str] | None = None,
 ) -> Any:
+    """Return the active profile policy ``name``, or ``default`` when it is absent."""
+
     return active_policies(environ).get(name, default)

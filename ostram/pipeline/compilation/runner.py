@@ -21,6 +21,7 @@ parse_cli_args = _impl.parse_cli_args
 
 
 def main() -> None:
+    """Run B1 for the selected scenarios with the helpers exported by this module."""
     return _impl.orchestrate(
         parse_cli_args(),
         _impl.B1Paths.defaults(),

@@ -279,6 +279,12 @@ def fill_editor(editor_path, flow_data):
 # ============================================================================
 
 def main():
+    """Write interconnector activity limits into the Secondary Techs editor.
+
+    The limits come from the bilateral flow workbook, and the editor is
+    Secondary_Techs_Editor.xlsx in the preparation workspace. Returns without
+    changes when either file is missing.
+    """
     runtime = resolve_paths().stage_workspace("preparation", create=True)
     flow_file = runtime / "secondary_techs" / "flujos_energia_estimados_optimizacion.xlsx"
     editor_file = runtime / "Secondary_Techs_Editor.xlsx"

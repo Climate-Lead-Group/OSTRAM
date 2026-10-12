@@ -31,8 +31,9 @@ The two rows above are stage-specific contracts, not competing counts. Preparati
 performs a count-preserving reconciliation of legacy technology identities. Compilation
 then adds exactly one technology, `PWRSHPINDEA`, and six ELC dispatch fuels:
 `ELCBGDXX00`, `ELCBGDXX03`, `ELCBGDXX04`, `ELCINDEA00`, `ELCINDEA03`, and
-`ELCINDEA04`. `profile.yaml` records membership hashes for both stages, and the runtime
-rejects any other addition or removal before crossing the matrix/solver boundary.
+`ELCINDEA04`. `profile.yaml` records the reconciliation and the generated delta, and the
+runtime rejects any other compiled addition or removal before crossing the matrix/solver
+boundary.
 
 `C_Target_VRE` declares a completed-result dependency on `A_Calibrated_BAU`: it scales
 its NDC-derived floors against solved CalBAU generation, so A must be solved first. The

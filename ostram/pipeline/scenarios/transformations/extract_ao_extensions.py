@@ -1,3 +1,4 @@
+"""Write OSTRAM_AO_Extensions.xlsx from the WV workbook and the four A-O workbooks for review."""
 from pathlib import Path
 # -*- coding: utf-8 -*-
 """
@@ -80,7 +81,7 @@ CATEGORY_FALLBACKS = {
 }
 
 # WV sheets scanned for tech codes when building / verifying the roster.
-# Mirrors V17_TECH_SHEETS in 1_merge_timeslices_into_WV.py.
+# Mirrors V17_TECH_SHEETS in merge_timeslices.py.
 WV_TECH_SHEETS = [
     "Primary_Techs", "Secondary_Techs", "Capacities_CF",
     "VariableCost", "Demand_Techs", "Emissions",
@@ -122,10 +123,12 @@ def parse_code(code):
 
 
 def find_code_col(df):
+    """Return the first entry of ``CODE_COLS`` that is a column of ``df``, or None."""
     return next((c for c in CODE_COLS if c in df.columns), None)
 
 
 def find_name_col(df):
+    """Return the first entry of ``NAME_COLS`` that is a column of ``df``, or None."""
     return next((c for c in NAME_COLS if c in df.columns), None)
 
 
@@ -355,8 +358,13 @@ for code in absent:
         # Country-style 5-char regions in this project end in 'XX' or start
         # with 'IND' (the India sub-regions). Anything else is non-canonical.
         def is_country_region(r):
+            """Return a true value when ``r`` ends in XX or starts with IND, the two forms of a country-region code."""
             return r.endswith("XX") or (r and r.startswith("IND"))
         def score(c2):
+            """Return the sort key that ranks a TRN template candidate: cross-border
+            first, then origin overlap, destination overlap and a tiebreak on the
+            first character.
+            """
             _, o2, d2 = parse_code(c2)
             return (is_country_region(o2) and is_country_region(d2),  # 1: cross-border
                     o2 in (new_origin, new_dest),                      # 2: origin overlap
@@ -419,7 +427,7 @@ for code in absent:
         notes = (f"[FALLBACK: category {s['fallback_detail']} via CATEGORY_FALLBACKS; "
                  f"template={s['template']}; confirm Tech.Name override]")
     elif s["fallback_kind"] == "trn_partial":
-        notes = (f"[FALLBACK: TRN partial-region match — {s['fallback_detail']}; "
+        notes = (f"[FALLBACK: TRN partial-region match: {s['fallback_detail']}; "
                  f"confirm Tech.Name override]")
     else:
         notes = ""
@@ -532,6 +540,7 @@ print("=" * 72)
 
 _passed, _failed = 0, 0
 def check(name, cond, detail=""):
+    """Count and print one built-in test result as PASS or FAIL."""
     global _passed, _failed
     if cond:
         _passed += 1

@@ -1,6 +1,6 @@
 """
-inject_DaysInDayType.py
-=======================
+days_in_day_type.py
+===================
 
 Adjusts the DaysInDayType block of an OSeMOSYS .txt datafile in place.
 
@@ -54,6 +54,13 @@ from collections import defaultdict
 
 
 def inject(path: Path) -> None:
+    """Replace the DaysInDayType block of the datafile at ``path`` with one
+    row per season and year computed from YearSplit, and write the file
+    back.
+
+    Raises SystemExit when YearSplit or DaysInDayType is missing or no
+    timeslice is parsed.
+    """
     text = path.read_text(encoding='utf-8')
 
     # 1. Locate YearSplit block
@@ -130,6 +137,9 @@ def inject(path: Path) -> None:
 
 
 def main() -> None:
+    """Run :func:`inject` on the datafile named by the single command-line
+    argument.
+    """
     if len(sys.argv) != 2:
         print("Usage: python inject_DaysInDayType.py <preprocessed_file.txt>")
         sys.exit(1)

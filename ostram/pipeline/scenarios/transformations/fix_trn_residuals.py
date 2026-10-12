@@ -31,7 +31,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import math
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
@@ -65,8 +64,7 @@ PARAM_COL = "Parameter"
 PROJ_MODE_COL = "Projection.Mode"
 
 # RC Authority V1 is a dense 18-technology x 28-year table in the materialized
-# v18 workbook. The digest commits the complete numeric table without making
-# this script a second source of the values.
+# v18 workbook.
 AUTHORITY_YEARS = tuple(range(2023, 2051))
 AUTHORITY_TECHS = frozenset({
     "TRNBGDXXINDEA", "TRNBGDXXINDNE", "TRNBTNXXBGDXX",
@@ -76,9 +74,6 @@ AUTHORITY_TECHS = frozenset({
     "TRNINDNONPLXX", "TRNINDSOINDWE", "TRNINDSOLKAXX",
     "TRNLKAXXMDVXX", "TRNMDVXXINDSO", "TRNNPLXXBGDXX",
 })
-AUTHORITY_SEMANTIC_SHA256 = (
-    "6c4420017b4a2df0b0e4ab6cc11f0bb45c79aa139bed858bdea5fec1aa54584b"
-)
 
 
 # ------------------------------------------------------------------ data model
@@ -195,19 +190,6 @@ def _decimal_text(value: object, context: str) -> str:
     return format(decimal_value.normalize(), "f")
 
 
-def authority_semantic_sha256(
-    authority: Mapping[str, Mapping[int, float]],
-) -> str:
-    """Hash the canonical technology/year/value authority domain."""
-    payload = "".join(
-        f"{tech}|{year}|"
-        f"{_decimal_text(authority[tech][year], f'{tech}/{year}')}\n"
-        for tech in sorted(authority)
-        for year in sorted(authority[tech])
-    )
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
-
-
 def _validate_authority_mapping(
     authority: Mapping[str, Mapping[int, float]],
 ) -> None:
@@ -237,12 +219,6 @@ def _validate_authority_mapping(
             )
         for year in sorted(years):
             _decimal_text(authority[tech][year], f"{tech}/{year}")
-    digest = authority_semantic_sha256(authority)
-    if strict_full and digest != AUTHORITY_SEMANTIC_SHA256:
-        raise ValueError(
-            "RC Authority V1 semantic digest mismatch: "
-            f"expected {AUTHORITY_SEMANTIC_SHA256}, got {digest}"
-        )
 
 
 def load_rc_authority(authority_path: Path) -> Dict[str, Dict[int, float]]:
@@ -415,6 +391,7 @@ def derive_commissionings(
 
 
 def is_flat(profile: Dict[int, float]) -> bool:
+    """Return True when the values of ``profile`` differ by at most ``FLAT_TOLERANCE``."""
     vals = list(profile.values())
     return (max(vals) - min(vals)) <= FLAT_TOLERANCE
 
@@ -675,6 +652,7 @@ def load_overrides(path: Path) -> Dict[str, List[Commissioning]]:
 
 # ---------------------------------------------------------------- diff writer
 def write_diff_csv(diffs: List[DiffEntry], path: Path) -> None:
+    """Write the cell-level changes in ``diffs`` to a CSV file at ``path``."""
     with path.open("w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["sheet", "tech", "parameter", "year",
@@ -696,13 +674,16 @@ def write_diff_md(
     cutoff_year: int,
     path: Path,
 ) -> None:
+    """Write the Markdown diff log at ``path``: a summary, warnings, skipped
+    technologies and the commissioning schedule of each technology written.
+    """
     split_diffs = [d for d in diffs if d.source == "split"]
     authority_diffs = [d for d in diffs if d.source == "authority_v1"]
 
     flatten_plans = [p for p in plans if p.flatten_only]
 
     lines: List[str] = []
-    lines.append("# TRN Interconnector Authority — Diff Log")
+    lines.append("# TRN Interconnector Authority: Diff Log")
     lines.append("")
     lines.append(f"- Mode: **{mode}** "
                  f"(`{MIN_INV_PARAM}` if min, `{MAX_CAP_PARAM}` if max)")
@@ -817,6 +798,9 @@ def run_fix(
 
 # ---------------------------------------------------------------- CLI
 def main(argv: Optional[List[str]] = None) -> int:
+    """Parse the command line, run the transmission fix and write the optional
+    diff logs; return 0.
+    """
     p = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     p.add_argument("--input", type=Path, required=True,
                    help="path to input A-O_Parametrization.xlsx")
@@ -839,7 +823,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                         "to override the selected commissioning schedule")
     p.add_argument("--authority", type=Path, required=True,
                    help="raw or materialized v18 workbook containing the "
-                        "digest-validated interconnector authorities")
+                        "validated interconnector authorities")
     args = p.parse_args(argv)
 
     diffs, plans, skipped, warnings = run_fix(

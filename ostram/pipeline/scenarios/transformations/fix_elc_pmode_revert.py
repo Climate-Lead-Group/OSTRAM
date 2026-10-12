@@ -1,27 +1,31 @@
 """fix_elc_pmode_revert.py
-=============================
-Reproduces the manual edit that Luis made between run 2 of
-add_max_capacity_investment_rule.py (10:55) and B1b_Pre_solver_validation.py
-(12:01) on 2026-04-30.
+========================
+Sets ``Projection.Mode`` to "EMPTY" on the two capacity cap rows of each
+ELC*01 dispatch node.
 
 WHAT IT DOES
 ------------
-In the 'Secondary Techs' sheet, reverts the 'Projection.Mode' column from
-"User defined" to "EMPTY" for each ELC*01 dispatch node derived from the
-active profile's ``countries`` list, across two parameters:
+In the 'Secondary Techs' sheet, sets the 'Projection.Mode' column to "EMPTY"
+for each ELC*01 dispatch node derived from the active profile's
+``countries`` list, across two parameters:
   Parameters (2):
     TotalAnnualMaxCapacity, TotalAnnualMaxCapacityInvestment
 
 WHY
 ---
-The second run of add_max_capacity_investment_rule.py (commit 2be1616;
-since Sept 2026 the pipeline runs the merged script once with --fill-zeros)
-flips Projection.Mode EMPTY -> User defined for all techs ZEROED
-in MaxCap/MaxCapInv. The ELC*01 techs are ZEROED (lockout: the model must not
-invest in a "placeholder electricity tech", only use the PWR* ones).
-Luis decided that 'User defined' was misleading for those lockout rows
-(the year cells are 0, with no real configurable value) and reverted them to
-"EMPTY" by hand. The rows are functionally disabled either way.
+For a technology with no positive ResidualCapacity or
+TotalAnnualMinCapacityInvestment in any year, which includes the ELC*01
+nodes, add_max_capacity_investment_rule.py writes 0 into every year cell of
+these rows and changes their Projection.Mode from "EMPTY" to "User
+defined". The reason for setting the mode back to "EMPTY" is not recorded.
+
+EFFECT
+------
+B1 omits a row whose Projection.Mode is "EMPTY", and the otoole conversion
+gives each omitted entry -1, which skips the constraint. Neither cap
+therefore applies to the ELC*01 nodes. If these rows were exported, their
+0 would forbid new capacity (build cap) and all capacity (total capacity
+cap).
 
 Idempotent: re-running is a no-op (they are already EMPTY).
 
@@ -76,6 +80,11 @@ def elc_dispatch_techs(countries: object) -> frozenset[str]:
 
 
 def configured_country_region_map(config_path: Path | None = None) -> dict[str, str]:
+    """Return the country-region map built from the ``countries`` list of the
+    country configuration file.
+
+    Raises ValueError when the file does not hold a mapping.
+    """
     path = resolve_paths().country_config if config_path is None else Path(config_path)
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
@@ -84,6 +93,7 @@ def configured_country_region_map(config_path: Path | None = None) -> dict[str, 
 
 
 def configured_elc_dispatch_techs(config_path: Path | None = None) -> frozenset[str]:
+    """Return the ELC*01 dispatch node of each configured country-region."""
     return frozenset(
         f"ELC{region}01"
         for region in configured_country_region_map(config_path)

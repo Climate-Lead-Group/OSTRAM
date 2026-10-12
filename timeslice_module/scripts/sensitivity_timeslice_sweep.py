@@ -18,10 +18,23 @@ Outputs:
   - Summary CSV with all metrics
   - Season-disaggregated results
 
-Open in Spyder and press F5.
+Run: python sensitivity_timeslice_sweep.py --base-dir <data folder>
 
 Author: CLG / Luis Victor-Gallardo
 """
+
+import argparse
+
+# Parsed before the plotting imports, so --help needs no plotting packages.
+_parser = argparse.ArgumentParser(
+    description="Sweep daypart schemes against sub-daily data."
+)
+_parser.add_argument(
+    "--base-dir", required=True,
+    help="Data folder outside the repository with the country sub-daily "
+         "data; outputs go to its _sensitivity/ folder.",
+)
+_ARGS = _parser.parse_args()
 
 import os
 import re
@@ -42,7 +55,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 # USER CONFIGURATION
 # ======================================================================
 
-BASE_DIR   = r"C:\Users\luisfernando\Desktop\OSeMOSYS\asia_ostram\asia_ostram_data"
+BASE_DIR   = _ARGS.base_dir
 OUTPUT_DIR = os.path.join(BASE_DIR, "_sensitivity")
 DPI        = 200
 VERBOSE    = True

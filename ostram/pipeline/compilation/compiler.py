@@ -1566,7 +1566,7 @@ if 'System Parameters' in Parametrization.sheet_names:
     else:
         print('   WARNING: System Parameters sheet found but no valid rows.')
 else:
-    print('   NOTE: No System Parameters sheet found — ReserveMargin not included.')
+    print('   NOTE: No System Parameters sheet found; ReserveMargin not included.')
 #
 end_1 = time.time()   
 time_elapsed_1 = -start1 + end_1

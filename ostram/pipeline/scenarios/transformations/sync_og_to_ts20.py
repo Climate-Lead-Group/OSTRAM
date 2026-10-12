@@ -110,18 +110,25 @@ def derive_fabric(wv_file: Path) -> None:
 # CSV writers
 # ---------------------------------------------------------------------------
 def write_timeslice_csv(out_dir: Path) -> None:
+    """Write ``TIMESLICE.csv`` with the derived timeslice list."""
     df = pd.DataFrame({"VALUE": TIMESLICES})
     df.to_csv(out_dir / "TIMESLICE.csv", index=False)
     print(f"  TIMESLICE.csv               {len(df)} rows")
 
 
 def write_dailytimebracket_csv(out_dir: Path) -> None:
+    """Write ``DAILYTIMEBRACKET.csv`` with the derived bracket list."""
     df = pd.DataFrame({"VALUE": BRACKETS})
     df.to_csv(out_dir / "DAILYTIMEBRACKET.csv", index=False)
     print(f"  DAILYTIMEBRACKET.csv        {len(df)} rows")
 
 
 def write_yearsplit_csv(wv_file: Path, out_dir: Path) -> None:
+    """Write ``YearSplit.csv`` from the 2023 column of the WV
+    ``Yearsplit_Template`` sheet, repeated for every model year.
+
+    Exits when the sheet's timeslice order differs from the derived order.
+    """
     src = pd.read_excel(wv_file, sheet_name="Yearsplit_Template")
     if list(src["Timeslices"]) != TIMESLICES:
         sys.exit(f"[ERROR] WV Yearsplit_Template rows != derived canonical order")
@@ -136,6 +143,10 @@ def write_yearsplit_csv(wv_file: Path, out_dir: Path) -> None:
 
 
 def write_daysplit_csv(wv_file: Path, out_dir: Path) -> None:
+    """Write ``DaySplit.csv`` from the 2023 column of the WV ``DaySplit``
+    sheet, converted from fraction of year to fraction of day and repeated
+    for every model year.
+    """
     src = pd.read_excel(wv_file, sheet_name="DaySplit")
     if list(src["DAILYTIMEBRACKET"]) != BRACKETS:
         sys.exit(f"[ERROR] WV DaySplit brackets {list(src['DAILYTIMEBRACKET'])} != derived {BRACKETS}")
@@ -153,9 +164,14 @@ _ELC_03_RE = re.compile(r"^(ELC[A-Z]{5})03$")
 
 
 def write_specified_demand_profile_csv(wv_file: Path, out_dir: Path, region: str = "GLOBAL") -> None:
+    """Write ``SpecifiedDemandProfile.csv`` from the 2023 column of the WV
+    ``Demand_Profiles`` sheet for ``region`` and every model year, with
+    ELC*03 fuels renamed to ELC*02.
+    """
     src = pd.read_excel(wv_file, sheet_name="Demand_Profiles")
     # Map ELC*03 -> ELC*02 to keep the OG CSV pre-DSPTRN.
     def to_pre_dsptrn(code: str) -> str:
+        """Return ``code`` with an ELC*03 suffix changed to 02; other codes are returned unchanged."""
         m = _ELC_03_RE.match(str(code))
         return m.group(1) + "02" if m else str(code)
     src = src.copy()
@@ -178,6 +194,10 @@ def write_specified_demand_profile_csv(wv_file: Path, out_dir: Path, region: str
 
 
 def write_conversion_csvs(out_dir: Path) -> None:
+    """Write ``Conversionls.csv``, ``Conversionld.csv`` and ``Conversionlh.csv``,
+    which map each timeslice to its season, its single day type and its
+    daily time bracket.
+    """
     # Conversionls: TIMESLICE x SEASON; 1.0 if S<season> matches the ts season prefix
     rows = [(ts, s, 1.0 if int(_TS_TAG_RE.fullmatch(ts).group(1)) == s else 0.0)
             for ts in TIMESLICES for s in SEASONS]
@@ -204,6 +224,10 @@ def write_conversion_csvs(out_dir: Path) -> None:
 # preserve formatting and comments)
 # ---------------------------------------------------------------------------
 def update_yaml_xtra_scen(yaml_path: Path) -> None:
+    """Rewrite every ``DailyTimeBracket`` and ``Timeslices`` list in
+    ``yaml_path``, inline or block form, with the derived values; other
+    lines are kept as they are.
+    """
     with open(yaml_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
 
@@ -253,6 +277,9 @@ def update_yaml_xtra_scen(yaml_path: Path) -> None:
 # Main
 # ---------------------------------------------------------------------------
 def main() -> int:
+    """Derive the timeslice fabric from the WV workbook, rewrite the OG CSVs
+    and update the YAML lists; return 0.
+    """
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--wv", type=Path, required=True,

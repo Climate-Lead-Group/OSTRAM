@@ -207,14 +207,14 @@ def _stage3_dispatch(module: str, arguments=None, cwd=None, label=None) -> str:
         )
         return ""
     if module.endswith("clear_stale_unbinding_caps"):
-        clear_stale_unbinding_caps.patch_workbook(
+        clear_stale_unbinding_caps.reset_stale_caps(
             resolve(values["--input"]),
             False,
             resolve(values["--output"]),
         )
         return ""
     if module.endswith("cap_trn_to_residual"):
-        cap_trn_to_residual.patch_workbook(
+        cap_trn_to_residual.apply_trn_caps(
             resolve(values["--input"]),
             False,
             resolve(values["--output"]),
@@ -325,7 +325,7 @@ class WorkbookRoundTripAndMaterializationTests(unittest.TestCase):
             source_hash = _sha256(source)
             output = io.StringIO()
             with redirect_stdout(output):
-                actual = cap_trn_to_residual.patch_workbook(
+                actual = cap_trn_to_residual.apply_trn_caps(
                     source,
                     False,
                     desired,
@@ -441,10 +441,10 @@ class WorkbookRoundTripAndMaterializationTests(unittest.TestCase):
                 stage_4_consolidate=transform.stage_4_consolidate,
                 stage_4_5_apply_inherited_restrictions=lambda *_args: None,
                 stage_5_rules_scripts=lambda *_args: None,
-                stage_ws3_interconnector_costs=lambda *_args: None,
-                stage_ws3_internal_transmission=lambda *_args: None,
-                stage_ws3_internal_tx_losses=lambda *_args: None,
-                stage_ws4_pwr_min_pin=lambda *_args: None,
+                stage_interconnector_costs=lambda *_args: None,
+                stage_internal_transmission=lambda *_args: None,
+                stage_internal_tx_losses=lambda *_args: None,
+                stage_base_year_pin=lambda *_args: None,
                 stage_6_sync_og_to_ts20=lambda *_args: None,
                 stage_6_persist_restrictions=lambda *_args: None,
                 deliver_outputs=deliver,

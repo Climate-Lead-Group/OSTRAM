@@ -56,7 +56,7 @@ TARGET_TYPES = {"GENERATION", "STORAGE_SHORT", "STORAGE_LONG"}
 C2A_PARAM_NAME = "CapacityToActivityUnit"
 C2A_VALUE = 31.536
 
-# Column layout (1-indexed) — verified against this workbook
+# Column layout (1-indexed): verified against this workbook
 COL_TYPE = 1     # 'Tech.Type'      (e.g. 'Secondary', 'Demand')
 COL_TECHID = 2   # 'Tech.ID'        (numeric, unique per tech)
 COL_TECH = 3     # 'Tech'           (e.g. 'PWRCOABGDXX')
@@ -142,6 +142,12 @@ def copy_row_style(ws, src_row: int, dst_row: int, ncols: int) -> None:
 
 # ---------- main ----------
 def main() -> int:
+    """Add a CapacityToActivityUnit row for each GENERATION, STORAGE_SHORT and
+    STORAGE_LONG technology that lacks one and write a new workbook.
+
+    Returns 0 on success, also when nothing is added or for a dry run, and
+    1 on an input error.
+    """
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--src", default=DEFAULT_SRC,
@@ -201,8 +207,8 @@ def main() -> int:
     print(f"  Will add c2a row:             {len(to_add)}")
     print(f"  Target techs NOT in sheet:    {len(not_in_sheet)}")
     if not_in_sheet:
-        # Should be 0 for this model — flag if not.
-        print(f"    (these will not be updated — verify they don't need it):")
+        # Should be 0 for this model: flag if not.
+        print(f"    (these will not be updated; verify they don't need it):")
         for t in not_in_sheet[:20]:
             print(f"      {t}  [{tech_type[t]}]")
         if len(not_in_sheet) > 20:
@@ -216,7 +222,7 @@ def main() -> int:
         print(f"    {k}: {v}")
 
     if not to_add:
-        print("\nNothing to add. (Re-run is a no-op — the file already has "
+        print("\nNothing to add. (Re-run is a no-op; the file already has "
               "c2a set for every target tech.)")
         return 0
 

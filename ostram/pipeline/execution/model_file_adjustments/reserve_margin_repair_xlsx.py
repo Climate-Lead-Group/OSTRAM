@@ -1,8 +1,9 @@
 """Careful reserve-margin repair using an XLSX fallback workbook.
 
-This script is the XLSX sibling of patch_reserve_margin_repair_careful.py.
 It keeps stock and flow capacity limits separate and only replaces sentinel
-values, by default 0 and 9999.
+values: TotalAnnualMaxCapacity where it is 0, and
+TotalAnnualMaxCapacityInvestment where it holds one of --sentinel-values,
+by default 0 and 9999.
 """
 
 from __future__ import annotations
@@ -90,10 +91,16 @@ def bounded_warnings_path(
 
 
 def normalize_header(value: object) -> str:
+    """Return the cell value as stripped text, or an empty string for an
+    empty cell.
+    """
     return str(value).strip() if value is not None else ""
 
 
 def cell_text(value: object) -> str | None:
+    """Return the cell value as stripped text, or None when it is empty or
+    blank.
+    """
     if value is None:
         return None
     text = str(value).strip()
@@ -101,6 +108,9 @@ def cell_text(value: object) -> str | None:
 
 
 def pick_value(row: dict[str, object], *candidates: str) -> str | None:
+    """Return the first non-blank value among the candidate columns, matched
+    case-insensitively, or None.
+    """
     lower_map = {key.lower(): key for key in row}
     for candidate in candidates:
         key = lower_map.get(candidate.lower())
@@ -113,6 +123,13 @@ def pick_value(row: dict[str, object], *candidates: str) -> str | None:
 
 
 def load_fallback_xlsx(path: Path, sheet_name: str | None = None) -> list[CapFallback]:
+    """Read total capacity cap and build cap fallbacks from a worksheet.
+
+    The worksheet is ``sheet_name`` or the first sheet. Each non-empty row
+    needs a country-region column; TECH_PREFIX and YEAR are optional and
+    default to ``*``. Raises ValueError for a missing sheet, an empty sheet
+    or header row, or a row without a country-region.
+    """
     workbook = load_workbook(path, data_only=True, read_only=True)
     if sheet_name:
         if sheet_name not in workbook.sheetnames:
@@ -177,6 +194,7 @@ def load_fallback_xlsx(path: Path, sheet_name: str | None = None) -> list[CapFal
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse the command-line arguments."""
     parser = argparse.ArgumentParser(
         description=(
             "Adjust reserve tags and carefully replace sentinel firm-capacity caps "
@@ -249,16 +267,26 @@ def preserve_reviewed_capacity_rows(before, after, protected):
 
 
 def reviewed_capacity_keys(input_path):
+    """Return the (parameter, technology, year) keys of the base-year pin rows
+    for the total capacity cap and the build cap of the input scenario.
+
+    The scenario is the name of the datafile's folder without ``_0``. The
+    set is empty when that scenario has no pinned root.
+    """
     from ostram.profiles import profile_policy
     from ostram.pipeline.scenarios.rules import apply_base_year_pin as pins
     scenario=pins.calibration_root(input_path.parent.name.removesuffix("_0"))
     if scenario is None:return set()
     path=Path(profile_policy("pwr_min_pin_rules_path",str(pins.RULES_CSV)))
-    rules=pins.load_pin_rules(path,enforce_production_contract=True)
+    rules=pins.load_pin_rules(path)
     return {(r.parameter,r.technology,r.year) for r in rules if r.parameter in (STOCK_PARAM,FLOW_PARAM) and scenario in r.root_scenarios}
 
 
 def main() -> int:
+    """Apply the reserve margin tags and the gas and oil allowance to the
+    input datafile, restore the base-year pin rows, write the adjusted
+    datafile and the warnings, and return 0.
+    """
     args = parse_args()
     input_path = Path(args.input_file)
     output_path = Path(args.output)

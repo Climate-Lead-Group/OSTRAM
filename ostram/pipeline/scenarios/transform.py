@@ -13,11 +13,12 @@ Pipeline:
   Stage 0    materialize scenario template  v18 -> flat v17-shaped per scenario
   Stage 1    scripts 1-5                    AO/WV alignment pipeline, with
                                             maintained AO decision overlay
-  Stage 1b   A0_insert_reserve_margin       adds System Parameters sheet
-             add_max OLD (8ee8056)          fills 9999 / zeroes
-             add_max NEW (2be1616)          flips Projection.Mode
-             fix_elc_pmode_revert           reverts 20 ELC*01 PM cells
-             B1b_Pre_solver_validation      V2 fix (PWRHYDLKAXX)
+  Stage 1b   insert_reserve_margin          adds System Parameters sheet
+             add_max_capacity_investment_rule --fill-zeros
+                                            fills 9999 / zeroes and flips
+                                            Projection.Mode
+             fix_elc_pmode_revert           sets ELC*01 PM cells to EMPTY
+             pre_solver_validation          V2 fix (PWRHYDLKAXX)
   Stage 2    add_ao_c2a                     adds CapacityToActivityUnit
   Stage 2.5  fix_pwrpet_clear               clears 336 PWRPETBGDXX cells
   Stage 3    fix_trn_residuals              + clear_stale_unbinding_caps
@@ -26,7 +27,7 @@ Pipeline:
   Stage 4.5  apply_inherited_restrictions   write Restrictions rows from
                                             inherit_restrictions_from scenarios
   Stage 5    <rules_script>                 applies the scenario's rules
-  Late WS-4  apply_base_year_pin            exact audited 2023-2026 PWR/MIN
+  Late       apply_base_year_pin            exact audited 2023-2026 PWR/MIN
                                             keys on the three canonical roots
   Stage 6    persist_run_restrictions       write CHANGES.json into a
                                             disposable scenario-state copy
@@ -83,11 +84,11 @@ def _configure_profile_paths() -> None:
     SOASIA_V18 = _PROJECT_PATHS.scenario_workbook
 
 # =============================================================================
-# USER CONFIGURATION — defaults; can be overridden via CLI
+# USER CONFIGURATION: defaults; can be overridden via CLI
 # =============================================================================
 DEFAULT_SCENARIO = "BAU"
 
-# Don't auto-clean the runtime workdir (A3_process/_run_<ts>/) — useful for debugging.
+# Don't auto-clean the runtime workdir (workspace/scenarios/_run_<ts>/); useful for debugging.
 KEEP_WORKDIR_DEFAULT = False
 # =============================================================================
 
@@ -107,6 +108,7 @@ INPUT_FILES = (
 
 
 def parse_cli_args() -> argparse.Namespace:
+    """Parse the command-line arguments of ``python -m ostram transform``."""
     p = argparse.ArgumentParser(
         prog="python -m ostram transform",
         description=__doc__,
@@ -238,11 +240,13 @@ def _load_scenarios_module():
 # CLI helpers
 # ---------------------------------------------------------------------------
 def banner(msg: str) -> None:
+    """Print ``msg`` between two rules of 78 equals signs."""
     bar = "=" * 78
     print(f"\n{bar}\n{msg}\n{bar}")
 
 
 def step(label: str) -> None:
+    """Print a step label prefixed with ``>>>``."""
     print(f"\n>>> {label}")
 
 
@@ -312,9 +316,10 @@ def _resolve_script_yaml(script_name: str, scenario: str) -> Path | None:
     """Locate the YAML config to use for `script_name` under `scenario`.
 
     Resolution order:
-      1. rules_scripts/configs/<scenario>/<YAML_FILE_NAME>   (per-scenario override)
-      2. rules_scripts/<YAML_FILE_NAME>                       (default next-to-script)
-      3. None — script has no YAML or no file present.
+      1. config/scenarios/<scenario>/<YAML_FILE_NAME>
+      2. <YAML_FILE_NAME> next to the rule module in
+         ostram/pipeline/scenarios/rules/
+      3. None: the script has no YAML or no file is present.
     """
     src = RULES_SCRIPTS_DIR / script_name
     yaml_name = _read_script_yaml_name(src)
@@ -420,7 +425,10 @@ def build_workdir(
 # Pipeline stages
 # ---------------------------------------------------------------------------
 def stage_1_scripts_1_to_5(s1: Path) -> None:
-    banner("Stage 1 — scripts 1-5 (AO/WV alignment pipeline)")
+    """Stage 1: run the six A-O alignment modules in ``s1``, from the
+    timeslice merge to the timeslice fabric propagation.
+    """
+    banner("Stage 1: scripts 1-5 (AO/WV alignment pipeline)")
     run_subproc("ostram.pipeline.scenarios.transformations.merge_timeslices", cwd=s1, label="merge timeslices")
     run_subproc("ostram.pipeline.scenarios.transformations.extract_ao_extensions", cwd=s1, label="extract AO extensions")
     run_subproc(
@@ -438,7 +446,12 @@ def stage_1_scripts_1_to_5(s1: Path) -> None:
 
 
 def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
-    banner("Stage 1b — A0 + add_max (fill-zeros) + ELC revert + B1b")
+    """Stage 1b: copy the stage 1 workbooks into ``s1b`` and run the reserve
+    margin, ``add_max_capacity_investment_rule --fill-zeros``, ELC
+    projection-mode and pre-solver validation steps on
+    ``A-O_Parametrization.xlsx``.
+    """
+    banner("Stage 1b: A0 + add_max (fill-zeros) + ELC revert + B1b")
 
     # Move stage1 outputs into stage1b/
     src_dir = s1 / "wvaligned_outputs_v2"
@@ -457,7 +470,7 @@ def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
         "--input", s1b / "A-O_Parametrization.xlsx",
     ], label="insert reserve margin")
 
-    # 2) add_max_capacity_investment_rule — single pass with --fill-zeros.
+    # 2) add_max_capacity_investment_rule: single pass with --fill-zeros.
     #    Equivalent to the historical OLD (8ee8056: cell values, zeros->9999)
     #    followed by NEW (2be1616: Projection.Mode flips) sequence; merged
     #    into one script in Sept 2026 (the two copies shared a backup name
@@ -466,7 +479,7 @@ def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
         "--input-dir", s1b, "--fill-zeros",
     ], cwd=wd, label="add_max_capacity_investment_rule (--fill-zeros)")
 
-    # 3) fix_elc_pmode_revert — manual ELC*01 revert
+    # 3) fix_elc_pmode_revert: manual ELC*01 revert
     run_subproc("ostram.pipeline.scenarios.transformations.fix_elc_pmode_revert", [
         "--input", s1b / "A-O_Parametrization.xlsx",
     ], label="fix ELC projection mode")
@@ -479,7 +492,13 @@ def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
 
 
 def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
-    banner("Stage 2 + 2.5 — add_ao_c2a + fix_pwrpet_clear")
+    """Stages 2 and 2.5: add CapacityToActivityUnit rows in ``s2``, then clear
+    the PWRPET values.
+
+    When ``add_ao_c2a`` writes no output, the original workbook is copied
+    to the patched name.
+    """
+    banner("Stage 2 + 2.5: add_ao_c2a + fix_pwrpet_clear")
 
     # Move Stage 1b output into stage2/ as the input to add_ao_c2a
     shutil.copy(s1b / "A-O_Parametrization.xlsx", s2 / "A-O_Parametrization_ORIGINAL.xlsx")
@@ -500,14 +519,21 @@ def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
         print("    [FALLBACK] add_ao_c2a produced no output; copied ORIGINAL "
               "to *_c2a_patched.xlsx so pipeline can continue.")
 
-    # fix_pwrpet_clear — the manual edit Luis did
+    # fix_pwrpet_clear: the manual edit Luis did
     run_subproc("ostram.pipeline.scenarios.transformations.fix_pwrpet_clear", [
         "--input", s2 / "A-O_Parametrization_c2a_patched.xlsx",
     ], label="clear PWRPET values")
 
 
 def stage_3_fix_2(s2: Path, s3: Path) -> Path:
-    banner("Stage 3 — FIX_2 pipeline (fix_trn + clear_stale + cap_trn)")
+    """Stage 3: run ``fix_trn_residuals``, ``clear_stale_unbinding_caps`` and
+    ``cap_trn_to_residual`` in ``s3``.
+
+    Returns the path of the POST_TRN_CAP workbook. Raises RuntimeError when
+    neither the profile authorities nor ``OSTRAM_TEMPLATE_PATH`` are set,
+    and FileNotFoundError when the interconnector authority file is missing.
+    """
+    banner("Stage 3: FIX_2 pipeline (fix_trn + clear_stale + cap_trn)")
 
     authority_path_raw = os.environ.get("OSTRAM_TEMPLATE_PATH")
     authority_path = (
@@ -567,7 +593,7 @@ def stage_3_fix_2(s2: Path, s3: Path) -> Path:
 def stage_4_consolidate(s1: Path, s3: Path, s5: Path, post_trn_cap: Path) -> None:
     """Stage 4: consolidate the 4 final files into stage5/. Separate from stage 5
     so stage 4.5 (inherit restrictions) can run between them."""
-    banner("Stage 4 — consolidate 4 final files into stage5/")
+    banner("Stage 4: consolidate 4 final files into stage5/")
     shutil.copy(post_trn_cap, s5 / "A-O_Parametrization.xlsx")
     src_dir = s1 / "wvaligned_outputs_v2"
     shutil.copy(src_dir / "A-O_AR_Model_Base_Year_wvaligned_v2.xlsx",
@@ -591,7 +617,7 @@ def stage_4_5_apply_inherited_restrictions(
     Applied AFTER stage 4 (where the file is consolidated into stage5/) and
     BEFORE stage 5 (where this scenario's rules_script runs on top). Stages 1b
     earlier in the pipeline may have written 9999 placeholders into the same
-    MaxCapInv cells — overwriting them here is the intended behavior.
+    MaxCapInv cells: overwriting them here is the intended behavior.
 
     `restriction_sources` maps an inherited scenario to an alternative
     workbook (a prerequisite's exported run state) whose Restrictions rows
@@ -608,7 +634,7 @@ def stage_4_5_apply_inherited_restrictions(
             f"inherit_restrictions_from: {unknown}"
         )
     banner(
-        f"Stage 4.5 — apply inherited restrictions from {', '.join(inherit_from)}"
+        f"Stage 4.5: apply inherited restrictions from {', '.join(inherit_from)}"
     )
     _scenarios = _load_scenarios_module()
 
@@ -644,9 +670,9 @@ def stage_5_rules_scripts(
     inherit restrictions and apply no rule of its own).
     """
     if not rules_scripts:
-        banner("Stage 5 — SKIPPED (no rules_scripts for this scenario)")
+        banner("Stage 5: SKIPPED (no rules_scripts for this scenario)")
         return
-    banner(f"Stage 5 — rules_scripts chain ({len(rules_scripts)} script(s))")
+    banner(f"Stage 5: rules_scripts chain ({len(rules_scripts)} script(s))")
     for i, script in enumerate(rules_scripts, start=1):
         source = RULES_SCRIPTS_DIR / script
         if not source.is_file():
@@ -668,12 +694,12 @@ def stage_5_rules_scripts(
         )
 
 
-def stage_ws3_interconnector_costs(
+def stage_interconnector_costs(
     s5: Path,
     soasia: Path,
     materialized_template: Path | None,
 ) -> None:
-    """WS-3: wire v18 Interconnector_Params cost columns into the model.
+    """Wire v18 Interconnector_Params cost columns into the model.
 
     Interconnector CapitalCost/FixedCost historically came from the OG_csvs base
     (distance-computed predecessor values) and the sourced Interconnector_Params sheet
@@ -689,7 +715,7 @@ def stage_ws3_interconnector_costs(
     script = RULES_SCRIPTS_DIR / "apply_interconnector_costs.py"
     if not script.is_file():
         sys.exit(f"ERROR: apply_interconnector_costs.py not found at {script}")
-    banner("WS-3 — apply v18 Interconnector_Params costs (CapitalCost / FixedCost / OperationalLife)")
+    banner("stage_interconnector_costs: apply v18 Interconnector_Params costs (CapitalCost / FixedCost / OperationalLife)")
     arguments: list[object] = ["--input-dir", s5, "--skip-backup"]
     if materialized_template is not None:
         arguments += ["--template", materialized_template]
@@ -700,10 +726,10 @@ def stage_ws3_interconnector_costs(
     )
 
 
-def stage_ws3_internal_transmission(s5: Path) -> None:
-    """WS-3 D5: calibrate the six INTERNAL (intra-node) transmission families.
+def stage_internal_transmission(s5: Path) -> None:
+    """Calibrate the six INTERNAL (intra-node) transmission families.
 
-    A2_AddTx injects RNWTRN/RNWNLI/RNWRPO (RE) and PWRTRN/TRNNLI/TRNRPO (non-RE)
+    A2 (transmission.py) injects RNWTRN/RNWNLI/RNWRPO (RE) and PWRTRN/TRNNLI/TRNRPO (non-RE)
     flat (CapEx 100, FOM 4, ResidualCapacity 5, life 20); the Stage-1 template
     merge then rewrites their OperationalLife to 50/20. This late stage makes
     Config_country_codes.yaml + a desk-checked per-node residuals file the source
@@ -722,15 +748,15 @@ def stage_ws3_internal_transmission(s5: Path) -> None:
     if not (script.is_file() and config.is_file() and residuals.is_file()):
         print("    [SKIP] internal-transmission stage: script/config/residuals missing")
         return
-    banner("WS-3 — calibrate internal transmission (per-node ResidualCapacity / RE CapEx / OperationalLife=40)")
+    banner("stage_internal_transmission: calibrate internal transmission (per-node ResidualCapacity / RE CapEx / OperationalLife=40)")
     run_subproc("ostram.pipeline.scenarios.rules.apply_internal_transmission", [
         "--input-dir", s5, "--skip-backup",
         "--config", config, "--residuals", residuals,
     ], label="apply internal transmission")
 
 
-def stage_ws3_internal_tx_losses(s5: Path) -> None:
-    """WS-4: give the six internal transmission families a non-zero loss.
+def stage_internal_tx_losses(s5: Path) -> None:
+    """Give the six internal transmission families a non-zero loss.
 
     A2 injects internal-tx output activity = 1.0 (0% loss). This stage sets
     OutputActivityRatio = 1 - internal_transmission.transmission_loss (default
@@ -744,13 +770,13 @@ def stage_ws3_internal_tx_losses(s5: Path) -> None:
     if not (script.is_file() and config.is_file()):
         print("    [SKIP] internal-tx losses stage: script/config missing")
         return
-    banner("WS-4 — internal transmission losses (OutputActivityRatio = 1 - loss)")
+    banner("stage_internal_tx_losses: internal transmission losses (OutputActivityRatio = 1 - loss)")
     run_subproc("ostram.pipeline.scenarios.rules.apply_internal_tx_losses", [
         "--input-dir", s5, "--skip-backup", "--config", config,
     ], label="apply internal transmission losses")
 
 
-def stage_ws4_pwr_min_pin(s5: Path, scenario: str) -> None:
+def stage_base_year_pin(s5: Path, scenario: str) -> None:
     """Restore only the audited 2023-2026 PWR/MIN keys on canonical roots.
 
     This late A3 stage consumes a version-controlled static allowlist.  It
@@ -761,7 +787,7 @@ def stage_ws4_pwr_min_pin(s5: Path, scenario: str) -> None:
         raise ValueError(f"unsupported PWR/MIN pin scenario: {scenario!r}")
     if not profile_policy("apply_pwr_min_pin", True):
         print(
-            "    [SKIP] WS-4 PWR/MIN pin: profile policy "
+            "    [SKIP] stage_base_year_pin: profile policy "
             "apply_pwr_min_pin=false (calibration authority not valid "
             "for this profile's domain)"
         )
@@ -775,7 +801,7 @@ def stage_ws4_pwr_min_pin(s5: Path, scenario: str) -> None:
             + ", ".join(str(path) for path in missing)
         )
     banner(
-        "WS-4 — restore audited non-Maldives 2023-2026 PWR/MIN calibration"
+        "stage_base_year_pin: restore audited non-Maldives 2023-2026 PWR/MIN calibration"
     )
     run_subproc(
         "ostram.pipeline.scenarios.rules.apply_base_year_pin",
@@ -811,7 +837,7 @@ def stage_6_persist_restrictions(
         return
     if not soasia.is_file():
         return
-    banner("Stage 6 — persist run restrictions to disposable scenario state")
+    banner("Stage 6: persist run restrictions to disposable scenario state")
     search_dir = s5.parent
     candidates = sorted(
         search_dir.glob(f"{s5.name}_PRE_*_CHANGES.json"),
@@ -843,7 +869,7 @@ def stage_6_sync_og_to_ts20(wd: Path, s1: Path) -> None:
     """Propagate the 20-ts fabric from WV down to OG_csvs_inputs and the YAML,
     so the next A1 run produces consistent 20-ts CSVs and B1_Compiler stops
     aborting on the YAML-vs-xlsx timeslice mismatch."""
-    banner("Stage 6 — sync OG_csvs_inputs + YAML to 20-ts fabric")
+    banner("Stage 6: sync OG_csvs_inputs + YAML to 20-ts fabric")
     wv_file = s1 / "SOASIA_OSeMOSYS_WV.xlsx"
     og_csvs_dir = _PROJECT_PATHS.preparation_workspace / "og_csvs_inputs"
     yaml_file = _PROJECT_PATHS.compilation_workspace / "Config_MOMF_T1_A.yaml"
@@ -867,6 +893,9 @@ def finalize_support_bau(output_dir: Path, scenario: str) -> None:
 
 
 def deliver_outputs(s5: Path, output_dir: Path) -> None:
+    """Copy the four A-O workbooks from ``s5`` into ``output_dir``, creating
+    the folder if needed.
+    """
     banner(f"Delivering 4 final files to {output_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
     for f in INPUT_FILES:
@@ -957,6 +986,7 @@ def _orchestration_dependencies(
     stage_4_5 = stage_4_5_apply_inherited_restrictions
     if restriction_sources:
         def stage_4_5(s5, soasia, inherit_from):
+            """Run stage 4.5 with the restriction sources given on the command line."""
             return stage_4_5_apply_inherited_restrictions(
                 s5,
                 soasia,
@@ -967,6 +997,7 @@ def _orchestration_dependencies(
     stage_6 = stage_6_persist_restrictions
     if run_state_out is not None:
         def stage_6(s5, scenario_run_state, scenario, rules_scripts):
+            """Run stage 6, then copy the scenario run state to the ``--run-state-out`` path."""
             result = stage_6_persist_restrictions(
                 s5, scenario_run_state, scenario, rules_scripts
             )
@@ -987,10 +1018,10 @@ def _orchestration_dependencies(
         stage_4_consolidate=stage_4_consolidate,
         stage_4_5_apply_inherited_restrictions=stage_4_5,
         stage_5_rules_scripts=stage_5_rules_scripts,
-        stage_ws3_interconnector_costs=stage_ws3_interconnector_costs,
-        stage_ws3_internal_transmission=stage_ws3_internal_transmission,
-        stage_ws3_internal_tx_losses=stage_ws3_internal_tx_losses,
-        stage_ws4_pwr_min_pin=stage_ws4_pwr_min_pin,
+        stage_interconnector_costs=stage_interconnector_costs,
+        stage_internal_transmission=stage_internal_transmission,
+        stage_internal_tx_losses=stage_internal_tx_losses,
+        stage_base_year_pin=stage_base_year_pin,
         stage_6_sync_og_to_ts20=stage_6_sync_og_to_ts20,
         stage_6_persist_restrictions=stage_6,
         deliver_outputs=deliver_outputs,
@@ -1007,6 +1038,7 @@ def _orchestration_dependencies(
 
 
 def main() -> int:
+    """Parse the command line and run the A3 orchestration; return its exit code."""
     if os.environ.get(PROFILE_AUTHORITIES_ENV):
         _configure_profile_paths()
     cli_args = parse_cli_args()

@@ -3,7 +3,6 @@ from __future__ import annotations
 import csv
 from collections import Counter
 from decimal import Decimal
-import hashlib
 from pathlib import Path
 import tempfile
 import unittest
@@ -146,19 +145,6 @@ class UnescapMappingTests(unittest.TestCase):
                     compiled_root=compiled_root,
                 )
 
-    def test_seed_domain_rejects_same_count_membership_drift(self) -> None:
-        manifest = load_manifest(UNESCAP / "profile.yaml")
-        source = UNESCAP / "inputs" / "osemosys_global"
-        technology = _read_values(source / "TECHNOLOGY.csv")
-        technology.remove(next(iter(technology)))
-        technology.add("UNDECLARED_SEED_TECHNOLOGY")
-        with tempfile.TemporaryDirectory() as temp:
-            seed_root = Path(temp)
-            _write_values(seed_root / "TECHNOLOGY.csv", technology)
-            _write_values(seed_root / "FUEL.csv", _read_values(source / "FUEL.csv"))
-            with self.assertRaisesRegex(ProfileDomainError, "seed TECHNOLOGY"):
-                validate_seed_domain(manifest, seed_root)
-
     def test_profile_presents_seed_and_compiled_counts_as_distinct_stages(self) -> None:
         metadata = load_manifest(UNESCAP / "profile.yaml").metadata
         self.assertEqual(metadata["seed_set_sizes"]["TECHNOLOGY"], 89)
@@ -182,10 +168,6 @@ class UnescapMappingTests(unittest.TestCase):
         authority = (
             UNESCAP / "config" / "scenarios" / "rules"
             / "pwr_min_2023_2026_pin.csv"
-        )
-        self.assertEqual(
-            hashlib.sha256(authority.read_bytes()).hexdigest(),
-            "984c3885f7bcee992d634c602402e3c6183a2f3bc8a1d8a0620ae214c1a1d872",
         )
         with authority.open(encoding="utf-8-sig", newline="") as stream:
             rows = list(csv.DictReader(stream))

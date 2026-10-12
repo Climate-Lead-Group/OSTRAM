@@ -387,7 +387,7 @@ def validate_tech_types(country_code):
     else:
         results.append(ValidationResult(
             "TECH:Backstop", "WARN",
-            "No backstop (BCK) technology found — model may be infeasible"
+            "No backstop (BCK) technology found; model may be infeasible"
         ))
 
     # Check intranational transmission
@@ -579,6 +579,11 @@ def generate_summary(country_code, results):
 
 
 def main(argv=None):
+    """Validate country data in the input CSVs and return the exit code.
+
+    One country, or every configured country, is validated. Returns 0 when all
+    pass, else 1.
+    """
     parser = argparse.ArgumentParser(
         description="Validate country data in OG_csvs_inputs"
     )

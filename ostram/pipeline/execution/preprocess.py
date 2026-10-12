@@ -37,6 +37,12 @@ from collections import defaultdict
 
 
 def main(data_infile, data_outfile):
+    """Write ``data_outfile`` as ``data_infile`` with the mode and technology
+    sets rebuilt and ``end;`` appended.
+
+    The sets are rebuilt from InputActivityRatio, OutputActivityRatio,
+    TechnologyToStorage, TechnologyFromStorage and EmissionActivityRatio.
+    """
 
     lines = []
 
@@ -235,6 +241,9 @@ def main(data_infile, data_outfile):
         dict_emi[emission].append((mode, tech))
 
     def file_output_function(if_dict, str_dict, set_list, set_name, extra_char):
+        """Write one ``set_name[member]:=`` line for each member of ``set_list``,
+        listing the entries of ``str_dict`` for members present in ``if_dict``.
+        """
         for each in set_list:
             if each in if_dict.keys():
                 line = set_name + str(each) + "]:=" + str(str_dict[each]) + extra_char

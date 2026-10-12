@@ -2,8 +2,7 @@
 Shared helpers for validating A-O_Parametrization.xlsx upper-bound invariants.
 
 Used by:
-    - Z_AUX_apply_parametrization_review.py (consistency sweep after review writes)
-    - B1b_Pre_solver_validation.py            (pre-solver validation in B1)
+    - pre_solver_validation.py  (pre-solver validation in A3 stage 1b)
 
 Constants, indexing, and the cumulative-capacity sweep originated in
 Z_AUX_apply_parametrization_review.py. The activity-vs-capacity helpers
@@ -36,10 +35,12 @@ ACT_LOWER_HAIRCUT = 0.99        # ActivityLowerLimit = max_activity * 99%
 
 
 def norm_str(v):
+    """Return ``v`` as a stripped string, or an empty string for None."""
     return str(v).strip() if v is not None else ""
 
 
 def is_empty_number(v):
+    """Return True when ``v`` is None, an empty string or a float NaN."""
     if v is None or v == "":
         return True
     if isinstance(v, float) and math.isnan(v):

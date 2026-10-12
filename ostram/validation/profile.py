@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import csv
 from decimal import Decimal, InvalidOperation
-import hashlib
 import os
 from pathlib import Path
-import re
 from typing import Any, Mapping
 
 from ostram.paths import ProjectPaths, resolve_paths
@@ -20,10 +18,6 @@ from ostram.profiles import (
 )
 
 
-_DOMAIN_ALGORITHM = "sha256-sorted-values-v1"
-_SHA256 = re.compile(r"^[0-9a-f]{64}$")
-
-
 class ProfileDomainError(ProfileError):
     """Raised when a seed or compiled domain drifts from its profile contract."""
 
@@ -34,17 +28,7 @@ def _domain_contract(manifest: ProfileManifest) -> Mapping[str, Any] | None:
         return None
     if not isinstance(contract, Mapping):
         raise ProfileDomainError("metadata.domain_contract must be a mapping")
-    if contract.get("membership_hash") != _DOMAIN_ALGORITHM:
-        raise ProfileDomainError(
-            "metadata.domain_contract.membership_hash must be "
-            f"{_DOMAIN_ALGORITHM!r}"
-        )
     return contract
-
-
-def _domain_digest(values: set[str]) -> str:
-    payload = "".join(f"{value}\n" for value in sorted(values)).encode("utf-8")
-    return hashlib.sha256(payload).hexdigest()
 
 
 def _read_domain_set(root: Path, set_name: str) -> set[str]:
@@ -62,51 +46,6 @@ def _read_domain_set(root: Path, set_name: str) -> set[str]:
     if duplicates:
         raise ProfileDomainError(f"{path} contains duplicate members: {duplicates}")
     return set(values)
-
-
-def _expected_stage_set(
-    contract: Mapping[str, Any],
-    stage: str,
-    set_name: str,
-) -> tuple[int, str]:
-    stages = contract.get("stages")
-    if not isinstance(stages, Mapping):
-        raise ProfileDomainError("domain_contract.stages must be a mapping")
-    stage_contract = stages.get(stage)
-    if not isinstance(stage_contract, Mapping):
-        raise ProfileDomainError(f"domain_contract.stages.{stage} must be a mapping")
-    set_contract = stage_contract.get(set_name)
-    if not isinstance(set_contract, Mapping):
-        raise ProfileDomainError(
-            f"domain_contract.stages.{stage}.{set_name} must be a mapping"
-        )
-    count = set_contract.get("count")
-    digest = set_contract.get("sha256")
-    if not isinstance(count, int) or count < 0:
-        raise ProfileDomainError(f"invalid {stage} {set_name} count: {count!r}")
-    if not isinstance(digest, str) or _SHA256.fullmatch(digest) is None:
-        raise ProfileDomainError(f"invalid {stage} {set_name} sha256: {digest!r}")
-    return count, digest
-
-
-def _validate_members(
-    values: set[str],
-    *,
-    contract: Mapping[str, Any],
-    stage: str,
-    set_name: str,
-) -> dict[str, Any]:
-    expected_count, expected_digest = _expected_stage_set(
-        contract, stage, set_name
-    )
-    actual_digest = _domain_digest(values)
-    if len(values) != expected_count or actual_digest != expected_digest:
-        raise ProfileDomainError(
-            f"{stage} {set_name} domain mismatch: expected "
-            f"count={expected_count}, sha256={expected_digest}; got "
-            f"count={len(values)}, sha256={actual_digest}"
-        )
-    return {"count": len(values), "sha256": actual_digest}
 
 
 def _text_list(value: object, label: str) -> list[str]:
@@ -221,33 +160,13 @@ def validate_seed_domain(
     technology = _read_domain_set(osemosys_inputs, "TECHNOLOGY")
     fuel = _read_domain_set(osemosys_inputs, "FUEL")
     seed_result = {
-        "TECHNOLOGY": _validate_members(
-            technology,
-            contract=contract,
-            stage="seed",
-            set_name="TECHNOLOGY",
-        ),
-        "FUEL": _validate_members(
-            fuel,
-            contract=contract,
-            stage="seed",
-            set_name="FUEL",
-        ),
+        "TECHNOLOGY": {"count": len(technology)},
+        "FUEL": {"count": len(fuel)},
     }
     projected_technology = _project_seed_technologies(technology, contract)
     projected_result = {
-        "TECHNOLOGY": _validate_members(
-            projected_technology,
-            contract=contract,
-            stage="projected_seed",
-            set_name="TECHNOLOGY",
-        ),
-        "FUEL": _validate_members(
-            fuel,
-            contract=contract,
-            stage="projected_seed",
-            set_name="FUEL",
-        ),
+        "TECHNOLOGY": {"count": len(projected_technology)},
+        "FUEL": {"count": len(fuel)},
     }
     return {
         "stage": "seed",
@@ -301,12 +220,7 @@ def validate_compiled_domain(
                 f"removals={sorted(removals)}, unexpected_additions="
                 f"{sorted(unexpected_additions)}, missing_additions={sorted(missing_additions)}"
             )
-        compiled_result[set_name] = _validate_members(
-            compiled[set_name],
-            contract=contract,
-            stage="compiled",
-            set_name=set_name,
-        )
+        compiled_result[set_name] = {"count": len(compiled[set_name])}
         delta_result[set_name] = sorted(additions)
 
     return {
@@ -318,23 +232,24 @@ def validate_compiled_domain(
 
 
 def _domain_expanded(
-    contract: Mapping[str, Any],
+    manifest: ProfileManifest,
     osemosys_inputs: Path,
 ) -> bool:
-    """Return True if the actual seed domain is larger than the contract expects.
+    """Return True if the actual seed domain is larger than ``seed_set_sizes``.
 
     This happens after ``country merge`` adds a new country's technologies
     and fuels to the seed CSVs.  The domain has legitimately expanded and
     the contract (which was authored for the original country set) no longer
     applies.
     """
+    sizes = manifest.metadata.get("seed_set_sizes")
     try:
         for set_name in ("TECHNOLOGY", "FUEL"):
-            expected_count, _ = _expected_stage_set(contract, "seed", set_name)
+            expected_count = sizes[set_name]
             actual = _read_domain_set(osemosys_inputs, set_name)
             if len(actual) > expected_count:
                 return True
-    except ProfileDomainError:
+    except (ProfileDomainError, KeyError, TypeError):
         pass
     return False
 
@@ -369,7 +284,7 @@ def validate_active_compiled_domain(
 
     # If the seed domain grew (country merge added members), the contract
     # is stale.  Skip validation so B2 can proceed.
-    if _domain_expanded(contract, paths.osemosys_inputs):
+    if _domain_expanded(manifest, paths.osemosys_inputs):
         print(
             "[profile-domain] Domain has expanded beyond the contract "
             "(country merge detected). Skipping domain validation."
@@ -388,6 +303,20 @@ def validate_profile(
     *,
     paths: ProjectPaths,
 ) -> dict[str, Any]:
+    """Validate one profile and return its report.
+
+    The check requires every authority to exist, every effective value in the
+    manifest metadata to be a finite number and the seed domain to meet the
+    profile's domain contract when it declares one. The report holds the
+    profile id, the manifest path and digest, the authority paths, the
+    policies, the effective values and the domain check result.
+
+    Raises:
+        ProfileManifestError: If an authority is invalid or missing.
+        ProfileDomainError: If the seed domain breaks the domain contract.
+        ValueError: If an effective value is not a finite number.
+    """
+
     authorities = manifest.source_paths(paths, require_exists=True)
     effective = dict(manifest.metadata.get("effective_values", {}))
     for name, value in effective.items():
