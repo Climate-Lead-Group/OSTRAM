@@ -138,6 +138,7 @@ def get_env_executable(executable_name):
 
 
 def sort_csv_files_in_folder(folder_path):
+    """Sort the rows of each CSV file in ``folder_path`` by all columns and overwrite the file."""
     if not os.path.isdir(folder_path):
         print(f"Invalid path: {folder_path}")
         return
@@ -302,6 +303,7 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
     from otoole.utils import validate_config
 
     class PreciseDatafile(WriteDatafile):
+        """otoole datafile writer that writes parameter values with ``%.17g``."""
         def _write_parameter(self, df, parameter_name, handle, default, **kwargs):
             df = self._form_parameter(df, default)
             handle.write(f"param default {default} : {parameter_name} :=\n")
@@ -770,6 +772,7 @@ def check_enviro_variables(solver_command):
     )
 
 def main_executer(params, scenario_name, HERE):
+    """Run ``execute_scenario`` for one scenario with this module's process dependencies."""
     execution_dependencies = b2_orchestrator.ScenarioExecutionDependencies(
         run_process=subprocess.run,
         check_environment=check_enviro_variables,
@@ -785,6 +788,9 @@ def main_executer(params, scenario_name, HERE):
         execution_dependencies,
     )
 def delete_files(file, data_file, solver):
+    """Delete the solution file ``file``, the datafile ``data_file``, an empty ``.log`` file,
+    the matching LP file (``.glp`` for GLPK) and the solver's log files in the working directory.
+    """
     # Delete files
     if file and os.path.exists(file):
         shutil.os.remove(file)
@@ -1005,6 +1011,7 @@ def _orchestration_dependencies():
 
 
 def main(argv=None):
+    """Run B2 with this module's dependencies."""
     return b2_orchestrator.orchestrate_b2(
         _orchestration_dependencies,
         argv=argv,

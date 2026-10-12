@@ -67,6 +67,9 @@ PIP_DEPS = {
 
 # ---------- Shell utilities ----------
 def run(cmd: Sequence[str | Path], *, cwd: Path | None = None) -> None:
+    """Run a command as a child process with ``PYTHONHASHSEED=0`` and the project root
+    first on ``PYTHONPATH``, through the active run reporter when one is set.
+    """
     env = os.environ.copy()
     env["PYTHONHASHSEED"] = "0"
     env["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -124,6 +127,7 @@ def conda_exe() -> str:
     return "conda"
 
 def check_tool_available(tool: str) -> None:
+    """Raise ``RuntimeError`` when ``<tool> --version`` fails to run."""
     if tool == "conda":
         tool = conda_exe()
     try:
@@ -141,6 +145,7 @@ def check_tool_available(tool: str) -> None:
 
 # ---------- Conda environment management ----------
 def env_exists(name: str) -> bool:
+    """Return whether ``conda env list`` reports an environment named ``name``, ignoring case."""
     target = name.lower()
 
     try:
@@ -174,6 +179,7 @@ def env_exists(name: str) -> bool:
 
 
 def guess_env_name_from_yaml(env_file: str | Path) -> str | None:
+    """Return the ``name:`` value of ``env_file``; ``None`` when the file or value is missing."""
     p = Path(env_file)
     if not p.exists():
         return None
@@ -189,6 +195,7 @@ def guess_env_name_from_yaml(env_file: str | Path) -> str | None:
 
 
 def create_env_if_missing(env_name: str, env_file: str | Path) -> None:
+    """Create the conda environment ``env_name`` from ``env_file`` unless it exists."""
     if env_exists(env_name):
         print(f"Conda environment '{env_name}' already exists. Skipping recreation.")
         return
@@ -197,6 +204,7 @@ def create_env_if_missing(env_name: str, env_file: str | Path) -> None:
 
 
 def ensure_pip_available(env_name: str) -> None:
+    """Install pip into the conda environment when ``python -m pip --version`` fails there."""
     try:
         run([conda_exe(), "run", "-n", env_name, "python", "-m", "pip", "--version"])
     except subprocess.CalledProcessError:
@@ -205,6 +213,7 @@ def ensure_pip_available(env_name: str) -> None:
 
 
 def module_present(env_name: str, module: str) -> bool:
+    """Return whether the Python of the conda environment ``env_name`` finds ``module``."""
     code = (
         "import importlib.util,sys;"
         f"sys.exit(0) if importlib.util.find_spec('{module}') else sys.exit(1)"
@@ -217,6 +226,7 @@ def module_present(env_name: str, module: str) -> bool:
 
 
 def ensure_deps(env_name: str) -> None:
+    """Install missing ``CONDA_DEPS`` with conda and missing ``PIP_DEPS`` with pip."""
     need_pip = any(not module_present(env_name, m) for m in PIP_DEPS.keys())
     if need_pip:
         ensure_pip_available(env_name)
@@ -235,16 +245,22 @@ def ensure_deps(env_name: str) -> None:
 
 # ---------- DVC ----------
 def is_dvc_repo(project_root: Path | None = None) -> bool:
+    """Return whether the project root holds a ``.dvc`` folder."""
     root = resolve_paths().project_root if project_root is None else project_root
     return (root / ".dvc").is_dir()
 
 
 def is_git_repo(project_root: Path | None = None) -> bool:
+    """Return whether the project root holds a ``.git`` entry."""
     root = resolve_paths().project_root if project_root is None else project_root
     return (root / ".git").exists()
 
 
 def ensure_dvc_repo(env_name: str, project_root: Path | None = None) -> None:
+    """Run ``dvc init`` (``--no-scm`` outside Git) when the project root has no ``.dvc`` folder.
+
+    Raises ``RuntimeError`` when ``.dvc`` is still absent afterwards.
+    """
     root = resolve_paths().project_root if project_root is None else project_root.resolve()
     if is_dvc_repo(root):
         print("DVC repository detected (.dvc/ found).")
@@ -262,6 +278,7 @@ def ensure_dvc_repo(env_name: str, project_root: Path | None = None) -> None:
 
 
 def has_dvc_remote(env_name: str, project_root: Path | None = None) -> bool:
+    """Return whether ``dvc remote list`` reports a remote in the conda environment."""
     root = resolve_paths().project_root if project_root is None else project_root.resolve()
     try:
         out = subprocess.check_output(
@@ -279,6 +296,7 @@ def dvc_command(
     args: Sequence[str] | str,
     project_root: Path | None = None,
 ) -> None:
+    """Run ``dvc`` with ``args`` in the conda environment from the project root."""
     root = resolve_paths().project_root if project_root is None else project_root.resolve()
     tokens = shlex.split(args) if isinstance(args, str) else list(args)
     run([conda_exe(), "run", "-n", env_name, "dvc", *tokens], cwd=root)
@@ -296,6 +314,10 @@ def run_pipeline_script(
     *,
     paths: ProjectPaths | None = None,
 ) -> None:
+    """Run a stage script as a module with the current interpreter from its stage workspace.
+
+    ``env_name`` is not used. Raises ``FileNotFoundError`` when the script is missing.
+    """
     del env_name  # the active interpreter is the supported package environment
     active_paths = resolve_paths() if paths is None else paths
     if not script_path.is_file():
@@ -362,6 +384,7 @@ def post_a2_snapshot_exists(a1_outputs_dir: Path) -> bool:
 
 
 def format_duration(start_time: dt.datetime, end_time: dt.datetime) -> str:
+    """Format the time between two datetimes as ``1h 2m 3s``, leaving out leading zero units."""
     duration = end_time - start_time
     total_seconds = int(duration.total_seconds())
     hours, remainder = divmod(total_seconds, 3600)
@@ -378,6 +401,7 @@ def format_duration(start_time: dt.datetime, end_time: dt.datetime) -> str:
 
 # ---------- Main ----------
 def parse_args(argv=None):
+    """Parse the command line of the ``run`` command."""
     parser = argparse.ArgumentParser(
         description=(
             "Run OSTRAM through base-model preparation (A1), transmission "
@@ -458,6 +482,9 @@ def _create_run_reporter(
 
 
 def main() -> None:
+    """Check the conda environment and DVC data, run A1 and A2 when a required root scenario
+    lacks its post-A2 snapshot, then run A3, B1 and B2 for the selected scenarios.
+    """
     args = parse_args()
     paths = resolve_paths()
     pipeline_dir = paths.package_root / "pipeline"

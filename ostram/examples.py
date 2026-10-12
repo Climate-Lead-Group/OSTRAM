@@ -106,6 +106,7 @@ def _report(
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Run ``example prepare`` or ``example report`` for the active profile."""
     parser = argparse.ArgumentParser(prog="python -m ostram example")
     subparsers = parser.add_subparsers(dest="action", required=True)
     prepare = subparsers.add_parser("prepare")

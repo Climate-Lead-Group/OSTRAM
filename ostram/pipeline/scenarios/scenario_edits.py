@@ -138,6 +138,7 @@ def scan_columns(ws):
 
 
 def find_row(ws, col_map, tech, param):
+    """Return the first row of ``tech`` and ``param``, or None when absent."""
     tc, pc = col_map["tech"], col_map["param"]
     for r in range(2, ws.max_row + 1):
         t = ws.cell(row=r, column=tc).value
@@ -150,6 +151,7 @@ def find_row(ws, col_map, tech, param):
 
 
 def find_unique_row(ws, col_map, tech, param):
+    """Return the single row of ``tech`` and ``param``; raise ValueError for none or several."""
     rows = []
     tc, pc = col_map["tech"], col_map["param"]
     for r in range(2, ws.max_row + 1):
@@ -166,6 +168,7 @@ def find_unique_row(ws, col_map, tech, param):
 
 
 def finite_nonnegative(value, context):
+    """Return ``value`` as a float if finite and non-negative; raise ValueError otherwise."""
     if isinstance(value, bool) or value is None:
         raise ValueError(f"{context}: expected numeric value, got {value!r}")
     try:
@@ -215,6 +218,9 @@ def residual_values_for_edit(
     edit,
     minimum_boundaries=None,
 ):
+    """Return {year: value} from the tech's effective ResidualCapacity row, or from the
+    minimum-investment boundary when the edit's ``residual_source`` names it.
+    """
     source = edit.get("residual_source", "effective")
     if source == "effective":
         row = find_unique_row(ws, col_map, tech, RES_PARAM)
@@ -257,6 +263,7 @@ def residual_values_for_edit(
 
 
 def find_any_row_for_tech(ws, col_map, tech):
+    """Return the first row of ``tech`` on the sheet, or None when absent."""
     tc = col_map["tech"]
     for r in range(2, ws.max_row + 1):
         t = ws.cell(row=r, column=tc).value
@@ -290,6 +297,7 @@ def techs_matching(ws, col_map, edit):
 
 
 def read_row_values(ws, col_map, year_cols, tech, param):
+    """Return {year: cell value} of the ``tech`` and ``param`` row, or None when absent."""
     r = find_row(ws, col_map, tech, param)
     if r is None:
         return None
@@ -314,6 +322,7 @@ def create_param_row(ws, col_map, tech, param):
 
 
 def flip_proj_mode(ws, col_map, row):
+    """Set the row's Projection.Mode to ``User defined`` when it is blank or ``EMPTY``."""
     if "proj" in col_map:
         cell = ws.cell(row=row, column=col_map["proj"])
         if cell.value in (None, "EMPTY", ""):
@@ -364,6 +373,10 @@ def apply_edit(
     log,
     minimum_boundaries=None,
 ):
+    """Apply one scenario edit to each selected technology and record the changes in the edit log.
+
+    Raises ScenarioEditError when the edit matches nothing.
+    """
     param = edit["param"]
     validate_residual_source(edit)
     create = bool(edit.get("create_if_absent", False))
@@ -440,6 +453,7 @@ def apply_edit(
             # Absent "years" -> multiply every year (backward compatible).
             yrs = set(int(y) for y in edit["years"]) if edit.get("years") else None
             def newfn(y, old, f=f, yrs=yrs):
+                """Return ``old`` times the factor in selected years; keep others unchanged."""
                 if yrs is not None and y not in yrs:
                     return old
                 if old is None or (isinstance(old, str) and not old.strip()):
@@ -456,12 +470,14 @@ def apply_edit(
                 ws, col_map, year_cols, tech, param, edit, minimum_boundaries
             )
             def newfn(y, old, rv=resvals):
+                """Return the residual value of year ``y``."""
                 return round(rv[y], 6)
         elif edit.get("op") == "clamp_to_residual":
             resvals = residual_values_for_edit(
                 ws, col_map, year_cols, tech, param, edit, minimum_boundaries
             )
             def newfn(y, old, rv=resvals):
+                """Return min(``old``, residual value of year ``y``); keep None and text."""
                 cap = rv[y]
                 if old is None:
                     return None
@@ -586,6 +602,9 @@ def scale_activity_to_ceiling(ws, col_map, year_cols, tech, ceil, maxcap_orig, l
 
 
 def apply_ceiling_layer(wb, log, ceiling_path=CEIL_BASE):
+    """Set each shared VRE ceiling as a flat value in every year, clamp the technology's
+    annual investment rows to it and scale its activity lower limit where the ceiling binds.
+    """
     ceiling_path = Path(ceiling_path)
     base = yaml.safe_load(ceiling_path.read_text(encoding="utf-8"))
     base = base.get("vre_ceilings", base)
@@ -615,6 +634,7 @@ def apply_ceiling_layer(wb, log, ceiling_path=CEIL_BASE):
 
 
 def apply_scenario_edits(wb, scenario_inputs, log, minimum_boundaries=None):
+    """Apply the scenario edits listed under ``edits`` in their listed order."""
     for edit in scenario_inputs.get("edits", []):
         ws = wb[edit["sheet"]]
         col_map, year_cols = scan_columns(ws)
@@ -730,6 +750,7 @@ def build_scenario(
 
 
 def restore_scenario(scenario):
+    """Replace the derived scenario's folder with its latest ``_PREPATCH_`` backup."""
     tgt_dir = A1_OUTPUTS / f"A1_Outputs_{scenario}"
     backups = sorted(tgt_dir.parent.glob(f"{tgt_dir.name}_PREPATCH_*"))
     if not backups:
@@ -742,6 +763,7 @@ def restore_scenario(scenario):
 
 
 def print_summary(log):
+    """Print a summary of one derived scenario's edit log."""
     print("=" * 64)
     print(f"scenario_edits  --  {log['scenario']}  (from {log['source']})")
     print("=" * 64)
@@ -812,6 +834,10 @@ def self_test():
 
 # --------------------------------------------------------------------------
 def main():
+    """Build one derived scenario, restore it from its backup, or run the self-test.
+
+    Returns 1 when a scenario edit or VRE ceiling matches nothing.
+    """
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument(
         "--scenario",

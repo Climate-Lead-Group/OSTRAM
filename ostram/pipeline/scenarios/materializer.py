@@ -46,6 +46,8 @@ REQUIRED_AO_FILES = (
 
 @dataclass(frozen=True)
 class MaterializationPaths:
+    """Filesystem paths used by one A3 materialisation run."""
+
     preparation_workspace: Path
     a1_outputs: Path
     a3_entrypoint: Path
@@ -54,6 +56,7 @@ class MaterializationPaths:
 
     @classmethod
     def defaults(cls) -> "MaterializationPaths":
+        """Return the paths of the active workspace and the packaged A3 entrypoint."""
         paths = resolve_paths()
         a3_process = Path(__file__).with_name("transformations")
         return cls(
@@ -113,6 +116,7 @@ def _default_root_materializer(
     extra_arguments: Mapping[str, Sequence[str]] | None = None,
 ) -> RootMaterializer:
     def materialize(root: str, environment: Mapping[str, str]) -> None:
+        """Run the A3 entrypoint for one root scenario in the scenarios stage workspace."""
         command = [
             sys.executable,
             "-B",
@@ -223,6 +227,7 @@ def _default_direction_applier(
         overlay: Path,
         study_start_year: int | None,
     ) -> dict:
+        """Apply ``overlay`` to the A-O workbooks in ``target`` and return its change log."""
         return module.run(
             target,
             skip_backup=True,
@@ -427,6 +432,7 @@ def materialize_scenarios(
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build the A3 argument parser with ``--scenarios`` and ``--a-result-seed``."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--scenarios",
@@ -449,6 +455,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Materialise the selected scenarios and print the provenance record.
+
+    The A-result seed reaches A3 through ``OSTRAM_A_CALIBRATED_BAU_RESULT``.
+    Returns 1 when a scenario edit or VRE ceiling matches nothing.
+    """
     args = build_parser().parse_args(argv)
     environment = dict(os.environ)
     if args.a_result_seed is not None:
