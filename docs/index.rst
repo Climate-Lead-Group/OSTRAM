@@ -32,6 +32,7 @@ Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
    data-reference
    regression
    glossary
+   file-map
 
 
 Indices and tables
