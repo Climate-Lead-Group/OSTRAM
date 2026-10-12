@@ -22,7 +22,7 @@ settings files live in `config/scenarios/<root>/`.
 | `apply_interconnector_costs.py` | the `Interconnector_Params` sheet of the scenario workbook | Overwrites `CapitalCost`, `FixedCost` and `OperationalLife` of the interconnectors with the sheet's values. |
 | `apply_internal_transmission.py` | `Config_country_codes.yaml` and `config/scenarios/rules/internal_tx_residuals.csv` | Writes `ResidualCapacity`, `CapitalCost`, `FixedCost` and `OperationalLife` of the six internal transmission families, 60 technologies in all. |
 | `apply_internal_tx_losses.py` | `Config_country_codes.yaml` | Sets the output activity ratio of the internal transmission families to 1 minus the loss setting `internal_transmission.transmission_loss`, which is 0.03 on `main`. |
-| `apply_base_year_pin.py` | `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | Writes the reviewed 2023 to 2026 values of the table over the matching workbook rows. It checks the file against the digest recorded in `full.yaml` before it writes. |
+| `apply_base_year_pin.py` | `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | Writes the reviewed 2023 to 2026 values of the table over the matching workbook rows. |
 | `set_interconnector_direction.py` | `config/scenarios/<scenario>/set_interconnector_direction.yaml` | Zeroes one flow mode of each listed interconnector, so that power flows one way. The empty map of `B_Opt_DirBidir` changes nothing. |
 
 ## Order of the rules

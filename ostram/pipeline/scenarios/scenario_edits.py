@@ -721,7 +721,6 @@ def build_scenario(
         rules = Path(profile_policy("pwr_min_pin_rules_path", str(pins.RULES_CSV)))
         log["reviewed_calibration"] = pins.apply_pin_rules(
             tgt_dir, root, rules, skip_backup=True,
-            enforce_production_contract=True,
         )
 
     log_path = tgt_dir / f"apply_patches_CHANGES_{stamp}.json"

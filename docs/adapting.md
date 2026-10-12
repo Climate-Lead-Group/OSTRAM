@@ -18,7 +18,7 @@ the [glossary](glossary.md).
 | The technology taxonomy | `config/scenarios/technology_types.csv` | Every technology with its category. |
 | The rule settings | `config/scenarios/<root>/*.yaml` | Retirement lifetimes, build caps, interconnector relaxation, storage floors and targets. See the [rules](rules.md) page. |
 | The internal transmission residuals | `config/scenarios/rules/internal_tx_residuals.csv` | One row per country-region. |
-| The base-year pin table | `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | Reviewed values for 2023 to 2026. The digest in the `policies` section of `full.yaml` must match the file. The pin code expects the South Asia table, as described below. |
+| The base-year pin table | `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | Reviewed values for 2023 to 2026. The pin code expects the South Asia table, as described below. |
 | The gas and oil allowance | `inputs/execution/firm_capacity_fallbacks_by_cr.xlsx` | One row per country-region. |
 | The profile | `config/profiles/full.yaml` | The sources of record, the scenario registry, the shared VRE ceilings and the scenario edits. A second profile can be registered in `config/profiles/registry.json`, as the training profile `examples/unescap/profile.yaml` is. |
 | The model file | `model/osemosys_fast_preprocessed.txt` | The demand accounting sets and the historical trade constraints name South Asia fuels and corridors, as described below. |
@@ -27,12 +27,8 @@ the [glossary](glossary.md).
 
 These lines are described as they are. Changing them is a code change.
 
-- `ostram/pipeline/scenarios/rules/apply_base_year_pin.py`, line 87, allows the
-  countries BGD, BTN, IND, LKA and NPL. Lines 110 to 115 fix the expected
-  shape of the pin table: 3,429 rules in all, the count per parameter, per
-  state, per country (IND 2,497, LKA 375, BGD 271, BTN 166, NPL 120), per
-  lineage class, and per root (`A_Calibrated_BAU` 3,401, `B_Optimised_VRE`
-  3,429, `C_Target_VRE` 3,429). A table with other counts fails these checks.
+- `ostram/pipeline/scenarios/rules/apply_base_year_pin.py`, line 75, allows the
+  countries BGD, BTN, IND, LKA and NPL.
 - `ostram/pipeline/scenarios/transformations/update_ao_from_extensions.py`,
   lines 103 to 116, map the region codes BGDXX, BTNXX, INDEA, INDNE, INDNO,
   INDSO, INDWE, LKAXX, MDVXX, MMRXX and NPLXX to their names, and define

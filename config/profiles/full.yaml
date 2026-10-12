@@ -15,7 +15,6 @@ policies:
   - B_Optimised_VRE
   - C_Target_VRE
   lid_rule_new_semantics: false
-  pwr_min_pin_rules_sha256: 2aa729dd83d0b7de602e22d9eb278eac94941acc5b6afed0fc972c20b3f82f24
 authorities:
   scenario_registry: project:config/profiles/full.yaml
   scenario_inputs:

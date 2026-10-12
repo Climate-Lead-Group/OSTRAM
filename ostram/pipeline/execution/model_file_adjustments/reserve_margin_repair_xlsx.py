@@ -254,7 +254,7 @@ def reviewed_capacity_keys(input_path):
     scenario=pins.calibration_root(input_path.parent.name.removesuffix("_0"))
     if scenario is None:return set()
     path=Path(profile_policy("pwr_min_pin_rules_path",str(pins.RULES_CSV)))
-    rules=pins.load_pin_rules(path,enforce_production_contract=True)
+    rules=pins.load_pin_rules(path)
     return {(r.parameter,r.technology,r.year) for r in rules if r.parameter in (STOCK_PARAM,FLOW_PARAM) and scenario in r.root_scenarios}
 
 

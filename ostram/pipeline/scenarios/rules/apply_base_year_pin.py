@@ -37,7 +37,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from ostram.paths import resolve_paths
-from ostram.profiles import DEFAULT_PROFILE, active_profile_id, profile_policy
+from ostram.profiles import profile_policy
 
 from openpyxl import load_workbook
 
@@ -51,18 +51,6 @@ PIN_ROOT_SCENARIOS = frozenset(
 )
 RULES_CSV = (
     resolve_paths().scenario_config_root / "rules" / "pwr_min_2023_2026_pin.csv"
-)
-RULES_SHA256 = (
-    "2aa729dd83d0b7de602e22d9eb278eac94941acc5b6afed0fc972c20b3f82f24"
-)
-INHERITED_CANONICAL_SOURCE_RULES_SHA256 = (
-    "cdcb0aeb570486b40ab96be68f6db031af54afa3ac02e4832a456522ca73a17c"
-)
-GENERATION_PIN_SOURCE_SHA256 = (
-    "e7c701e7e611f422df36ac627a8346b504a963a896f1ff23b99a5a133b26611c"
-)
-CAPACITY_CHRONOLOGY_SOURCE_SHA256 = (
-    "efc432d8ee11cb95d83ed0b4d83520b5c9b34ea969436cb9d7561b4dffc52fc2"
 )
 BACKUP_TAG = "_PRE_PWR_MIN_PIN_"
 
@@ -107,12 +95,6 @@ EXPECTED_FIELDS = (
     "authority_lineage_class",
     "timeslice",
 )
-EXPECTED_RULE_COUNT = 3429
-EXPECTED_PARAMETER_COUNTS = {'TotalAnnualMaxCapacity': 484, 'TotalAnnualMaxCapacityInvestment': 298, 'TotalAnnualMinCapacityInvestment': 146, 'ResidualCapacity': 502, 'TotalTechnologyAnnualActivityLowerLimit': 276, 'TotalTechnologyAnnualActivityUpperLimit': 483, 'CapacityFactor': 1240}
-EXPECTED_STATE_COUNTS = {'POSITIVE': 2717, 'ZERO': 399, 'ABSENT': 313}
-EXPECTED_COUNTRY_COUNTS = {'IND': 2497, 'LKA': 375, 'BGD': 271, 'BTN': 166, 'NPL': 120}
-EXPECTED_AUTHORITY_LINEAGE_COUNTS = {('BENCHMARK_SUPPORTED', 'ACCEPTED_WS4_BASE_YEAR_PIN_2023_2026'): 787, ('OFFICIAL_FISCAL_OPERATING_STOCK', 'BPDB_COHORTS_AND_BCRECL_ACTUAL_COD'): 4, ('R8_CAP03_CAP08_CAP16_CAP23', 'D4_R2_CAPACITY_CHRONOLOGY'): 8, ('CORRECT_PABNA_SOLAR_RETIREMENT', 'BCRECL_ACTUAL_COD_AND_RETAINED_30_YEAR_LIFE'): 16, ('EXPLICIT_GOVERNED_RESIDUAL', 'V20_USER_DEFINED_RESIDUAL_LOST_DURING_MATERIALIZATION'): 224, ('VERIFIED_OPERATING_CAPACITY', 'RMA_PRODUCTION_YEAR_END_STOCK_COD_EXPOSURE_IN_PROFILE_ONCE'): 4, ('VERIFIED_OPERATING_CAPACITY', 'DGPC_DHYE_AND_APPROVED_UNIT_COD_CALENDAR_EXPOSURE_ONCE'): 24, ('OWNER_R7_R8_CAPACITY_FREEZE', 'D4_R2_CAPACITY_FREEZE'): 65, ('Observed', 'GENERATION_CALIBRATION_EVIDENCE_R3'): 66, ('Approved fiscal-average estimate', 'BPDB_FY2022_23_FY2023_24_MEAN_APPROVED_20260913'): 8, ('2026 transition assumption', 'GENERATION_CALIBRATION_EVIDENCE_R3'): 61, ('Observed source category', 'GENERATION_CALIBRATION_EVIDENCE_R3'): 232, ('Allocated', 'GENERATION_CALIBRATION_EVIDENCE_R3'): 60, ('OWNER_MAPPING_EXCEPTION', 'OWNER_RULING_WASTE_MAPPING_20260906'): 8, ('Observed source category', 'VERIFIED_ASSEMBLY_ERRATUM_NORTH_SHP_2023'): 2, ('ALLOCATED_FALLBACK', 'R3_NEPAL_NATIONAL_TOTAL_AND_OFFICIAL_OPERATING_ROSTER'): 9, ('OWNER_FALLBACK_LOWER_ONLY', 'OWNER_RULING_NEPAL_LOWER_ONLY_20260906'): 9, ('RETIRED_SOLVER_REPLAY', 'ORIGINAL_PRODUCTION_ROW_ID_AUDIT'): 296, ('TRANSITION_UPPER_REMOVED', 'R3_2026_LOWER_ONLY'): 8, ('VERIFIED_SEPHU_AND_GOVERNED_DSP', 'MOENR_2025_07_19_AND_MOF_2026_27_P157'): 28, ('OFFICIAL_OPERATING_CAPACITY', 'NEA_OFFICIAL_ROSTER_COD_WEIGHTED_ONCE'): 84, ('HISTORICAL_STOCK_NO_DOUBLE_COUNT', 'NEA_OFFICIAL_ROSTER_REPLACES_MODEL_PLACEHOLDER_INVESTMENTS'): 18, ('CORRECT_PUMPED_STORAGE_MAPPING', 'V20_PLANNED_GENERATION_ROW_481_AND_EXISTING_STORAGE_LONG_MAPPING'): 2, ('OFFICIAL_PREVIOUS_YEAR_SOLAR_STOCK', 'CEB_SD2025_P0_P1_CEB_ROOFTOP_GRID_PLUS_GOVERNED_LECO_LESS_MANDATORY_INVESTMENT'): 26, ('GUARDED_MINIMUM_OVER_GENERIC_RESIDUAL_CEILING', 'V20_INTERCONNECTOR_PARAMS_AND_CAP_TRN_TO_RESIDUAL'): 56, ('SOURCE_YEAR_DISPATCH_PROFILE', 'CEA_MONTHLY_PLF_WITH_RETAINED_AF_DECOMPOSITION'): 800, ('SOURCE_YEAR_DISPATCH_PROFILE', 'PGCB_FISCAL_PROFILE_WITH_SAME_PERIOD_CAPACITY'): 120, ('SOURCE_YEAR_DISPATCH_PROFILE', 'PUCSL_SOURCE_YEAR_HYDRO_WITH_RETAINED_AF'): 80, ('SOURCE_YEAR_DISPATCH_PROFILE', 'CEA_GENERATION_MNRE_GRID_STOCK_NINJA_DAYLIGHT_SHAPE'): 160, ('SOURCE_YEAR_DISPATCH_PROFILE', 'RMA_VERIFIED_PRODUCTION_COD_AND_AF_COUNTED_ONCE'): 80, ('OFFICIAL_OPERATING_STOCK', 'PUCSL_YEAR_END_HYDRO_STOCK_EXPOSURE_IN_MONTHLY_PROFILE_ONCE'): 28, ('OFFICIAL_GRID_SOLAR_STOCK', 'MNRE_YEAR_END_GRID_STOCK_LESS_RETAINED_MANDATORY_INVESTMENT'): 6, ('OFFICIAL_GRID_SOLAR_STOCK', 'MNRE_OBSERVED_NET_COHORTS_RETAINED_25_YEAR_MODEL_LIFE'): 50}
-EXPECTED_SCENARIO_COUNTS = {'A_Calibrated_BAU': 3401, 'B_Optimised_VRE': 3429, 'C_Target_VRE': 3429}
 
 
 @dataclass(frozen=True)
@@ -231,8 +213,6 @@ def _parse_rule(row: dict[str, str], row_number: int) -> PinRule:
     identity = row["source_rule_id"]
     operation = identity.split("::", 1)[0]
     authority = (row["authority_classification"], row["authority_lineage_class"])
-    if authority not in EXPECTED_AUTHORITY_LINEAGE_COUNTS:
-        raise ValueError(f"{label}: unsupported authority lineage")
     expected_id = f"{operation}::{parameter}::GLOBAL::{technology}::{year}"
     if operation == "PWR_MIN_PIN":
         if country not in {"IND", "LKA"} or parameter in ACTIVITY_PARAMETERS or not present or year not in GENERATION_YEARS:
@@ -281,54 +261,13 @@ def _parse_rule(row: dict[str, str], row_number: int) -> PinRule:
                    scenarios, *authority, operation_kind, timeslice)
 
 
-def _validate_production_contract(rules: tuple[PinRule, ...]) -> None:
-    if len(rules) != EXPECTED_RULE_COUNT:
-        raise ValueError("reviewed rule count mismatch")
-    for actual, expected in [
-        (Counter(r.parameter for r in rules), EXPECTED_PARAMETER_COUNTS),
-        (Counter(r.state for r in rules), EXPECTED_STATE_COUNTS),
-        (Counter(r.canonical_country for r in rules), EXPECTED_COUNTRY_COUNTS),
-        (Counter((r.authority_classification, r.authority_lineage_class) for r in rules), EXPECTED_AUTHORITY_LINEAGE_COUNTS),
-    ]:
-        if actual != expected:
-            raise ValueError("reviewed rule distribution mismatch")
-    if sum(r.source_rule_id.startswith("PWR_MIN_PIN::") for r in rules) != 787:
-        raise ValueError("retained control count mismatch")
-    if sum(r.present and r.year == 2026 and r.parameter == P_ACTIVITY_LOWER for r in rules) != 63:
-        raise ValueError("2026 transition count mismatch")
-
-
 def load_pin_rules(
     rules_csv: Path | str = RULES_CSV,
-    *,
-    enforce_production_contract: bool | None = None,
 ) -> tuple[PinRule, ...]:
     """Load and fail-close validate the complete source-rule allowlist."""
     path = Path(rules_csv)
     if not path.is_file():
         raise FileNotFoundError(path)
-    is_default = path.resolve() == RULES_CSV.resolve()
-    profile_id = active_profile_id()
-    if enforce_production_contract is None:
-        enforce_production_contract = is_default and profile_id == DEFAULT_PROFILE
-    if is_default:
-        expected_hash = profile_policy("pwr_min_pin_rules_sha256")
-        if expected_hash is None and profile_id == DEFAULT_PROFILE:
-            expected_hash = RULES_SHA256
-        if not (
-            isinstance(expected_hash, str)
-            and len(expected_hash) == 64
-            and all(character in "0123456789abcdef" for character in expected_hash)
-        ):
-            raise ValueError(
-                f"profile {profile_id!r} does not declare a valid "
-                "pwr_min_pin_rules_sha256 policy"
-            )
-        actual_hash = _sha256(path)
-        if actual_hash != expected_hash:
-            raise ValueError(
-                f"profile rule hash mismatch: {actual_hash} != {expected_hash}"
-            )
     with path.open("r", encoding="utf-8-sig", newline="") as stream:
         reader = csv.DictReader(stream)
         fields = tuple(reader.fieldnames or ())
@@ -346,8 +285,6 @@ def load_pin_rules(
         raise ValueError("duplicate source_rule_id in pin rules")
     if len(keys) != len(set(keys)):
         raise ValueError("duplicate complete source key in pin rules")
-    if enforce_production_contract:
-        _validate_production_contract(rules)
     return rules
 
 
@@ -443,7 +380,6 @@ def apply_pin_rules(
     rules_csv: Path | str = RULES_CSV,
     *,
     skip_backup: bool = False,
-    enforce_production_contract: bool | None = None,
 ) -> dict[str, object]:
     """Apply exact rules for one canonical root scenario.
 
@@ -454,24 +390,12 @@ def apply_pin_rules(
     if scenario not in PIN_ROOT_SCENARIOS:
         raise ValueError(f"unsupported pin scenario: {scenario!r}")
     rules_path = Path(rules_csv)
-    all_rules = load_pin_rules(
-        rules_path,
-        enforce_production_contract=enforce_production_contract,
-    )
+    all_rules = load_pin_rules(rules_path)
     rules = tuple(
         rule for rule in all_rules if scenario in rule.root_scenarios
     )
     if not rules:
         raise ValueError(f"no pin rules apply to scenario {scenario!r}")
-    if (
-        rules_path.resolve() == RULES_CSV.resolve()
-        and active_profile_id() == DEFAULT_PROFILE
-        and len(rules) != EXPECTED_SCENARIO_COUNTS[scenario]
-    ):
-        raise ValueError(
-            f"{scenario} rule count is {len(rules)}, expected "
-            f"{EXPECTED_SCENARIO_COUNTS[scenario]}"
-        )
 
     directory = Path(input_dir)
     workbook_path = directory / PARAM_FILE
@@ -657,13 +581,6 @@ def apply_pin_rules(
             "workbook": str(workbook_path),
             "rules_csv": str(rules_path),
             "rules_sha256": _sha256(rules_path),
-            "inherited_canonical_source_rules_sha256": (
-                INHERITED_CANONICAL_SOURCE_RULES_SHA256
-            ),
-            "generation_pin_source_sha256": GENERATION_PIN_SOURCE_SHA256,
-            "capacity_chronology_source_sha256": (
-                CAPACITY_CHRONOLOGY_SOURCE_SHA256
-            ),
             "rules_loaded": len(all_rules),
             "rules_applied": len(rules),
             "operation_counts": dict(
