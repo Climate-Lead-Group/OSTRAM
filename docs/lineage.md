@@ -11,7 +11,8 @@ code lives under `ostram/`; all supported invocations begin with
 | Global OSeMOSYS sets and parameters | `inputs/osemosys_global/` | Read-only authority |
 | Preparation sources and workbook templates | `inputs/preparation/` | Read-only authority |
 | Scenario and timeslice workbooks | `inputs/scenarios/` | Read-only authority; materialized copies enter the workspace |
-| Scenario registry and rule configuration | `config/scenarios/` | Read-only policy authority |
+| Scenario registry, scenario edits and shared VRE ceilings | `config/profiles/full.yaml` | Read-only policy source of record |
+| Rule configuration | `config/scenarios/` | Read-only policy source of record |
 | Compiler configuration | `config/compilation/` | Copied to the compilation workspace before controlled mutation |
 | Execution configuration | `config/execution/` | Read-only configuration |
 | Maintained model | `model/osemosys_fast_preprocessed.txt` | Read-only model authority |
@@ -73,12 +74,9 @@ user deliberately runs the configured solver route.
 
 ### September 2026 cost release
 
-The accepted cost candidate is identified by manifest SHA256
-`882c38ae33178f931a25dab78567b94f8becaed24a31c5d8bd81d6bb265badf4`.
-This is a manifest identity, not the scenario workbook hash. Release verification
-and the selected 17-case index live outside Git in
-`D4_SCAN_STATE/RELEASE_20260919/RELEASE_REVIEW.md` alongside this checkout.
-That review determines whether production transfer and publication passed.
+The September 2026 release is commit `3a428dc`, tagged `v2026.09-release`.
+The release review and the selected 17-case index are kept outside the
+repository with the release evidence.
 
 The scenario workbook and existing monetary CSVs retain the complete revised
 monetary set and the eight accepted correction families. Prices are constant
@@ -109,10 +107,10 @@ OTH/COG retain oil-/gas-equivalent proxies. Unity mapping to the inherited
 fleet's incompletely documented heat basis is a disclosed compatibility
 assumption, not a verified HHV/LHV conversion.
 
-The final evidence workbook is
-`D4_SCAN_STATE/COST_UPDATE_20260919/OSTRAM_Fuel_Prices_Cost_Update.xlsx`.
-Its retained non-fuel/source sheets, `fuel_price_register.csv`, and the release
-archive index identify source documents, units, dates, boundaries and proxies.
+The evidence workbook of the cost update, `OSTRAM_Fuel_Prices_Cost_Update.xlsx`,
+is kept outside the repository with the release evidence. Its retained
+non-fuel/source sheets, `fuel_price_register.csv`, and the release archive
+index identify source documents, units, dates, boundaries and proxies.
 Historical comparisons use H2_r4 with selected execution under H4; the newer
 evidence-review candidate must not replace this full monetary set.
 
