@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import contextlib
+import io
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 from openpyxl import Workbook
 
@@ -163,6 +166,24 @@ class UnmatchedScenarioEditTests(unittest.TestCase):
             [(row["tech"], row["param"]) for row in log["rows_created"]],
             [("TRNNLIBGDXX", "TotalAnnualMaxCapacity")],
         )
+
+
+class StandaloneStopMessageTests(unittest.TestCase):
+    def test_main_prints_the_stop_message_without_a_traceback(self) -> None:
+        message = f"Scenario {SCENARIO}: the edit changed nothing."
+        stderr = io.StringIO()
+        with (
+            mock.patch.object(
+                edits, "build_scenario",
+                side_effect=edits.ScenarioEditError(message),
+            ),
+            mock.patch("sys.argv", ["scenario_edits", "--scenario", SCENARIO]),
+            contextlib.redirect_stderr(stderr),
+        ):
+            code = edits.main()
+        self.assertEqual(code, 1)
+        self.assertEqual(stderr.getvalue(), message + "\n")
+        self.assertNotIn("Traceback", stderr.getvalue())
 
 
 if __name__ == "__main__":

@@ -834,7 +834,11 @@ def main():
     if args.restore:
         restore_scenario(args.scenario)
         return 0
-    log = build_scenario(args.scenario, args.source_scenario, args.skip_backup)
+    try:
+        log = build_scenario(args.scenario, args.source_scenario, args.skip_backup)
+    except ScenarioEditError as error:
+        print(error, file=sys.stderr)
+        return 1
     print_summary(log)
     return 0
 
