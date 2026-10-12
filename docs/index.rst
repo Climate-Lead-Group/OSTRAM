@@ -42,6 +42,7 @@ Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
    file-map
    full-yaml
    reference/scenarios/scenario_catalogue
+   history/a1-b1-transformation-contract
 
 
 Indices and tables
