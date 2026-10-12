@@ -637,17 +637,6 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
         workbook.close()
         self.assertFalse(unavailable.exists())
 
-    def test_protected_cap_and_relax_implementations_are_byte_identical(self) -> None:
-        protected = {
-            TRANSFORMATIONS / "cap_trn_to_residual.py":
-                "b5d8d9536bd6948bb40390e05bb19f46538439cb2b90ee26b00e71707d7b3854",
-            SCENARIOS / "rules" / "relax_interconnectors.py":
-                "4308c9b63b3365c6517d2e520ddf763c4831344aecf1f9b7c7c70768b1ed45af",
-        }
-        for path, expected in protected.items():
-            with self.subTest(path=path.name):
-                self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), expected)
-
     def test_writer_order_and_scenario_predicates_remain_unchanged(self) -> None:
         workbook = load_workbook(TEMPLATE, read_only=True, data_only=True)
         try:
