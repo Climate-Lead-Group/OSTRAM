@@ -102,19 +102,22 @@ under `config/` and fails when a file is added, removed or left unregistered.
 
 ## Abbreviations
 
+These are historical labels, and the files keep their names.
+
 | Abbreviation | Meaning |
 |---|---|
 | `cr` | country-region |
-| `A-O`, `AO` | The prefix of the four scenario workbooks and of the extension decisions. Meaning not recorded. |
+| `A-O`, `AO` | phase A outputs, the name of the A1 workbooks. It is the prefix of the four scenario workbooks and of the extension decisions. |
 | `AR` | activity ratio, as in `A-O_AR_Projections.xlsx` |
 | `OG`, `og` | OSeMOSYS Global, as in `inputs/osemosys_global/` and `og_csvs_inputs/` |
 | `c2a` | `CapacityToActivityUnit`, as in `add_ao_c2a.py` |
 | `ts20` | the 20 timeslices, as in `sync_og_to_ts20.py` |
-| `WV` | The suffix of the merged workbook `SOASIA_OSeMOSYS_WV.xlsx`. Meaning not recorded. |
-| `SOASIA` | The prefix of the merged workbook. Meaning not recorded. |
-| `MOMF`, `T1`, `A`, `AB` | The parts of `Config_MOMF_T1_A.yaml` and `Config_MOMF_T1_AB.yaml`. Meaning not recorded. |
-| `D4` | The prefix of the added sets and constraints in the model file. Meaning not recorded. |
-| `WS-3`, `WS-4` | The prefixes in the docstrings of the late A3 rules. Meaning not recorded. |
+| `WV` | working version, as in the merged workbook `SOASIA_OSeMOSYS_WV.xlsx` |
+| `SOASIA` | South Asia, as in the merged workbook `SOASIA_OSeMOSYS_WV.xlsx` |
+| `MOMF` | Multipurpose OSeMOSYS Modelling Framework, as in `Config_MOMF_T1_A.yaml` and `Config_MOMF_T1_AB.yaml` |
+| `T1` | tier 1, in the same two file names |
+| `A`, `AB` | pipeline phases, in the same two file names |
+| `D4` | The prefix of the added sets and constraints in the model file. It is named after the project's D4 deliverable report, for which these sets and constraints were added. |
 | `v18` | Version 18 of the scenario workbook template. |
 | `SDS`, `LDS` | short-duration and long-duration storage |
 | `BCK` | backstop |
