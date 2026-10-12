@@ -1,3 +1,4 @@
+"""Apply curated cell-level corrections to the A3 stage 1 wvaligned workbooks."""
 from pathlib import Path
 # -*- coding: utf-8 -*-
 """
@@ -227,10 +228,12 @@ TECH_NAME_RENAMES = {
 # =============================================================================
 
 def find_code_col(headers):
+    """Return the first entry of ``CODE_COLS`` present in ``headers``, or None."""
     return next((c for c in CODE_COLS if c in headers), None)
 
 
 def md5_of(path):
+    """Return the MD5 hex digest of the file at ``path``, or None when the file does not exist."""
     if not os.path.exists(path):
         return None
     h = hashlib.md5()
@@ -632,6 +635,7 @@ print("=" * 72)
 
 _passed, _failed = 0, 0
 def check(name, cond, detail=""):
+    """Count and print one built-in test result as PASS or FAIL."""
     global _passed, _failed
     if cond:
         _passed += 1
