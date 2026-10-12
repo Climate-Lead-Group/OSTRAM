@@ -547,7 +547,7 @@ def print_summary(log: dict) -> None:
     bar = "=" * 72
     cfg = log.get("config_summary", {})
     print(bar)
-    print("set_retirement_schedule — ResidualCapacity drawdown applied")
+    print("set_retirement_schedule: ResidualCapacity drawdown applied")
     print(bar)
     print(f"Backup folder      : {log.get('backup_dir', '(skipped)')}")
     print(f"Edited file        : {log['file']}")
@@ -615,7 +615,7 @@ def print_summary(log: dict) -> None:
 def run_self_test() -> int:
     bar = "=" * 72
     print(bar)
-    print("set_retirement_schedule.py — SELF-TEST")
+    print("set_retirement_schedule.py: SELF-TEST")
     print(bar)
 
     passed = 0
@@ -724,7 +724,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 1: Linear age-based retirement (coal, lifetime=35)
     # ======================================================================
-    print("\nTest 1 — Linear age-based retirement (coal, lifetime=35)")
+    print("\nTest 1: Linear age-based retirement (coal, lifetime=35)")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir)
@@ -775,7 +775,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 2: Scheduled override replaces age-based
     # ======================================================================
-    print("\nTest 2 — Scheduled override replaces age-based")
+    print("\nTest 2: Scheduled override replaces age-based")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir)
@@ -826,7 +826,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 3: Exempt techs untouched
     # ======================================================================
-    print("\nTest 3 — Exempt techs untouched")
+    print("\nTest 3: Exempt techs untouched")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir)
@@ -865,7 +865,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 4: Monotonicity enforcement
     # ======================================================================
-    print("\nTest 4 — Monotonicity enforcement")
+    print("\nTest 4: Monotonicity enforcement")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir)
@@ -909,7 +909,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 5: Non-negative floor
     # ======================================================================
-    print("\nTest 5 — Non-negative floor")
+    print("\nTest 5: Non-negative floor")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir)

@@ -1495,7 +1495,7 @@ def print_summary(log: dict) -> None:
     """Pretty-print the run summary."""
     bar = "=" * 72
     print(bar)
-    print("MaxCapacityInvestment lid + untie rule — applied")
+    print("MaxCapacityInvestment lid + untie rule: applied")
     print(bar)
     print(f"Backup folder : {log.get('backup_dir', '(skipped)')}")
     print(f"Edited file   : {log['file']}")
@@ -1624,7 +1624,7 @@ def main() -> int:
     parser.add_argument(
         "--skip-backup",
         action="store_true",
-        help="Skip backup creation (DANGEROUS — for testing only)",
+        help="Skip backup creation (DANGEROUS, for testing only)",
     )
     parser.add_argument(
         "--restore",

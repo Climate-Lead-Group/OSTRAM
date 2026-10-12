@@ -1097,7 +1097,7 @@ def print_summary(log: dict) -> None:
     bar = "=" * 72
     cfg = log.get("config", {})
     print(bar)
-    print("set_vre_targets — VRE generation/capacity floors applied")
+    print("set_vre_targets: VRE generation/capacity floors applied")
     print(bar)
     print(f"Backup folder      : {log.get('backup_dir', '(skipped)')}")
     print(f"Edited file        : {log['file']}")
@@ -1163,7 +1163,7 @@ def run_self_test() -> int:
     """Build synthetic data, run all tests, verify assertions."""
     bar = "=" * 72
     print(bar)
-    print("set_vre_targets.py — SELF-TEST")
+    print("set_vre_targets.py: SELF-TEST")
     print(bar)
 
     passed = 0
@@ -1273,7 +1273,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 1: Activity floor computation
     # ======================================================================
-    print("\nTest 1 — Activity floor computation")
+    print("\nTest 1: Activity floor computation")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir, years_3)
@@ -1333,7 +1333,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 2: Interpolation (pct and production)
     # ======================================================================
-    print("\nTest 2 — Interpolation between milestones")
+    print("\nTest 2: Interpolation between milestones")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir, years_5)
@@ -1402,7 +1402,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 3: Max floor share safety cap
     # ======================================================================
-    print("\nTest 3 — Max floor share safety cap")
+    print("\nTest 3: Max floor share safety cap")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir, [2030])
@@ -1458,7 +1458,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 4: Missing BAU results
     # ======================================================================
-    print("\nTest 4 — Missing BAU results (hard fail)")
+    print("\nTest 4: Missing BAU results (hard fail)")
     test_ok = True
     try:
         load_bau_total_production(Path("/nonexistent/path/to/bau"), set())
@@ -1480,7 +1480,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 5: Untie rule on capacity mode
     # ======================================================================
-    print("\nTest 5 — Untie rule (capacity mode, MaxCapInv < MinCapInv)")
+    print("\nTest 5: Untie rule (capacity mode, MaxCapInv < MinCapInv)")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         # Pre-set MaxCapInv = 3.0 for PWRSPVINDEA

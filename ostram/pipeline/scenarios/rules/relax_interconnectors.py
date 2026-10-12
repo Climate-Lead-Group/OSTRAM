@@ -768,7 +768,7 @@ def print_summary(log: dict) -> None:
     bar = "=" * 72
     cfg = log.get("config", {})
     print(bar)
-    print("relax_interconnectors — TRN MaxCapInv relaxation applied")
+    print("relax_interconnectors: TRN MaxCapInv relaxation applied")
     print(bar)
     print(f"Backup folder : {log.get('backup_dir', '(skipped)')}")
     print(f"Edited file   : {log['file']}")
@@ -836,7 +836,7 @@ def run_self_test() -> int:
 
     bar = "=" * 72
     print(bar)
-    print("relax_interconnectors.py — SELF-TEST")
+    print("relax_interconnectors.py: SELF-TEST")
     print(bar)
 
     passed = 0
@@ -944,7 +944,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 1: Multiplicative mode (factor = 2.0)
     # ======================================================================
-    print("\nTest 1 — Multiplicative mode (factor = 2.0)")
+    print("\nTest 1: Multiplicative mode (factor = 2.0)")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir)
@@ -982,7 +982,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 2: Additive mode (headroom_gw = 1.0)
     # ======================================================================
-    print("\nTest 2 — Additive mode (headroom_gw = 1.0)")
+    print("\nTest 2: Additive mode (headroom_gw = 1.0)")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir)
@@ -1016,7 +1016,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 3: Per-link override with interpolation
     # ======================================================================
-    print("\nTest 3 — Per-link override with interpolation")
+    print("\nTest 3: Per-link override with interpolation")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir)
@@ -1061,7 +1061,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 4: Safety floor (override below ResCap)
     # ======================================================================
-    print("\nTest 4 — Safety floor (override below ResCap, clamped)")
+    print("\nTest 4: Safety floor (override below ResCap, clamped)")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir)
@@ -1131,7 +1131,7 @@ def main() -> int:
     parser.add_argument(
         "--skip-backup",
         action="store_true",
-        help="Skip backup creation (DANGEROUS — for testing only)",
+        help="Skip backup creation (DANGEROUS, for testing only)",
     )
     parser.add_argument(
         "--self-test",

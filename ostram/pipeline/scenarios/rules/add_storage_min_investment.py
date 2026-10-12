@@ -289,7 +289,7 @@ def print_summary(log: dict) -> None:
     """Pretty-print the run summary."""
     bar = "=" * 60
     print(bar)
-    print("Storage MinCapacityInvestment floors — applied")
+    print("Storage MinCapacityInvestment floors: applied")
     print(bar)
     print(f"File          : {log['file']}")
     print(f"YAML config   : {log['yaml']}")
@@ -326,7 +326,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--skip-backup", action="store_true",
-        help="Skip backup (DANGEROUS — testing only)",
+        help="Skip backup (DANGEROUS, testing only)",
     )
     args = parser.parse_args()
 

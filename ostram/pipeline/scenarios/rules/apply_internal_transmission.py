@@ -419,7 +419,7 @@ def run(input_dir, sheets=None, skip_backup=False, config=None, residuals=None,
 def print_summary(log: dict) -> None:
     bar = "=" * 72
     print(bar)
-    print("apply_internal_transmission — YAML + residuals -> model"
+    print("apply_internal_transmission: YAML + residuals -> model"
           + ("  [DRY RUN]" if log.get("dry_run") else ""))
     print(bar)
     print(f"Config (knobs)   : {log.get('config')}")
@@ -447,7 +447,7 @@ def print_summary(log: dict) -> None:
 def run_self_test() -> int:
     import tempfile
     bar = "=" * 72
-    print(bar); print("apply_internal_transmission.py — SELF-TEST"); print(bar)
+    print(bar); print("apply_internal_transmission.py: SELF-TEST"); print(bar)
     ok = True
     with tempfile.TemporaryDirectory() as td:
         td = Path(td)

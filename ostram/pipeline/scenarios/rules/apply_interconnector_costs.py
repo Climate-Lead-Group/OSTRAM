@@ -309,7 +309,7 @@ def run(input_dir, sheets=None, skip_backup=False, template=None) -> dict:
 def print_summary(log: dict) -> None:
     bar = "=" * 72
     print(bar)
-    print("apply_interconnector_costs — v18 Interconnector_Params -> model")
+    print("apply_interconnector_costs: v18 Interconnector_Params -> model")
     print(bar)
     print(f"Template (source): {log.get('template')}")
     print(f"Backup folder    : {log.get('backup_dir', '(skipped)')}")
@@ -334,7 +334,7 @@ def print_summary(log: dict) -> None:
 def run_self_test() -> int:
     import tempfile
     bar = "=" * 72
-    print(bar); print("apply_interconnector_costs.py — SELF-TEST"); print(bar)
+    print(bar); print("apply_interconnector_costs.py: SELF-TEST"); print(bar)
     ok = True
     with tempfile.TemporaryDirectory() as td:
         td = Path(td)

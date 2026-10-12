@@ -546,7 +546,7 @@ def print_summary(log: dict) -> None:
     bar = "=" * 72
     cfg = log.get("config_summary", {})
     print(bar)
-    print("set_min_capacity_floors — BAU calibration floors/ceilings applied")
+    print("set_min_capacity_floors: BAU calibration floors/ceilings applied")
     print(bar)
     print(f"Backup folder    : {log.get('backup_dir', '(skipped)')}")
     print(f"Edited file      : {log['file']}")
@@ -574,7 +574,7 @@ def print_summary(log: dict) -> None:
             print(f"\n  [{section_name.upper()}]")
             for ep in entries:
                 print(f"    {ep['cr']} / {ep['tech_pattern']} → "
-                      f"{ep['wb_param']} — matched {len(ep['matched_techs'])} techs "
+                      f"{ep['wb_param']}: matched {len(ep['matched_techs'])} techs "
                       f"({', '.join(ep['matched_techs'])})")
                 if ep.get("note"):
                     print(f"      note: {ep['note']}")
@@ -605,7 +605,7 @@ def print_summary(log: dict) -> None:
 def run_self_test() -> int:
     bar = "=" * 72
     print(bar)
-    print("set_min_capacity_floors.py — SELF-TEST")
+    print("set_min_capacity_floors.py: SELF-TEST")
     print(bar)
 
     passed = 0
@@ -707,7 +707,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 1: Floor writes MinCapInv
     # ======================================================================
-    print("\nTest 1 — Floor writes MinCapInv")
+    print("\nTest 1: Floor writes MinCapInv")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir)
@@ -753,7 +753,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 2: Floor triggers untie rule
     # ======================================================================
-    print("\nTest 2 — Floor triggers untie rule")
+    print("\nTest 2: Floor triggers untie rule")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir, maxinv_presets={"PWRSPVINDEA": 2.0})
@@ -805,7 +805,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 3: Ceiling tightens MaxCapInv
     # ======================================================================
-    print("\nTest 3 — Ceiling tightens MaxCapInv")
+    print("\nTest 3: Ceiling tightens MaxCapInv")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         # MaxCapInv for PWRCOAINDEA = 9999 (or empty → we use 9999)
@@ -839,7 +839,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 4: Ceiling does not loosen
     # ======================================================================
-    print("\nTest 4 — Ceiling does not loosen existing MaxCapInv")
+    print("\nTest 4: Ceiling does not loosen existing MaxCapInv")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         # MaxCapInv for PWRCOAINDEA: 0.5 at all years
@@ -874,7 +874,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 5: Interpolation
     # ======================================================================
-    print("\nTest 5 — Interpolation between milestones")
+    print("\nTest 5: Interpolation between milestones")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         wb_path = _build_workbook(tmpdir)
@@ -920,7 +920,7 @@ def run_self_test() -> int:
     # ======================================================================
     # TEST 6: Tech pattern expansion (cr filter)
     # ======================================================================
-    print("\nTest 6 — Tech pattern expansion respects cr filter")
+    print("\nTest 6: Tech pattern expansion respects cr filter")
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         # Add an extra tech to prove cr filtering works
