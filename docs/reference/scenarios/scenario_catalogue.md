@@ -249,7 +249,7 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 | `A_Calibrated_BAU_Clipped` | `A_Calibrated_BAU` with the shared VRE ceilings and nothing else. |
 | `B_Optimised_VRE` | The least-cost root: retirement, the build cap with a rising cap multiplier, interconnector relaxation and storage minimum investments. |
 | `B_Opt_Clipped` | `B_Optimised_VRE` with the shared VRE ceilings and nothing else. The other B variants are compared with it. |
-| `B_Opt_DirBidir` | `B_Opt_Clipped` with an overlay that lists no corridor, so every interconnector flows both ways. It shows that the direction machinery changes nothing on its own. |
+| `B_Opt_DirBidir` | `B_Opt_Clipped` with an overlay that lists no corridor, so every interconnector flows both ways. It is the reference case for `B_Opt_DirContractual`. |
 | `B_Opt_DirContractual` | `B_Opt_Clipped` with an overlay that sets nine corridors to one direction, from their contracts and physical flows, and leaves the two Nepal to India corridors bidirectional. The justification is in the [direction references](interconnector_direction_references.md). |
 | `B_Opt_IndiaCosts` | `B_Opt_Clipped` with the capital and fixed costs of the non-India generation and storage technologies set to the India values of the same family and year. The values were first generated from the `B_Optimised_VRE` workbook and were revised in the September 2026 cost release. |
 | `B_Opt_IndiaCostsFuel` | `B_Opt_IndiaCosts` plus the fuel prices of the non-India MIN technologies set to the India prices. |
