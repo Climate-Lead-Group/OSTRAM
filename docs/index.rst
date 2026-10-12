@@ -1,9 +1,12 @@
-OSTRAM -- OSeMOSYS Transmission Model
-======================================
+OSTRAM
+======
 
-**OSTRAM** is an automated pipeline for running energy system optimization models using
-`OSeMOSYS <https://osemosys.readthedocs.io/>`_. It supports multiple solvers (GLPK, CBC,
-CPLEX, Gurobi) and is designed for full reproducibility of results.
+OSTRAM, OSeMOSYS for Transmission – Framework to represent power systems
+connectivity, builds on `OSeMOSYS <https://osemosys.readthedocs.io/>`_ and
+OSeMOSYS Global. It adds detail on internal transmission and on the
+interconnectors between countries, and supports "what if" comparisons between
+scenarios. The South Asia model is its reference application. The solvers
+GLPK, CBC, CPLEX and Gurobi are supported.
 
 Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
 
