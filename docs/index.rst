@@ -29,6 +29,7 @@ Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
    rules
    scenario-edits
    adding-a-scenario
+   adapting
 
 .. toctree::
    :maxdepth: 2
