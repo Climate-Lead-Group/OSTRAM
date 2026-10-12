@@ -79,6 +79,7 @@ BACKUP_TAG = "_PRE_TRN_COSTS_"
 
 # --------------------------------------------------------------------------- worksheet helpers
 def find_year_columns(ws) -> dict:
+    """Return {year: column index} for the integer year headers in row 1."""
     out = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -88,6 +89,7 @@ def find_year_columns(ws) -> dict:
 
 
 def find_named_columns(ws, names) -> dict:
+    """Return {header: column index} for the row-1 headers listed in names."""
     found = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -109,6 +111,11 @@ def _values_differ(a, b, tol: float = 1e-9) -> bool:
 
 # --------------------------------------------------------------------------- read source of truth
 def resolve_template(explicit: Path | None) -> Path:
+    """Return the first existing workbook among the explicit path,
+    $OSTRAM_TEMPLATE_PATH and ostram/pipeline/scenarios/OSTRAM_Scenario_Inputs.xlsx.
+
+    Raises FileNotFoundError when none exists.
+    """
     candidates = []
     if explicit:
         candidates.append(Path(explicit))
@@ -231,6 +238,7 @@ def apply_costs(ws, ic_values: dict, seen: set) -> dict:
 
 
 def edit_parametrization(filepath: Path, sheets: list, ic_values: dict) -> dict:
+    """Write the sourced values into each target sheet, save the workbook and return the change log with the unmatched (tech, param) pairs."""
     wb = load_workbook(filepath)
     file_log = {"file": str(filepath), "sheets": []}
     seen: set = set()
@@ -253,6 +261,7 @@ def edit_parametrization(filepath: Path, sheets: list, ic_values: dict) -> dict:
 
 # --------------------------------------------------------------------------- backup / restore
 def make_backup(input_dir: Path) -> Path:
+    """Copy the input folder to a timestamped `_PRE_TRN_COSTS_` sibling and return its path."""
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     backup = input_dir.parent / f"{input_dir.name}{BACKUP_TAG}{stamp}"
     if backup.exists():
@@ -262,6 +271,7 @@ def make_backup(input_dir: Path) -> Path:
 
 
 def find_latest_backup(input_dir: Path) -> Path | None:
+    """Return the newest `_PRE_TRN_COSTS_` backup beside the input folder, or None."""
     parent = input_dir.parent
     cands = sorted((p for p in parent.iterdir()
                     if p.is_dir() and p.name.startswith(f"{input_dir.name}{BACKUP_TAG}")),
@@ -270,6 +280,7 @@ def find_latest_backup(input_dir: Path) -> Path | None:
 
 
 def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path:
+    """Replace the input folder with the given backup, or the newest one, and return the backup used."""
     input_dir = Path(input_dir)
     backup_dir = Path(backup_dir) if backup_dir else find_latest_backup(input_dir)
     if not backup_dir or not backup_dir.is_dir():
@@ -282,6 +293,7 @@ def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path
 
 # --------------------------------------------------------------------------- orchestration
 def run(input_dir, sheets=None, skip_backup=False, template=None) -> dict:
+    """Apply the Interconnector_Params values to A-O_Parametrization.xlsx and return the change log."""
     input_dir = Path(input_dir)
     sheets = sheets or DEFAULT_TARGET_SHEETS
     template_path = resolve_template(template)
@@ -308,6 +320,7 @@ def run(input_dir, sheets=None, skip_backup=False, template=None) -> dict:
 
 
 def print_summary(log: dict) -> None:
+    """Print the per-sheet changes and the unmatched pairs of a run log."""
     bar = "=" * 72
     print(bar)
     print("apply_interconnector_costs: v18 Interconnector_Params -> model")
@@ -333,6 +346,7 @@ def print_summary(log: dict) -> None:
 
 # --------------------------------------------------------------------------- self-test
 def run_self_test() -> int:
+    """Run the rule on a synthetic template and workbook, print each check and return 0 on success."""
     import tempfile
     bar = "=" * 72
     print(bar); print("apply_interconnector_costs.py: SELF-TEST"); print(bar)
@@ -400,6 +414,7 @@ def run_self_test() -> int:
         chk.close()
 
         def ck(cond, label):
+            """Print PASS or FAIL for one check and record a failure."""
             nonlocal ok
             print(("  PASS " if cond else "  FAIL ") + label)
             ok = ok and cond
@@ -417,6 +432,7 @@ def run_self_test() -> int:
 
 # --------------------------------------------------------------------------- main
 def main() -> int:
+    """Parse the command line, then run the rule, the self-test or a restore; return the exit code."""
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--input-dir", type=Path, default=Path("A1_Outputs/A1_Outputs_BAU"))

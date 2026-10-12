@@ -311,6 +311,7 @@ def print_summary(log: dict) -> None:
 
 
 def main() -> int:
+    """Parse the command line, apply the storage minimum investment rule and return the exit code."""
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,

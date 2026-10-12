@@ -1609,6 +1609,7 @@ def print_summary(log: dict) -> None:
 
 
 def main() -> int:
+    """Parse the command line, then apply the build-cap rule or restore a backup; return the exit code."""
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )

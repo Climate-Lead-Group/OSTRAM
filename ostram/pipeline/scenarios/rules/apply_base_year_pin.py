@@ -99,6 +99,7 @@ EXPECTED_FIELDS = (
 
 @dataclass(frozen=True)
 class PinRule:
+    """One validated row of the base-year pin rules CSV."""
     source_rule_id: str
     parameter: str
     region: str
@@ -119,6 +120,7 @@ class PinRule:
 
     @property
     def complete_key(self) -> tuple[str, str, str, int, str]:
+        """Return the (region, technology, parameter, year, timeslice) key of the rule."""
         return self.region, self.technology, self.parameter, self.year, self.timeslice
 
 
@@ -342,6 +344,7 @@ def _excel_number(value: Decimal) -> int | float:
 
 
 def make_backup(input_dir: Path) -> Path:
+    """Copy the input folder to a timestamped `_PRE_PWR_MIN_PIN_` sibling and return its path."""
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     backup = input_dir.parent / f"{input_dir.name}{BACKUP_TAG}{stamp}"
     if backup.exists():
@@ -351,6 +354,7 @@ def make_backup(input_dir: Path) -> Path:
 
 
 def restore(input_dir: Path | str, restore_from: Path | str | None = None) -> Path:
+    """Replace the input folder with the given backup, or the newest one beside it, and return the backup used."""
     destination = Path(input_dir)
     if restore_from is None:
         candidates = sorted(
@@ -619,6 +623,7 @@ def run(
 
 
 def print_summary(log: dict[str, object]) -> None:
+    """Print a one-line summary of an :func:`apply_pin_rules` log."""
     print(
         "apply_base_year_pin "
         f"scenario={log['scenario']} status={log['status']} "
@@ -629,6 +634,7 @@ def print_summary(log: dict[str, object]) -> None:
 
 
 def main() -> int:
+    """Parse the command line, then apply the base-year pin or restore a backup; return the exit code."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input-dir", type=Path)
     parser.add_argument("--scenario")

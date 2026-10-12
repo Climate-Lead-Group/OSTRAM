@@ -154,6 +154,7 @@ def resolve_config(explicit: Path | None) -> Path:
 
 
 def resolve_residuals(explicit: Path | None) -> Path:
+    """Return the residuals CSV given by --residuals, or the copy beside this module."""
     if explicit:
         p = Path(explicit)
         if p.is_file():
@@ -225,6 +226,7 @@ def build_target_values(knobs: dict, residuals: dict, nodes: list) -> dict:
 
 # --------------------------------------------------------------------------- worksheet helpers
 def find_year_columns(ws) -> dict:
+    """Return {year: column index} for the integer year headers in row 1."""
     out = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -234,6 +236,7 @@ def find_year_columns(ws) -> dict:
 
 
 def find_named_columns(ws, names) -> dict:
+    """Return {header: column index} for the row-1 headers listed in names."""
     found = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -314,6 +317,7 @@ def apply_values(ws, target_values: dict, seen: set, dry_run: bool) -> dict:
 
 def edit_parametrization(filepath: Path, sheets: list, target_values: dict,
                          dry_run: bool) -> dict:
+    """Write the target values into each target sheet, save the workbook unless dry_run and return the change log with the unmatched (tech, param) pairs."""
     wb = load_workbook(filepath)
     file_log = {"file": str(filepath), "sheets": []}
     seen: set = set()
@@ -335,6 +339,7 @@ def edit_parametrization(filepath: Path, sheets: list, target_values: dict,
 
 
 def write_desk_check_csv(file_log: dict, path: Path) -> None:
+    """Write every cell change of a run log to a CSV with its old and new value."""
     with open(path, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["sheet", "tech", "family", "node", "parameter", "year",
@@ -348,6 +353,7 @@ def write_desk_check_csv(file_log: dict, path: Path) -> None:
 
 # --------------------------------------------------------------------------- backup / restore
 def make_backup(input_dir: Path) -> Path:
+    """Copy the input folder to a timestamped `_PRE_INTERNAL_TX_` sibling and return its path."""
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     backup = input_dir.parent / f"{input_dir.name}{BACKUP_TAG}{stamp}"
     if backup.exists():
@@ -357,6 +363,7 @@ def make_backup(input_dir: Path) -> Path:
 
 
 def find_latest_backup(input_dir: Path) -> Path | None:
+    """Return the newest `_PRE_INTERNAL_TX_` backup beside the input folder, or None."""
     parent = input_dir.parent
     cands = sorted((p for p in parent.iterdir()
                     if p.is_dir() and p.name.startswith(f"{input_dir.name}{BACKUP_TAG}")),
@@ -365,6 +372,7 @@ def find_latest_backup(input_dir: Path) -> Path | None:
 
 
 def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path:
+    """Replace the input folder with the given backup, or the newest one, and return the backup used."""
     input_dir = Path(input_dir)
     backup_dir = Path(backup_dir) if backup_dir else find_latest_backup(input_dir)
     if not backup_dir or not backup_dir.is_dir():
@@ -378,6 +386,7 @@ def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path
 # --------------------------------------------------------------------------- orchestration
 def run(input_dir, sheets=None, skip_backup=False, config=None, residuals=None,
         dry_run=False, desk_check_csv=None, nodes=None) -> dict:
+    """Apply the configured costs, operational life and per-node residual capacity to the internal transmission families and return the change log."""
     input_dir = Path(input_dir)
     sheets = sheets or DEFAULT_TARGET_SHEETS
     config_path = resolve_config(config)
@@ -418,6 +427,7 @@ def run(input_dir, sheets=None, skip_backup=False, config=None, residuals=None,
 
 
 def print_summary(log: dict) -> None:
+    """Print the inputs, per-sheet changes and unmatched pairs of a run log."""
     bar = "=" * 72
     print(bar)
     print("apply_internal_transmission: YAML + residuals -> model"
@@ -446,6 +456,7 @@ def print_summary(log: dict) -> None:
 
 # --------------------------------------------------------------------------- self-test
 def run_self_test() -> int:
+    """Run the rule twice on synthetic inputs, print each check and return 0 on success."""
     import tempfile
     bar = "=" * 72
     print(bar); print("apply_internal_transmission.py: SELF-TEST"); print(bar)
@@ -515,6 +526,7 @@ def run_self_test() -> int:
         chk.close()
 
         def ck(cond, label):
+            """Print PASS or FAIL for one check and record a failure."""
             nonlocal ok
             print(("  PASS " if cond else "  FAIL ") + label)
             ok = ok and cond
@@ -541,6 +553,7 @@ def run_self_test() -> int:
 
 # --------------------------------------------------------------------------- main
 def main() -> int:
+    """Parse the command line, then run the rule, the self-test or a restore; return the exit code."""
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--input-dir", type=Path, default=Path("A1_Outputs/A1_Outputs_BAU"))

@@ -74,6 +74,11 @@ def _values_differ(a, b, tol=1e-9) -> bool:
 
 # --------------------------------------------------------------------------- config
 def resolve_config(explicit):
+    """Return the first existing Config_country_codes.yaml among the explicit
+    path, $OSTRAM_CONFIG_PATH and ostram/pipeline/Config_country_codes.yaml.
+
+    Raises FileNotFoundError when none exists.
+    """
     cands = []
     if explicit:
         cands.append(Path(explicit))
@@ -88,6 +93,7 @@ def resolve_config(explicit):
 
 
 def read_loss(config_path) -> float:
+    """Return `internal_transmission.transmission_loss` from the config, or DEFAULT_LOSS when absent; raise ValueError outside [0, 1)."""
     with open(config_path, "r", encoding="utf-8") as fh:
         data = yaml.safe_load(fh) or {}
     blk = data.get("internal_transmission", {}) or {}
@@ -177,6 +183,7 @@ def edit_base_year(path: Path, oar: float) -> dict:
 
 # --------------------------------------------------------------------------- backup / restore
 def make_backup(d: Path) -> Path:
+    """Copy the input folder to a timestamped `_PRE_INTERNAL_LOSS_` sibling and return its path."""
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     b = d.parent / f"{d.name}{BACKUP_TAG}{stamp}"
     if b.exists():
@@ -186,6 +193,7 @@ def make_backup(d: Path) -> Path:
 
 
 def restore(d: Path, frm=None) -> Path:
+    """Replace the input folder with the given backup, or the newest one, and return the backup used."""
     d = Path(d)
     if frm is None:
         cands = sorted(p for p in d.parent.iterdir()
@@ -201,6 +209,7 @@ def restore(d: Path, frm=None) -> Path:
 
 # --------------------------------------------------------------------------- orchestration
 def run(input_dir, skip_backup=False, config=None) -> dict:
+    """Set the output activity of the internal transmission families to 1 - loss in both AR workbooks and return the change log."""
     input_dir = Path(input_dir)
     loss = read_loss(resolve_config(config))
     oar = round(1.0 - loss, 6)
@@ -221,6 +230,7 @@ def run(input_dir, skip_backup=False, config=None) -> dict:
 
 
 def print_summary(log):
+    """Print the loss, output activity ratio and cell counts of a run log."""
     print("=" * 68)
     print(f"apply_internal_tx_losses  loss={log['loss']:.3f}  OAR={log['oar']}")
     print("=" * 68)
@@ -235,6 +245,7 @@ def print_summary(log):
 
 # --------------------------------------------------------------------------- self-test
 def run_self_test() -> int:
+    """Run the rule twice on synthetic inputs, print each check and return 0 on success."""
     import tempfile
     print("=" * 68); print("apply_internal_tx_losses.py SELF-TEST"); print("=" * 68)
     ok = True
@@ -279,6 +290,7 @@ def run_self_test() -> int:
         gotb = {bv.cell(row=r, column=1).value: bv.cell(row=r, column=3).value for r in range(2, bv.max_row + 1)}
 
         def ck(cond, label):
+            """Print PASS or FAIL for one check and record a failure."""
             nonlocal ok; print(("  PASS " if cond else "  FAIL ") + label); ok = ok and cond
         ck(got.get(("RNWTRNINDWE", "Output")) == 0.97, "internal RNWTRN Output 1 -> 0.97")
         ck(got.get(("PWRTRNMDVXX", "Output")) == 0.97, "internal PWRTRN Output 1 -> 0.97")
@@ -294,6 +306,7 @@ def run_self_test() -> int:
 
 
 def main() -> int:
+    """Parse the command line, then run the rule, the self-test or a restore; return the exit code."""
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--input-dir", type=Path, default=Path("A1_Outputs/A1_Outputs_BAU"))
     p.add_argument("--config", type=Path, default=None)

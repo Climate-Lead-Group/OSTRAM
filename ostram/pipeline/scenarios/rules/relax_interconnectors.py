@@ -254,6 +254,7 @@ def _rmtree_robust(path: Path, attempts: int = 5) -> None:
 
 
 def find_latest_backup(input_dir: Path) -> Path | None:
+    """Return the newest `_PRE_TRN_RELAX_` backup beside the input folder, or None."""
     parent = input_dir.parent
     candidates = sorted(
         (p for p in parent.iterdir()
@@ -264,6 +265,7 @@ def find_latest_backup(input_dir: Path) -> Path | None:
 
 
 def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path:
+    """Replace the input folder with the given backup, or the newest one, after saving the current folder as a `_POST_TRN_RELAX_pre_restore_` snapshot; return the backup used."""
     input_dir = Path(input_dir)
     if backup_dir is None:
         backup_dir = find_latest_backup(input_dir)
@@ -287,6 +289,7 @@ def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path
 
 
 def make_backup(input_dir: Path) -> Path:
+    """Copy the input folder to a timestamped `_PRE_TRN_RELAX_` sibling and return its path."""
     if not input_dir.is_dir():
         raise FileNotFoundError(f"Input directory does not exist: {input_dir}")
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -311,6 +314,7 @@ def find_year_columns(ws) -> dict:
 
 
 def find_named_columns(ws, names) -> dict:
+    """Return {header: column index} for the row-1 headers listed in names."""
     found = {}
     for col_idx in range(1, ws.max_column + 1):
         val = ws.cell(row=1, column=col_idx).value
@@ -320,6 +324,7 @@ def find_named_columns(ws, names) -> dict:
 
 
 def values_differ(a, b, tol: float = 1e-12) -> bool:
+    """Return True when two cell values differ by more than tol, compared as numbers where possible."""
     if a is None and b is None:
         return False
     if a is None or b is None:
@@ -1115,6 +1120,7 @@ def run_self_test() -> int:
 # Main
 # ---------------------------------------------------------------------------
 def main() -> int:
+    """Parse the command line, then run the rule, the self-test or a restore; return the exit code."""
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
