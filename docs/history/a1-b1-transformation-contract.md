@@ -1,15 +1,17 @@
 # A1/A2-to-B1 transformation contract
 
-> **Historical transformation contract:** The branch-scoped no-solver evidence and
-> claims below are preserved as recorded. Current acceptance authority for
-> compiled identities is the authenticated external Run 3
-> `STAGE_2_GOVERNED_COMPARATOR_MANIFEST.csv`, generated from current maintained
-> roots plus declared rules. See the current
-> [runtime and data lineage](lineage.md) before using this historical detail.
->
+> Superseded. This page is the historical record of the transformation contract
+> frozen in July 2026 for the branch `refactor/a1-b1-transforms`. The current
+> pipeline is on the [pipeline](../pipeline.md) page, the current acceptance
+> checks are on the [regression](../regression.md) page, and the current
+> scenario registry is described on the [full.yaml section map](../full-yaml.md).
+> Paths, branch names, counts and file names below are as recorded at the time.
+> The former Run 3 comparator manifest and the earlier file digests are kept
+> outside the repository.
+
 This document freezes the transformation boundary exercised by
 `refactor/a1-b1-transforms`. It supplements the current
-[regression policy](regression.md).
+[regression policy](../regression.md).
 
 This is a behavior-preserving Tier 3 structural refactor. Its purpose is to make
 the established transformation plan, pure table operations, I/O effects,
@@ -46,7 +48,7 @@ or replace a public entrypoint.
 
 ### A1: source preprocessing and scenario artifacts
 
-[`A1_Pre_processing_OG_csvs.py`](../ostram/pipeline/preparation/base_inputs.py)
+[`A1_Pre_processing_OG_csvs.py`](../../ostram/pipeline/preparation/base_inputs.py)
 retains its established sequence:
 
 1. read and sort the original model CSV inputs;
@@ -69,7 +71,7 @@ or change its model calculations.
 
 ### A2: scenario assembly
 
-[`A2_AddTx.py`](../ostram/pipeline/preparation/transmission.py) continues to discover scenario
+[`A2_AddTx.py`](../../ostram/pipeline/preparation/transmission.py) continues to discover scenario
 directories in sorted order. Within each scenario it applies base-year,
 projections, parametrization, and demand work in that order. Its established BAU
 snapshot replacement remains remove-then-copy after scenario processing. Argument
@@ -78,8 +80,8 @@ remain unchanged even where they are awkward.
 
 ### A3: ordered scenario materialization
 
-[`scenario transform module`](../ostram/pipeline/scenarios/transform.py) and
-[`a3_orchestrator.py`](../ostram/pipeline/scenarios/orchestrator.py) retain the characterized
+[`scenario transform module`](../../ostram/pipeline/scenarios/transform.py) and
+[`a3_orchestrator.py`](../../ostram/pipeline/scenarios/orchestrator.py) retain the characterized
 stage sequence:
 
 `stage_1_scripts_1_to_5` -> `stage_1b` ->
@@ -94,7 +96,7 @@ The final full-profile support `BAU` output additionally receives
 `finalize_support_bau` after delivery. It sets the 18 TRN total-capacity ceilings
 to residual capacity plus surviving required additions. It runs after inherited
 restriction state is exported, so accepted roots retain the sequence and
-inherited values above. See the [support BAU policy](pipeline.md#support-bau).
+inherited values above. See the [support BAU policy](../pipeline.md#support-bau).
 
 Normal A3 execution still contains only the four active Control definitions:
 `BAU`, `A_Calibrated_BAU`, `B_Optimised_VRE`, and `C_Target_VRE`. Derived decision
@@ -123,15 +125,15 @@ available as a runtime fallback.
 
 ### B1: selection, compilation, and CSV delivery
 
-[`B1 runner module`](../ostram/pipeline/compilation/runner.py) remains the public CLI
-and [`b1_runner.py`](../ostram/pipeline/compilation/orchestrator.py) retains scenario discovery,
+[`B1 runner module`](../../ostram/pipeline/compilation/runner.py) remains the public CLI
+and [`b1_runner.py`](../../ostram/pipeline/compilation/orchestrator.py) retains scenario discovery,
 filtering, config backup/update/restoration, and compiler dispatch. Eligible
 scenario directories are discovered in sorted order. A valid requested filter is
 resolved in discovery order and collapses requested duplicates. The child command
 remains the current interpreter plus the absolute `B1 compiler module` path, with
 `workspace/` as its working directory and the complete environment inherited.
 
-[`B1 compiler module`](../ostram/pipeline/compilation/compiler.py) remains a directly executable,
+[`B1 compiler module`](../../ostram/pipeline/compilation/compiler.py) remains a directly executable,
 top-level compiler. Importing it is still not a supported way to obtain helper
 functions because import executes compiler work. Its established transformation
 groups remain ordered as follows:
@@ -179,8 +181,8 @@ does not repair it.
 
 ### B2: final compiler delivery and the solver boundary
 
-[`B2 execution module`](../ostram/pipeline/execution/runner.py) and
-[`b2_orchestrator.py`](../ostram/pipeline/execution/orchestrator.py) retain the compile path
+[`B2 execution module`](../../ostram/pipeline/execution/runner.py) and
+[`b2_orchestrator.py`](../../ostram/pipeline/execution/orchestrator.py) retain the compile path
 from B1 CSV directories through `process_scenario_folder`, otoole conversion, and
 the ordered preprocessing and model-file adjustment chain documented in the core workflow
 characterization. The canonical final filename suffix remains
@@ -195,7 +197,7 @@ does not authorize a matrix build or solver run.
 ## Extracted production boundaries
 
 The new import-safe package is
-[`ostram/pipeline/compilation/transforms/`](../ostram/pipeline/compilation/transforms/). Importing
+`ostram/pipeline/compilation/transforms/`. Importing
 any module in it must not read configuration, open a workbook, create a writer,
 change the current working directory, launch a process, or run any pipeline stage.
 The package does not make `B1 compiler module` itself import-safe and does not add a new
@@ -203,12 +205,12 @@ public CLI.
 
 | Module | Responsibility | Preserved dependency boundary |
 |---|---|---|
-| [`planning.py`](../ostram/pipeline/compilation/transforms/planning.py) | Derive the inclusive year vector, setup mapping, and exact lazy path formulas from the loaded configuration. | No filesystem access. The configured `Timeslices` list is still sorted in place; paths remain unnormalized strings. |
-| [`tables.py`](../ostram/pipeline/compilation/transforms/tables.py) | Normalize year-like column labels, expand system-parameter rows, and construct padded structure/set tables. | Pure pandas/numpy inputs and returned tables; no workbook or CSV effects. |
-| [`effects.py`](../ostram/pipeline/compilation/transforms/effects.py) | Read YAML, CSV, workbook, and pickle inputs and write completed/structure workbooks. | Openers, readers, loaders, writer factories, and frame writers are injectable while default calls retain predecessor semantics. |
-| [`validation.py`](../ostram/pipeline/compilation/transforms/validation.py) | Apply the demand, capacity-factor, `YearSplit`, and `DaySplit` configuration checks. | Reporting and stopping are injectable; default text and bare `sys.exit()` behavior remain exact. |
-| [`delivery.py`](../ostram/pipeline/compilation/transforms/delivery.py) | Clean the delivery mappings and emit main/additional parameter and set CSVs in the frozen order. | Directory creation, frame construction, and CSV writing are injectable; no implicit cleanup is added. |
-| [`__init__.py`](../ostram/pipeline/compilation/transforms/__init__.py) | Declare the package without importing or executing compiler work. | Import safety only; no orchestration. |
+| [`planning.py`](../../ostram/pipeline/compilation/transforms/planning.py) | Derive the inclusive year vector, setup mapping, and exact lazy path formulas from the loaded configuration. | No filesystem access. The configured `Timeslices` list is still sorted in place; paths remain unnormalized strings. |
+| [`tables.py`](../../ostram/pipeline/compilation/transforms/tables.py) | Normalize year-like column labels, expand system-parameter rows, and construct padded structure/set tables. | Pure pandas/numpy inputs and returned tables; no workbook or CSV effects. |
+| [`effects.py`](../../ostram/pipeline/compilation/transforms/effects.py) | Read YAML, CSV, workbook, and pickle inputs and write completed/structure workbooks. | Openers, readers, loaders, writer factories, and frame writers are injectable while default calls retain predecessor semantics. |
+| [`validation.py`](../../ostram/pipeline/compilation/transforms/validation.py) | Apply the demand, capacity-factor, `YearSplit`, and `DaySplit` configuration checks. | Reporting and stopping are injectable; default text and bare `sys.exit()` behavior remain exact. |
+| [`delivery.py`](../../ostram/pipeline/compilation/transforms/delivery.py) | Clean the delivery mappings and emit main/additional parameter and set CSVs in the frozen order. | Directory creation, frame construction, and CSV writing are injectable; no implicit cleanup is added. |
+| [`__init__.py`](../../ostram/pipeline/compilation/transforms/__init__.py) | Declare the package without importing or executing compiler work. | Import safety only; no orchestration. |
 
 Each of these paths is operational production code and must be registered as an
 exact protected path. Protection is additive: introducing the package must not
@@ -304,7 +306,7 @@ external scratch helper `relax_activity_band.py` (2,807 bytes; SHA-256
 lineage evidence, not production source. It must not be copied into the repository,
 imported by the compiler, or executed as part of the normal transformation path.
 The tracked
-[`apply_base_year_pin.py`](../ostram/pipeline/scenarios/rules/apply_base_year_pin.py)
+[`apply_base_year_pin.py`](../../ostram/pipeline/scenarios/rules/apply_base_year_pin.py)
 is now the static production transformer. Its audited allowlist is mechanically
 projected from the frozen corrected evidence, and its embedded digests bind both
 that canonical source (`canonical_source_rules.csv` SHA-256
@@ -332,8 +334,8 @@ order. The following unaffected production scripts remain protected:
 
 | File | Frozen SHA-256 |
 |---|---|
-| [`cap_trn_to_residual.py`](../workspace/A3_process/cap_trn_to_residual.py) | `f9f876d1e58cc8dd1339aea703477fe7a85bef776ad227ab99d972d25f7c6a36` |
-| [`relax_interconnectors.py`](../ostram/pipeline/scenarios/rules/relax_interconnectors.py) | `e496d54157459e7da2eb460d0cc76264eeee26a386e6a8c811cad1285424fbb7` |
+| `cap_trn_to_residual.py` | `f9f876d1e58cc8dd1339aea703477fe7a85bef776ad227ab99d972d25f7c6a36` |
+| [`relax_interconnectors.py`](../../ostram/pipeline/scenarios/rules/relax_interconnectors.py) | `e496d54157459e7da2eb460d0cc76264eeee26a386e6a8c811cad1285424fbb7` |
 
 The following byte-identity requirements apply to that earlier
 behavior-preserving migration. The later PWR/MIN correction instead requires the
@@ -403,8 +405,7 @@ This historical record predates and does not validate the late-WS4 static
 PWR/MIN pin.
 
 The contract above was exercised at candidate commit
-`0cc2c68234df903beadf037082301e2211557e61` in the disposable clean clone
-`C:\Users\luisfernando\AppData\Local\Temp\OSTRAM_a1_b1_validate_0cc2c68_20260717`.
+`0cc2c68234df903beadf037082301e2211557e61` in a disposable clean clone under the local temporary folder.
 The accepted files were read only from
 `<workspace>\execution\Executables`.
 No generating command ran in either primary checkout.
