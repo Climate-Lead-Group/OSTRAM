@@ -8,7 +8,7 @@ baseline, controlled by a YAML configuration file.
 
 This script is the complement of cap_trn_to_residual.py. Where that
 script freezes interconnectors at ResidualCapacity, this one opens them
-up — by a multiplicative factor, an additive headroom, absolute
+up by a multiplicative factor, an additive headroom, absolute
 per-link overrides, or a cap of 9999 (mode "unconstrained").
 
 RULE
@@ -123,7 +123,7 @@ def load_config(yaml_path: Path) -> dict:
     """Load and validate the YAML configuration.
 
     Returns a dict with keys:
-        mode             : str — "multiplicative", "additive", or "unconstrained"
+        mode             : str, one of "multiplicative", "additive", or "unconstrained"
         headroom_factor  : float (used by multiplicative)
         headroom_gw      : float (used by additive)
         overrides        : dict {tech: {year: value}}
@@ -946,7 +946,7 @@ def run_self_test() -> int:
         if not condition:
             print(f"  FAIL: {msg}")
             failed += 1
-        # Don't increment passed here — we count per-test, not per-assertion
+        # Don't increment passed here; passes are counted once per test
 
     # ======================================================================
     # TEST 1: Multiplicative mode (factor = 2.0)

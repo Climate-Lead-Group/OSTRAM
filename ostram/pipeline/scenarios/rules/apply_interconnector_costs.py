@@ -26,7 +26,7 @@ untouched; TransmissionLossFactor / CapacityFactor are out of scope.
 Scenario support: when run inside A3, the template read is the per-scenario
 MATERIALIZED template ($OSTRAM_TEMPLATE_PATH), which already has BAU + any
 scenario overrides merged (identity key (Tech, Parameter)). So per-scenario
-interconnector costs are a one-row add to Interconnector_Params — no change here.
+interconnector costs are a one-row add to Interconnector_Params: no change here.
 
 Source of the Interconnector_Params values (priority order):
   1. --template <path>

@@ -2,7 +2,7 @@
 set_vre_targets.py
 ==================
 
-Independent rule — sets minimum renewable generation (or capacity)
+Independent rule: sets minimum renewable generation (or capacity)
 floors per country-region and technology, expressed as absolute values
 derived from a prior BAU solve's total production.
 
@@ -106,7 +106,7 @@ UNTIE_MULTIPLIER = 1.01
 BACKUP_TAG = "_PRE_VRE_TARGETS_"
 
 # ---------------------------------------------------------------------------
-# BAU production source — column names and accepted file layouts
+# BAU production source: column names and accepted file layouts
 # ---------------------------------------------------------------------------
 # Two layouts are supported transparently:
 #   1. otoole's separate-parameter file 'ProductionByTechnology.csv'
@@ -165,7 +165,7 @@ def load_config(yaml_path: Path) -> dict:
     # pin_generation_to_target: when true, cap_envelope targets also get a
     # TotalTechnologyAnnualActivityUpperLimit = max(target_gen, CalBAU_gen),
     # which pins generation AT the NDC share (not above it) while leaving the
-    # capacity envelope generous — so the solver keeps its room (no degenerate
+    # capacity envelope generous, so the solver keeps its room (no degenerate
     # narrow capacity band). The max() guard prevents force-curtailing planned
     # capacity in regions whose baseline already exceeds the early floor.
     pin_generation_to_target = bool(cfg.get("pin_generation_to_target", False))
@@ -334,7 +334,7 @@ def load_bau_tech_yield(bau_results_path: Path, techs: set,
     cap_traj  : {tech: {year: TotalCapacityAnnual GW}}  (CalBAU's installed path)
 
     The cap trajectory is used by the cap_envelope feature so the envelope is
-    never sized below what CalBAU actually built — which reflects planned
+    never sized below what CalBAU actually built, which reflects planned
     capacity (e.g. Bangladesh's planned solar) and the calibrated baseline.
     Yield falls back to default_cf * C2AU for techs CalBAU never built.
     Reads the same file as load_bau_total_production (otoole or combined B2).
@@ -354,7 +354,7 @@ def load_bau_tech_yield(bau_results_path: Path, techs: set,
     df[PROD_COL_TECH] = df[PROD_COL_TECH].astype(str)
     df[PROD_COL_YEAR] = df[PROD_COL_YEAR].astype(float).astype(int)
 
-    # Production and capacity sit on different rows in the wide format —
+    # Production and capacity sit on different rows in the wide format;
     # aggregate each to one value per (tech, year), then merge.
     p = (df.dropna(subset=[prod_col])
            .groupby([PROD_COL_TECH, PROD_COL_YEAR], as_index=False)[prod_col].max())
@@ -390,7 +390,7 @@ def interpolate_schedule(schedule: dict, years: list,
                          pre_first: float = 0.0) -> dict:
     """Linearly interpolate a sparse {year: value} schedule.
 
-    Years before first key: pre_first (default 0 — no floor before
+    Years before first key: pre_first (default 0, no floor before
     the first target milestone).
     Years after last key: hold last value flat.
     """
@@ -1199,7 +1199,7 @@ def run_self_test() -> int:
 
         row = 2
         for tech in techs_gen:
-            # ResidualCapacity (dummy — not used by this script but present
+            # ResidualCapacity (dummy: not used by this script but present
             # for structural consistency)
             ws.cell(row=row, column=1, value=tech)
             ws.cell(row=row, column=2, value="ResidualCapacity")
@@ -1509,7 +1509,7 @@ def run_self_test() -> int:
         # Target 50% of 100 PJ = 50 PJ → GW = 50 / (31.536 × 1.0) ≈ 1.585
         # But that's less than 3.0, so untie won't fire.
         # Let's use a bigger target to trigger untie: 80% of 100 = 80 PJ
-        # GW = 80 / 31.536 ≈ 2.537 — still less than 3.0.
+        # GW = 80 / 31.536 ≈ 2.537: still less than 3.0.
         # Use an even bigger target or lower MaxCapInv.
         # Simpler: set MaxCapInv = 0.5, target = 50%
         wb_path2 = _build_workbook(tmpdir, [2030],

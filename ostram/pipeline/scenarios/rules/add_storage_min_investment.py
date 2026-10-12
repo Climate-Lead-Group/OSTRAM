@@ -2,7 +2,7 @@
 add_storage_min_investment.py
 ==============================
 
-Independent rule — writes small TotalAnnualMinCapacityInvestment values
+Independent rule: writes small TotalAnnualMinCapacityInvestment values
 for storage technologies into A-O_Parametrization.xlsx, nudging the
 optimizer to deploy storage gradually rather than deferring to end-of-
 horizon.
@@ -32,7 +32,7 @@ Reads storage_floors.yaml (next to this script, or --yaml override):
 Years between anchors are linearly interpolated. Years before the first
 anchor get 0 (no floor). Years after the last anchor hold the last value.
 Values are per-tech (e.g. 0.1 GW for PWRSDSINDNO, 0.1 GW for PWRSDSINDSO,
-etc.) — NOT summed across the family.
+etc.): NOT summed across the family.
 
 Only cells that are currently empty (None/NaN) or zero are written.
 Existing non-zero MinCapInv values (real planning data) are preserved.

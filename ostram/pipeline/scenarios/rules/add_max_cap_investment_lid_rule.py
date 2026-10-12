@@ -2,7 +2,7 @@
 add_max_cap_investment_lid_rule.py
 ===================================
 
-Independent rule — applies a per-year LID and the V1 UNTIE RULE to
+Independent rule: applies a per-year LID and the V1 UNTIE RULE to
 TotalAnnualMaxCapacityInvestment for GENERATION technologies that have
 either ResidualCapacity > 0 or TotalAnnualMinCapacityInvestment > 0 in any
 year.
@@ -11,7 +11,7 @@ This script is INDEPENDENT of add_max_capacity_investment_rule.py. It can run:
   - On a fresh A-O_Parametrization.xlsx (operates on empty MaxInv cells).
   - On the output of the first rule script (treats blank, 0 and 9999 cells
     as placeholders and replaces them with the lid).
-  - Repeatedly (idempotent — second run produces no changes).
+  - Repeatedly (idempotent: second run produces no changes).
 
 PROBLEM
 -------
@@ -46,7 +46,7 @@ Mode "uniform" (default):
 
     The base_pct schedule is a per-decade plateau encoding "tight while we
     have planning data, looser as the horizon gets speculative." Demand
-    growth is layered on linearly via mult — fast-growing crs get
+    growth is layered on linearly via mult: fast-growing crs get
     proportionally more headroom.
 
 Mode "proportional":
@@ -96,7 +96,7 @@ infeasibility.
 SCOPE
 -----
 - ALLOWED set: techs with residual > 0 OR min-cap-investment > 0 in any year.
-- TRN* transmission interconnects (length-13 codes) are SKIPPED entirely —
+- TRN* transmission interconnects (length-13 codes) are SKIPPED entirely;
   they span two country+region pairs and don't fit a single pool. Their
   manually-calibrated MaxInv values are left untouched.
 - Non-allowed techs are also untouched (handled by a separate rule).
@@ -197,7 +197,7 @@ TRN_TECH_LENGTH = 13    # transmission interconnects, e.g. TRNINDEAINDNE -- skip
 COUNTRY_REGION_SLICE = slice(6, 11)  # for length-11 PWR* codes: chars 6..10
 
 # ---------------------------------------------------------------------------
-# Tech-type filter — only change GENERATION technologies
+# Tech-type filter: only change GENERATION technologies
 # ---------------------------------------------------------------------------
 # The technology taxonomy, config/scenarios/technology_types.csv, is read
 # through resolve_paths().interconnector_taxonomy. It lists techs by category
@@ -218,13 +218,13 @@ RESTRICT_TO_GENERATION = True
 # pool definition and demand multiplier; they differ in *how* the lid is
 # distributed among techs. See top-of-file RULE block for full formulas.
 #
-#   "uniform"      — Per-decade pct schedule, applied uniformly across all
+#   "uniform"     : Per-decade pct schedule, applied uniformly across all
 #                    techs in the same cr. Same lid value for every allowed
 #                    gen tech in cr per year. Use this for "let the optimizer
 #                    pick winners" scenarios and for late-horizon stress tests
 #                    where the planning anchor is intentionally relaxed.
 #
-#   "proportional" — Each tech gets a lid sized to its 2024 fleet share,
+#   "proportional": Each tech gets a lid sized to its 2024 fleet share,
 #                    times the year-over-year growth in scaled_pool, times
 #                    a slack factor. Use this when the BAU narrative is
 #                    "fleet evolves proportionally to current composition."
@@ -278,7 +278,7 @@ LID_SECURITY_FACTOR = 1.1
 #
 # This lets the optimizer gradually diverge from the BAU fleet-share trajectory
 # without a spike (near-term ≈ BAU) and without single-tech dominance (the
-# proportional structure is preserved — all families get the same multiplier).
+# proportional structure is preserved: all families get the same multiplier).
 LID_RELAXATION_SCHEDULE: dict = {}
 
 # --- Family-specific relaxation ceilings (used by both modes) ----------------
@@ -350,7 +350,7 @@ LID_FLOOR_GW: float = 0.0
 # fraction of scaled_pool.  When the sum of per-tech lids in a cr is below
 # this threshold, ALL lids in that cr are scaled up by the same factor so the
 # total meets the floor.  The proportional tech-share structure and family
-# ceilings are preserved — the floor only sets a system-level minimum.
+# ceilings are preserved: the floor only sets a system-level minimum.
 #
 # Years between anchors are linearly interpolated (same logic as
 # relaxation_schedule).  Default {} = no adequacy floor (BAU behaviour).
@@ -358,7 +358,7 @@ LID_FLOOR_GW: float = 0.0
 # Typical usage: zero through the planning horizon, ramping up in later years
 # to prevent backstop activation when pool_delta shrinks due to retirements:
 #   adequacy_floor_schedule:
-#     2040: 0.0       # no floor through 2040 — preserve BAU calibration
+#     2040: 0.0       # no floor through 2040: preserve BAU calibration
 #     2045: 0.08      # 8% by 2045
 #     2050: 0.20      # 20% by 2050
 LID_ADEQUACY_FLOOR_SCHEDULE: dict = {}
@@ -403,7 +403,7 @@ def _rmtree_robust(path: Path, attempts: int = 5) -> None:
         except PermissionError:
             gc.collect()
             time.sleep(0.1 * (i + 1))
-    # Final attempt — let it raise if the lock still hasn't released.
+    # Final attempt: let it raise if the lock still hasn't released.
     shutil.rmtree(path)
 
 
@@ -664,7 +664,7 @@ def lid_pct_for_cr_year(cr: str, year: int,
     """Return the *uniform-mode* lid percentage for (country_region, year).
 
     This function is used by uniform mode to compute pct(cr, y). Proportional
-    mode does not call this — it computes lid directly via tech_share and
+    mode does not call this: it computes lid directly via tech_share and
     pool_delta (see proportional_lid_for_tech_year).
 
     Formula:
@@ -730,7 +730,7 @@ def build_demand_multiplier_map(demand_path: Path,
 
     Aggregates demand-type rows by country+region (chars 3..7 of the Fuel/Tech
     code, e.g. ELCBGDXX03 -> BGDXX). Returns an empty dict if the demand file
-    is missing or doesn't have the expected structure — callers should treat
+    is missing or doesn't have the expected structure: callers should treat
     an empty map as 'no ramp data, fall back to flat default'.
     """
     demand_path = Path(demand_path)
@@ -811,7 +811,7 @@ def identify_allowed_techs(df: pd.DataFrame, year_cols: list,
     AND (in `generation_techs` if RESTRICT_TO_GENERATION and the set is given).
 
     `generation_techs` is the set returned by load_generation_techs(). When
-    None, no category filter is applied — useful for tests of the unfiltered
+    None, no category filter is applied: useful for tests of the unfiltered
     behavior. Production callers should always pass it.
     """
     res = df[df["Parameter"] == RES_PARAM]
@@ -829,7 +829,7 @@ def country_region_for(tech: str) -> str | None:
 
     Returns e.g. 'BGDXX' for PWRHYDBGDXX, 'INDNE' for PWRHYDINDNE.
     Returns None for tech codes that don't fit the PWR* length-11 convention
-    (e.g. TRN* transmission interconnects of length 13) — those should be
+    (e.g. TRN* transmission interconnects of length 13): those should be
     excluded from pool computation and pool-based lid application.
     """
     if not isinstance(tech, str) or len(tech) != PWR_TECH_LENGTH:
@@ -873,7 +873,7 @@ def build_tech_share_map(df: pd.DataFrame, allowed: set,
     pool growth among allowed gen techs in a cr.
 
     Shares for techs in the same cr sum to 1.0 (modulo float). Techs with
-    zero residual at ref_year get share=0 — they receive no proportional
+    zero residual at ref_year get share=0: they receive no proportional
     allocation, only whatever the untie rule provides via MinCapInv.
     """
     res = df[(df["Parameter"] == RES_PARAM) & (df["Tech"].isin(allowed))].copy()
@@ -970,7 +970,7 @@ def compute_adequacy_scale_factors(
 
     For each (cr, year) where the adequacy floor schedule is active:
       1. Compute the per-tech lid (same formula as the main loop, including
-         relaxation, family ceiling, and per-tech floor — but NOT the untie
+         relaxation, family ceiling, and per-tech floor, and without the untie
          rule, which is a downstream correction).
       2. Sum across all gen techs in that cr to get total_lid.
       3. Compare total_lid against adequacy_floor_pct(y) × scaled_pool(cr, y).
@@ -1108,7 +1108,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
     proj_mode_col = headers.get(PROJ_MODE_COL)
 
     # Snapshot the uniform-mode lid pct per (cr, year). Always logged for
-    # traceability — under proportional mode this is informational only.
+    # traceability: under proportional mode this is informational only.
     pct_used = {
         f"{cr}_{y}": lid_pct_for_cr_year(cr, y, demand_mult_map)
         for (cr, y) in pool_map.keys()
@@ -1165,7 +1165,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
 
         cr = country_region_for(tech)
         if cr is None:
-            # TRN* and other non-PWR* techs: skip — leave manual cal alone.
+            # TRN* and other non-PWR* techs: skip and leave manual cal alone.
             if tech not in log["skipped_non_pwr_techs"]:
                 log["skipped_non_pwr_techs"].append(tech)
             continue
@@ -1232,9 +1232,9 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                     family_capped = True
             # A "locked" family has ceiling <= 1.0 (i.e. stays at or below BAU
             # proportions).  Locked families do NOT receive the lid_floor_gw
-            # rescue — otherwise families with near-zero BAU share (e.g. BIO,
+            # rescue: otherwise families with near-zero BAU share (e.g. BIO,
             # WAS) accumulate 0.5 GW/yr of spurious build from the floor alone.
-            # NOTE: do NOT gate on family_capped here — when relax_mult ==
+            # NOTE: do NOT gate on family_capped here: when relax_mult ==
             # family_ceiling (both 1.0, as in A_CalBAU), family_capped is False
             # but the family is still locked.  Matches the logic in
             # compute_adequacy_scale_factors().

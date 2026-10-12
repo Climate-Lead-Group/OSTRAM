@@ -29,7 +29,7 @@ life 20) into `Demand Techs` / `Fixed Horizon Parameters`. But:
   * There is no RE-vs-non-RE cost differentiation.
 
 This stage runs LAST (after stage 5 and the interconnector-cost stage), so its
-writes are authoritative and cannot be clobbered downstream — the same pattern
+writes are authoritative and cannot be clobbered downstream: the same pattern
 proven by apply_interconnector_costs.py. It leaves the flat post-A2 snapshot
 untouched and does the calibration transparently in the delivered workbook.
 
@@ -41,7 +41,7 @@ Values applied
         RNWNLI/RNWRPO/TRNNLI/TRNRPO = 0          (new-build / repower mechanisms)
     Per-node values come from the frozen, desk-checked
     `internal_tx_residuals.csv` (peak x 1.2).
-  * CapitalCost / FixedCost (uniform across nodes — intra-node tx is accounting;
+  * CapitalCost / FixedCost (uniform across nodes: intra-node tx is accounting;
     the study is about interties):
         non-RE (PWRTRN/TRNNLI/TRNRPO) = base_capital_cost / base_fixed_cost
         RE     (RNWTRN/RNWNLI/RNWRPO) = base x re_capex_multiplier

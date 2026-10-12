@@ -2,7 +2,7 @@
 set_retirement_schedule.py
 ==========================
 
-Independent rule — draws down ResidualCapacity for thermal generation
+Independent rule: draws down ResidualCapacity for thermal generation
 technologies over time, modelling planned retirements and end-of-life
 decommissioning.
 

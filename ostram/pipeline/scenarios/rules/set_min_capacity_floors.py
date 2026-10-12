@@ -2,12 +2,12 @@
 set_min_capacity_floors.py
 ==========================
 
-Independent rule — writes minimum capacity/generation floors and
+Independent rule: writes minimum capacity/generation floors and
 optional maximum ceilings from exogenous policy documents (CCDRs,
 national energy plans, IRPs) into the parametrization workbook.
 
 All target values come from a user-curated YAML file. Unlike
-set_vre_targets.py this script has NO dependency on prior model runs —
+set_vre_targets.py this script has NO dependency on prior model runs;
 it is purely a "policy injection" layer.
 
 RULE
