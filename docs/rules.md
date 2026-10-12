@@ -92,7 +92,7 @@ treats it as follows.
 | B1 | Exports a row only when its `Projection.Mode` is a text other than `EMPTY`, `Zero`, blank or `According to demand`. A 0 on an exported row stays 0. An omitted row receives -1 from the otoole conversion configuration. |
 | B2 storage delay | Sets both caps of the 20 storage-linked technologies to 0 in 2023 to 2027 and to -1 from 2028. |
 | B2 backstop opening | Turns 0 into 9999 for both caps of `PWRBCK*`. |
-| B2 gas and oil allowance | Replaces a build cap of 0 or 9999 of `PWRPET*`, `PWROIL*` and `PWRNGS*` with 0.5 GW per year, and a total capacity cap of 0 with 10 GW. It skips a technology with a positive minimum investment in any year and restores the values of the base-year pin. |
+| B2 gas and oil allowance | Replaces a build cap of 0 or 9999 of `PWRPET*`, `PWROIL*` and `PWRNGS*` with 0.5 GW per year, and a total capacity cap of 0 with 10 GW. For a technology with a positive minimum investment in any year, it keeps the build caps and still replaces a total capacity cap of 0. A replaced total capacity cap is raised to the higher of the minimum total capacity and the residual capacity plus the minimum investment of the same year, where that value is higher than 10 GW. It restores the values of the base-year pin. |
 
 Read the final datafile before relying on a value:
 `workspace/execution/Executables/<S>_0/Pre_processed_<S>_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt`.
@@ -175,9 +175,11 @@ for every technology family.
 ## Gas and oil allowance
 
 Gas and oil plants that would otherwise be blocked may still add up to
-0.5 GW per year in each country or region. This lets each one meet its
+0.5 GW per year in each country-region. This lets each one meet its
 reserve margin with real plants instead of the emergency backstop. The value
 is a modelling choice. You can change it to explore its effect.
+
+The same value also replaces a build cap of 9999 for these technologies.
 
 The value is in `inputs/execution/firm_capacity_fallbacks_by_cr.xlsx`, sheet
 `fallbacks`, column `TotalAnnualMaxCapacityInvestment`, one row per
