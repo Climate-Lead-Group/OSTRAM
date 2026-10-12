@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import ast
 import builtins
+import dataclasses
 import importlib
 import io
 import os
 import pickle
 import subprocess
 import sys
+import tempfile
 import unittest
 from collections.abc import Iterable
 from contextlib import redirect_stderr, redirect_stdout
@@ -664,7 +666,14 @@ class B1ConfigurationAndSourcePathCharacterizationTests(unittest.TestCase):
             plan.scenario_workbook("Print_Paramet"), factory=excel_file
         )
         effects.open_workbook(plan.extra_input("Xtra_Emi"), factory=excel_file)
-        effects.read_csv(plan.og_emissions_csv(), reader=read_csv)
+        # An empty preparation workspace keeps the expected seed path the
+        # same whether or not this clone holds a prepared workspace.
+        with tempfile.TemporaryDirectory() as empty_workspace:
+            paths = dataclasses.replace(
+                planning.resolve_paths(), workspace=Path(empty_workspace)
+            )
+            with mock.patch.object(planning, "resolve_paths", return_value=paths):
+                effects.read_csv(plan.og_emissions_csv(), reader=read_csv)
         effects.open_workbook(plan.extra_input("Xtra_Storage"), factory=excel_file)
 
         scenario_root = "A1ROOT_SCENARIO"
