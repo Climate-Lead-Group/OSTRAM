@@ -391,6 +391,7 @@ def derive_commissionings(
 
 
 def is_flat(profile: Dict[int, float]) -> bool:
+    """Return True when the values of ``profile`` differ by at most ``FLAT_TOLERANCE``."""
     vals = list(profile.values())
     return (max(vals) - min(vals)) <= FLAT_TOLERANCE
 
@@ -651,6 +652,7 @@ def load_overrides(path: Path) -> Dict[str, List[Commissioning]]:
 
 # ---------------------------------------------------------------- diff writer
 def write_diff_csv(diffs: List[DiffEntry], path: Path) -> None:
+    """Write the cell-level changes in ``diffs`` to a CSV file at ``path``."""
     with path.open("w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["sheet", "tech", "parameter", "year",
@@ -672,6 +674,9 @@ def write_diff_md(
     cutoff_year: int,
     path: Path,
 ) -> None:
+    """Write the Markdown diff log at ``path``: a summary, warnings, skipped
+    technologies and the commissioning schedule of each technology written.
+    """
     split_diffs = [d for d in diffs if d.source == "split"]
     authority_diffs = [d for d in diffs if d.source == "authority_v1"]
 
@@ -793,6 +798,9 @@ def run_fix(
 
 # ---------------------------------------------------------------- CLI
 def main(argv: Optional[List[str]] = None) -> int:
+    """Parse the command line, run the transmission fix and write the optional
+    diff logs; return 0.
+    """
     p = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     p.add_argument("--input", type=Path, required=True,
                    help="path to input A-O_Parametrization.xlsx")

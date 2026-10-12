@@ -319,6 +319,7 @@ def _default_authority() -> Path:
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse the ``--extensions`` and ``--authority`` arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
     script_dir = Path(__file__).resolve().parent
     parser.add_argument(
@@ -331,6 +332,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """Apply the maintained AO extension decisions to the extensions workbook and return 0."""
     args = parse_args()
     authority = args.authority if args.authority is not None else _default_authority()
     count = apply_decisions(args.extensions, authority)

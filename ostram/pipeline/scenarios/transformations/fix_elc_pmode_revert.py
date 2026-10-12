@@ -80,6 +80,11 @@ def elc_dispatch_techs(countries: object) -> frozenset[str]:
 
 
 def configured_country_region_map(config_path: Path | None = None) -> dict[str, str]:
+    """Return the country-region map built from the ``countries`` list of the
+    country configuration file.
+
+    Raises ValueError when the file does not hold a mapping.
+    """
     path = resolve_paths().country_config if config_path is None else Path(config_path)
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
@@ -88,6 +93,7 @@ def configured_country_region_map(config_path: Path | None = None) -> dict[str, 
 
 
 def configured_elc_dispatch_techs(config_path: Path | None = None) -> frozenset[str]:
+    """Return the ELC*01 dispatch node of each configured country-region."""
     return frozenset(
         f"ELC{region}01"
         for region in configured_country_region_map(config_path)

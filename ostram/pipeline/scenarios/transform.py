@@ -108,6 +108,7 @@ INPUT_FILES = (
 
 
 def parse_cli_args() -> argparse.Namespace:
+    """Parse the command-line arguments of ``python -m ostram transform``."""
     p = argparse.ArgumentParser(
         prog="python -m ostram transform",
         description=__doc__,
@@ -239,11 +240,13 @@ def _load_scenarios_module():
 # CLI helpers
 # ---------------------------------------------------------------------------
 def banner(msg: str) -> None:
+    """Print ``msg`` between two rules of 78 equals signs."""
     bar = "=" * 78
     print(f"\n{bar}\n{msg}\n{bar}")
 
 
 def step(label: str) -> None:
+    """Print a step label prefixed with ``>>>``."""
     print(f"\n>>> {label}")
 
 
@@ -422,6 +425,9 @@ def build_workdir(
 # Pipeline stages
 # ---------------------------------------------------------------------------
 def stage_1_scripts_1_to_5(s1: Path) -> None:
+    """Stage 1: run the six A-O alignment modules in ``s1``, from the
+    timeslice merge to the timeslice fabric propagation.
+    """
     banner("Stage 1: scripts 1-5 (AO/WV alignment pipeline)")
     run_subproc("ostram.pipeline.scenarios.transformations.merge_timeslices", cwd=s1, label="merge timeslices")
     run_subproc("ostram.pipeline.scenarios.transformations.extract_ao_extensions", cwd=s1, label="extract AO extensions")
@@ -440,6 +446,11 @@ def stage_1_scripts_1_to_5(s1: Path) -> None:
 
 
 def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
+    """Stage 1b: copy the stage 1 workbooks into ``s1b`` and run the reserve
+    margin, ``add_max_capacity_investment_rule --fill-zeros``, ELC
+    projection-mode and pre-solver validation steps on
+    ``A-O_Parametrization.xlsx``.
+    """
     banner("Stage 1b: A0 + add_max (fill-zeros) + ELC revert + B1b")
 
     # Move stage1 outputs into stage1b/
@@ -481,6 +492,12 @@ def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
 
 
 def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
+    """Stages 2 and 2.5: add CapacityToActivityUnit rows in ``s2``, then clear
+    the PWRPET values.
+
+    When ``add_ao_c2a`` writes no output, the original workbook is copied
+    to the patched name.
+    """
     banner("Stage 2 + 2.5: add_ao_c2a + fix_pwrpet_clear")
 
     # Move Stage 1b output into stage2/ as the input to add_ao_c2a
@@ -509,6 +526,13 @@ def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
 
 
 def stage_3_fix_2(s2: Path, s3: Path) -> Path:
+    """Stage 3: run ``fix_trn_residuals``, ``clear_stale_unbinding_caps`` and
+    ``cap_trn_to_residual`` in ``s3``.
+
+    Returns the path of the POST_TRN_CAP workbook. Raises RuntimeError when
+    neither the profile authorities nor ``OSTRAM_TEMPLATE_PATH`` are set,
+    and FileNotFoundError when the interconnector authority file is missing.
+    """
     banner("Stage 3: FIX_2 pipeline (fix_trn + clear_stale + cap_trn)")
 
     authority_path_raw = os.environ.get("OSTRAM_TEMPLATE_PATH")
@@ -869,6 +893,9 @@ def finalize_support_bau(output_dir: Path, scenario: str) -> None:
 
 
 def deliver_outputs(s5: Path, output_dir: Path) -> None:
+    """Copy the four A-O workbooks from ``s5`` into ``output_dir``, creating
+    the folder if needed.
+    """
     banner(f"Delivering 4 final files to {output_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
     for f in INPUT_FILES:
@@ -959,6 +986,7 @@ def _orchestration_dependencies(
     stage_4_5 = stage_4_5_apply_inherited_restrictions
     if restriction_sources:
         def stage_4_5(s5, soasia, inherit_from):
+            """Run stage 4.5 with the restriction sources given on the command line."""
             return stage_4_5_apply_inherited_restrictions(
                 s5,
                 soasia,
@@ -969,6 +997,7 @@ def _orchestration_dependencies(
     stage_6 = stage_6_persist_restrictions
     if run_state_out is not None:
         def stage_6(s5, scenario_run_state, scenario, rules_scripts):
+            """Run stage 6, then copy the scenario run state to the ``--run-state-out`` path."""
             result = stage_6_persist_restrictions(
                 s5, scenario_run_state, scenario, rules_scripts
             )
@@ -1009,6 +1038,7 @@ def _orchestration_dependencies(
 
 
 def main() -> int:
+    """Parse the command line and run the A3 orchestration; return its exit code."""
     if os.environ.get(PROFILE_AUTHORITIES_ENV):
         _configure_profile_paths()
     cli_args = parse_cli_args()

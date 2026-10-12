@@ -137,6 +137,13 @@ def reset_stale_caps(
     dry_run: bool,
     output_path: Path | None = None,
 ) -> Path | None:
+    """Set the 2024-2050 TotalAnnualMaxCapacityInvestment cells of each
+    allowlisted technology to 9999 when its 2023 value is 9999 and its
+    later years hold exactly one other distinct value.
+
+    Technologies that do not match are skipped. Returns the path of the
+    saved workbook, or None for a dry run.
+    """
     if not input_path.is_file():
         sys.exit(f"ERROR: input file not found: {input_path}")
 
@@ -267,6 +274,7 @@ def reset_stale_caps(
 
 
 def main() -> None:
+    """Parse the command line and run ``reset_stale_caps``."""
     p = argparse.ArgumentParser(description=__doc__.split("\n")[2])
     p.add_argument(
         "--input", type=Path, default=DEFAULT_INPUT,

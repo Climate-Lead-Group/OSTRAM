@@ -126,6 +126,15 @@ def apply_trn_caps(
     dry_run: bool,
     output_path: Path | None = None,
 ) -> Path | None:
+    """Set TotalAnnualMaxCapacity equal to ResidualCapacity and
+    TotalAnnualMaxCapacityInvestment to 9999 for the allowlisted TRN
+    technologies in every year from 2023 to 2050.
+
+    A technology with a missing parameter row or a blank ResidualCapacity
+    year is skipped. Returns the path of the saved workbook, or None for a
+    dry run. Exits when the input file, the sheet, a required header or a
+    year column is missing.
+    """
     if not input_path.is_file():
         sys.exit(f"ERROR: input file not found: {input_path}")
 
@@ -286,6 +295,7 @@ def apply_trn_caps(
 
 
 def main() -> None:
+    """Parse the command line and run ``apply_trn_caps``."""
     p = argparse.ArgumentParser(description=__doc__.split("\n")[2])
     p.add_argument(
         "--input", type=Path, default=DEFAULT_INPUT,

@@ -142,6 +142,12 @@ def copy_row_style(ws, src_row: int, dst_row: int, ncols: int) -> None:
 
 # ---------- main ----------
 def main() -> int:
+    """Add a CapacityToActivityUnit row for each GENERATION, STORAGE_SHORT and
+    STORAGE_LONG technology that lacks one and write a new workbook.
+
+    Returns 0 on success, also when nothing is added or for a dry run, and
+    1 on an input error.
+    """
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--src", default=DEFAULT_SRC,

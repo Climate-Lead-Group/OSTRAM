@@ -26,6 +26,9 @@ SHEET_NAME = "System Parameters"
 
 
 def insert(input_path: Path) -> None:
+    """Replace the System Parameters sheet of ``input_path`` with one
+    ReserveMargin row for every year and save the workbook in place.
+    """
     if not input_path.is_file():
         sys.exit(f"ERROR: input not found: {input_path}")
     wb = openpyxl.load_workbook(input_path)

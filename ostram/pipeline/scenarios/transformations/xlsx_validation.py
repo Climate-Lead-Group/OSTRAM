@@ -35,10 +35,12 @@ ACT_LOWER_HAIRCUT = 0.99        # ActivityLowerLimit = max_activity * 99%
 
 
 def norm_str(v):
+    """Return ``v`` as a stripped string, or an empty string for None."""
     return str(v).strip() if v is not None else ""
 
 
 def is_empty_number(v):
+    """Return True when ``v`` is None, an empty string or a float NaN."""
     if v is None or v == "":
         return True
     if isinstance(v, float) and math.isnan(v):

@@ -416,6 +416,10 @@ def print_summary(log: dict) -> None:
 
 
 def main() -> int:
+    """Parse the command line, apply the rule to the A-O workbooks in
+    ``--input-dir`` and print a summary; return 0 on success and 1 on an
+    error.
+    """
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )

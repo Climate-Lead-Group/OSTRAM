@@ -255,6 +255,11 @@ dp_cfg = cfg_raw[cfg_raw["key"].astype(str).str.startswith("daypart_")].copy()
 dp_cfg["bracket"] = dp_cfg["key"].str.replace("daypart_D", "", regex=False).astype(int)
 
 def parse_hours(label):
+    """Return the number of hours in a daypart label that holds a
+    ``(start-end)`` hour range.
+
+    Raises RuntimeError when the label holds no hour range.
+    """
     m = re.search(r"\((\d{1,2})-(\d{1,2})\)", str(label))
     if not m:
         raise RuntimeError(f"Cannot parse hours from daypart label: {label!r}")
@@ -659,6 +664,7 @@ print("=" * 72)
 
 _passed, _failed = 0, 0
 def check(name, cond, detail=""):
+    """Count and print one built-in test result as PASS or FAIL."""
     global _passed, _failed
     if cond:
         _passed += 1
