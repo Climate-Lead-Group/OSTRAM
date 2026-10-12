@@ -16,7 +16,7 @@ settings files live in `config/scenarios/<root>/`.
 | `set_retirement_schedule.py` | `retirement_schedule.yaml` | Draws down `ResidualCapacity` of thermal generation over time, by age-based lifetimes per fuel and by explicit schedules. The listed exempt patterns are untouched. |
 | `add_max_cap_investment_lid_rule.py` | `lid_rule.yaml` | Writes the build cap of every generation technology that has residual capacity or a minimum investment in at least one year, from residual capacity, demand growth and the five steps below. |
 | `set_min_capacity_floors.py` | `bau_calibration.yaml` | Writes minimum capacity or activity floors and maximum ceilings listed in the file. On `main` the A file lists none. The C file lists one ceiling, the annual hydro investment of NPLXX. |
-| `set_vre_targets.py` | `set_vre_targets.yaml` | C only. Converts fixed renewable generation shares per country-region into activity floors sized from the solved A result, and writes a bounded capacity envelope for solar in place of its build cap. |
+| `set_vre_targets.py` | `set_vre_targets.yaml` | C only. Converts fixed renewable generation shares per country-region into activity floors sized from the solved A result, and writes a bounded capacity envelope for solar and onshore wind in place of their build caps. |
 | `relax_interconnectors.py` | `relax_interconnectors.yaml` | Opens the build cap of interconnectors above their residual capacity, by a factor, by a fixed headroom or by per-corridor schedules. It sets `TotalAnnualMaxCapacity` of an overridden corridor with new investment to 9999. |
 | `add_storage_min_investment.py` | `storage_floors.yaml` | Writes small minimum investments for the storage families per year. |
 | `apply_interconnector_costs.py` | the `Interconnector_Params` sheet of the scenario workbook | Overwrites `CapitalCost`, `FixedCost` and `OperationalLife` of the interconnectors with the sheet's values. |
@@ -53,8 +53,10 @@ The order is load-bearing in these places.
 - The build-cap rule skips interconnectors. The relaxation rule sets their
   caps afterwards from their residual capacity, and the direction overlay
   runs after the relaxation rule.
-- In C the VRE targets run after the build-cap rule, because they write the
-  solar capacity envelope over the build cap that the rule wrote.
+- In C the VRE targets run after the build-cap rule. They overwrite the solar
+  and onshore wind build caps that the rule wrote with the capacity envelope,
+  for each target marked `cap_envelope`. The reason for that position is not
+  recorded.
 - The build-cap rule reads `TotalAnnualMinCapacityInvestment` and keeps every
   cap above the minimum investment of the same year. In C the minimum
   capacity floors run before it. The reason for that position is not
