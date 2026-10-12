@@ -63,12 +63,12 @@ class A3Dependencies:
         [Path, Path, list[str]], object
     ]
     stage_5_rules_scripts: Callable[[Path, Path, list[str]], object]
-    stage_ws3_interconnector_costs: Callable[
+    stage_interconnector_costs: Callable[
         [Path, Path, Path | None], object
     ]
-    stage_ws3_internal_transmission: Callable[[Path], object]
-    stage_ws3_internal_tx_losses: Callable[[Path], object]
-    stage_ws4_pwr_min_pin: Callable[[Path, str], object]
+    stage_internal_transmission: Callable[[Path], object]
+    stage_internal_tx_losses: Callable[[Path], object]
+    stage_base_year_pin: Callable[[Path, str], object]
     stage_6_sync_og_to_ts20: Callable[[Path, Path], object]
     stage_6_persist_restrictions: Callable[
         [Path, Path, str, list[str]], object
@@ -233,15 +233,15 @@ def execute_plan(
         stage5,
         rules_scripts,
     )
-    dependencies.stage_ws3_interconnector_costs(
+    dependencies.stage_interconnector_costs(
         stage5,
         plan.soasia,
         materialized_template,
     )
-    dependencies.stage_ws3_internal_transmission(stage5)
-    dependencies.stage_ws3_internal_tx_losses(stage5)
+    dependencies.stage_internal_transmission(stage5)
+    dependencies.stage_internal_tx_losses(stage5)
     if plan.scenario in PWR_MIN_PIN_ROOT_SCENARIOS:
-        dependencies.stage_ws4_pwr_min_pin(stage5, plan.scenario)
+        dependencies.stage_base_year_pin(stage5, plan.scenario)
     dependencies.stage_6_sync_og_to_ts20(workdir, stage1)
     scenario_run_state = (
         workdir / f"_scenario_run_state_{plan.scenario}.xlsx"

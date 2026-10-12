@@ -668,7 +668,7 @@ def stage_5_rules_scripts(
         )
 
 
-def stage_ws3_interconnector_costs(
+def stage_interconnector_costs(
     s5: Path,
     soasia: Path,
     materialized_template: Path | None,
@@ -700,7 +700,7 @@ def stage_ws3_interconnector_costs(
     )
 
 
-def stage_ws3_internal_transmission(s5: Path) -> None:
+def stage_internal_transmission(s5: Path) -> None:
     """WS-3 D5: calibrate the six INTERNAL (intra-node) transmission families.
 
     A2_AddTx injects RNWTRN/RNWNLI/RNWRPO (RE) and PWRTRN/TRNNLI/TRNRPO (non-RE)
@@ -729,7 +729,7 @@ def stage_ws3_internal_transmission(s5: Path) -> None:
     ], label="apply internal transmission")
 
 
-def stage_ws3_internal_tx_losses(s5: Path) -> None:
+def stage_internal_tx_losses(s5: Path) -> None:
     """WS-4: give the six internal transmission families a non-zero loss.
 
     A2 injects internal-tx output activity = 1.0 (0% loss). This stage sets
@@ -750,7 +750,7 @@ def stage_ws3_internal_tx_losses(s5: Path) -> None:
     ], label="apply internal transmission losses")
 
 
-def stage_ws4_pwr_min_pin(s5: Path, scenario: str) -> None:
+def stage_base_year_pin(s5: Path, scenario: str) -> None:
     """Restore only the audited 2023-2026 PWR/MIN keys on canonical roots.
 
     This late A3 stage consumes a version-controlled static allowlist.  It
@@ -987,10 +987,10 @@ def _orchestration_dependencies(
         stage_4_consolidate=stage_4_consolidate,
         stage_4_5_apply_inherited_restrictions=stage_4_5,
         stage_5_rules_scripts=stage_5_rules_scripts,
-        stage_ws3_interconnector_costs=stage_ws3_interconnector_costs,
-        stage_ws3_internal_transmission=stage_ws3_internal_transmission,
-        stage_ws3_internal_tx_losses=stage_ws3_internal_tx_losses,
-        stage_ws4_pwr_min_pin=stage_ws4_pwr_min_pin,
+        stage_interconnector_costs=stage_interconnector_costs,
+        stage_internal_transmission=stage_internal_transmission,
+        stage_internal_tx_losses=stage_internal_tx_losses,
+        stage_base_year_pin=stage_base_year_pin,
         stage_6_sync_og_to_ts20=stage_6_sync_og_to_ts20,
         stage_6_persist_restrictions=stage_6,
         deliver_outputs=deliver_outputs,

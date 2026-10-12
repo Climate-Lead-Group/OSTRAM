@@ -319,7 +319,7 @@ TRNNLI:
 # ============================================================
 # WS-3 D5 — INTERNAL (intra-node) transmission calibration
 # ============================================================
-# Applied by the late A3 stage `stage_ws3_internal_transmission`
+# Applied by the late A3 stage `stage_internal_transmission`
 # (rules_scripts/apply_internal_transmission.py), which is authoritative for the
 # delivered model: it overrides the flat A2 placeholders and the Stage-1
 # OperationalLife (50/20) with the values below, on the six internal families
