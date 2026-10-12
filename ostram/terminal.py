@@ -29,12 +29,16 @@ SENSITIVE_ARGUMENT = re.compile(
 
 @dataclass(frozen=True)
 class StageDefinition:
+    """One pipeline stage: its position, code and status description."""
+
     number: int
     code: str
     description: str
 
     @property
     def label(self) -> str:
+        """Return the status label: position out of five, code and description."""
+
         return f"[{self.number}/5 · {self.code}] {self.description}"
 
 
@@ -143,18 +147,36 @@ class _CapturedStream(io.TextIOBase):
 
     @property
     def encoding(self) -> str:
+        """Return the encoding of the wrapped stream.
+
+        The locale's preferred encoding, then UTF-8, applies when the stream
+        declares none.
+        """
+
         return _stream_encoding(self.stream)
 
     def isatty(self) -> bool:
+        """Return whether the wrapped stream is a terminal."""
+
         return bool(getattr(self.stream, "isatty", lambda: False)())
 
     def fileno(self) -> int:
+        """Return the file descriptor of the wrapped stream."""
+
         return self.stream.fileno()
 
     def writable(self) -> bool:
+        """Return ``True``; the stream accepts text."""
+
         return True
 
     def write(self, text: str) -> int:
+        """Write ``text`` to the wrapped stream and log each complete line.
+
+        A carriage return also ends a line. A partial last line stays buffered until
+        the next line end or :meth:`flush`. Returns the length of ``text``.
+        """
+
         value = str(text)
         self._buffer += value.replace("\r", "\n")
         while "\n" in self._buffer:
@@ -165,6 +187,8 @@ class _CapturedStream(io.TextIOBase):
         return len(value)
 
     def flush(self) -> None:
+        """Log any buffered partial line and flush the wrapped stream."""
+
         if self._buffer:
             self.reporter.record_output(self.name, self._buffer)
             self._buffer = ""
@@ -246,12 +270,20 @@ class RunReporter:
             self._log.flush()
 
     def record_output(self, stream_name: str, line: str) -> None:
+        """Log one line of parent-process output and show it as the recent status."""
+
         clean = _strip_terminal_controls(line)
         self._write_log(f"OUTPUT {stream_name}", clean)
         self.recent_status(clean)
 
     @contextmanager
     def capture_output(self) -> Iterator[None]:
+        """Tee ``sys.stdout`` and ``sys.stderr`` into the run log inside the context.
+
+        The original streams are restored on exit. When :meth:`finish` has run, the
+        log closes as the outermost capture ends.
+        """
+
         previous_stdout = sys.stdout
         previous_stderr = sys.stderr
         captured_stdout = _CapturedStream(self, "stdout", previous_stdout)
@@ -297,6 +329,13 @@ class RunReporter:
             self._render()
 
     def recent_status(self, message: str) -> None:
+        """Set the recent-status text from ``message`` and redraw the status line.
+
+        Whitespace is collapsed and the text is cut to 140 characters. A selected
+        scenario named in the text becomes the current scenario. A blank message is
+        ignored.
+        """
+
         clean = " ".join(str(message).split())
         if not clean:
             return
@@ -309,6 +348,11 @@ class RunReporter:
         self._render()
 
     def stage_start(self, code: str, *, scenario: str | None = None) -> None:
+        """Mark stage ``code`` as running, log it and show its status.
+
+        ``scenario``, when given, becomes the current scenario.
+        """
+
         stage = next(item for item in STAGES if item.code == code)
         with self._lock:
             self._current = stage
@@ -320,6 +364,11 @@ class RunReporter:
         self._emit_status(f"{stage.label} | STARTED")
 
     def stage_complete(self, code: str, *, detail: str | None = None) -> None:
+        """Mark stage ``code`` as completed, log it and show its status.
+
+        The log entry and status carry the elapsed time and ``detail``, if given.
+        """
+
         stage = next(item for item in STAGES if item.code == code)
         elapsed = time.monotonic() - self._stage_started
         with self._lock:
@@ -335,6 +384,8 @@ class RunReporter:
         )
 
     def stage_skip(self, code: str, reason: str) -> None:
+        """Mark stage ``code`` as skipped for ``reason``, log it and show its status."""
+
         stage = next(item for item in STAGES if item.code == code)
         with self._lock:
             self._current = stage
@@ -346,6 +397,11 @@ class RunReporter:
         self._emit_status(f"{stage.label} | SKIPPED | {reason}")
 
     def stage_fail(self, detail: str) -> None:
+        """Mark the current stage as failed with ``detail``, log it and show its status.
+
+        When no stage has started, only the recent-status text changes.
+        """
+
         with self._lock:
             stage = self._current
             if stage is not None:
@@ -356,6 +412,8 @@ class RunReporter:
             self._emit_status(f"{stage.label} | FAILED | {detail}")
 
     def note(self, message: str) -> None:
+        """Log ``message`` as a status entry and show it as the recent status."""
+
         self._write_log("STATUS", message)
         self.recent_status(message)
 
@@ -416,6 +474,17 @@ class RunReporter:
         cwd: Path | None,
         env: dict[str, str],
     ) -> None:
+        """Run ``command`` as a child process and log its output line by line.
+
+        Each output line also becomes the recent status, and in verbose mode it is
+        echoed to the console. The child receives ``PYTHONIOENCODING=utf-8`` and,
+        unless ``env`` sets it, ``NO_COLOR=1``. On ``KeyboardInterrupt`` the child is
+        stopped before the interrupt propagates.
+
+        Raises:
+            subprocess.CalledProcessError: If the child exits with a non-zero code.
+        """
+
         tokens = [str(token) for token in command]
         child_env = dict(env)
         child_env["PYTHONIOENCODING"] = "utf-8"
@@ -473,6 +542,12 @@ class RunReporter:
             raise subprocess.CalledProcessError(returncode, tokens)
 
     def finish(self, *, outcome: str, exit_code: int, final_message: str) -> None:
+        """Log the end of the run, print ``final_message`` and the log path.
+
+        The log closes unless an output capture is still open. Later calls do
+        nothing.
+        """
+
         if self._finished:
             return
         self._stop.set()
@@ -500,6 +575,8 @@ _ACTIVE_REPORTER: ContextVar[RunReporter | None] = ContextVar(
 
 @contextmanager
 def activate_reporter(reporter: RunReporter) -> Iterator[None]:
+    """Make ``reporter`` the active reporter inside the context."""
+
     token = _ACTIVE_REPORTER.set(reporter)
     try:
         yield
@@ -508,4 +585,6 @@ def activate_reporter(reporter: RunReporter) -> Iterator[None]:
 
 
 def active_reporter() -> RunReporter | None:
+    """Return the active reporter, or ``None`` when none is active."""
+
     return _ACTIVE_REPORTER.get()

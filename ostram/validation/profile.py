@@ -303,6 +303,20 @@ def validate_profile(
     *,
     paths: ProjectPaths,
 ) -> dict[str, Any]:
+    """Validate one profile and return its report.
+
+    The check requires every authority to exist, every effective value in the
+    manifest metadata to be a finite number and the seed domain to meet the
+    profile's domain contract when it declares one. The report holds the
+    profile id, the manifest path and digest, the authority paths, the
+    policies, the effective values and the domain check result.
+
+    Raises:
+        ProfileManifestError: If an authority is invalid or missing.
+        ProfileDomainError: If the seed domain breaks the domain contract.
+        ValueError: If an effective value is not a finite number.
+    """
+
     authorities = manifest.source_paths(paths, require_exists=True)
     effective = dict(manifest.metadata.get("effective_values", {}))
     for name, value in effective.items():
