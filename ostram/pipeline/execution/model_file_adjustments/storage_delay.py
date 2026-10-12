@@ -383,7 +383,10 @@ def main() -> int:
     parser.add_argument(
         "--allowed-value",
         default="-1",
-        help="Cap value for storage-linked PWR techs after blocked years. Default -1 means unconstrained.",
+        help=(
+            "Cap value for storage-linked PWR techs after blocked years. "
+            "The default -1 skips both cap constraints."
+        ),
     )
     parser.add_argument(
         "--dry-run",

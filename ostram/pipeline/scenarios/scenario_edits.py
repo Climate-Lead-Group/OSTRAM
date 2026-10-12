@@ -813,7 +813,14 @@ def self_test():
 # --------------------------------------------------------------------------
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--scenario", help="scenario name (config folder under configs/)")
+    ap.add_argument(
+        "--scenario",
+        help=(
+            "derived scenario name; reads scenario_inputs.<scenario> from "
+            "config/profiles/full.yaml and writes "
+            "workspace/preparation/A1_Outputs/A1_Outputs_<scenario>"
+        ),
+    )
     ap.add_argument(
         "--source-scenario",
         default=None,
