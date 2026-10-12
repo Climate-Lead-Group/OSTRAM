@@ -22,12 +22,6 @@ optimal solutions. Windows Python 3.10.21, CBC 2.10.13, GLPK 5.0 and otoole 1.1.
 were used; `pip check` passes. Training uses CBC primal tolerance `1e-10` for A/B
 and `1e-12` for C, dual tolerance `1e-8`, and both random seeds 12345.
 
-| Scenario | CBC objective (MUSD) | Reconciled total (MUSD) | Backstop generation, 2023–2050 (PJ) | Maximum scaled serialized residual |
-|---|---:|---:|---:|---:|
-| A_Calibrated_BAU | 586,430.07677182 | 613,061.705301 | 0.000000 | 4.38e-08 |
-| B_Optimised_VRE | 555,111.93041688 | 581,743.559485 | 0.000000 | 4.38e-08 |
-| C_Target_VRE | 540,925.25041220 | 567,556.879320 | 0.000000 | 4.38e-08 |
-
 Maximum new/installed annual backstop capacity (GW):
 A_Calibrated_BAU: 0/0; B_Optimised_VRE: 0/0; C_Target_VRE: 0/0.
 Maximum saved bound violation:
@@ -101,18 +95,9 @@ the existing supported Conda paths, the single authorized solver process ran.
 
 ## Genuine solver boundary
 
-The OSTRAM parent process returned 0, but CBC did **not** find a feasible solution:
-
-```text
-PrimalInfeasible objective 559384.1792 - 137927 iterations
-Result - Linear relaxation infeasible
-```
-
-The solution header is:
-
-```text
-Infeasible - objective value 559384.17921019
-```
+The OSTRAM parent process returned 0. CBC found no feasible solution: it reported its
+linear relaxation infeasible after 137,927 iterations, and the solution header reads
+`Infeasible`.
 
 Otoole independently warned that the CBC solution contains decision variables out of
 bounds. The exact boundary is the active execution chain for
@@ -122,14 +107,6 @@ LP, and CBC finds its linear relaxation infeasible. The careful reserve-margin a
 records 10 warnings, including zero early investment caps for `PWRNGSBGDXX` and
 `PWRNGSINDEA`; those warnings are evidence, not proof of the infeasibility's modelling
 cause. No assumption was changed and no second solver run was made.
-
-The generated evidence is reproducibly identified by:
-
-| Ignored artifact | SHA-256 |
-|---|---|
-| `execution/Executables/B_Optimised_VRE_0/Pre_processed_B_Optimised_VRE_0_StorageDelayN5_OpenBCK_RMCarefulXLSX_output.sol` | `78e0558f993f66cfb1cf6b0c56cc73b87b67da6fb428f64f964d23d990698899` |
-| `execution/OSTRAM_StorageDelay_Combined_Inputs_Outputs.csv` | `5ee2d9a4a134bcfc006a083319fc8cf9684225d94837b09249d9a4c127dd93b3` |
-| `reports/unescap.html` | `dbb1d20c9817d5fc2e1725b3149e3e7d934e697839bae2796f84d50fffba66da` |
 
 The runtime now validates CBC's solution header before otoole conversion and reporting;
 zero-exit infeasible results fail closed. The macOS acceptance workflow applies the same
