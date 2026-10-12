@@ -678,7 +678,7 @@ def write_diff_md(
     flatten_plans = [p for p in plans if p.flatten_only]
 
     lines: List[str] = []
-    lines.append("# TRN Interconnector Authority — Diff Log")
+    lines.append("# TRN Interconnector Authority: Diff Log")
     lines.append("")
     lines.append(f"- Mode: **{mode}** "
                  f"(`{MIN_INV_PARAM}` if min, `{MAX_CAP_PARAM}` if max)")

@@ -419,7 +419,7 @@ for code in absent:
         notes = (f"[FALLBACK: category {s['fallback_detail']} via CATEGORY_FALLBACKS; "
                  f"template={s['template']}; confirm Tech.Name override]")
     elif s["fallback_kind"] == "trn_partial":
-        notes = (f"[FALLBACK: TRN partial-region match — {s['fallback_detail']}; "
+        notes = (f"[FALLBACK: TRN partial-region match: {s['fallback_detail']}; "
                  f"confirm Tech.Name override]")
     else:
         notes = ""

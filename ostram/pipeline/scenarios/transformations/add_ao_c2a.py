@@ -202,7 +202,7 @@ def main() -> int:
     print(f"  Target techs NOT in sheet:    {len(not_in_sheet)}")
     if not_in_sheet:
         # Should be 0 for this model — flag if not.
-        print(f"    (these will not be updated — verify they don't need it):")
+        print(f"    (these will not be updated; verify they don't need it):")
         for t in not_in_sheet[:20]:
             print(f"      {t}  [{tech_type[t]}]")
         if len(not_in_sheet) > 20:
@@ -216,7 +216,7 @@ def main() -> int:
         print(f"    {k}: {v}")
 
     if not to_add:
-        print("\nNothing to add. (Re-run is a no-op — the file already has "
+        print("\nNothing to add. (Re-run is a no-op; the file already has "
               "c2a set for every target tech.)")
         return 0
 
