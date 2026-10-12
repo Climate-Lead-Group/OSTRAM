@@ -35,6 +35,7 @@ Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
    regression
    glossary
    file-map
+   full-yaml
 
 
 Indices and tables
