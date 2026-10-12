@@ -140,8 +140,9 @@ class AtomicWorkspaceTests(unittest.TestCase):
                 encoding="utf-8",
             )
             changed_manifest = load_manifest(manifest.path)
-            with self.assertRaisesRegex(ProfileWorkspaceError, "different manifest"):
-                prepare_profile(changed_manifest, paths=paths)
+            # A changed manifest re-prepares the workspace.
+            result = prepared_profile(changed_manifest, paths=paths)
+            self.assertEqual(result.stamp["manifest_sha256"], changed_manifest.digest)
             result = prepare_profile(changed_manifest, paths=paths, reset=True)
             self.assertEqual(result.stamp["manifest_sha256"], changed_manifest.digest)
             manifest = changed_manifest

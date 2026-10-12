@@ -70,10 +70,6 @@ def _validate_stamp(target: Path, manifest: ProfileManifest) -> dict:
             f"foreign profile workspace at {target}: stamp declares "
             f"{stamp.get('profile_id')!r}, expected {manifest.profile_id!r}"
         )
-    if stamp.get("manifest_sha256") != manifest.digest:
-        raise ProfileWorkspaceError(
-            f"profile workspace at {target} was prepared from a different manifest"
-        )
     return stamp
 
 
@@ -137,9 +133,14 @@ def prepare_profile(
                     f"{stamp.get('profile_id')!r}, expected {manifest.profile_id!r}"
                 )
         else:
-            _validate_stamp(target, manifest)
-            raise FileExistsError(
-                f"profile workspace already exists: {target}; pass --reset to replace it"
+            stamp = _validate_stamp(target, manifest)
+            if stamp.get("manifest_sha256") == manifest.digest:
+                raise FileExistsError(
+                    f"profile workspace already exists: {target}; pass --reset to replace it"
+                )
+            print(
+                f"[profile] Re-preparing {target} "
+                f"(manifest changed since preparation)"
             )
 
     root.mkdir(parents=True, exist_ok=True)
@@ -222,6 +223,12 @@ def prepared_profile(
         )
 
     stamp = _validate_stamp(target, manifest)
+    if stamp.get("manifest_sha256") != manifest.digest:
+        print(
+            f"[profile] Re-preparing {target} "
+            f"(manifest changed since preparation)"
+        )
+        return prepare_profile(manifest, paths=paths, reset=True)
     mapping = stamp.get("mutable_authorities")
     source_digests = stamp.get("mutable_source_sha256")
     if not isinstance(mapping, dict) or set(mapping) != mutable_roles:
