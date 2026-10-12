@@ -3,8 +3,8 @@
 ## 2026-09-22 isolated training reproduction repair
 
 This record supersedes the historical training solver outcome below. The repair
-starts at `6ff8fc91c89b81a5e44cbf6798f0ec30a0fbc77a`, on
-`fix/unescap-training-reproduction`. Exact clean-clone commands are in
+starts at commit `6ff8fc91c89b81a5e44cbf6798f0ec30a0fbc77a` and is merged into
+`main`. The clean-clone commands are in
 [the authoring and acceptance guide](../AUTHORING_AND_ACCEPTANCE.md).
 
 The original maintained inputs reproduce the missing Bangladesh gas emissions
@@ -70,14 +70,13 @@ PR #35; integrating its test-contract correction is still required for a green
 combined suite. The training repair has no runtime dependency on the BAU fix.
 
 Detailed commands, logs, hashes, LP residuals, per-technology/year backstop use,
-cost reconciliation and the 17-case comparison are retained separately in
-`C:/Users/luisfernando/Desktop/OSeMOSYS/OSTRAM_unescap_repair/records/`:
-`repair-summary.json`, `training-acceptance-*.json`,
-`training-report-acceptance.json`, `full-invariance-results.json`,
-`a3-before-details.json`, `a3-after-details.json` and `final-regressions.log`.
-Final generated training outputs are under the sibling `f/profiles/unescap/`;
-fresh full comparison artifacts are under the sibling `full/`. These generated
-artifacts are not committed. This is Windows acceptance; no macOS run is claimed.
+cost reconciliation and the 17-case comparison were retained outside the
+repository in the repair records: `repair-summary.json`,
+`training-acceptance-*.json`, `training-report-acceptance.json`,
+`full-invariance-results.json`, `a3-before-details.json`,
+`a3-after-details.json` and `final-regressions.log`, together with the
+generated training outputs and the full comparison artifacts. None of these
+is committed. This is Windows acceptance; no macOS run is claimed.
 
 ## Historical release-readiness record
 
@@ -88,7 +87,7 @@ model, solver, CSV, snapshot, and dashboard files remain ignored under
 ## Windows environment and one authorized CBC run
 
 - CBC: 2.10.13, build date 2026-03-12.
-- Conda: 24.5.0; environment `OSTRAM-env`.
+- Conda: 24.5.0; the environment created from `environment.yaml`.
 - Scenario: `B_Optimised_VRE` only; no full-model solver was run.
 - Canonical process return code: 0.
 - Total pipeline duration: 618.758 seconds (10m 18s).
