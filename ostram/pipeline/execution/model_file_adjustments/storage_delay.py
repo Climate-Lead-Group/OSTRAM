@@ -47,17 +47,22 @@ TECH_MIN_PARAMS = (
 
 
 def read_lines(path: Path) -> list[str]:
+    """Read a UTF-8 file into lines that keep their line endings."""
     with open(path, "rb") as f:
         return f.read().decode("utf-8").splitlines(keepends=True)
 
 
 def write_lines(path: Path, lines: list[str]) -> None:
+    """Write the lines to ``path`` as UTF-8, creating the parent folder."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "wb") as f:
         f.write("".join(lines).encode("utf-8"))
 
 
 def detect_eol(lines: list[str]) -> str:
+    """Return the line ending of the first terminated line, or a line feed
+    when no line is terminated.
+    """
     for line in lines:
         if line.endswith("\r\n"):
             return "\r\n"
@@ -67,6 +72,10 @@ def detect_eol(lines: list[str]) -> str:
 
 
 def find_set_members(lines: list[str], set_name: str) -> list[str]:
+    """Return the members of set ``set_name``, one per line up to ``;``.
+
+    Raises RuntimeError when the set is missing or unterminated.
+    """
     header_re = re.compile(rf"^\s*set\s+{re.escape(set_name)}\b")
     for i, line in enumerate(lines):
         if not header_re.match(line):
@@ -85,6 +94,11 @@ def find_set_members(lines: list[str], set_name: str) -> list[str]:
 
 
 def find_param_block(lines: list[str], param_name: str) -> tuple[int | None, int | None]:
+    """Return the line indices of the header and the closing ``;`` of
+    parameter block ``param_name``, or (None, None) when it is missing.
+
+    Raises RuntimeError when the block is unterminated.
+    """
     header_re = re.compile(
         rf"^\s*param(?:\s+default\s+\S+)?\s*:\s*{re.escape(param_name)}\s*:=\s*$"
     )
@@ -101,6 +115,9 @@ def find_param_block(lines: list[str], param_name: str) -> tuple[int | None, int
 
 
 def find_end_line(lines: list[str]) -> int:
+    """Return the index of the ``end;`` line, or the number of lines when
+    there is none.
+    """
     for i, line in enumerate(lines):
         if line.strip() == "end;":
             return i
@@ -108,6 +125,9 @@ def find_end_line(lines: list[str]) -> int:
 
 
 def year_key(year: str) -> tuple[int, str]:
+    """Sort key that orders numeric years by value and places other labels
+    after them.
+    """
     try:
         return int(year), year
     except ValueError:
@@ -115,6 +135,10 @@ def year_key(year: str) -> tuple[int, str]:
 
 
 def select_blocked_years(years: list[str], first_n_years: int) -> list[str]:
+    """Return the first ``first_n_years`` years in sorted order.
+
+    Raises ValueError when ``first_n_years`` is negative.
+    """
     if first_n_years < 0:
         raise ValueError("--first-n-years must be >= 0")
     sorted_years = sorted(years, key=year_key)
@@ -126,6 +150,12 @@ def select_target_storages(
     exact_storages: list[str],
     storage_prefixes: list[str],
 ) -> list[str]:
+    """Return the storages to delay: the exact names when given, otherwise
+    those matching the prefixes, otherwise all storages.
+
+    Raises ValueError for an unknown exact name or a prefix list that
+    matches nothing.
+    """
     if exact_storages:
         unknown = sorted(set(exact_storages) - set(storages))
         if unknown:
@@ -141,12 +171,18 @@ def select_target_storages(
 
 
 def storage_to_tech(storage_name: str) -> str:
+    """Return the PWR technology name for a storage by dropping its last two
+    characters and adding the ``PWR`` prefix.
+    """
     if len(storage_name) < 3:
         raise ValueError(f"Unexpected storage name: {storage_name!r}")
     return "PWR" + storage_name[:-2]
 
 
 def is_nonzero(value: str) -> bool:
+    """Return True when ``value`` is a nonzero number or a non-blank
+    non-numeric token.
+    """
     try:
         return float(value) != 0.0
     except ValueError:
@@ -154,6 +190,12 @@ def is_nonzero(value: str) -> bool:
 
 
 def linked_storage_techs(lines: list[str], target_storages: set[str]) -> list[str]:
+    """Return the technologies linked to the target storages.
+
+    These are the technologies with a nonzero TechnologyToStorage or
+    TechnologyFromStorage entry, plus the PWR name derived from each
+    storage.
+    """
     techs: set[str] = set()
     for param_name in LINK_PARAMS:
         start, end = find_param_block(lines, param_name)
@@ -178,6 +220,9 @@ def storage_allowed_data_block(
     blocked_years: list[str],
     eol: str,
 ) -> list[str]:
+    """Return a StorageBuildAllowed block with 0 for every region, storage
+    and blocked year.
+    """
     block = [f"param {STORAGE_ALLOWED_PARAM} :={eol}"]
     for region in sorted(regions):
         for storage in sorted(storages):
@@ -188,6 +233,9 @@ def storage_allowed_data_block(
 
 
 def upsert_param_block(lines: list[str], param_name: str, new_block: list[str]) -> list[str]:
+    """Replace parameter block ``param_name`` with ``new_block``, or insert
+    it before ``end;`` when the block is missing.
+    """
     start, end = find_param_block(lines, param_name)
     if start is not None and end is not None:
         return lines[:start] + new_block + lines[end + 1 :]
@@ -210,6 +258,13 @@ def rewrite_tech_cap_block(
     allowed_value: str,
     eol: str,
 ) -> tuple[list[str], int, int]:
+    """Rewrite one cap block for the storage-linked technologies.
+
+    Existing rows of those technologies are removed and one row per region,
+    technology and year is added: 0 in a blocked year and
+    ``allowed_value`` afterwards. Returns the new lines and the numbers of
+    removed and added rows. Raises RuntimeError when the block is missing.
+    """
     start, end = find_param_block(lines, param_name)
     if start is None or end is None:
         raise RuntimeError(f"param block {param_name!r} not found")
@@ -243,6 +298,11 @@ def drop_blocked_min_rows(
     techs: list[str],
     blocked_years: set[str],
 ) -> tuple[list[str], int]:
+    """Remove the rows of minimum parameter ``param_name`` for ``techs`` in
+    the blocked years.
+
+    Returns the new lines and the number of rows removed.
+    """
     start, end = find_param_block(lines, param_name)
     if start is None or end is None:
         return lines, 0
@@ -262,6 +322,12 @@ def drop_blocked_min_rows(
 
 
 def adjust_model_lines(lines: list[str]) -> list[str]:
+    """Add the StorageBuildAllowed parameter and the storage delay constraint
+    to the model file when they are absent.
+
+    Raises RuntimeError when the anchor lines for either insertion are
+    missing.
+    """
     eol = detect_eol(lines)
     text = "".join(lines)
     out = list(lines)
@@ -302,6 +368,12 @@ def adjust_data_lines(
     storage_prefixes: list[str],
     allowed_value: str,
 ) -> tuple[list[str], dict[str, object]]:
+    """Apply the storage delay to the datafile lines.
+
+    Writes StorageBuildAllowed, rewrites both capacity caps of the
+    storage-linked technologies and drops their minimum rows in the
+    blocked years. Returns the new lines and a summary of the changes.
+    """
     eol = detect_eol(lines)
     regions = find_set_members(lines, "REGION")
     years = sorted(find_set_members(lines, "YEAR"), key=year_key)
@@ -354,6 +426,9 @@ def adjust_data_lines(
 
 
 def main() -> int:
+    """Apply the storage delay to the datafile and the model file, write both
+    copies unless ``--dry-run`` is set, and return 0.
+    """
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,

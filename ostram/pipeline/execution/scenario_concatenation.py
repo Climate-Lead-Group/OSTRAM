@@ -178,6 +178,9 @@ class _CsvAppender:
         self._started = False
 
     def append(self, block: pd.DataFrame) -> None:
+        """Append ``block`` in the fixed column layout, writing the header on the
+        first call.
+        """
         block = block.reindex(columns=self.columns)
         block.to_csv(
             self.path,

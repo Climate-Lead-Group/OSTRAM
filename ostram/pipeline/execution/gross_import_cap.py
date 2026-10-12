@@ -10,6 +10,15 @@ import yaml
 from ostram.paths import resolve_paths
 
 def render_policy(input_folder, scenario_name):
+    """Return the GMPL sets and parameter of the gross import cap of
+    ``scenario_name``.
+
+    The policy is read from ``scenario_inputs`` in
+    ``config/profiles/full.yaml``; the demand fuels and cross-border TRN
+    flows come from the CSVs in ``input_folder``. Returns an empty
+    ``D4ImportCountry`` set when the scenario has no policy. Raises
+    ValueError for an invalid policy or a country without demand.
+    """
     cfg = yaml.safe_load((resolve_paths().project_root/'config/profiles/full.yaml').read_text(encoding='utf8'))
     policy = cfg.get('scenario_inputs', {}).get(scenario_name, {}).get('gross_import_cap')
     if not policy:

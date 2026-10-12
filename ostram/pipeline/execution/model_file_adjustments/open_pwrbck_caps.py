@@ -99,6 +99,10 @@ def adjust_block(lines, start, end, pattern, new_value):
 
 
 def main():
+    """Set the zero cap rows of the matching technologies, by default the
+    backstop, to the replacement value, by default 9999, and write the
+    result to the output path.
+    """
     parser = argparse.ArgumentParser(
         description='Open PWRBCK* (or other matching) cap rows in '
                     'TotalAnnualMaxCapacity and TotalAnnualMaxCapacityInvestment '

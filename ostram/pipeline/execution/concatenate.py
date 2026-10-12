@@ -55,7 +55,11 @@ def _variable_cost_corrections(datafile,d,de,activity,out,source):
   k=r['REGION'],r['TECHNOLOGY'],str(int(float(r['MODE_OF_OPERATION']))),str(int(float(r['YEAR'])))
   value=float(r['VALUE']);assert k not in explicit or explicit[k]==value
   explicit[k]=value;multiplicity[k]+=1
- def v(p,*k):return d.get(p,{}).get(tuple(map(str,k)),de.get(p,0))
+ def v(p,*k):
+  """Return the value of parameter ``p`` at key ``k``, or the parameter
+  default, 0 when none is set.
+  """
+  return d.get(p,{}).get(tuple(map(str,k)),de.get(p,0))
  for k,x in explicit.items():assert abs(v('VariableCost',*k)-x)<=1e-9,('Export/compiled coefficient mismatch',k,x,v('VariableCost',*k))
  omitted=collections.defaultdict(float);expected=collections.defaultdict(float);formerly_double_counted=collections.defaultdict(float);duplicate=collections.defaultdict(float)
  for a in activity.itertuples(index=False):
@@ -204,6 +208,9 @@ def concatenate_outputs(outputs_folder: Path, output_file: Path, *, datafile=Non
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Parse the command-line arguments, write the combined output table and
+    return 0.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("outputs_folder", type=Path)
     parser.add_argument("output_file", type=Path)
