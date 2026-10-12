@@ -99,7 +99,7 @@ storage_delay_storage_prefixes:
   - SDS
   - LDS
 # storage_delay_storages: []          # exact storage names (overrides prefixes if set)
-storage_delay_allowed_value: "-1"     # PWR cap value applied in open years (-1 = unconstrained)
+storage_delay_allowed_value: "-1"     # PWR cap value applied in open years (-1 skips the constraint)
 storage_delay_suffix: "StorageDelayN5"
 storage_delay_model_output: "osemosys_fast_preprocessed_storage_delay.txt"
 storage_delay_prefix_final_files: "OSTRAM_StorageDelay_"
@@ -166,8 +166,9 @@ reserve_margin_xlsx_target_prefixes:
   - PWROIL
   - PWRNGS
 
-# Only these current values are replaced in TotalAnnualMaxCapacity and
-# TotalAnnualMaxCapacityInvestment. Other values are left untouched.
+# TotalAnnualMaxCapacityInvestment is replaced only where it holds one of
+# these values. TotalAnnualMaxCapacity is replaced only where it is 0.
+# Other values are left untouched.
 reserve_margin_xlsx_sentinel_values:
   - 0
   - 9999

@@ -493,7 +493,7 @@ B2 applies a fixed chain of model-file adjustments to the preprocessed OSeMOSYS 
 storage_delay_active: True
 storage_delay_first_n_years: 5
 storage_delay_storage_prefixes: [SDS, LDS]
-storage_delay_allowed_value: "-1"          # unconstrained PWR cap in open years
+storage_delay_allowed_value: "-1"          # -1 skips the PWR caps in open years
 storage_delay_suffix: "StorageDelayN5"
 storage_delay_model_output: "osemosys_fast_preprocessed_storage_delay.txt"
 storage_delay_prefix_final_files: "OSTRAM_StorageDelay_"
