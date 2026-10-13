@@ -8819,10 +8819,10 @@ scenario_inputs:
     description: Fixed upper limits on the yearly flow of Bangladesh's four import
       corridors from 2027 to 2050. They were calculated once as 15 per cent of
       Bangladesh's demand, split by each corridor's share of imports in a historical
-      B_Optimised_VRE run, with no allowance for exports. Backstop imports to
-      Bangladesh (TRNNLIBGDXX, TRNRPOBGDXX) are set to zero from 2027. Applied after
-      the shared VRE ceilings. This scenario differs from the gross import cap of
-      B_Opt_Clipped_GrossImportCap15.
+      B_Optimised_VRE run, with no allowance for exports. The activity of
+      Bangladesh's new and repowered internal lines (TRNNLIBGDXX, TRNRPOBGDXX) is
+      set to zero from 2027. Applied after the shared VRE ceilings. This scenario
+      differs from the gross import cap of B_Opt_Clipped_GrossImportCap15.
     apply_vre_ceiling_layer: true
     edits:
     - sheet: Secondary Techs
@@ -8978,8 +8978,8 @@ scenario_inputs:
         '2049': 0.0
         '2050': 0.0
       create_if_absent: true
-      note: backstop import disallowed (study period 2027+ only; base years left at
-        calibrated mix)
+      note: new internal line activity set to zero (study period 2027+ only;
+        base years left at calibrated mix)
     - sheet: Demand Techs
       tech: TRNRPOBGDXX
       param: TotalTechnologyAnnualActivityUpperLimit
@@ -9009,8 +9009,8 @@ scenario_inputs:
         '2049': 0.0
         '2050': 0.0
       create_if_absent: true
-      note: backstop import disallowed (study period 2027+ only; base years left at
-        calibrated mix)
+      note: repowered internal line activity set to zero (study period 2027+ only;
+        base years left at calibrated mix)
   B_Opt_TxCap150:
     scenario: B_Opt_TxCap150
     base_scenario: B_Optimised_VRE

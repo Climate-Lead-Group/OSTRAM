@@ -17,8 +17,8 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
   it. The [scenario edits](../../scenario-edits.md) page describes the step.
 - `B_Opt_TradeCap15` and `B_Opt_Clipped_GrossImportCap15` are different
   limits. `B_Opt_TradeCap15` sets fixed activity upper limits on four
-  Bangladesh import corridors and zero backstop imports from 2027, through
-  scenario edits. `B_Opt_Clipped_GrossImportCap15` caps the gross received
+  Bangladesh import corridors and zero activity on Bangladesh's new and
+  repowered internal lines from 2027, through scenario edits. `B_Opt_Clipped_GrossImportCap15` caps the gross received
   imports of each of the six countries at 15 per cent of its annual demand in
   2027 to 2050, through a constraint that B2 builds from the compiled demand
   and output ratios.
@@ -167,7 +167,7 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 - Overlay: none.
 - B2 policy: the historical trade constraints are active; CPLEX numerical emphasis.
 - Seed needs: none.
-- Description: Fixed upper limits on the yearly flow of Bangladesh's four import corridors from 2027 to 2050. They were calculated once as 15 per cent of Bangladesh's demand, split by each corridor's share of imports in a historical B_Optimised_VRE run, with no allowance for exports. Backstop imports to Bangladesh (TRNNLIBGDXX, TRNRPOBGDXX) are set to zero from 2027. Applied after the shared VRE ceilings. This scenario differs from the gross import cap of B_Opt_Clipped_GrossImportCap15.
+- Description: Fixed upper limits on the yearly flow of Bangladesh's four import corridors from 2027 to 2050. They were calculated once as 15 per cent of Bangladesh's demand, split by each corridor's share of imports in a historical B_Optimised_VRE run, with no allowance for exports. The activity of Bangladesh's new and repowered internal lines (TRNNLIBGDXX, TRNRPOBGDXX) is set to zero from 2027. Applied after the shared VRE ceilings. This scenario differs from the gross import cap of B_Opt_Clipped_GrossImportCap15.
 
 | Sheet | Parameter | Operation | Technologies |
 |---|---|---|---|
@@ -256,7 +256,7 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 | `B_Opt_SolarCapex130` | `B_Opt_Clipped` with the solar capital cost multiplied by 1.30 in every year. |
 | `B_Opt_SolarCapexHi` | `B_Opt_Clipped` with the solar capital cost multiplied by 1.10 in every year. |
 | `B_Opt_SolarCapexSpike` | `B_Opt_Clipped` with the solar capital cost multiplied by 1.50 in 2028, 2029 and 2030 only. |
-| `B_Opt_TradeCap15` | `B_Opt_Clipped` with fixed annual activity limits on the four Bangladesh import corridors, computed once as 15 per cent of demand split by the import shares of a historical `B_Optimised_VRE` result, and zero backstop imports from 2027. |
+| `B_Opt_TradeCap15` | `B_Opt_Clipped` with fixed annual activity limits on the four Bangladesh import corridors, computed once as 15 per cent of demand split by the import shares of a historical `B_Optimised_VRE` result, and zero activity on Bangladesh's new and repowered internal lines from 2027. |
 | `B_Opt_TxCap150` | `B_Opt_Clipped` with the capacity of each international corridor in 2027 to 2050 capped at the larger of 1.5 times its 2023 residual capacity and its calibrated base-window capacity, plus literal tables of minimum investments and backstop limits. |
 | `C_Target_VRE` | The target root: retirement, the minimum capacity floors with the Nepal hydro ceiling, the build cap, the VRE targets sized from the solved A result, interconnector relaxation and storage minimum investments. |
 | `C_Target_VRE_Clipped` | `C_Target_VRE` with the shared VRE ceilings, plus the restated Maldives 2028 solar assumption: a minimum total of 0.3841 GW with earlier builds counting towards it. |
