@@ -14,7 +14,6 @@ read_yaml_ruamel = _impl.read_yaml_ruamel
 write_yaml_ruamel = _impl.write_yaml_ruamel
 read_yaml_pyyaml = _impl.read_yaml_pyyaml
 write_yaml_pyyaml = _impl.write_yaml_pyyaml
-regex_update_main_scenario = _impl.regex_update_main_scenario
 update_main_scenario = _impl.update_main_scenario
 run_compiler = _impl.run_compiler
 parse_cli_args = _impl.parse_cli_args
