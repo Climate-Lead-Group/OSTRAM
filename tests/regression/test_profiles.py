@@ -154,6 +154,62 @@ class AtomicWorkspaceTests(unittest.TestCase):
             refreshed = prepared_profile(manifest, paths=paths)
             self.assertEqual(refreshed.authorities["seed"].read_text(), "version two")
 
+    def test_unedited_copy_refreshes_and_nothing_moves(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            paths, manifest = self._fixture(Path(temp))
+            result = prepare_profile(manifest, paths=paths)
+            (manifest.root / "seed.txt").write_text("version two", encoding="utf-8")
+            refreshed = prepared_profile(manifest, paths=paths)
+            self.assertEqual(refreshed.authorities["seed"].read_text(), "version two")
+            self.assertFalse((result.workspace / "authorities_previous").exists())
+
+    def test_edited_file_copy_moves_before_refresh(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            paths, manifest = self._fixture(Path(temp))
+            result = prepare_profile(manifest, paths=paths)
+            copy = result.authorities["seed"]
+            relative = copy.relative_to(result.workspace)
+            copy.write_text("trainee edit", encoding="utf-8")
+            (manifest.root / "seed.txt").write_text("version two", encoding="utf-8")
+            with mock.patch("builtins.print") as printed:
+                refreshed = prepared_profile(manifest, paths=paths)
+            self.assertEqual(refreshed.authorities["seed"].read_text(), "version two")
+            moved = list((result.workspace / "authorities_previous").glob("*"))
+            self.assertEqual(len(moved), 1)
+            self.assertEqual((moved[0] / relative).read_text(), "trainee edit")
+            lines = [str(call.args[0]) for call in printed.call_args_list]
+            self.assertEqual(sum("Moved the edited copy" in line for line in lines), 1)
+
+    def test_edited_directory_copy_moves_intact_before_refresh(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            paths, manifest = self._fixture(Path(temp))
+            data = manifest.root / "data"
+            data.mkdir()
+            (data / "a.csv").write_text("a", encoding="utf-8")
+            manifest = self._change_manifest(
+                manifest,
+                "  readonly:",
+                "  data: {path: profile:data, mutable: true, kind: directory}\n  readonly:",
+            )
+            result = prepare_profile(manifest, paths=paths)
+            copy = result.authorities["data"]
+            relative = copy.relative_to(result.workspace)
+            (copy / "trainee.csv").write_text("trainee", encoding="utf-8")
+            (data / "b.csv").write_text("b", encoding="utf-8")
+            with mock.patch("builtins.print"):
+                refreshed = prepared_profile(manifest, paths=paths)
+            self.assertEqual(
+                sorted(path.name for path in refreshed.authorities["data"].iterdir()),
+                ["a.csv", "b.csv"],
+            )
+            moved = list((result.workspace / "authorities_previous").glob("*"))
+            self.assertEqual(len(moved), 1)
+            self.assertEqual(
+                sorted(path.name for path in (moved[0] / relative).iterdir()),
+                ["a.csv", "trainee.csv"],
+            )
+            self.assertEqual((moved[0] / relative / "trainee.csv").read_text(), "trainee")
+
     def _change_manifest(self, manifest, old: str = "", new: str = ""):
         text = manifest.path.read_text(encoding="utf-8").replace(old, new)
         manifest.path.write_text(text + f"# {manifest.digest}\n", encoding="utf-8")

@@ -194,6 +194,10 @@ negative bound values additionally constrained to the `1e-8` near-zero tolerance
   to `--reset`, which deletes the workspace and prepares a new one. A changed
   `profile.yaml` keeps the workspace when its mutable authority roles are the same and
   moves it to `unescap_previous_<UTC timestamp>` when they differ.
+- When the source of a mutable authority changes, the next run replaces the workspace
+  copy. A copy edited since preparation first moves to
+  `authorities_previous/<UTC timestamp>/` inside the workspace, under its own relative
+  path.
 - Reporting/capture and resource inspection resolve the activated profile bundle.
 
 ## Historical integration validation record
