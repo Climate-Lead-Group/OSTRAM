@@ -426,7 +426,7 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
         build_source = inspect.getsource(module.build_workdir)
         stage1_source = inspect.getsource(module.stage_1_scripts_1_to_5)
         self.assertIn("OSTRAM_Timeslice_Inputs.xlsx", build_source)
-        self.assertIn('script == "relax_interconnectors.py"', build_source)
+        self.assertNotIn('script == "relax_interconnectors.py"', build_source)
         self.assertNotIn("stage1_sources", build_source)
         self.assertNotIn("OSTRAM_AO_Extensions_FILLED.xlsx", build_source)
         self.assertNotIn(

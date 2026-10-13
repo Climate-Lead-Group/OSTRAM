@@ -408,9 +408,6 @@ def build_workdir(
                     f"rules_script '{script}' not found at {src}. "
                     f"Available: {sorted(available)}"
                 )
-            if script == "relax_interconnectors.py":
-                shutil.copy(RULES_SCRIPTS_DIR / "__init__.py", rs_wd / "__init__.py")
-                shutil.copy(src, rs_wd / script)
             yaml_path = _resolve_script_yaml(script, scenario)
             if yaml_path is not None:
                 yaml_name = yaml_path.name
@@ -681,14 +678,11 @@ def stage_5_rules_scripts(
         yaml_name = _read_script_yaml_name(source)
         if yaml_name:
             arguments.extend(["--yaml", wd / "rules_scripts" / yaml_name])
+        if script == "relax_interconnectors.py":
+            arguments.extend(["--tech-types", wd / "TECH_TYPES.csv"])
         step(f"[{i}/{len(rules_scripts)}] {script}")
-        module = (
-            "rules_scripts.relax_interconnectors"
-            if script == "relax_interconnectors.py"
-            else f"ostram.pipeline.scenarios.rules.{source.stem}"
-        )
         run_subproc(
-            module,
+            f"ostram.pipeline.scenarios.rules.{source.stem}",
             arguments,
             cwd=wd, label=script,
         )

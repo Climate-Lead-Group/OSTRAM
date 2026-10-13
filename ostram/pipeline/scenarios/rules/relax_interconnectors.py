@@ -72,6 +72,7 @@ from pathlib import Path
 
 import pandas as pd
 from openpyxl import load_workbook, Workbook
+from ostram.paths import resolve_paths
 from ostram.pipeline.scenarios.rules.config_keys import check_keys
 
 # Try to import yaml; fall back to a minimal parser if unavailable.
@@ -109,7 +110,6 @@ PROJ_MODE_USER = "User defined"
 PLACEHOLDER_VALUE = 9999
 
 # Tech-type filter
-TECH_TYPES_FILE = "TECH_TYPES.csv"
 TECH_TYPES_CATEGORY_COL = "Technology (PWR)"
 TECH_TYPES_TECH_COL = "Technology"
 INTERCONNECTOR_CATEGORY = "INTERCONNECTORS"
@@ -229,8 +229,8 @@ def load_interconnector_techs(tech_types_path: Path) -> set:
     tech_types_path = Path(tech_types_path)
     if not tech_types_path.is_file():
         raise FileNotFoundError(
-            f"TECH_TYPES.csv not found at {tech_types_path}. "
-            f"Place it in A3_process/ (one level above rules_scripts/)."
+            f"Technology taxonomy not found at {tech_types_path}. A3 passes "
+            f"its staged copy of config/scenarios/technology_types.csv with --tech-types."
         )
     df = pd.read_csv(tech_types_path)
     cat_col = TECH_TYPES_CATEGORY_COL
@@ -728,7 +728,7 @@ def edit_parametrization(filepath: Path, sheets: list,
 # Orchestration
 # ---------------------------------------------------------------------------
 def run(input_dir, sheets: list = None, skip_backup: bool = False,
-        yaml_path: Path | None = None) -> dict:
+        yaml_path: Path | None = None, tech_types_path: Path | None = None) -> dict:
     """End-to-end: load config, backup, edit, write log."""
     input_dir = Path(input_dir)
     sheets = sheets or DEFAULT_TARGET_SHEETS
@@ -743,9 +743,8 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
         )
     config = load_config(yaml_path)
 
-    # Locate TECH_TYPES.csv (one level up from rules_scripts/)
-    script_dir = Path(__file__).resolve().parent
-    tech_types_path = script_dir.parent / TECH_TYPES_FILE
+    if tech_types_path is None:
+        tech_types_path = resolve_paths().interconnector_taxonomy
     trn_techs = load_interconnector_techs(tech_types_path)
 
     # Backup
@@ -1171,6 +1170,12 @@ def main() -> int:
         default=None,
         help="Path to YAML config (default: <script_dir>/relax_interconnectors.yaml).",
     )
+    parser.add_argument(
+        "--tech-types",
+        type=Path,
+        default=None,
+        help="Technology taxonomy CSV (default: the active technology taxonomy).",
+    )
     args = parser.parse_args()
 
     if args.self_test:
@@ -1186,7 +1191,7 @@ def main() -> int:
         return 0
 
     try:
-        log = run(args.input_dir, args.sheets, args.skip_backup, args.yaml)
+        log = run(args.input_dir, args.sheets, args.skip_backup, args.yaml, args.tech_types)
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
