@@ -257,9 +257,8 @@ python -m ostram --workspace $workspace run --skip-pull --env-name ostram --scen
 
 Driving a campaign as one invocation per scenario instead makes B2 — and
 therefore this concatenation — run once per scenario, which is quadratic in the
-selection size. A 15-scenario campaign measured the phase growing from 183.5 s
-to 754.5 s per invocation. Split invocations only when a run genuinely needs a
-seam between scenarios, and expect that cost.
+selection size. Split invocations only when a run genuinely needs a seam
+between scenarios, and expect that cost.
 
 ## Scenario selection
 

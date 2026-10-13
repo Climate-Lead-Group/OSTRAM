@@ -102,14 +102,13 @@ are in `docs/ranking_by_budget.csv` and `docs/ostram_timeslice_handover.md`.
    that it does not overwrite an existing case.
 6. Revert `DAYPART_DEF` in both files if the module should stay canonical.
 
-Each variant takes roughly 45 seconds to generate. Build time does not
-depend meaningfully on timeslice count.
+Build time does not depend meaningfully on timeslice count.
 
 ## Key trade-off
 
 Coarser fabrics (fewer timeslices) are cheaper to solve but misrepresent
-when solar energy is available. The 3dp/12ts case credits 16 times more
-solar energy to dark hours than the adopted 5dp/20ts fabric.
+when solar energy is available. The 3dp/12ts case credits more solar energy
+to dark hours than the adopted 5dp/20ts fabric.
 
 ## Stale capacity factors
 
