@@ -9,7 +9,8 @@ baseline, controlled by a YAML configuration file.
 This script is the complement of cap_trn_to_residual.py. Where that
 script freezes interconnectors at ResidualCapacity, this one opens them
 up by a multiplicative factor, an additive headroom, absolute
-per-link overrides, or a cap of 9999 (mode "unconstrained").
+per-link overrides, or a cap of 9999 (mode "cap_9999", also accepted
+under its previous name "unconstrained").
 
 RULE
 ----
@@ -23,7 +24,7 @@ of config/scenarios/technology_types.csv staged in the run folder:
             MaxCapInv = ResidualCapacity × headroom_factor
         mode == "additive":
             MaxCapInv = ResidualCapacity + headroom_gw
-        mode == "unconstrained":
+        mode == "cap_9999":
             MaxCapInv = 9999   (a finite cap)
 
     Safety floor: MaxCapInv = max(MaxCapInv, ResidualCapacity)
@@ -124,7 +125,8 @@ def load_config(yaml_path: Path) -> dict:
     """Load and validate the YAML configuration.
 
     Returns a dict with keys:
-        mode             : str, one of "multiplicative", "additive", or "unconstrained"
+        mode             : str, one of "multiplicative", "additive", or "cap_9999"
+                           ("unconstrained" is read as "cap_9999")
         headroom_factor  : float (used by multiplicative)
         headroom_gw      : float (used by additive)
         overrides        : dict {tech: {year: value}}
@@ -137,10 +139,12 @@ def load_config(yaml_path: Path) -> dict:
     }, yaml_path)
 
     mode = cfg.get("mode", "multiplicative")
-    if mode not in ("multiplicative", "additive", "unconstrained"):
+    if mode == "unconstrained":
+        mode = "cap_9999"
+    if mode not in ("multiplicative", "additive", "cap_9999"):
         raise ValueError(
             f"Invalid mode '{mode}' in {yaml_path}. "
-            f"Expected 'multiplicative', 'additive', or 'unconstrained'."
+            f"Expected 'multiplicative', 'additive', or 'cap_9999'."
         )
 
     headroom_factor = float(cfg.get("headroom_factor", 2.0))
@@ -468,9 +472,9 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
             elif mode == "additive":
                 proposed = rescap + headroom_gw
                 reason = "additive"
-            elif mode == "unconstrained":
+            elif mode == "cap_9999":
                 proposed = PLACEHOLDER_VALUE
-                reason = "unconstrained"
+                reason = "cap_9999"
             else:
                 proposed = rescap
                 reason = "fallback"

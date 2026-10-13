@@ -1,4 +1,4 @@
-"""Each rule loader refuses a configuration key that its code does not read."""
+"""Rule loaders refuse unknown configuration keys and read renamed values."""
 from __future__ import annotations
 
 import csv
@@ -71,6 +71,12 @@ class RuleConfigKeyTests(unittest.TestCase):
         for loader in (internal_tx.read_config, internal_losses.read_loss):
             with self.subTest(loader=loader.__module__):
                 self._assert_refused(loader, path, "unknown_key")
+
+    def test_relax_mode_cap_9999_and_its_previous_name(self) -> None:
+        for name in ("cap_9999", "unconstrained"):
+            with self.subTest(mode=name):
+                path = self._write("relax_interconnectors.yaml", {"mode": name})
+                self.assertEqual(relax.load_config(path)["mode"], "cap_9999")
 
     def test_pin_rules_refuse_an_unknown_column(self) -> None:
         path = self.root / "pin.csv"

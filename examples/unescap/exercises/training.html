@@ -734,7 +734,7 @@
       <thead><tr><th>Setting</th><th>What it does</th></tr></thead>
       <tbody>
         <tr><td><code>overrides</code></td><td>An <strong>absolute cap in GW</strong> on new interconnector capacity, staged by year. Values between years are interpolated linearly and held flat after the last year. This is the precise switch &mdash; it also lifts the total-capacity ceiling so the link can actually be built.</td></tr>
-        <tr><td><code>mode</code> + <code>headroom_factor</code> / <code>headroom_gw</code></td><td>The fallback for any link <em>without</em> an override: <code>multiplicative</code> (ResidualCapacity &times; factor), <code>additive</code> (ResidualCapacity + GW) or <code>unconstrained</code> (no cap).</td></tr>
+        <tr><td><code>mode</code> + <code>headroom_factor</code> / <code>headroom_gw</code></td><td>The fallback for any link without an override: <code>multiplicative</code> (ResidualCapacity &times; factor), <code>additive</code> (ResidualCapacity + GW) or <code>cap_9999</code> (a finite cap of 9999; <code>unconstrained</code> is read as <code>cap_9999</code>).</td></tr>
       </tbody>
     </table>
     <div class="callout important"><div class="tag">Why we steer with the override</div><p>The base model freezes each interconnector at its existing capacity (<code>TotalAnnualMaxCapacity = ResidualCapacity</code>). Giving <code>TRNBGDXXINDEA</code> an override with any non-zero value is what tells OSTRAM to <em>lift that ceiling</em> and let new capacity be built. So the override is both the amount <strong>and</strong> the on-switch &mdash; that is why every exercise here edits it directly.</p></div>
