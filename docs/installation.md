@@ -109,7 +109,7 @@ $env:PYTHONUTF8 = '1'
 $env:PYTHONHASHSEED = '0'
 $env:PYTHONDONTWRITEBYTECODE = '1'
 $env:PYTHONUNBUFFERED = '1'
-$runRoot = [IO.Path]::GetFullPath('..') # parent of this isolated checkout
+$runRoot = (Resolve-Path '..').Path # parent of this isolated checkout
 $env:CONDA_ENVS_PATH = Join-Path $runRoot 'conda-envs'
 $env:CONDA_PKGS_DIRS = Join-Path $runRoot 'conda-pkgs'
 conda env create -n ostram-reproduce -f environment.yaml -y
