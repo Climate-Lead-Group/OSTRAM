@@ -331,14 +331,13 @@ TRNNLI:
 #     LBNL 2019; default 2.0). Set 1.5 / 1.8 / 2.0 / 3.0 to sensitise.
 #   * OperationalLife applies to all 6 families (fixes the 50/20 drift).
 #   * Per-node ResidualCapacity comes from the maintained, desk-checked
-#     config/scenarios/rules/internal_tx_residuals.csv (peak x residual_margin;
+#     config/scenarios/rules/internal_tx_residuals.csv (peak x 1.2, as its header states;
 #     NLI/RPO = 0).
 internal_transmission:
   base_capital_cost: 100        # non-RE $/kW
   base_fixed_cost: 4            # non-RE $/kW/yr (4% of CapEx)
   re_capex_multiplier: 2.0      # WS-1 slider: 1.5 / 1.8 / 2.0 / 3.0
   operational_life: 40          # years, all 6 internal families
-  residual_margin: 1.2          # peak x margin (documentation; residuals precomputed)
   transmission_loss: 0.03       # intra-node tx loss -> OutputActivityRatio = 1-loss = 0.97 (CEA ~3-4%, distribution excluded)
 
 # Enable DSPTRN dispatch technology (adds ELC03/ELC04 tier for interconnections)
