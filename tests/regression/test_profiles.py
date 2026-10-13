@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from contextlib import redirect_stderr, redirect_stdout
+import io
 import json
 import os
 from pathlib import Path
@@ -9,6 +11,7 @@ import unittest
 from unittest import mock
 
 import ostram.__main__ as cli
+from ostram import examples
 from ostram.paths import ProjectPaths
 from ostram.profile_workspace import (
     STAMP_NAME,
@@ -153,6 +156,20 @@ class AtomicWorkspaceTests(unittest.TestCase):
             # Mutable sources are now auto-refreshed instead of raising.
             refreshed = prepared_profile(manifest, paths=paths)
             self.assertEqual(refreshed.authorities["seed"].read_text(), "version two")
+
+    def test_repeated_prepare_prints_the_message_without_a_traceback(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            paths, manifest = self._fixture(Path(temp))
+            with (
+                mock.patch.object(examples, "_active_manifest", return_value=manifest),
+                mock.patch.object(examples, "resolve_paths", return_value=paths),
+                redirect_stdout(io.StringIO()),
+                redirect_stderr(io.StringIO()) as stderr,
+            ):
+                self.assertEqual(examples.main(["prepare", "tiny"]), 0)
+                self.assertEqual(examples.main(["prepare", "tiny"]), 1)
+            self.assertIn("profile workspace already exists", stderr.getvalue())
+            self.assertNotIn("Traceback", stderr.getvalue())
 
     def test_unedited_copy_refreshes_and_nothing_moves(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

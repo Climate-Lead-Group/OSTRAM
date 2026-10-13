@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 import html
 from html.parser import HTMLParser
 import io
@@ -15,6 +15,7 @@ import pandas as pd
 
 from ostram import __main__ as cli
 from ostram.examples import _CAPTURE, _comparison_labels, _report
+from ostram.examples import main as example_main
 from ostram.pipeline.execution import runner as execution_runner
 from ostram.pipeline.execution.orchestrator import validate_cbc_solution
 from ostram.pipeline.preparation import merge_country_template as country_merge
@@ -220,6 +221,36 @@ class CanonicalTrainingRouteTests(unittest.TestCase):
             html = compared.read_text(encoding="utf-8")
             self.assertIn('"forward"', html)
             self.assertIn('"reverse"', html)
+
+    def test_repeated_capture_prints_the_message_without_a_traceback(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            workspace = Path(temp).resolve()
+            execution = workspace / "execution"
+            execution.mkdir()
+            pd.DataFrame([
+                {"Scenario": "B_Optimised_VRE", "REGION": "GLOBAL", "YEAR": 2050,
+                 "TECHNOLOGY": "TRNBGDXXINDEA", "TotalCapacityAnnual": 2.496}
+            ]).to_csv(execution / "OSTRAM_Combined_Inputs_Outputs.csv", index=False)
+            paths = SimpleNamespace(workspace=workspace, execution_workspace=execution)
+            manifest = SimpleNamespace(
+                profile_id="unescap",
+                path=EXAMPLE_ROOT / "profile.yaml",
+                metadata={
+                    "country_regions": [{"region": "BGDXX", "label": "Bangladesh"}],
+                    "interconnectors": [{"technology": "TRNBGDXXINDEA"}],
+                },
+            )
+            arguments = ["report", "unescap", "--capture", "forward"]
+            with (
+                mock.patch("ostram.examples.resolve_paths", return_value=paths),
+                mock.patch("ostram.examples._active_manifest", return_value=manifest),
+                redirect_stdout(io.StringIO()),
+                redirect_stderr(io.StringIO()) as stderr,
+            ):
+                self.assertEqual(example_main(arguments), 0)
+                self.assertEqual(example_main(arguments), 1)
+            self.assertIn("capture already exists", stderr.getvalue())
+            self.assertNotIn("Traceback", stderr.getvalue())
 
 
 class TrainingAssetTests(unittest.TestCase):
