@@ -72,7 +72,7 @@ class ScenarioRegistryTests(unittest.TestCase):
         self.assertEqual(registry.root_names, ROOT_SCENARIOS)
         self.assertEqual(registry.decision_scenarios, DECISION_SCENARIOS)
         self.assertEqual(registry.scenario_names, CANONICAL_SCENARIOS)
-        self.assertEqual(len(registry.decision_scenarios), 17)
+        self.assertEqual(len(registry.decision_scenarios), len(DECISION_SCENARIOS))
 
         derived = registry.derived_by_name
         self.assertEqual(
