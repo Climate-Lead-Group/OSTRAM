@@ -49,6 +49,7 @@ from pathlib import Path
 
 import pandas as pd
 from ostram.paths import resolve_paths
+from ostram.pipeline.scenarios.rules.config_keys import check_keys
 from openpyxl import load_workbook, Workbook
 
 try:
@@ -103,6 +104,7 @@ def load_config(yaml_path: Path) -> dict:
     cfg = _load_yaml(yaml_path)
     if cfg is None:
         cfg = {}
+    check_keys(cfg, {"warn_on_untie", "floors", "ceilings"}, yaml_path)
 
     warn_on_untie = bool(cfg.get("warn_on_untie", True))
 
@@ -111,6 +113,8 @@ def load_config(yaml_path: Path) -> dict:
             return []
         entries = []
         for i, entry in enumerate(raw):
+            check_keys(entry, {"cr", "tech", "param", "schedule", "note"},
+                       yaml_path, f"{section}[{i}]")
             cr = str(entry.get("cr", ""))
             tech = str(entry.get("tech", ""))
             param = str(entry.get("param", ""))

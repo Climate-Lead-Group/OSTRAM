@@ -71,6 +71,7 @@ from pathlib import Path
 
 import pandas as pd
 from openpyxl import load_workbook, Workbook
+from ostram.pipeline.scenarios.rules.config_keys import check_keys
 
 # Try to import yaml; fall back to a minimal parser if unavailable.
 try:
@@ -131,6 +132,9 @@ def load_config(yaml_path: Path) -> dict:
     cfg = _load_yaml(yaml_path)
     if cfg is None:
         cfg = {}
+    check_keys(cfg, {
+        "mode", "headroom_factor", "headroom_gw", "overrides", "capacity_ceiling",
+    }, yaml_path)
 
     mode = cfg.get("mode", "multiplicative")
     if mode not in ("multiplicative", "additive", "unconstrained"):

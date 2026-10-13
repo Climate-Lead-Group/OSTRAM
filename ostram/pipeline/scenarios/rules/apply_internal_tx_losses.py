@@ -44,6 +44,7 @@ from pathlib import Path
 
 import yaml
 from openpyxl import load_workbook, Workbook
+from ostram.pipeline.scenarios.rules.config_keys import INTERNAL_TRANSMISSION_KEYS, check_keys
 
 PROJ_FILE = "A-O_AR_Projections.xlsx"
 BASE_FILE = "A-O_AR_Model_Base_Year.xlsx"
@@ -97,6 +98,7 @@ def read_loss(config_path) -> float:
     with open(config_path, "r", encoding="utf-8") as fh:
         data = yaml.safe_load(fh) or {}
     blk = data.get("internal_transmission", {}) or {}
+    check_keys(blk, INTERNAL_TRANSMISSION_KEYS, config_path, "internal_transmission")
     loss = blk.get("transmission_loss", DEFAULT_LOSS)
     loss = float(loss)
     if not (0.0 <= loss < 1.0):

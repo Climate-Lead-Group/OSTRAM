@@ -151,6 +151,7 @@ from pathlib import Path
 import pandas as pd
 from ostram.paths import resolve_paths
 from ostram.profiles import profile_policy
+from ostram.pipeline.scenarios.rules.config_keys import check_keys
 from openpyxl import load_workbook
 
 try:
@@ -488,6 +489,11 @@ def load_config(yaml_path: Path) -> dict:
     cfg = _load_yaml(yaml_path)
     if cfg is None:
         cfg = {}
+    check_keys(cfg, {
+        "rule_mode", "percentage_default", "percentage_by_year", "security_factor",
+        "ramp_from_demand", "exempt_prefixes", "exempt_max_cap", "relaxation_schedule",
+        "lid_floor_gw", "family_relaxation_ceilings", "adequacy_floor_schedule",
+    }, yaml_path)
 
     out: dict = {}
 

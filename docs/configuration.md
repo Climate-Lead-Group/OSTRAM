@@ -590,13 +590,17 @@ Defines how parameters are combined when merging sub-regions:
 
 The three decision roots `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE` each have a subfolder with the YAML files of their rule chain. `BAU` has none; its build-cap rule runs on its defaults. `B_Opt_DirBidir` and `B_Opt_DirContractual` each have a subfolder with one direction overlay. The {doc}`rules` page lists which rules each root runs, and the [scenario catalogue](reference/scenarios/scenario_catalogue.md) summarises every scenario. The main YAML anatomy:
 
-| YAML | Consumed by | Key fields |
-|------|--------------|------------|
-| `retirement_schedule.yaml` | `set_retirement_schedule.py` | `base_year`, `age_based.<fuel>.lifetime_years`, `age_based.<fuel>.retirement_profile`, `scheduled`, `exempt` |
-| `lid_rule.yaml` | `add_max_cap_investment_lid_rule.py` | `rule_mode` (`uniform`/`proportional`), `percentage_default`, `percentage_by_year`, `security_factor`, `exempt_prefixes`, `relaxation_schedule` |
-| `relax_interconnectors.yaml` | `relax_interconnectors.py` | `mode` (`multiplicative`/`additive`/`unconstrained`), `headroom_factor`, `overrides` (absolute per-corridor schedules) |
-| `bau_calibration.yaml` (or `storage_floors.yaml`) | `set_min_capacity_floors.py` | `floors`, `ceilings`, each with `cr` (country-region), `tech`, `param`, `schedule` |
-| `set_vre_targets.yaml` | `set_vre_targets.py` | `bau_results_path` (relative path to a prior solved scenario's output, typically `A_Calibrated_BAU`), `constraint_type`, `max_floor_share`, `targets`, `pin_generation_to_target`, `cap_envelope` |
+| YAML | Consumed by | Keys |
+|------|--------------|------|
+| `retirement_schedule.yaml` | `set_retirement_schedule.py` | `base_year`, `fuel_slice`, `age_based.<fuel>.lifetime_years`, `age_based.<fuel>.retirement_profile`, `scheduled` (entries with `cr`, `tech`, `schedule`, `note`), `exempt` |
+| `lid_rule.yaml` | `add_max_cap_investment_lid_rule.py` | `rule_mode` (`uniform`/`proportional`), `percentage_default`, `percentage_by_year`, `security_factor`, `ramp_from_demand`, `exempt_prefixes`, `exempt_max_cap`, `relaxation_schedule`, `lid_floor_gw`, `family_relaxation_ceilings`, `adequacy_floor_schedule` |
+| `relax_interconnectors.yaml` | `relax_interconnectors.py` | `mode` (`multiplicative`/`additive`/`unconstrained`), `headroom_factor`, `headroom_gw`, `overrides` (absolute per-corridor schedules), `capacity_ceiling` |
+| `bau_calibration.yaml` | `set_min_capacity_floors.py` | `warn_on_untie`, `floors`, `ceilings`, each entry with `cr` (country-region), `tech`, `param`, `schedule`, `note` |
+| `storage_floors.yaml` | `add_storage_min_investment.py` | `storage_floors` |
+| `set_vre_targets.yaml` | `set_vre_targets.py` | `bau_results_path` (relative path to a prior solved scenario's output, typically `A_Calibrated_BAU`), `constraint_type`, `max_floor_share`, `cap_envelope_headroom`, `cap_envelope_min_inv_gw`, `default_capacity_factor`, `pin_generation_to_target`, `pin_slack`, `activity_lower_caps` (entries with `region`, `technology`, `year`, `maximum`), `targets` (entries with `cr`, `tech`, `schedule`, `cap_envelope`) |
+| `set_interconnector_direction.yaml` | `set_interconnector_direction.py` | `directions` |
+
+Each rule stops when its file holds a key outside its row, and the message names the file and the unknown keys. The same check covers the `internal_transmission` block of `Config_country_codes.yaml` (`base_capital_cost`, `base_fixed_cost`, `re_capex_multiplier`, `operational_life`, `transmission_loss`) and the header of `config/scenarios/rules/pwr_min_2023_2026_pin.csv`.
 
 A rule reads only the exact file name it expects, for example `lid_rule.yaml`. The test `tests/regression/test_config_files.py` lists every file under `config/` and fails when another file appears there.
 
