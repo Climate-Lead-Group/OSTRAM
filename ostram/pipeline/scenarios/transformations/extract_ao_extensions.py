@@ -1,49 +1,40 @@
-"""Write OSTRAM_AO_Extensions.xlsx from the WV workbook and the four A-O workbooks for review."""
-from pathlib import Path
-# -*- coding: utf-8 -*-
-"""
-2_extract_ao_extensions.py  (v17 / pipeline stage 2)
+"""Write OSTRAM_AO_Extensions.xlsx from the WV workbook and the four A-O workbooks for review.
 
-Reads SOASIA_OSeMOSYS_WV.xlsx (output of stage 1) and the four A-O
-parametrization workbooks; writes OSTRAM_AO_Extensions.xlsx -- the
-freshly generated review file that receives the maintained decision overlay
-before it drives stage 3.
-
-Pipeline:
-  1_merge_timeslices_into_WV.py    v17 + timeslices       -> WV
-  2_extract_ao_extensions.py       WV  + A-O              -> Extensions xlsx
-  apply_ao_extension_decisions.py  maintained decisions   -> overlaid Extensions
-  3_update_ao_from_extensions.py   Extensions xlsx + A-O  -> updated A-O
+Reads SOASIA_OSeMOSYS_WV.xlsx, written by merge_timeslices, and the four
+A-O parametrization workbooks. Writes OSTRAM_AO_Extensions.xlsx, the review
+file that ao_extension_decisions overlays with the maintained decisions
+before update_ao_from_extensions reads it.
 
 Output: OSTRAM_AO_Extensions.xlsx
   Tab 1: 1_Extensions_To_Add        Single wide table covering presence,
                                     propagation suggestions, template
                                     suggestions, and human-decision columns.
   Tab 2: 2_Parameter_Rows_To_Replicate  Raw parameter rows from WV for each
-                                        extension code (reference for stage 3).
+                                        extension code.
   Tab 3: 3_Signal_Disagreements    Sanity check: orange flags vs. absence.
 
 Detection logic
 ---------------
   ABSENCE is the primary signal: a code is "missing from A-O" iff it's in WV
-  but not in any of the four A-O workbooks. That's binary, file-content fact.
+  but not in any of the four A-O workbooks.
 
-  COLOR (orange = FCD5B4) is the team-applied secondary signal carried over
-  from the v15/v16/v17 cleanup. Disagreements between absence and color are
-  reported in Tab 3.
+  COLOUR (orange = FCD5B4) is the secondary signal. Disagreements between
+  absence and colour are reported in Tab 3.
 
-Template suggestion (option 3, conservative)
---------------------------------------------
+Template suggestion
+-------------------
   For each absent code, look in A-O Parametrization for a code with the SAME
-  prefix + SAME category (e.g., PWRNGS for a missing PWRNGSBGDXX).
-   - Match found -> suggest it as Suggested_Template_AO; copy its Tech.Name.
+  prefix + SAME category (e.g., PWRNGS for a missing PWRNGSBGDXX), then for
+  the CATEGORY_FALLBACKS analogue, then, for TRN codes, for a TRN code that
+  shares a region (pick_trn_template).
+   - Match found -> suggest it as Suggested_Template_AO; copy its Tech.Name
+                    only when the same-category rule matched.
    - No match    -> leave Suggested_Template_AO blank and tag the row
-                    [NEEDS_REVIEW] in Notes. No proxy fabrication.
-  Same rule drives the Add_To_* propagation suggestion: Y if the template
-  is present in that workbook, N otherwise. Blank if no template.
-
-Run in Spyder with F5. Paths and mappings in USER CONFIGURATION below.
+                    [NEEDS_REVIEW] in Notes.
+  The Add_To_* propagation suggestion is Y if the template is present in
+  that workbook, N otherwise, and blank if there is no template.
 """
+from pathlib import Path
 
 import os
 import pandas as pd
