@@ -7,9 +7,7 @@
 ##   - Storage STILL exempt (PWRSDS/PWRLDS not in GENERATION category,
 ##     so removing them from exempt causes MaxCapInv=0 vs MinCapInv>0
 ##     infeasibility). Use storage_delay_active: True in B2 YAML to
-##     block early-year builds. The 36.9 GW LKA anomaly may recur —
-##     if so, a storage-specific cap mechanism is needed in a future
-##     iteration.
+##     block early-year builds.
 
 rule_mode: proportional
 security_factor: 1.1
@@ -28,12 +26,7 @@ lid_floor_gw: 0.5
 ##
 ## NGS uses 1.01 (same convention as PET/OIL in B and C): with the flat
 ## 1.0 relaxation schedule this relaxes nothing, it only keeps gas
-## eligible for lid_floor_gw (0.5 GW/yr). With NGS strictly locked the
-## BAU pool is exhausted after ~2047, INDEA hydro hits its resource cap
-## and only solar has lid room, so the model buys ~300 PJ of SDS storage
-## plus PWRBCK backstop in 2048-2050 (A system cost 1.38M vs 0.56M with
-## the gas floor; B/C ~0.55M). Half a GW/yr of gas in BGD/IND is the
-## realistic BAU continuation.
+## eligible for lid_floor_gw (0.5 GW/yr).
 family_relaxation_ceilings:
   COA: 1.0
   PET: 1.0

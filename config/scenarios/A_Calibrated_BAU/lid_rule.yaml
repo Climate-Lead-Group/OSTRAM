@@ -7,9 +7,7 @@
 ##   - Storage STILL exempt (PWRSDS/PWRLDS not in GENERATION category,
 ##     so removing them from exempt causes MaxCapInv=0 vs MinCapInv>0
 ##     infeasibility). Use storage_delay_active: True in B2 YAML to
-##     block early-year builds. The 36.9 GW LKA anomaly may recur;
-##     if so, a storage-specific cap mechanism is needed in a future
-##     iteration.
+##     block early-year builds.
 
 rule_mode: proportional
 security_factor: 1.1
@@ -20,11 +18,7 @@ relaxation_schedule:
   2050: 1.0
 
 ## Minimum MaxCapInv (GW) per tech per year.
-## Reverted 0.5 -> 0.0 (2026-07-07): OSTRAM_latest's validated CalBAU was solved
-## with floor=0 (base-year MaxCapInv=0). The 0.5 was added in a same-day WIP
-## commit (1a702b1) but CalBAU was never re-solved, leaving latest stale by this
-## one knob. 0.0 = script default (no floor / BAU behaviour) and reproduces the
-## validated anchor (2,224,446 M USD) exactly. See session 2026-07-07 diagnosis.
+## 0.0 is the script default: no floor.
 lid_floor_gw: 0.0
 
 ## All generation families locked at BAU proportions.

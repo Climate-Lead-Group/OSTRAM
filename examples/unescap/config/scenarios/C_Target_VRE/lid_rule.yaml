@@ -5,11 +5,6 @@
 ## feature (bounded MaxCap/MaxCapInv following each region's NDC floor
 ## trajectory). Wind sits on the normal proportional lid — its NDC floors
 ## (<=19%) are within the 3.0x relaxation ceiling.
-##
-## v1 BUG (resolved): exempting PWRWON/PWRSPV uncapped them -> runaway wind
-## (1,782 GW) and solar front-loading. The cap_envelope approach replaces
-## exemption with a floor-derived capacity ceiling. This file no longer
-## differs from B at all.
 
 rule_mode: proportional
 security_factor: 1.1
@@ -23,10 +18,7 @@ relaxation_schedule:
   2045: 2.0
   2050: 3.0
 
-## 0.5 matches A_Calibrated_BAU. With 0.1, the relaxation multiplier acts
-## on near-zero proportional lids (e.g. PWRSPV ~0.1-0.2 GW/yr, binding every
-## year), leaving this scenario with LESS investment room than the BAU and a
-## higher system cost than A (2026-09-22). Keep >= A's floor so this scenario
+## 0.5 matches A_Calibrated_BAU. Keep >= A's floor so this scenario
 ## is a relaxation of the BAU.
 lid_floor_gw: 0.5
 
