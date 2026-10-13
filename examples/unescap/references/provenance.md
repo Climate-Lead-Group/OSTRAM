@@ -189,8 +189,11 @@ negative bound values additionally constrained to the `1e-8` near-zero tolerance
 - `storage_delay_active` reads the declared maintained model and writes a scenario-local
   adjusted model under `Executables/<scenario>_0/`; it never resolves a removed legacy
   adjusted-model path or modifies the maintained model.
-- Preparation is stamped atomically. Repeated preparation requires `--reset`, refuses
-  foreign/unstamped workspaces, and profile workspaces are isolated by profile id.
+- Preparation is stamped atomically, isolated by profile id, and refuses foreign or
+  unstamped workspaces. A repeated `prepare` with an unchanged manifest stops and points
+  to `--reset`, which deletes the workspace and prepares a new one. A changed
+  `profile.yaml` keeps the workspace when its mutable authority roles are the same and
+  moves it to `unescap_previous_<UTC timestamp>` when they differ.
 - Reporting/capture and resource inspection resolve the activated profile bundle.
 
 ## Historical integration validation record
