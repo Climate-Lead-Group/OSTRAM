@@ -36,8 +36,6 @@ family_relaxation_ceilings:
   OIL: 1.0
   BIO: 1.0
   WAS: 1.0
-  NGA: 1.0
-  NUC: 1.0
 
 ## Storage must stay exempt to avoid MinCapInv > MaxCapInv
 ## infeasibility (storage techs are not GENERATION, so the lid
