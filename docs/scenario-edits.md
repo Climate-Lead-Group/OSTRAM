@@ -78,7 +78,8 @@ The build stops with an error when an edit changes nothing:
 - a `create_if_absent` edit names a technology that is absent from the
   workbook, or a parameter that is absent from every sheet;
 - a `tech_prefix` edit matches no technology;
-- a `multiply` edit lists years that are not year columns;
+- a `values` edit, or a `multiply` edit with `years`, names a year that is
+  not a year column; the message lists the missing years;
 - a shared VRE ceiling finds no `TotalAnnualMaxCapacity` row for its technology.
 
 The message names the scenario, the edit and the reason, and suggests the

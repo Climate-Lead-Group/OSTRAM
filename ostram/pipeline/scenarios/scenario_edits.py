@@ -381,10 +381,14 @@ def apply_edit(
     validate_residual_source(edit)
     create = bool(edit.get("create_if_absent", False))
     selector = edit.get("tech") or edit.get("tech_prefix") or ", ".join(edit.get("techs", []))
-    if edit.get("op") == "multiply" and edit.get("years"):
-        years = sorted(int(y) for y in edit["years"])
-        if not set(years) & set(year_cols):
-            raise scenario_edit_error(ws, log, f'the edit to {param} for "{selector}"', param, years, "years")
+    if edit.get("op") != "set_to_residual_factor_floor":
+        if "values" in edit:
+            named_years = edit["values"] or {}
+        else:
+            named_years = edit.get("years") if edit.get("op") == "multiply" else None
+        missing = sorted({int(y) for y in named_years or ()} - set(year_cols))
+        if missing:
+            raise scenario_edit_error(ws, log, f'the edit to {param} for "{selector}"', param, missing, "years")
     matched = 0
     for tech in techs_matching(ws, col_map, edit):
         r = find_row(ws, col_map, tech, param)
