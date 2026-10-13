@@ -1,4 +1,4 @@
-## lid_rule.yaml — B_Optimised_VRE scenario override
+## lid_rule.yaml: B_Optimised_VRE scenario override
 ## Updated: 2026-05-26  (added BIO/WAS family ceilings)
 
 rule_mode: proportional
@@ -23,7 +23,7 @@ lid_floor_gw: 0.1
 ## A ceiling of 1.0 = locked to BAU proportions (no relaxation).
 ##
 ## IMPORTANT: families with ceiling <= 1.0 are "locked" families.
-## The lid_floor_gw does NOT apply to locked families — their effective
+## The lid_floor_gw does NOT apply to locked families; their effective
 ## lid is purely proportional (share × pool_delta × ceiling).  This
 ## prevents the floor from acting as an implicit per-tech subsidy
 ## for families with near-zero BAU share.
@@ -35,8 +35,8 @@ family_relaxation_ceilings:
   WAS: 1.0
   NGS: 1.2
   URN: 1.5
-  HYD: 3.0        # NEW — stop hydro riding the 10×
-  SHP: 3.0        # NEW — same
+  HYD: 3.0        # NEW: stop hydro riding the 10×
+  SHP: 3.0        # NEW: same
   # SPV/WON/CSP stay unlisted; they get the full relaxation_schedule,
   # which reaches 25.0 in 2050
 
@@ -46,7 +46,7 @@ exempt_prefixes:
   - PWRSDS     # Short-duration storage
   - PWRLDS     # Long-duration storage
 
-## Adequacy floor — ensures the sum of gen MaxCapInv in each (cr, year)
+## Adequacy floor: ensures the sum of gen MaxCapInv in each (cr, year)
 ## is at least this fraction of scaled_pool (ResidualCapacity × demand_mult).
 ## When the proportional lid produces a total below this floor, ALL per-tech
 ## lids are scaled up by the same factor (preserving tech-share structure
@@ -62,4 +62,4 @@ exempt_prefixes:
 adequacy_floor_schedule:
   2040: 0.0        # no floor through 2040
   2045: 0.08       # 8% by 2045
-  2050: 0.20       # 20% by 2050 — covers INDWE 19.4% gap
+  2050: 0.20       # 20% by 2050; covers INDWE 19.4% gap

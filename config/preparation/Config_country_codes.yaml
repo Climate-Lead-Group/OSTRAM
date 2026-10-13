@@ -261,7 +261,7 @@ implausible_combinations:
 # WARNING: DEAD KEY: `TotalAnnualMaxCapacityInvestment` in the six
 #   family blocks below is NOT compiled for transmission. transmission.py process_parametrization
 #   reads PARAM_LIST = [CapitalCost, FixedCost, ResidualCapacity,
-#   TotalAnnualMinCapacityInvestment, TotalAnnualMaxCapacity] — which OMITS it. Do NOT
+#   TotalAnnualMinCapacityInvestment, TotalAnnualMaxCapacity], which OMITS it. Do NOT
 #   rename it to a live key (e.g. TotalAnnualMaxCapacity): that would cap internal
 #   transmission at 5 GW/yr and cripple the 660-930 GW build-out the model needs. Leave as-is.
 # Renewable transmission technologies

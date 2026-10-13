@@ -1,4 +1,4 @@
-## A_Calibrated_BAU — thermal retirement schedule  (v2)
+## A_Calibrated_BAU: thermal retirement schedule  (v2)
 ##
 ## Lifetimes calibrated to midpoints of Natalia's country-level research
 ## (Energy_Data_for_YAML_ALL_6_Countries.xlsx, "Retirements" sheet, Note 8).
@@ -9,7 +9,7 @@
 ##   PET 20–30 yr  →  midpoint 25
 ##   NUC 40–60 yr  →  midpoint 50
 ##
-## Same midpoints used across BAU and Opti — no defensible basis for
+## Same midpoints used across BAU and Opti; no defensible basis for
 ## differentiating lifetimes between scenarios.
 ##
 ## Country-level consistency checks against Natalia's trajectory data:

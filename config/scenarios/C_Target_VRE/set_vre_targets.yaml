@@ -20,7 +20,7 @@ max_floor_share: 0.95     # safety cap; high enough for the NPL/BTN hydro locks
 ## set_vre_targets writes a bounded MaxCap/MaxCapInv that follows the floor's
 ## capacity trajectory (cap_needed = floor_gen / realized_yield from CalBAU).
 ## This replaces lid-exemption: solar is pinned near residual early and rises
-## only as the external-share floor rises — no front-loading, no 9999. headroom is the
+## only as the external-share floor rises: no front-loading, no 9999. headroom is the
 ## slack above the floor-implied capacity (raise it if a solar floor goes
 ## infeasible due to curtailment at high penetration).
 cap_envelope_headroom: 0.20      # generous capacity band -> solver stays well-conditioned
