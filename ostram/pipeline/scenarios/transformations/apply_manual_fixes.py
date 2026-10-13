@@ -321,7 +321,7 @@ def coerce_value(ws, col_idx_1based, new_value):
 # =============================================================================
 
 print("=" * 72)
-print("4_apply_manual_fixes.py")
+print("apply_manual_fixes")
 print("=" * 72)
 
 in_dir  = os.path.join(WORK_DIR, INPUT_SUBDIR)
@@ -355,7 +355,7 @@ out_wbs = {label: load_workbook(OUT_FILES[label]) for label in AO_FILES}
 # Audit log accumulator
 log_lines = []
 log_lines.append("=" * 72)
-log_lines.append("4_apply_manual_fixes.py -- Run log")
+log_lines.append("apply_manual_fixes -- Run log")
 for label, sheet, tech, selectors, edit_col, _, _ in out_of_domain_substitutions:
     message = f"OUT_OF_DOMAIN  {label}/{sheet} {tech} {selectors} {edit_col} (not declared in active taxonomy)"
     log_lines.append(message)

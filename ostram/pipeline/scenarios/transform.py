@@ -425,7 +425,7 @@ def stage_1_scripts_1_to_5(s1: Path) -> None:
     """Stage 1: run the six A-O alignment modules in ``s1``, from the
     timeslice merge to the timeslice fabric propagation.
     """
-    banner("Stage 1: scripts 1-5 (AO/WV alignment pipeline)")
+    banner("Stage 1: six alignment modules (AO/WV alignment pipeline)")
     run_subproc("ostram.pipeline.scenarios.transformations.merge_timeslices", cwd=s1, label="merge timeslices")
     run_subproc("ostram.pipeline.scenarios.transformations.extract_ao_extensions", cwd=s1, label="extract AO extensions")
     run_subproc(

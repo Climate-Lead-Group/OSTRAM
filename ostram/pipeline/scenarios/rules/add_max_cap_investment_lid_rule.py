@@ -714,8 +714,8 @@ def load_generation_techs(tech_types_path: Path) -> set:
     tech_types_path = Path(tech_types_path)
     if not tech_types_path.is_file():
         raise FileNotFoundError(
-            f"TECH_TYPES.csv not found at {tech_types_path}. "
-            f"Place it next to this script, or set "
+            f"Technology taxonomy not found at {tech_types_path} "
+            f"(config/scenarios/technology_types.csv, or the active profile's interconnector_taxonomy). Set "
             f"RESTRICT_TO_GENERATION = False to disable the filter."
         )
     df = pd.read_csv(tech_types_path)

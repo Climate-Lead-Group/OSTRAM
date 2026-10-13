@@ -92,7 +92,7 @@ def resolve_plan(
 ) -> A3Plan:
     """Resolve scenario, dependency, and destination choices without effects."""
     if not paths.process_dir.is_dir():
-        raise SystemExit(f"ERROR: A3_process folder missing: {paths.process_dir}")
+        raise SystemExit(f"ERROR: A3 scenarios workspace folder missing: {paths.process_dir}")
 
     soasia = (
         cli_args.soasia
