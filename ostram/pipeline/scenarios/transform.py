@@ -11,7 +11,7 @@ from previous runs, and the rules_script assigned to the scenario.
 
 Pipeline:
   Stage 0    materialize scenario template  v18 -> flat v17-shaped per scenario
-  Stage 1    scripts 1-5                    AO/WV alignment pipeline, with
+  Stage 1    six modules                    AO/WV alignment pipeline, with
                                             maintained AO decision overlay
   Stage 1b   insert_reserve_margin          adds System Parameters sheet
              add_max_capacity_investment_rule --fill-zeros
