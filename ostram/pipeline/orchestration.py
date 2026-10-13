@@ -139,7 +139,8 @@ def check_tool_available(tool: str) -> None:
     except Exception as exc:
         raise RuntimeError(
             f"Requirement '{tool}' not found in PATH. "
-            f"Open an Anaconda/Miniconda Prompt or install the tool. Original error: {exc}"
+            f"Activate the conda environment that holds OSTRAM, or install the tool. "
+            f"Original error: {exc}"
         )
 
 
