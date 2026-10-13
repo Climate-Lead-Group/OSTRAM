@@ -556,6 +556,26 @@ def run_open_pwrbck_adjustment(params, scenario_name):
     print(result.stdout)
     print('#------------------------------------------------------------------------------#')
 
+# Names these keys had before the rename; B2 still accepts them.
+_PREVIOUS_KEY_NAMES = {
+    'reserve_margin_adjust_backstop': 'reserve_margin_patch_backstop',
+    'reserve_margin_adjust_ccs': 'reserve_margin_patch_ccs',
+    'reserve_margin_xlsx_adjust_backstop': 'reserve_margin_xlsx_patch_backstop',
+    'reserve_margin_xlsx_adjust_ccs': 'reserve_margin_xlsx_patch_ccs',
+}
+
+
+def _renamed_param(params, key, default):
+    """Return ``params[key]`` or the value under its previous name; stop when both differ."""
+    previous = _PREVIOUS_KEY_NAMES[key]
+    if key in params and previous in params and params[key] != params[previous]:
+        raise ValueError(
+            f"{key} and its previous name {previous} are both set, to different "
+            "values. Keep one of them."
+        )
+    return params.get(key, params.get(previous, default))
+
+
 def run_reserve_margin_repair_adjustment(params, scenario_name):
     """
     OPTIONAL diagnostic/final-ish step: adjusts ReserveMarginTagTechnology and
@@ -573,6 +593,9 @@ def run_reserve_margin_repair_adjustment(params, scenario_name):
         reserve_margin_adjust_backstop: bool -- set PWRBCK tags (default True)
         reserve_margin_adjust_ccs: bool      -- set PWRCCS tags (default True)
         reserve_margin_open_capacity: bool  -- open selected caps (default True)
+
+    The two adjust keys also accept their previous names, with patch in
+    place of adjust.
 
     This chains after strip_storage/open_pwrbck when those adjustments are active.
     """
@@ -620,9 +643,9 @@ def run_reserve_margin_repair_adjustment(params, scenario_name):
     )
     command += ['--open-capacity-prefixes'] + list(open_prefixes)
 
-    if not params.get('reserve_margin_adjust_backstop', True):
+    if not _renamed_param(params, 'reserve_margin_adjust_backstop', True):
         command.append('--skip-backstop-credit')
-    if not params.get('reserve_margin_adjust_ccs', True):
+    if not _renamed_param(params, 'reserve_margin_adjust_ccs', True):
         command.append('--skip-ccs-credit')
     if not params.get('reserve_margin_open_capacity', True):
         command.append('--skip-capacity-opening')
@@ -651,6 +674,11 @@ def run_reserve_margin_xlsx_adjustment(params, scenario_name):
         reserve_margin_xlsx_ccs_credit: num      -- PWRCCS reserve credit (default 0.9)
         reserve_margin_xlsx_target_prefixes: list -- default ["PWRPET", "PWROIL", "PWRNGS"]
         reserve_margin_xlsx_sentinel_values: list -- default [0, 9999]
+        reserve_margin_xlsx_adjust_backstop: bool -- set PWRBCK tags (default True)
+        reserve_margin_xlsx_adjust_ccs: bool      -- set PWRCCS tags (default True)
+
+    The two adjust keys also accept their previous names, with patch in
+    place of adjust.
 
     This chains after strip_storage/open_pwrbck and also after the older
     reserve_margin_repair adjustment if that older adjustment is active.
@@ -715,9 +743,9 @@ def run_reserve_margin_xlsx_adjustment(params, scenario_name):
     sentinel_values = params.get('reserve_margin_xlsx_sentinel_values', [0, 9999])
     command += ['--sentinel-values'] + [str(value) for value in sentinel_values]
 
-    if not params.get('reserve_margin_xlsx_adjust_backstop', True):
+    if not _renamed_param(params, 'reserve_margin_xlsx_adjust_backstop', True):
         command.append('--skip-backstop-credit')
-    if not params.get('reserve_margin_xlsx_adjust_ccs', True):
+    if not _renamed_param(params, 'reserve_margin_xlsx_adjust_ccs', True):
         command.append('--skip-ccs-credit')
 
     print(f"Repairing reserve margin data from XLSX for '{scenario_name}_0' (suffix={suffix}):")

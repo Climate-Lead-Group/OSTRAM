@@ -1805,5 +1805,46 @@ class CostExportReconciliationTests(unittest.TestCase):
             self.assertEqual(evidence['missing_cost_frames'], ['DiscountedOperationalCost'])
 
 
+
+class ReserveMarginKeyNameTests(unittest.TestCase):
+    def _xlsx_command(self, **params: object) -> list[str]:
+        runner_module = _load_b2("reserve_margin_key_names")
+        commands: list[list[str]] = []
+
+        def fake_run(command):
+            commands.append(list(command))
+            return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+        with (
+            mock.patch.object(runner_module, "_run_stage_command", side_effect=fake_run),
+            redirect_stdout(io.StringIO()),
+        ):
+            runner_module.run_reserve_margin_xlsx_adjustment(
+                _base_params(reserve_margin_xlsx_active=True, **params), "A"
+            )
+        return commands[0]
+
+    def test_default_keeps_both_credits(self) -> None:
+        command = self._xlsx_command()
+        self.assertNotIn("--skip-backstop-credit", command)
+        self.assertNotIn("--skip-ccs-credit", command)
+
+    def test_previous_names_are_accepted(self) -> None:
+        command = self._xlsx_command(
+            reserve_margin_xlsx_patch_backstop=False,
+            reserve_margin_xlsx_patch_ccs=False,
+        )
+        self.assertIn("--skip-backstop-credit", command)
+        self.assertIn("--skip-ccs-credit", command)
+
+    def test_conflicting_names_stop(self) -> None:
+        with self.assertRaises(ValueError) as raised:
+            self._xlsx_command(
+                reserve_margin_xlsx_adjust_backstop=True,
+                reserve_margin_xlsx_patch_backstop=False,
+            )
+        self.assertIn("reserve_margin_xlsx_patch_backstop", str(raised.exception))
+
+
 if __name__ == "__main__":
     unittest.main()

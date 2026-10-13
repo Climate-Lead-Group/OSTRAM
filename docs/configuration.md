@@ -533,6 +533,8 @@ reserve_margin_xlsx_target_prefixes: [PWRPET, PWROIL, PWRNGS]
 reserve_margin_xlsx_sentinel_values: [0, 9999]
 ```
 
+`reserve_margin_xlsx_adjust_backstop` and `reserve_margin_xlsx_adjust_ccs`, both `True` by default, set the PWRBCK and PWRCCS reserve-margin tags; `False` skips that credit. `reserve_margin_adjust_backstop` and `reserve_margin_adjust_ccs` do the same for the older version. B2 also accepts each key under its previous name, with `patch` in place of `adjust`, and stops when a key and its previous name are both set to different values.
+
 ---
 
 ## Config_region_consolidation.yaml
