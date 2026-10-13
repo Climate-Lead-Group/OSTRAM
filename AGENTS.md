@@ -89,5 +89,5 @@ The pipeline runs in this order:
 
 - Every change: the solver-free tests pass.
 - Docstring-only commits: with docstrings stripped, every module's AST is unchanged.
-- Config, input or pipeline changes: build all 18 registered scenarios (support `BAU` plus the 17 decision scenarios) with `--compile-only`, on `main` and on the branch, in separate clones. Compare `workspace/compilation/A2_Output_Params/<S>/`, `workspace/execution/A2_Outputs_Params_otoole/<S>/` and `workspace/execution/Executables/<S>_0/` byte for byte. Warnings files may differ only in clone paths and timestamps.
+- Config, input or pipeline changes: build all 18 registered scenarios (support `BAU` plus the 17 decision scenarios) with `--compile-only`, on `main` and on the branch, in separate clones. Compare `workspace/compilation/A2_Output_Params/<S>/`, `workspace/execution/A2_Outputs_Params_otoole/<S>/` and `workspace/execution/Executables/<S>_0/` byte for byte. Warnings files may differ only in clone paths and timestamps. The steps and the comparison command are in the section "After changing inputs" of `CONTRIBUTING.md`.
 - Documentation changes: the Sphinx build adds no new warnings.

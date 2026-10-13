@@ -307,7 +307,7 @@ After the [installation](installation.md), run this from the clone in the
 activated environment:
 
 ```powershell
-$workspace = [IO.Path]::GetFullPath('..\support-bau-workspace')
+$workspace = Join-Path (Resolve-Path '..').Path 'support-bau-workspace'
 if (Test-Path -LiteralPath $workspace) { throw 'Choose a new empty workspace path' }
 python -m ostram --profile full --workspace $workspace run --env-name ostram --skip-pull --scenarios BAU --verbose
 if ($LASTEXITCODE -ne 0) { throw 'Support BAU preparation/compilation/solve/export failed' }
@@ -339,7 +339,7 @@ and complete A first. These two invocations use only maintained checkout inputs
 and the newly solved A; no accepted or private prepared inputs are copied in.
 
 ```powershell
-$workspace = [IO.Path]::GetFullPath('..\w')
+$workspace = Join-Path (Resolve-Path '..').Path 'w'
 if (Test-Path -LiteralPath $workspace) { throw 'Choose a new empty workspace path' }
 python -m ostram --workspace $workspace run --skip-pull --env-name ostram --scenarios A_Calibrated_BAU --verbose
 if ($LASTEXITCODE -ne 0) { throw 'A preparation/compilation/solve/export failed' }
