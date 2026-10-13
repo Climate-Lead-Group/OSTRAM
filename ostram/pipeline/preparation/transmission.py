@@ -174,10 +174,6 @@ def process_base_year(path, pairs, enable_dsptrn=False):
         header = list(dtech.columns)
         dtech = dtech.iloc[0:0]  # clear rows
 
-        def add_row(lst):
-            """Append a copy of the enclosing ``row`` dictionary to ``lst``."""
-            lst.append({k:v for k,v in row.items()})
-
         rows = []
         for country, region in pairs:
             countryname = iso_country_map.get(country, f"Unknown ({country})")
