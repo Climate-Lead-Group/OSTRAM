@@ -9,8 +9,20 @@ Windows PowerShell. Terms are in the [glossary](glossary.md).
 
 ## Install
 
-1. Install Miniconda or Anaconda, and Git. Open a PowerShell window in which
-   `conda --version` works. An Anaconda Prompt is such a window.
+1. Install Git and Miniforge, a conda installer that uses only the conda-forge
+   channel. Download Miniforge from <https://conda-forge.org/download/> and
+   keep the default options. Open the Miniforge Prompt from the Start menu, run
+   `conda init powershell` once, and close it.
+
+   If PowerShell later reports that running scripts is disabled, run
+   `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once in PowerShell.
+
+   Open a new PowerShell window. `conda --version` and `conda env list` work
+   there. Run every command on this page in that window.
+
+   If you already use Miniconda or Anaconda and `conda env create` stops with a
+   message about Anaconda's terms of service, install Miniforge, or accept
+   those terms if your organisation's licence covers it.
 
 2. Clone into a short path, such as a folder directly under the root of a
    drive. Some output paths of the scenario
@@ -28,10 +40,18 @@ Windows PowerShell. Terms are in the [glossary](glossary.md).
 
    ```powershell
    conda env create -n ostram -f environment.yaml
+   ```
+
+   If this command fails, stop. Every later command needs the environment.
+
+   ```powershell
    conda activate ostram
+   python -c "import sys; print(sys.prefix)"
    python -m pip install -e .
    python -m pip check
    ```
+
+   The printed path ends with `envs\ostram`.
 
 4. Set the encoding and check the installation. Set `PYTHONUTF8` again in
    every new window before a pipeline command.
