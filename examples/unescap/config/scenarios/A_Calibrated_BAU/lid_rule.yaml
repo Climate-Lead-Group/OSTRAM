@@ -52,10 +52,7 @@ exempt_prefixes:
 ##
 ## Zero through 2040 preserves near-term BAU calibration.  Ramps from 2041
 ## to provide system headroom at end of horizon, where pool_delta collapses
-## as retirements exhaust the BAU pool.  Without this, A_Calibrated_BAU
-## builds ~28.7 GW of PWRBCK backstop in BGDXX/INDEA over 2048-2050 (total
-## allowed gen MaxCapInv falls to ~1.5 GW/yr while demand grows ~25% in
-## 2045-2050), inflating the system cost ~100x versus B/C.
+## as retirements exhaust the BAU pool.
 ## Same anchors as B_Optimised_VRE and C_Target_VRE.
 adequacy_floor_schedule:
   2040: 0.0        # no floor through 2040

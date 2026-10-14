@@ -263,7 +263,7 @@ implausible_combinations:
 #   reads PARAM_LIST = [CapitalCost, FixedCost, ResidualCapacity,
 #   TotalAnnualMinCapacityInvestment, TotalAnnualMaxCapacity], which OMITS it. Do NOT
 #   rename it to a live key (e.g. TotalAnnualMaxCapacity): that would cap internal
-#   transmission at 5 GW/yr and cripple the 660-930 GW build-out the model needs. Leave as-is.
+#   transmission at 5 GW/yr. Leave as-is.
 # Renewable transmission technologies
 #Existing renewable transmission technologies
 RNWTRN:
