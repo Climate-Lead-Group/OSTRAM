@@ -92,46 +92,6 @@ and `conda.bat` found on `PATH`. A `.bat` or `.cmd` hit, such as
 of the same installation when that file exists. With no hit it runs the bare
 name `conda`.
 
-## Isolated reproduction environment
-
-Keep the checkout, environment, package cache, logs and outputs separate from
-production. From a new checkout, the following creates the documented
-environment under an explicit local directory instead of updating an existing
-environment. Set `CONDA_EXE` to the installed Conda executable if it is not
-already available through an activated Conda prompt. Use a dedicated PowerShell
-session. The recorded clean-clone execution cleared inherited OSTRAM/Python
-path overrides and fixed Python's hash seed before launching the runner:
-
-```powershell
-Get-ChildItem Env: | Where-Object Name -Like 'OSTRAM_*' | Remove-Item
-Remove-Item Env:PYTHONPATH, Env:PYTHONHOME -ErrorAction SilentlyContinue
-$env:PYTHONUTF8 = '1'
-$env:PYTHONHASHSEED = '0'
-$env:PYTHONDONTWRITEBYTECODE = '1'
-$env:PYTHONUNBUFFERED = '1'
-$runRoot = (Resolve-Path '..').Path # parent of this isolated checkout
-$env:CONDA_ENVS_PATH = Join-Path $runRoot 'conda-envs'
-$env:CONDA_PKGS_DIRS = Join-Path $runRoot 'conda-pkgs'
-conda env create -n ostram-reproduce -f environment.yaml -y
-if ($LASTEXITCODE -ne 0) { throw 'Conda installation failed' }
-$python = Join-Path $env:CONDA_ENVS_PATH 'ostram-reproduce\python.exe'
-& $python -m pip install -e .
-if ($LASTEXITCODE -ne 0) { throw 'Editable installation failed' }
-& $python -m pip check
-& $python -m pip freeze > (Join-Path $runRoot 'pip-freeze.txt')
-& $python -m ostram inspect-resources
-```
-
-Use `& $python` instead of `python`, and pass `--env-name ostram-reproduce`
-to the `run` commands in the [portfolio sequence](pipeline.md#accepted-17-scenario-portfolio).
-Record `conda list`, the Python version, `glpsol --version` and the selected
-vendor solver version with each reproduction. Solver binaries and vendor
-licences are external runtime dependencies; an old prepared workspace is not
-an installation dependency.
-
-Keep the complete environment/package export with run evidence; unbounded
-dependency resolution on a later date is not an exact environment replay.
-
 ## Verify the installation
 
 ```powershell

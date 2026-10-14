@@ -69,7 +69,6 @@ SEASON_DEF = [
 ]
 
 # Scheme: 5dp_D_6_17 — 5 dp (solar 6-17, tight)
-# Selected via sensitivity_timeslice_sweep.py ranking (April 2026).
 # Design: one fat solar block (06-17) maximises SCV by contrasting
 # "solar" vs. "no-solar" hours; three short evening/night blocks
 # capture the post-sunset demand peak and ramp-down.

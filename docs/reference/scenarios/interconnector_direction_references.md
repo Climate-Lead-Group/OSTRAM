@@ -7,7 +7,7 @@ ActivityRatio in `A-O_AR_Projections.xlsx` + base-year values; `Projection.Mode 
 `bidirectional` = both modes active (omit from config).
 
 Each corridor's direction is set to its **real-world governing flow**, established from primary
-sources (PPAs, commissioned assets, official plans) via three research passes (2026-07). Genuinely
+sources (PPAs, commissioned assets, official plans). Genuinely
 seasonal corridors are left bidirectional; conceptual corridors are set to the only physically
 plausible direction (blocking impossible export legs) and are inactive in B_Opt regardless.
 
@@ -49,7 +49,4 @@ plausible direction (blocking impossible export legs) and are inactive in B_Opt 
   the Bangladesh treatment). Also pre-construction (in-service ~2034) — a timing fact, out of scope here.
 - **Node mapping (#10 vs #11):** The flagship Dhalkebar–Muzaffarpur line physically lands in Bihar =
   India's *Eastern* region, so it arguably belongs to `TRNINDEANPLXX`; `TRNINDNONPLXX` (Butwal–Gorakhpur)
-  is the true Northern link. Both are bidirectional, so this does not affect the direction map — noted
-  for a possible separate node-mapping review.
-
-_Generated 2026-07 from three primary-source research passes; every non-inferred direction is cited above._
+  is the true Northern link. Both are bidirectional, so this does not affect the direction map.

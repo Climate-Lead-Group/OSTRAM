@@ -31,12 +31,12 @@ absolute, and the caller's current directory is never searched for resources.
 ### Supported Windows locations
 
 Use a local, nonsynchronised location for both the project and workspace.
-Unicode and spaces are supported. Before a governed run, the final-output
+Unicode and spaces are supported. Before a run, the final-output
 preflight must predict every final path at no more than 240 UTF-16 code units.
 
 Deeply nested roots, network-mounted roots, and cloud-synchronised roots,
 including OneDrive, are unsupported. If the preflight fails, choose a shorter
-local root. The application must not silently truncate final governed output
+local root. The application must not silently truncate final output
 names.
 
 ## 3. Run a solver-free preparation gate
@@ -69,12 +69,12 @@ registry selection, compiles it, and executes B2. Use `--scenarios` for an
 explicit comma-separated selection and the documented `--skip-*` flags when a
 stage is already satisfied.
 
-For all 17 accepted cases, use the
-[portfolio sequence](pipeline.md#accepted-17-scenario-portfolio): solve A, then
+For all 17 decision cases, use the
+[portfolio sequence](pipeline.md#17-scenario-portfolio): solve A, then
 materialize and solve the remaining decision cases using that new A result.
 Support `BAU` has a separate [standalone execution command](pipeline.md#support-bau)
 and permits existing transmission plus committed additions. It is not the
-accepted A scenario. The unfiltered default also
+A scenario. The unfiltered default also
 includes C, which cannot be materialized before its A result exists.
 
 The interactive display is compact and updates in place on stderr. Redirected

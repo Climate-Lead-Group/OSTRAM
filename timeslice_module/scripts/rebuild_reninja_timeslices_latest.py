@@ -83,7 +83,6 @@ SEASON_DEF = [
 #   - First entry starts at 0, last entry ends at 24
 #   - No gaps, no overlaps
 # Scheme: 5dp_D_6_17 — 5 dp (solar 6-17, tight)
-# Selected via sensitivity_timeslice_sweep.py ranking (April 2026).
 # MUST match DAYPART_DEF in build_ostram_timeslices.py.
 DAYPART_DEF = [
     ('D1', 'Night',         0,  6),

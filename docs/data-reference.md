@@ -168,7 +168,7 @@ Year (2023-2050)
           └── Daily Time Bracket (5 brackets)
 ```
 
-This produces **20 timeslices** (4 seasons x 5 brackets), expanded from an earlier 12-timeslice (4x3) structure:
+This produces **20 timeslices** (4 seasons x 5 brackets):
 
 | Timeslice | Season | Bracket |
 |-----------|--------|---------|
@@ -239,6 +239,32 @@ Base year and projection activity ratios:
 | `FixedCost` | M$/GW/yr | Annual fixed O&M cost |
 | `VariableCost` | M$/PJ | Variable O&M cost |
 | `CapitalCostStorage` | M$/GW | Storage capital cost |
+
+### Fuel prices
+
+- Prices are constant 2023 USD/GJ, numerically MUSD/PJ. Capital costs are in
+  MUSD/GW and fixed O&M in MUSD/GW-year.
+- The `VariableCost` rows of the country `MIN` technologies hold the fuel
+  prices, including the `B_Opt_IndiaCostsFuel` substitution.
+- The compiler reads `fuel_cost_allocation` in `Config_MOMF_T1_A.yaml`. For
+  each fuel and year the positive minimum mapped national price is charged
+  upstream. Each generator keeps its non-fuel VOM plus the national-price
+  difference multiplied by its fuel `InputActivityRatio`. The compiler keeps
+  four-decimal monetary rounding. `COAINT` names an accounting route, not a
+  procurement origin.
+- India coal uses the NTPC utility-cost proxy with 1% annual real escalation;
+  its extension through 2050 is a study assumption.
+- Bangladesh gas uses the FY2023/24 procurement proxy (5.422227767430297
+  USD2023/GJ) for 2023 and 2024, with IEPMP ratios thereafter. Its boundary
+  excludes midstream.
+- Sri Lanka coal's 2023 value is 7.96 USD/GJ, with the invoice-finalisation
+  caveat.
+- Maldives diesel uses the Sri Lanka price as its proxy.
+- International and CIF multipliers apply once: 1.3, and 1.0 for fuel oil.
+  National observations receive no added delivery charge.
+- OTH and COG keep oil-equivalent and gas-equivalent proxies.
+- The prices map one to one onto the inherited fleet's heat basis. This is a
+  compatibility assumption, not a verified HHV/LHV conversion.
 
 ### Capacity Parameters
 

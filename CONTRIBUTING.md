@@ -18,6 +18,8 @@ summary they need.
 
 ## Tests
 
+- Regression checks are the test command below and, for input changes, the
+  steps in [After changing inputs](#after-changing-inputs).
 - Every change: the solver-free tests pass.
 
   ```powershell
@@ -49,7 +51,7 @@ This applies to changes under `config/`, `inputs/` or `ostram/pipeline/`.
 3. In each clone, build all 18 registered scenarios. Omit `--scenarios`. The two
    C scenarios need a solved `A_Calibrated_BAU` result: pass the same folder
    to both clones. The
-   [portfolio sequence](docs/pipeline.md#accepted-17-scenario-portfolio) shows
+   [portfolio sequence](docs/pipeline.md#17-scenario-portfolio) shows
    how to make it.
 
    ```powershell

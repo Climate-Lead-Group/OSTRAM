@@ -5,8 +5,7 @@ built for the UNESCAP training sessions. Bangladesh (`BGDXX`) and India East (`I
 joined by the real `TRNBGDXXINDEA` cross-border corridor, over 2023–2050 in 20 timeslices.
 
 Everything the profile needs is in this directory — input CSVs, the scenario workbook,
-preparation/compilation/execution configuration, the scenario registry, the exercises,
-and the provenance record. Nothing here falls back to the project-root configuration of
+preparation/compilation/execution configuration and the scenario registry. Nothing here falls back to the project-root configuration of
 the same name.
 
 The profile engine and these assets are integrated. All commands below resolve the
@@ -54,14 +53,6 @@ only `B_Optimised_VRE` never adds BAU.
 examples/unescap/
   profile.yaml                     the profile's authorities and resolution policy
   README.md                        this file
-  AUTHORING_AND_ACCEPTANCE.md      Windows authoring + Actions acceptance guide
-  TRAINING_OPERATION_COVERAGE.md   legacy scripts and the current commands
-  exercises/
-    training.html                  main guide — 4 scenario exercises + 5 interconnector sub-exercises
-    add-country.html               Exercise A — add Myanmar to the model
-    add-interconnector.html        Exercise B — add a BGD↔MMR corridor
-  docs/
-    git-setup.html                 version control and environment setup
   inputs/
     osemosys_global/*.csv          64 OSeMOSYS Global parameter and set files
     scenarios/
@@ -77,36 +68,27 @@ examples/unescap/
     scenarios/
       registry.json                ostram-scenario-registry-v1 — four roots, no derived
       technology_types.csv         technology → category map, trimmed to this profile
-      ao_extension_decisions.csv   AO extension decision record (see provenance)
+      ao_extension_decisions.csv   AO extension decision record
       A_Calibrated_BAU/*.yaml
       B_Optimised_VRE/*.yaml
       C_Target_VRE/*.yaml
-  references/
-    interconnector-direction-results.html   measured forward/reverse/bidirectional comparison
-    provenance.md                  where every file came from, and what changed
-    release-readiness.md           Windows CBC and cross-platform acceptance evidence
 ```
 
 Nothing generated lives here. Preparation output, compiled parameters, solver inputs,
 `.sol` files, `Executables/`, `Outputs/`, dashboards, and plots are all written under the
 run workspace (`--workspace` / `OSTRAM_WORKSPACE`), never inside `examples/unescap/`.
 
-Training authors should start with
-[`AUTHORING_AND_ACCEPTANCE.md`](AUTHORING_AND_ACCEPTANCE.md). The table of legacy
-scripts and current commands is [`TRAINING_OPERATION_COVERAGE.md`](TRAINING_OPERATION_COVERAGE.md).
-
 ## Commands
 
-Install a clean checkout with the exact Windows commands in
-[`AUTHORING_AND_ACCEPTANCE.md`](AUTHORING_AND_ACCEPTANCE.md#install-a-clean-checkout-on-windows).
-The commands below use its dedicated `ostram-unescap` environment and a new workspace.
+Install a clean checkout with the [installation](../../docs/installation.md) page.
+The commands below use its `ostram` environment and a new workspace.
 The profile is named, not located, so no command depends on your working directory.
 
 ```
 python -m ostram --workspace workspace/unescap example prepare unescap
-python -m ostram --workspace workspace/unescap --profile unescap run --env-name ostram-unescap --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --compile-only --skip-pull
-python -m ostram --workspace workspace/unescap --profile unescap run --env-name ostram-unescap --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --skip-pull
-python -m ostram --workspace workspace/unescap --profile unescap run --env-name ostram-unescap --scenarios "C_Target_VRE" --skip-pull
+python -m ostram --workspace workspace/unescap --profile unescap run --env-name ostram --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --compile-only --skip-pull
+python -m ostram --workspace workspace/unescap --profile unescap run --env-name ostram --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --skip-pull
+python -m ostram --workspace workspace/unescap --profile unescap run --env-name ostram --scenarios "C_Target_VRE" --skip-pull
 python -m ostram --workspace workspace/unescap example report unescap --capture baseline
 python -m ostram --workspace workspace/unescap example report unescap
 ```
@@ -117,7 +99,7 @@ result in the same workspace. Select A/B/C explicitly: support `BAU` supplies A'
 restriction materialization and is not a requested decision solve. The backstop is
 enabled by this profile; include its exported use when interpreting a feasible result.
 
-Profile-aware country commands, used by [Exercise A](exercises/add-country.html):
+Profile-aware country commands:
 
 ```
 python -m ostram --profile unescap country template
@@ -143,7 +125,7 @@ scenario can be compiled or solved.
 
 `profile.yaml` names every resource under exactly one authority:
 
-- **`profile:`** — everything in this directory: inputs, configs, registry, docs.
+- **`profile:`** — everything in this directory: inputs, configs and registry.
 - **`project:`** — repository-level resources borrowed as-is: the maintained OSeMOSYS
   model at `model/osemosys_fast_preprocessed.txt`, and `inputs/execution/`.
 - **`package:`** — resources shipped inside the installed `ostram` package:
@@ -155,13 +137,10 @@ fails and names it; it does not quietly reach for the project-root file of the s
 The config files use `${...}` tokens for every path — none of them contain a physical
 legacy path such as `./A1_Outputs` or `../Executables/A_Calibrated_BAU_0`.
 
-## Provenance and known discrepancies
+## Known discrepancies
 
-[`references/provenance.md`](references/provenance.md) records the source commit, the
-source path of every migrated file, the SHA-256 of the scenario workbook, and every
-transformation applied. The workbook's exact **2.496 GW** `TRNBGDXXINDEA` residual
-capacity is also the 2023 anchor in every executable scenario schedule; prose may describe
-it as approximately 2.5 GW, but no executable authority rounds it. Choosing 2.500 GW is
-an exercise edit, not the shipped seed. In the active relaxed scenario the resulting
+The workbook's exact **2.496 GW** `TRNBGDXXINDEA` residual
+capacity is also the 2023 anchor in every executable scenario schedule; no executable
+authority rounds it. In the active relaxed scenario the resulting
 `TotalAnnualMaxCapacity` is exactly `9999.0`, a finite cap of up to 9999 GW in total. It
 does not alter the `ResidualCapacity` series.

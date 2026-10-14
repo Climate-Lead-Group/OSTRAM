@@ -171,15 +171,3 @@ authorities:
   compilation_resources:
     path: package:resources/compilation
     kind: directory
-
-  # Read-only teaching and provenance material.
-  exercises:
-    path: profile:exercises
-    kind: directory
-  profile_docs:
-    path: profile:docs
-    kind: directory
-  references:
-    path: profile:references
-    kind: directory
-  provenance: profile:references/provenance.md

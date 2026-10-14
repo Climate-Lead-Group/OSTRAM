@@ -19,12 +19,12 @@ reads it. Stage names and other terms are in the [glossary](glossary.md).
 | `.github/workflows/unescap-macos-acceptance.yml` | The CI workflow that runs the training profile on macOS. | GitHub Actions. |
 | `config/` | Configuration. See the table below. | A1 to B2. |
 | `docs/` | This documentation. | Sphinx. |
-| `examples/unescap/` | The two-region training profile with its own inputs, configuration, registry, exercises and references. | `python -m ostram --profile unescap`. |
+| `examples/unescap/` | The two-region training profile with its own inputs, configuration and registry. | `python -m ostram --profile unescap`. |
 | `inputs/` | Model inputs. See the table below. | A1, A3 and B2. |
 | `model/osemosys_fast_preprocessed.txt` | The OSeMOSYS model file in GMPL. | B2. The storage delay writes an adjusted copy, and `glpsol` reads that copy. |
 | `ostram/` | The Python package. See the table below. | Every command. |
 | `tests/` | The solver-free tests in `tests/regression/` and `tests/validation/`. | `python -m unittest discover -s tests -p 'test_*.py'`. |
-| `timeslice_module/` | The timeslice workbook generator, its inputs, four computed workbook cases and notes. The pipeline does not read it. | People, by hand. See its README. |
+| `timeslice_module/` | The timeslice workbook generator, its inputs and the reference workbook of the adopted fabric. The pipeline does not read it. | People, by hand. See its README. |
 | `tools/generate_scenario_catalogue.py` | Regenerates the scenario catalogue page. | `tests/regression/test_scenario_catalogue.py`. |
 | `workspace/` | Generated files. Git ignores it. | Every stage writes here. |
 
@@ -101,8 +101,6 @@ under `config/` and fails when a file is added, removed or left unregistered.
 
 ## Abbreviations
 
-These are historical labels, and the files keep their names.
-
 | Abbreviation | Meaning |
 |---|---|
 | `cr` | country-region |
@@ -116,7 +114,7 @@ These are historical labels, and the files keep their names.
 | `MOMF` | Multipurpose OSeMOSYS Modelling Framework, as in `Config_MOMF_T1_A.yaml` and `Config_MOMF_T1_AB.yaml` |
 | `T1` | tier 1, in the same two file names |
 | `A`, `AB` | pipeline phases, in the same two file names |
-| `D4` | The prefix of the added sets and constraints in the model file. It is named after the project's D4 deliverable report, for which these sets and constraints were added. |
+| `D4` | The prefix of the added sets and constraints in the model file. |
 | `v18` | Version 18 of the scenario workbook template. |
 | `SDS`, `LDS` | short-duration and long-duration storage |
 | `BCK` | backstop |
