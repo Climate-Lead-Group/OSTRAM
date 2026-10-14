@@ -1,6 +1,7 @@
-## A_Calibrated_BAU: thermal retirement schedule  (v2)
+## A_Calibrated_BAU: thermal retirement schedule
 ##
-## Lifetimes calibrated to midpoints of Natalia's country-level research
+## Lifetimes calibrated to midpoints of country-level research from CEA NRAP
+## 2025, IEPMP, CEB LTGEP and the other sources listed below
 ## (Energy_Data_for_YAML_ALL_6_Countries.xlsx, "Retirements" sheet, Note 8).
 ##
 ## Generic lifetime ranges (Note 8):
@@ -12,7 +13,7 @@
 ## Same midpoints used across BAU and Opti; no defensible basis for
 ## differentiating lifetimes between scenarios.
 ##
-## Country-level consistency checks against Natalia's trajectory data:
+## Country-level consistency checks against the trajectory data in the sources below:
 ##   - India COA: net growth 228→315 GW (CEA NRAP Sc.I). 35 yr linear
 ##     retirement is real but overwhelmed by new builds via MinCapInv.
 ##   - India GAS: flat ~20 GW through 2036. 30 yr life → retirements ≈

@@ -1,5 +1,4 @@
 ## lid_rule.yaml — B_Optimised_VRE scenario override
-## Updated: 2026-05-26  (added BIO/WAS family ceilings)
 
 rule_mode: proportional
 security_factor: 1.1

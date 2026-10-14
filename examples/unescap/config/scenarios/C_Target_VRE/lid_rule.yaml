@@ -1,4 +1,4 @@
-## lid_rule.yaml — C_Target_VRE scenario override (v3)
+## lid_rule.yaml — C_Target_VRE scenario override
 ## IDENTICAL to B_Optimised_VRE. No solar/wind exemption.
 ##
 ## Solar is handled entirely by set_vre_targets.yaml via the cap_envelope
