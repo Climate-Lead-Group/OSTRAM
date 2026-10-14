@@ -19,7 +19,7 @@
 ## as the ramp rises above the calibrated trajectory.)
 ##
 ## ---------------------------------------------------------------------------
-## DESIGN DECISIONS (see chat 2026-06-07)
+## DESIGN DECISIONS
 ## ---------------------------------------------------------------------------
 ## 1. CalBAU already meets most non-solar NDC components, so the binding lever
 ##    is overwhelmingly SOLAR. India nuclear/hydro/wind are already >= target
@@ -63,10 +63,8 @@ default_capacity_factor: 0.10    # fallback yield (× c2a) if CalBAU never built
 
 ## pin_generation_to_target: pins VRE generation AT the NDC share via an
 ## activity UPPER limit = max(target_gen, CalBAU_gen), while the capacity
-## envelope above stays generous. Result: solar/wind land exactly on target
-## (no 20% overshoot) WITHOUT the degenerate narrow-capacity-band that stalls
-## the solver. The max() guard keeps planned capacity (e.g. BGD solar) from
-## being force-curtailed in early years.
+## envelope above stays generous. The max() guard keeps planned capacity
+## (e.g. BGD solar) from being force-curtailed in early years.
 pin_generation_to_target: true
 pin_slack: 0.01                  # upper limit sits 1% above the floor (a narrow range, not an exact lower==upper equality)
 

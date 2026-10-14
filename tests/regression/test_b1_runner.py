@@ -20,6 +20,7 @@ import yaml
 from ostram.paths import ProjectPaths
 from ostram.pipeline.compilation.transforms import effects as b1_effects
 from ostram.pipeline.compilation.transforms import planning as b1_planning
+from ostram.pipeline.scenarios.registry import DECISION_SCENARIOS
 
 
 TEST_ROOT = Path(__file__).resolve().parent
@@ -497,12 +498,20 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
         self.assertEqual(truthy_empty.selected, ())
         self.assertTrue(truthy_empty.filter_active)
 
-    def test_last_resort_regex_edge_case_is_preserved_not_silently_fixed(self) -> None:
-        original = "xtra_scen:\n  Main_Scenario: ORIGINAL\n"
-        self.assertEqual(
-            self.runner.regex_update_main_scenario(original, "NEXT"),
-            "xtra_scen:\n  Main_Scenario: 'NEXT'ORIGINAL\n",
-        )
+    def test_update_without_yaml_library_stops_with_message(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            config = Path(temp) / "Config_MOMF_T1_A.yaml"
+            original = b"xtra_scen:\n  Main_Scenario: ORIGINAL\n"
+            config.write_bytes(original)
+            with mock.patch.object(
+                self.runner, "try_import_yaml_handlers", return_value=(None, None)
+            ):
+                with self.assertRaises(SystemExit) as raised:
+                    self.runner.update_main_scenario(config, "NEXT")
+            self.assertEqual(config.read_bytes(), original)
+        message = str(raised.exception.code)
+        self.assertIn("ruamel.yaml", message)
+        self.assertIn("PyYAML", message)
 
     def test_command_plan_and_injected_runner_are_separate(self) -> None:
         compiler = Path("root") / "compiler.py"
@@ -704,7 +713,7 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
                         b1_effects.open_workbook(plan.extra_input(key))
 
         registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))["scenario_registry"]
-        self.assertEqual(len(registry["decision_scenarios"]), 17)
+        self.assertEqual(len(registry["decision_scenarios"]), len(DECISION_SCENARIOS))
         governed_sources = []
         for path in registry_path.parent.rglob("*"):
             if path.is_file() and path.suffix.lower() in {

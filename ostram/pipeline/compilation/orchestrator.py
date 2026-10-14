@@ -184,29 +184,6 @@ def write_yaml_pyyaml(yaml_path: Path, data, pyyaml):
         pyyaml.safe_dump(data, file, sort_keys=False, allow_unicode=True)
 
 
-def regex_update_main_scenario(yaml_text: str, new_value: str) -> str:
-    """Preserve the predecessor's last-resort regex update behavior."""
-    xtra_match = re.search(r"(^|\n)xtra_scen:\s*\{?[\s\S]*?$", yaml_text)
-    if not xtra_match:
-        return re.sub(
-            r"(Main_Scenario:\s*)['\"]?.*?['\"]?",
-            rf"\1'{new_value}'",
-            yaml_text,
-            count=1,
-        )
-
-    def replace_first_after_xtra(text: str) -> str:
-        """Replace the first ``Main_Scenario`` value in ``text`` with ``new_value``."""
-        return re.sub(
-            r"(Main_Scenario:\s*)['\"]?.*?['\"]?",
-            rf"\1'{new_value}'",
-            text,
-            count=1,
-        )
-
-    return replace_first_after_xtra(yaml_text)
-
-
 def update_main_scenario(yaml_path: Path, new_value: str) -> None:
     """Update ``xtra_scen.Main_Scenario`` with the available YAML handler."""
     ruamel_yaml_cls, pyyaml_mod = try_import_yaml_handlers()
@@ -233,9 +210,10 @@ def update_main_scenario(yaml_path: Path, new_value: str) -> None:
         write_yaml_pyyaml(yaml_path, data, pyyaml_mod)
         return
 
-    original_text = yaml_path.read_text(encoding="utf-8")
-    updated_text = regex_update_main_scenario(original_text, new_value)
-    yaml_path.write_text(updated_text, encoding="utf-8")
+    raise SystemExit(
+        f"Cannot update 'Main_Scenario' in {yaml_path}: neither ruamel.yaml nor "
+        "PyYAML is installed. Install one of them in the environment that runs OSTRAM."
+    )
 
 
 def build_compiler_command(

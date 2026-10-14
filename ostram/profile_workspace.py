@@ -103,6 +103,14 @@ def _authority_digest(source: Path, kind: str) -> str:
     return digest.hexdigest()
 
 
+def _copy_digest(candidate: Path, kind: str) -> str | None:
+    """Return the digest of a workspace copy, or None when it cannot be read."""
+    try:
+        return _authority_digest(candidate, kind)
+    except OSError:
+        return None
+
+
 def _keep_or_move_workspace(target: Path, stamp: dict, manifest: ProfileManifest) -> bool:
     """Handle a workspace whose stamp records another manifest digest.
 
@@ -271,6 +279,7 @@ def prepared_profile(
         )
     resolved = dict(sources)
     stamp_dirty = False
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     for role, relative in mapping.items():
         if not isinstance(relative, str):
             raise ProfileWorkspaceError(f"invalid prepared path for authority {role!r}")
@@ -284,15 +293,24 @@ def prepared_profile(
         spec = manifest.authorities[role]
         current_digest = _authority_digest(sources[role], spec.kind)
         if current_digest != source_digests[role]:
-            # Mutable source legitimately changed (e.g. student edited the
-            # scenario workbook).  Refresh the workspace copy and update the
-            # stamp instead of failing.
-            if candidate.exists():
-                if spec.kind == "directory":
-                    shutil.rmtree(candidate)
-                else:
-                    candidate.unlink()
-            _copy_authority(sources[role], candidate, spec.kind)
+            # The source changed since preparation. The workspace copy is
+            # replaced; a copy edited since preparation, or one whose digest
+            # cannot be read, moves to authorities_previous first. The stamp
+            # records the source digest, which equals the copy's digest at
+            # preparation and after each refresh.
+            copy_digest = _copy_digest(candidate, spec.kind) if candidate.exists() else None
+            if copy_digest != current_digest:
+                if copy_digest == source_digests[role]:
+                    if spec.kind == "directory":
+                        shutil.rmtree(candidate)
+                    else:
+                        candidate.unlink()
+                elif candidate.exists():
+                    moved_to = target / "authorities_previous" / timestamp / relative
+                    moved_to.parent.mkdir(parents=True, exist_ok=True)
+                    os.replace(candidate, moved_to)
+                    print(f"[profile] Moved the edited copy of {role!r} to {moved_to}")
+                _copy_authority(sources[role], candidate, spec.kind)
             source_digests[role] = current_digest
             stamp_dirty = True
             print(

@@ -57,6 +57,7 @@ The pipeline runs in this order:
 
 - Do not run the solver unless the task asks for it. Use `--compile-only`.
 - Changes under `config/`, `inputs/` or `ostram/pipeline/` need the compile gate below before they are pushed.
+- A change in behaviour updates every document that describes it, in the same pull request.
 - Rule order in A3 is load-bearing. Retirement runs before the build cap, because the build cap reads the ResidualCapacity that retirement writes.
 - In the final datafile, `TotalAnnualMaxCapacityInvestment = 0` forbids new
   capacity for that technology and year. Only -1 skips this cap. 9999 is a

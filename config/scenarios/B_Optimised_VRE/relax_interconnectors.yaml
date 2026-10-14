@@ -1,4 +1,4 @@
-## relax_interconnectors.yaml — B_Optimised_VRE
+## relax_interconnectors.yaml: B_Optimised_VRE
 ##
 ## Evidence-based interconnector expansion caps derived from the project
 ## pipeline in the maintained v18 Interconnectors sheet (Zixuan v3 + IEPMP 2023 + BPC PDB
@@ -19,7 +19,7 @@ headroom_factor: 1.5          # conservative default for corridors without overr
 
 overrides:
   # ==========================================================================
-  # FROZEN CORRIDORS (ResCap = 0) — evidence-based pipeline caps
+  # FROZEN CORRIDORS (ResCap = 0): evidence-based pipeline caps
   # ==========================================================================
   #
   # BTN → BGD: 750 MW dedicated hydro line (IEPMP 2023, under study, COD ~2035)
@@ -30,10 +30,10 @@ overrides:
   #   Phase 2: 500 MW expansion, COD 2040 (Conceptual, LTGEP 2025-2044)
   TRNINDSOLKAXX: {2023: 0, 2037: 0, 2039: 0.5, 2040: 1.0}
 
-  # LKA → MDV: No projects in any pipeline — stays frozen
+  # LKA → MDV: No projects in any pipeline; stays frozen
   TRNLKAXXMDVXX: {2023: 0}
 
-  # MDV → IND-S: No projects in any pipeline — stays frozen
+  # MDV → IND-S: No projects in any pipeline; stays frozen
   TRNMDVXXINDSO: {2023: 0}
 
   # ==========================================================================
@@ -66,7 +66,7 @@ overrides:
   TRNINDNONPLXX: {2023: 0.50, 2025: 1.50, 2028: 2.65}
 
   # ==========================================================================
-  # INDIA-INTERNAL CORRIDORS (pipeline < 3× — tighten to evidence)
+  # INDIA-INTERNAL CORRIDORS (pipeline < 3×: tighten to evidence)
   # ==========================================================================
   #
   # INDEA → INDNO (ResCap 22.53 GW): Sipat–Ranchi 765kV 3.0 GW COD 2029
@@ -95,7 +95,7 @@ overrides:
   TRNBTNXXINDEA: {2023: 5.53, 2028: 6.20, 2030: 8.60, 2035: 15.26}
 
   # ==========================================================================
-  # CORRIDORS WITH NO PROJECT DATA — use default headroom_factor (1.5×)
+  # CORRIDORS WITH NO PROJECT DATA: use default headroom_factor (1.5×)
   # ==========================================================================
   # TRNINDEAINDWE  (ResCap 21.19 GW) → 1.5× = 31.79 GW
   # TRNINDNEINDNO  (ResCap 3.00 GW)  → 1.5× =  4.50 GW

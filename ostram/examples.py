@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 import re
 import shutil
+import sys
 from typing import Sequence
 
 from ostram.paths import resolve_paths
@@ -122,11 +123,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     manifest = _active_manifest(args.profile)
-    if args.action == "prepare":
-        prepared = prepare_profile(manifest, paths=resolve_paths(), reset=args.reset)
-        print(f"Prepared profile {manifest.profile_id}: {prepared.workspace}")
-        return 0
-    output = _report(manifest, args.capture, args.compare)
+    try:
+        if args.action == "prepare":
+            prepared = prepare_profile(manifest, paths=resolve_paths(), reset=args.reset)
+            print(f"Prepared profile {manifest.profile_id}: {prepared.workspace}")
+            return 0
+        output = _report(manifest, args.capture, args.compare)
+    except FileExistsError as error:
+        print(error, file=sys.stderr)
+        return 1
     print(f"Profile report: {output}")
     return 0
 

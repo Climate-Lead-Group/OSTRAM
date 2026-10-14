@@ -58,6 +58,7 @@ import pandas as pd
 from openpyxl import load_workbook
 
 from ostram.paths import resolve_paths
+from ostram.pipeline.scenarios.rules.config_keys import check_keys
 
 try:
     import yaml as _yaml
@@ -116,6 +117,7 @@ def load_config(yaml_path: Path) -> dict:
     raw = _load_yaml(yaml_path)
     if raw is None:
         raw = {}
+    check_keys(raw, {"directions"}, yaml_path)
     directions = raw.get("directions", {})
     if directions is None:
         directions = {}

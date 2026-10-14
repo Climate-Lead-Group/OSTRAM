@@ -1,49 +1,40 @@
-"""Write OSTRAM_AO_Extensions.xlsx from the WV workbook and the four A-O workbooks for review."""
-from pathlib import Path
-# -*- coding: utf-8 -*-
-"""
-2_extract_ao_extensions.py  (v17 / pipeline stage 2)
+"""Write OSTRAM_AO_Extensions.xlsx from the WV workbook and the four A-O workbooks for review.
 
-Reads SOASIA_OSeMOSYS_WV.xlsx (output of stage 1) and the four A-O
-parametrization workbooks; writes OSTRAM_AO_Extensions.xlsx -- the
-freshly generated review file that receives the maintained decision overlay
-before it drives stage 3.
-
-Pipeline:
-  1_merge_timeslices_into_WV.py    v17 + timeslices       -> WV
-  2_extract_ao_extensions.py       WV  + A-O              -> Extensions xlsx
-  apply_ao_extension_decisions.py  maintained decisions   -> overlaid Extensions
-  3_update_ao_from_extensions.py   Extensions xlsx + A-O  -> updated A-O
+Reads SOASIA_OSeMOSYS_WV.xlsx, written by merge_timeslices, and the four
+A-O parametrization workbooks. Writes OSTRAM_AO_Extensions.xlsx, the review
+file that ao_extension_decisions overlays with the maintained decisions
+before update_ao_from_extensions reads it.
 
 Output: OSTRAM_AO_Extensions.xlsx
   Tab 1: 1_Extensions_To_Add        Single wide table covering presence,
                                     propagation suggestions, template
                                     suggestions, and human-decision columns.
   Tab 2: 2_Parameter_Rows_To_Replicate  Raw parameter rows from WV for each
-                                        extension code (reference for stage 3).
+                                        extension code.
   Tab 3: 3_Signal_Disagreements    Sanity check: orange flags vs. absence.
 
 Detection logic
 ---------------
   ABSENCE is the primary signal: a code is "missing from A-O" iff it's in WV
-  but not in any of the four A-O workbooks. That's binary, file-content fact.
+  but not in any of the four A-O workbooks.
 
-  COLOR (orange = FCD5B4) is the team-applied secondary signal carried over
-  from the v15/v16/v17 cleanup. Disagreements between absence and color are
-  reported in Tab 3.
+  COLOUR (orange = FCD5B4) is the secondary signal. Disagreements between
+  absence and colour are reported in Tab 3.
 
-Template suggestion (option 3, conservative)
---------------------------------------------
+Template suggestion
+-------------------
   For each absent code, look in A-O Parametrization for a code with the SAME
-  prefix + SAME category (e.g., PWRNGS for a missing PWRNGSBGDXX).
-   - Match found -> suggest it as Suggested_Template_AO; copy its Tech.Name.
+  prefix + SAME category (e.g., PWRNGS for a missing PWRNGSBGDXX), then for
+  the CATEGORY_FALLBACKS analogue, then, for TRN codes, for a TRN code that
+  shares a region (pick_trn_template).
+   - Match found -> suggest it as Suggested_Template_AO; copy its Tech.Name
+                    only when the same-category rule matched.
    - No match    -> leave Suggested_Template_AO blank and tag the row
-                    [NEEDS_REVIEW] in Notes. No proxy fabrication.
-  Same rule drives the Add_To_* propagation suggestion: Y if the template
-  is present in that workbook, N otherwise. Blank if no template.
-
-Run in Spyder with F5. Paths and mappings in USER CONFIGURATION below.
+                    [NEEDS_REVIEW] in Notes.
+  The Add_To_* propagation suggestion is Y if the template is present in
+  that workbook, N otherwise, and blank if there is no template.
 """
+from pathlib import Path
 
 import os
 import pandas as pd
@@ -120,6 +111,28 @@ def parse_code(code):
     if len(s) == 13 and s.startswith("TRN"):
         return s[:3], s[3:8], s[8:13]
     return None, None, None
+
+
+def pick_trn_template(cands, new_origin, new_dest):
+    """Return the TRN template candidate that ranks first: cross-border
+    first, then origin overlap, destination overlap and the alphabetically
+    first name.
+    """
+    # Score: prefer cross-border templates (both legs end in XX or are
+    # India sub-regions) over national-transmission codes like TRNNLI*.
+    # Country-style 5-char regions in this project end in 'XX' or start
+    # with 'IND' (the India sub-regions). Anything else is non-canonical.
+    def is_country_region(r):
+        """Return a true value when ``r`` ends in XX or starts with IND, the two forms of a country-region code."""
+        return r.endswith("XX") or (r and r.startswith("IND"))
+    def score(c2):
+        """Return the sort key of a TRN template candidate; the lowest key ranks first."""
+        _, o2, d2 = parse_code(c2)
+        return (not (is_country_region(o2) and is_country_region(d2)),  # 1: cross-border
+                o2 not in (new_origin, new_dest),                      # 2: origin overlap
+                d2 not in (new_origin, new_dest),                      # 3: dest overlap
+                c2)                                                    # 4: alpha tiebreak
+    return min(cands, key=score)
 
 
 def find_code_col(df):
@@ -353,25 +366,8 @@ for code in absent:
                 continue
             if o2 in (new_origin, new_dest) or d2 in (new_origin, new_dest):
                 cands.add(c2)
-        # Score: prefer cross-border templates (both legs end in XX or are
-        # India sub-regions) over national-transmission codes like TRNNLI*.
-        # Country-style 5-char regions in this project end in 'XX' or start
-        # with 'IND' (the India sub-regions). Anything else is non-canonical.
-        def is_country_region(r):
-            """Return a true value when ``r`` ends in XX or starts with IND, the two forms of a country-region code."""
-            return r.endswith("XX") or (r and r.startswith("IND"))
-        def score(c2):
-            """Return the sort key that ranks a TRN template candidate: cross-border
-            first, then origin overlap, destination overlap and a tiebreak on the
-            first character.
-            """
-            _, o2, d2 = parse_code(c2)
-            return (is_country_region(o2) and is_country_region(d2),  # 1: cross-border
-                    o2 in (new_origin, new_dest),                      # 2: origin overlap
-                    d2 in (new_origin, new_dest),                      # 3: dest overlap
-                    -ord(c2[0]) if c2 else 0)                          # 4: alpha tiebreak
         if cands:
-            template = sorted(cands, key=score, reverse=True)[0]
+            template = pick_trn_template(cands, new_origin, new_dest)
             fallback_kind = "trn_partial"
             fallback_detail = f"region overlap with {template}"
             n_with_trn += 1

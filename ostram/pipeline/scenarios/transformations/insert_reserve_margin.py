@@ -1,14 +1,12 @@
-"""A0_insert_reserve_margin.py
-================================
-Portable version of A0_Insert_ReserveMargin.py: takes --input argument
-instead of relying on hardcoded WORK_DIR.
-
-Adds a 'System Parameters' sheet to the input A-O_Parametrization.xlsx
-with a single row: ReserveMargin = 1.15 (flat, all years 2023-2050).
-Re-runnable: replaces the existing 'System Parameters' sheet if present.
+"""insert_reserve_margin.py
+=========================
+Adds a 'System Parameters' sheet to the A-O_Parametrization.xlsx given
+with --input, with a single row: ReserveMargin = 1.15 (flat, all years
+2023-2050). Re-runnable: replaces the existing 'System Parameters' sheet if
+present.
 
 Usage:
-    python A0_insert_reserve_margin.py --input <A-O_Parametrization.xlsx>
+    python -m ostram.pipeline.scenarios.transformations.insert_reserve_margin --input <A-O_Parametrization.xlsx>
 """
 from __future__ import annotations
 import argparse

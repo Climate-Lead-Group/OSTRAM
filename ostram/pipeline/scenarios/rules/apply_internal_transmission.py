@@ -82,6 +82,7 @@ from pathlib import Path
 
 import yaml
 from openpyxl import load_workbook, Workbook
+from ostram.pipeline.scenarios.rules.config_keys import INTERNAL_TRANSMISSION_KEYS, check_keys
 
 # --------------------------------------------------------------------------- config
 PARAM_FILE_NAME = "A-O_Parametrization.xlsx"
@@ -172,6 +173,7 @@ def read_config(config_path: Path) -> dict:
     with open(config_path, "r", encoding="utf-8") as fh:
         data = yaml.safe_load(fh) or {}
     blk = data.get("internal_transmission", {}) or {}
+    check_keys(blk, INTERNAL_TRANSMISSION_KEYS, config_path, "internal_transmission")
     knobs = dict(DEFAULTS)
     for k in DEFAULTS:
         if k in blk and blk[k] is not None:

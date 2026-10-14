@@ -108,9 +108,8 @@ storage_delay_root_datafile: "OSTRAM_data_storage_delay.txt"
 ########################################################################################
 # === Storage stripping diagnostic ===
 # Master switch. False (or absent) = pipeline runs unchanged (no strip).
-# NOTE: ALL scenarios use delay:True / strip:False per Luis decision 2026-07-07
-# (OSTRAM_latest CalBAU was validated with storage-delay, not strip). Storage
-# kept across A/B/C + sensitivities for a consistent comparison.
+# All scenarios use storage_delay_active: True and strip_storage_active: False,
+# so every scenario keeps its storage.
 strip_storage_active: False
 
 # --- Tier 3: zero storage (baseline) --- ACTIVE

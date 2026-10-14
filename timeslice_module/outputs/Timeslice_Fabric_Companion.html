@@ -67,7 +67,7 @@ canvas{width:100%!important}
 
 <!-- SECTION 1: The menu -->
 <h2>The four fabrics at a glance</h2>
-<p>Each row is a pre-computed workbook case. Build time is ~45 seconds regardless of timeslice count. The cost of finer fabrics is paid at solve time, not generation time.</p>
+<p>Each row is a pre-computed workbook case. Build time does not depend meaningfully on timeslice count. The cost of finer fabrics is paid at solve time.</p>
 
 <table class="menu-table">
 <thead><tr><th>Fabric</th><th>Timeslices</th><th>Solar block CF</th><th>Phantom solar</th><th>LP row scaling</th></tr></thead>
@@ -215,7 +215,6 @@ function renderGrid() {
     const vs20 = (activeFab === 2 || adopted.peakCF == null) ? 'baseline' : ((f.peakCF/adopted.peakCF-1)*100).toFixed(1)+'%';
     cards += '<div class="stat"><div class="lab">Peak solar block CF</div><div class="val">'+f.peakCF.toFixed(3)+'</div><div class="sub">vs adopted: '+vs20+'</div></div>';
   }
-  cards += '<div class="stat"><div class="lab">Build time</div><div class="val">~45s</div><div class="sub">Fabric-independent</div></div>';
   document.getElementById('statsArea').innerHTML = cards;
 
   document.getElementById('noteArea').innerHTML = '<div class="note">'+f.note+'</div>';

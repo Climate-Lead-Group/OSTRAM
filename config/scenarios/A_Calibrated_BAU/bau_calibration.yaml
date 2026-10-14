@@ -1,4 +1,4 @@
-## A_Calibrated_BAU — policy floors and ceilings from national plans.
+## A_Calibrated_BAU: policy floors and ceilings from national plans.
 ##
 ## TODO: populate from CCDRs / IRPs / national energy plans (Natalia's research).
 ## Below is a placeholder template demonstrating the structure.
@@ -6,7 +6,7 @@
 warn_on_untie: true
 
 floors: []
-  # Example shape — uncomment and replace with real values once research lands:
+  # Example shape; uncomment and replace with real values once research lands:
   # - cr: INDEA
   #   tech: 'PWRSPV*'
   #   param: min_capacity

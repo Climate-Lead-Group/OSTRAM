@@ -353,9 +353,9 @@
           <button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>Copy</button>
 <pre><code><span class="cmd">cd</span> <span class="string">path\to\OSTRAM</span>
 <span class="cmd">conda</span> env create <span class="flag">-f</span> <span class="string">environment.yaml</span>
-<span class="cmd">conda</span> activate <span class="string">OSTRAM_env</span></code></pre>
+<span class="cmd">conda</span> activate <span class="string">OSTRAM-env</span></code></pre>
         </div>
-        <div class="callout tip"><div class="tag">What happens here?</div><p>Conda reads <code>environment.yaml</code>, creates the <code>OSTRAM_env</code> environment, and installs all required packages including the <strong>GLPK</strong> and <strong>CBC</strong> solvers. This may take several minutes the first time.</p></div>
+        <div class="callout tip"><div class="tag">What happens here?</div><p>Conda reads <code>environment.yaml</code>, creates the <code>OSTRAM-env</code> environment, and installs all required packages including the GLPK and CBC solvers. This may take several minutes the first time.</p></div>
       </li>
       <li>
         <strong>Prepare the UNESCAP example and run it</strong>
@@ -373,7 +373,7 @@
         <a href="../exercises/add-interconnector.html">Exercise B</a>.</p>
       </li>
     </ol>
-    <div class="callout warn"><div class="tag">Subsequent runs</div><p>Every time you open a new Anaconda Prompt to work with OSTRAM, activate the environment first: <code>conda activate OSTRAM_env</code>. Without this step you will see errors about missing packages.</p></div>
+    <div class="callout warn"><div class="tag">Subsequent runs</div><p>Every time you open a new Anaconda Prompt to work with OSTRAM, activate the environment first: <code>conda activate OSTRAM-env</code>. Without this step you will see errors about missing packages.</p></div>
   </section>
 
   <!-- 9. INSTALL SOLVERS -->
@@ -433,14 +433,14 @@
 <span class="cmd">conda</span> env create <span class="flag">-f</span> <span class="string">environment.yaml</span>
 
 <span class="comment"># Activate the environment</span>
-<span class="cmd">conda</span> activate <span class="string">OSTRAM_env</span>
+<span class="cmd">conda</span> activate <span class="string">OSTRAM-env</span>
 
 <span class="comment"># Verify Python version</span>
 <span class="cmd">python</span> <span class="flag">--version</span>
 <span class="output"># Should show Python 3.10.x</span></code></pre>
     </div>
     <div class="callout tip"><div class="tag">What is a Conda environment?</div><p>A self-contained toolbox. OSTRAM needs specific versions of Python libraries. The environment ensures those exact versions are installed without conflicting with other programs on your computer.</p></div>
-    <div class="callout warn"><div class="tag">Remember</div><p>Every time you open a new Anaconda Prompt to work with OSTRAM, activate the environment first: <code>conda activate OSTRAM_env</code>. Without it, you will see errors about missing packages.</p></div>
+    <div class="callout warn"><div class="tag">Remember</div><p>Every time you open a new Anaconda Prompt to work with OSTRAM, activate the environment first: <code>conda activate OSTRAM-env</code>. Without it, you will see errors about missing packages.</p></div>
   </section>
 
   <!-- TROUBLESHOOTING -->

@@ -9,7 +9,8 @@ baseline, controlled by a YAML configuration file.
 This script is the complement of cap_trn_to_residual.py. Where that
 script freezes interconnectors at ResidualCapacity, this one opens them
 up by a multiplicative factor, an additive headroom, absolute
-per-link overrides, or a cap of 9999 (mode "unconstrained").
+per-link overrides, or a cap of 9999 (mode "cap_9999", also accepted
+under its previous name "unconstrained").
 
 RULE
 ----
@@ -23,7 +24,7 @@ of config/scenarios/technology_types.csv staged in the run folder:
             MaxCapInv = ResidualCapacity × headroom_factor
         mode == "additive":
             MaxCapInv = ResidualCapacity + headroom_gw
-        mode == "unconstrained":
+        mode == "cap_9999":
             MaxCapInv = 9999   (a finite cap)
 
     Safety floor: MaxCapInv = max(MaxCapInv, ResidualCapacity)
@@ -71,6 +72,8 @@ from pathlib import Path
 
 import pandas as pd
 from openpyxl import load_workbook, Workbook
+from ostram.paths import resolve_paths
+from ostram.pipeline.scenarios.rules.config_keys import check_keys
 
 # Try to import yaml; fall back to a minimal parser if unavailable.
 try:
@@ -107,7 +110,6 @@ PROJ_MODE_USER = "User defined"
 PLACEHOLDER_VALUE = 9999
 
 # Tech-type filter
-TECH_TYPES_FILE = "TECH_TYPES.csv"
 TECH_TYPES_CATEGORY_COL = "Technology (PWR)"
 TECH_TYPES_TECH_COL = "Technology"
 INTERCONNECTOR_CATEGORY = "INTERCONNECTORS"
@@ -123,7 +125,8 @@ def load_config(yaml_path: Path) -> dict:
     """Load and validate the YAML configuration.
 
     Returns a dict with keys:
-        mode             : str, one of "multiplicative", "additive", or "unconstrained"
+        mode             : str, one of "multiplicative", "additive", or "cap_9999"
+                           ("unconstrained" is read as "cap_9999")
         headroom_factor  : float (used by multiplicative)
         headroom_gw      : float (used by additive)
         overrides        : dict {tech: {year: value}}
@@ -131,12 +134,17 @@ def load_config(yaml_path: Path) -> dict:
     cfg = _load_yaml(yaml_path)
     if cfg is None:
         cfg = {}
+    check_keys(cfg, {
+        "mode", "headroom_factor", "headroom_gw", "overrides", "capacity_ceiling",
+    }, yaml_path)
 
     mode = cfg.get("mode", "multiplicative")
-    if mode not in ("multiplicative", "additive", "unconstrained"):
+    if mode == "unconstrained":
+        mode = "cap_9999"
+    if mode not in ("multiplicative", "additive", "cap_9999"):
         raise ValueError(
             f"Invalid mode '{mode}' in {yaml_path}. "
-            f"Expected 'multiplicative', 'additive', or 'unconstrained'."
+            f"Expected 'multiplicative', 'additive', or 'cap_9999'."
         )
 
     headroom_factor = float(cfg.get("headroom_factor", 2.0))
@@ -221,8 +229,8 @@ def load_interconnector_techs(tech_types_path: Path) -> set:
     tech_types_path = Path(tech_types_path)
     if not tech_types_path.is_file():
         raise FileNotFoundError(
-            f"TECH_TYPES.csv not found at {tech_types_path}. "
-            f"Place it in A3_process/ (one level above rules_scripts/)."
+            f"Technology taxonomy not found at {tech_types_path}. A3 passes "
+            f"its staged copy of config/scenarios/technology_types.csv with --tech-types."
         )
     df = pd.read_csv(tech_types_path)
     cat_col = TECH_TYPES_CATEGORY_COL
@@ -464,9 +472,9 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
             elif mode == "additive":
                 proposed = rescap + headroom_gw
                 reason = "additive"
-            elif mode == "unconstrained":
+            elif mode == "cap_9999":
                 proposed = PLACEHOLDER_VALUE
-                reason = "unconstrained"
+                reason = "cap_9999"
             else:
                 proposed = rescap
                 reason = "fallback"
@@ -720,7 +728,7 @@ def edit_parametrization(filepath: Path, sheets: list,
 # Orchestration
 # ---------------------------------------------------------------------------
 def run(input_dir, sheets: list = None, skip_backup: bool = False,
-        yaml_path: Path | None = None) -> dict:
+        yaml_path: Path | None = None, tech_types_path: Path | None = None) -> dict:
     """End-to-end: load config, backup, edit, write log."""
     input_dir = Path(input_dir)
     sheets = sheets or DEFAULT_TARGET_SHEETS
@@ -735,9 +743,8 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
         )
     config = load_config(yaml_path)
 
-    # Locate TECH_TYPES.csv (one level up from rules_scripts/)
-    script_dir = Path(__file__).resolve().parent
-    tech_types_path = script_dir.parent / TECH_TYPES_FILE
+    if tech_types_path is None:
+        tech_types_path = resolve_paths().interconnector_taxonomy
     trn_techs = load_interconnector_techs(tech_types_path)
 
     # Backup
@@ -1163,6 +1170,12 @@ def main() -> int:
         default=None,
         help="Path to YAML config (default: <script_dir>/relax_interconnectors.yaml).",
     )
+    parser.add_argument(
+        "--tech-types",
+        type=Path,
+        default=None,
+        help="Technology taxonomy CSV (default: the active technology taxonomy).",
+    )
     args = parser.parse_args()
 
     if args.self_test:
@@ -1178,7 +1191,7 @@ def main() -> int:
         return 0
 
     try:
-        log = run(args.input_dir, args.sheets, args.skip_backup, args.yaml)
+        log = run(args.input_dir, args.sheets, args.skip_backup, args.yaml, args.tech_types)
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1

@@ -1,4 +1,4 @@
-## B_Optimised_VRE — thermal retirement schedule  (v2)
+## B_Optimised_VRE: thermal retirement schedule  (v2)
 ##
 ## Lifetimes calibrated to midpoints of Natalia's country-level research
 ## (Energy_Data_for_YAML_ALL_6_Countries.xlsx, "Retirements" sheet, Note 8).
@@ -9,10 +9,10 @@
 ##   PET 20–30 yr  →  midpoint 25
 ##   NUC 40–60 yr  →  midpoint 50
 ##
-## Same midpoints used across BAU and Opti — no defensible basis for
+## Same midpoints used across BAU and Opti; no defensible basis for
 ## differentiating lifetimes between scenarios.
 ##
-## OPTION B (cliff profile) remains deferred — requires set_retirement_schedule.py
+## OPTION B (cliff profile) remains deferred: requires set_retirement_schedule.py
 ## changes. Once supported, cliff would give physically more realistic behavior:
 ## full nameplate until late-life, then linear tail. See v1 for commented params.
 ##

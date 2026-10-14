@@ -49,6 +49,7 @@ from pathlib import Path
 
 import pandas as pd
 from openpyxl import load_workbook
+from ostram.pipeline.scenarios.rules.config_keys import check_keys
 
 try:
     import yaml as _yaml
@@ -109,6 +110,7 @@ def load_config(yaml_path: Path) -> dict[str, dict[int, float]]:
     cfg = _load_yaml(yaml_path)
     if cfg is None:
         cfg = {}
+    check_keys(cfg, {"storage_floors"}, yaml_path)
     raw = cfg.get("storage_floors", {})
     if not raw:
         raise ValueError(

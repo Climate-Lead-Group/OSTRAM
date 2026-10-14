@@ -72,10 +72,10 @@ class AcceptedBaselineTests(unittest.TestCase):
                 writer.writerows(rows)
 
             loaded = baseline.load_governed_manifest(manifest)
-            self.assertEqual(len(loaded), 17)
+            self.assertEqual(len(loaded), len(baseline.canonical_scenarios()))
             self.assertEqual(
                 len(baseline.validate_governed_output_files(root, loaded)),
-                17,
+                len(baseline.canonical_scenarios()),
             )
 
             rows[1]["AuthorityClass"] = baseline.GOVERNED_ROOT_AUTHORITY

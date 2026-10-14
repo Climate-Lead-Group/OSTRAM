@@ -1,28 +1,16 @@
-"""Apply curated cell-level corrections to the A3 stage 1 wvaligned workbooks."""
-from pathlib import Path
-# -*- coding: utf-8 -*-
-"""
-4_apply_manual_fixes.py  (pipeline stage 4)
+"""Apply curated cell-level corrections to the A3 stage 1 wvaligned workbooks.
 
-Applies human-curated cell-level corrections to the *_wvaligned.xlsx files
-produced by stage 3. Outputs *_wvaligned_v2.xlsx with the fixes applied.
+Reads the ``*_wvaligned.xlsx`` workbooks that update_ao_from_extensions
+writes to ``wvaligned_outputs`` and writes copies with the corrections,
+``*_wvaligned_v2.xlsx``, to ``wvaligned_outputs_v2``. The input workbooks
+are not changed.
 
-Pipeline:
-  1_merge_timeslices_into_WV.py    timeslices source     -> WV
-  2_extract_ao_extensions.py       WV  + A-O             -> Extensions xlsx
-  3_update_ao_from_extensions.py   Extensions + A-O      -> *_wvaligned
-  4_apply_manual_fixes.py          *_wvaligned           -> *_wvaligned_v2  <- THIS
+A3 stage 1 runs merge_timeslices, extract_ao_extensions,
+ao_extension_decisions, update_ao_from_extensions, apply_manual_fixes and
+propagate_timeslice_fabric, in that order.
 
-What stage 4 does (and why it's a separate stage)
--------------------------------------------------
-Stage 3 does mechanical row cloning with region substitution. It cannot
-catch semantic anomalies discovered when reviewing its output -- e.g.,
-"Maldives has no gas pipeline from India" or "Nepal imports oil via India,
-not Bangladesh". Those corrections are post-hoc by nature: you only know
-them after seeing the cloned rows. They land here as a hardcoded list.
+Four kinds of edit are defined in USER CONFIGURATION below:
 
-Four kinds of edits supported
------------------------------
   DELETIONS        -- remove a specific row identified by
                       (workbook, sheet, tech, selector_dict)
   SUBSTITUTIONS    -- overwrite a specific cell value
@@ -32,14 +20,9 @@ Four kinds of edits supported
   TECH_NAME_RENAMES -- bulk-rename Tech.Name for a tech code across every
                        row in every sheet in every workbook
 
-Substituted cells are colored purple (#9B59B6) so they stand out from the
-five Step-3 / Step-2B color tiers. Deleted rows obviously can't be colored.
-
-Setup-A: stage 3 outputs are NEVER modified. We copy them to a v2 folder
-and edit the copies.
-
-Run in Spyder with F5. Paths and edits are in USER CONFIGURATION below.
+Substituted cells are coloured purple (#9B59B6). Deleted rows have no colour.
 """
+from pathlib import Path
 
 import os
 import shutil
@@ -321,7 +304,7 @@ def coerce_value(ws, col_idx_1based, new_value):
 # =============================================================================
 
 print("=" * 72)
-print("4_apply_manual_fixes.py")
+print("apply_manual_fixes")
 print("=" * 72)
 
 in_dir  = os.path.join(WORK_DIR, INPUT_SUBDIR)
@@ -355,7 +338,7 @@ out_wbs = {label: load_workbook(OUT_FILES[label]) for label in AO_FILES}
 # Audit log accumulator
 log_lines = []
 log_lines.append("=" * 72)
-log_lines.append("4_apply_manual_fixes.py -- Run log")
+log_lines.append("apply_manual_fixes -- Run log")
 for label, sheet, tech, selectors, edit_col, _, _ in out_of_domain_substitutions:
     message = f"OUT_OF_DOMAIN  {label}/{sheet} {tech} {selectors} {edit_col} (not declared in active taxonomy)"
     log_lines.append(message)

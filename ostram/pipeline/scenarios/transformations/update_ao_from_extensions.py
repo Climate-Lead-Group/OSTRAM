@@ -357,7 +357,7 @@ def color_row(ws, row_num, color_hex):
 # =============================================================================
 
 print("=" * 72)
-print("3_update_ao_from_extensions.py")
+print("update_ao_from_extensions")
 print("=" * 72)
 
 out_dir = os.path.join(WORK_DIR, OUTPUT_SUBDIR)
@@ -454,7 +454,7 @@ for (label, src, _) in AO_WORKBOOKS:
 
 log_lines = []
 log_lines.append("=" * 72)
-log_lines.append("3_update_ao_from_extensions.py -- Run log")
+log_lines.append("update_ao_from_extensions -- Run log")
 log_lines.append(f"Run timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 log_lines.append("=" * 72)
 log_lines.append("")

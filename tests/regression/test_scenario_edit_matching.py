@@ -123,6 +123,29 @@ class UnmatchedScenarioEditTests(unittest.TestCase):
             'the workbook.',
         )
 
+    def test_years_filter_with_one_missing_column_stops(self) -> None:
+        self.assert_stops(
+            {
+                "sheet": "Secondary Techs", "tech": "PWRSOLBGDXX",
+                "param": "CapitalCost", "op": "multiply", "factor": 1.5,
+                "years": [2030, 2061],
+            },
+            f'Scenario {SCENARIO}: the edit to CapitalCost for "PWRSOLBGDXX" '
+            'changed nothing. None of the years 2061 is a column in '
+            'the workbook.',
+        )
+
+    def test_values_year_with_no_column_stops(self) -> None:
+        self.assert_stops(
+            {
+                "sheet": "Secondary Techs", "tech": "PWRSOLBGDXX",
+                "param": "CapitalCost", "values": {"2030": 90.0, "2061": 80.0},
+            },
+            f'Scenario {SCENARIO}: the edit to CapitalCost for "PWRSOLBGDXX" '
+            'changed nothing. None of the years 2061 is a column in '
+            'the workbook.',
+        )
+
     def test_vre_ceiling_that_matches_nothing_stops(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             ceilings = Path(temp) / "full.yaml"

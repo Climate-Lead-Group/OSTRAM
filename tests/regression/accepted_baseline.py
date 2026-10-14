@@ -105,7 +105,7 @@ def scenario_contract(
         decision_names == EXPECTED_DECISION_SCENARIOS,
         "accepted scenario order or membership drift",
     )
-    _require(len(set(decision_names)) == 17, "accepted scenarios must be unique")
+    _require(len(set(decision_names)) == len(decision_names), "accepted scenarios must be unique")
     return root_names, decision_names
 
 
@@ -136,7 +136,10 @@ def load_governed_manifest(
         raise BaselineValidationError(f"cannot load {path}: {exc}") from exc
 
     expected_names = canonical_scenarios(inventory_path)
-    _require(len(raw_rows) == 17, "governed manifest must contain exactly 17 rows")
+    _require(
+        len(raw_rows) == len(expected_names),
+        "governed manifest must contain one row per decision scenario",
+    )
     _require(
         tuple(row["Scenario"] for row in raw_rows) == expected_names,
         "governed scenario order or membership drift",

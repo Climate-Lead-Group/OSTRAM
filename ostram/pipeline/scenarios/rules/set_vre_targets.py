@@ -57,6 +57,7 @@ from pathlib import Path
 
 import pandas as pd
 from ostram.paths import resolve_paths
+from ostram.pipeline.scenarios.rules.config_keys import check_keys
 from openpyxl import load_workbook, Workbook
 
 try:
@@ -139,6 +140,11 @@ def load_config(yaml_path: Path) -> dict:
     cfg = _load_yaml(yaml_path)
     if cfg is None:
         cfg = {}
+    check_keys(cfg, {
+        "bau_results_path", "constraint_type", "max_floor_share", "cap_envelope_headroom",
+        "cap_envelope_min_inv_gw", "default_capacity_factor", "pin_generation_to_target",
+        "pin_slack", "activity_lower_caps", "targets",
+    }, yaml_path)
 
     bau_results_path = os.environ.get(
         "OSTRAM_A_CALIBRATED_BAU_RESULT",
@@ -183,6 +189,7 @@ def load_config(yaml_path: Path) -> dict:
     activity_lower_caps = []
     seen_activity_lower_cap_keys = set()
     for entry in cfg.get("activity_lower_caps", []) or []:
+        check_keys(entry, {"region", "technology", "year", "maximum"}, yaml_path, "activity_lower_caps")
         region = str(entry.get("region", ""))
         technology = str(entry.get("technology", ""))
         year = int(entry.get("year", 0))
@@ -206,6 +213,7 @@ def load_config(yaml_path: Path) -> dict:
     raw_targets = cfg.get("targets", []) or []
     targets = []
     for entry in raw_targets:
+        check_keys(entry, {"cr", "tech", "schedule", "cap_envelope"}, yaml_path, "targets")
         cr = str(entry.get("cr", ""))
         tech = str(entry.get("tech", ""))
         schedule = entry.get("schedule", {})
@@ -433,7 +441,10 @@ def interpolate_production(total_prod: dict, cr: str, years: list) -> dict:
 def load_generation_techs(tech_types_path: Path) -> set:
     """Load technology_types.csv and return the set of GENERATION techs."""
     if not tech_types_path.is_file():
-        raise FileNotFoundError(f"TECH_TYPES.csv not found at {tech_types_path}")
+        raise FileNotFoundError(
+            f"Technology taxonomy not found at {tech_types_path} "
+            f"(config/scenarios/technology_types.csv, or the active profile's interconnector_taxonomy)"
+        )
     df = pd.read_csv(tech_types_path)
     return set(df.loc[df[TECH_TYPES_CATEGORY_COL] == GENERATION_CATEGORY,
                       TECH_TYPES_TECH_COL].dropna())

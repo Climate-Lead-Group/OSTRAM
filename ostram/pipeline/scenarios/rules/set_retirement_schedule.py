@@ -45,6 +45,7 @@ from pathlib import Path
 
 import pandas as pd
 from ostram.paths import resolve_paths
+from ostram.pipeline.scenarios.rules.config_keys import check_keys
 from openpyxl import load_workbook, Workbook
 
 try:
@@ -120,6 +121,7 @@ def load_config(yaml_path: Path) -> dict:
     cfg = _load_yaml(yaml_path)
     if cfg is None:
         cfg = {}
+    check_keys(cfg, {"base_year", "fuel_slice", "age_based", "scheduled", "exempt"}, yaml_path)
 
     base_year = int(cfg.get("base_year", 2023))
 
@@ -132,6 +134,7 @@ def load_config(yaml_path: Path) -> dict:
     age_based: dict = {}
     for fuel, params in raw_age.items():
         fuel = str(fuel).upper()
+        check_keys(params, {"lifetime_years", "retirement_profile"}, yaml_path, f"age_based.{fuel}")
         lifetime = int(params.get("lifetime_years", 30))
         profile = str(params.get("retirement_profile", "linear"))
         if profile not in PROFILE_FUNCS:
@@ -145,6 +148,7 @@ def load_config(yaml_path: Path) -> dict:
     raw_sched = cfg.get("scheduled", []) or []
     scheduled = []
     for entry in raw_sched:
+        check_keys(entry, {"cr", "tech", "schedule", "note"}, yaml_path, "scheduled")
         cr = str(entry.get("cr", ""))
         tech = str(entry.get("tech", ""))
         schedule = entry.get("schedule", {})
@@ -198,7 +202,10 @@ def interpolate_schedule(schedule: dict, years: list) -> dict:
 def load_generation_techs(tech_types_path: Path) -> set:
     """Return the technologies that the technology taxonomy lists as GENERATION."""
     if not tech_types_path.is_file():
-        raise FileNotFoundError(f"TECH_TYPES.csv not found at {tech_types_path}")
+        raise FileNotFoundError(
+            f"Technology taxonomy not found at {tech_types_path} "
+            f"(config/scenarios/technology_types.csv, or the active profile's interconnector_taxonomy)"
+        )
     df = pd.read_csv(tech_types_path)
     return set(df.loc[df[TECH_TYPES_CATEGORY_COL] == GENERATION_CATEGORY,
                       TECH_TYPES_TECH_COL].dropna())

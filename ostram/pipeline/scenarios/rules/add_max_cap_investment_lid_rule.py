@@ -151,6 +151,7 @@ from pathlib import Path
 import pandas as pd
 from ostram.paths import resolve_paths
 from ostram.profiles import profile_policy
+from ostram.pipeline.scenarios.rules.config_keys import check_keys
 from openpyxl import load_workbook
 
 try:
@@ -488,6 +489,11 @@ def load_config(yaml_path: Path) -> dict:
     cfg = _load_yaml(yaml_path)
     if cfg is None:
         cfg = {}
+    check_keys(cfg, {
+        "rule_mode", "percentage_default", "percentage_by_year", "security_factor",
+        "ramp_from_demand", "exempt_prefixes", "exempt_max_cap", "relaxation_schedule",
+        "lid_floor_gw", "family_relaxation_ceilings", "adequacy_floor_schedule",
+    }, yaml_path)
 
     out: dict = {}
 
@@ -708,8 +714,8 @@ def load_generation_techs(tech_types_path: Path) -> set:
     tech_types_path = Path(tech_types_path)
     if not tech_types_path.is_file():
         raise FileNotFoundError(
-            f"TECH_TYPES.csv not found at {tech_types_path}. "
-            f"Place it next to this script, or set "
+            f"Technology taxonomy not found at {tech_types_path} "
+            f"(config/scenarios/technology_types.csv, or the active profile's interconnector_taxonomy). Set "
             f"RESTRICT_TO_GENERATION = False to disable the filter."
         )
     df = pd.read_csv(tech_types_path)

@@ -167,7 +167,7 @@ xtra_scen:
   - 'SDSMDVXX01'
   - 'SDSNPLXX01'
 Conversionls:
-# 20 timeslices (S1D1..S4D5) × 4 seasons — 1-hot season membership
+# 20 timeslices (S1D1..S4D5) × 4 seasons: 1-hot season membership
 - 1
 - 0
 - 0
@@ -249,7 +249,7 @@ Conversionls:
 - 0
 - 1
 Conversionld:
-# 20 timeslices × 1 daytype — all 1s
+# 20 timeslices × 1 daytype: all 1s
 - 1
 - 1
 - 1
@@ -271,7 +271,7 @@ Conversionld:
 - 1
 - 1
 Conversionlh:
-# 20 timeslices × 5 daily brackets (D1..D5) — 1-hot bracket membership
+# 20 timeslices × 5 daily brackets (D1..D5): 1-hot bracket membership
 - 1
 - 0
 - 0

@@ -11,7 +11,7 @@ from previous runs, and the rules_script assigned to the scenario.
 
 Pipeline:
   Stage 0    materialize scenario template  v18 -> flat v17-shaped per scenario
-  Stage 1    scripts 1-5                    AO/WV alignment pipeline, with
+  Stage 1    six modules                    AO/WV alignment pipeline, with
                                             maintained AO decision overlay
   Stage 1b   insert_reserve_margin          adds System Parameters sheet
              add_max_capacity_investment_rule --fill-zeros
@@ -408,9 +408,6 @@ def build_workdir(
                     f"rules_script '{script}' not found at {src}. "
                     f"Available: {sorted(available)}"
                 )
-            if script == "relax_interconnectors.py":
-                shutil.copy(RULES_SCRIPTS_DIR / "__init__.py", rs_wd / "__init__.py")
-                shutil.copy(src, rs_wd / script)
             yaml_path = _resolve_script_yaml(script, scenario)
             if yaml_path is not None:
                 yaml_name = yaml_path.name
@@ -428,7 +425,7 @@ def stage_1_scripts_1_to_5(s1: Path) -> None:
     """Stage 1: run the six A-O alignment modules in ``s1``, from the
     timeslice merge to the timeslice fabric propagation.
     """
-    banner("Stage 1: scripts 1-5 (AO/WV alignment pipeline)")
+    banner("Stage 1: six alignment modules (AO/WV alignment pipeline)")
     run_subproc("ostram.pipeline.scenarios.transformations.merge_timeslices", cwd=s1, label="merge timeslices")
     run_subproc("ostram.pipeline.scenarios.transformations.extract_ao_extensions", cwd=s1, label="extract AO extensions")
     run_subproc(
@@ -681,14 +678,11 @@ def stage_5_rules_scripts(
         yaml_name = _read_script_yaml_name(source)
         if yaml_name:
             arguments.extend(["--yaml", wd / "rules_scripts" / yaml_name])
+        if script == "relax_interconnectors.py":
+            arguments.extend(["--tech-types", wd / "TECH_TYPES.csv"])
         step(f"[{i}/{len(rules_scripts)}] {script}")
-        module = (
-            "rules_scripts.relax_interconnectors"
-            if script == "relax_interconnectors.py"
-            else f"ostram.pipeline.scenarios.rules.{source.stem}"
-        )
         run_subproc(
-            module,
+            f"ostram.pipeline.scenarios.rules.{source.stem}",
             arguments,
             cwd=wd, label=script,
         )

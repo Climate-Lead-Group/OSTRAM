@@ -38,6 +38,7 @@ from pathlib import Path
 
 from ostram.paths import resolve_paths
 from ostram.profiles import profile_policy
+from ostram.pipeline.scenarios.rules.config_keys import check_keys
 
 from openpyxl import load_workbook
 
@@ -273,6 +274,7 @@ def load_pin_rules(
     with path.open("r", encoding="utf-8-sig", newline="") as stream:
         reader = csv.DictReader(stream)
         fields = tuple(reader.fieldnames or ())
+        check_keys(fields, EXPECTED_FIELDS, path, "header")
         if fields != EXPECTED_FIELDS:
             raise ValueError(
                 f"rule header mismatch: {fields!r} != {EXPECTED_FIELDS!r}"

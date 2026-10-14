@@ -129,11 +129,6 @@ vendor solver version with each reproduction. Solver binaries and vendor
 licences are external runtime dependencies; an old prepared workspace is not
 an installation dependency.
 
-The 21 September 2026 clean-clone execution installed Python 3.10.21,
-NumPy 2.2.6, pandas 2.3.3, openpyxl 3.1.5, otoole 1.1.5, PyYAML 6.0.3,
-ruamel.yaml 0.19.1, XlsxWriter 3.2.9 and DVC 3.67.1. It used Conda GLPK 5.0
-for matrix generation and the existing licensed CPLEX 22.1.2.0 installation,
-with four threads, random seed 12345 and deterministic parallel mode.
 Keep the complete environment/package export with run evidence; unbounded
 dependency resolution on a later date is not an exact environment replay.
 

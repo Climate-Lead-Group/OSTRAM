@@ -283,7 +283,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--wv", type=Path, required=True,
-                    help="Path to SOASIA_OSeMOSYS_WV.xlsx (built by A3_process stage1 script 1)")
+                    help="Path to SOASIA_OSeMOSYS_WV.xlsx (built by merge_timeslices in A3 stage 1)")
     ap.add_argument("--og-csvs-dir", type=Path, required=True,
                     help="Path to OG_csvs_inputs/ folder")
     ap.add_argument("--yaml", type=Path, required=True,
