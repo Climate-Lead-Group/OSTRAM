@@ -251,7 +251,7 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 | `B_Opt_Clipped` | `B_Optimised_VRE` with the shared VRE ceilings and nothing else. The other B variants are compared with it. |
 | `B_Opt_DirBidir` | `B_Opt_Clipped` with an overlay that lists no corridor, so every interconnector flows both ways. It is the reference case for `B_Opt_DirContractual`. |
 | `B_Opt_DirContractual` | `B_Opt_Clipped` with an overlay that sets nine corridors to one direction, from their contracts and physical flows, and leaves the two Nepal to India corridors bidirectional. The justification is in the [direction references](interconnector_direction_references.md). |
-| `B_Opt_IndiaCosts` | `B_Opt_Clipped` with the capital and fixed costs of the non-India generation and storage technologies set to the India values of the same family and year. The values were first generated from the `B_Optimised_VRE` workbook and were revised in the September 2026 cost release. |
+| `B_Opt_IndiaCosts` | `B_Opt_Clipped` with the capital and fixed costs of the non-India generation and storage technologies set to the India values of the same family and year. The values were first generated from the `B_Optimised_VRE` workbook. |
 | `B_Opt_IndiaCostsFuel` | `B_Opt_IndiaCosts` plus the fuel prices of the non-India MIN technologies set to the India prices. |
 | `B_Opt_SolarCapex130` | `B_Opt_Clipped` with the solar capital cost multiplied by 1.30 in every year. |
 | `B_Opt_SolarCapexHi` | `B_Opt_Clipped` with the solar capital cost multiplied by 1.10 in every year. |

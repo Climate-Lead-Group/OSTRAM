@@ -101,8 +101,6 @@ under `config/` and fails when a file is added, removed or left unregistered.
 
 ## Abbreviations
 
-These are historical labels, and the files keep their names.
-
 | Abbreviation | Meaning |
 |---|---|
 | `cr` | country-region |
@@ -116,7 +114,7 @@ These are historical labels, and the files keep their names.
 | `MOMF` | Multipurpose OSeMOSYS Modelling Framework, as in `Config_MOMF_T1_A.yaml` and `Config_MOMF_T1_AB.yaml` |
 | `T1` | tier 1, in the same two file names |
 | `A`, `AB` | pipeline phases, in the same two file names |
-| `D4` | The prefix of the added sets and constraints in the model file. It is named after the project's D4 deliverable report, for which these sets and constraints were added. |
+| `D4` | The prefix of the added sets and constraints in the model file. |
 | `v18` | Version 18 of the scenario workbook template. |
 | `SDS`, `LDS` | short-duration and long-duration storage |
 | `BCK` | backstop |

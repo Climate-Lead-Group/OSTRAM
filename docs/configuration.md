@@ -390,7 +390,7 @@ xtra_scen:
   Storage: [LDSBGDXX01, SDSBGDXX01, ...]
 ```
 
-The model uses **20 timeslices** (4 seasons x 5 daily time brackets), a single region (`GLOBAL`), and 2 modes of operation. This was expanded from an earlier 12-timeslice (4x3) structure -- see {doc}`data-reference` for the full `Conversionls`/`Conversionld`/`Conversionlh` mapping.
+The model uses **20 timeslices** (4 seasons x 5 daily time brackets), a single region (`GLOBAL`), and 2 modes of operation. See {doc}`data-reference` for the full `Conversionls`/`Conversionld`/`Conversionlh` mapping.
 
 ### Directory and File Paths
 
