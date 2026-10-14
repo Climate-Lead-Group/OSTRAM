@@ -229,11 +229,6 @@ class UnescapMappingTests(unittest.TestCase):
         }
         self.assertTrue((normalized - deliberately_filtered).issubset(set(mappings)))
 
-        exercise = (
-            UNESCAP / "exercises" / "add-interconnector.html"
-        ).read_text(encoding="utf-8")
-        self.assertIn("INTERCONNECTORS,TRNBGDXXMMRXX", exercise)
-
     def test_timeslice_authority_contains_only_reduced_model_sources(self) -> None:
         workbook = load_workbook(
             UNESCAP / "inputs" / "scenarios" / "OSTRAM_Timeslice_Inputs.xlsx",

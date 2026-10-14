@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from contextlib import redirect_stderr, redirect_stdout
 import html
-from html.parser import HTMLParser
 import io
 from pathlib import Path
 import re
@@ -24,26 +23,6 @@ from ostram.pipeline.preparation.scenario_country_sync import _default_ao
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXAMPLE_ROOT = REPO_ROOT / "examples" / "unescap"
-
-
-class _Links(HTMLParser):
-    def __init__(self) -> None:
-        super().__init__()
-        self.hrefs: list[str] = []
-        self.ids: set[str] = set()
-
-    def handle_starttag(self, tag, attrs) -> None:
-        values = dict(attrs)
-        if "id" in values:
-            self.ids.add(values["id"])
-        if tag == "a" and "href" in values:
-            self.hrefs.append(values["href"])
-
-
-def _parse_html(path: Path) -> _Links:
-    parser = _Links()
-    parser.feed(path.read_text(encoding="utf-8"))
-    return parser
 
 
 class PortableRuntimeTests(unittest.TestCase):
@@ -257,8 +236,6 @@ class TrainingAssetTests(unittest.TestCase):
     def test_live_docs_contain_no_retired_or_invented_commands(self) -> None:
         live_documents = [
             EXAMPLE_ROOT / "README.md",
-            EXAMPLE_ROOT / "AUTHORING_AND_ACCEPTANCE.md",
-            *sorted((EXAMPLE_ROOT / "exercises").glob("*.html")),
         ]
         text = "\n".join(
             path.read_text(encoding="utf-8")
@@ -276,8 +253,6 @@ class TrainingAssetTests(unittest.TestCase):
     def test_every_documented_capture_label_is_accepted_by_the_cli(self) -> None:
         documents = [
             EXAMPLE_ROOT / "README.md",
-            EXAMPLE_ROOT / "AUTHORING_AND_ACCEPTANCE.md",
-            *sorted((EXAMPLE_ROOT / "exercises").glob("*.html")),
         ]
         labels: list[str] = []
         for path in documents:
@@ -291,26 +266,6 @@ class TrainingAssetTests(unittest.TestCase):
             [label for label in labels if not _CAPTURE.fullmatch(label)],
             [],
         )
-
-    def test_all_internal_html_links_resolve_and_fragments_exist(self) -> None:
-        parsed = {path.resolve(): _parse_html(path) for path in EXAMPLE_ROOT.rglob("*.html")}
-        failures: list[str] = []
-        for source, document in parsed.items():
-            for href in document.hrefs:
-                if not href or href.startswith(("http://", "https://", "mailto:", "/")):
-                    continue
-                target_text, _, fragment = href.partition("#")
-                target = source if not target_text else (source.parent / target_text).resolve()
-                if not target.exists():
-                    failures.append(f"{source.relative_to(REPO_ROOT)} -> missing {href}")
-                    continue
-                if fragment and target.suffix.lower() == ".html":
-                    target_doc = parsed.get(target) or _parse_html(target)
-                    if fragment not in target_doc.ids:
-                        failures.append(
-                            f"{source.relative_to(REPO_ROOT)} -> missing fragment {href}"
-                        )
-        self.assertEqual(failures, [])
 
 
 if __name__ == "__main__":

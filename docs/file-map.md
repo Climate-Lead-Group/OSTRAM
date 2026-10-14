@@ -19,7 +19,7 @@ reads it. Stage names and other terms are in the [glossary](glossary.md).
 | `.github/workflows/unescap-macos-acceptance.yml` | The CI workflow that runs the training profile on macOS. | GitHub Actions. |
 | `config/` | Configuration. See the table below. | A1 to B2. |
 | `docs/` | This documentation. | Sphinx. |
-| `examples/unescap/` | The two-region training profile with its own inputs, configuration, registry, exercises and references. | `python -m ostram --profile unescap`. |
+| `examples/unescap/` | The two-region training profile with its own inputs, configuration and registry. | `python -m ostram --profile unescap`. |
 | `inputs/` | Model inputs. See the table below. | A1, A3 and B2. |
 | `model/osemosys_fast_preprocessed.txt` | The OSeMOSYS model file in GMPL. | B2. The storage delay writes an adjusted copy, and `glpsol` reads that copy. |
 | `ostram/` | The Python package. See the table below. | Every command. |
