@@ -24,7 +24,7 @@ reads it. Stage names and other terms are in the [glossary](glossary.md).
 | `model/osemosys_fast_preprocessed.txt` | The OSeMOSYS model file in GMPL. | B2. The storage delay writes an adjusted copy, and `glpsol` reads that copy. |
 | `ostram/` | The Python package. See the table below. | Every command. |
 | `tests/` | The solver-free tests in `tests/regression/` and `tests/validation/`. | `python -m unittest discover -s tests -p 'test_*.py'`. |
-| `timeslice_module/` | The timeslice workbook generator, its inputs, four computed workbook cases and notes. The pipeline does not read it. | People, by hand. See its README. |
+| `timeslice_module/` | The timeslice workbook generator, its inputs and the reference workbook of the adopted fabric. The pipeline does not read it. | People, by hand. See its README. |
 | `tools/generate_scenario_catalogue.py` | Regenerates the scenario catalogue page. | `tests/regression/test_scenario_catalogue.py`. |
 | `workspace/` | Generated files. Git ignores it. | Every stage writes here. |
 
