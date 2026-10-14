@@ -10,7 +10,6 @@ reads it. Stage names and other terms are in the [glossary](glossary.md).
 | `README.md` | The front page. | People. Tests check that it names the commands. |
 | `AGENTS.md` | Instructions for AI coding agents. | Agents. |
 | `CONTRIBUTING.md` | How to make a change. | People. |
-| `CHANGES.md` | The changelog. | People. |
 | `LICENSE` | The Apache License, version 2.0. | People. |
 | `environment.yaml` | The conda environment definition. | `python -m ostram run` when it checks or creates an environment. |
 | `pyproject.toml` | Package metadata and Python dependencies. | `pip install -e .` |
