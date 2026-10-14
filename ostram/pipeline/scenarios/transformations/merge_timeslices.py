@@ -568,7 +568,7 @@ appears_in = {}   # tech -> set of v17 sheet names
 canon_name = {}   # tech -> canonical Tech.Name (first non-null encountered)
 
 for sheet in V17_TECH_SHEETS:
-    # BUG-1 FIX: Capacities_CF was rebuilt in-memory by Step 5 (df_cf).
+    # Capacities_CF was rebuilt in-memory by Step 5 (df_cf).
     # Re-reading it from TEMPLATE_PATH would return the OLD rows (WON/WOF only),
     # causing every other PWR tech that gained CF rows in Step 5 to stay
     # unmarked in Tech_Universe.  Use df_cf directly for this sheet; all other
@@ -719,7 +719,7 @@ for ft in dp_d["Fuel/Tech"].dropna().unique():
     check(f"Demand_Profiles[{ft}] sums to ~1.0",
           abs(s - 1.0) < 0.01, f"(got {s:.6f})")
 
-# (f) CF values in [0, 1] -- WARNING (not a failure): handover says "warn if not".
+# (f) CF values in [0, 1] -- WARNING (not a failure).
 #     Out-of-range values originate in the timeslice source data, not the script.
 year_cols = [c for c in cf_d.columns if isinstance(c, int)]
 oor_mask = (cf_d[year_cols] < 0).any(axis=1) | (cf_d[year_cols] > 1).any(axis=1)

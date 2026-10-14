@@ -468,10 +468,8 @@ def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
     ], label="insert reserve margin")
 
     # 2) add_max_capacity_investment_rule: single pass with --fill-zeros.
-    #    Equivalent to the historical OLD (8ee8056: cell values, zeros->9999)
-    #    followed by NEW (2be1616: Projection.Mode flips) sequence; merged
-    #    into one script in Sept 2026 (the two copies shared a backup name
-    #    and collided when both ran within the same second).
+    #    Empty and zero MaxCapacityInvestment cells of allowed techs become
+    #    9999, and EMPTY Projection.Mode rows become "User defined".
     run_subproc("ostram.pipeline.scenarios.transformations.add_max_capacity_investment_rule", [
         "--input-dir", s1b, "--fill-zeros",
     ], cwd=wd, label="add_max_capacity_investment_rule (--fill-zeros)")
@@ -516,7 +514,7 @@ def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
         print("    [FALLBACK] add_ao_c2a produced no output; copied ORIGINAL "
               "to *_c2a_patched.xlsx so pipeline can continue.")
 
-    # fix_pwrpet_clear: the manual edit Luis did
+    # fix_pwrpet_clear: clear the PWRPETBGDXX capacity factors
     run_subproc("ostram.pipeline.scenarios.transformations.fix_pwrpet_clear", [
         "--input", s2 / "A-O_Parametrization_c2a_patched.xlsx",
     ], label="clear PWRPET values")
@@ -695,9 +693,9 @@ def stage_interconnector_costs(
 ) -> None:
     """Wire v18 Interconnector_Params cost columns into the model.
 
-    Interconnector CapitalCost/FixedCost historically came from the OG_csvs base
-    (distance-computed predecessor values) and the sourced Interconnector_Params sheet
-    was never consumed. This stage makes that sheet the source of truth: it
+    The OG_csvs base carries distance-computed interconnector CapitalCost and
+    FixedCost values. This stage makes the sourced Interconnector_Params sheet
+    the source of truth instead: it
     applies Interconnector_Params -> Secondary Techs (CapitalCost, FixedCost) and
     Fixed Horizon Parameters (OperationalLife), reading the per-scenario
     materialized template so any scenario override flows through. Residuals/caps

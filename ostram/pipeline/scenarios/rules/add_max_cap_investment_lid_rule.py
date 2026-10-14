@@ -239,8 +239,8 @@ LID_RULE_MODE = "proportional"
 #                        which typically have visibility through ~2030.
 #   2031-2040 = 10%    - planning data thins past 2030; 20x jump frees the
 #                        optimizer enough to substitute for storage if needed.
-#   2041-2050 = 50%    - effectively unbounded; "we don't know what build
-#                        rates will be in 2045+, let the model decide."
+#   2041-2050 = 50%    - effectively unbounded; build rates past 2045 are
+#                        left to the optimizer.
 # Years not in this dict fall back to LID_PERCENTAGE_DEFAULT.
 LID_PERCENTAGE_DEFAULT = 0.5
 LID_PERCENTAGE_BY_YEAR: dict = {
@@ -264,7 +264,7 @@ LID_SECURITY_FACTOR = 1.1
 
 # --- Relaxation schedule (used by both modes) --------------------------------
 # Year-keyed multiplier on the computed lid.  Default {}: multiplier = 1.0 for
-# every year (BAU behaviour, identical to the old script).
+# every year (BAU behaviour).
 #
 # For optimisation scenarios, set anchor points in the YAML, e.g.:
 #   relaxation_schedule:

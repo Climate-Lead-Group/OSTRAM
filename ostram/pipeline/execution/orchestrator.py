@@ -1048,7 +1048,7 @@ def execute_scenario(
         "cplex_numerical_emphasis_scenarios", ()
     ):
         # Keep the shared run configuration unchanged for subsequent cases.
-        # This reproduces the accepted numerical recovery without editing LPs.
+        # This applies CPLEX numerical emphasis without editing the LP.
         params = {**params, "cplex_numerical_emphasis": True}
 
     reuse_solution = (

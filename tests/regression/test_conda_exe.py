@@ -1,4 +1,4 @@
-"""conda_exe() finds conda on a standard Windows install and on the r7 layout."""
+"""conda_exe() finds conda on a standard Windows install and with a separate env folder on PATH."""
 
 from __future__ import annotations
 

@@ -537,7 +537,7 @@ def apply_restrictions(
 
     For each (source_sheet, tech, parameter, year) -> value, find the matching
     row in the workbook (tech + parameter) and set the year column. Only
-    `source_sheet_filter` is honored today (other sheets are skipped, see plan).
+    `source_sheet_filter` is honored (other sheets are skipped).
 
     Returns the number of cells written.
     """

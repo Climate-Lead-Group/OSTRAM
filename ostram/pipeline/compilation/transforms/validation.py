@@ -1,4 +1,4 @@
-"""Legacy B1 configuration checks with injectable reporting and stopping."""
+"""B1 configuration checks with injectable reporting and stopping."""
 
 from __future__ import annotations
 

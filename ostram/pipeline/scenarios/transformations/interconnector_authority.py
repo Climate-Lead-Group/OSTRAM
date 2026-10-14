@@ -9,8 +9,7 @@ Both supported workbook shapes are accepted:
 * the raw v18 sheet, whose first column is ``scenario``; and
 * a scenario-materialized sheet, from which ``scenario`` has been removed.
 
-Either shape may end with the audit-only ``IEEE Reference`` column used by the
-accepted v21 authority. The loader does not consume that column and continues
+Either shape may end with the audit-only ``IEEE Reference`` column. The loader does not consume that column and continues
 to reject every other schema extension.
 """
 from __future__ import annotations

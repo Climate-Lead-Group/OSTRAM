@@ -1,12 +1,12 @@
-"""Materialize the approved generation calibration and retained controls.
+"""Materialize the generation calibration and retained controls.
 
 Only explicit complete keys in the frozen table may change a workbook cell.
 Historical evidence limits follow the documented 0.98/1.02 convention;
 Nepal fallback is lower-only. The 2026 transition is lower-only at 0.95,
-except the owner's two waste-mapping waivers (2023-2026 lower limits zero).
+except two waste-mapping waivers (2023-2026 lower limits zero).
 ABSENT operations retire replay values and expressly removed upper bounds.
 Original observations and unresolved source cells remain unchanged.
-Bangladesh 2023 coal/gas/combined-oil/hydro references are approved provisional
+Bangladesh 2023 coal/gas/combined-oil/hydro references are provisional
 fiscal-average estimates: (FY2022/23 + FY2023/24) / 2, used as calendar-2023
 proxies, not observed calendar generation. BPDB Annual Reports, both printed
 p.14 / PDF p.15, Energy Generation by Fuel Type:
@@ -14,10 +14,10 @@ FY2022/23: https://objectstorage.ap-dcc-gazipur-1.oraclecloud15.com/n/axvjbnqpry
 FY2023/24 archived report: https://www.energytransitionbd.org/_files/ugd/315ccb_6d364c5d297344e9a02aeab743af34a1.pdf
 Pairs in GWh: coal (10081,19138), gas (46013,46579), combined oil
 (20650,11797), hydro (610,825). Bounds remain reference * 0.0036 * 0.98/1.02.
-SUPPORT.xlsx Current reference audit retains original R3 observations,
-both saved-source paths/hashes and the adopted averaging method separately.
+SUPPORT.xlsx Current reference sheet keeps the original observations,
+both saved-source paths/hashes and the averaging method separately.
 The original 787 India/Sri Lanka capacity and investment controls are retained.
-R3 and the supporting evidence remain outside production.
+The original observations and the supporting evidence are not read in production.
 """
 
 from __future__ import annotations
