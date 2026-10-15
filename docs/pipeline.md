@@ -1,6 +1,6 @@
 # Pipeline
 
-```text
+```mermaid
 flowchart TB
     subgraph MAIN["GitHub main · tracked and reproducible"]
         direction LR
