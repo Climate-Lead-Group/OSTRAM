@@ -1,8 +1,8 @@
 ## relax_interconnectors.yaml: B_Optimised_VRE
 ##
 ## Evidence-based interconnector expansion caps derived from the project
-## pipeline in the maintained v18 Interconnectors sheet (Zixuan v3 + IEPMP 2023 + BPC PDB
-## 2024 + NEA Annual 2024/25 + NEP Vol.II + LTGEP 2025-2044).
+## pipeline in the maintained v18 Interconnectors sheet (IEPMP 2023 + BPC PDB 2024
+## + NEA Annual 2024/25 + NEP Vol.II + LTGEP 2025-2044).
 ##
 ## Default mode: multiplicative with a conservative 1.5× factor for
 ## corridors without explicit project data.  Per-corridor overrides
@@ -26,7 +26,7 @@ overrides:
   TRNBTNXXBGDXX: {2023: 0, 2033: 0, 2035: 0.75}
 
   # IND-S → LKA: India–Sri Lanka HVDC (Madurai ↔ Mannar)
-  #   Phase 1: 500 MW, COD 2039 (Proposed/Planning, Zixuan v3)
+  #   Phase 1: 500 MW, COD 2039 (Proposed/Planning, project research)
   #   Phase 2: 500 MW expansion, COD 2040 (Conceptual, LTGEP 2025-2044)
   TRNINDSOLKAXX: {2023: 0, 2037: 0, 2039: 0.5, 2040: 1.0}
 

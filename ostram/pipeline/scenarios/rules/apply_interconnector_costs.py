@@ -8,10 +8,10 @@ for interconnector CapitalCost / FixedCost / OperationalLife.
 
 Background
 ----------
-The pipeline historically read interconnector CapitalCost from the OG_csvs base
-(distance-computed legacy values, e.g. BD<->IN_E = 292.487 $/kW). The sourced,
-cited values in the v18 template's `Interconnector_Params` sheet (e.g. 380 $/kW)
-were never consumed. This step closes that gap: for every interconnector tech
+The OG_csvs base carries distance-computed interconnector CapitalCost values
+(e.g. BD<->IN_E = 292.487 $/kW). This step replaces them with the sourced,
+cited values in the v18 template's `Interconnector_Params` sheet (e.g. 380 $/kW):
+for every interconnector tech
 present in `Interconnector_Params`, it overwrites the matching model rows with
 the sheet's values, across two sheets with different layouts:
 

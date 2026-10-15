@@ -2582,7 +2582,7 @@ class SecondaryTechsUpdater:
                 except (ValueError, TypeError):
                     pass
 
-        # FIXED: Use ONLY TotalAnnualMaxCapacity (per user requirement)
+        # Use ONLY TotalAnnualMaxCapacity
         if max_cap_activity is not None:
             max_possible = max_cap_activity
             capacity_source = 'MaxCapacity'

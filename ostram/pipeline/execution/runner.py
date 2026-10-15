@@ -243,7 +243,7 @@ def process_scenario_folder(base_input_path, template_path, base_output_path, sc
     print('#------------------------------------------------------------------------------#')
 
 def historical_trade_activation(input_folder, scenario_name):
-    """Scope approved historical equations and reject incomplete applicable data."""
+    """Scope the historical-trade equations and reject incomplete applicable data."""
     from ostram.profiles import profile_policy
     from ostram.pipeline.scenarios.rules.apply_base_year_pin import calibration_root
     root = calibration_root(scenario_name)

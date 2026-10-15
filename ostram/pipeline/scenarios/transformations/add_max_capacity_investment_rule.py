@@ -25,9 +25,8 @@ If yes ("ALLOWED"):
     until 2030"). Only blank cells mean "no upper bound was set."
 
     With --fill-zeros, explicit 0 cells are ALSO replaced with 9999 (only
-    positive values are preserved). This reproduces the legacy behaviour of
-    the first version of this script (commit 8ee8056), which the pipeline
-    relies on to regenerate the BAU A-O_Parametrization exactly.
+    positive values are preserved). The pipeline uses this mode to build the
+    BAU A-O_Parametrization.
 
 If no ("ZEROED"):
     For TotalAnnualMaxCapacity AND TotalAnnualMaxCapacityInvestment, set every
@@ -44,17 +43,6 @@ Additionally, MinCapacityInvestment rows whose year cells are non-null but
 mode is "EMPTY" also get flipped to "User defined". This activates planned-
 build values (e.g. hydro 1.138 GW commissioned in 2026) that the upstream
 pipeline left with mode=EMPTY, where downstream would silently ignore them.
-
-HISTORY
--------
-Until Sept 2026 the pipeline (transform.py, Stage 1b) ran two frozen copies
-of this script back to back on the same folder: the OLD version (commit
-8ee8056: cell values, zeros filled with 9999) followed by the NEW version
-(commit 2be1616: only blanks filled, plus the Projection.Mode flips). Running
-OLD then NEW is equivalent to a single pass of this script with --fill-zeros
-(NEW found nothing left to fill after OLD, and only contributed the mode
-flips). The two copies were merged into this single file because they shared
-the same backup folder name and collided when both ran within one second.
 
 SCOPE
 -----
@@ -85,7 +73,7 @@ USAGE
         --input-dir A1_Outputs/A1_Outputs_BAU \\
         --sheets "Secondary Techs"
 
-    # Pipeline (Stage 1b) call: legacy OLD+NEW equivalent:
+    # Pipeline (Stage 1b) call:
     python -m ostram.pipeline.scenarios.transformations.add_max_capacity_investment_rule \\
         --input-dir stage1b --fill-zeros
 """
@@ -192,7 +180,7 @@ def apply_rule_to_sheet(
     Edit a worksheet in place, applying the rule. Returns a sheet-level log.
 
     fill_zeros=True also replaces explicit 0 cells of ALLOWED techs'
-    MaxCapacityInvestment with `allowed_fill` (legacy 8ee8056 behaviour).
+    MaxCapacityInvestment with `allowed_fill`.
     """
     year_cols = find_year_columns(ws)
     headers = find_named_columns(ws, ["Tech", "Parameter", PROJ_MODE_COL])

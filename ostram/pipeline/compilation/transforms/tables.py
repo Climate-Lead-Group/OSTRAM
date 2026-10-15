@@ -1,4 +1,4 @@
-"""Pure tabular transformations extracted from the legacy B1 compiler."""
+"""Pure tabular transformations used by the B1 compiler."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def build_system_parameter_rows(
     years: Sequence[int],
     setup: Mapping[str, Any],
 ) -> pd.DataFrame:
-    """Expand non-missing system-parameter cells into legacy long-form rows.
+    """Expand non-missing system-parameter cells into long-form rows.
 
     Rows, duplicate keys, input index order, Python ``float`` conversion, and
     four-decimal rounding are intentionally left exactly as in the predecessor.

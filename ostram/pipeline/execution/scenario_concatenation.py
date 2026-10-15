@@ -1,11 +1,10 @@
 """Streaming cross-scenario concatenation for the B2 final post-processing.
 
-The legacy implementation loaded every scenario's inputs and outputs into
-memory, concatenated them into three campaign-wide DataFrames and sorted
-each one.  With 16 scenarios that meant three copies of a 7.6 million row
-table and a ``MemoryError`` on a 32 GB machine.
+Loading every scenario's inputs and outputs into memory at once means, with
+16 scenarios, three copies of a 7.6 million row table and a ``MemoryError``
+on a 32 GB machine.
 
-This module produces the same three files (inputs, outputs, combined) by
+This module produces the three files (inputs, outputs, combined) by
 processing one scenario at a time and appending its sorted block to the
 CSV files.  Because the global sort order starts with ``Future`` and
 ``Scenario``, and the accumulated minimum-investment column is grouped by
@@ -48,10 +47,10 @@ def active_output_csv_candidates(params, scenario_future_name):
     The solver/otoole path can become, for example:
       Pre_processed_BAU_0_NoStorage_OpenBCK_RMCarefulXLSX_output.csv
 
-    The final scenario concatenator used to look only for:
+    The plain name is:
       Pre_processed_BAU_0_Output.csv
 
-    Keep the active chained name first, with legacy fallbacks after it.
+    Keep the active chained name first, with the plain-name fallbacks after it.
     """
     base = f"{params['preprocess_data_name']}{scenario_future_name}"
     chain_parts = []

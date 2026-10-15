@@ -1,13 +1,12 @@
 """fix_pwrpet_clear.py
 ========================
-Reproduces the manual clear that Luis did on the Capacities sheet:
+Clears the PWRPETBGDXX capacity factors on the Capacities sheet:
 for each row where Tech == 'PWRPETBGDXX', clears (None) the value in
 ALL year columns (2023..2050). That is 12 timeslices x 28 years
 = 336 cells.
 
-Rationale: Luis decided that the auto-generated CapacityFactor values for
-PWRPETBGDXX (very low values like 0.0086, 0.0248) were not realistic
-and cleared them by hand. With no value, OSeMOSYS uses AvailabilityFactor=0.8
+Rationale: the auto-generated CapacityFactor values for PWRPETBGDXX are
+very low (e.g. 0.0086, 0.0248) and are not used. With no value, OSeMOSYS uses AvailabilityFactor=0.8
 as the cap.
 
 Idempotent: re-running is a no-op (the cells are already empty).

@@ -46,7 +46,7 @@ Values applied
         non-RE (PWRTRN/TRNNLI/TRNRPO) = base_capital_cost / base_fixed_cost
         RE     (RNWTRN/RNWNLI/RNWRPO) = base x re_capex_multiplier
     Basis: per-kW RE transmission premium ~1.5-2.3x (LBNL 2019); default 2.0.
-    The multiplier is a single exposed YAML knob so WS-1 can slide it.
+    The multiplier is a single exposed YAML knob for sensitivity runs.
   * OperationalLife = operational_life (default 40) for all 6 families.
 
 Scope (intentionally narrow): the four params above, on the six internal

@@ -1,4 +1,4 @@
-"""Pure configuration and path planning for the legacy B1 compiler."""
+"""Pure configuration and path planning for the B1 compiler."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ CONFIG_PATH = "Config_MOMF_T1_A.yaml"
 
 @dataclass(frozen=True)
 class TransformPlan:
-    """Values derived before the legacy compiler starts its transformations.
+    """Values derived before the compiler starts its transformations.
 
     Paths deliberately remain strings and are resolved lazily.  The predecessor
     interprets every relative path against the process working directory and uses
@@ -77,7 +77,7 @@ class TransformPlan:
 
 
 def build_transform_plan(params: MutableMapping[str, Any]) -> TransformPlan:
-    """Derive the legacy plan while retaining its mutation and failure behavior.
+    """Derive the plan while retaining the compiler's mutation and failure behavior.
 
     In particular, the configured ``Timeslices`` list is sorted in place.  The
     returned setup mapping is a new mapping whose values retain their predecessor

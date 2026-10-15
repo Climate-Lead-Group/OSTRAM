@@ -79,7 +79,7 @@ WV_TECH_SHEETS = [
     "Interconnector_Params", "Fixed_Horizon_Parameters",
 ]
 
-# Orange highlight colors used by the team to flag rows for decision.
+# Orange highlight colors that flag rows for decision.
 ORANGE_COLORS = {"FFFCD5B4", "FFFCD5B5"}
 
 # Code/name column candidates -- A-O uses different headers across files.

@@ -1,4 +1,4 @@
-"""Output delivery helpers preserving the legacy B1 write sequence."""
+"""Output delivery helpers preserving the B1 write sequence."""
 
 from __future__ import annotations
 
@@ -14,9 +14,8 @@ def clean_parameter_tables(
 ) -> tuple[dict[Any, pd.DataFrame], dict[Any, pd.DataFrame]]:
     """Remove missing keys and recreate both delivery mappings from main tables.
 
-    The second mapping intentionally does *not* use the predecessor's accumulated
-    NDP mapping.  That historical quirk is part of accepted output behavior and is
-    made explicit here rather than corrected during the structural refactor.
+    The second mapping intentionally does *not* use the accumulated NDP mapping.
+    The compiled output depends on this, so it is made explicit here.
     """
     cleaned_main = {
         key: value for key, value in main_tables.items() if not pd.isna(key)

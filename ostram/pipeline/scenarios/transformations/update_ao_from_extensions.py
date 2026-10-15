@@ -129,7 +129,7 @@ def _region_name(region_code: str) -> str:
 TIER_COLOR = {
     "STRICT":      "FFC6EFCE",  # light green
     "CROSS_SHEET": "FFFFEB9C",  # light yellow (matches stage 1 audit color)
-    "TEMPLATE":    "FFFCD5B4",  # orange (matches team's "needs review" color)
+    "TEMPLATE":    "FFFCD5B4",  # orange ("needs review" color)
     "TAB2_ONLY":   "FFCCE5FF",  # light blue-violet -- Tab2 direct synthesis (Step 3B)
 }
 
@@ -1396,10 +1396,8 @@ for idx, row in include_y.reset_index(drop=True).iterrows():
 # Timeslice handling (passthrough at 20):
 #   WV Capacities_CF carries 20 timeslices (5 dayparts per season x 4 seasons).
 #   The A-O Capacities sheet now also runs at 20 timeslices, refreshed in
-#   Step 2D for existing techs. The historical 20->12 YearSplit-weighted merge
-#   has been removed (architectural debt called out in handover_step2d.md
-#   section 5.1). Step 3B now emits the 20 WV rows verbatim, one per WV
-#   timeslice. Year cells are copied directly from the Tab 2 row matching that
+#   Step 2D for existing techs. Step 3B emits the 20 WV rows verbatim, one
+#   per WV timeslice. Year cells are copied directly from the Tab 2 row matching that
 #   timeslice; no averaging is performed.
 
 print("\n" + "=" * 72)
@@ -1484,8 +1482,7 @@ for idx, row in include_y.reset_index(drop=True).iterrows():
 
                 if ts_vals_in_tab2:
                     # --- Timesliced rows: emit 20 WV rows verbatim ---
-                    # (Historical 20->12 YearSplit-weighted merge removed;
-                    #  see Step 3B header comment / handover_step2d.md s5.1.)
+                    # (see Step 3B header comment.)
                     wv_ts_list = sorted(set(ts_vals_in_tab2), key=ts_sort_key)
 
                     n_appended = 0

@@ -87,7 +87,7 @@ def write_completed_demand_workbook(
     """Write the completed demand workbook and return its rounded frame.
 
     There is deliberately no context manager or failure cleanup: a conversion or
-    write failure propagates before ``close`` exactly as it did in the predecessor.
+    write failure propagates before ``close``.
     """
     if writer_factory is None:
         writer_factory = pd.ExcelWriter
@@ -148,7 +148,7 @@ def allocate_country_fuel_costs(tables, config_path, audit_path):
     for an unsupported policy or inconsistent tables.
     """
     # Existing compilation YAML embeds this policy; standalone paths remain
-    # supported for the accepted focused regression fixtures.
+    # supported for the focused regression fixtures.
     if config_path is None:
         return tables
     if isinstance(config_path, dict):

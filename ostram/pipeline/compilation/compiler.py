@@ -1178,7 +1178,7 @@ if accumulated_emission_data:  # Ensure there's something to append
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=FutureWarning)
         df_Emissions = pd.concat([df_Emissions, new_emissions_df], ignore_index=True)
-# Bangladesh gas combustion uses the approved fuel factor, not a factor per
+# Bangladesh gas combustion uses one fuel factor, not a factor per
 # fuel-supply origin. Check actual mode activity bases before serialization.
 _bgd_iar = df_IAR.loc[df_IAR["TECHNOLOGY"] == "PWRNGSBGDXX"]
 if not _bgd_iar.empty:

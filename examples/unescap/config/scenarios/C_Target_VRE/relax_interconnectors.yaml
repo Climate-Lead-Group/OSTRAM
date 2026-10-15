@@ -1,12 +1,9 @@
 ## relax_interconnectors.yaml — C_Target_VRE
 ## IDENTICAL to B_Optimised_VRE. Same evidence-based pipeline caps.
 ##
-## Sources: Zixuan v3 + IEPMP 2023 + BPC PDB 2024 + NEA Annual 2024/25
-##          + NEP Vol.II + LTGEP 2025-2044.
+## Sources: IEPMP 2023 + BPC PDB 2024 + NEA Annual 2024/25 + NEP Vol.II + LTGEP 2025-2044.
 ##
-## UNESCAP training model: only the Bangladesh <-> India East corridor remains;
-## all other SOASIA corridors were removed with their countries/regions.
-## The full corridor table lives in git history.
+## UNESCAP training model: only the Bangladesh <-> India East corridor is modelled.
 
 mode: multiplicative
 headroom_factor: 1.5

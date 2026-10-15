@@ -1,5 +1,4 @@
 ## lid_rule.yaml — A_Calibrated_BAU scenario override
-## Updated: 2026-05-26
 ##
 ## Key differences from B_Optimised_VRE:
 ##   - NO relaxation (flat 1.0× — pure BAU proportions for all families)

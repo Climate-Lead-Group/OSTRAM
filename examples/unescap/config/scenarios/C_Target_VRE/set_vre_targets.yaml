@@ -1,5 +1,4 @@
 ## set_vre_targets.yaml — C_Target_VRE scenario
-## Generated: 2026-06-07
 ##
 ## NDC-derived renewable generation floors, expressed as a % of CalBAU
 ## total generation per country-region. set_vre_targets reads the
@@ -68,9 +67,7 @@ default_capacity_factor: 0.10    # fallback yield (× c2a) if CalBAU never built
 pin_generation_to_target: true
 pin_slack: 0.01                  # upper limit sits 1% above the floor (a narrow range, not an exact lower==upper equality)
 
-## NOTE: trimmed to the UNESCAP training subset (Bangladesh + India East).
-## Sri Lanka / Maldives / Nepal / Bhutan and India's other four regions were
-## removed with those regions. The full SOASIA target table lives in git history.
+## NOTE: targets cover the UNESCAP training subset (Bangladesh + India East) only.
 targets:
 
   # =========================================================================
