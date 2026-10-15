@@ -205,7 +205,7 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 - Overlay: none.
 - B2 policy: the historical trade constraints are active.
 - Seed needs: a solved `A_Calibrated_BAU` result.
-- Description: The shared VRE ceilings applied to C_Target_VRE. It also restates the Maldives solar assumption for 2028 that C_Target_VRE already carries: a minimum total of 0.3841 GW, with earlier builds counting towards it. This is a legacy modelling assumption. It is not an official target.
+- Description: The shared VRE ceilings applied to C_Target_VRE. It also restates the Maldives solar assumption for 2028 that C_Target_VRE already carries: a minimum total of 0.3841 GW, with earlier builds counting towards it. This is a modelling assumption. It is not an official target.
 
 | Sheet | Parameter | Operation | Technologies |
 |---|---|---|---|
@@ -236,7 +236,7 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 - Overlay: none.
 - B2 policy: the historical trade constraints are active; gross imports capped at 0.15 of annual demand in 2027 to 2050 for BGD, BTN, IND, LKA, MDV, NPL.
 - Seed needs: none.
-- Description: Clipped B with annual aggregate gross received-import cap, all six countries per legacy documented region-wide scope; India aggregated nationally.
+- Description: Clipped B with annual aggregate gross received-import cap, all six countries per the documented region-wide scope; India aggregated nationally.
 
 <!-- generated: end -->
 

@@ -1,4 +1,4 @@
-# Fixture for the residual_source: minimum_investment_boundary clamp, taken from config/profiles/full.yaml at 003fdbe.
+# Fixture for the residual_source: minimum_investment_boundary clamp, taken from config/profiles/full.yaml.
 scenario_inputs:
   B_Opt_LinkFreeze:
     scenario: B_Opt_LinkFreeze

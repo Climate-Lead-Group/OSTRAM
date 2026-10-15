@@ -1,6 +1,6 @@
 """Final support BAU ceiling: existing capacity plus surviving commitments.
 
-Required annual investment minima are the owner's committed additions. Their
+Required annual investment minima are committed additions. Their
 year is the commissioning year; OSeMOSYS keeps vintage v alive in year y when
 0 <= y - v < OperationalLife. Never export this policy as inherited Restrictions.
 """

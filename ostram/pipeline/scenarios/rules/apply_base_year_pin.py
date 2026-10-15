@@ -225,7 +225,7 @@ def _parse_rule(row: dict[str, str], row_number: int) -> PinRule:
         if parameter not in ACTIVITY_PARAMETERS or not present or year not in GENERATION_YEARS:
             raise ValueError(f"{label}: invalid R3 generation operation")
         if year == 2026 and (parameter != P_ACTIVITY_LOWER or country == "NPL"):
-            raise ValueError(f"{label}: 2026 permits only the approved non-Nepal lower transition")
+            raise ValueError(f"{label}: 2026 permits only the allowed non-Nepal lower transition")
         operation_kind = GENERATION_OPERATION
     elif operation == "D4_R3_REMOVE":
         if present or parameter not in ACTIVITY_PARAMETERS or year not in GENERATION_YEARS:
@@ -247,12 +247,12 @@ def _parse_rule(row: dict[str, str], row_number: int) -> PinRule:
     elif operation == "D4_R2_RESIDUAL":
         expected_id = f"{operation}::{technology}::{year}"
         if country not in {"BGD", "BTN"} or parameter != P_RESIDUAL_CAPACITY or year not in CAPACITY_YEARS or not present:
-            raise ValueError(f"{label}: invalid approved residual operation")
+            raise ValueError(f"{label}: invalid residual operation")
         operation_kind = CAPACITY_OPERATION
     elif operation == "D4_R2_CAPACITY_FREEZE":
         expected_id = f"{operation}::{technology}::{parameter}::{year}"
         if country not in {"BGD", "BTN"} or parameter not in {P_MAX_INV, P_MIN_INV} or year not in GENERATION_YEARS or not present:
-            raise ValueError(f"{label}: invalid approved investment freeze")
+            raise ValueError(f"{label}: invalid investment freeze")
         operation_kind = CAPACITY_OPERATION
     else:
         raise ValueError(f"{label}: unsupported operation")

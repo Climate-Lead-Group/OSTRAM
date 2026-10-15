@@ -36,7 +36,7 @@ class CondaExeTests(unittest.TestCase):
             found = _conda_exe_with_path(root / "condabin")
         self.assertEqual(os.path.normcase(found), os.path.normcase(str(conda)))
 
-    def test_r7_layout_resolves_to_scripts_conda_exe(self) -> None:
+    def test_scripts_layout_resolves_to_scripts_conda_exe(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp) / "anaconda3"
             env = Path(temp) / "conda-envs" / "ostram-reproduce"
