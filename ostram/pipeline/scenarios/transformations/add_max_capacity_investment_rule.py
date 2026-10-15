@@ -432,7 +432,7 @@ def main() -> int:
         "--fill-zeros",
         action="store_true",
         help="Also replace explicit 0 MaxCapacityInvestment cells of ALLOWED "
-             "techs with 9999 (legacy 8ee8056 behaviour; used by the pipeline).",
+             "techs with 9999.",
     )
     args = parser.parse_args()
 

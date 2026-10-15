@@ -876,7 +876,7 @@ class TxCap150FormulaTests(unittest.TestCase):
 
 
 class SemanticComparisonBehaviorTests(unittest.TestCase):
-    def test_sparse_zero_serialization_canonicalizes_only_approved_zeros(self) -> None:
+    def test_sparse_zero_serialization_canonicalizes_only_permitted_zeros(self) -> None:
         serialized = {
             (tech, year): value
             for tech, value in AUTHORITY.items()
