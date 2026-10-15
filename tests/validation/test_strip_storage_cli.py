@@ -13,7 +13,7 @@ walks the output file structurally (set blocks + parameter blocks) and verifies:
        the disabled techs, all with value = 0.
     6. Every TECH_MIN_PARAMS block has zero rows for the disabled techs
        (this is the NCC2 contradiction guard).
-    7. No bare PWRSDS / PWRLDS phantom tech anywhere (Codex regression check).
+    7. No bare PWRSDS / PWRLDS phantom tech anywhere (phantom storage tech check).
     8. Whole-file scan: residual mentions are limited to zero-valued
        StorageBuildAllowed rows (the explicit no-build marker).
 
@@ -223,8 +223,8 @@ def main():
               0, len(rows),
               detail=f"leaked rows: {rows[:3]}")
 
-    # 7. Codex regression: bare PWRSDS / PWRLDS (without country suffix)
-    print("\n(7) Codex regression check")
+    # 7. Phantom storage tech check: bare PWRSDS / PWRLDS (without country suffix)
+    print("\n(7) Phantom storage tech check")
     bare_re = re.compile(r"\bPWR(?:SDS|LDS)\b(?!\w)")
     bare_hits = []
     for ln, line in enumerate(out_lines, 1):

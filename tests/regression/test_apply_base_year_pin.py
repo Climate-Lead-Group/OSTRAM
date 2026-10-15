@@ -85,7 +85,7 @@ def _rule(
         "root_scenarios_with_actual_change": root_scenarios,
         "authority_classification": "BENCHMARK_SUPPORTED",
         "authority_lineage_class": (
-            "ACCEPTED_WS4_BASE_YEAR_PIN_2023_2026"
+            "ACCEPTED_BASE_YEAR_PIN_2023_2026"
         ),
     }
 
