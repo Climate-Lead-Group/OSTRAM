@@ -161,11 +161,12 @@ Used by: `InputActivityRatio`, `OutputActivityRatio`, `EmissionActivityRatio`.
 
 OSTRAM uses a hierarchical temporal structure:
 
-```
-Year (2023-2050)
-  └── Season (4 seasons)
-      └── Day Type (1 type)
-          └── Daily Time Bracket (5 brackets)
+```mermaid
+flowchart TB
+    Y["Year (2023-2050)"] --> S["Season (4)"]
+    S --> D["Day type (1)"]
+    D --> B["Daily time bracket (5)"]
+    B --- N["20 timeslices, S1D1..S4D5"]
 ```
 
 This produces **20 timeslices** (4 seasons x 5 brackets):
@@ -325,24 +326,19 @@ Base year and projection activity ratios:
 
 OSTRAM uses a single-region (`GLOBAL`) architecture where geographic granularity is embedded in the technology and fuel naming conventions. Each country/region's technologies operate independently, connected only through explicit cross-border interconnector (`TRN`) technologies.
 
-```
-Mining (MIN)  →  Power (PWR)  →  ELC*00/01 (plant output)
-                                        ↓
-                        Grid-tier conversion (RNWTRN/PWRTRN/RNWRPO/TRNRPO/RNWNLI/TRNNLI)
-                                        ↓
-                                   ELC*02 (line output)  →  Demand
-                                        ↓
-                              DSPTRN Mode 1 (export)
-                                        ↓
-                                   ELC*03 (dispatch-ready)
-                                        ↓
-                      Cross-border interconnector (TRN{origin}{dest})
-                                        ↓
-                                   ELC*04 (imported, at destination)
-                                        ↓
-                              DSPTRN Mode 2 (import)
-                                        ↓
-                                   ELC*03 (dispatch-ready again, available locally)
+```mermaid
+flowchart TB
+    MIN["Mining (MIN)"] --> PWR["Power (PWR)"]
+    PWR --> E01["ELC*00/01 (plant output)"]
+    E01 --> GRID["Grid-tier conversion<br/>(RNWTRN/PWRTRN/RNWRPO/TRNRPO/RNWNLI/TRNNLI)"]
+    GRID --> E02["ELC*02 (line output)"]
+    E02 --> DEM["Demand"]
+    E02 --> D1["DSPTRN Mode 1 (export)"]
+    D1 --> E03["ELC*03 (dispatch-ready)"]
+    E03 --> TRN["Cross-border interconnector<br/>(TRN{origin}{dest})"]
+    TRN --> E04["ELC*04 (imported, at destination)"]
+    E04 --> D2["DSPTRN Mode 2 (import)"]
+    D2 --> E03B["ELC*03 (dispatch-ready again, available locally)"]
 ```
 
 ### Energy Flow

@@ -7,13 +7,15 @@ Date: 2025
 """
 
 project = "OSTRAM"
-copyright = "2025, Climate Lead Group"
+copyright = "2026, Climate Lead Group"
 author = "Climate Lead Group"
-release = "1.0"
+release = "2026.10"
+version = "2026.10"
 
 extensions = [
     "myst_parser",
     "sphinx.ext.autosectionlabel",
+    "sphinxcontrib.mermaid",
 ]
 
 myst_enable_extensions = [
@@ -23,6 +25,13 @@ myst_enable_extensions = [
 
 myst_heading_anchors = 3
 
+# Render plain ```mermaid fences (as GitHub does) through the mermaid directive.
+myst_fence_as_directive = ["mermaid"]
+
+# Neutral palette stays readable on both Furo backgrounds.
+mermaid_light_theme = "neutral"
+mermaid_dark_theme = "neutral"
+
 source_suffix = {
     ".rst": "restructuredtext",
     ".md": "markdown",
@@ -31,17 +40,9 @@ source_suffix = {
 templates_path = ["_templates"]
 exclude_patterns = ["_build"]
 
-html_theme = "sphinx_rtd_theme"
+html_theme = "furo"
 html_theme_options = {
-    "navigation_depth": 3,
-    "collapse_navigation": False,
-    "titles_only": False,
-}
-
-html_context = {
-    "display_github": True,
-    "github_user": "Climate-Lead-Group",
-    "github_repo": "OSTRAM",
-    "github_version": "main",
-    "conf_py_path": "/docs/",
+    "source_repository": "https://github.com/Climate-Lead-Group/OSTRAM/",
+    "source_branch": "main",
+    "source_directory": "docs/",
 }
