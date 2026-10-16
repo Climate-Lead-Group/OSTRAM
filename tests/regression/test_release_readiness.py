@@ -105,7 +105,7 @@ class PortableRuntimeTests(unittest.TestCase):
 
 
 class CanonicalTrainingRouteTests(unittest.TestCase):
-    def test_country_merge_targets_profile_authority_without_changing_full_default(self) -> None:
+    def test_country_merge_targets_setup_authority_without_changing_south_asia_default(self) -> None:
         paths = SimpleNamespace(
             osemosys_inputs=Path("prepared-authority"),
             preparation_workspace=Path("legacy-preparation"),
@@ -121,7 +121,7 @@ class CanonicalTrainingRouteTests(unittest.TestCase):
                 Path("legacy-preparation") / "og_csvs_inputs",
             )
 
-    def test_profile_subcommand_help_needs_no_prepared_workspace(self) -> None:
+    def test_setup_subcommand_help_needs_no_prepared_workspace(self) -> None:
         commands = (
             ["example", "report", "unescap_training", "--help"],
             ["--setup", "unescap_training", "country", "template", "--help"],

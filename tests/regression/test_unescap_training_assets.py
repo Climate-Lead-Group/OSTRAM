@@ -145,7 +145,7 @@ class UnescapMappingTests(unittest.TestCase):
                     compiled_root=compiled_root,
                 )
 
-    def test_profile_presents_seed_and_compiled_counts_as_distinct_stages(self) -> None:
+    def test_setup_presents_seed_and_compiled_counts_as_distinct_stages(self) -> None:
         metadata = load_manifest(UNESCAP / "setup.yaml").metadata
         self.assertEqual(metadata["seed_set_sizes"]["TECHNOLOGY"], 89)
         self.assertEqual(metadata["seed_set_sizes"]["FUEL"], 43)
@@ -162,9 +162,9 @@ class UnescapMappingTests(unittest.TestCase):
         )
 
     def test_reduced_pwr_min_pin_is_complete_for_its_domain(self) -> None:
-        # The projection stays frozen as reference evidence, but the profile
+        # The projection stays frozen as reference evidence, but the setup
         # disables its application (policies.apply_pwr_min_pin: false): the
-        # full-model calibration is infeasible on the reduced domain.
+        # South Asia calibration is infeasible on the reduced domain.
         authority = (
             UNESCAP / "config" / "scenarios" / "rules"
             / "pwr_min_2023_2026_pin.csv"
@@ -200,7 +200,7 @@ class UnescapMappingTests(unittest.TestCase):
             codes = {row["AO_Code_To_Add"] for row in csv.DictReader(stream)}
         self.assertEqual(codes, {"PWRNGSBGDXX", "PWRSHPINDEA"})
 
-    def test_reduced_taxonomy_is_complete_without_full_model_padding(self) -> None:
+    def test_reduced_taxonomy_is_complete_without_south_asia_padding(self) -> None:
         taxonomy_path = UNESCAP / "config" / "scenarios" / "technology_types.csv"
         with taxonomy_path.open("r", encoding="utf-8-sig", newline="") as stream:
             rows = list(csv.DictReader(stream))

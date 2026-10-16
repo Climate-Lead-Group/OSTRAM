@@ -51,7 +51,7 @@ class ExtensionEmissionTests(unittest.TestCase):
         for parameter in ("InputActivityRatio", "CapitalCost"):
             self.assertEqual(filtered[parameter].TECHNOLOGY.tolist(), ["PWRNGSINDEA"])
 
-    def test_default_full_profile_keeps_existing_filter_semantics(self):
+    def test_default_south_asia_setup_keeps_existing_filter_semantics(self):
         for frame in self.filter(False).values():
             self.assertEqual(frame.TECHNOLOGY.tolist(), ["PWRNGSINDEA"])
 

@@ -304,8 +304,8 @@ class AtomicWorkspaceTests(unittest.TestCase):
                 prepared_setup(manifest, paths=paths)
 
 
-class ProfileCliTests(unittest.TestCase):
-    def test_profile_is_selected_before_route_import_and_not_forwarded(self) -> None:
+class SetupCliTests(unittest.TestCase):
+    def test_setup_is_selected_before_route_import_and_not_forwarded(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             write_project(root)
@@ -340,7 +340,7 @@ class ProfileCliTests(unittest.TestCase):
             self.assertEqual(events[0], ("import", "tiny"))
             self.assertEqual(events[1][1], ("python -m ostram run", "--sentinel"))
 
-    def test_profile_option_after_command_is_left_for_historical_parser(self) -> None:
+    def test_setup_option_after_command_is_left_for_historical_parser(self) -> None:
         import sys
 
         seen = []
@@ -353,7 +353,7 @@ class ProfileCliTests(unittest.TestCase):
             seen, [("python -m ostram run", "--setup", "full")]
         )
 
-    def test_unqualified_and_explicit_full_have_same_authority_bundle(self) -> None:
+    def test_unqualified_and_explicit_south_asia_have_same_authority_bundle(self) -> None:
         paths = project_paths(REPO_ROOT)
         implicit = load_setup("south_asia", paths=paths)
         explicit = load_setup("south_asia", paths=paths)
@@ -366,7 +366,7 @@ class ProfileCliTests(unittest.TestCase):
             2.496,
         )
 
-    def test_unescap_manifest_is_complete_and_namespaced(self) -> None:
+    def test_unescap_training_manifest_is_complete_and_namespaced(self) -> None:
         paths = project_paths(REPO_ROOT)
         manifest = load_setup("unescap_training", paths=paths)
         sources = manifest.source_paths(paths)
@@ -384,8 +384,8 @@ class ProfileCliTests(unittest.TestCase):
         self.assertTrue(required_roles.issubset(manifest.authorities))
         self.assertTrue(all(path.exists() for path in sources.values()))
         self.assertEqual(manifest.policies["lid_rule_new_semantics"], True)
-        # The base-year pin of the full model is not domain-valid on the
-        # reduced two-region model (CBC-certified infeasible); the profile
+        # The base-year pin of the South Asia model is not domain-valid on the
+        # reduced two-region model (CBC-certified infeasible); the setup
         # keeps it disabled.
         self.assertEqual(manifest.policies["apply_pwr_min_pin"], False)
         self.assertEqual(

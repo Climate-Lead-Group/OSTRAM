@@ -1020,7 +1020,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                         label="apply base-year pin",
                     )
 
-    def test_static_pin_wrapper_honors_profile_policy_gate(self) -> None:
+    def test_static_pin_wrapper_honors_setup_policy_gate(self) -> None:
         module = _load_a3("pin_policy_gate")
         with tempfile.TemporaryDirectory() as temp:
             rules_dir = Path(temp)

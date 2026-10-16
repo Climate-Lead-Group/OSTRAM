@@ -84,7 +84,7 @@ class ManualFixDomainTests(unittest.TestCase):
                 self.assertIn("FAIL  sub locatable: AR_Base/Secondary PWRNGSBGDXX", result.stdout)
                 self.assertNotIn("OUT_OF_DOMAIN  AR_Base/Secondary PWRNGSBGDXX", result.stdout)
 
-    def test_full_taxonomy_retains_every_existing_substitution_target(self) -> None:
+    def test_south_asia_taxonomy_retains_every_existing_substitution_target(self) -> None:
         full = load_taxonomy(ROOT / "config/scenarios/technology_types.csv")
         self.assertTrue({"PWRNGSBGDXX", "PWRGEOINDNO", "PWRNGSMDVXX",
                          "PWROILMDVXX", "PWROILNPLXX"}.issubset(full))

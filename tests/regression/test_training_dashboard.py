@@ -1,4 +1,4 @@
-"""Regression coverage for the profile-aware interactive training dashboard."""
+"""Regression coverage for the setup-aware interactive training dashboard."""
 
 from __future__ import annotations
 
@@ -131,7 +131,7 @@ class ClassifierTests(unittest.TestCase):
         self.assertEqual(scenario_label("Training"), "Training")
         self.assertEqual(scenario_label("Alpha_Run"), "Alpha_Run")
 
-    def test_storage_prefixes_come_from_profile_metadata(self) -> None:
+    def test_storage_prefixes_come_from_setup_metadata(self) -> None:
         self.assertEqual(storage_prefixes(METADATA), ("PWRSDS", "PWRLDS"))
         self.assertEqual(storage_prefixes({"storage": ["XYZMMRXX01"]}), ("PWRXYZ",))
         self.assertEqual(storage_prefixes({}), ("PWRSDS", "PWRLDS"))
@@ -193,7 +193,7 @@ class AggregationTests(unittest.TestCase):
         for year in (2030, 2050):
             self.assertAlmostEqual(system[year], mmr[year] + lka[year], places=9)
 
-    def test_storage_uses_profile_declared_families(self) -> None:
+    def test_storage_uses_setup_declared_families(self) -> None:
         self.assertEqual(self.alpha["System"]["storage"], {2030: 1.0, 2050: 2.0})
         self.assertEqual(self.alpha["MMRXX"]["storage"], {2030: 1.0, 2050: 2.0})
         self.assertEqual(self.alpha["LKAXX"]["storage"], {})
@@ -220,7 +220,7 @@ class AggregationTests(unittest.TestCase):
                 block["ProductionByTechnologyAnnual"], {2030: 1.5, 2050: 2.5}
             )
 
-    def test_lid_diagnostic_labels_use_profile_region_names(self) -> None:
+    def test_lid_diagnostic_labels_use_setup_region_names(self) -> None:
         lid = self.alpha["System"]["lid_diagnostic"]
         self.assertIn("PWRSPVMMRXX01", lid)
         self.assertEqual(lid["PWRSPVMMRXX01"]["label"], "Solar PV (Myanmar)")
@@ -350,7 +350,7 @@ class RendererTests(unittest.TestCase):
         self.assertIn("stackedArea", self.document)
         self.assertIn("lineChart", self.document)
 
-    def test_embedded_profile_report_payload_round_trips(self) -> None:
+    def test_embedded_setup_report_payload_round_trips(self) -> None:
         payload = _payload(self.document)
         self.assertEqual(payload["schema"], "ostram-setup-report-v1")
         self.assertEqual(payload["setup_id"], "synthetic")
@@ -366,7 +366,7 @@ class RendererTests(unittest.TestCase):
             self.assertNotIn(forbidden, self.document, forbidden)
         self.assertIn("Climate Lead Group", self.document)
 
-    def test_unescap_visual_language_is_preserved(self) -> None:
+    def test_unescap_training_visual_language_is_preserved(self) -> None:
         for marker in ("--teal-dark:#00414D", "--teal:#0A595F",
                        "footer-logo-svg", "hero", "badge"):
             self.assertIn(marker, self.document)

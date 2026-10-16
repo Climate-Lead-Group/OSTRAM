@@ -93,7 +93,7 @@ class ScenarioCountrySyncTests(unittest.TestCase):
 
 
 class SelectedRegistryTests(unittest.TestCase):
-    def test_registry_content_drives_non_full_scenarios(self) -> None:
+    def test_registry_content_drives_non_default_scenarios(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             registry_path = root / "registry.json"
@@ -139,7 +139,7 @@ class AoDecisionAuthorityTests(unittest.TestCase):
                 _decision_rows(path)
 
 
-class ProfileLidPolicyTests(unittest.TestCase):
+class SetupBuildCapPolicyTests(unittest.TestCase):
     def _worksheet(self):
         workbook = Workbook()
         worksheet = workbook.active
@@ -175,7 +175,7 @@ class ProfileLidPolicyTests(unittest.TestCase):
         workbook.close()
         return value, result
 
-    def test_full_default_preserves_manual_value_and_profile_policy_can_override(self) -> None:
+    def test_south_asia_default_preserves_manual_value_and_setup_policy_can_override(self) -> None:
         full_value, full_log = self._apply(None)
         enabled_value, enabled_log = self._apply('{"lid_rule_new_semantics": true}')
         self.assertEqual(full_value, 0.166)
@@ -184,8 +184,8 @@ class ProfileLidPolicyTests(unittest.TestCase):
         self.assertEqual(enabled_log["changes"][0]["reason"], "lid_relaxed")
 
 
-class ProfileElcDispatchTests(unittest.TestCase):
-    def test_dispatch_nodes_are_derived_from_profile_country_regions(self) -> None:
+class SetupElcDispatchTests(unittest.TestCase):
+    def test_dispatch_nodes_are_derived_from_setup_country_regions(self) -> None:
         self.assertEqual(
             elc_dispatch_techs(["BGD", "INDEA", "MMR"]),
             frozenset({"ELCBGDXX01", "ELCINDEA01", "ELCMMRXX01"}),
@@ -206,7 +206,7 @@ class ProfileElcDispatchTests(unittest.TestCase):
             frozenset({"ELCBGDXX01", "ELCINDEA01"}),
         )
 
-    def test_full_country_regions_preserve_the_historical_node_set(self) -> None:
+    def test_south_asia_country_regions_preserve_the_historical_node_set(self) -> None:
         self.assertEqual(
             configured_elc_dispatch_techs(
                 REPO_ROOT / "config" / "preparation" / "Config_country_codes.yaml"
@@ -219,8 +219,8 @@ class ProfileElcDispatchTests(unittest.TestCase):
         )
 
 
-class ProfileReportingTests(unittest.TestCase):
-    def test_synthetic_results_inject_profile_metadata_and_exact_source_value(self) -> None:
+class SetupReportingTests(unittest.TestCase):
+    def test_synthetic_results_inject_setup_metadata_and_exact_source_value(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             csv_path = root / "results.csv"
@@ -258,7 +258,7 @@ class ProfileReportingTests(unittest.TestCase):
             self.assertIn("ostram-setup-data", html)
             self.assertIn("2.496", html)
 
-    def test_terminal_log_includes_profile_manifest_workspace_and_compile_state(self) -> None:
+    def test_terminal_log_includes_setup_manifest_workspace_and_compile_state(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             reporter = RunReporter(

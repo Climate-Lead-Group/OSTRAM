@@ -1,4 +1,4 @@
-"""The setup file of the default profile, from the path resolver."""
+"""The setup file of the default setup, from the path resolver."""
 
 from pathlib import Path
 

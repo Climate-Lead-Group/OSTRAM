@@ -77,7 +77,7 @@ class SupportBAUTransmissionTests(unittest.TestCase):
                 policy.apply_commitment_ceiling(path)
             self.assertEqual(before, path.read_bytes())
 
-    def test_full_support_only(self):
+    def test_south_asia_support_only(self):
         with mock.patch.object(policy, "apply_commitment_ceiling") as apply:
             with mock.patch.dict(os.environ, {"OSTRAM_SETUP_POLICIES": '{"support_bau_committed_transmission": true}'}):
                 for scenario in ("A_Calibrated_BAU", "B_Optimised_VRE", "C_Target_VRE"):

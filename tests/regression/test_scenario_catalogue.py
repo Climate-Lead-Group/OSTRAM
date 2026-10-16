@@ -1,4 +1,4 @@
-"""The scenario catalogue page matches full.yaml and the scenario registry."""
+"""The scenario catalogue page matches south_asia.yaml and the scenario registry."""
 
 from __future__ import annotations
 
