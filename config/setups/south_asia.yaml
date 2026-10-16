@@ -14,7 +14,7 @@ policies:
   - A_Calibrated_BAU
   - B_Optimised_VRE
   - C_Target_VRE
-  lid_rule_new_semantics: false
+  build_cap_replaces_workbook_values: false
 authorities:
   scenario_registry: project:config/setups/south_asia.yaml
   scenario_inputs:

@@ -175,7 +175,7 @@ class SetupBuildCapPolicyTests(unittest.TestCase):
 
     def test_south_asia_default_preserves_manual_value_and_setup_policy_can_override(self) -> None:
         full_value, full_log = self._apply(None)
-        enabled_value, enabled_log = self._apply('{"lid_rule_new_semantics": true}')
+        enabled_value, enabled_log = self._apply('{"build_cap_replaces_workbook_values": true}')
         self.assertEqual(full_value, 0.166)
         self.assertEqual(full_log["changes"], [])
         self.assertEqual(enabled_value, 10.0)

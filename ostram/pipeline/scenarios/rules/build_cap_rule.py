@@ -1113,7 +1113,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             "build_tech_share_map and build_pool_delta_map."
         )
 
-    override_inherited = bool(setup_policy("lid_rule_new_semantics", False))
+    override_inherited = bool(setup_policy("build_cap_replaces_workbook_values", False))
 
     year_cols = find_year_columns(ws)
     headers = find_named_columns(ws, ["Tech", "Parameter", PROJ_MODE_COL])
