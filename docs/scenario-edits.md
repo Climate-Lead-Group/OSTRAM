@@ -2,7 +2,7 @@
 
 A derived scenario is built from its parent's A-O workbooks by
 `ostram/pipeline/scenarios/scenario_edits.py`, which reads the scenario's
-block under `scenario_inputs` in `config/profiles/full.yaml`. Terms are in
+block under `scenario_inputs` in `config/profiles/south_asia.yaml`. Terms are in
 the [glossary](glossary.md).
 
 ## Order of the build

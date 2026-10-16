@@ -109,7 +109,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--profile",
         default=DEFAULT_PROFILE,
-        help="Fail-closed OSTRAM profile (default: full).",
+        help="Fail-closed OSTRAM profile (default: south_asia).",
     )
     subcommands = parser.add_subparsers(dest="command", metavar="COMMAND")
     for name, route in ROUTES.items():
@@ -333,7 +333,7 @@ def main(argv: Sequence[str] | None = None) -> int | None:
         if command == "inspect-resources":
             if len(remaining) != 1:
                 parser.error("inspect-resources accepts no command arguments")
-            # Re-resolve after profile activation so non-full profiles report
+            # Re-resolve after profile activation so non-default profiles report
             # their isolated prepared workspace rather than the outer workspace
             # used only to locate ``profiles/<id>``.
             print(

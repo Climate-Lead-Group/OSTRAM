@@ -63,7 +63,7 @@ files. Every run writes `<workspace>/logs/<run-id>/run.log`.
 ```text
 ostram/       the Python package
 inputs/       model inputs
-config/       configuration, including config/profiles/full.yaml
+config/       configuration, including config/profiles/south_asia.yaml
 model/        the OSeMOSYS model file
 docs/         documentation
 examples/     the two-region training profile

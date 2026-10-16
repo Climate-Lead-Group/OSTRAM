@@ -1,6 +1,6 @@
 """Serialize maintained aggregate annual received-import policies during compilation.
 
-The policy lives in full.yaml; flow membership is derived from actual CSV ratios.
+The policy lives in south_asia.yaml; flow membership is derived from actual CSV ratios.
 Domestic transfers (including all Indian interregional corridors) are excluded.
 """
 from pathlib import Path
@@ -14,7 +14,7 @@ def render_policy(input_folder, scenario_name):
     ``scenario_name``.
 
     The policy is read from ``scenario_inputs`` in
-    ``config/profiles/full.yaml``; the demand fuels and cross-border TRN
+    ``config/profiles/south_asia.yaml``; the demand fuels and cross-border TRN
     flows come from the CSVs in ``input_folder``. Returns an empty
     ``D4ImportCountry`` set when the scenario has no policy. Raises
     ValueError for an invalid policy or a country without demand.

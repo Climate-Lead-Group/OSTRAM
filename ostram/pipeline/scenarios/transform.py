@@ -876,7 +876,7 @@ def stage_6_sync_og_to_ts20(wd: Path, s1: Path) -> None:
 
 
 def finalize_support_bau(output_dir: Path, scenario: str) -> None:
-    """Apply the full-profile support policy after restriction export/delivery."""
+    """Apply the `south_asia` support policy after restriction export/delivery."""
     if scenario != "BAU" or not profile_policy("support_bau_committed_transmission", False):
         return
     from .transformations.support_bau_transmission import apply_commitment_ceiling

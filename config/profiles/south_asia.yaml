@@ -1,7 +1,7 @@
 schema: ostram-profile-v1
-id: full
+id: south_asia
 metadata:
-  title: OSTRAM full model
+  title: OSTRAM South Asia model
   country_regions: []
   interconnectors: []
   effective_values:
@@ -16,7 +16,7 @@ policies:
   - C_Target_VRE
   lid_rule_new_semantics: false
 authorities:
-  scenario_registry: project:config/profiles/full.yaml
+  scenario_registry: project:config/profiles/south_asia.yaml
   scenario_inputs:
     path: project:inputs/scenarios
     kind: directory

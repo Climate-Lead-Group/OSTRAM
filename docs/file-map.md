@@ -33,7 +33,7 @@ reads it. Stage names and other terms are in the [glossary](glossary.md).
 | Path | What it holds | Read by |
 |---|---|---|
 | `config/profiles/registry.json` | The profile names and their profile files. | The command line option `--profile`. |
-| `config/profiles/full.yaml` | The South Asia profile: policies, sources of record, the scenario registry, the shared VRE ceilings and the scenario edits. See the [section map](full-yaml.md). | A3, B2 and the tests. |
+| `config/profiles/south_asia.yaml` | The South Asia profile: policies, sources of record, the scenario registry, the shared VRE ceilings and the scenario edits. See the [section map](south-asia-yaml.md). | A3, B2 and the tests. |
 | `config/preparation/Config_country_codes.yaml` | Countries, regions, technology mappings, transmission defaults and the internal transmission settings. | A1, A2 and the A3 rules for internal transmission. |
 | `config/preparation/Config_region_consolidation.yaml` | An optional merge of sub-regions into one region. Disabled. | A1. |
 | `config/compilation/Config_MOMF_T1_A.yaml` | Compiler settings: years, timeslices, the storage set, workbook names and parameter lists. | A1 writes a runtime copy. A3, B1 and B2 read it. |

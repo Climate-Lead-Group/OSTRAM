@@ -239,7 +239,7 @@ def load_rc_authority(authority_path: Path) -> Dict[str, Dict[int, float]]:
         meta_cols, year_cols = _build_column_index(ws)
         strict_full = active_profile_id() == DEFAULT_PROFILE
         # Core columns are always required; extended metadata columns are
-        # only present (and validated) in the full/default profile workbook.
+        # only present (and validated) in the default profile workbook.
         core_meta = {TECH_COL, PARAM_COL, "Unit"}
         extended_meta = {"Parameter.ID", PROJ_MODE_COL, "Projection.Parameter"}
         required_meta = core_meta | extended_meta if strict_full else core_meta
@@ -748,7 +748,7 @@ def run_fix(
         load_minimum_boundary_authority(authority_path)
     else:
         # Reduced profile workbooks retain their own RC rows but intentionally
-        # omit the full model's 11-row additive contribution family and
+        # omit the South Asia model's 11-row additive contribution family and
         # two-row LinkFreeze boundary family.
         contribution_authority = {}
 

@@ -81,7 +81,7 @@ class ConfigFileTests(unittest.TestCase):
         registered = {entry["name"] for entry in registry["root_scenarios"]}
         registered |= {entry["name"] for entry in registry["derived_scenarios"]}
         entries = [
-            ("full.yaml scenario_inputs block {}", name)
+            ("south_asia.yaml scenario_inputs block {}", name)
             for name in profile["scenario_inputs"]
         ]
         entries += [
@@ -92,7 +92,7 @@ class ConfigFileTests(unittest.TestCase):
             and any(path.is_file() for path in folder.rglob("*"))
         ]
         entries += [
-            ("full.yaml policies.historical_trade_roots entry {}", name)
+            ("south_asia.yaml policies.historical_trade_roots entry {}", name)
             for name in profile["policies"].get("historical_trade_roots", [])
         ]
         entries += [
@@ -101,7 +101,7 @@ class ConfigFileTests(unittest.TestCase):
         ]
         problems = [
             f"{label.format(name)} has no registered scenario. Register the "
-            "scenario in scenario_registry in config/profiles/full.yaml, or "
+            "scenario in scenario_registry in config/profiles/south_asia.yaml, or "
             "delete the entry."
             for label, name in entries
             if name not in registered

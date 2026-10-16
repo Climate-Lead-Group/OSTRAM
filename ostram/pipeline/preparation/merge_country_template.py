@@ -33,7 +33,7 @@ DATASETS = (
 
 
 def _default_input_dir(paths) -> Path:
-    """Keep full's legacy staging target; profiles merge their mutable authority."""
+    """Keep the default profile's legacy staging target; profiles merge their mutable authority."""
 
     if active_profile_id() == DEFAULT_PROFILE:
         return paths.preparation_workspace / "og_csvs_inputs"

@@ -25,7 +25,7 @@ PROFILE_MANIFEST_ENV = "OSTRAM_PROFILE_MANIFEST"
 PROFILE_WORKSPACE_ENV = "OSTRAM_PROFILE_WORKSPACE"
 PROFILE_AUTHORITIES_ENV = "OSTRAM_PROFILE_AUTHORITIES"
 PROFILE_POLICIES_ENV = "OSTRAM_PROFILE_POLICIES"
-DEFAULT_PROFILE = "full"
+DEFAULT_PROFILE = "south_asia"
 PROFILE_SCHEMA = "ostram-profile-v1"
 REGISTRY_SCHEMA = "ostram-profile-registry-v1"
 _PROFILE_ID = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
@@ -330,7 +330,7 @@ def load_profile(
 
     The registry is ``registry_path``, or :func:`default_registry_path` when it
     is ``None``. When the installed registry is used for the ``full`` profile,
-    the manifest is the ``full.yaml`` beside that registry.
+    the manifest is the ``south_asia.yaml`` beside that registry.
 
     Raises:
         FileNotFoundError: If the registry or the manifest file is missing.
@@ -404,7 +404,7 @@ def encoded_environment(
 
 
 def active_profile_id(environ: Mapping[str, str] | None = None) -> str:
-    """Return the profile id in ``OSTRAM_PROFILE``, or ``full`` when it is unset."""
+    """Return the profile id in ``OSTRAM_PROFILE``, or ``south_asia`` when it is unset."""
 
     environment = os.environ if environ is None else environ
     return environment.get(PROFILE_ENV, DEFAULT_PROFILE)

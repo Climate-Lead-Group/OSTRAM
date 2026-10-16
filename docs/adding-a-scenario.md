@@ -1,7 +1,7 @@
 # Adding a scenario
 
 A derived scenario needs one block and two registry entries in
-`config/profiles/full.yaml`, plus changes to the test contracts that list the
+`config/profiles/south_asia.yaml`, plus changes to the test contracts that list the
 scenarios. It needs no workbook row and no folder, unless it changes
 interconnector directions. The example adds `B_Opt_SolarCapex120`, which
 multiplies the solar capital cost by 1.2. Terms are in the

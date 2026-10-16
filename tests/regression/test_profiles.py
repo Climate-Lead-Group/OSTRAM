@@ -355,8 +355,8 @@ class ProfileCliTests(unittest.TestCase):
 
     def test_unqualified_and_explicit_full_have_same_authority_bundle(self) -> None:
         paths = project_paths(REPO_ROOT)
-        implicit = load_profile("full", paths=paths)
-        explicit = load_profile("full", paths=paths)
+        implicit = load_profile("south_asia", paths=paths)
+        explicit = load_profile("south_asia", paths=paths)
         self.assertEqual(implicit.digest, explicit.digest)
         self.assertFalse(implicit.policies["lid_rule_new_semantics"])
         self.assertEqual(

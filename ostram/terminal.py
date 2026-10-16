@@ -205,7 +205,7 @@ class RunReporter:
         workspace: Path,
         scenarios: Sequence[str],
         verbose: bool,
-        profile_id: str = "full",
+        profile_id: str = "south_asia",
         manifest: Path | None = None,
         compile_only: bool = False,
         stdout: TextIO | None = None,

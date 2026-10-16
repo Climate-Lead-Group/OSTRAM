@@ -4,7 +4,7 @@ Instructions for AI coding agents working on OSTRAM. People should start with `R
 
 ## Project
 
-OSTRAM (OSeMOSYS for Transmission – Framework to represent power systems connectivity) builds on OSeMOSYS and OSeMOSYS Global. It adds detail on internal transmission and interconnectors, and supports "what if" comparisons between scenarios. The South Asia model, the default `full` profile, is the reference application. `examples/unescap` is a separate, reduced two-region training profile.
+OSTRAM (OSeMOSYS for Transmission – Framework to represent power systems connectivity) builds on OSeMOSYS and OSeMOSYS Global. It adds detail on internal transmission and interconnectors, and supports "what if" comparisons between scenarios. The South Asia model, the default `south_asia` profile, is the reference application. `examples/unescap` is a separate, reduced two-region training profile.
 
 The pipeline runs in this order:
 
@@ -17,7 +17,7 @@ The pipeline runs in this order:
 ## Layout
 
 - `ostram/`: the package.
-- `config/profiles/full.yaml`: scenario registry, scenario edits, VRE ceilings and run policies.
+- `config/profiles/south_asia.yaml`: scenario registry, scenario edits, VRE ceilings and run policies.
 - `config/scenarios/<root>/`: rule YAMLs for the roots `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE`. The fourth root, support `BAU`, has no folder; its rule script runs on its built-in defaults.
 - `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx`: the scenario workbook. Its Control sheet lists each root's rule scripts in run order.
 - `tests/`: tests. `docs/`: Sphinx documentation.
@@ -26,16 +26,16 @@ The pipeline runs in this order:
 ## Scenarios
 
 - A root runs the A3 rule scripts named in the Control sheet. Each script reads its YAML from `config/scenarios/<root>/`.
-- A derived scenario copies its root's finished A3 output, applies the VRE ceiling layer, applies its ordered edits from `full.yaml` under `scenario_inputs/<name>`, then re-applies the base-year pin. Its parent is always a root. `B_Opt_DirBidir` and `B_Opt_DirContractual` then also get their direction overlay.
+- A derived scenario copies its root's finished A3 output, applies the VRE ceiling layer, applies its ordered edits from `south_asia.yaml` under `scenario_inputs/<name>`, then re-applies the base-year pin. Its parent is always a root. `B_Opt_DirBidir` and `B_Opt_DirContractual` then also get their direction overlay.
 - `C_Target_VRE` and `C_Target_VRE_Clipped` need a solved `A_Calibrated_BAU` result, passed with `--a-result-seed`.
 
 ## Which config is live
 
 - Every file under `config/` is read by the pipeline. `tests/regression/test_config_files.py` lists the 25 files and fails when a file is added, missing or left unregistered.
 - A root's rule YAML is read only when the Control sheet names the rule script for that root. A3 copies the root's YAMLs into its run folder and each rule reads its own file by name.
-- `config/profiles/full.yaml` is the source of record for the scenario registry, the shared VRE ceilings and the scenario edits. Its `description`, `rule` and `note` strings are documentation; nothing reads them.
+- `config/profiles/south_asia.yaml` is the source of record for the scenario registry, the shared VRE ceilings and the scenario edits. Its `description`, `rule` and `note` strings are documentation; nothing reads them.
 - B2 reads `config/execution/Config_MOMF_T1_AB.yaml`, unless `workspace/execution/Config_MOMF_T1_AB.yaml` exists; then that copy and the `Config_MOMF_T1_A.yaml` beside it are read instead.
-- `examples/unescap/` holds the training profile's own config. The `full` profile never reads it.
+- `examples/unescap/` holds the training profile's own config. The `south_asia` profile never reads it.
 
 ## Environment (Windows)
 

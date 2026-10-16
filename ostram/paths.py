@@ -185,7 +185,7 @@ class ProjectPaths:
 
         The canonical CLI injects the entire validated mapping in one
         environment value before importing a route.  Direct historical module
-        calls have no mapping and retain their established full-model paths.
+        calls have no mapping and retain their established default-profile paths.
         A present but incomplete mapping fails closed instead of falling back.
         """
 

@@ -1,6 +1,6 @@
 # Scenario catalogue
 
-The block between the two markers is generated from `config/profiles/full.yaml`
+The block between the two markers is generated from `config/profiles/south_asia.yaml`
 and `config/execution/Config_MOMF_T1_AB.yaml` by
 `python tools/generate_scenario_catalogue.py`, run from the repository root.
 The test `tests/regression/test_scenario_catalogue.py` fails when the block
@@ -265,5 +265,5 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 | `B_Opt_TxCap150` | `B_Opt_Clipped` with the capacity of each international corridor in 2027 to 2050 capped at the larger of 1.5 times its 2023 residual capacity and its calibrated base-window capacity, plus literal tables of minimum investments and backstop limits. |
 | `C_Target_VRE` | The target root: retirement, the minimum capacity floors with the Nepal hydro ceiling, the build cap, the VRE targets sized from the solved A result, interconnector relaxation and storage minimum investments. |
 | `C_Target_VRE_Clipped` | `C_Target_VRE` with the shared VRE ceilings, plus the restated Maldives 2028 solar assumption: a minimum total of 0.3841 GW with earlier builds counting towards it. |
-| `A_Calibrated_BAU_Clipped_TxFreeze2026` | `A_Calibrated_BAU_Clipped` with upper capacity limits and fixed early investments for the eleven international corridors, derived once from a historical A-clipped reference at the end of 2026. The tables are literal values in `full.yaml`; the pipeline never recomputes them from a current A result. |
+| `A_Calibrated_BAU_Clipped_TxFreeze2026` | `A_Calibrated_BAU_Clipped` with upper capacity limits and fixed early investments for the eleven international corridors, derived once from a historical A-clipped reference at the end of 2026. The tables are literal values in `south_asia.yaml`; the pipeline never recomputes them from a current A result. |
 | `B_Opt_Clipped_GrossImportCap15` | `B_Opt_Clipped` with a policy that caps the gross received imports of each country at 15 per cent of its annual demand in 2027 to 2050, for all six countries with India counted nationally. |

@@ -1,6 +1,6 @@
 """Canonical OSTRAM root and derived-scenario contract.
 
-The production registry is maintained in ``config/profiles/full.yaml``.  This module
+The production registry is maintained in ``config/profiles/south_asia.yaml``.  This module
 validates that contract, resolves an exact canonical selection, and exposes the
 root prerequisites needed by A1, A2, and A3.  It deliberately performs no
 workbook or solver effects.

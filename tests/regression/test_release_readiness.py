@@ -115,7 +115,7 @@ class CanonicalTrainingRouteTests(unittest.TestCase):
                 country_merge._default_input_dir(paths),
                 Path("prepared-authority"),
             )
-        with mock.patch.object(country_merge, "active_profile_id", return_value="full"):
+        with mock.patch.object(country_merge, "active_profile_id", return_value="south_asia"):
             self.assertEqual(
                 country_merge._default_input_dir(paths),
                 Path("legacy-preparation") / "og_csvs_inputs",

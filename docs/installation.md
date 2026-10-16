@@ -119,7 +119,7 @@ the [pipeline](pipeline.md#support-bau) page.
 
 `environment.yaml` installs GLPK and CBC. CPLEX and Gurobi require their vendor
 installations and licences. Select the solver in
-`config/execution/Config_MOMF_T1_AB.yaml`. The tracked full profile selects
+`config/execution/Config_MOMF_T1_AB.yaml`. The tracked `south_asia` profile selects
 CPLEX, and the training profile selects CBC. For CPLEX, add the folder that
 holds `cplex.exe` to `PATH` in the session.
 

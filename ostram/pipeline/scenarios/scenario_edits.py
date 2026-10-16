@@ -7,9 +7,9 @@ the ``base_scenario`` declared by its canonical registry/scenario-edit contract 
 applying, in order:
 
     1. the SHARED VRE physical-potential ceiling layer
-       (config/profiles/full.yaml::vre_ceilings)
+       (config/profiles/south_asia.yaml::vre_ceilings)
     2. the run-specific edits in
-       config/profiles/full.yaml::scenario_inputs[scenario]
+       config/profiles/south_asia.yaml::scenario_inputs[scenario]
 
 Design (patterned on the rules_scripts):
   * Non-destructive to the SOURCE: the declared root A-O is never mutated.
@@ -847,7 +847,7 @@ def main():
         "--scenario",
         help=(
             "derived scenario name; reads scenario_inputs.<scenario> from "
-            "config/profiles/full.yaml and writes "
+            "config/profiles/south_asia.yaml and writes "
             "workspace/preparation/A1_Outputs/A1_Outputs_<scenario>"
         ),
     )

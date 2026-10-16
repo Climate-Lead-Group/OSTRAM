@@ -38,7 +38,7 @@ Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
    data-reference
    glossary
    file-map
-   full-yaml
+   south-asia-yaml
    reference/scenarios/scenario_catalogue
    reference/scenarios/vre_ceiling_provenance
    reference/scenarios/interconnector_direction_references

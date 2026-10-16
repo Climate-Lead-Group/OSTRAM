@@ -1,7 +1,7 @@
 # UNESCAP South Asia training profile.
 #
 # Every runtime authority is explicit. Profile-owned inputs and configuration
-# never fall back to the full-model file with the same role. The maintained
+# never fall back to the South Asia file with the same role. The maintained
 # model, execution support input, and package templates are shared authorities
 # named here rather than implicit compatibility defaults.
 
@@ -103,10 +103,10 @@ policies:
   # A3 introduces declared extensions after A1's technology-country filter.
   # Preserve only their emission rows; other seed parameters stay filtered.
   preserve_declared_extension_emissions: true
-  # The training correction replaces legacy hand-entered LID cells. The full
-  # profile explicitly keeps this false in config/profiles/full.yaml.
+  # The training correction replaces legacy hand-entered LID cells. The south_asia
+  # profile explicitly keeps this false in config/profiles/south_asia.yaml.
   lid_rule_new_semantics: true
-  # The base-year pin is a full-model calibration authority (audited on
+  # The base-year pin is a South Asia calibration authority (audited on
   # the five-country domain, where pinned 2023-2026 BGD generation balances
   # against several import corridors). Projected onto this reduced two-region
   # model it is provably infeasible: pinned BGD activity (~270.7 PJ in 2023,

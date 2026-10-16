@@ -60,14 +60,14 @@ are under the workspace. Terms are in the [glossary](glossary.md).
 
 | Step | Command or module | Reads | Writes |
 |---|---|---|---|
-| Start | `python -m ostram run --skip-pull --env-name <env> --scenarios B_Opt_TxCap150` | `config/profiles/registry.json`, the scenario registry in `config/profiles/full.yaml`, `environment.yaml` | `logs/<run-id>/run.log` |
+| Start | `python -m ostram run --skip-pull --env-name <env> --scenarios B_Opt_TxCap150` | `config/profiles/registry.json`, the scenario registry in `config/profiles/south_asia.yaml`, `environment.yaml` | `logs/<run-id>/run.log` |
 | Environment | `conda env list`; `conda env create` when the named environment is missing; one check per dependency | `environment.yaml` | the conda environment, when it is missing |
 | DVC | `dvc init` and `dvc pull`; skipped with `--skip-pull` | `dvc.yaml`, `.dvc/config` | `.dvc/` |
 | A1 | `python -B -m ostram.pipeline.preparation.base_inputs`, from `preparation/` | `inputs/osemosys_global/*.csv`, `config/preparation/Config_country_codes.yaml`, `config/preparation/Config_region_consolidation.yaml`, `inputs/preparation/secondary_technologies/Tech_Country_Matrix.xlsx`, the six templates in `inputs/preparation/workbook_templates/`, `config/compilation/Config_MOMF_T1_A.yaml` | `preparation/og_csvs_inputs/`, `preparation/extra_inputs/`, `preparation/A1_Outputs/A1_Outputs_<root>/` for all four roots, a runtime copy of the compilation configuration |
 | A2 | `python -B -m ostram.pipeline.preparation.transmission`, from `preparation/` | `config/preparation/Config_country_codes.yaml` and the A-O workbooks of each root | the A-O workbooks in place, and `preparation/A1_Outputs/_post_a2_snapshot_<root>/` |
 | A3 | `python -B -m ostram.pipeline.scenarios.materializer --scenarios B_Opt_TxCap150`, from `scenarios/` | the scenario registry, then the files in the A3 table below | `A1_Outputs_B_Optimised_VRE/`, `A1_Outputs_B_Opt_TxCap150/` and `_scenario_materialization.json` under `preparation/A1_Outputs/` |
 | B1 | `python -B -m ostram.pipeline.compilation.runner --scenarios B_Opt_TxCap150`, from `compilation/`; it runs `python -B -m ostram.pipeline.compilation.compiler` once per scenario | the four A-O workbooks of the scenario, `preparation/extra_inputs/`, `preparation/og_csvs_inputs/EMISSION.csv`, the runtime compilation configuration | the completed workbooks in `A1_Outputs_B_Opt_TxCap150/`, `compilation/A2_Structure_Lists.xlsx`, `compilation/A2_Output_Params/B_Opt_TxCap150/*.csv` |
-| B2 | `python -B -m ostram.pipeline.execution.runner --scenarios B_Opt_TxCap150`, from `execution/`, with `--compile-only` when `run` has it | `config/execution/Config_MOMF_T1_AB.yaml`, or `execution/Config_MOMF_T1_AB.yaml` when that copy exists; the runtime compilation configuration; `ostram/resources/compilation/conversion_format.yaml` and `templates/*.csv`; `config/profiles/full.yaml` for the gross import policy and the historical trade roots; `model/osemosys_fast_preprocessed.txt`; `inputs/execution/firm_capacity_fallbacks_by_cr.xlsx` | the files in the B2 table below |
+| B2 | `python -B -m ostram.pipeline.execution.runner --scenarios B_Opt_TxCap150`, from `execution/`, with `--compile-only` when `run` has it | `config/execution/Config_MOMF_T1_AB.yaml`, or `execution/Config_MOMF_T1_AB.yaml` when that copy exists; the runtime compilation configuration; `ostram/resources/compilation/conversion_format.yaml` and `templates/*.csv`; `config/profiles/south_asia.yaml` for the gross import policy and the historical trade roots; `model/osemosys_fast_preprocessed.txt`; `inputs/execution/firm_capacity_fallbacks_by_cr.xlsx` | the files in the B2 table below |
 
 A1 and A2 run only when a required root has no post-A2 snapshot. They
 prepare all four roots at once.
@@ -91,7 +91,7 @@ in a working folder `scenarios/_run_<stamp>/`. The modules are in
 | Stage 5 | the root's rule chain in `ostram/pipeline/scenarios/rules/` | `config/scenarios/<root>/*.yaml` | the A-O workbooks in `stage5/` |
 | Shared rules | `apply_interconnector_costs`, `apply_internal_transmission`, `apply_internal_tx_losses` in `rules/`, then `apply_base_year_pin` for `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE` | the merged workbook, `config/preparation/Config_country_codes.yaml`, `config/scenarios/rules/internal_tx_residuals.csv`, `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | the A-O workbooks in `stage5/` |
 | Stage 6 | `sync_og_to_ts20`, then `transform` | `SOASIA_OSeMOSYS_WV.xlsx`, the change records of stage 5 | the timeslice sets and parameters in `preparation/og_csvs_inputs/`, `_scenario_run_state_<root>.xlsx`, the four A-O workbooks in `A1_Outputs_<root>/`; `BAU` also receives its transmission ceilings |
-| Derived scenario | `ostram/pipeline/scenarios/scenario_edits.py` | `A1_Outputs_<parent>/`, `config/profiles/full.yaml`, the base-year pin table | `A1_Outputs_<scenario>/` with its edit log; the overlay for the two direction variants |
+| Derived scenario | `ostram/pipeline/scenarios/scenario_edits.py` | `A1_Outputs_<parent>/`, `config/profiles/south_asia.yaml`, the base-year pin table | `A1_Outputs_<scenario>/` with its edit log; the overlay for the two direction variants |
 
 The [rules page](rules.md) lists the rule chain of each root and the
 [scenario edits page](scenario-edits.md) describes the derived build.
@@ -101,7 +101,7 @@ The [rules page](rules.md) lists the rule chain of each root and the
 | B2 step | Module | Reads | Writes |
 |---|---|---|---|
 | Normalise | `ostram.pipeline.execution.runner` | `compilation/A2_Output_Params/<S>/*.csv`, the package CSV templates | `execution/A2_Outputs_Params_otoole/<S>/*.csv` |
-| Convert | otoole, driven by the runner | the normalised CSVs, `conversion_format.yaml`, the gross import policy and the historical trade roots in `full.yaml`, the model file | `execution/Executables/<S>_0/<S>_0.txt` |
+| Convert | otoole, driven by the runner | the normalised CSVs, `conversion_format.yaml`, the gross import policy and the historical trade roots in `south_asia.yaml`, the model file | `execution/Executables/<S>_0/<S>_0.txt` |
 | Preprocess | `ostram.pipeline.execution.preprocess` | the datafile | `Pre_processed_<S>_0.txt` |
 | Adjustment 1 | `model_file_adjustments.days_in_day_type` | the preprocessed datafile | the same file, in place |
 | Adjustment 2 | `model_file_adjustments.storage_delay` | the datafile and `model/osemosys_fast_preprocessed.txt` | `Pre_processed_<S>_0_StorageDelayN5.txt` and `osemosys_fast_preprocessed_storage_delay.txt` |
@@ -119,7 +119,7 @@ older reserve-margin repair are switched off in the tracked configuration.
 | File | Stage |
 |---|---|
 | `config/profiles/registry.json` | `run`, for the profile selection |
-| `config/profiles/full.yaml` | `run`, A3, B2 |
+| `config/profiles/south_asia.yaml` | `run`, A3, B2 |
 | `environment.yaml` | `run` |
 | `config/preparation/Config_country_codes.yaml` | A1, A2, A3 |
 | `config/preparation/Config_region_consolidation.yaml` | A1 |
@@ -150,10 +150,10 @@ The maintained authorities are:
 
 - `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx`
 - `inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx`
-- `config/profiles/full.yaml::scenario_registry`
+- `config/profiles/south_asia.yaml::scenario_registry`
 - scenario-specific rule YAML files in `config/scenarios/<scenario>/`
 
-Full-profile derived edits live in `config/profiles/full.yaml`.
+Derived edits of the `south_asia` profile live in `config/profiles/south_asia.yaml`.
 
 The registry declares four roots and the derived scenarios. A root is
 transformed through the ordered workbook stages. A derived scenario begins
@@ -256,7 +256,7 @@ seed boundary; no result is discovered through caller CWD.
 
 ### Support BAU
 
-The full-profile rule is: **BAU permits existing transmission
+The `south_asia` profile rule is: **BAU permits existing transmission
 plus already committed additions, with no discretionary expansion beyond those
 commitments.** Existing `TotalAnnualMinCapacityInvestment` values for the 18
 interconnector `TRN` technologies are interpreted as the commitments. Their
@@ -277,7 +277,7 @@ investment minima, the ceiling prevents discretionary additions.
 The final ceiling rows use `Projection.Mode = User defined`: B1 deliberately
 omits rows marked `EMPTY`, even when their year cells contain numbers.
 
-The policy runs **only on the final full-profile `BAU` output**, after disposable
+The policy runs **only on the final `south_asia` `BAU` output**, after disposable
 restriction-state export and delivery. Shared preparation, post-A2 snapshots,
 and inherited Restrictions retain their existing values. The
 UNESCAP profile does not enable this policy. Validation remains enabled and
@@ -290,7 +290,7 @@ activated environment:
 ```powershell
 $workspace = Join-Path (Resolve-Path '..').Path 'support-bau-workspace'
 if (Test-Path -LiteralPath $workspace) { throw 'Choose a new empty workspace path' }
-python -m ostram --profile full --workspace $workspace run --env-name ostram --skip-pull --scenarios BAU --verbose
+python -m ostram --profile south_asia --workspace $workspace run --env-name ostram --skip-pull --scenarios BAU --verbose
 if ($LASTEXITCODE -ne 0) { throw 'Support BAU preparation/compilation/solve/export failed' }
 ```
 
@@ -302,7 +302,7 @@ sequence below.
 
 ### 17-scenario portfolio
 
-The full-profile registry distinguishes support `BAU` from the 17 decision
+The `south_asia` registry distinguishes support `BAU` from the 17 decision
 scenarios. A1, A2, A3, B1 and B2
 name stages; B1 does not mean `B_Optimised_VRE`.
 

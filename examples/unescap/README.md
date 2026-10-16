@@ -9,7 +9,7 @@ preparation/compilation/execution configuration and the scenario registry. Nothi
 the same name.
 
 The profile engine and these assets are integrated. All commands below resolve the
-profile's explicit authorities; none implicitly borrow a same-named full-model input.
+profile's explicit authorities; none implicitly borrow a same-named South Asia input.
 
 ## The model
 
