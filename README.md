@@ -7,7 +7,7 @@ on internal transmission and on the interconnectors between countries, and
 supports "what if" comparisons between scenarios. The South Asia model is its
 reference application: Bangladesh, Bhutan, India in five regions, Nepal, Sri
 Lanka and the Maldives, from 2023 to 2050 in 20 timeslices. A reduced
-two-region training model lives in [`examples/unescap/`](examples/unescap/README.md).
+two-region training model lives in [`examples/unescap_training/`](examples/unescap_training/README.md).
 
 ## Install
 
@@ -63,10 +63,10 @@ files. Every run writes `<workspace>/logs/<run-id>/run.log`.
 ```text
 ostram/       the Python package
 inputs/       model inputs
-config/       configuration, including config/profiles/full.yaml
+config/       configuration, including config/setups/south_asia.yaml
 model/        the OSeMOSYS model file
 docs/         documentation
-examples/     the two-region training profile
+examples/     the two-region training setup
 tests/        solver-free tests
 workspace/    generated files, ignored by Git
 ```

@@ -17,7 +17,7 @@ from typing import Mapping
 
 PROJECT_ROOT_ENV = "OSTRAM_PROJECT_ROOT"
 WORKSPACE_ENV = "OSTRAM_WORKSPACE"
-PROFILE_AUTHORITIES_ENV = "OSTRAM_PROFILE_AUTHORITIES"
+SETUP_AUTHORITIES_ENV = "OSTRAM_SETUP_AUTHORITIES"
 WINDOWS_SAFE_ABSOLUTE_PATH_BUDGET = 240
 _WORKBOOK_PATH_DIGEST_LENGTH = 16
 _SAFE_COMPONENT = re.compile(r"^[^./\\][^/\\]*$")
@@ -181,35 +181,35 @@ class ProjectPaths:
         return (self.project_root / "ostram").resolve()
 
     def authority(self, role: str, default: Path) -> Path:
-        """Return an activated profile authority or the compatibility default.
+        """Return an activated setup authority or the compatibility default.
 
         The canonical CLI injects the entire validated mapping in one
         environment value before importing a route.  Direct historical module
-        calls have no mapping and retain their established full-model paths.
+        calls have no mapping and retain their established default-setup paths.
         A present but incomplete mapping fails closed instead of falling back.
         """
 
-        encoded = os.environ.get(PROFILE_AUTHORITIES_ENV)
+        encoded = os.environ.get(SETUP_AUTHORITIES_ENV)
         if encoded is None:
             return default.resolve()
         try:
             mapping = json.loads(encoded)
         except json.JSONDecodeError as error:
             raise ProjectResolutionError(
-                f"invalid {PROFILE_AUTHORITIES_ENV}: {error}"
+                f"invalid {SETUP_AUTHORITIES_ENV}: {error}"
             ) from error
         if not isinstance(mapping, dict):
             raise ProjectResolutionError(
-                f"{PROFILE_AUTHORITIES_ENV} must encode an object"
+                f"{SETUP_AUTHORITIES_ENV} must encode an object"
             )
         if role not in mapping:
             raise ProjectResolutionError(
-                f"active profile has no authority for role {role!r}"
+                f"active setup has no authority for role {role!r}"
             )
         value = mapping[role]
         if not isinstance(value, str) or not Path(value).is_absolute():
             raise ProjectResolutionError(
-                f"active profile authority {role!r} is not an absolute path"
+                f"active setup authority {role!r} is not an absolute path"
             )
         return Path(value).resolve()
 
@@ -224,7 +224,7 @@ class ProjectPaths:
         """Return the OSeMOSYS Global inputs folder.
 
         The default is ``<project_root>/inputs/osemosys_global``. The active
-        profile's ``osemosys_inputs`` authority replaces it when a profile is
+        setup's ``osemosys_inputs`` authority replaces it when a setup is
         active.
         """
 
@@ -237,7 +237,7 @@ class ProjectPaths:
         """Return the A1 preparation inputs folder.
 
         The default is ``<project_root>/inputs/preparation``. The active
-        profile's ``preparation_inputs`` authority replaces it when a profile is
+        setup's ``preparation_inputs`` authority replaces it when a setup is
         active.
         """
 
@@ -250,7 +250,7 @@ class ProjectPaths:
         """Return the workbook templates folder.
 
         The default is ``<preparation_inputs>/workbook_templates``. The active
-        profile's ``preparation_templates`` authority replaces it when a profile
+        setup's ``preparation_templates`` authority replaces it when a setup
         is active.
         """
 
@@ -264,8 +264,8 @@ class ProjectPaths:
 
         The default is
         ``<project_root>/inputs/preparation/secondary_technologies``. The active
-        profile's ``secondary_technology_inputs`` authority replaces it when a
-        profile is active.
+        setup's ``secondary_technology_inputs`` authority replaces it when a
+        setup is active.
         """
 
         return self.authority(
@@ -277,8 +277,8 @@ class ProjectPaths:
     def scenario_inputs(self) -> Path:
         """Return the scenario inputs folder.
 
-        The default is ``<project_root>/inputs/scenarios``. The active profile's
-        ``scenario_inputs`` authority replaces it when a profile is active.
+        The default is ``<project_root>/inputs/scenarios``. The active setup's
+        ``scenario_inputs`` authority replaces it when a setup is active.
         """
 
         return self.authority("scenario_inputs", self.inputs_root / "scenarios")
@@ -287,8 +287,8 @@ class ProjectPaths:
     def execution_inputs(self) -> Path:
         """Return the execution inputs folder.
 
-        The default is ``<project_root>/inputs/execution``. The active profile's
-        ``execution_inputs`` authority replaces it when a profile is active.
+        The default is ``<project_root>/inputs/execution``. The active setup's
+        ``execution_inputs`` authority replaces it when a setup is active.
         """
 
         return self.authority("execution_inputs", self.inputs_root / "execution")
@@ -303,8 +303,8 @@ class ProjectPaths:
     def scenario_config_root(self) -> Path:
         """Return the scenario configuration folder.
 
-        The default is ``<project_root>/config/scenarios``. The active profile's
-        ``scenario_config_root`` authority replaces it when a profile is active.
+        The default is ``<project_root>/config/scenarios``. The active setup's
+        ``scenario_config_root`` authority replaces it when a setup is active.
         """
 
         return self.authority(
@@ -316,7 +316,7 @@ class ProjectPaths:
         """Return the preparation configuration folder.
 
         The default is ``<project_root>/config/preparation``. The active
-        profile's ``preparation_config`` authority replaces it when a profile is
+        setup's ``preparation_config`` authority replaces it when a setup is
         active.
         """
 
@@ -330,7 +330,7 @@ class ProjectPaths:
 
         The default is
         ``<project_root>/config/preparation/Config_country_codes.yaml``. The
-        active profile's ``country_config`` authority replaces it when a profile
+        active setup's ``country_config`` authority replaces it when a setup
         is active.
         """
 
@@ -345,8 +345,8 @@ class ProjectPaths:
 
         The default is
         ``<project_root>/config/preparation/Config_region_consolidation.yaml``.
-        The active profile's ``region_config`` authority replaces it when a
-        profile is active.
+        The active setup's ``region_config`` authority replaces it when a
+        setup is active.
         """
 
         return self.authority(
@@ -365,8 +365,8 @@ class ProjectPaths:
         """Return the OSeMOSYS model file.
 
         The default is ``<project_root>/model/osemosys_fast_preprocessed.txt``.
-        The active profile's ``maintained_model`` authority replaces it when a
-        profile is active.
+        The active setup's ``maintained_model`` authority replaces it when a
+        setup is active.
         """
 
         return self.authority(
@@ -384,8 +384,8 @@ class ProjectPaths:
         """Return the compilation resources folder.
 
         The default is ``<project_root>/ostram/resources/compilation``. The
-        active profile's ``compilation_resources`` authority replaces it when a
-        profile is active.
+        active setup's ``compilation_resources`` authority replaces it when a
+        setup is active.
         """
 
         return self.authority(
@@ -397,8 +397,8 @@ class ProjectPaths:
         """Return the preparation resources folder.
 
         The default is ``<project_root>/ostram/resources/preparation``. The
-        active profile's ``preparation_resources`` authority replaces it when a
-        profile is active.
+        active setup's ``preparation_resources`` authority replaces it when a
+        setup is active.
         """
 
         return self.authority(
@@ -409,13 +409,15 @@ class ProjectPaths:
     def scenario_registry(self) -> Path:
         """Return the scenario registry file.
 
-        The default is ``<project_root>/config/profiles/full.yaml``. The active
-        profile's ``scenario_registry`` authority replaces it when a profile is
-        active.
+        The default is the manifest of the default setup, as the setup
+        registry names it. The active setup's ``scenario_registry`` authority
+        replaces it when a setup is active.
         """
 
+        from ostram.setups import DEFAULT_SETUP, load_setup
+
         return self.authority(
-            "scenario_registry", self.config_root / "profiles" / "full.yaml"
+            "scenario_registry", load_setup(DEFAULT_SETUP, paths=self).path
         )
 
     @property
@@ -424,8 +426,8 @@ class ProjectPaths:
 
         The default is
         ``<project_root>/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx``. The
-        active profile's ``scenario_workbook`` authority replaces it when a
-        profile is active.
+        active setup's ``scenario_workbook`` authority replaces it when a
+        setup is active.
         """
 
         return self.authority(
@@ -439,8 +441,8 @@ class ProjectPaths:
 
         The default is
         ``<project_root>/inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx``. The
-        active profile's ``timeslice_workbook`` authority replaces it when a
-        profile is active.
+        active setup's ``timeslice_workbook`` authority replaces it when a
+        setup is active.
         """
 
         return self.authority(
@@ -454,7 +456,7 @@ class ProjectPaths:
 
         The default is
         ``<project_root>/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx``. The
-        active profile's ``ao_decisions`` authority replaces it when a profile
+        active setup's ``ao_decisions`` authority replaces it when a setup
         is active.
         """
 
@@ -469,8 +471,8 @@ class ProjectPaths:
 
         The default is
         ``<project_root>/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx``. The
-        active profile's ``interconnector_authority`` authority replaces it when
-        a profile is active.
+        active setup's ``interconnector_authority`` authority replaces it when
+        a setup is active.
         """
 
         return self.authority(
@@ -483,8 +485,8 @@ class ProjectPaths:
         """Return the technology taxonomy.
 
         The default is ``<project_root>/config/scenarios/technology_types.csv``.
-        The active profile's ``interconnector_taxonomy`` authority replaces it
-        when a profile is active.
+        The active setup's ``interconnector_taxonomy`` authority replaces it
+        when a setup is active.
         """
 
         return self.authority(
@@ -498,7 +500,7 @@ class ProjectPaths:
 
         The default is
         ``<project_root>/config/execution/Config_MOMF_T1_AB.yaml``. The active
-        profile's ``execution_config`` authority replaces it when a profile is
+        setup's ``execution_config`` authority replaces it when a setup is
         active.
         """
 
@@ -513,7 +515,7 @@ class ProjectPaths:
 
         The default is
         ``<project_root>/config/compilation/Config_MOMF_T1_A.yaml``. The active
-        profile's ``compilation_config`` authority replaces it when a profile is
+        setup's ``compilation_config`` authority replaces it when a setup is
         active.
         """
 

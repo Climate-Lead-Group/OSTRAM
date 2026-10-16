@@ -39,10 +39,10 @@ from tests.regression.test_run_orchestration import (
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 UNESCAP_REGISTRY = (
-    REPO_ROOT / "examples" / "unescap" / "config" / "scenarios" / "registry.json"
+    REPO_ROOT / "examples" / "unescap_training" / "config" / "scenarios" / "registry.json"
 )
 UNESCAP_WORKBOOK = (
-    REPO_ROOT / "examples" / "unescap" / "inputs" / "scenarios"
+    REPO_ROOT / "examples" / "unescap_training" / "inputs" / "scenarios"
     / "OSTRAM_Scenario_Inputs.xlsx"
 )
 PREPARATION_WORKSPACE = REPO_ROOT / "workspace" / "preparation"
@@ -81,7 +81,7 @@ def _root(name: str, role: str, restrictions: list[str] | None = None) -> dict:
 
 
 class RestrictionDependencyContractTests(unittest.TestCase):
-    def test_unescap_registry_declares_the_bau_prerequisite_for_a(self) -> None:
+    def test_unescap_training_registry_declares_the_bau_prerequisite_for_a(self) -> None:
         registry = load_registry(UNESCAP_REGISTRY)
         roots = registry.roots_by_name
         self.assertEqual(
@@ -96,7 +96,7 @@ class RestrictionDependencyContractTests(unittest.TestCase):
             ["A_Calibrated_BAU"],
         )
 
-    def test_full_registry_declares_no_restriction_prerequisites(self) -> None:
+    def test_south_asia_registry_declares_no_restriction_prerequisites(self) -> None:
         registry = load_registry()
         for root in registry.roots:
             self.assertEqual(root.restriction_dependencies, ())

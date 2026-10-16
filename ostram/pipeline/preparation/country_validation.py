@@ -3,9 +3,9 @@ Validation script for OG_csvs_inputs data.
 Validates that a country has all required data in the OSeMOSYS CSV input files.
 
 Usage:
-    python -m ostram --profile unescap country validate
-    python -m ostram --profile unescap country validate ARG
-    python -m ostram --profile unescap country validate NCC --report
+    python -m ostram --setup unescap_training country validate
+    python -m ostram --setup unescap_training country validate ARG
+    python -m ostram --setup unescap_training country validate NCC --report
 
 Author: Climate Lead Group, Andrey Salazar-Vargas
 """

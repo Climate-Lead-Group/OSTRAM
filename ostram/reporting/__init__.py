@@ -1,1 +1,1 @@
-"""Reusable, profile-aware OSTRAM reporting."""
+"""Reusable, setup-aware OSTRAM reporting."""

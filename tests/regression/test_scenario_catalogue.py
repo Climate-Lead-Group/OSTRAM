@@ -1,4 +1,4 @@
-"""The scenario catalogue page matches full.yaml and the scenario registry."""
+"""The scenario catalogue page matches south_asia.yaml and the scenario registry."""
 
 from __future__ import annotations
 
@@ -8,6 +8,8 @@ import re
 import unittest
 
 import yaml
+
+from tests.regression.setup_file import SETUP_FILE
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -24,7 +26,7 @@ def _generator():
 
 def _registered_scenarios() -> list[str]:
     profile = yaml.safe_load(
-        (REPO_ROOT / "config" / "profiles" / "full.yaml").read_text(encoding="utf-8")
+        SETUP_FILE.read_text(encoding="utf-8")
     )
     registry = profile["scenario_registry"]
     return list(registry["support_scenarios"]) + list(registry["decision_scenarios"])

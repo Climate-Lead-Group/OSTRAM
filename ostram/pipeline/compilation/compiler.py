@@ -44,8 +44,8 @@ params = _effects.read_config(_planning.CONFIG_PATH)
 transform_plan = _planning.build_transform_plan(params)
 
 # Gate the FINAL materialized workbook, after all late pins and corrections.
-from ostram.profiles import profile_policy
-if profile_policy("validation_no_mutation", False):
+from ostram.setups import setup_policy
+if setup_policy("validation_no_mutation", False):
     from ostram.pipeline.scenarios.transformations.pre_solver_validation import run as validate_workbook
     _, invalid = validate_workbook(
         params["xtra_scen"]["Main_Scenario"],

@@ -53,11 +53,11 @@ from datetime import datetime
 from pathlib import Path
 
 from ostram.paths import (
-    PROFILE_AUTHORITIES_ENV,
+    SETUP_AUTHORITIES_ENV,
     bounded_workspace_workbook_path,
     resolve_paths,
 )
-from ostram.profiles import profile_policy
+from ostram.setups import setup_policy
 
 from . import orchestrator as _orchestrator
 
@@ -71,8 +71,8 @@ SOASIA_V18 = _PROJECT_PATHS.scenario_workbook
 PIN_ROOT_SCENARIOS = _orchestrator.PWR_MIN_PIN_ROOT_SCENARIOS
 
 
-def _configure_profile_paths() -> None:
-    """Refresh authorities after the canonical CLI activates a profile."""
+def _configure_setup_paths() -> None:
+    """Refresh authorities after the canonical CLI activates a setup."""
 
     global _PROJECT_PATHS, PREPARATION_WORKSPACE, SCENARIO_CONFIG_DIR
     global SCENARIO_RULE_DATA, A3_WORKSPACE, SOASIA_V18
@@ -301,7 +301,7 @@ def _read_script_yaml_name(script_path: Path) -> str | None:
     """Inspect a rules_script source for its `YAML_FILE_NAME` constant.
 
     Returns the YAML filename if declared at module level, else None
-    (scripts like the lid_rule use in-script config and have no YAML).
+    (scripts like the build_cap_rule use in-script config and have no YAML).
     """
     import re
     try:
@@ -525,7 +525,7 @@ def stage_3_fix_2(s2: Path, s3: Path) -> Path:
     ``cap_trn_to_residual`` in ``s3``.
 
     Returns the path of the POST_TRN_CAP workbook. Raises RuntimeError when
-    neither the profile authorities nor ``OSTRAM_TEMPLATE_PATH`` are set,
+    neither the setup authorities nor ``OSTRAM_TEMPLATE_PATH`` are set,
     and FileNotFoundError when the interconnector authority file is missing.
     """
     banner("Stage 3: FIX_2 pipeline (fix_trn + clear_stale + cap_trn)")
@@ -533,14 +533,14 @@ def stage_3_fix_2(s2: Path, s3: Path) -> Path:
     authority_path_raw = os.environ.get("OSTRAM_TEMPLATE_PATH")
     authority_path = (
         resolve_paths().interconnector_authority
-        if os.environ.get(PROFILE_AUTHORITIES_ENV)
+        if os.environ.get(SETUP_AUTHORITIES_ENV)
         else Path(authority_path_raw).resolve() if authority_path_raw else None
     )
     if authority_path is None:
         raise RuntimeError("OSTRAM_TEMPLATE_PATH is required for RC Authority V1")
     if not authority_path.is_file():
         raise FileNotFoundError(
-            f"RC Authority V1 profile authority not found: {authority_path}"
+            f"RC Authority V1 setup authority not found: {authority_path}"
         )
 
     post_cap_reset = bounded_workspace_workbook_path(
@@ -777,11 +777,11 @@ def stage_base_year_pin(s5: Path, scenario: str) -> None:
     """
     if scenario not in PIN_ROOT_SCENARIOS:
         raise ValueError(f"unsupported PWR/MIN pin scenario: {scenario!r}")
-    if not profile_policy("apply_pwr_min_pin", True):
+    if not setup_policy("apply_pwr_min_pin", True):
         print(
-            "    [SKIP] stage_base_year_pin: profile policy "
+            "    [SKIP] stage_base_year_pin: setup policy "
             "apply_pwr_min_pin=false (calibration authority not valid "
-            "for this profile's domain)"
+            "for this setup's domain)"
         )
         return
     script = RULES_SCRIPTS_DIR / "apply_base_year_pin.py"
@@ -876,8 +876,8 @@ def stage_6_sync_og_to_ts20(wd: Path, s1: Path) -> None:
 
 
 def finalize_support_bau(output_dir: Path, scenario: str) -> None:
-    """Apply the full-profile support policy after restriction export/delivery."""
-    if scenario != "BAU" or not profile_policy("support_bau_committed_transmission", False):
+    """Apply the `south_asia` support policy after restriction export/delivery."""
+    if scenario != "BAU" or not setup_policy("support_bau_committed_transmission", False):
         return
     from .transformations.support_bau_transmission import apply_commitment_ceiling
 
@@ -1031,8 +1031,8 @@ def _orchestration_dependencies(
 
 def main() -> int:
     """Parse the command line and run the A3 orchestration; return its exit code."""
-    if os.environ.get(PROFILE_AUTHORITIES_ENV):
-        _configure_profile_paths()
+    if os.environ.get(SETUP_AUTHORITIES_ENV):
+        _configure_setup_paths()
     cli_args = parse_cli_args()
     return _orchestrator.orchestrate_a3(
         cli_args,

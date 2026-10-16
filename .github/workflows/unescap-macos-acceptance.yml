@@ -4,9 +4,9 @@ on:
   pull_request:
     paths:
       - ".github/workflows/unescap-macos-acceptance.yml"
-      - "config/profiles/**"
+      - "config/setups/**"
       - "environment.yaml"
-      - "examples/unescap/**"
+      - "examples/unescap_training/**"
       - "inputs/execution/**"
       - "model/**"
       - "ostram/**"
@@ -82,18 +82,18 @@ jobs:
           tail -n 40 "$ACCEPTANCE_DIR/tests.log" > "$ACCEPTANCE_DIR/test-summary.txt"
           test "$return_code" -eq 0
 
-      - name: Prepare and inspect the UNESCAP profile
+      - name: Prepare and inspect the UNESCAP setup
         id: prepare
         run: |
           set -o pipefail
-          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" example prepare unescap 2>&1 | tee "$ACCEPTANCE_DIR/profile-preparation.txt"
-          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" --profile unescap inspect-resources 2>&1 | tee "$ACCEPTANCE_DIR/inspect-resources.json"
+          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" example prepare unescap_training 2>&1 | tee "$ACCEPTANCE_DIR/setup-preparation.txt"
+          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" --setup unescap_training inspect-resources 2>&1 | tee "$ACCEPTANCE_DIR/inspect-resources.json"
 
       - name: Compile B_Optimised_VRE without a solver
         id: compile
         run: |
           set -o pipefail
-          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" --profile unescap run --scenarios B_Optimised_VRE --compile-only --skip-pull 2>&1 | tee "$ACCEPTANCE_DIR/compile-only.txt"
+          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" --setup unescap_training run --scenarios B_Optimised_VRE --compile-only --skip-pull 2>&1 | tee "$ACCEPTANCE_DIR/compile-only.txt"
 
       - name: Compile A_Calibrated_BAU from a fresh workspace without a solver
         id: compile_a
@@ -101,8 +101,8 @@ jobs:
           OSTRAM_A_GATE_WORKSPACE: workspace/macos-acceptance-fresh-a
         run: |
           set -o pipefail
-          python -m ostram --workspace "$OSTRAM_A_GATE_WORKSPACE" example prepare unescap 2>&1 | tee "$ACCEPTANCE_DIR/compile-only-a-preparation.txt"
-          python -m ostram --workspace "$OSTRAM_A_GATE_WORKSPACE" --profile unescap run --scenarios A_Calibrated_BAU --compile-only --skip-pull 2>&1 | tee "$ACCEPTANCE_DIR/compile-only-a.txt"
+          python -m ostram --workspace "$OSTRAM_A_GATE_WORKSPACE" example prepare unescap_training 2>&1 | tee "$ACCEPTANCE_DIR/compile-only-a-preparation.txt"
+          python -m ostram --workspace "$OSTRAM_A_GATE_WORKSPACE" --setup unescap_training run --scenarios A_Calibrated_BAU --compile-only --skip-pull 2>&1 | tee "$ACCEPTANCE_DIR/compile-only-a.txt"
           python - <<'PY'
           import json
           import os
@@ -110,8 +110,8 @@ jobs:
 
           provenance = json.loads(
               (
-                  Path(os.environ["OSTRAM_A_GATE_WORKSPACE"]) / "profiles"
-                  / "unescap" / "preparation" / "A1_Outputs"
+                  Path(os.environ["OSTRAM_A_GATE_WORKSPACE"]) / "setups"
+                  / "unescap_training" / "preparation" / "A1_Outputs"
                   / "_scenario_materialization.json"
               ).read_text(encoding="utf-8")
           )
@@ -119,7 +119,7 @@ jobs:
           assert provenance["required_roots"] == ["BAU", "A_Calibrated_BAU"], provenance
           assert provenance["solver_invoked"] is False, provenance
           PY
-          git diff --exit-code -- examples/unescap/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
+          git diff --exit-code -- examples/unescap_training/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
 
       - name: Validate the compiled stage-domain contract
         id: domain
@@ -130,13 +130,13 @@ jobs:
           import os
           from pathlib import Path
           from ostram.paths import resolve_paths
-          from ostram.profile_workspace import prepared_profile
-          from ostram.profiles import load_profile
-          from ostram.validation.profile import validate_compiled_domain
+          from ostram.setup_workspace import prepared_setup
+          from ostram.setups import load_setup
+          from ostram.validation.setup_domain import validate_compiled_domain
 
           outer = resolve_paths(workspace=Path(os.environ["OSTRAM_GATE_WORKSPACE"]))
-          manifest = load_profile("unescap", paths=outer)
-          prepared = prepared_profile(manifest, paths=outer)
+          manifest = load_setup("unescap_training", paths=outer)
+          prepared = prepared_setup(manifest, paths=outer)
           source = (
               prepared.workspace / "compilation" / "A2_Output_Params"
               / "B_Optimised_VRE"
@@ -187,7 +187,7 @@ jobs:
           set -o pipefail
           started=$SECONDS
           set +e
-          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" --profile unescap run --scenarios B_Optimised_VRE --skip-pull 2>&1 | tee "$ACCEPTANCE_DIR/solver-run.txt"
+          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" --setup unescap_training run --scenarios B_Optimised_VRE --skip-pull 2>&1 | tee "$ACCEPTANCE_DIR/solver-run.txt"
           return_code=${PIPESTATUS[0]}
           set -e
           duration_seconds=$((SECONDS - started))
@@ -200,8 +200,8 @@ jobs:
       - name: Generate, capture, and validate the real dashboard
         id: report
         run: |
-          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" example report unescap --capture macos-arm64-cbc
-          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" example report unescap
+          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" example report unescap_training --capture macos-arm64-cbc
+          python -m ostram --workspace "$OSTRAM_GATE_WORKSPACE" example report unescap_training
           python - <<'PY'
           import json
           import os
@@ -221,7 +221,7 @@ jobs:
                       self.ids.add(values["id"])
                   if tag == "a" and values.get("href"):
                       self.hrefs.append(values["href"])
-                  if tag == "script" and values.get("id") == "ostram-profile-data":
+                  if tag == "script" and values.get("id") == "ostram-setup-data":
                       self.in_payload = True
               def handle_endtag(self, tag):
                   if tag == "script" and self.in_payload:
@@ -230,11 +230,11 @@ jobs:
                   if self.in_payload:
                       self.payload.append(data)
 
-          workspace = Path(os.environ["OSTRAM_GATE_WORKSPACE"]) / "profiles" / "unescap"
-          report = workspace / "reports" / "unescap.html"
+          workspace = Path(os.environ["OSTRAM_GATE_WORKSPACE"]) / "setups" / "unescap_training"
+          report = workspace / "reports" / "unescap_training.html"
           document = Document()
           document.feed(report.read_text(encoding="utf-8"))
-          assert {"app", "ostram-profile-data"} <= document.ids
+          assert {"app", "ostram-setup-data"} <= document.ids
           assert all(not href.startswith("#") or href[1:] in document.ids for href in document.hrefs)
           data = json.loads("".join(document.payload))
           assert [item["region"] for item in data["country_regions"]] == ["BGDXX", "INDEA"]
@@ -288,7 +288,7 @@ jobs:
               for name, value in os.environ.items()
               if name.endswith("_OUTCOME")
           }
-          logs = sorted((Path(os.environ["OSTRAM_GATE_WORKSPACE"]) / "profiles" / "unescap" / "logs").glob("*/run.log"))
+          logs = sorted((Path(os.environ["OSTRAM_GATE_WORKSPACE"]) / "setups" / "unescap_training" / "logs").glob("*/run.log"))
           if logs:
               lines = [line for line in logs[-1].read_text(encoding="utf-8").splitlines()
                        if "RUN |" in line or "STAGE |" in line]
@@ -331,7 +331,7 @@ jobs:
             acceptance/unescap-macos-arm64/environment.txt
             acceptance/unescap-macos-arm64/cbc-version.txt
             acceptance/unescap-macos-arm64/test-summary.txt
-            acceptance/unescap-macos-arm64/profile-preparation.txt
+            acceptance/unescap-macos-arm64/setup-preparation.txt
             acceptance/unescap-macos-arm64/inspect-resources.json
             acceptance/unescap-macos-arm64/compiled-domain.json
             acceptance/unescap-macos-arm64/solver-status.txt

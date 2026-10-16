@@ -7,6 +7,8 @@ import unittest
 
 import yaml
 
+from tests.regression.setup_file import SETUP_FILE
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CONFIG = REPO_ROOT / "config"
@@ -18,20 +20,20 @@ EXPECTED_CONFIG_FILES = (
     "config/execution/Config_MOMF_T1_AB.yaml",
     "config/preparation/Config_country_codes.yaml",
     "config/preparation/Config_region_consolidation.yaml",
-    "config/profiles/full.yaml",
-    "config/profiles/registry.json",
+    SETUP_FILE.relative_to(REPO_ROOT).as_posix(),
+    "config/setups/registry.json",
     "config/scenarios/A_Calibrated_BAU/bau_calibration.yaml",
-    "config/scenarios/A_Calibrated_BAU/lid_rule.yaml",
+    "config/scenarios/A_Calibrated_BAU/build_cap_rule.yaml",
     "config/scenarios/A_Calibrated_BAU/relax_interconnectors.yaml",
     "config/scenarios/A_Calibrated_BAU/retirement_schedule.yaml",
     "config/scenarios/B_Opt_DirBidir/set_interconnector_direction.yaml",
     "config/scenarios/B_Opt_DirContractual/set_interconnector_direction.yaml",
-    "config/scenarios/B_Optimised_VRE/lid_rule.yaml",
+    "config/scenarios/B_Optimised_VRE/build_cap_rule.yaml",
     "config/scenarios/B_Optimised_VRE/relax_interconnectors.yaml",
     "config/scenarios/B_Optimised_VRE/retirement_schedule.yaml",
     "config/scenarios/B_Optimised_VRE/storage_floors.yaml",
     "config/scenarios/C_Target_VRE/bau_calibration.yaml",
-    "config/scenarios/C_Target_VRE/lid_rule.yaml",
+    "config/scenarios/C_Target_VRE/build_cap_rule.yaml",
     "config/scenarios/C_Target_VRE/relax_interconnectors.yaml",
     "config/scenarios/C_Target_VRE/retirement_schedule.yaml",
     "config/scenarios/C_Target_VRE/set_vre_targets.yaml",
@@ -70,7 +72,7 @@ class ConfigFileTests(unittest.TestCase):
 
     def test_every_scenario_entry_has_a_registered_scenario(self) -> None:
         profile = yaml.safe_load(
-            (CONFIG / "profiles" / "full.yaml").read_text(encoding="utf-8")
+            SETUP_FILE.read_text(encoding="utf-8")
         )
         execution = yaml.safe_load(
             (CONFIG / "execution" / "Config_MOMF_T1_AB.yaml").read_text(encoding="utf-8")
@@ -79,7 +81,7 @@ class ConfigFileTests(unittest.TestCase):
         registered = {entry["name"] for entry in registry["root_scenarios"]}
         registered |= {entry["name"] for entry in registry["derived_scenarios"]}
         entries = [
-            ("full.yaml scenario_inputs block {}", name)
+            ("south_asia.yaml scenario_inputs block {}", name)
             for name in profile["scenario_inputs"]
         ]
         entries += [
@@ -90,7 +92,7 @@ class ConfigFileTests(unittest.TestCase):
             and any(path.is_file() for path in folder.rglob("*"))
         ]
         entries += [
-            ("full.yaml policies.historical_trade_roots entry {}", name)
+            ("south_asia.yaml policies.historical_trade_roots entry {}", name)
             for name in profile["policies"].get("historical_trade_roots", [])
         ]
         entries += [
@@ -99,7 +101,7 @@ class ConfigFileTests(unittest.TestCase):
         ]
         problems = [
             f"{label.format(name)} has no registered scenario. Register the "
-            "scenario in scenario_registry in config/profiles/full.yaml, or "
+            "scenario in scenario_registry in config/setups/south_asia.yaml, or "
             "delete the entry."
             for label, name in entries
             if name not in registered

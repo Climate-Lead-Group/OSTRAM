@@ -12,7 +12,7 @@ from typing import Iterable, Sequence
 from openpyxl import load_workbook
 
 from ostram.paths import resolve_paths
-from ostram.profiles import PROFILE_WORKSPACE_ENV
+from ostram.setups import SETUP_WORKSPACE_ENV
 from ostram.pipeline.scenarios.rules.set_interconnector_direction import (
     parse_tech_regions,
 )
@@ -294,7 +294,7 @@ def _default_ao(paths) -> Path:
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the ``scenario sync-country`` command and return 0.
 
-    The target workbook must lie inside the active profile workspace.
+    The target workbook must lie inside the active setup workspace.
     """
     parser = argparse.ArgumentParser(prog="python -m ostram scenario")
     subparsers = parser.add_subparsers(dest="action", required=True)
@@ -306,15 +306,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     paths = resolve_paths()
     target = (args.target or paths.scenario_workbook).resolve()
-    prepared_root_raw = os.environ.get(PROFILE_WORKSPACE_ENV)
+    prepared_root_raw = os.environ.get(SETUP_WORKSPACE_ENV)
     if not prepared_root_raw:
-        raise RuntimeError("scenario sync-country requires an activated profile workspace")
+        raise RuntimeError("scenario sync-country requires an activated setup workspace")
     prepared_root = Path(prepared_root_raw).resolve()
     try:
         target.relative_to(prepared_root)
     except ValueError as error:
         raise ValueError(
-            "scenario sync-country refuses to mutate a committed profile seed; "
+            "scenario sync-country refuses to mutate a committed setup seed; "
             f"target must be inside {prepared_root}"
         ) from error
     changes = synchronize_country(

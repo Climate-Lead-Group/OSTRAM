@@ -244,10 +244,10 @@ def process_scenario_folder(base_input_path, template_path, base_output_path, sc
 
 def historical_trade_activation(input_folder, scenario_name):
     """Scope the historical-trade equations and reject incomplete applicable data."""
-    from ostram.profiles import profile_policy
+    from ostram.setups import setup_policy
     from ostram.pipeline.scenarios.rules.apply_base_year_pin import calibration_root
     root = calibration_root(scenario_name)
-    active = root is not None and root in profile_policy("historical_trade_roots", [])
+    active = root is not None and root in setup_policy("historical_trade_roots", [])
     model = resolve_paths().maintained_model.read_text(encoding="utf-8")
     marker = "param D4HistoricalTradeActive binary default 0;"
     if marker not in model:

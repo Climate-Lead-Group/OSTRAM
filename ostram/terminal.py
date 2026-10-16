@@ -205,7 +205,7 @@ class RunReporter:
         workspace: Path,
         scenarios: Sequence[str],
         verbose: bool,
-        profile_id: str = "full",
+        setup_id: str = "south_asia",
         manifest: Path | None = None,
         compile_only: bool = False,
         stdout: TextIO | None = None,
@@ -214,7 +214,7 @@ class RunReporter:
         self.project_root = Path(project_root).resolve()
         self.workspace = Path(workspace).resolve()
         self.scenarios = tuple(str(scenario) for scenario in scenarios)
-        self.profile_id = str(profile_id)
+        self.setup_id = str(setup_id)
         self.manifest = None if manifest is None else Path(manifest).resolve()
         self.compile_only = bool(compile_only)
         self.verbose = bool(verbose)
@@ -249,7 +249,7 @@ class RunReporter:
         self._write_log("RUN", f"start_time={self.started_at.isoformat()}")
         self._write_log("RUN", f"project_root={self.project_root}")
         self._write_log("RUN", f"workspace={self.workspace}")
-        self._write_log("RUN", f"profile_id={self.profile_id}")
+        self._write_log("RUN", f"setup_id={self.setup_id}")
         self._write_log("RUN", f"manifest={self.manifest}")
         self._write_log("RUN", "scenarios=" + json.dumps(self.scenarios, ensure_ascii=False))
         self._write_log("RUN", f"compile_only={self.compile_only}")

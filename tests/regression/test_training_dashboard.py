@@ -1,4 +1,4 @@
-"""Regression coverage for the profile-aware interactive training dashboard."""
+"""Regression coverage for the setup-aware interactive training dashboard."""
 
 from __future__ import annotations
 
@@ -107,8 +107,8 @@ def _build(tmp: Path, metadata=METADATA, snapshots=None):
         snapshots = [("baseline", before), ("edited", after)]
     return build_dashboard_data(
         snapshots,
-        profile_id="synthetic",
-        manifest=tmp / "profile.yaml",
+        setup_id="synthetic",
+        manifest=tmp / "setup.yaml",
         workspace=tmp / "workspace",
         metadata=metadata,
     )
@@ -116,7 +116,7 @@ def _build(tmp: Path, metadata=METADATA, snapshots=None):
 
 def _payload(document: str) -> dict:
     match = re.search(
-        r'<script id="ostram-profile-data" type="application/json">(.*?)</script>',
+        r'<script id="ostram-setup-data" type="application/json">(.*?)</script>',
         document,
         re.S,
     )
@@ -131,7 +131,7 @@ class ClassifierTests(unittest.TestCase):
         self.assertEqual(scenario_label("Training"), "Training")
         self.assertEqual(scenario_label("Alpha_Run"), "Alpha_Run")
 
-    def test_storage_prefixes_come_from_profile_metadata(self) -> None:
+    def test_storage_prefixes_come_from_setup_metadata(self) -> None:
         self.assertEqual(storage_prefixes(METADATA), ("PWRSDS", "PWRLDS"))
         self.assertEqual(storage_prefixes({"storage": ["XYZMMRXX01"]}), ("PWRXYZ",))
         self.assertEqual(storage_prefixes({}), ("PWRSDS", "PWRLDS"))
@@ -193,7 +193,7 @@ class AggregationTests(unittest.TestCase):
         for year in (2030, 2050):
             self.assertAlmostEqual(system[year], mmr[year] + lka[year], places=9)
 
-    def test_storage_uses_profile_declared_families(self) -> None:
+    def test_storage_uses_setup_declared_families(self) -> None:
         self.assertEqual(self.alpha["System"]["storage"], {2030: 1.0, 2050: 2.0})
         self.assertEqual(self.alpha["MMRXX"]["storage"], {2030: 1.0, 2050: 2.0})
         self.assertEqual(self.alpha["LKAXX"]["storage"], {})
@@ -220,7 +220,7 @@ class AggregationTests(unittest.TestCase):
                 block["ProductionByTechnologyAnnual"], {2030: 1.5, 2050: 2.5}
             )
 
-    def test_lid_diagnostic_labels_use_profile_region_names(self) -> None:
+    def test_lid_diagnostic_labels_use_setup_region_names(self) -> None:
         lid = self.alpha["System"]["lid_diagnostic"]
         self.assertIn("PWRSPVMMRXX01", lid)
         self.assertEqual(lid["PWRSPVMMRXX01"]["label"], "Solar PV (Myanmar)")
@@ -350,10 +350,10 @@ class RendererTests(unittest.TestCase):
         self.assertIn("stackedArea", self.document)
         self.assertIn("lineChart", self.document)
 
-    def test_embedded_profile_report_payload_round_trips(self) -> None:
+    def test_embedded_setup_report_payload_round_trips(self) -> None:
         payload = _payload(self.document)
-        self.assertEqual(payload["schema"], "ostram-profile-report-v1")
-        self.assertEqual(payload["profile_id"], "synthetic")
+        self.assertEqual(payload["schema"], "ostram-setup-report-v1")
+        self.assertEqual(payload["setup_id"], "synthetic")
         self.assertEqual(payload["snapshot_labels"], ["baseline", "edited"])
         self.assertEqual(
             payload["effective_values"]["interconnector_capacity_gw"], 2.496
@@ -366,7 +366,7 @@ class RendererTests(unittest.TestCase):
             self.assertNotIn(forbidden, self.document, forbidden)
         self.assertIn("Climate Lead Group", self.document)
 
-    def test_unescap_visual_language_is_preserved(self) -> None:
+    def test_unescap_training_visual_language_is_preserved(self) -> None:
         for marker in ("--teal-dark:#00414D", "--teal:#0A595F",
                        "footer-logo-svg", "hero", "badge"):
             self.assertIn(marker, self.document)
@@ -396,7 +396,7 @@ class EscapingTests(unittest.TestCase):
             # Outside the inert JSON payload, the hostile title must appear
             # only in HTML-escaped form.
             without_payload = re.sub(
-                r'<script id="ostram-profile-data"[^>]*>.*?</script>',
+                r'<script id="ostram-setup-data"[^>]*>.*?</script>',
                 "",
                 document,
                 flags=re.S,
@@ -415,8 +415,8 @@ class ReportRouteTests(unittest.TestCase):
         _write_csv(execution / "OSTRAM_Combined_Inputs_Outputs.csv", _alpha_rows())
         paths = SimpleNamespace(workspace=workspace, execution_workspace=execution)
         manifest = SimpleNamespace(
-            profile_id="unescap",
-            path=workspace / "profile.yaml",
+            setup_id="unescap_training",
+            path=workspace / "setup.yaml",
             metadata=METADATA,
         )
         return workspace, execution, paths, manifest
@@ -426,7 +426,7 @@ class ReportRouteTests(unittest.TestCase):
             workspace, execution, paths, manifest = self._workspace(temp)
             with mock.patch("ostram.examples.resolve_paths", return_value=paths):
                 report = _report(manifest, "baseline")
-                self.assertEqual(report, workspace / "reports" / "unescap.html")
+                self.assertEqual(report, workspace / "reports" / "unescap_training.html")
                 self.assertTrue(
                     (workspace / "reports" / "snapshots" / "baseline.csv").exists()
                 )
@@ -439,7 +439,7 @@ class ReportRouteTests(unittest.TestCase):
                 )
                 _report(manifest, "exercise1")
                 rebuilt = _report(manifest, None)
-                self.assertEqual(rebuilt, workspace / "reports" / "unescap.html")
+                self.assertEqual(rebuilt, workspace / "reports" / "unescap_training.html")
                 payload = _payload(rebuilt.read_text(encoding="utf-8"))
                 self.assertEqual(
                     sorted(payload["snapshot_labels"]), ["baseline", "exercise1"]
@@ -458,7 +458,7 @@ class ReportRouteTests(unittest.TestCase):
                 compared = _report(manifest, None, "forward,reverse,bidirectional")
             self.assertEqual(
                 compared,
-                workspace / "reports" / "unescap-interconnector-comparison.html",
+                workspace / "reports" / "unescap_training-interconnector-comparison.html",
             )
             self.assertTrue(compared.resolve().is_relative_to(workspace))
             payload = _payload(compared.read_text(encoding="utf-8"))

@@ -6,7 +6,7 @@ ELC*01 dispatch node.
 WHAT IT DOES
 ------------
 In the 'Secondary Techs' sheet, sets the 'Projection.Mode' column to "EMPTY"
-for each ELC*01 dispatch node derived from the active profile's
+for each ELC*01 dispatch node derived from the active setup's
 ``countries`` list, across two parameters:
   Parameters (2):
     TotalAnnualMaxCapacity, TotalAnnualMaxCapacityInvestment

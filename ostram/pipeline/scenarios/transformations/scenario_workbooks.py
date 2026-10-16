@@ -609,7 +609,7 @@ def persist_run_restrictions(
     Translates each 'changes' entry into a Restrictions row. The `parameter`
     column is taken from the change entry's own `parameter` field when present
     (scripts that touch multiple parameters declare it per-row); the legacy
-    `parameter` kwarg is used as a fallback when the entry is silent (lid_rule
+    `parameter` kwarg is used as a fallback when the entry is silent (build_cap_rule
     pre-multi-param scripts).
 
     ALL pre-existing rows for this scenario are removed first (clear-and-write).
@@ -637,7 +637,7 @@ def persist_run_restrictions(
             for change in sheet_entry.get("changes", []):
                 # Scripts may declare the parameter as "parameter" or the
                 # shorter "param" key; either works. Fall back to the kwarg
-                # default for legacy logs (pre-multi-param lid_rule).
+                # default for legacy logs (pre-multi-param build_cap_rule).
                 row_param = (
                     change.get("parameter")
                     or change.get("param")

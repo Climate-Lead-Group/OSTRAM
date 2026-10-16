@@ -1596,7 +1596,7 @@ class B2MainExecutorCommandCharacterizationTests(unittest.TestCase):
     def test_absolute_outputs_config_still_routes_results_per_scenario(self) -> None:
         """An absolute ``outputs`` must not collapse onto one shared directory.
 
-        The execution profile resolves ``outputs`` to an absolute workspace
+        The active setup's execution config resolves ``outputs`` to an absolute workspace
         path.  Joining that onto the scenario folder discards the scenario, so
         every scenario wrote its otoole results to the same directory and the
         next scenario's run overwrote them.

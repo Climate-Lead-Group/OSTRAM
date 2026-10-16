@@ -244,8 +244,8 @@ def run(scenario, xlsx_path=None, *, interactive=True, auto_fix_all=False,
         report_only=False, base_year=None, fail_on_issues=False):
     """Inspect without mutation when requested; final gates fail on any issue."""
     # Calibration must never adjust limits merely to pass a check.
-    from ostram.profiles import profile_policy
-    if profile_policy("validation_no_mutation", False):
+    from ostram.setups import setup_policy
+    if setup_policy("validation_no_mutation", False):
         report_only = True
         auto_fix_all = False
     if xlsx_path is None:

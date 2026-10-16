@@ -13,6 +13,8 @@ from unittest import mock
 
 from openpyxl import Workbook, load_workbook
 
+from tests.regression.setup_file import SETUP_FILE
+
 
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
@@ -24,9 +26,9 @@ FIX_SCRIPT = TRANSFORMATIONS / "fix_trn_residuals.py"
 AUTHORITY_SCRIPT = TRANSFORMATIONS / "interconnector_authority.py"
 A3_SCRIPT = SCENARIOS / "transform.py"
 SCENARIO_EDITS_SCRIPT = SCENARIOS / "scenario_edits.py"
-TXCAP_CONFIG = REPO_ROOT / "config" / "profiles" / "full.yaml"
+TXCAP_CONFIG = SETUP_FILE
 LINKFREEZE_CONFIG = TEST_ROOT / "fixtures" / "link_freeze_min_boundary.yaml"
-SCENARIO_REGISTRY = REPO_ROOT / "config" / "profiles" / "full.yaml"
+SCENARIO_REGISTRY = SETUP_FILE
 
 YEARS = tuple(range(2023, 2051))
 STUDY_YEARS = tuple(range(2027, 2051))
@@ -620,7 +622,7 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
             control["A_Calibrated_BAU"][:3],
             (
                 True,
-                "set_retirement_schedule.py, add_max_cap_investment_lid_rule.py, "
+                "set_retirement_schedule.py, build_cap_rule.py, "
                 "set_min_capacity_floors.py, relax_interconnectors.py",
                 "BAU",
             ),
@@ -629,7 +631,7 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
             control["B_Optimised_VRE"][:3],
             (
                 True,
-                "set_retirement_schedule.py, add_max_cap_investment_lid_rule.py, "
+                "set_retirement_schedule.py, build_cap_rule.py, "
                 "relax_interconnectors.py, add_storage_min_investment.py",
                 None,
             ),

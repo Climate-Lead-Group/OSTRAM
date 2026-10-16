@@ -5,7 +5,7 @@ clear_stale_unbinding_caps.py
 Pre-lid data fix. Resets stale 'unbinding cap' values in
 TotalAnnualMaxCapacityInvestment cells of PWRSPV* and PWRWON* techs
 that are flat across the full 2024-2050 horizon, so the lid script
-(add_max_cap_investment_lid_rule.py) can write the year-schedule
+(build_cap_rule.py) can write the year-schedule
 into them.
 
 Background

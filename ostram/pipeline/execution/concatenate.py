@@ -105,10 +105,10 @@ def reconciled_cost_frames(outputs_folder, datafile, parameter_csv):
     activity = pd.read_csv(Path(outputs_folder)/'RateOfActivity.csv')
     correction, evidence = _variable_cost_corrections(
         datafile, data, defaults, activity, outputs_folder, parameter_csv)
-    # The accepted full model has one accounting region. Fail closed rather
+    # The South Asia model has one accounting region. Fail closed rather
     # than silently reallocating corrections when this contract changes.
     if set(activity.REGION) != {'GLOBAL'}:
-        raise ValueError('Full-model cost reconciliation requires GLOBAL region')
+        raise ValueError('South Asia cost reconciliation requires GLOBAL region')
     annual = collections.defaultdict(float)
     for (tech, year), value in correction.items():
         annual[int(year)] += value

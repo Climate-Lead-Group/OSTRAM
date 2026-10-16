@@ -32,7 +32,7 @@ FAIL = "\033[91mFAIL\033[0m"
 
 
 def _add_scenario_row(wb_path: Path, scenario: str, *, active=True,
-                      rules_script="add_max_cap_investment_lid_rule.py",
+                      rules_script="build_cap_rule.py",
                       inherit_from="") -> None:
     """Append a scenario row to the Control sheet."""
     wb = load_workbook(wb_path)

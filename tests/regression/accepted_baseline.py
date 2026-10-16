@@ -11,10 +11,12 @@ import yaml
 from pathlib import Path
 from typing import Any
 
+from setup_file import SETUP_FILE
+
 
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[1]
-INVENTORY_PATH = REPO_ROOT / "config" / "profiles" / "full.yaml"
+INVENTORY_PATH = SETUP_FILE
 
 EXPECTED_ROOT_SCENARIOS = (
     "BAU",

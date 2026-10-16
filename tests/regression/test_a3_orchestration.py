@@ -20,6 +20,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
+from tests.regression.setup_file import SETUP_FILE
+
 
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
@@ -27,7 +29,7 @@ SCENARIO_PACKAGE = REPO_ROOT / "ostram" / "pipeline" / "scenarios"
 A3_ENTRYPOINT = SCENARIO_PACKAGE / "transform.py"
 A3_ORCHESTRATOR = SCENARIO_PACKAGE / "orchestrator.py"
 SCENARIO_HELPER = SCENARIO_PACKAGE / "transformations" / "scenario_workbooks.py"
-SCENARIO_REGISTRY = REPO_ROOT / "config" / "profiles" / "full.yaml"
+SCENARIO_REGISTRY = SETUP_FILE
 
 ACTIVE_SCENARIOS = (
     "BAU",
@@ -1018,7 +1020,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                         label="apply base-year pin",
                     )
 
-    def test_static_pin_wrapper_honors_profile_policy_gate(self) -> None:
+    def test_static_pin_wrapper_honors_setup_policy_gate(self) -> None:
         module = _load_a3("pin_policy_gate")
         with tempfile.TemporaryDirectory() as temp:
             rules_dir = Path(temp)
@@ -1037,7 +1039,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
             )
             for policies, expected_calls in cases:
                 with self.subTest(policies=policies):
-                    environ = {"OSTRAM_PROFILE_POLICIES": policies} if policies else {}
+                    environ = {"OSTRAM_SETUP_POLICIES": policies} if policies else {}
                     with (
                         mock.patch.dict(os.environ, environ, clear=False),
                         mock.patch.object(module, "RULES_SCRIPTS_DIR", rules_dir),
@@ -1046,7 +1048,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                         mock.patch.object(module, "run_subproc") as run_subproc,
                     ):
                         if policies is None:
-                            os.environ.pop("OSTRAM_PROFILE_POLICIES", None)
+                            os.environ.pop("OSTRAM_SETUP_POLICIES", None)
                         module.stage_base_year_pin(stage5, "B_Optimised_VRE")
                     self.assertEqual(run_subproc.call_count, expected_calls)
 

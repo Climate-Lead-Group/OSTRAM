@@ -202,6 +202,7 @@ class ScenarioRegistryTests(unittest.TestCase):
                     "A_Calibrated_BAU_Clipped",
                     a1_outputs=outputs,
                     configs=configs,
+                    ceiling_path=profile_dir / "full.yaml",
                     authority_path=root / "unused.xlsx",
                 )
             apply_pin.assert_called_once()
@@ -219,6 +220,7 @@ class ScenarioRegistryTests(unittest.TestCase):
                     source="B_Optimised_VRE",
                     a1_outputs=outputs,
                     configs=configs,
+                    ceiling_path=profile_dir / "full.yaml",
                     authority_path=root / "unused.xlsx",
                 )
 

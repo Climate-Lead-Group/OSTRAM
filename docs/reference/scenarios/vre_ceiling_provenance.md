@@ -2,7 +2,7 @@
 
 ## 1. VRE resource-potential ceilings — reference list
 
-The applied values are the `vre_ceilings` section of `config/profiles/full.yaml`.
+The applied values are the `vre_ceilings` section of `config/setups/south_asia.yaml`.
 
 **India — solar (NISE):**
 - NISE/MNRE state-wise solar potential (2014): **748.98 GWp** (3% of wasteland + Census 2011). https://mnre.gov.in/en/solar-overview/ · PIB https://www.pib.gov.in/Pressreleaseshare.aspx?PRID=2003561
@@ -52,7 +52,7 @@ The applied values are the `vre_ceilings` section of `config/profiles/full.yaml`
 
 ### The applied values and the historical limits
 
-Each ceiling in `full.yaml` was chosen once as the lower of the atlas-based figure and the
+Each ceiling in `south_asia.yaml` was chosen once as the lower of the atlas-based figure and the
 historical `B_Optimised_VRE` limit. Four values therefore
 hold the historical limit in place of the atlas figure: BTN solar 1.8102 GW (atlas figure 5),
 INDEA wind 0 (atlas figure 8), INDNE wind 0 (atlas figure 0.5) and NPL wind 0 (atlas figure 2).

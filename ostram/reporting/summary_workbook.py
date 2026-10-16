@@ -26,7 +26,7 @@ never mutates anything.
 Usage::
 
     python -m ostram.reporting.summary_workbook <folder-or-zip-or-csv ...> \
-        [--out PATH] [--manifest examples/unescap/profile.yaml]
+        [--out PATH] [--manifest examples/unescap_training/setup.yaml]
 """
 
 from __future__ import annotations
@@ -996,7 +996,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument(
         "--manifest", type=Path, default=None,
-        help="optional profile manifest (profile.yaml); its metadata supplies "
+        help="optional setup manifest (setup.yaml); its metadata supplies "
              "storage prefixes and declared interconnectors",
     )
     args = parser.parse_args(argv)

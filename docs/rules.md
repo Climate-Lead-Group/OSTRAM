@@ -14,7 +14,7 @@ settings files live in `config/scenarios/<root>/`.
 | Rule module | Settings file | What it does |
 |---|---|---|
 | `set_retirement_schedule.py` | `retirement_schedule.yaml` | Draws down `ResidualCapacity` of thermal generation over time, by age-based lifetimes per fuel and by explicit schedules. The listed exempt patterns are untouched. |
-| `add_max_cap_investment_lid_rule.py` | `lid_rule.yaml` | Writes the build cap of every generation technology that has residual capacity or a minimum investment in at least one year, from residual capacity, demand growth and the five steps below. |
+| `build_cap_rule.py` | `build_cap_rule.yaml` | Writes the build cap of every generation technology that has residual capacity or a minimum investment in at least one year, from residual capacity, demand growth and the five steps below. |
 | `set_min_capacity_floors.py` | `bau_calibration.yaml` | Writes minimum capacity or activity floors and maximum ceilings listed in the file. On `main` the A file lists none. The C file lists one ceiling, the annual hydro investment of NPLXX. |
 | `set_vre_targets.py` | `set_vre_targets.yaml` | C only. Converts fixed renewable generation shares per country-region into activity floors sized from the solved A result, and writes a bounded capacity envelope for solar and onshore wind in place of their build caps. |
 | `relax_interconnectors.py` | `relax_interconnectors.yaml` | Opens the build cap of interconnectors above their residual capacity, by a factor, by a fixed headroom or by per-corridor schedules. It sets `TotalAnnualMaxCapacity` of an overridden corridor with new investment to 9999. |
@@ -102,7 +102,7 @@ Read the final datafile before relying on a value:
 ## Build caps
 
 The build-cap rule sets each cap in five steps, in a fixed order. The
-settings are in `config/scenarios/<root>/lid_rule.yaml`.
+settings are in `config/scenarios/<root>/build_cap_rule.yaml`.
 
 1. Formula. The required growth of a country-region in a year is the increase
    of its demand-scaled fleet from the year before. It is zero when the fleet

@@ -1,4 +1,4 @@
-"""Profile-aware routing for existing country preparation helpers."""
+"""Setup-aware routing for existing country preparation helpers."""
 
 from __future__ import annotations
 
