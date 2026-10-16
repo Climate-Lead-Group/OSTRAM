@@ -21,16 +21,19 @@ def _edits(edits):
 
 
 def generated_block():
-    setup = yaml.safe_load(resolve_paths(project_root=ROOT).scenario_registry.read_text(encoding="utf-8"))
+    paths = resolve_paths(project_root=ROOT)
+    setup = yaml.safe_load(paths.scenario_registry.read_text(encoding="utf-8"))
     execution = yaml.safe_load((ROOT / "config/execution/Config_MOMF_T1_AB.yaml").read_text(encoding="utf-8"))
-    registry, inputs = setup["scenario_registry"], setup["scenario_inputs"]
+    registry = setup["scenario_registry"]
     roots = {r["name"]: r for r in registry["root_scenarios"]}
     derived = {d["name"]: d for d in registry["derived_scenarios"]}
     out = [START]
     for name in list(registry["support_scenarios"]) + list(registry["decision_scenarios"]):
         root = name if name in roots else derived[name]["base_scenario"]
         seeds = [d["scenario"] for d in roots[root]["dependencies"] if d.get("type") == "result"]
-        block, policy = inputs.get(name, {}), []
+        scenario_file = paths.scenario_config_root / name / "scenario.yaml"
+        block = {} if name in roots else yaml.safe_load(scenario_file.read_text(encoding="utf-8"))
+        policy = []
         if root in setup["policies"].get("historical_trade_roots", []):
             policy.append("the historical trade constraints are active")
         if name in execution.get("cplex_numerical_emphasis_scenarios", []):

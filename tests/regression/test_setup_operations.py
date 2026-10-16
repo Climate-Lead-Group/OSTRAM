@@ -108,9 +108,10 @@ class SelectedRegistryTests(unittest.TestCase):
                 "derived_scenarios": [{
                     "name": "Derived", "base_scenario": "Decision",
                 }],
-                "scenario_inputs": {"Derived": {
-                    "scenario": "Derived", "base_scenario": "Decision", "edits": []
-                }},
+            }), encoding="utf-8")
+            (root / "Derived").mkdir()
+            (root / "Derived" / "scenario.yaml").write_text(json.dumps({
+                "scenario": "Derived", "base_scenario": "Decision", "edits": []
             }), encoding="utf-8")
             registry = load_registry(registry_path)
             self.assertEqual(registry.scenario_names, ("Seed", "Decision", "Derived"))

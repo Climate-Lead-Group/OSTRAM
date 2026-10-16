@@ -9,7 +9,7 @@ applying, in order:
     1. the SHARED VRE physical-potential ceiling layer
        (config/setups/south_asia.yaml::vre_ceilings)
     2. the run-specific edits in
-       config/setups/south_asia.yaml::scenario_inputs[scenario]
+       config/scenarios/<scenario>/scenario.yaml
 
 Design (patterned on the rules_scripts):
   * Non-destructive to the SOURCE: the declared root A-O is never mutated.
@@ -685,17 +685,17 @@ def build_scenario(
 
     a1_outputs = Path(a1_outputs)
     configs = Path(configs)
-    setup_path = Path(ceiling_path)
-    if not setup_path.is_file():
-        raise FileNotFoundError(f"scenario YAML not found: {setup_path}")
-    scenario_inputs = yaml.safe_load(setup_path.read_text(encoding="utf-8"))["scenario_inputs"][scenario]
+    scenario_path = configs / scenario / "scenario.yaml"
+    if not scenario_path.is_file():
+        raise FileNotFoundError(f"scenario YAML not found: {scenario_path}")
+    scenario_inputs = yaml.safe_load(scenario_path.read_text(encoding="utf-8"))
     declared_source = scenario_inputs.get("base_scenario")
     if not declared_source:
-        raise ValueError(f"{setup_path} does not declare base_scenario")
+        raise ValueError(f"{scenario_path} does not declare base_scenario")
     if source is not None and source != declared_source:
         raise ValueError(
             f"source override {source!r} conflicts with "
-            f"{setup_path.name}::base_scenario={declared_source!r}"
+            f"{scenario_path}::base_scenario={declared_source!r}"
         )
     source = declared_source
 
@@ -720,7 +720,7 @@ def build_scenario(
     shutil.copytree(src_dir, tgt_dir)
 
     log = {"scenario": scenario, "source": source, "timestamp": stamp,
-           "scenario_yaml": str(setup_path), "target": str(tgt_dir),
+           "scenario_yaml": str(scenario_path), "target": str(tgt_dir),
            "backup_dir": str(backup_dir) if backup_dir else None,
            "cells": [], "rows_created": [], "skipped": []}
 
@@ -846,8 +846,8 @@ def main():
     ap.add_argument(
         "--scenario",
         help=(
-            "derived scenario name; reads scenario_inputs.<scenario> from "
-            "config/setups/south_asia.yaml and writes "
+            "derived scenario name; reads "
+            "config/scenarios/<scenario>/scenario.yaml and writes "
             "workspace/preparation/A1_Outputs/A1_Outputs_<scenario>"
         ),
     )

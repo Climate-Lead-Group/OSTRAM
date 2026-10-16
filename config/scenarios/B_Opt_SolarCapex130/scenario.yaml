@@ -1,0 +1,14 @@
+scenario: B_Opt_SolarCapex130
+base_scenario: B_Optimised_VRE
+description: >-
+  The shared VRE ceilings applied to B_Optimised_VRE. The CapitalCost of every
+  solar technology (PWRSPV, all ten nodes) is multiplied by 1.30 in every year.
+apply_vre_ceiling_layer: true
+edits:
+- sheet: Secondary Techs
+  tech_prefix: PWRSPV
+  param: CapitalCost
+  op: multiply
+  factor: 1.3
+  note: PWRSPV CAPEX x1.30, all years; rides on top of per-node cost multipliers
+    already in the A-O.

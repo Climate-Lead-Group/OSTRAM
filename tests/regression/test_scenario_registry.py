@@ -183,16 +183,16 @@ class ScenarioRegistryTests(unittest.TestCase):
             workbook = Workbook()
             workbook.active.title = "fixture"
             workbook.save(source / scenario_edits.PARAM_FILE)
-            profile_dir = configs.parent / "profiles"
-            profile_dir.mkdir(parents=True)
-            (profile_dir / "full.yaml").write_text(
+            scenario_dir = configs / "A_Calibrated_BAU_Clipped"
+            scenario_dir.mkdir(parents=True)
+            (scenario_dir / "scenario.yaml").write_text(
                 json.dumps(
-                    {"scenario_inputs": {"A_Calibrated_BAU_Clipped": {
+                    {
                         "scenario": "A_Calibrated_BAU_Clipped",
                         "base_scenario": "A_Calibrated_BAU",
                         "apply_vre_ceiling_layer": False,
                         "edits": [],
-                    }}}
+                    }
                 ),
                 encoding="utf-8",
             )
@@ -202,7 +202,6 @@ class ScenarioRegistryTests(unittest.TestCase):
                     "A_Calibrated_BAU_Clipped",
                     a1_outputs=outputs,
                     configs=configs,
-                    ceiling_path=profile_dir / "full.yaml",
                     authority_path=root / "unused.xlsx",
                 )
             apply_pin.assert_called_once()
@@ -220,7 +219,6 @@ class ScenarioRegistryTests(unittest.TestCase):
                     source="B_Optimised_VRE",
                     a1_outputs=outputs,
                     configs=configs,
-                    ceiling_path=profile_dir / "full.yaml",
                     authority_path=root / "unused.xlsx",
                 )
 

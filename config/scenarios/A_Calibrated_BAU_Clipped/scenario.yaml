@@ -1,0 +1,6 @@
+scenario: A_Calibrated_BAU_Clipped
+base_scenario: A_Calibrated_BAU
+description: >-
+  The shared VRE ceilings applied to A_Calibrated_BAU. No other changes.
+apply_vre_ceiling_layer: true
+edits: []

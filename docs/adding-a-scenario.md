@@ -1,30 +1,30 @@
 # Adding a scenario
 
-A derived scenario needs one block and two registry entries in
-`config/setups/south_asia.yaml`, plus changes to the test contracts that list the
-scenarios. It needs no workbook row and no folder, unless it changes
-interconnector directions. The example adds `B_Opt_SolarCapex120`, which
+A derived scenario needs its own file, `config/scenarios/<name>/scenario.yaml`,
+and two registry entries in `config/setups/south_asia.yaml`, plus changes to the
+test contracts that list the scenarios. It needs no workbook row and no other
+file, unless it changes interconnector directions. The example adds `B_Opt_SolarCapex120`, which
 multiplies the solar capital cost by 1.2. Terms are in the
 [glossary](glossary.md).
 
-## The scenario edits block
+## The scenario file
 
-Add a block under `scenario_inputs`. The block name and the `scenario` field
-must be equal, and `base_scenario` must be a root.
+Create `config/scenarios/B_Opt_SolarCapex120/scenario.yaml`. The folder name and
+the `scenario` field must be equal, and `base_scenario` must be a root.
 
 ```yaml
-  B_Opt_SolarCapex120:
-    scenario: B_Opt_SolarCapex120
-    base_scenario: B_Optimised_VRE
-    description: 'The shared VRE ceilings applied to B_Optimised_VRE, with the solar
-      capital cost multiplied by 1.2 in every year.'
-    apply_vre_ceiling_layer: true
-    edits:
-    - sheet: Secondary Techs
-      tech_prefix: PWRSPV
-      param: CapitalCost
-      op: multiply
-      factor: 1.2
+scenario: B_Opt_SolarCapex120
+base_scenario: B_Optimised_VRE
+description: >-
+  The shared VRE ceilings applied to B_Optimised_VRE. The CapitalCost of every
+  solar technology is multiplied by 1.2 in every year.
+apply_vre_ceiling_layer: true
+edits:
+- sheet: Secondary Techs
+  tech_prefix: PWRSPV
+  param: CapitalCost
+  op: multiply
+  factor: 1.2
 ```
 
 The [scenario edits](scenario-edits.md) page lists the fields and the
@@ -67,7 +67,7 @@ Only direction changes need an overlay.
 | `tests/regression/test_accepted_baseline.py` | Raise the two expected counts of manifest rows by one. |
 | `tests/regression/test_scenario_registry.py` | Raise the expected count of decision scenarios by one. |
 | `tests/regression/test_b1_runner.py` | Raise the expected count of decision scenarios by one. |
-| `tests/regression/test_config_files.py` | Add the overlay file to `EXPECTED_CONFIG_FILES`, when the scenario has one. |
+| `tests/regression/test_config_files.py` | Add the scenario file, and the overlay file when the scenario has one, to `EXPECTED_CONFIG_FILES`. |
 
 Then regenerate the scenario catalogue and add one row for the scenario to
 its origin table:

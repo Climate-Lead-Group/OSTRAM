@@ -12,9 +12,12 @@ Its top-level sections, in file order, hold the following. Terms are in the
 | `authorities` | The sources of record: each named input, configuration file or folder and its location, as a `project:` path in the clone or a `package:` path in the installed package. | `ostram.paths`, for every stage. |
 | `scenario_registry` | `support_scenarios`, `root_scenarios` with their roles and result dependencies, `decision_scenarios` in canonical order, and `derived_scenarios` with their parents and, for the two direction variants, the overlay file and its study start year. | The registry loader, for the `run` command, A3, B1 and B2. |
 | `vre_ceilings` | The sheet, the parameter and the 20 values of the shared VRE ceilings. | The scenario edits, for every derived scenario. |
-| `scenario_inputs` | One block per derived scenario: `scenario`, `base_scenario`, `description` or `rule`, `apply_vre_ceiling_layer`, the `edits` list, and for `B_Opt_Clipped_GrossImportCap15` the `gross_import_cap` policy. | The scenario edits in A3. B2 reads the gross import policy. |
 
-The `description`, `rule` and `note` strings are documentation. Nothing
-reads them. The [scenario edits](scenario-edits.md) page describes the edit
-fields and operations, and the [scenario catalogue](reference/scenarios/scenario_catalogue.md)
-lists every scenario's block.
+Each derived scenario has its own file, `config/scenarios/<name>/scenario.yaml`.
+It holds `scenario`, `base_scenario`, `description`, `apply_vre_ceiling_layer`,
+the `edits` list and, for `B_Opt_Clipped_GrossImportCap15`, the
+`gross_import_cap` policy. The scenario edits in A3 read it, and B2 reads the
+gross import policy. The `description` and `note` strings are documentation.
+Nothing reads them. The [scenario edits](scenario-edits.md) page describes the
+edit fields and operations, and the [scenario catalogue](reference/scenarios/scenario_catalogue.md)
+lists every scenario.

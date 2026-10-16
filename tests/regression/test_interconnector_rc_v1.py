@@ -26,7 +26,7 @@ FIX_SCRIPT = TRANSFORMATIONS / "fix_trn_residuals.py"
 AUTHORITY_SCRIPT = TRANSFORMATIONS / "interconnector_authority.py"
 A3_SCRIPT = SCENARIOS / "transform.py"
 SCENARIO_EDITS_SCRIPT = SCENARIOS / "scenario_edits.py"
-TXCAP_CONFIG = SETUP_FILE
+TXCAP_CONFIG = REPO_ROOT / "config" / "scenarios" / "B_Opt_TxCap150" / "scenario.yaml"
 LINKFREEZE_CONFIG = TEST_ROOT / "fixtures" / "link_freeze_min_boundary.yaml"
 SCENARIO_REGISTRY = SETUP_FILE
 
@@ -699,7 +699,7 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
 
 class TxCap150FormulaTests(unittest.TestCase):
     def test_config_preserves_formula_domain_targets_and_non_cap_edits(self) -> None:
-        config = yaml.safe_load(TXCAP_CONFIG.read_text(encoding="utf-8"))["scenario_inputs"]["B_Opt_TxCap150"]
+        config = yaml.safe_load(TXCAP_CONFIG.read_text(encoding="utf-8"))
         self.assertEqual(config["scenario"], "B_Opt_TxCap150")
         self.assertEqual(config["base_scenario"], "B_Optimised_VRE")
         dynamic = [
@@ -736,7 +736,7 @@ class TxCap150FormulaTests(unittest.TestCase):
 
     def test_dynamic_formula_reads_effective_rc_for_both_targets(self) -> None:
         module = _load_module(SCENARIO_EDITS_SCRIPT, "txcap_formula")
-        config = yaml.safe_load(TXCAP_CONFIG.read_text(encoding="utf-8"))["scenario_inputs"]["B_Opt_TxCap150"]
+        config = yaml.safe_load(TXCAP_CONFIG.read_text(encoding="utf-8"))
         edits = [
             edit for edit in config["edits"]
             if edit.get("op") == "set_to_residual_factor_floor"
@@ -866,7 +866,7 @@ class TxCap150FormulaTests(unittest.TestCase):
         with (
             mock.patch.object(Path, "is_file", return_value=True),
             mock.patch.object(
-                Path, "read_text", return_value=json.dumps({"scenario_inputs": {"Bad": {"scenario": "Bad", "base_scenario": "B_Optimised_VRE", **inputs}}})
+                Path, "read_text", return_value=json.dumps({"scenario": "Bad", "base_scenario": "B_Optimised_VRE", **inputs})
             ),
             mock.patch.object(module.shutil, "copytree") as copytree,
             mock.patch.object(module.shutil, "rmtree") as rmtree,

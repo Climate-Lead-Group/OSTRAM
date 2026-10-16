@@ -26,8 +26,21 @@ EXPECTED_CONFIG_FILES = (
     "config/scenarios/A_Calibrated_BAU/build_cap_rule.yaml",
     "config/scenarios/A_Calibrated_BAU/relax_interconnectors.yaml",
     "config/scenarios/A_Calibrated_BAU/retirement_schedule.yaml",
+    "config/scenarios/A_Calibrated_BAU_Clipped/scenario.yaml",
+    "config/scenarios/A_Calibrated_BAU_Clipped_TxFreeze2026/scenario.yaml",
+    "config/scenarios/B_Opt_Clipped/scenario.yaml",
+    "config/scenarios/B_Opt_Clipped_GrossImportCap15/scenario.yaml",
+    "config/scenarios/B_Opt_DirBidir/scenario.yaml",
     "config/scenarios/B_Opt_DirBidir/set_interconnector_direction.yaml",
+    "config/scenarios/B_Opt_DirContractual/scenario.yaml",
     "config/scenarios/B_Opt_DirContractual/set_interconnector_direction.yaml",
+    "config/scenarios/B_Opt_IndiaCosts/scenario.yaml",
+    "config/scenarios/B_Opt_IndiaCostsFuel/scenario.yaml",
+    "config/scenarios/B_Opt_SolarCapex130/scenario.yaml",
+    "config/scenarios/B_Opt_SolarCapexHi/scenario.yaml",
+    "config/scenarios/B_Opt_SolarCapexSpike/scenario.yaml",
+    "config/scenarios/B_Opt_TradeCap15/scenario.yaml",
+    "config/scenarios/B_Opt_TxCap150/scenario.yaml",
     "config/scenarios/B_Optimised_VRE/build_cap_rule.yaml",
     "config/scenarios/B_Optimised_VRE/relax_interconnectors.yaml",
     "config/scenarios/B_Optimised_VRE/retirement_schedule.yaml",
@@ -38,6 +51,7 @@ EXPECTED_CONFIG_FILES = (
     "config/scenarios/C_Target_VRE/retirement_schedule.yaml",
     "config/scenarios/C_Target_VRE/set_vre_targets.yaml",
     "config/scenarios/C_Target_VRE/storage_floors.yaml",
+    "config/scenarios/C_Target_VRE_Clipped/scenario.yaml",
     "config/scenarios/rules/internal_tx_residuals.csv",
     "config/scenarios/rules/pwr_min_2023_2026_pin.csv",
     "config/scenarios/technology_types.csv",
@@ -81,10 +95,6 @@ class ConfigFileTests(unittest.TestCase):
         registered = {entry["name"] for entry in registry["root_scenarios"]}
         registered |= {entry["name"] for entry in registry["derived_scenarios"]}
         entries = [
-            ("south_asia.yaml scenario_inputs block {}", name)
-            for name in profile["scenario_inputs"]
-        ]
-        entries += [
             ("folder config/scenarios/{}", folder.name)
             for folder in sorted((CONFIG / "scenarios").iterdir())
             if folder.is_dir()

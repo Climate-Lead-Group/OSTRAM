@@ -1,6 +1,7 @@
 """Canonical OSTRAM root and derived-scenario contract.
 
-The production registry is maintained in ``config/setups/south_asia.yaml``.  This module
+The production registry is maintained in ``config/setups/south_asia.yaml``, and
+each derived scenario in ``config/scenarios/<name>/scenario.yaml``.  This module
 validates that contract, resolves an exact canonical selection, and exposes the
 root prerequisites needed by A1, A2, and A3.  It deliberately performs no
 workbook or solver effects.
@@ -307,7 +308,7 @@ def load_registry(
         derived=tuple(derived),
         decision_scenarios=decision_scenarios,
     )
-    _validate_registry(registry, validate_files=validate_files)
+    _validate_registry(registry, validate_files=validate_files, scenario_root=base)
     return registry
 
 
@@ -315,6 +316,7 @@ def _validate_registry(
     registry: ScenarioRegistry,
     *,
     validate_files: bool,
+    scenario_root: Path,
 ) -> None:
     root_names = list(registry.root_names)
     derived_names = [scenario.name for scenario in registry.derived]
@@ -358,11 +360,6 @@ def _validate_registry(
         )
 
     root_set = set(root_names)
-    scenario_inputs = {}
-    if validate_files and registry.derived:
-        scenario_inputs = yaml.safe_load(
-            registry.path.read_text(encoding="utf-8")
-        ).get("scenario_inputs", {})
     for scenario in registry.derived:
         if scenario.base_scenario not in root_set:
             raise ValueError(
@@ -370,19 +367,20 @@ def _validate_registry(
             )
         if not validate_files:
             continue
-        inputs = scenario_inputs.get(scenario.name)
-        if inputs is None:
+        scenario_file = scenario_root / scenario.name / "scenario.yaml"
+        if not scenario_file.is_file():
             raise ValueError(
-                f"{registry.path} has no scenario_inputs block for {scenario.name}"
+                f"{scenario.name} has no scenario file {scenario_file}"
             )
+        inputs = yaml.safe_load(scenario_file.read_text(encoding="utf-8"))
         if inputs.get("scenario") != scenario.name:
             raise ValueError(
-                f"scenario_inputs/{scenario.name} declares scenario="
+                f"{scenario_file} declares scenario="
                 f"{inputs.get('scenario')!r}; expected {scenario.name!r}"
             )
         if inputs.get("base_scenario") != scenario.base_scenario:
             raise ValueError(
-                f"scenario_inputs/{scenario.name} declares "
+                f"{scenario_file} declares "
                 f"base_scenario={inputs.get('base_scenario')!r}; expected "
                 f"{scenario.base_scenario!r}"
             )
