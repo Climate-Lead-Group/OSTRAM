@@ -50,7 +50,7 @@ solver datafile and runs no solver. `--scenarios` takes one comma-separated
 list. `C_Target_VRE` needs a solved `A_Calibrated_BAU` result, passed with
 `--a-result-seed`. The [pipeline](docs/pipeline.md) page walks through the
 stages, and the [scenario catalogue](docs/reference/scenarios/scenario_catalogue.md)
-lists the 18 registered scenarios: the support scenario `BAU` and the 17
+lists the delivered scenarios: the support scenario `BAU` and the 17
 decision scenarios.
 
 The global options `--project-root` and `--workspace` go before the command.

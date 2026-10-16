@@ -104,15 +104,16 @@ def scenario_contract(
     decision_names = tuple(decisions)
     _require(root_names == EXPECTED_ROOT_SCENARIOS, "root scenario contract drift")
     _require(
-        decision_names == EXPECTED_DECISION_SCENARIOS,
-        "accepted scenario order or membership drift",
+        decision_names[:len(EXPECTED_DECISION_SCENARIOS)] == EXPECTED_DECISION_SCENARIOS,
+        "the delivered scenarios must open the registered list, in order",
     )
     _require(len(set(decision_names)) == len(decision_names), "accepted scenarios must be unique")
     return root_names, decision_names
 
 
 def canonical_scenarios(inventory_path: Path = INVENTORY_PATH) -> tuple[str, ...]:
-    return scenario_contract(inventory_path)[1]
+    """Return the delivered decision scenarios, the ones the manifest covers."""
+    return scenario_contract(inventory_path)[1][:len(EXPECTED_DECISION_SCENARIOS)]
 
 
 def load_governed_manifest(

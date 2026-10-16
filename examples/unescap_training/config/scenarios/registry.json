@@ -42,6 +42,5 @@
     "A_Calibrated_BAU",
     "B_Optimised_VRE",
     "C_Target_VRE"
-  ],
-  "derived_scenarios": []
+  ]
 }

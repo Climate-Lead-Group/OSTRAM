@@ -94,7 +94,7 @@ class AcceptedBaselineTests(unittest.TestCase):
         result = baseline.validate_repository(REPO_ROOT)
         self.assertEqual(result["root_scenarios"], list(baseline.EXPECTED_ROOT_SCENARIOS))
         self.assertEqual(
-            result["scenario_order"],
+            result["scenario_order"][:len(baseline.EXPECTED_DECISION_SCENARIOS)],
             list(baseline.EXPECTED_DECISION_SCENARIOS),
         )
 

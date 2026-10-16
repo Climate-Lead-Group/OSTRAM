@@ -637,12 +637,9 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
             ),
         )
         registry = yaml.safe_load(SCENARIO_REGISTRY.read_text(encoding="utf-8"))["scenario_registry"]
-        scenarios = {
-            entry["name"]: entry for entry in registry["derived_scenarios"]
-        }
-        self.assertNotIn("B_Opt_LinkFreeze", scenarios)
+        self.assertNotIn("B_Opt_LinkFreeze", registry["decision_scenarios"])
         self.assertEqual(
-            scenarios["B_Opt_TxCap150"]["base_scenario"],
+            yaml.safe_load(TXCAP_CONFIG.read_text(encoding="utf-8"))["base_scenario"],
             "B_Optimised_VRE",
         )
         linkfreeze = yaml.safe_load(LINKFREEZE_CONFIG.read_text(encoding="utf-8"))["scenario_inputs"]["B_Opt_LinkFreeze"]

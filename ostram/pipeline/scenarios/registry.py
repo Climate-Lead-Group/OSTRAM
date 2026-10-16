@@ -25,26 +25,6 @@ ROOT_SCENARIOS = (
     "B_Optimised_VRE",
     "C_Target_VRE",
 )
-DECISION_SCENARIOS = (
-    "A_Calibrated_BAU",
-    "A_Calibrated_BAU_Clipped",
-    "B_Optimised_VRE",
-    "B_Opt_Clipped",
-    "B_Opt_DirBidir",
-    "B_Opt_DirContractual",
-    "B_Opt_IndiaCosts",
-    "B_Opt_IndiaCostsFuel",
-    "B_Opt_SolarCapex130",
-    "B_Opt_SolarCapexHi",
-    "B_Opt_SolarCapexSpike",
-    "B_Opt_TradeCap15",
-    "B_Opt_TxCap150",
-    "C_Target_VRE",
-    "C_Target_VRE_Clipped",
-    "A_Calibrated_BAU_Clipped_TxFreeze2026",
-    "B_Opt_Clipped_GrossImportCap15",
-)
-CANONICAL_SCENARIOS = SUPPORT_SCENARIOS + DECISION_SCENARIOS
 _SCENARIO_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
 _ENVIRONMENT_NAME = re.compile(r"^[A-Z][A-Z0-9_]*$")
 
@@ -280,27 +260,39 @@ def load_registry(
             )
         )
 
+    decision_scenarios = tuple(raw.get("decision_scenarios", ()))
+    root_names = {root.name for root in roots}
     derived: list[DerivedScenario] = []
-    for entry in raw.get("derived_scenarios", ()):
-        overlay = entry.get("direction_overlay")
-        direction_overlay = (
-            _registry_relative(
-                base, overlay, label=f"{entry.get('name')} direction overlay"
+    for name in decision_scenarios:
+        if name in root_names:
+            continue
+        folder = _registry_relative(base, name, label=f"{name} scenario folder")
+        scenario_file = folder / "scenario.yaml"
+        if not scenario_file.is_file():
+            raise ValueError(f"{name} has no scenario file {scenario_file}")
+        inputs = yaml.safe_load(scenario_file.read_text(encoding="utf-8"))
+        if inputs.get("scenario") != name:
+            raise ValueError(
+                f"{scenario_file} declares scenario="
+                f"{inputs.get('scenario')!r}; expected {name!r}"
             )
-            if overlay else None
-        )
+        overlay = inputs.get("direction_overlay")
         derived.append(
             DerivedScenario(
-                name=str(entry["name"]),
-                base_scenario=str(entry["base_scenario"]),
-                direction_overlay=direction_overlay,
-                direction_study_start_year=entry.get(
+                name=name,
+                base_scenario=str(inputs.get("base_scenario")),
+                direction_overlay=(
+                    _registry_relative(
+                        folder, overlay, label=f"{name} direction overlay"
+                    )
+                    if overlay else None
+                ),
+                direction_study_start_year=inputs.get(
                     "direction_study_start_year"
                 ),
             )
         )
 
-    decision_scenarios = tuple(raw.get("decision_scenarios", ()))
     registry = ScenarioRegistry(
         path=registry_path,
         support_scenarios=support_scenarios,
@@ -308,7 +300,7 @@ def load_registry(
         derived=tuple(derived),
         decision_scenarios=decision_scenarios,
     )
-    _validate_registry(registry, validate_files=validate_files, scenario_root=base)
+    _validate_registry(registry, validate_files=validate_files)
     return registry
 
 
@@ -316,7 +308,6 @@ def _validate_registry(
     registry: ScenarioRegistry,
     *,
     validate_files: bool,
-    scenario_root: Path,
 ) -> None:
     root_names = list(registry.root_names)
     derived_names = [scenario.name for scenario in registry.derived]
@@ -350,15 +341,6 @@ def _validate_registry(
     if overlap:
         raise ValueError(f"support and decision scenarios overlap: {sorted(overlap)}")
 
-    expected_derived = [
-        name for name in registry.decision_scenarios if name not in root_names
-    ]
-    if derived_names != expected_derived:
-        raise ValueError(
-            f"derived scenario order must be {expected_derived}, "
-            f"got {derived_names}"
-        )
-
     root_set = set(root_names)
     for scenario in registry.derived:
         if scenario.base_scenario not in root_set:
@@ -367,23 +349,6 @@ def _validate_registry(
             )
         if not validate_files:
             continue
-        scenario_file = scenario_root / scenario.name / "scenario.yaml"
-        if not scenario_file.is_file():
-            raise ValueError(
-                f"{scenario.name} has no scenario file {scenario_file}"
-            )
-        inputs = yaml.safe_load(scenario_file.read_text(encoding="utf-8"))
-        if inputs.get("scenario") != scenario.name:
-            raise ValueError(
-                f"{scenario_file} declares scenario="
-                f"{inputs.get('scenario')!r}; expected {scenario.name!r}"
-            )
-        if inputs.get("base_scenario") != scenario.base_scenario:
-            raise ValueError(
-                f"{scenario_file} declares "
-                f"base_scenario={inputs.get('base_scenario')!r}; expected "
-                f"{scenario.base_scenario!r}"
-            )
         if (
             scenario.direction_overlay is not None
             and not scenario.direction_overlay.is_file()

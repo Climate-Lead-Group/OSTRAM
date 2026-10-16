@@ -96,39 +96,6 @@ scenario_registry:
   - C_Target_VRE_Clipped
   - A_Calibrated_BAU_Clipped_TxFreeze2026
   - B_Opt_Clipped_GrossImportCap15
-  derived_scenarios:
-  - name: A_Calibrated_BAU_Clipped
-    base_scenario: A_Calibrated_BAU
-  - name: B_Opt_Clipped
-    base_scenario: B_Optimised_VRE
-  - name: B_Opt_DirBidir
-    base_scenario: B_Optimised_VRE
-    direction_overlay: B_Opt_DirBidir/set_interconnector_direction.yaml
-    direction_study_start_year: 2027
-  - name: B_Opt_DirContractual
-    base_scenario: B_Optimised_VRE
-    direction_overlay: B_Opt_DirContractual/set_interconnector_direction.yaml
-    direction_study_start_year: 2027
-  - name: B_Opt_IndiaCosts
-    base_scenario: B_Optimised_VRE
-  - name: B_Opt_IndiaCostsFuel
-    base_scenario: B_Optimised_VRE
-  - name: B_Opt_SolarCapex130
-    base_scenario: B_Optimised_VRE
-  - name: B_Opt_SolarCapexHi
-    base_scenario: B_Optimised_VRE
-  - name: B_Opt_SolarCapexSpike
-    base_scenario: B_Optimised_VRE
-  - name: B_Opt_TradeCap15
-    base_scenario: B_Optimised_VRE
-  - name: B_Opt_TxCap150
-    base_scenario: B_Optimised_VRE
-  - name: C_Target_VRE_Clipped
-    base_scenario: C_Target_VRE
-  - name: A_Calibrated_BAU_Clipped_TxFreeze2026
-    base_scenario: A_Calibrated_BAU
-  - name: B_Opt_Clipped_GrossImportCap15
-    base_scenario: B_Optimised_VRE
 vre_ceilings:
   description: Shared VRE ceilings. Each value sets TotalAnnualMaxCapacity (GW) of
     one solar or onshore wind technology to the same value in every year. The values

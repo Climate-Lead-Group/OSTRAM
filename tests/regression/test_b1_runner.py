@@ -20,7 +20,7 @@ import yaml
 from ostram.paths import ProjectPaths
 from ostram.pipeline.compilation.transforms import effects as b1_effects
 from ostram.pipeline.compilation.transforms import planning as b1_planning
-from ostram.pipeline.scenarios.registry import DECISION_SCENARIOS
+from ostram.pipeline.scenarios.registry import load_registry
 from tests.regression.setup_file import SETUP_FILE
 
 
@@ -714,7 +714,10 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
                         b1_effects.open_workbook(plan.extra_input(key))
 
         registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))["scenario_registry"]
-        self.assertEqual(len(registry["decision_scenarios"]), len(DECISION_SCENARIOS))
+        self.assertEqual(
+            tuple(registry["decision_scenarios"]),
+            load_registry(registry_path).decision_scenarios,
+        )
         governed_sources = []
         for path in registry_path.parent.rglob("*"):
             if path.is_file() and path.suffix.lower() in {

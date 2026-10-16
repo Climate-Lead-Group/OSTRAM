@@ -17,8 +17,6 @@ from ostram.pipeline.scenarios.materializer import (
     materialize_scenarios,
 )
 from ostram.pipeline.scenarios.registry import (
-    CANONICAL_SCENARIOS,
-    DECISION_SCENARIOS,
     ROOT_SCENARIOS,
     ensure_root_output_directories,
     load_registry,
@@ -28,6 +26,26 @@ from ostram.pipeline.scenarios import scenario_edits
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PREPARATION_WORKSPACE = REPO_ROOT / "workspace" / "preparation"
+# The delivered decision scenarios. Scenarios registered after them pass.
+DELIVERED_DECISION_SCENARIOS = (
+    "A_Calibrated_BAU",
+    "A_Calibrated_BAU_Clipped",
+    "B_Optimised_VRE",
+    "B_Opt_Clipped",
+    "B_Opt_DirBidir",
+    "B_Opt_DirContractual",
+    "B_Opt_IndiaCosts",
+    "B_Opt_IndiaCostsFuel",
+    "B_Opt_SolarCapex130",
+    "B_Opt_SolarCapexHi",
+    "B_Opt_SolarCapexSpike",
+    "B_Opt_TradeCap15",
+    "B_Opt_TxCap150",
+    "C_Target_VRE",
+    "C_Target_VRE_Clipped",
+    "A_Calibrated_BAU_Clipped_TxFreeze2026",
+    "B_Opt_Clipped_GrossImportCap15",
+)
 
 
 class ScenarioRegistryTests(unittest.TestCase):
@@ -69,10 +87,15 @@ class ScenarioRegistryTests(unittest.TestCase):
 
     def test_exact_roots_decision_order_bases_and_overlays(self) -> None:
         registry = load_registry()
+        delivered = len(DELIVERED_DECISION_SCENARIOS)
         self.assertEqual(registry.root_names, ROOT_SCENARIOS)
-        self.assertEqual(registry.decision_scenarios, DECISION_SCENARIOS)
-        self.assertEqual(registry.scenario_names, CANONICAL_SCENARIOS)
-        self.assertEqual(len(registry.decision_scenarios), len(DECISION_SCENARIOS))
+        self.assertEqual(
+            registry.decision_scenarios[:delivered], DELIVERED_DECISION_SCENARIOS
+        )
+        self.assertEqual(
+            registry.scenario_names[:delivered + 1],
+            ("BAU",) + DELIVERED_DECISION_SCENARIOS,
+        )
 
         derived = registry.derived_by_name
         self.assertEqual(
@@ -94,7 +117,8 @@ class ScenarioRegistryTests(unittest.TestCase):
         b_derived = [
             scenario
             for scenario in registry.derived
-            if scenario.name not in {
+            if scenario.name in DELIVERED_DECISION_SCENARIOS
+            and scenario.name not in {
                 "A_Calibrated_BAU_Clipped",
                 "A_Calibrated_BAU_Clipped_TxFreeze2026",
                 "C_Target_VRE_Clipped",
@@ -109,7 +133,8 @@ class ScenarioRegistryTests(unittest.TestCase):
         overlays = {
             scenario.name
             for scenario in registry.derived
-            if scenario.direction_overlay is not None
+            if scenario.name in DELIVERED_DECISION_SCENARIOS
+            and scenario.direction_overlay is not None
         }
         self.assertEqual(
             overlays,

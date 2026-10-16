@@ -61,7 +61,6 @@ def _write_registry(root: Path, root_scenarios: list[dict]) -> Path:
                     for entry in root_scenarios
                     if entry["role"] == "decision"
                 ],
-                "derived_scenarios": [],
             }
         ),
         encoding="utf-8",

@@ -3,5 +3,7 @@ base_scenario: B_Optimised_VRE
 description: >-
   The shared VRE ceilings applied to B_Optimised_VRE. Every interconnector may
   carry power in both directions; its direction file lists no one-way corridors.
+direction_overlay: set_interconnector_direction.yaml
+direction_study_start_year: 2027
 apply_vre_ceiling_layer: true
 edits: []

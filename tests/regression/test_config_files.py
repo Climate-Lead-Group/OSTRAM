@@ -1,4 +1,8 @@
-"""Every file under config/ is expected, and every scenario entry is registered."""
+"""Every file under config/ is expected, and every scenario entry is registered.
+
+The list holds the delivered files. The folder of a scenario registered later,
+config/scenarios/<name>/, may hold any files.
+"""
 
 from __future__ import annotations
 
@@ -58,13 +62,29 @@ EXPECTED_CONFIG_FILES = (
 )
 
 
+def _added_scenario_folders() -> set[str]:
+    """Return config/scenarios/<name>/ of every registered scenario with no listed file."""
+    registry = yaml.safe_load(SETUP_FILE.read_text(encoding="utf-8"))["scenario_registry"]
+    listed = {path.split("/")[2] for path in EXPECTED_CONFIG_FILES if path.startswith("config/scenarios/")}
+    return {
+        f"config/scenarios/{name}/"
+        for name in registry["decision_scenarios"]
+        if name not in listed
+    }
+
+
 class ConfigFileTests(unittest.TestCase):
     def test_every_file_under_config_is_on_the_list(self) -> None:
+        added = _added_scenario_folders()
         on_disk = sorted(
             path.relative_to(REPO_ROOT).as_posix()
             for path in CONFIG.rglob("*")
             if path.is_file()
         )
+        on_disk = [
+            path for path in on_disk
+            if not any(path.startswith(folder) for folder in added)
+        ]
         problems = [
             f"{path} is not on EXPECTED_CONFIG_FILES. Add it to the list in "
             "this test, or delete it."
@@ -93,7 +113,7 @@ class ConfigFileTests(unittest.TestCase):
         )
         registry = profile["scenario_registry"]
         registered = {entry["name"] for entry in registry["root_scenarios"]}
-        registered |= {entry["name"] for entry in registry["derived_scenarios"]}
+        registered |= set(registry["decision_scenarios"])
         entries = [
             ("folder config/scenarios/{}", folder.name)
             for folder in sorted((CONFIG / "scenarios").iterdir())

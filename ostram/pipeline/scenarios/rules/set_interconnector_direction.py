@@ -23,8 +23,8 @@ Runs AFTER relax_interconnectors.py in the rules chain.
 
 CONFIGURATION
 -------------
-A derived scenario names its file as ``direction_overlay`` in the scenario
-registry, for example
+A derived scenario names its file as ``direction_overlay`` in its own
+scenario file, relative to the scenario's folder, for example
 config/scenarios/B_Opt_DirContractual/set_interconnector_direction.yaml.
 Without --yaml, the script reads set_interconnector_direction.yaml next to
 this module.

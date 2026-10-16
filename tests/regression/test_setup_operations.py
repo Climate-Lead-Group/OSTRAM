@@ -105,9 +105,6 @@ class SelectedRegistryTests(unittest.TestCase):
                     {"name": "Decision", "role": "decision", "dependencies": []},
                 ],
                 "decision_scenarios": ["Decision", "Derived"],
-                "derived_scenarios": [{
-                    "name": "Derived", "base_scenario": "Decision",
-                }],
             }), encoding="utf-8")
             (root / "Derived").mkdir()
             (root / "Derived" / "scenario.yaml").write_text(json.dumps({
