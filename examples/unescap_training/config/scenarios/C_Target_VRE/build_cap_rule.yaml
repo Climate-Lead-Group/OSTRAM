@@ -1,4 +1,4 @@
-## lid_rule.yaml — C_Target_VRE scenario override
+## build_cap_rule.yaml — C_Target_VRE scenario override
 ## IDENTICAL to B_Optimised_VRE. No solar/wind exemption.
 ##
 ## Solar is handled entirely by set_vre_targets.yaml via the cap_envelope
@@ -7,9 +7,9 @@
 ## (<=19%) are within the 3.0x relaxation ceiling.
 
 rule_mode: proportional
-security_factor: 1.1
+margin_factor: 1.1
 
-relaxation_schedule:
+cap_multiplier_schedule:
   2023: 1.0
   2027: 1.0
   2030: 1.1
@@ -20,9 +20,9 @@ relaxation_schedule:
 
 ## 0.5 matches A_Calibrated_BAU. Keep >= A's floor so this scenario
 ## is a relaxation of the BAU.
-lid_floor_gw: 0.5
+technology_top_up_gw: 0.5
 
-family_relaxation_ceilings:
+family_limits:
   COA: 1.0    # coal locked to BAU proportions
   PET: 1.01   # petroleum locked
   OIL: 1.01   # oil locked
@@ -35,7 +35,7 @@ exempt_prefixes:
   - PWRSDS     # Short-duration storage
   - PWRLDS     # Long-duration storage
 
-adequacy_floor_schedule:
+adequacy_share_schedule:
   2040: 0.0
   2045: 0.08
   2050: 0.20

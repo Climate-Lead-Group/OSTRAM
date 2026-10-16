@@ -45,13 +45,13 @@ maps the terms to the names used in the code.
 
 | Docs term | Code name | Where |
 |---|---|---|
-| build cap | `lid` | `ostram/pipeline/scenarios/rules/add_max_cap_investment_lid_rule.py` |
-| cap multiplier | `relaxation_schedule` | `config/scenarios/<root>/lid_rule.yaml` |
-| family limit | `family_relaxation_ceilings` | `config/scenarios/<root>/lid_rule.yaml` |
-| technology top-up | `lid_floor_gw` | `config/scenarios/<root>/lid_rule.yaml` |
-| adequacy top-up | `adequacy_floor_schedule` | `config/scenarios/<root>/lid_rule.yaml` |
-| demand-scaled fleet | `scaled_pool` | `add_max_cap_investment_lid_rule.py` |
-| security factor | `security_factor` | `config/scenarios/<root>/lid_rule.yaml` |
+| build cap | `lid` | `ostram/pipeline/scenarios/rules/build_cap_rule.py` |
+| cap multiplier | `cap_multiplier_schedule` | `config/scenarios/<root>/build_cap_rule.yaml` |
+| family limit | `family_limits` | `config/scenarios/<root>/build_cap_rule.yaml` |
+| technology top-up | `technology_top_up_gw` | `config/scenarios/<root>/build_cap_rule.yaml` |
+| adequacy top-up | `adequacy_share_schedule` | `config/scenarios/<root>/build_cap_rule.yaml` |
+| demand-scaled fleet | `scaled_pool` | `build_cap_rule.py` |
+| security factor | `margin_factor` | `config/scenarios/<root>/build_cap_rule.yaml` |
 | scenario edits | `scenario_inputs`, `scenario_edits.py` | `config/setups/south_asia.yaml`, `ostram/pipeline/scenarios/` |
 | model-file adjustments | `model_file_adjustments/` | `ostram/pipeline/execution/` |
 | edit log | `apply_patches_CHANGES_<stamp>.json` | `workspace/preparation/A1_Outputs/A1_Outputs_<scenario>/` |

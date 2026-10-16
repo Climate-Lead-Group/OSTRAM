@@ -1,4 +1,4 @@
-## lid_rule.yaml: A_Calibrated_BAU scenario override
+## build_cap_rule.yaml: A_Calibrated_BAU scenario override
 ##
 ## Key differences from B_Optimised_VRE:
 ##   - NO relaxation (flat 1.0×, pure BAU proportions for all families)
@@ -9,21 +9,21 @@
 ##     block early-year builds.
 
 rule_mode: proportional
-security_factor: 1.1
+margin_factor: 1.1
 
 ## Flat: no relaxation for calibrated BAU
-relaxation_schedule:
+cap_multiplier_schedule:
   2023: 1.0
   2050: 1.0
 
 ## Minimum MaxCapInv (GW) per tech per year.
 ## 0.0 is the script default: no floor.
-lid_floor_gw: 0.0
+technology_top_up_gw: 0.0
 
 ## All generation families locked at BAU proportions.
 ## Combined with the floor-respects-ceiling fix, families with
 ## near-zero BAU share (BIO, WAS) get near-zero MaxCapInv.
-family_relaxation_ceilings:
+family_limits:
   COA: 1.0
   PET: 1.0
   OIL: 1.0

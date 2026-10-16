@@ -301,7 +301,7 @@ def _read_script_yaml_name(script_path: Path) -> str | None:
     """Inspect a rules_script source for its `YAML_FILE_NAME` constant.
 
     Returns the YAML filename if declared at module level, else None
-    (scripts like the lid_rule use in-script config and have no YAML).
+    (scripts like the build_cap_rule use in-script config and have no YAML).
     """
     import re
     try:

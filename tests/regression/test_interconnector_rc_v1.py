@@ -622,7 +622,7 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
             control["A_Calibrated_BAU"][:3],
             (
                 True,
-                "set_retirement_schedule.py, add_max_cap_investment_lid_rule.py, "
+                "set_retirement_schedule.py, build_cap_rule.py, "
                 "set_min_capacity_floors.py, relax_interconnectors.py",
                 "BAU",
             ),
@@ -631,7 +631,7 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
             control["B_Optimised_VRE"][:3],
             (
                 True,
-                "set_retirement_schedule.py, add_max_cap_investment_lid_rule.py, "
+                "set_retirement_schedule.py, build_cap_rule.py, "
                 "relax_interconnectors.py, add_storage_min_investment.py",
                 None,
             ),

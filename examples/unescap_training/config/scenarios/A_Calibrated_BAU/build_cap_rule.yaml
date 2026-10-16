@@ -1,4 +1,4 @@
-## lid_rule.yaml — A_Calibrated_BAU scenario override
+## build_cap_rule.yaml — A_Calibrated_BAU scenario override
 ##
 ## Key differences from B_Optimised_VRE:
 ##   - NO relaxation (flat 1.0× — pure BAU proportions for all families)
@@ -9,15 +9,15 @@
 ##     block early-year builds.
 
 rule_mode: proportional
-security_factor: 1.1
+margin_factor: 1.1
 
 ## Flat — no relaxation for calibrated BAU
-relaxation_schedule:
+cap_multiplier_schedule:
   2023: 1.0
   2050: 1.0
 
 ## Minimum MaxCapInv (GW) per tech per year.
-lid_floor_gw: 0.5
+technology_top_up_gw: 0.5
 
 ## Generation families locked at BAU proportions.
 ## Combined with the floor-respects-ceiling fix, families with
@@ -25,8 +25,8 @@ lid_floor_gw: 0.5
 ##
 ## NGS uses 1.01 (same convention as PET/OIL in B and C): with the flat
 ## 1.0 relaxation schedule this relaxes nothing, it only keeps gas
-## eligible for lid_floor_gw (0.5 GW/yr).
-family_relaxation_ceilings:
+## eligible for technology_top_up_gw (0.5 GW/yr).
+family_limits:
   COA: 1.0
   PET: 1.0
   OIL: 1.0
@@ -53,7 +53,7 @@ exempt_prefixes:
 ## to provide system headroom at end of horizon, where pool_delta collapses
 ## as retirements exhaust the BAU pool.
 ## Same anchors as B_Optimised_VRE and C_Target_VRE.
-adequacy_floor_schedule:
+adequacy_share_schedule:
   2040: 0.0        # no floor through 2040
   2045: 0.08       # 8% by 2045
   2050: 0.20       # 20% by 2050

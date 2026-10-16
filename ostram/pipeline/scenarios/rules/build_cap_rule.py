@@ -1,5 +1,5 @@
 """
-add_max_cap_investment_lid_rule.py
+build_cap_rule.py
 ===================================
 
 Independent rule: applies a per-year LID and the V1 UNTIE RULE to
@@ -122,18 +122,18 @@ OUTPUT
 USAGE
 -----
     # From the explicit scenario workspace:
-    python add_max_cap_investment_lid_rule.py
+    python build_cap_rule.py
 
     # Override defaults:
-    python add_max_cap_investment_lid_rule.py \\
+    python build_cap_rule.py \\
         --input-dir A1_Outputs/A1_Outputs_BAU \\
         --sheets "Secondary Techs"
 
     # Restore from the most recent _PRE_LID_* backup:
-    python add_max_cap_investment_lid_rule.py --restore
+    python build_cap_rule.py --restore
 
     # Restore from a specific backup folder:
-    python add_max_cap_investment_lid_rule.py \\
+    python build_cap_rule.py \\
         --restore-from A1_Outputs/A1_Outputs_BAU_PRE_LID_20260430_204529
 """
 
@@ -176,7 +176,17 @@ PARAM_FILE_NAME = "A-O_Parametrization.xlsx"
 # values override the module-level constants below for the lifetime of this
 # process. Absent YAML = current module defaults remain in effect (so BAU and
 # scenarios without a YAML override behave exactly as before).
-YAML_FILE_NAME = "lid_rule.yaml"
+YAML_FILE_NAME = "build_cap_rule.yaml"
+
+# Earlier names of the YAML keys. A file that still uses one is refused, and
+# the error names the key to use instead.
+RENAMED_KEYS = {
+    "relaxation_schedule": "cap_multiplier_schedule",
+    "family_relaxation_ceilings": "family_limits",
+    "lid_floor_gw": "technology_top_up_gw",
+    "adequacy_floor_schedule": "adequacy_share_schedule",
+    "security_factor": "margin_factor",
+}
 
 RES_PARAM = "ResidualCapacity"
 MIN_INV_PARAM = "TotalAnnualMinCapacityInvestment"
@@ -267,7 +277,7 @@ LID_SECURITY_FACTOR = 1.1
 # every year (BAU behaviour).
 #
 # For optimisation scenarios, set anchor points in the YAML, e.g.:
-#   relaxation_schedule:
+#   cap_multiplier_schedule:
 #     2023: 1.0
 #     2030: 1.5
 #     2040: 3.0
@@ -287,10 +297,10 @@ LID_RELAXATION_SCHEDULE: dict = {}
 # given family (chars 3..6 of the tech code, e.g. COA, SPV, WON, NGA).
 # A family ceiling of 1.0 means the tech family stays at BAU proportions
 # regardless of the relaxation schedule.  Families not listed get the full
-# relaxation_schedule value.  Default {} = no family caps (all families get
+# cap_multiplier_schedule value.  Default {} = no family caps (all families get
 # the same multiplier, backward-compatible).
 # Example YAML:
-#   family_relaxation_ceilings:
+#   family_limits:
 #     COA: 1.0    # coal locked to BAU proportions
 #     PET: 1.0    # petroleum locked
 #     NGA: 1.2    # gas gets slight room
@@ -299,7 +309,7 @@ LID_FAMILY_RELAXATION_CEILINGS: dict = {}
 # --- Exempt prefixes (used by both modes) ------------------------------------
 # When non-empty, any tech whose code starts with one of these prefixes gets
 # MaxCapInv = 9999, a finite cap, in place of the computed lid.
-# Kept for backward compatibility; relaxation_schedule is the preferred
+# Kept for backward compatibility; cap_multiplier_schedule is the preferred
 # mechanism.  Default: empty list (all techs get the lid).
 LID_EXEMPT_PREFIXES: list = []
 
@@ -354,11 +364,11 @@ LID_FLOOR_GW: float = 0.0
 # ceilings are preserved: the floor only sets a system-level minimum.
 #
 # Years between anchors are linearly interpolated (same logic as
-# relaxation_schedule).  Default {} = no adequacy floor (BAU behaviour).
+# cap_multiplier_schedule).  Default {} = no adequacy floor (BAU behaviour).
 #
 # Typical usage: zero through the planning horizon, ramping up in later years
 # to prevent backstop activation when pool_delta shrinks due to retirements:
-#   adequacy_floor_schedule:
+#   adequacy_share_schedule:
 #     2040: 0.0       # no floor through 2040: preserve BAU calibration
 #     2045: 0.08      # 8% by 2045
 #     2050: 0.20      # 20% by 2050
@@ -489,10 +499,13 @@ def load_config(yaml_path: Path) -> dict:
     cfg = _load_yaml(yaml_path)
     if cfg is None:
         cfg = {}
+    renamed = [f"{old} (now {new})" for old, new in RENAMED_KEYS.items() if old in cfg]
+    if renamed:
+        raise ValueError(f"{yaml_path}: renamed keys: {', '.join(renamed)}")
     check_keys(cfg, {
-        "rule_mode", "percentage_default", "percentage_by_year", "security_factor",
-        "ramp_from_demand", "exempt_prefixes", "exempt_max_cap", "relaxation_schedule",
-        "lid_floor_gw", "family_relaxation_ceilings", "adequacy_floor_schedule",
+        "rule_mode", "percentage_default", "percentage_by_year", "margin_factor",
+        "ramp_from_demand", "exempt_prefixes", "exempt_max_cap", "cap_multiplier_schedule",
+        "technology_top_up_gw", "family_limits", "adequacy_share_schedule",
     }, yaml_path)
 
     out: dict = {}
@@ -518,8 +531,8 @@ def load_config(yaml_path: Path) -> dict:
                 expanded[y] = value
         out["percentage_by_year"] = expanded
 
-    if "security_factor" in cfg:
-        out["security_factor"] = float(cfg["security_factor"])
+    if "margin_factor" in cfg:
+        out["margin_factor"] = float(cfg["margin_factor"])
 
     if "ramp_from_demand" in cfg:
         out["ramp_from_demand"] = bool(cfg["ramp_from_demand"])
@@ -544,30 +557,30 @@ def load_config(yaml_path: Path) -> dict:
                 )
         out["exempt_max_cap"] = parsed_emc
 
-    if "relaxation_schedule" in cfg:
-        raw = cfg["relaxation_schedule"] or {}
+    if "cap_multiplier_schedule" in cfg:
+        raw = cfg["cap_multiplier_schedule"] or {}
         expanded_rs: dict = {}
         for raw_key, raw_val in raw.items():
             for y in _parse_year_key(raw_key):
                 expanded_rs[y] = float(raw_val)
-        out["relaxation_schedule"] = expanded_rs
+        out["cap_multiplier_schedule"] = expanded_rs
 
-    if "lid_floor_gw" in cfg:
-        out["lid_floor_gw"] = float(cfg["lid_floor_gw"])
+    if "technology_top_up_gw" in cfg:
+        out["technology_top_up_gw"] = float(cfg["technology_top_up_gw"])
 
-    if "family_relaxation_ceilings" in cfg:
-        raw_frc = cfg["family_relaxation_ceilings"] or {}
-        out["family_relaxation_ceilings"] = {
+    if "family_limits" in cfg:
+        raw_frc = cfg["family_limits"] or {}
+        out["family_limits"] = {
             str(k).strip().upper(): float(v) for k, v in raw_frc.items()
         }
 
-    if "adequacy_floor_schedule" in cfg:
-        raw_afs = cfg["adequacy_floor_schedule"] or {}
+    if "adequacy_share_schedule" in cfg:
+        raw_afs = cfg["adequacy_share_schedule"] or {}
         expanded_afs: dict = {}
         for raw_key, raw_val in raw_afs.items():
             for y in _parse_year_key(raw_key):
                 expanded_afs[y] = float(raw_val)
-        out["adequacy_floor_schedule"] = expanded_afs
+        out["adequacy_share_schedule"] = expanded_afs
 
     return out
 
@@ -590,25 +603,25 @@ def apply_config(cfg: dict) -> None:
         LID_PERCENTAGE_DEFAULT = cfg["percentage_default"]
     if "percentage_by_year" in cfg:
         LID_PERCENTAGE_BY_YEAR = cfg["percentage_by_year"]
-    if "security_factor" in cfg:
-        LID_SECURITY_FACTOR = cfg["security_factor"]
+    if "margin_factor" in cfg:
+        LID_SECURITY_FACTOR = cfg["margin_factor"]
     if "ramp_from_demand" in cfg:
         LID_RAMP_FROM_DEMAND = cfg["ramp_from_demand"]
     if "exempt_prefixes" in cfg:
         LID_EXEMPT_PREFIXES = list(cfg["exempt_prefixes"])
     if "exempt_max_cap" in cfg:
         EXEMPT_MAX_CAP = dict(cfg["exempt_max_cap"])
-    if "relaxation_schedule" in cfg:
+    if "cap_multiplier_schedule" in cfg:
         LID_RELAXATION_SCHEDULE = {
-            int(k): float(v) for k, v in cfg["relaxation_schedule"].items()
+            int(k): float(v) for k, v in cfg["cap_multiplier_schedule"].items()
         }
-    if "lid_floor_gw" in cfg:
-        LID_FLOOR_GW = float(cfg["lid_floor_gw"])
-    if "family_relaxation_ceilings" in cfg:
-        LID_FAMILY_RELAXATION_CEILINGS = dict(cfg["family_relaxation_ceilings"])
-    if "adequacy_floor_schedule" in cfg:
+    if "technology_top_up_gw" in cfg:
+        LID_FLOOR_GW = float(cfg["technology_top_up_gw"])
+    if "family_limits" in cfg:
+        LID_FAMILY_RELAXATION_CEILINGS = dict(cfg["family_limits"])
+    if "adequacy_share_schedule" in cfg:
         LID_ADEQUACY_FLOOR_SCHEDULE = {
-            int(k): float(v) for k, v in cfg["adequacy_floor_schedule"].items()
+            int(k): float(v) for k, v in cfg["adequacy_share_schedule"].items()
         }
 
 
@@ -1145,7 +1158,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             {f"{cr}_{y}": v for (cr, y), v in pool_delta_map.items()}
             if pool_delta_map else {}
         ),
-        "security_factor": (
+        "margin_factor": (
             LID_SECURITY_FACTOR if LID_RULE_MODE == "proportional" else None
         ),
     }
@@ -1227,7 +1240,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             # --- Family-specific ceiling: cap the relaxation multiplier for
             # techs whose family (chars 3..6) has a ceiling defined.  E.g.
             # COA: 1.0 locks coal to BAU proportions; families not listed
-            # get the full relaxation_schedule value.
+            # get the full cap_multiplier_schedule value.
             family_ceiling = None
             family_capped = False
             if LID_FAMILY_RELAXATION_CEILINGS and not is_exempt:
@@ -1237,7 +1250,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                     relax_mult = family_ceiling
                     family_capped = True
             # A "locked" family has ceiling <= 1.0 (i.e. stays at or below BAU
-            # proportions).  Locked families do NOT receive the lid_floor_gw
+            # proportions).  Locked families do NOT receive the technology_top_up_gw
             # rescue: otherwise families with near-zero BAU share (e.g. BIO,
             # WAS) accumulate 0.5 GW/yr of spurious build from the floor alone.
             # NOTE: do NOT gate on family_capped here: when relax_mult ==
@@ -1293,7 +1306,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                 if is_exempt:
                     reason = "exempt_9999"
                 elif adequacy_scaled:
-                    reason = "lid_adequacy_scaled"
+                    reason = "adequacy_top_up"
                 elif floored:
                     reason = "lid_floor"
                 elif family_locked and LID_FLOOR_GW > 0 and lid < LID_FLOOR_GW:
@@ -1471,16 +1484,16 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
         str(k): v for k, v in LID_PERCENTAGE_BY_YEAR.items()
     }
     log["lid_ramp_from_demand"] = LID_RAMP_FROM_DEMAND
-    log["lid_rule_mode"] = LID_RULE_MODE
-    log["lid_security_factor"] = (
+    log["build_cap_rule_mode"] = LID_RULE_MODE
+    log["lid_margin_factor"] = (
         LID_SECURITY_FACTOR if LID_RULE_MODE == "proportional" else None
     )
     log["restrict_to_generation"] = RESTRICT_TO_GENERATION
     log["exempt_prefixes"] = list(LID_EXEMPT_PREFIXES)
-    log["relaxation_schedule"] = dict(LID_RELAXATION_SCHEDULE)
-    log["lid_floor_gw"] = LID_FLOOR_GW
-    log["family_relaxation_ceilings"] = dict(LID_FAMILY_RELAXATION_CEILINGS)
-    log["adequacy_floor_schedule"] = dict(LID_ADEQUACY_FLOOR_SCHEDULE)
+    log["cap_multiplier_schedule"] = dict(LID_RELAXATION_SCHEDULE)
+    log["technology_top_up_gw"] = LID_FLOOR_GW
+    log["family_limits"] = dict(LID_FAMILY_RELAXATION_CEILINGS)
+    log["adequacy_share_schedule"] = dict(LID_ADEQUACY_FLOOR_SCHEDULE)
     log["generation_techs_count"] = (
         len(generation_techs) if generation_techs is not None else None
     )
@@ -1587,7 +1600,7 @@ def print_summary(log: dict) -> None:
         n_family_capped = reason_counts.get("lid_family_capped", 0)
         n_floor = reason_counts.get("lid_floor", 0)
         n_floor_suppressed = reason_counts.get("lid_floor_suppressed", 0)
-        n_adequacy = reason_counts.get("lid_adequacy_scaled", 0)
+        n_adequacy = reason_counts.get("adequacy_top_up", 0)
         n_untie = reason_counts.get("untie_min_inv", 0)
         n_other = (sum(reason_counts.values())
                    - n_lid - n_relaxed - n_family_capped - n_floor

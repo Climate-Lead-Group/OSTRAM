@@ -1,5 +1,5 @@
-## lid_rule.yaml: C_Target_VRE scenario override
-## Differences from B_Optimised_VRE: this relaxation_schedule ends at 3.0 in
+## build_cap_rule.yaml: C_Target_VRE scenario override
+## Differences from B_Optimised_VRE: this cap_multiplier_schedule ends at 3.0 in
 ## 2050, where B's ends at 25.0, and this file lists no HYD or SHP family
 ## limits, where B lists 3.0 for each. No solar or wind exemption.
 ##
@@ -9,9 +9,9 @@
 ## country-region, and onshore wind in INDNO, INDSO, INDWE and LKAXX.
 
 rule_mode: proportional
-security_factor: 1.1
+margin_factor: 1.1
 
-relaxation_schedule:
+cap_multiplier_schedule:
   2023: 1.0
   2027: 1.0
   2030: 1.1
@@ -20,9 +20,9 @@ relaxation_schedule:
   2045: 2.0
   2050: 3.0
 
-lid_floor_gw: 0.1
+technology_top_up_gw: 0.1
 
-family_relaxation_ceilings:
+family_limits:
   COA: 1.0    # coal locked to BAU proportions
   PET: 1.01   # petroleum locked
   OIL: 1.01   # oil locked
@@ -35,7 +35,7 @@ exempt_prefixes:
   - PWRSDS     # Short-duration storage
   - PWRLDS     # Long-duration storage
 
-adequacy_floor_schedule:
+adequacy_share_schedule:
   2040: 0.0
   2045: 0.08
   2050: 0.20

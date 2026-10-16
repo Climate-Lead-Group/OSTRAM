@@ -13,7 +13,7 @@
 ## held flat through 2027, so the floor early on == CalBAU production and is
 ## therefore NON-BINDING (C reproduces the calibrated baseline at the start).
 ## It then ramps to the NDC milestone. This is the direct analog of B's
-## lid relaxation_schedule sitting at 1.0 through 2027 — differentiation from
+## lid cap_multiplier_schedule sitting at 1.0 through 2027 — differentiation from
 ## BAU starts smooth, not abrupt. (Source-share = current; floor only bites
 ## as the ramp rises above the calibrated trajectory.)
 ##

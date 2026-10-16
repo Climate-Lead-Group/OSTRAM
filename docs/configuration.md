@@ -595,7 +595,7 @@ The three decision roots `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE
 | YAML | Consumed by | Keys |
 |------|--------------|------|
 | `retirement_schedule.yaml` | `set_retirement_schedule.py` | `base_year`, `fuel_slice`, `age_based.<fuel>.lifetime_years`, `age_based.<fuel>.retirement_profile`, `scheduled` (entries with `cr`, `tech`, `schedule`, `note`), `exempt` |
-| `lid_rule.yaml` | `add_max_cap_investment_lid_rule.py` | `rule_mode` (`uniform`/`proportional`), `percentage_default`, `percentage_by_year`, `security_factor`, `ramp_from_demand`, `exempt_prefixes`, `exempt_max_cap`, `relaxation_schedule`, `lid_floor_gw`, `family_relaxation_ceilings`, `adequacy_floor_schedule` |
+| `build_cap_rule.yaml` | `build_cap_rule.py` | `rule_mode` (`uniform`/`proportional`), `percentage_default`, `percentage_by_year`, `margin_factor`, `ramp_from_demand`, `exempt_prefixes`, `exempt_max_cap`, `cap_multiplier_schedule`, `technology_top_up_gw`, `family_limits`, `adequacy_share_schedule` |
 | `relax_interconnectors.yaml` | `relax_interconnectors.py` | `mode` (`multiplicative`/`additive`/`cap_9999`, a cap of 9999; `unconstrained` is read as `cap_9999`), `headroom_factor`, `headroom_gw`, `overrides` (absolute per-corridor schedules), `capacity_ceiling` |
 | `bau_calibration.yaml` | `set_min_capacity_floors.py` | `warn_on_untie`, `floors`, `ceilings`, each entry with `cr` (country-region), `tech`, `param`, `schedule`, `note` |
 | `storage_floors.yaml` | `add_storage_min_investment.py` | `storage_floors` |
@@ -604,7 +604,7 @@ The three decision roots `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE
 
 Each rule stops when its file holds a key outside its row, and the message names the file and the unknown keys. The same check covers the `internal_transmission` block of `Config_country_codes.yaml` (`base_capital_cost`, `base_fixed_cost`, `re_capex_multiplier`, `operational_life`, `transmission_loss`) and the header of `config/scenarios/rules/pwr_min_2023_2026_pin.csv`.
 
-A rule reads only the exact file name it expects, for example `lid_rule.yaml`. The test `tests/regression/test_config_files.py` lists every file under `config/` and fails when another file appears there.
+A rule reads only the exact file name it expects, for example `build_cap_rule.yaml`. The test `tests/regression/test_config_files.py` lists every file under `config/` and fails when another file appears there.
 
 :::{warning}
 Rule scripts resolve `bau_results_path` **relative to their own staged working directory** inside the A3 run, not relative to the repo root. Don't "fix" it to an absolute path from a different machine -- verify it still resolves correctly if you move or rename `Executables/` output folders.

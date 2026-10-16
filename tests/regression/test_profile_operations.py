@@ -28,7 +28,7 @@ from ostram.reporting.training_dashboard import (
     render_html,
 )
 from ostram.terminal import RunReporter
-from ostram.pipeline.scenarios.rules import add_max_cap_investment_lid_rule as lid
+from ostram.pipeline.scenarios.rules import build_cap_rule as lid
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]

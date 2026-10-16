@@ -9,7 +9,7 @@ from pathlib import Path
 import yaml
 
 from ostram.pipeline.scenarios.rules import (
-    add_max_cap_investment_lid_rule as lid_rule,
+    build_cap_rule as lid_rule,
     add_storage_min_investment as storage,
     apply_base_year_pin as pin,
     apply_internal_transmission as internal_tx,
@@ -56,6 +56,15 @@ class RuleConfigKeyTests(unittest.TestCase):
             with self.subTest(loader=name):
                 path = self._write(f"{name}.yaml", {"unknown_key": 1})
                 self._assert_refused(loader, path, "unknown_key")
+
+    def test_build_cap_rule_refuses_old_keys_and_names_the_new_one(self) -> None:
+        for old, new in lid_rule.RENAMED_KEYS.items():
+            with self.subTest(key=old):
+                path = self._write("build_cap_rule.yaml", {old: 1})
+                with self.assertRaises(ValueError) as raised:
+                    lid_rule.load_config(path)
+                self.assertIn(old, str(raised.exception))
+                self.assertIn(new, str(raised.exception))
 
     def test_entry_with_unknown_key_is_refused(self) -> None:
         entry = {"cr": "BGDXX", "tech": "PWRSOL", "param": "min_cap",
