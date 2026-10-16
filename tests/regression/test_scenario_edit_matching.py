@@ -148,7 +148,7 @@ class UnmatchedScenarioEditTests(unittest.TestCase):
 
     def test_vre_ceiling_that_matches_nothing_stops(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
-            ceilings = Path(temp) / "full.yaml"
+            ceilings = Path(temp) / "south_asia.yaml"
             ceilings.write_text(
                 "vre_ceilings:\n"
                 "  sheet: Secondary Techs\n"

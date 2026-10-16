@@ -45,7 +45,7 @@ maps the terms to the names used in the code.
 
 | Docs term | Code name | Where |
 |---|---|---|
-| build cap | `lid` | `ostram/pipeline/scenarios/rules/build_cap_rule.py` |
+| build cap | `build_cap` | `ostram/pipeline/scenarios/rules/build_cap_rule.py` |
 | cap multiplier | `cap_multiplier_schedule` | `config/scenarios/<root>/build_cap_rule.yaml` |
 | family limit | `family_limits` | `config/scenarios/<root>/build_cap_rule.yaml` |
 | technology top-up | `technology_top_up_gw` | `config/scenarios/<root>/build_cap_rule.yaml` |

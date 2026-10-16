@@ -9,7 +9,7 @@ from pathlib import Path
 import yaml
 
 from ostram.pipeline.scenarios.rules import (
-    build_cap_rule as lid_rule,
+    build_cap_rule as build_cap,
     add_storage_min_investment as storage,
     apply_base_year_pin as pin,
     apply_internal_transmission as internal_tx,
@@ -22,7 +22,7 @@ from ostram.pipeline.scenarios.rules import (
 )
 
 YAML_LOADERS = {
-    "lid_rule": lid_rule.load_config,
+    "build_cap_rule": build_cap.load_config,
     "storage_floors": storage.load_config,
     "relax_interconnectors": relax.load_config,
     "set_interconnector_direction": direction.load_config,
@@ -58,11 +58,11 @@ class RuleConfigKeyTests(unittest.TestCase):
                 self._assert_refused(loader, path, "unknown_key")
 
     def test_build_cap_rule_refuses_old_keys_and_names_the_new_one(self) -> None:
-        for old, new in lid_rule.RENAMED_KEYS.items():
+        for old, new in build_cap.RENAMED_KEYS.items():
             with self.subTest(key=old):
                 path = self._write("build_cap_rule.yaml", {old: 1})
                 with self.assertRaises(ValueError) as raised:
-                    lid_rule.load_config(path)
+                    build_cap.load_config(path)
                 self.assertIn(old, str(raised.exception))
                 self.assertIn(new, str(raised.exception))
 

@@ -1,9 +1,9 @@
-name: UNESCAP macOS ARM64 acceptance
+name: Training macOS ARM64 acceptance
 
 on:
   pull_request:
     paths:
-      - ".github/workflows/unescap-macos-acceptance.yml"
+      - ".github/workflows/training-macos-acceptance.yml"
       - "config/setups/**"
       - "environment.yaml"
       - "examples/unescap_training/**"
@@ -18,19 +18,19 @@ permissions:
   contents: read
 
 concurrency:
-  group: unescap-macos-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: training-macos-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   acceptance:
-    name: macOS ARM64 UNESCAP acceptance
+    name: macOS ARM64 training acceptance
     runs-on: macos-latest
     timeout-minutes: 120
     defaults:
       run:
         shell: bash -el {0}
     env:
-      ACCEPTANCE_DIR: acceptance/unescap-macos-arm64
+      ACCEPTANCE_DIR: acceptance/training-macos-arm64
       OSTRAM_GATE_WORKSPACE: workspace/macos-acceptance
       PYTHONHASHSEED: "0"
       PYTHONDONTWRITEBYTECODE: "1"
@@ -82,7 +82,7 @@ jobs:
           tail -n 40 "$ACCEPTANCE_DIR/tests.log" > "$ACCEPTANCE_DIR/test-summary.txt"
           test "$return_code" -eq 0
 
-      - name: Prepare and inspect the UNESCAP setup
+      - name: Prepare and inspect the training setup
         id: prepare
         run: |
           set -o pipefail
@@ -249,7 +249,7 @@ jobs:
           assert first_line.lower().startswith("optimal"), first_line
           acceptance = Path(os.environ["ACCEPTANCE_DIR"])
           (acceptance / "solver-solution-status.txt").write_text(first_line + "\n", encoding="utf-8")
-          (acceptance / "unescap-report.html").write_bytes(report.read_bytes())
+          (acceptance / "training-report.html").write_bytes(report.read_bytes())
           (acceptance / "report-evidence.json").write_text(
               json.dumps({
                   "schema": data["schema"],
@@ -294,7 +294,7 @@ jobs:
                        if "RUN |" in line or "STAGE |" in line]
               (target / "terminal-run-summary.txt").write_text("\n".join(lines[-30:]) + "\n", encoding="utf-8")
           summary = {
-              "schema": "ostram-unescap-macos-acceptance-v1",
+              "schema": "ostram-training-macos-acceptance-v1",
               "runner": "macos-latest",
               "expected_architecture": "arm64",
               "outcomes": outcomes,
@@ -304,7 +304,7 @@ jobs:
               json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
           )
           markdown = [
-              "# UNESCAP macOS ARM64 acceptance",
+              "# Training macOS ARM64 acceptance",
               "",
               "Runner: `macos-latest` (required architecture: `arm64`)",
               "",
@@ -313,7 +313,7 @@ jobs:
               *[f"| {name} | {value} |" for name, value in sorted(outcomes.items())],
               "",
               "See `environment.txt`, `cbc-version.txt`, `compiled-domain.json`, "
-              "`solver-status.txt`, `solver-solution-status.txt`, and `unescap-report.html`.",
+              "`solver-status.txt`, `solver-solution-status.txt`, and `training-report.html`.",
           ]
           (target / "acceptance-summary.md").write_text("\n".join(markdown) + "\n", encoding="utf-8")
           PY
@@ -322,20 +322,20 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: unescap-macos-arm64-acceptance
+          name: training-macos-arm64-acceptance
           if-no-files-found: error
           retention-days: 14
           path: |
-            acceptance/unescap-macos-arm64/acceptance-summary.json
-            acceptance/unescap-macos-arm64/acceptance-summary.md
-            acceptance/unescap-macos-arm64/environment.txt
-            acceptance/unescap-macos-arm64/cbc-version.txt
-            acceptance/unescap-macos-arm64/test-summary.txt
-            acceptance/unescap-macos-arm64/setup-preparation.txt
-            acceptance/unescap-macos-arm64/inspect-resources.json
-            acceptance/unescap-macos-arm64/compiled-domain.json
-            acceptance/unescap-macos-arm64/solver-status.txt
-            acceptance/unescap-macos-arm64/solver-solution-status.txt
-            acceptance/unescap-macos-arm64/terminal-run-summary.txt
-            acceptance/unescap-macos-arm64/report-evidence.json
-            acceptance/unescap-macos-arm64/unescap-report.html
+            acceptance/training-macos-arm64/acceptance-summary.json
+            acceptance/training-macos-arm64/acceptance-summary.md
+            acceptance/training-macos-arm64/environment.txt
+            acceptance/training-macos-arm64/cbc-version.txt
+            acceptance/training-macos-arm64/test-summary.txt
+            acceptance/training-macos-arm64/setup-preparation.txt
+            acceptance/training-macos-arm64/inspect-resources.json
+            acceptance/training-macos-arm64/compiled-domain.json
+            acceptance/training-macos-arm64/solver-status.txt
+            acceptance/training-macos-arm64/solver-solution-status.txt
+            acceptance/training-macos-arm64/terminal-run-summary.txt
+            acceptance/training-macos-arm64/report-evidence.json
+            acceptance/training-macos-arm64/training-report.html

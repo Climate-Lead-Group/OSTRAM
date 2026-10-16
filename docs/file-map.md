@@ -16,7 +16,7 @@ reads it. Stage names and other terms are in the [glossary](glossary.md).
 | `dvc.yaml`, `.dvc/`, `.dvcignore` | DVC stage definitions and local DVC state. | `python -m ostram run` without `--skip-pull`. |
 | `.gitattributes` | Line-ending rules. It keeps `pwr_min_2023_2026_pin.csv` with CRLF endings. | Git. |
 | `.readthedocs.yaml` | Read the Docs build settings. | Read the Docs. |
-| `.github/workflows/unescap-macos-acceptance.yml` | The CI workflow that runs the training setup on macOS. | GitHub Actions. |
+| `.github/workflows/training-macos-acceptance.yml` | The CI workflow that runs the training setup on macOS. | GitHub Actions. |
 | `config/` | Configuration. See the table below. | A1 to B2. |
 | `docs/` | This documentation. | Sphinx. |
 | `examples/unescap_training/` | The two-region training setup with its own inputs, configuration and registry. | `python -m ostram --setup unescap_training`. |

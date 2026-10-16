@@ -28,7 +28,7 @@ from ostram.reporting.training_dashboard import (
     render_html,
 )
 from ostram.terminal import RunReporter
-from ostram.pipeline.scenarios.rules import build_cap_rule as lid
+from ostram.pipeline.scenarios.rules import build_cap_rule as build_cap
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -152,17 +152,17 @@ class SetupBuildCapPolicyTests(unittest.TestCase):
         workbook, worksheet = self._worksheet()
         environment = {} if policies is None else {"OSTRAM_SETUP_POLICIES": policies}
         patches = (
-            mock.patch.object(lid, "LID_RULE_MODE", "uniform"),
-            mock.patch.object(lid, "LID_PERCENTAGE_DEFAULT", 0.5),
-            mock.patch.object(lid, "LID_PERCENTAGE_BY_YEAR", {}),
-            mock.patch.object(lid, "LID_RELAXATION_SCHEDULE", {2025: 2.0}),
-            mock.patch.object(lid, "LID_FAMILY_RELAXATION_CEILINGS", {}),
-            mock.patch.object(lid, "LID_EXEMPT_PREFIXES", []),
-            mock.patch.object(lid, "LID_FLOOR_GW", 0.0),
+            mock.patch.object(build_cap, "BUILD_CAP_RULE_MODE", "uniform"),
+            mock.patch.object(build_cap, "BUILD_CAP_PERCENTAGE_DEFAULT", 0.5),
+            mock.patch.object(build_cap, "BUILD_CAP_PERCENTAGE_BY_YEAR", {}),
+            mock.patch.object(build_cap, "CAP_MULTIPLIER_SCHEDULE", {2025: 2.0}),
+            mock.patch.object(build_cap, "FAMILY_LIMITS", {}),
+            mock.patch.object(build_cap, "EXEMPT_PREFIXES", []),
+            mock.patch.object(build_cap, "TECHNOLOGY_TOP_UP_GW", 0.0),
         )
         with mock.patch.dict("os.environ", environment, clear=True):
             with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5], patches[6]:
-                result = lid.apply_lid_to_sheet(
+                result = build_cap.apply_build_cap_to_sheet(
                     worksheet,
                     {"PWRSPVMMRXX"},
                     {("MMRXX", 2025): 10.0},
@@ -179,7 +179,7 @@ class SetupBuildCapPolicyTests(unittest.TestCase):
         self.assertEqual(full_value, 0.166)
         self.assertEqual(full_log["changes"], [])
         self.assertEqual(enabled_value, 10.0)
-        self.assertEqual(enabled_log["changes"][0]["reason"], "lid_relaxed")
+        self.assertEqual(enabled_log["changes"][0]["reason"], "cap_multiplier")
 
 
 class SetupElcDispatchTests(unittest.TestCase):

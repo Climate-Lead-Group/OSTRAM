@@ -273,7 +273,7 @@ Base year and projection activity ratios:
 |-----------|------|-------------|
 | `ResidualCapacity` | GW | Existing installed capacity |
 | `TotalAnnualMaxCapacity` | GW | Maximum total capacity allowed |
-| `TotalAnnualMaxCapacityInvestment` | GW | Maximum new capacity per year (the "investment lid" A3 rule scripts write to) |
+| `TotalAnnualMaxCapacityInvestment` | GW | Maximum new capacity per year (the build cap the A3 rule scripts write) |
 | `TotalAnnualMinCapacity` | GW | Minimum required capacity |
 | `TotalAnnualMinCapacityInvestment` | GW | Minimum new capacity per year |
 

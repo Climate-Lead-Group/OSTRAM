@@ -36,7 +36,7 @@ family_limits:
   URN: 1.0
 
 ## Storage must stay exempt to avoid MinCapInv > MaxCapInv
-## infeasibility (storage techs are not GENERATION, so the lid
+## infeasibility (storage techs are not GENERATION, so the build cap
 ## script won't touch them otherwise and MaxCapInv stays at 0
 ## from upstream).
 exempt_prefixes:
@@ -45,7 +45,7 @@ exempt_prefixes:
 
 ## Adequacy floor — ensures the sum of gen MaxCapInv in each (cr, year)
 ## is at least this fraction of scaled_pool (ResidualCapacity × demand_mult).
-## When the proportional lid produces a total below this floor, ALL per-tech
+## When the proportional build cap produces a total below this floor, ALL per-tech
 ## lids in that cr are scaled up by the same factor, so BAU tech-share
 ## proportions and the family ceilings above are preserved.
 ##

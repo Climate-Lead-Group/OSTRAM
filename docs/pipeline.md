@@ -281,7 +281,7 @@ omits rows marked `EMPTY`, even when their year cells contain numbers.
 The policy runs **only on the final `south_asia` `BAU` output**, after disposable
 restriction-state export and delivery. Shared preparation, post-A2 snapshots,
 and inherited Restrictions retain their existing values. The
-UNESCAP setup does not enable this policy. Validation remains enabled and
+training setup does not enable this policy. Validation remains enabled and
 does not apply repairs. `support_bau_transmission.json` beside the final
 parametrization workbook records all 504 technology/year ceilings and sources.
 

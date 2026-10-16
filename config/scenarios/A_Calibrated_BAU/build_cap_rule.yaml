@@ -31,7 +31,7 @@ family_limits:
   WAS: 1.0
 
 ## Storage must stay exempt to avoid MinCapInv > MaxCapInv
-## infeasibility (storage techs are not GENERATION, so the lid
+## infeasibility (storage techs are not GENERATION, so the build cap
 ## script won't touch them otherwise and MaxCapInv stays at 0
 ## from upstream).
 exempt_prefixes:

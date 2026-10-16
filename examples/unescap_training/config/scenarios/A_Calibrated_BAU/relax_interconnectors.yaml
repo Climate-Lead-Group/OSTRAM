@@ -4,7 +4,7 @@
 ## represent the actual project pipeline from Interconnectors.xlsx),
 ## but with headroom_factor: 1.0 (no slack beyond the pipeline data).
 ##
-## UNESCAP training model: only the Bangladesh <-> India East corridor is modelled.
+## Training model: only the Bangladesh <-> India East corridor is modelled.
 
 mode: multiplicative
 headroom_factor: 1.0      # pipeline only, no extra slack

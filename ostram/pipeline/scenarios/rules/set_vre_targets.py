@@ -161,7 +161,7 @@ def load_config(yaml_path: Path) -> dict:
 
     # cap_envelope feature: when a target sets cap_envelope: true, write a
     # bounded MaxCap/MaxCapInv envelope derived from the floor's capacity
-    # trajectory (instead of exempting the tech in the lid). headroom is the
+    # trajectory (instead of exempting the tech in the build cap). headroom is the
     # fractional slack above the floor-implied capacity; min_inv_gw is the
     # minimum per-year build allowance so small/early adjustments stay feasible.
     cap_envelope_headroom = float(cfg.get("cap_envelope_headroom", 0.20))

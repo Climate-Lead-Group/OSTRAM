@@ -2,7 +2,7 @@
 
 Aggregates combined input/output result snapshots into one self-contained,
 offline, interactive HTML report. This module ports the interactive renderer
-and the proven metric semantics of the original UNESCAP training dashboard
+and the proven metric semantics of the original training dashboard
 into the setup/capture architecture:
 
 * scenarios come from the snapshot data (or setup metadata hints);
@@ -321,20 +321,20 @@ def cost_kpis(scenario_frame: pd.DataFrame) -> dict[str, float]:
     return out
 
 
-def lid_diagnostic(
+def build_cap_diagnostic(
     scenario_frame: pd.DataFrame,
     region: str | None,
     storage: tuple[str, ...],
     region_labels: Mapping[str, str],
 ) -> dict[str, dict[str, object]]:
-    """Per-technology NewCapacity vs TotalAnnualMaxCapacityInvestment (lid)."""
+    """Per-technology NewCapacity vs TotalAnnualMaxCapacityInvestment (the build cap)."""
     newcap_column = "NewCapacity"
-    lid_column = "TotalAnnualMaxCapacityInvestment"
+    build_cap_column = "TotalAnnualMaxCapacityInvestment"
     if {"YEAR", "TECHNOLOGY"} - set(scenario_frame.columns):
         return {}
     if (
         newcap_column not in scenario_frame.columns
-        and lid_column not in scenario_frame.columns
+        and build_cap_column not in scenario_frame.columns
     ):
         return {}
     sub = scenario_frame[
@@ -342,22 +342,22 @@ def lid_diagnostic(
     ]
     sub = sub[sub["TECHNOLOGY"].map(lambda tech: is_generation_tech(tech, storage)).astype(bool)]
     sub = _region_rows(sub, region)
-    sub = _dedup(sub, ("YEAR", "TECHNOLOGY", newcap_column, lid_column))
+    sub = _dedup(sub, ("YEAR", "TECHNOLOGY", newcap_column, build_cap_column))
     out: dict[str, dict[str, object]] = {}
     for tech, group in sub.groupby("TECHNOLOGY"):
         family = tech_family(tech)
         if not family:
             continue
         newcap: dict[int, float] = {}
-        lid: dict[int, float] = {}
+        build_cap: dict[int, float] = {}
         for _, row in group.iterrows():
             year = int(row["YEAR"])
             if newcap_column in group.columns and pd.notna(row.get(newcap_column)):
                 newcap[year] = round(float(row[newcap_column]), 4)
-            if lid_column in group.columns and pd.notna(row.get(lid_column)):
-                lid[year] = round(float(row[lid_column]), 4)
+            if build_cap_column in group.columns and pd.notna(row.get(build_cap_column)):
+                build_cap[year] = round(float(row[build_cap_column]), 4)
         if all(value == 0 for value in newcap.values()) and all(
-            value == 0 for value in lid.values()
+            value == 0 for value in build_cap.values()
         ):
             continue
         regions = technology_regions(tech)
@@ -368,7 +368,7 @@ def lid_diagnostic(
             "label": label,
             "family": family,
             "newcap": newcap,
-            "lid": lid,
+            "build_cap": build_cap,
         }
     return out
 
@@ -489,7 +489,7 @@ def aggregate_metrics(
         "interconnectors": _interconnector_block(
             selected, region, [str(item["technology"]) for item in declared]
         ),
-        "lid_diagnostic": lid_diagnostic(selected, region, storage, region_labels),
+        "build_cap_diagnostic": build_cap_diagnostic(selected, region, storage, region_labels),
     }
 
 
@@ -933,57 +933,57 @@ _DASH_JS = r"""
       lineChart(scaleShare(mB && mB.vre_share), scaleShare(mA && mA.vre_share),
         100, "%") + "</div>";
 
-    // Lid diagnostic
-    const lidA = mA && mA.lid_diagnostic, lidB = mB && mB.lid_diagnostic;
-    if(lidA || lidB){
+    // Build-cap diagnostic
+    const capA = mA && mA.build_cap_diagnostic, capB = mB && mB.build_cap_diagnostic;
+    if(capA || capB){
       const allTechs = {};
-      [lidB, lidA].forEach(d => {
+      [capB, capA].forEach(d => {
         if(d) Object.keys(d).forEach(t => { allTechs[t] = d[t].label; });
       });
       const techList = Object.entries(allTechs)
         .sort((a, b) => a[1].localeCompare(b[1]));
       if(techList.length){
-        let h = '<div class="panel"><h2>Lid diagnostic: NewCapacity vs ' +
+        let h = '<div class="panel"><h2>Build-cap diagnostic: NewCapacity vs ' +
           "MaxCapacityInvestment (GW)</h2>" +
           '<p class="note">Pick a technology. When the solid line touches the ' +
-          "dashed line the technology is <strong>lid-bound</strong> (the lid " +
+          "dashed line the technology is <strong>cap-bound</strong> (the build cap " +
           "decides). A gap means <strong>economics-bound</strong> (the " +
-          "optimiser chose less than the lid allows).</p>" +
-          '<div style="margin:12px 0"><label class="lid-label">Technology' +
-          '<select id="sel-lid-tech">';
+          "optimiser chose less than the build cap allows).</p>" +
+          '<div style="margin:12px 0"><label class="cap-label">Technology' +
+          '<select id="sel-cap-tech">';
         techList.forEach(([code, label]) => {
           h += '<option value="' + esc(code) + '">' + esc(label) + "</option>";
         });
         h += "</select></label></div>" +
           '<div class="pair"><div class="col"><h3>Before</h3>' +
-          '<div id="lid-before"></div></div>' +
-          '<div class="col"><h3>After</h3><div id="lid-after"></div></div>' +
+          '<div id="cap-before"></div></div>' +
+          '<div class="col"><h3>After</h3><div id="cap-after"></div></div>' +
           "</div></div>";
         app.innerHTML += h;
 
-        const renderLid = function(){
-          const t = $("sel-lid-tech").value;
-          const dB = lidB && lidB[t], dA = lidA && lidA[t];
+        const renderCap = function(){
+          const t = $("sel-cap-tech").value;
+          const dB = capB && capB[t], dA = capA && capA[t];
           function draw(d){
             if(!d) return '<div class="empty">No data for this technology</div>';
-            const nc = d.newcap || {}, lid = d.lid || {};
-            const vm = Math.max(maxOfSeries(nc), maxOfSeries(lid)) || 1;
-            if(!years(nc).length && !years(lid).length){
+            const nc = d.newcap || {}, cap = d.build_cap || {};
+            const vm = Math.max(maxOfSeries(nc), maxOfSeries(cap)) || 1;
+            if(!years(nc).length && !years(cap).length){
               return '<div class="empty">No data</div>';
             }
             return '<svg viewBox="0 0 ' + W + " " + H + '">' + axis(vm, "GW") +
-              linePath(lid, vm, "#F59E0B", true) +
+              linePath(cap, vm, "#F59E0B", true) +
               linePath(nc, vm, "#0A595F", false) + "</svg>" +
               '<div class="legend"><span><i style="background:#0A595F"></i>' +
               "NewCapacity</span>" +
               '<span><i style="background:#F59E0B"></i>' +
-              "MaxCapInvestment (lid)</span></div>";
+              "MaxCapInvestment (build cap)</span></div>";
           }
-          $("lid-before").innerHTML = draw(dB);
-          $("lid-after").innerHTML = draw(dA);
+          $("cap-before").innerHTML = draw(dB);
+          $("cap-after").innerHTML = draw(dA);
         };
-        $("sel-lid-tech").addEventListener("change", renderLid);
-        renderLid();
+        $("sel-cap-tech").addEventListener("change", renderCap);
+        renderCap();
       }
     }
   }
@@ -1049,8 +1049,8 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
   .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
   svg{width:100%;height:auto;display:block}
   .note{font-size:.8rem;color:var(--slate-600);margin-top:8px}
-  .lid-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--teal)}
-  .lid-label select{margin-left:8px;padding:7px 10px;border:1px solid var(--sage-light);border-radius:8px;font-size:.9rem;background:var(--ice);color:var(--slate-900);min-width:260px}
+  .cap-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--teal)}
+  .cap-label select{margin-left:8px;padding:7px 10px;border:1px solid var(--sage-light);border-radius:8px;font-size:.9rem;background:var(--ice);color:var(--slate-900);min-width:260px}
   @media(max-width:760px){.pair{grid-template-columns:1fr}}
 
   /* Footer */

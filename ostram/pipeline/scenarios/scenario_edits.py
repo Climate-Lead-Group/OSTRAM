@@ -525,7 +525,7 @@ def _neq(a, b):
 def clamp_row_to(ws, col_map, year_cols, tech, param, cap, log):
     """Clamp an existing (tech,param) row down so no year exceeds `cap`.
     Preserves coherence when a ceiling lowers TotalAnnualMaxCapacity below an
-    existing investment lid/floor (e.g. MaxCapInv > MaxCap after a clip)."""
+    existing investment build cap/floor (e.g. MaxCapInv > MaxCap after a clip)."""
     r = find_row(ws, col_map, tech, param)
     if r is None:
         return
@@ -566,7 +566,7 @@ def scale_activity_to_ceiling(ws, col_map, year_cols, tech, ceil, maxcap_orig, l
 
     ONLY the lower limit is touched -- never the pinned upper limit:
       * B_Opt-derived scenarios have lower limit == 0 on every VRE tech (they
-        use investment lids, not activity floors), so scaling is a pure no-op
+        use investment build caps, not activity floors), so scaling is a pure no-op
         for them (0 -> 0), and their upper limit is -1, which skips the
         constraint and must NOT be scaled into a bogus negative bound.
       * Leaving C_Target's upper pin unscaled just makes it non-binding above
@@ -625,7 +625,7 @@ def apply_ceiling_layer(wb, log, ceiling_path=CEIL_BASE):
         maxcap_orig = read_row_values(ws, col_map, year_cols, tech, param) or {}
         edit = {"param": param, "tech": tech, "op": "set_flat", "value": ceil}
         apply_edit(ws, col_map, year_cols, edit, log)
-        # coherence: no annual investment lid/floor may exceed the total ceiling
+        # coherence: no annual investment build cap/floor may exceed the total ceiling
         clamp_row_to(ws, col_map, year_cols, tech, "TotalAnnualMaxCapacityInvestment", ceil, log)
         clamp_row_to(ws, col_map, year_cols, tech, "TotalAnnualMinCapacityInvestment", ceil, log)
         # coherence: an activity floor sized above the ceiling is unproducible

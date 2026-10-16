@@ -38,10 +38,10 @@ from tests.regression.test_run_orchestration import (
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-UNESCAP_REGISTRY = (
+TRAINING_REGISTRY = (
     REPO_ROOT / "examples" / "unescap_training" / "config" / "scenarios" / "registry.json"
 )
-UNESCAP_WORKBOOK = (
+TRAINING_WORKBOOK = (
     REPO_ROOT / "examples" / "unescap_training" / "inputs" / "scenarios"
     / "OSTRAM_Scenario_Inputs.xlsx"
 )
@@ -81,7 +81,7 @@ def _root(name: str, role: str, restrictions: list[str] | None = None) -> dict:
 
 class RestrictionDependencyContractTests(unittest.TestCase):
     def test_unescap_training_registry_declares_the_bau_prerequisite_for_a(self) -> None:
-        registry = load_registry(UNESCAP_REGISTRY)
+        registry = load_registry(TRAINING_REGISTRY)
         roots = registry.roots_by_name
         self.assertEqual(
             roots["A_Calibrated_BAU"].restriction_dependencies,
@@ -105,7 +105,7 @@ class RestrictionDependencyContractTests(unittest.TestCase):
         )
 
     def test_selection_expansion_matches_the_declared_contract(self) -> None:
-        registry = load_registry(UNESCAP_REGISTRY)
+        registry = load_registry(TRAINING_REGISTRY)
         cases = (
             ("A_Calibrated_BAU", ("A_Calibrated_BAU",),
              ("BAU", "A_Calibrated_BAU")),
@@ -232,15 +232,15 @@ class RestrictionDependencyContractTests(unittest.TestCase):
                 ValueError,
                 r"B_Optimised_VRE are not declared by Control",
             ):
-                validate_control_roots(disagreeing, UNESCAP_WORKBOOK)
+                validate_control_roots(disagreeing, TRAINING_WORKBOOK)
 
-        # The committed UNESCAP declaration agrees with its Control sheet.
-        validate_control_roots(load_registry(UNESCAP_REGISTRY), UNESCAP_WORKBOOK)
+        # The committed training declaration agrees with its Control sheet.
+        validate_control_roots(load_registry(TRAINING_REGISTRY), TRAINING_WORKBOOK)
 
 
 class RestrictionPrerequisiteMaterializationTests(unittest.TestCase):
     def test_a_selection_materializes_bau_first_and_keeps_selection(self) -> None:
-        registry = load_registry(UNESCAP_REGISTRY)
+        registry = load_registry(TRAINING_REGISTRY)
         with tempfile.TemporaryDirectory() as temp:
             outputs = Path(temp) / "A1_Outputs"
             for root in ("BAU", "A_Calibrated_BAU"):
@@ -259,7 +259,7 @@ class RestrictionPrerequisiteMaterializationTests(unittest.TestCase):
                     REPO_ROOT / "ostram" / "pipeline" / "scenarios"
                     / "transformations"
                 ),
-                soasia=UNESCAP_WORKBOOK,
+                soasia=TRAINING_WORKBOOK,
             )
             materialized: list[str] = []
 
@@ -286,7 +286,7 @@ class RestrictionPrerequisiteMaterializationTests(unittest.TestCase):
         self.assertFalse(record["solver_invoked"])
 
     def test_missing_prerequisite_snapshot_fails_closed(self) -> None:
-        registry = load_registry(UNESCAP_REGISTRY)
+        registry = load_registry(TRAINING_REGISTRY)
         with tempfile.TemporaryDirectory() as temp:
             outputs = Path(temp) / "A1_Outputs"
             snapshot = outputs / "_post_a2_snapshot_A_Calibrated_BAU"
@@ -301,7 +301,7 @@ class RestrictionPrerequisiteMaterializationTests(unittest.TestCase):
                     REPO_ROOT / "ostram" / "pipeline" / "scenarios"
                     / "transformations"
                 ),
-                soasia=UNESCAP_WORKBOOK,
+                soasia=TRAINING_WORKBOOK,
             )
             with self.assertRaisesRegex(FileNotFoundError, r"\['BAU'\]"):
                 materialize_scenarios(
@@ -317,7 +317,7 @@ class RestrictionPrerequisiteMaterializationTests(unittest.TestCase):
 def _restrictions_row(scenario: str, tech: str, value: float) -> list:
     return [
         scenario, "Secondary Techs", tech,
-        "TotalAnnualMaxCapacityInvestment", 2025, value, "lid_rule", "fixture",
+        "TotalAnnualMaxCapacityInvestment", 2025, value, "build_cap_rule", "fixture",
     ]
 
 
@@ -424,7 +424,7 @@ class RunStateHandoffTests(unittest.TestCase):
             workbook.close()
 
     def _wired_materialization(self, *, export_state: bool, empty_state: bool = False):
-        registry = load_registry(UNESCAP_REGISTRY)
+        registry = load_registry(TRAINING_REGISTRY)
         commands: list[list[str]] = []
 
         with tempfile.TemporaryDirectory() as temp:
@@ -446,7 +446,7 @@ class RunStateHandoffTests(unittest.TestCase):
                     REPO_ROOT / "ostram" / "pipeline" / "scenarios"
                     / "transformations"
                 ),
-                soasia=UNESCAP_WORKBOOK,
+                soasia=TRAINING_WORKBOOK,
             )
 
             def fake_run(command, *, cwd, env, check):
@@ -524,7 +524,7 @@ class RestrictionPrerequisiteOrchestrationTests(unittest.TestCase):
     def _run(self, requested: str) -> LauncherHarness:
         label = requested.replace(",", "_")
         launcher = _load_launcher(f"restriction_prerequisites_{label}")
-        registry = load_registry(UNESCAP_REGISTRY)
+        registry = load_registry(TRAINING_REGISTRY)
         with (
             LauncherHarness(launcher) as harness,
             mock.patch.object(launcher, "load_registry", lambda: registry),

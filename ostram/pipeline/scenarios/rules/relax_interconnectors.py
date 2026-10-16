@@ -245,7 +245,7 @@ def load_interconnector_techs(tech_types_path: Path) -> set:
 
 
 # ---------------------------------------------------------------------------
-# Backup / restore (mirrors lid rule pattern)
+# Backup / restore (mirrors build cap rule pattern)
 # ---------------------------------------------------------------------------
 BACKUP_TAG = "_PRE_TRN_RELAX_"
 

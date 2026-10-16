@@ -13,7 +13,7 @@
 ## Same midpoints used across BAU and Opti; no defensible basis for
 ## differentiating lifetimes between scenarios.
 ##
-## Scenario differentiation from BAU is via the lid cap_multiplier_schedule
+## Scenario differentiation from BAU is via the build-cap rule's cap_multiplier_schedule
 ## in build_cap_rule.yaml, NOT via retirement lifetimes.
 ##
 ## Sources: CEA NRAP 2025, IEPMP In-Between, IPSDP, CEB LTGEP 2025-2044,

@@ -3,7 +3,7 @@
 ##
 ## Sources: IEPMP 2023 + BPC PDB 2024 + NEA Annual 2024/25 + NEP Vol.II + LTGEP 2025-2044.
 ##
-## UNESCAP training model: only the Bangladesh <-> India East corridor is modelled.
+## Training model: only the Bangladesh <-> India East corridor is modelled.
 
 mode: multiplicative
 headroom_factor: 1.5

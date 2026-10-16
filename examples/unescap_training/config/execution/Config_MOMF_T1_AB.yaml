@@ -1,4 +1,4 @@
-# Config_MOMF_T1_AB.yaml — UNESCAP training setup (execution authority)
+# Config_MOMF_T1_AB.yaml — training setup (execution authority)
 #
 # Setup: unescap_training  (examples/unescap_training/setup.yaml)
 #
@@ -125,7 +125,7 @@ storage_delay_root_datafile: "OSTRAM_data_storage_delay.txt"
 # === Storage stripping diagnostic ===
 # Master switch. False (or absent) = pipeline runs unchanged (no strip).
 #
-# OFF for this setup. The UNESCAP training model deliberately carries four
+# OFF for this setup. The training model deliberately carries four
 # storage technologies — LDSBGDXX01, LDSINDEA01, SDSBGDXX01, SDSINDEA01 — and
 # the B/C scenarios put storage floors on them. Stripping storage would delete
 # the object the exercises study. Turn this on only for a deliberate

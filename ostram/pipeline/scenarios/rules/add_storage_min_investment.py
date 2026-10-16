@@ -75,7 +75,7 @@ PROJ_MODE_USER = "User defined"
 
 
 # ---------------------------------------------------------------------------
-# Interpolation (same logic as lid script)
+# Interpolation (same logic as build cap script)
 # ---------------------------------------------------------------------------
 def interpolate_schedule(schedule: dict[int, float], year: int) -> float:
     """Linearly interpolate a year→value schedule.

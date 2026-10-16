@@ -18,7 +18,7 @@ from ostram.validation.setup_domain import (
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-UNESCAP = REPO_ROOT / "examples" / "unescap_training"
+TRAINING = REPO_ROOT / "examples" / "unescap_training"
 
 
 def _read_values(path: Path) -> set[str]:
@@ -33,10 +33,10 @@ def _write_values(path: Path, values: set[str]) -> None:
         writer.writerows([value] for value in sorted(values))
 
 
-class UnescapWorkbookTests(unittest.TestCase):
+class TrainingWorkbookTests(unittest.TestCase):
     def test_restrictions_is_a_header_only_seed_and_control_is_unchanged(self) -> None:
         workbook = load_workbook(
-            UNESCAP / "inputs" / "scenarios" / "OSTRAM_Scenario_Inputs.xlsx",
+            TRAINING / "inputs" / "scenarios" / "OSTRAM_Scenario_Inputs.xlsx",
             read_only=True,
             data_only=False,
         )
@@ -56,7 +56,7 @@ class UnescapWorkbookTests(unittest.TestCase):
 
     def test_workbook_retains_exact_interconnector_authority(self) -> None:
         workbook = load_workbook(
-            UNESCAP / "inputs" / "scenarios" / "OSTRAM_Scenario_Inputs.xlsx",
+            TRAINING / "inputs" / "scenarios" / "OSTRAM_Scenario_Inputs.xlsx",
             read_only=True,
             data_only=True,
         )
@@ -70,12 +70,12 @@ class UnescapWorkbookTests(unittest.TestCase):
         workbook.close()
 
 
-class UnescapMappingTests(unittest.TestCase):
+class TrainingMappingTests(unittest.TestCase):
     def test_bangladesh_gas_emissions_cover_both_combustion_modes(self) -> None:
         # B1 rounds the maintained 2.33765 input ratio to 2.3376. Output
         # activity is one PJ of ELCBGDXX01, not one PJ of gas supplied.
         expected = Decimal("0.0561") * Decimal("2.3376")
-        with (UNESCAP / "inputs/osemosys_global/EmissionActivityRatio.csv").open(
+        with (TRAINING / "inputs/osemosys_global/EmissionActivityRatio.csv").open(
             encoding="utf-8-sig", newline=""
         ) as stream:
             rows = [row for row in csv.DictReader(stream)
@@ -90,8 +90,8 @@ class UnescapMappingTests(unittest.TestCase):
         self.assertEqual({Decimal(row["VALUE"]) for row in rows}, {expected})
 
     def test_stage_specific_domain_contract_accepts_only_the_exact_delta(self) -> None:
-        manifest = load_manifest(UNESCAP / "setup.yaml")
-        seed_root = UNESCAP / "inputs" / "osemosys_global"
+        manifest = load_manifest(TRAINING / "setup.yaml")
+        seed_root = TRAINING / "inputs" / "osemosys_global"
         seed = validate_seed_domain(manifest, seed_root)
         assert seed is not None
         self.assertEqual(seed["seed"]["TECHNOLOGY"]["count"], 89)
@@ -99,7 +99,7 @@ class UnescapMappingTests(unittest.TestCase):
         self.assertEqual(seed["projected_seed"]["TECHNOLOGY"]["count"], 89)
 
         with (
-            UNESCAP / "config" / "scenarios" / "technology_types.csv"
+            TRAINING / "config" / "scenarios" / "technology_types.csv"
         ).open("r", encoding="utf-8-sig", newline="") as stream:
             compiled_technology = {
                 row["Technology"] for row in csv.DictReader(stream)
@@ -146,7 +146,7 @@ class UnescapMappingTests(unittest.TestCase):
                 )
 
     def test_setup_presents_seed_and_compiled_counts_as_distinct_stages(self) -> None:
-        metadata = load_manifest(UNESCAP / "setup.yaml").metadata
+        metadata = load_manifest(TRAINING / "setup.yaml").metadata
         self.assertEqual(metadata["seed_set_sizes"]["TECHNOLOGY"], 89)
         self.assertEqual(metadata["seed_set_sizes"]["FUEL"], 43)
         self.assertEqual(metadata["compiled_set_sizes"]["TECHNOLOGY"], 90)
@@ -166,7 +166,7 @@ class UnescapMappingTests(unittest.TestCase):
         # disables its application (policies.apply_pwr_min_pin: false): the
         # South Asia calibration is infeasible on the reduced domain.
         authority = (
-            UNESCAP / "config" / "scenarios" / "rules"
+            TRAINING / "config" / "scenarios" / "rules"
             / "pwr_min_2023_2026_pin.csv"
         )
         with authority.open(encoding="utf-8-sig", newline="") as stream:
@@ -195,13 +195,13 @@ class UnescapMappingTests(unittest.TestCase):
         )
 
     def test_ao_decisions_match_the_reduced_live_extension_set(self) -> None:
-        authority = UNESCAP / "config" / "scenarios" / "ao_extension_decisions.csv"
+        authority = TRAINING / "config" / "scenarios" / "ao_extension_decisions.csv"
         with authority.open(encoding="utf-8", newline="") as stream:
             codes = {row["AO_Code_To_Add"] for row in csv.DictReader(stream)}
         self.assertEqual(codes, {"PWRNGSBGDXX", "PWRSHPINDEA"})
 
     def test_reduced_taxonomy_is_complete_without_south_asia_padding(self) -> None:
-        taxonomy_path = UNESCAP / "config" / "scenarios" / "technology_types.csv"
+        taxonomy_path = TRAINING / "config" / "scenarios" / "technology_types.csv"
         with taxonomy_path.open("r", encoding="utf-8-sig", newline="") as stream:
             rows = list(csv.DictReader(stream))
         mappings = [row["Technology"] for row in rows if row["Technology"]]
@@ -213,7 +213,7 @@ class UnescapMappingTests(unittest.TestCase):
         # Every raw reduced-model technology that survives the declared matrix
         # filter/PWR cleanup is mapped. NGS and SHP are derived by preparation.
         with (
-            UNESCAP / "inputs" / "osemosys_global" / "TECHNOLOGY.csv"
+            TRAINING / "inputs" / "osemosys_global" / "TECHNOLOGY.csv"
         ).open("r", encoding="utf-8-sig", newline="") as stream:
             raw = {row["VALUE"] for row in csv.DictReader(stream)}
         normalized = {
@@ -231,7 +231,7 @@ class UnescapMappingTests(unittest.TestCase):
 
     def test_timeslice_authority_contains_only_reduced_model_sources(self) -> None:
         workbook = load_workbook(
-            UNESCAP / "inputs" / "scenarios" / "OSTRAM_Timeslice_Inputs.xlsx",
+            TRAINING / "inputs" / "scenarios" / "OSTRAM_Timeslice_Inputs.xlsx",
             read_only=True,
             data_only=False,
         )
