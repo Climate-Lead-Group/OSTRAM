@@ -1,4 +1,4 @@
-"""Atomic preparation and validation of mutable profile workspaces."""
+"""Atomic preparation and validation of mutable setup workspaces."""
 
 from __future__ import annotations
 
@@ -12,69 +12,69 @@ import shutil
 from typing import Mapping
 
 from ostram.paths import ProjectPaths
-from ostram.profiles import ProfileError, ProfileManifest
-from ostram.validation.profile import validate_seed_domain
+from ostram.setups import SetupError, SetupManifest
+from ostram.validation.setup_domain import validate_seed_domain
 
 
-STAMP_NAME = ".ostram-profile.json"
-STAMP_SCHEMA = "ostram-prepared-profile-v1"
+STAMP_NAME = ".ostram-setup.json"
+STAMP_SCHEMA = "ostram-prepared-setup-v1"
 
 
-class ProfileWorkspaceError(ProfileError):
+class SetupWorkspaceError(SetupError):
     """Raised for interrupted, foreign, or stale prepared workspaces."""
 
 
 @dataclass(frozen=True)
-class PreparedProfile:
-    """One prepared profile: its workspace, resolved authority paths and stamp."""
+class PreparedSetup:
+    """One prepared setup: its workspace, resolved authority paths and stamp."""
 
-    profile_id: str
+    setup_id: str
     workspace: Path
     authorities: Mapping[str, Path]
     stamp: Mapping[str, object]
 
 
-def profiles_root(paths: ProjectPaths) -> Path:
-    """Return the folder of prepared profiles, ``<workspace>/profiles``."""
+def setups_root(paths: ProjectPaths) -> Path:
+    """Return the folder of prepared setups, ``<workspace>/setups``."""
 
-    return (paths.workspace / "profiles").resolve()
-
-
-def profile_workspace(paths: ProjectPaths, profile_id: str) -> Path:
-    """Return the workspace of one profile, ``<workspace>/profiles/<profile_id>``."""
-
-    return (profiles_root(paths) / profile_id).resolve()
+    return (paths.workspace / "setups").resolve()
 
 
-def _staging_path(paths: ProjectPaths, profile_id: str) -> Path:
-    return (profiles_root(paths) / f".{profile_id}.preparing").resolve()
+def setup_workspace(paths: ProjectPaths, setup_id: str) -> Path:
+    """Return the workspace of one setup, ``<workspace>/setups/<setup_id>``."""
+
+    return (setups_root(paths) / setup_id).resolve()
 
 
-def _backup_path(paths: ProjectPaths, profile_id: str) -> Path:
-    return (profiles_root(paths) / f".{profile_id}.reset-backup").resolve()
+def _staging_path(paths: ProjectPaths, setup_id: str) -> Path:
+    return (setups_root(paths) / f".{setup_id}.preparing").resolve()
+
+
+def _backup_path(paths: ProjectPaths, setup_id: str) -> Path:
+    return (setups_root(paths) / f".{setup_id}.reset-backup").resolve()
 
 
 def _read_stamp(target: Path) -> dict:
     stamp_path = target / STAMP_NAME
     if not target.is_dir() or not stamp_path.is_file():
-        raise ProfileWorkspaceError(
-            f"interrupted or foreign profile workspace (stamp missing): {target}"
+        raise SetupWorkspaceError(
+            f"interrupted or foreign setup workspace (stamp missing): {target}"
         )
     try:
         stamp = json.loads(stamp_path.read_text(encoding="utf-8"))
     except Exception as error:
-        raise ProfileWorkspaceError(f"invalid profile stamp {stamp_path}: {error}") from error
+        raise SetupWorkspaceError(f"invalid setup stamp {stamp_path}: {error}") from error
     if stamp.get("schema") != STAMP_SCHEMA:
-        raise ProfileWorkspaceError(f"unsupported profile workspace stamp: {stamp_path}")
+        raise SetupWorkspaceError(f"unsupported setup workspace stamp: {stamp_path}")
     return stamp
 
 
-def _validate_stamp(target: Path, manifest: ProfileManifest) -> dict:
+def _validate_stamp(target: Path, manifest: SetupManifest) -> dict:
     stamp = _read_stamp(target)
-    if stamp.get("profile_id") != manifest.profile_id:
-        raise ProfileWorkspaceError(
-            f"foreign profile workspace at {target}: stamp declares "
-            f"{stamp.get('profile_id')!r}, expected {manifest.profile_id!r}"
+    if stamp.get("setup_id") != manifest.setup_id:
+        raise SetupWorkspaceError(
+            f"foreign setup workspace at {target}: stamp declares "
+            f"{stamp.get('setup_id')!r}, expected {manifest.setup_id!r}"
         )
     return stamp
 
@@ -111,7 +111,7 @@ def _copy_digest(candidate: Path, kind: str) -> str | None:
         return None
 
 
-def _keep_or_move_workspace(target: Path, stamp: dict, manifest: ProfileManifest) -> bool:
+def _keep_or_move_workspace(target: Path, stamp: dict, manifest: SetupManifest) -> bool:
     """Handle a workspace whose stamp records another manifest digest.
 
     When the manifest's mutable authority roles equal the stamp's, the
@@ -130,37 +130,37 @@ def _keep_or_move_workspace(target: Path, stamp: dict, manifest: ProfileManifest
             json.dumps(stamp, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
-        print(f"[profile] Kept {target} (manifest changed, same mutable authority roles)")
+        print(f"[setup] Kept {target} (manifest changed, same mutable authority roles)")
         return True
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
-    previous = target.with_name(f"{manifest.profile_id}_previous_{timestamp}")
+    previous = target.with_name(f"{manifest.setup_id}_previous_{timestamp}")
     os.replace(target, previous)
-    print(f"[profile] Mutable authority roles changed; previous workspace moved to {previous}")
+    print(f"[setup] Mutable authority roles changed; previous workspace moved to {previous}")
     return False
 
 
-def prepare_profile(
-    manifest: ProfileManifest,
+def prepare_setup(
+    manifest: SetupManifest,
     *,
     paths: ProjectPaths,
     reset: bool = False,
-) -> PreparedProfile:
-    """Validate, stage, stamp-last, and atomically publish one profile bundle."""
+) -> PreparedSetup:
+    """Validate, stage, stamp-last, and atomically publish one setup bundle."""
 
     sources = manifest.source_paths(paths, require_exists=True)
     validate_seed_domain(manifest, sources.get("osemosys_inputs"))
     mutable = {
         role: spec for role, spec in manifest.authorities.items() if spec.mutable
     }
-    root = profiles_root(paths)
-    target = profile_workspace(paths, manifest.profile_id)
-    staging = _staging_path(paths, manifest.profile_id)
-    backup = _backup_path(paths, manifest.profile_id)
+    root = setups_root(paths)
+    target = setup_workspace(paths, manifest.setup_id)
+    staging = _staging_path(paths, manifest.setup_id)
+    backup = _backup_path(paths, manifest.setup_id)
 
     # Existing debris is evidence of an interrupted mutation; never guess.
     if staging.exists() or backup.exists():
-        raise ProfileWorkspaceError(
-            f"interrupted preparation state exists for {manifest.profile_id!r}: "
+        raise SetupWorkspaceError(
+            f"interrupted preparation state exists for {manifest.setup_id!r}: "
             f"{staging if staging.exists() else backup}"
         )
     if target.exists():
@@ -169,19 +169,19 @@ def prepare_profile(
             # manifest edit, but it must never adopt a foreign or unstamped
             # workspace.
             stamp = _read_stamp(target)
-            if stamp.get("profile_id") != manifest.profile_id:
-                raise ProfileWorkspaceError(
-                    f"foreign profile workspace at {target}: stamp declares "
-                    f"{stamp.get('profile_id')!r}, expected {manifest.profile_id!r}"
+            if stamp.get("setup_id") != manifest.setup_id:
+                raise SetupWorkspaceError(
+                    f"foreign setup workspace at {target}: stamp declares "
+                    f"{stamp.get('setup_id')!r}, expected {manifest.setup_id!r}"
                 )
         else:
             stamp = _validate_stamp(target, manifest)
             if stamp.get("manifest_sha256") == manifest.digest:
                 raise FileExistsError(
-                    f"profile workspace already exists: {target}; pass --reset to replace it"
+                    f"setup workspace already exists: {target}; pass --reset to replace it"
                 )
             if _keep_or_move_workspace(target, stamp, manifest):
-                return prepared_profile(manifest, paths=paths)
+                return prepared_setup(manifest, paths=paths)
 
     root.mkdir(parents=True, exist_ok=True)
     staging.mkdir()
@@ -198,7 +198,7 @@ def prepare_profile(
             _copy_authority(source, destination, spec.kind)
             copied_sources[source_key] = destination
         if _authority_digest(destination, spec.kind) != source_digest:
-            raise ProfileWorkspaceError(
+            raise SetupWorkspaceError(
                 f"authority {role!r} changed while it was being prepared"
             )
         relative_authorities[role] = destination.relative_to(staging).as_posix()
@@ -206,7 +206,7 @@ def prepare_profile(
 
     stamp = {
         "schema": STAMP_SCHEMA,
-        "profile_id": manifest.profile_id,
+        "setup_id": manifest.setup_id,
         "manifest": str(manifest.path),
         "manifest_sha256": manifest.digest,
         "prepared_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -230,32 +230,32 @@ def prepare_profile(
     else:
         os.replace(staging, target)
 
-    return prepared_profile(manifest, paths=paths)
+    return prepared_setup(manifest, paths=paths)
 
 
-def prepared_profile(
-    manifest: ProfileManifest,
+def prepared_setup(
+    manifest: SetupManifest,
     *,
     paths: ProjectPaths,
-) -> PreparedProfile:
+) -> PreparedSetup:
     """Resolve one atomic runtime bundle without per-authority fallback."""
 
     mutable_roles = {
         role for role, spec in manifest.authorities.items() if spec.mutable
     }
-    # Immutable profiles preserve lazy historical command validation while the
-    # complete role map still prevents fallback. Mutable profiles must verify
+    # Immutable setups preserve lazy historical command validation while the
+    # complete role map still prevents fallback. Mutable setups must verify
     # their seed plus every read-only companion before activation.
     sources = manifest.source_paths(paths, require_exists=bool(mutable_roles))
-    target = profile_workspace(paths, manifest.profile_id)
+    target = setup_workspace(paths, manifest.setup_id)
     if not mutable_roles:
-        return PreparedProfile(
-            manifest.profile_id,
+        return PreparedSetup(
+            manifest.setup_id,
             target,
             sources,
             {
                 "schema": STAMP_SCHEMA,
-                "profile_id": manifest.profile_id,
+                "setup_id": manifest.setup_id,
                 "manifest_sha256": manifest.digest,
                 "mutable_authorities": {},
                 "mutable_source_sha256": {},
@@ -266,29 +266,29 @@ def prepared_profile(
     if stamp.get("manifest_sha256") != manifest.digest and not _keep_or_move_workspace(
         target, stamp, manifest
     ):
-        return prepare_profile(manifest, paths=paths)
+        return prepare_setup(manifest, paths=paths)
     mapping = stamp.get("mutable_authorities")
     source_digests = stamp.get("mutable_source_sha256")
     if not isinstance(mapping, dict) or set(mapping) != mutable_roles:
-        raise ProfileWorkspaceError(
-            f"prepared authority roles do not match manifest for {manifest.profile_id!r}"
+        raise SetupWorkspaceError(
+            f"prepared authority roles do not match manifest for {manifest.setup_id!r}"
         )
     if not isinstance(source_digests, dict) or set(source_digests) != mutable_roles:
-        raise ProfileWorkspaceError(
-            f"prepared source digests do not match manifest for {manifest.profile_id!r}"
+        raise SetupWorkspaceError(
+            f"prepared source digests do not match manifest for {manifest.setup_id!r}"
         )
     resolved = dict(sources)
     stamp_dirty = False
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     for role, relative in mapping.items():
         if not isinstance(relative, str):
-            raise ProfileWorkspaceError(f"invalid prepared path for authority {role!r}")
+            raise SetupWorkspaceError(f"invalid prepared path for authority {role!r}")
         candidate = (target / relative).resolve()
         try:
             candidate.relative_to(target)
         except ValueError as error:
-            raise ProfileWorkspaceError(
-                f"prepared authority {role!r} escapes profile workspace"
+            raise SetupWorkspaceError(
+                f"prepared authority {role!r} escapes setup workspace"
             ) from error
         spec = manifest.authorities[role]
         current_digest = _authority_digest(sources[role], spec.kind)
@@ -309,17 +309,17 @@ def prepared_profile(
                     moved_to = target / "authorities_previous" / timestamp / relative
                     moved_to.parent.mkdir(parents=True, exist_ok=True)
                     os.replace(candidate, moved_to)
-                    print(f"[profile] Moved the edited copy of {role!r} to {moved_to}")
+                    print(f"[setup] Moved the edited copy of {role!r} to {moved_to}")
                 _copy_authority(sources[role], candidate, spec.kind)
             source_digests[role] = current_digest
             stamp_dirty = True
             print(
-                f"[profile] Refreshed mutable authority {role!r} "
+                f"[setup] Refreshed mutable authority {role!r} "
                 f"(source changed since preparation)"
             )
         exists = candidate.is_file() if spec.kind == "file" else candidate.is_dir()
         if not exists:
-            raise ProfileWorkspaceError(
+            raise SetupWorkspaceError(
                 f"prepared authority {role!r} is missing: {candidate}"
             )
         resolved[role] = candidate
@@ -332,4 +332,4 @@ def prepared_profile(
             encoding="utf-8",
         )
 
-    return PreparedProfile(manifest.profile_id, target, resolved, stamp)
+    return PreparedSetup(manifest.setup_id, target, resolved, stamp)

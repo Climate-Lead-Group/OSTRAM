@@ -64,8 +64,8 @@ TAB_COLOR_PINK = "FFFFB6C1"  # rebuilt data sheets (were RED in v17)
 TAB_COLOR_META = "FFFFEB9C"  # auto-generated audit sheets (light yellow)
 
 # v17 region (5-char Tech infix) -> TS sheet prefix, derived from the active
-# profile country authority.  The full country list reproduces the historical
-# ten-region mapping exactly; reduced profiles load only their own sheets.
+# setup country authority.  The full country list reproduces the historical
+# ten-region mapping exactly; reduced setups load only their own sheets.
 REGION_MAP = configured_country_region_map()
 REGION_MAP_INV = {v: k for k, v in REGION_MAP.items()}
 

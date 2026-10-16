@@ -79,14 +79,14 @@ class SupportBAUTransmissionTests(unittest.TestCase):
 
     def test_full_support_only(self):
         with mock.patch.object(policy, "apply_commitment_ceiling") as apply:
-            with mock.patch.dict(os.environ, {"OSTRAM_PROFILE_POLICIES": '{"support_bau_committed_transmission": true}'}):
+            with mock.patch.dict(os.environ, {"OSTRAM_SETUP_POLICIES": '{"support_bau_committed_transmission": true}'}):
                 for scenario in ("A_Calibrated_BAU", "B_Optimised_VRE", "C_Target_VRE"):
                     transform.finalize_support_bau(Path("output"), scenario)
                 apply.assert_not_called()
                 transform.finalize_support_bau(Path("output"), "BAU")
                 apply.assert_called_once_with(Path("output/A-O_Parametrization.xlsx"))
             apply.reset_mock()
-            with mock.patch.dict(os.environ, {"OSTRAM_PROFILE_POLICIES": '{}'}):
+            with mock.patch.dict(os.environ, {"OSTRAM_SETUP_POLICIES": '{}'}):
                 transform.finalize_support_bau(Path("output"), "BAU")
             apply.assert_not_called()
 

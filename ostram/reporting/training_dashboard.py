@@ -1,18 +1,18 @@
-"""Profile-aware OSTRAM training dashboard.
+"""Setup-aware OSTRAM training dashboard.
 
 Aggregates combined input/output result snapshots into one self-contained,
 offline, interactive HTML report. This module ports the interactive renderer
 and the proven metric semantics of the original UNESCAP training dashboard
-into the profile/capture architecture:
+into the setup/capture architecture:
 
-* scenarios come from the snapshot data (or profile metadata hints);
+* scenarios come from the snapshot data (or setup metadata hints);
 * country regions, labels, storage families, interconnectors and effective
-  values come from profile metadata: nothing model-specific is hardcoded;
+  values come from setup metadata: nothing model-specific is hardcoded;
 * snapshots are the explicit ``(label, path)`` pairs handed in by the caller;
   the module never discovers inputs from the working directory.
 
-The generated HTML embeds the ``ostram-profile-report-v1`` payload in a stable
-``ostram-profile-data`` element and draws every chart with inline SVG and
+The generated HTML embeds the ``ostram-setup-report-v1`` payload in a stable
+``ostram-setup-data`` element and draws every chart with inline SVG and
 vanilla JavaScript: no CDN, external script, font or network request.
 """
 
@@ -50,7 +50,7 @@ OUTPUT_COLUMNS = (
 
 # Technology family taxonomy (labels + colors) shared with the historical
 # scenario-analysis tooling for visual consistency. This is the OSTRAM-wide
-# technology naming taxonomy, not a profile-specific routing table.
+# technology naming taxonomy, not a setup-specific routing table.
 TECH_FAMILIES = {
     "PWRCOA": ("Coal",          "#4a4a4a"),
     "PWRNGS": ("Gas",           "#d4a017"),
@@ -108,7 +108,7 @@ def scenario_label(scenario: str) -> str:
 
 
 def storage_prefixes(metadata: Mapping[str, object] | None) -> tuple[str, ...]:
-    """Derive PWR storage-tech prefixes from profile storage metadata."""
+    """Derive PWR storage-tech prefixes from setup storage metadata."""
     declared = (metadata or {}).get("storage", [])
     prefixes: list[str] = []
     if isinstance(declared, (list, tuple)):
@@ -258,7 +258,7 @@ def emissions_series(
 def storage_series(
     scenario_frame: pd.DataFrame, region: str | None, storage: tuple[str, ...]
 ) -> dict[int, float]:
-    """Total storage capacity by year for the profile's storage families."""
+    """Total storage capacity by year for the setup's storage families."""
     required = {"TotalCapacityAnnual", "YEAR", "TECHNOLOGY"}
     if not required.issubset(scenario_frame.columns):
         return {}
@@ -378,7 +378,7 @@ def _interconnector_block(
     region: str | None,
     technologies: Iterable[str],
 ) -> dict[str, dict[int, float]]:
-    """{metric: {year: value}} over the profile's declared interconnectors."""
+    """{metric: {year: value}} over the setup's declared interconnectors."""
     declared = {str(tech) for tech in technologies}
     if not declared or {"YEAR", "TECHNOLOGY"} - set(scenario_frame.columns):
         return {}
@@ -419,7 +419,7 @@ def _normalized_country_regions(
     elif isinstance(raw, list):
         items = raw
     else:
-        raise ValueError("profile metadata country_regions must be a list or mapping")
+        raise ValueError("setup metadata country_regions must be a list or mapping")
     normalized: list[dict[str, str]] = []
     seen: set[str] = set()
     for item in items:
@@ -496,17 +496,17 @@ def aggregate_metrics(
 def build_dashboard_data(
     snapshots: Iterable[tuple[str, Path]],
     *,
-    profile_id: str,
+    setup_id: str,
     manifest: Path,
     workspace: Path,
     metadata: Mapping[str, object],
 ) -> dict[str, object]:
-    """Build the ostram-profile-report-v1 payload for the given snapshots."""
+    """Build the ostram-setup-report-v1 payload for the given snapshots."""
     country_regions = _normalized_country_regions(metadata)
     regions = [entry["region"] for entry in country_regions]
     interconnectors = metadata.get("interconnectors", [])
     if not isinstance(interconnectors, list):
-        raise ValueError("profile metadata interconnectors must be a list")
+        raise ValueError("setup metadata interconnectors must be a list")
     declared = interconnector_metadata(interconnectors)
     scenario_hint = metadata.get("scenarios", [])
     data: dict[str, object] = {}
@@ -545,11 +545,11 @@ def build_dashboard_data(
             }
             for scenario in scenarios
         }
-    title = str(metadata.get("title") or f"OSTRAM {profile_id} training report")
+    title = str(metadata.get("title") or f"OSTRAM {setup_id} training report")
     return {
-        "schema": "ostram-profile-report-v1",
+        "schema": "ostram-setup-report-v1",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "profile_id": profile_id,
+        "setup_id": setup_id,
         "title": title,
         "manifest": str(Path(manifest).resolve()),
         "workspace": str(Path(workspace).resolve()),
@@ -580,7 +580,7 @@ def build_dashboard_data(
 _DASH_JS = r"""
 (function(){
   "use strict";
-  const D = JSON.parse(document.getElementById("ostram-profile-data").textContent);
+  const D = JSON.parse(document.getElementById("ostram-setup-data").textContent);
   const LABELS = (D.snapshot_labels && D.snapshot_labels.length)
     ? D.snapshot_labels : Object.keys(D.snapshots || {});
   const SCENARIOS = D.scenarios || [];
@@ -1092,7 +1092,7 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
   <label>Region<select id="sel-region"></select></label>
 </div>
 <main id="app"></main>
-<script id="ostram-profile-data" type="application/json">__PAYLOAD__</script>
+<script id="ostram-setup-data" type="application/json">__PAYLOAD__</script>
 <script>
 __JS__
 </script>
@@ -1130,10 +1130,10 @@ def render_html(data: Mapping[str, object]) -> str:
         "</", "<\\/"
     )
     title = html_text.escape(
-        str(data.get("title") or f"OSTRAM {data['profile_id']} profile report")
+        str(data.get("title") or f"OSTRAM {data['setup_id']} setup report")
     )
     meta = html_text.escape(
-        f"Profile {data['profile_id']}; Manifest {data['manifest']}; "
+        f"Setup {data['setup_id']}; Manifest {data['manifest']}; "
         f"Workspace {data['workspace']}"
     )
     document = _HTML_TEMPLATE

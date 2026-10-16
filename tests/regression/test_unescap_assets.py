@@ -9,16 +9,16 @@ import unittest
 
 from openpyxl import load_workbook
 
-from ostram.profiles import load_manifest
-from ostram.validation.profile import (
-    ProfileDomainError,
+from ostram.setups import load_manifest
+from ostram.validation.setup_domain import (
+    SetupDomainError,
     validate_compiled_domain,
     validate_seed_domain,
 )
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-UNESCAP = REPO_ROOT / "examples" / "unescap"
+UNESCAP = REPO_ROOT / "examples" / "unescap_training"
 
 
 def _read_values(path: Path) -> set[str]:
@@ -90,7 +90,7 @@ class UnescapMappingTests(unittest.TestCase):
         self.assertEqual({Decimal(row["VALUE"]) for row in rows}, {expected})
 
     def test_stage_specific_domain_contract_accepts_only_the_exact_delta(self) -> None:
-        manifest = load_manifest(UNESCAP / "profile.yaml")
+        manifest = load_manifest(UNESCAP / "setup.yaml")
         seed_root = UNESCAP / "inputs" / "osemosys_global"
         seed = validate_seed_domain(manifest, seed_root)
         assert seed is not None
@@ -137,7 +137,7 @@ class UnescapMappingTests(unittest.TestCase):
             compiled_technology.add("PWRUNDECLARED")
             _write_values(compiled_root / "TECHNOLOGY.csv", compiled_technology)
             with self.assertRaisesRegex(
-                ProfileDomainError, "unexpected_additions.*PWRUNDECLARED"
+                SetupDomainError, "unexpected_additions.*PWRUNDECLARED"
             ):
                 validate_compiled_domain(
                     manifest,
@@ -146,7 +146,7 @@ class UnescapMappingTests(unittest.TestCase):
                 )
 
     def test_profile_presents_seed_and_compiled_counts_as_distinct_stages(self) -> None:
-        metadata = load_manifest(UNESCAP / "profile.yaml").metadata
+        metadata = load_manifest(UNESCAP / "setup.yaml").metadata
         self.assertEqual(metadata["seed_set_sizes"]["TECHNOLOGY"], 89)
         self.assertEqual(metadata["seed_set_sizes"]["FUEL"], 43)
         self.assertEqual(metadata["compiled_set_sizes"]["TECHNOLOGY"], 90)

@@ -14,7 +14,7 @@ from ostram.pipeline.preparation import base_inputs
 
 
 ROOT = Path(__file__).resolve().parents[2]
-TRAINING = ROOT / "examples/unescap"
+TRAINING = ROOT / "examples/unescap_training"
 
 
 class ExtensionEmissionTests(unittest.TestCase):
@@ -39,7 +39,7 @@ class ExtensionEmissionTests(unittest.TestCase):
         matrix = dict(enabled=True, matrix_filtering_enabled=True,
                       matrix={"NGS": {"BGD": False, "MDV": False, "IND": True}})
         with patch.object(base_inputs, "_PROJECT_PATHS", paths), \
-                patch.object(base_inputs, "profile_policy", return_value=preserve), \
+                patch.object(base_inputs, "setup_policy", return_value=preserve), \
                 redirect_stdout(io.StringIO()):
             return base_inputs.filter_by_tech_country_matrix(data, matrix)
 

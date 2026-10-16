@@ -1,13 +1,13 @@
 # south_asia.yaml section map
 
-`config/profiles/south_asia.yaml` is the profile file of the South Asia model.
+`config/setups/south_asia.yaml` is the setup file of the South Asia model.
 Its top-level sections, in file order, hold the following. Terms are in the
 [glossary](glossary.md).
 
 | Section | What it holds | Read by |
 |---|---|---|
-| `schema`, `id` | The profile schema `ostram-profile-v1` and the profile id `south_asia`. | The profile loader, for every command. |
-| `metadata` | The title and `effective_values`, one documented value of the interconnector `TRNBGDXXINDEA`. | The profile loader and the training reports. |
+| `schema`, `id` | The setup schema `ostram-setup-v1` and the setup id `south_asia`. | The setup loader, for every command. |
+| `metadata` | The title and `effective_values`, one documented value of the interconnector `TRNBGDXXINDEA`. | The setup loader and the training reports. |
 | `policies` | `support_bau_committed_transmission` sets the transmission ceilings of support `BAU` at the end of its A3 run. `reconcile_variable_cost_exports` adds the omitted default variable costs to the concatenated cost tables in B2. `validation_no_mutation` keeps the A3 stage 1b validation report-only. `historical_trade_roots` names the roots whose scenarios activate the 50 historical trade constraints in B2. `lid_rule_new_semantics` selects the behaviour of the build-cap rule. | A3 and B2. |
 | `authorities` | The sources of record: each named input, configuration file or folder and its location, as a `project:` path in the clone or a `package:` path in the installed package. | `ostram.paths`, for every stage. |
 | `scenario_registry` | `support_scenarios`, `root_scenarios` with their roles and result dependencies, `decision_scenarios` in canonical order, and `derived_scenarios` with their parents and, for the two direction variants, the overlay file and its study start year. | The registry loader, for the `run` command, A3, B1 and B2. |

@@ -150,7 +150,7 @@ from pathlib import Path
 
 import pandas as pd
 from ostram.paths import resolve_paths
-from ostram.profiles import profile_policy
+from ostram.setups import setup_policy
 from ostram.pipeline.scenarios.rules.config_keys import check_keys
 from openpyxl import load_workbook
 
@@ -715,7 +715,7 @@ def load_generation_techs(tech_types_path: Path) -> set:
     if not tech_types_path.is_file():
         raise FileNotFoundError(
             f"Technology taxonomy not found at {tech_types_path} "
-            f"(config/scenarios/technology_types.csv, or the active profile's interconnector_taxonomy). Set "
+            f"(config/scenarios/technology_types.csv, or the active setup's interconnector_taxonomy). Set "
             f"RESTRICT_TO_GENERATION = False to disable the filter."
         )
     df = pd.read_csv(tech_types_path)
@@ -1100,7 +1100,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             "build_tech_share_map and build_pool_delta_map."
         )
 
-    override_inherited = bool(profile_policy("lid_rule_new_semantics", False))
+    override_inherited = bool(setup_policy("lid_rule_new_semantics", False))
 
     year_cols = find_year_columns(ws)
     headers = find_named_columns(ws, ["Tech", "Parameter", PROJ_MODE_COL])

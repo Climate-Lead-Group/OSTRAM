@@ -4,7 +4,7 @@ Instructions for AI coding agents working on OSTRAM. People should start with `R
 
 ## Project
 
-OSTRAM (OSeMOSYS for Transmission – Framework to represent power systems connectivity) builds on OSeMOSYS and OSeMOSYS Global. It adds detail on internal transmission and interconnectors, and supports "what if" comparisons between scenarios. The South Asia model, the default `south_asia` profile, is the reference application. `examples/unescap` is a separate, reduced two-region training profile.
+OSTRAM (OSeMOSYS for Transmission – Framework to represent power systems connectivity) builds on OSeMOSYS and OSeMOSYS Global. It adds detail on internal transmission and interconnectors, and supports "what if" comparisons between scenarios. The South Asia model, the default `south_asia` setup, is the reference application. `examples/unescap_training` is a separate, reduced two-region training setup.
 
 The pipeline runs in this order:
 
@@ -12,12 +12,12 @@ The pipeline runs in this order:
 2. A2 `ostram.pipeline.preparation.transmission`: adds transmission.
 3. A3 `ostram.pipeline.scenarios.materializer`: builds each root with its rule scripts, then each derived scenario from its root.
 4. B1 `ostram.pipeline.compilation.runner`: A-O workbooks become OSeMOSYS CSVs.
-5. B2 `ostram.pipeline.execution.runner`: CSVs become the adjusted solver datafile. B2 then solves and collects results: `glpsol --wlp` writes the LP, and CPLEX solves it (the `unescap` profile uses CBC). `--compile-only` stops B2 after the datafile.
+5. B2 `ostram.pipeline.execution.runner`: CSVs become the adjusted solver datafile. B2 then solves and collects results: `glpsol --wlp` writes the LP, and CPLEX solves it (the `unescap_training` setup uses CBC). `--compile-only` stops B2 after the datafile.
 
 ## Layout
 
 - `ostram/`: the package.
-- `config/profiles/south_asia.yaml`: scenario registry, scenario edits, VRE ceilings and run policies.
+- `config/setups/south_asia.yaml`: scenario registry, scenario edits, VRE ceilings and run policies.
 - `config/scenarios/<root>/`: rule YAMLs for the roots `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE`. The fourth root, support `BAU`, has no folder; its rule script runs on its built-in defaults.
 - `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx`: the scenario workbook. Its Control sheet lists each root's rule scripts in run order.
 - `tests/`: tests. `docs/`: Sphinx documentation.
@@ -33,9 +33,9 @@ The pipeline runs in this order:
 
 - Every file under `config/` is read by the pipeline. `tests/regression/test_config_files.py` lists the 25 files and fails when a file is added, missing or left unregistered.
 - A root's rule YAML is read only when the Control sheet names the rule script for that root. A3 copies the root's YAMLs into its run folder and each rule reads its own file by name.
-- `config/profiles/south_asia.yaml` is the source of record for the scenario registry, the shared VRE ceilings and the scenario edits. Its `description`, `rule` and `note` strings are documentation; nothing reads them.
+- `config/setups/south_asia.yaml` is the source of record for the scenario registry, the shared VRE ceilings and the scenario edits. Its `description`, `rule` and `note` strings are documentation; nothing reads them.
 - B2 reads `config/execution/Config_MOMF_T1_AB.yaml`, unless `workspace/execution/Config_MOMF_T1_AB.yaml` exists; then that copy and the `Config_MOMF_T1_A.yaml` beside it are read instead.
-- `examples/unescap/` holds the training profile's own config. The `south_asia` profile never reads it.
+- `examples/unescap_training/` holds the training setup's own config. The `south_asia` setup never reads it.
 
 ## Environment (Windows)
 

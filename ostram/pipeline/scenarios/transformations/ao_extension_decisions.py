@@ -314,7 +314,7 @@ def apply_decisions(
 
 def _default_authority() -> Path:
     # The activated bundle makes this either the full workbook authority or a
-    # profile-specific CSV sidecar.  No filename probing or fallback occurs.
+    # setup-specific CSV sidecar.  No filename probing or fallback occurs.
     return resolve_paths().ao_decisions
 
 

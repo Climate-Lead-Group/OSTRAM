@@ -14,7 +14,7 @@ def render_policy(input_folder, scenario_name):
     ``scenario_name``.
 
     The policy is read from ``scenario_inputs`` in
-    ``config/profiles/south_asia.yaml``; the demand fuels and cross-border TRN
+    ``config/setups/south_asia.yaml``; the demand fuels and cross-border TRN
     flows come from the CSVs in ``input_folder``. Returns an empty
     ``D4ImportCountry`` set when the scenario has no policy. Raises
     ValueError for an invalid policy or a country without demand.

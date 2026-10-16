@@ -273,11 +273,11 @@ def reviewed_capacity_keys(input_path):
     The scenario is the name of the datafile's folder without ``_0``. The
     set is empty when that scenario has no pinned root.
     """
-    from ostram.profiles import profile_policy
+    from ostram.setups import setup_policy
     from ostram.pipeline.scenarios.rules import apply_base_year_pin as pins
     scenario=pins.calibration_root(input_path.parent.name.removesuffix("_0"))
     if scenario is None:return set()
-    path=Path(profile_policy("pwr_min_pin_rules_path",str(pins.RULES_CSV)))
+    path=Path(setup_policy("pwr_min_pin_rules_path",str(pins.RULES_CSV)))
     rules=pins.load_pin_rules(path)
     return {(r.parameter,r.technology,r.year) for r in rules if r.parameter in (STOCK_PARAM,FLOW_PARAM) and scenario in r.root_scenarios}
 

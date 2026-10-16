@@ -1,4 +1,4 @@
-schema: ostram-profile-v1
+schema: ostram-setup-v1
 id: south_asia
 metadata:
   title: OSTRAM South Asia model
@@ -16,7 +16,7 @@ policies:
   - C_Target_VRE
   lid_rule_new_semantics: false
 authorities:
-  scenario_registry: project:config/profiles/south_asia.yaml
+  scenario_registry: project:config/setups/south_asia.yaml
   scenario_inputs:
     path: project:inputs/scenarios
     kind: directory

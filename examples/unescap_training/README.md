@@ -1,15 +1,15 @@
-# UNESCAP South Asia training profile
+# UNESCAP South Asia training setup
 
 A complete, self-contained OSTRAM example: a reduced two-region power-system model
 built for the UNESCAP training sessions. Bangladesh (`BGDXX`) and India East (`INDEA`),
 joined by the real `TRNBGDXXINDEA` cross-border corridor, over 2023–2050 in 20 timeslices.
 
-Everything the profile needs is in this directory — input CSVs, the scenario workbook,
+Everything the setup needs is in this directory — input CSVs, the scenario workbook,
 preparation/compilation/execution configuration and the scenario registry. Nothing here falls back to the project-root configuration of
 the same name.
 
-The profile engine and these assets are integrated. All commands below resolve the
-profile's explicit authorities; none implicitly borrow a same-named South Asia input.
+The setup engine and these assets are integrated. All commands below resolve the
+setup's explicit authorities; none implicitly borrow a same-named South Asia input.
 
 ## The model
 
@@ -30,7 +30,7 @@ The two rows above are stage-specific contracts, not competing counts. Preparati
 performs a count-preserving reconciliation of legacy technology identities. Compilation
 then adds exactly one technology, `PWRSHPINDEA`, and six ELC dispatch fuels:
 `ELCBGDXX00`, `ELCBGDXX03`, `ELCBGDXX04`, `ELCINDEA00`, `ELCINDEA03`, and
-`ELCINDEA04`. `profile.yaml` records the reconciliation and the generated delta, and the
+`ELCINDEA04`. `setup.yaml` records the reconciliation and the generated delta, and the
 runtime rejects any other compiled addition or removal before crossing the matrix/solver
 boundary.
 
@@ -50,8 +50,8 @@ only `B_Optimised_VRE` never adds BAU.
 ## Layout
 
 ```
-examples/unescap/
-  profile.yaml                     the profile's authorities and resolution policy
+examples/unescap_training/
+  setup.yaml                     the setup's authorities and resolution policy
   README.md                        this file
   inputs/
     osemosys_global/*.csv          64 OSeMOSYS Global parameter and set files
@@ -60,14 +60,14 @@ examples/unescap/
   config/
     preparation/
       Config_country_codes.yaml    countries, technology mappings, template generation
-      Config_region_consolidation.yaml   disabled for this profile
+      Config_region_consolidation.yaml   disabled for this setup
     compilation/
       Config_MOMF_T1_A.yaml        timeslice fabric, storage set, A-stage authorities
     execution/
       Config_MOMF_T1_AB.yaml       solver selection and execution-stage switches
     scenarios/
       registry.json                ostram-scenario-registry-v1 — four roots, no derived
-      technology_types.csv         technology → category map, trimmed to this profile
+      technology_types.csv         technology → category map, trimmed to this setup
       ao_extension_decisions.csv   AO extension decision record
       A_Calibrated_BAU/*.yaml
       B_Optimised_VRE/*.yaml
@@ -76,63 +76,63 @@ examples/unescap/
 
 Nothing generated lives here. Preparation output, compiled parameters, solver inputs,
 `.sol` files, `Executables/`, `Outputs/`, dashboards, and plots are all written under the
-run workspace (`--workspace` / `OSTRAM_WORKSPACE`), never inside `examples/unescap/`.
+run workspace (`--workspace` / `OSTRAM_WORKSPACE`), never inside `examples/unescap_training/`.
 
 ## Commands
 
 Install a clean checkout with the [installation](../../docs/installation.md) page.
 The commands below use its `ostram` environment and a new workspace.
-The profile is named, not located, so no command depends on your working directory.
+The setup is named, not located, so no command depends on your working directory.
 
 ```
-python -m ostram --workspace workspace/unescap example prepare unescap
-python -m ostram --workspace workspace/unescap --profile unescap run --env-name ostram --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --compile-only --skip-pull
-python -m ostram --workspace workspace/unescap --profile unescap run --env-name ostram --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --skip-pull
-python -m ostram --workspace workspace/unescap --profile unescap run --env-name ostram --scenarios "C_Target_VRE" --skip-pull
-python -m ostram --workspace workspace/unescap example report unescap --capture baseline
-python -m ostram --workspace workspace/unescap example report unescap
+python -m ostram --workspace workspace/unescap_training example prepare unescap_training
+python -m ostram --workspace workspace/unescap_training --setup unescap_training run --env-name ostram --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --compile-only --skip-pull
+python -m ostram --workspace workspace/unescap_training --setup unescap_training run --env-name ostram --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --skip-pull
+python -m ostram --workspace workspace/unescap_training --setup unescap_training run --env-name ostram --scenarios "C_Target_VRE" --skip-pull
+python -m ostram --workspace workspace/unescap_training example report unescap_training --capture baseline
+python -m ostram --workspace workspace/unescap_training example report unescap_training
 ```
 
 The first run stops before matrix generation and solving. The next two runs compile,
 solve with CBC, export results and reconcile costs. C consumes the newly completed A
 result in the same workspace. Select A/B/C explicitly: support `BAU` supplies A's
 restriction materialization and is not a requested decision solve. The backstop is
-enabled by this profile; include its exported use when interpreting a feasible result.
+enabled by this setup; include its exported use when interpreting a feasible result.
 
-Profile-aware country commands:
-
-```
-python -m ostram --profile unescap country template
-python -m ostram --profile unescap country merge MMR
-python -m ostram --profile unescap country validate MMR
-python -m ostram --profile unescap scenario sync-country --country MMR
-```
-
-Profile-aware scenario commands:
+Setup-aware country commands:
 
 ```
-python -m ostram --profile unescap scenario sync-country --help
-python -m ostram --profile unescap transform --scenario B_Optimised_VRE
-python -m ostram --profile unescap compile-inputs
-python -m ostram --profile unescap inspect-resources
+python -m ostram --setup unescap_training country template
+python -m ostram --setup unescap_training country merge MMR
+python -m ostram --setup unescap_training country validate MMR
+python -m ostram --setup unescap_training scenario sync-country --country MMR
 ```
 
-`profile.yaml` sets `metadata.requires_prepare: true`. The profile ships input CSVs and a
-scenario workbook, not a built model, so `example prepare unescap` must succeed before any
+Setup-aware scenario commands:
+
+```
+python -m ostram --setup unescap_training scenario sync-country --help
+python -m ostram --setup unescap_training transform --scenario B_Optimised_VRE
+python -m ostram --setup unescap_training compile-inputs
+python -m ostram --setup unescap_training inspect-resources
+```
+
+`setup.yaml` sets `metadata.requires_prepare: true`. The setup ships input CSVs and a
+scenario workbook, not a built model, so `example prepare unescap_training` must succeed before any
 scenario can be compiled or solved.
 
 ## Path resolution
 
-`profile.yaml` names every resource under exactly one authority:
+`setup.yaml` names every resource under exactly one authority:
 
-- **`profile:`** — everything in this directory: inputs, configs and registry.
+- **`setup:`** — everything in this directory: inputs, configs and registry.
 - **`project:`** — repository-level resources borrowed as-is: the maintained OSeMOSYS
   model at `model/osemosys_fast_preprocessed.txt`, and `inputs/execution/`.
 - **`package:`** — resources shipped inside the installed `ostram` package:
   `resources/compilation/` (otoole conversion format, parameter templates) and
   `resources/preparation/`.
 
-`resolution.implicit_file_fallback: false`. If a profile-owned file is missing, resolution
+`resolution.implicit_file_fallback: false`. If a setup-owned file is missing, resolution
 fails and names it; it does not quietly reach for the project-root file of the same name.
 The config files use `${...}` tokens for every path — none of them contain a physical
 legacy path such as `./A1_Outputs` or `../Executables/A_Calibrated_BAU_0`.

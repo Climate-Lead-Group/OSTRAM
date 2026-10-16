@@ -152,7 +152,7 @@ class ProfileLidPolicyTests(unittest.TestCase):
 
     def _apply(self, policies: str | None):
         workbook, worksheet = self._worksheet()
-        environment = {} if policies is None else {"OSTRAM_PROFILE_POLICIES": policies}
+        environment = {} if policies is None else {"OSTRAM_SETUP_POLICIES": policies}
         patches = (
             mock.patch.object(lid, "LID_RULE_MODE", "uniform"),
             mock.patch.object(lid, "LID_PERCENTAGE_DEFAULT", 0.5),
@@ -198,7 +198,7 @@ class ProfileElcDispatchTests(unittest.TestCase):
             configured_elc_dispatch_techs(
                 REPO_ROOT
                 / "examples"
-                / "unescap"
+                / "unescap_training"
                 / "config"
                 / "preparation"
                 / "Config_country_codes.yaml"
@@ -240,22 +240,22 @@ class ProfileReportingTests(unittest.TestCase):
                 },
             ]).to_csv(csv_path, index=False)
             data = build_dashboard_data(
-                [("before", csv_path)], profile_id="tiny",
-                manifest=root / "profile.yaml", workspace=root / "workspace",
+                [("before", csv_path)], setup_id="tiny",
+                manifest=root / "setup.yaml", workspace=root / "workspace",
                 metadata={
                     "country_regions": [{"region": "MMRXX", "label": "Myanmar"}],
                     "interconnectors": [{"technology": "TRNBGDXXMMRXX"}],
                     "effective_values": {"interconnector_capacity_gw": 2.496},
                 },
             )
-            self.assertEqual(data["profile_id"], "tiny")
+            self.assertEqual(data["setup_id"], "tiny")
             self.assertEqual(data["effective_values"]["interconnector_capacity_gw"], 2.496)
             metrics = data["snapshots"]["before"]["Training"]["System"]
             self.assertEqual(
                 metrics["interconnectors"]["TotalCapacityAnnual"][2050], 2.496
             )
             html = render_html(data)
-            self.assertIn("ostram-profile-data", html)
+            self.assertIn("ostram-setup-data", html)
             self.assertIn("2.496", html)
 
     def test_terminal_log_includes_profile_manifest_workspace_and_compile_state(self) -> None:
@@ -263,13 +263,13 @@ class ProfileReportingTests(unittest.TestCase):
             root = Path(temp)
             reporter = RunReporter(
                 project_root=REPO_ROOT, workspace=root / "workspace",
-                scenarios=("Training",), verbose=False, profile_id="tiny",
-                manifest=root / "profile.yaml", compile_only=True,
+                scenarios=("Training",), verbose=False, setup_id="tiny",
+                manifest=root / "setup.yaml", compile_only=True,
             )
             reporter.finish(outcome="COMPILE_ONLY_SUCCESS", exit_code=0,
                             final_message="complete")
             log = reporter.log_path.read_text(encoding="utf-8")
-            self.assertIn("profile_id=tiny", log)
+            self.assertIn("setup_id=tiny", log)
             self.assertIn("manifest=", log)
             self.assertIn("workspace=", log)
             self.assertIn("scenarios=[\"Training\"]", log)

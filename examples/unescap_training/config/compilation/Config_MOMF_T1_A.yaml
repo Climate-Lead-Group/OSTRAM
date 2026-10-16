@@ -1,14 +1,14 @@
-# Config_MOMF_T1_A.yaml — UNESCAP training profile (compilation authority)
+# Config_MOMF_T1_A.yaml — UNESCAP training setup (compilation authority)
 #
-# Profile: unescap  (examples/unescap/profile.yaml)
+# Setup: unescap_training  (examples/unescap_training/setup.yaml)
 #
-# Paths below are LOGICAL. Every ${...} token is declared in profile.yaml under
-# the profile:, project:, package:, or workspace: authority. Nothing here is
+# Paths below are LOGICAL. Every ${...} token is declared in setup.yaml under
+# the setup:, project:, package:, or workspace: authority. Nothing here is
 # resolved against the caller's working directory, and there is no per-file
 # fallback to the project-root configuration of the same name.
 
 # ── Directories (logical) ────────────────────────────────────
-A1_inputs: ${profile.osemosys_inputs}
+A1_inputs: ${setup.osemosys_inputs}
 A1_outputs: ${workspace.preparation}/A1_Outputs
 A2_extra_inputs: ${workspace.preparation}/extra_inputs
 A2_output: ${workspace.compilation}/A2_Output_Params/

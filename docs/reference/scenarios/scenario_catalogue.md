@@ -1,6 +1,6 @@
 # Scenario catalogue
 
-The block between the two markers is generated from `config/profiles/south_asia.yaml`
+The block between the two markers is generated from `config/setups/south_asia.yaml`
 and `config/execution/Config_MOMF_T1_AB.yaml` by
 `python tools/generate_scenario_catalogue.py`, run from the repository root.
 The test `tests/regression/test_scenario_catalogue.py` fails when the block

@@ -22,7 +22,7 @@ from ostram.pipeline.preparation.scenario_country_sync import _default_ao
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-EXAMPLE_ROOT = REPO_ROOT / "examples" / "unescap"
+EXAMPLE_ROOT = REPO_ROOT / "examples" / "unescap_training"
 
 
 class PortableRuntimeTests(unittest.TestCase):
@@ -110,12 +110,12 @@ class CanonicalTrainingRouteTests(unittest.TestCase):
             osemosys_inputs=Path("prepared-authority"),
             preparation_workspace=Path("legacy-preparation"),
         )
-        with mock.patch.object(country_merge, "active_profile_id", return_value="unescap"):
+        with mock.patch.object(country_merge, "active_setup_id", return_value="unescap_training"):
             self.assertEqual(
                 country_merge._default_input_dir(paths),
                 Path("prepared-authority"),
             )
-        with mock.patch.object(country_merge, "active_profile_id", return_value="south_asia"):
+        with mock.patch.object(country_merge, "active_setup_id", return_value="south_asia"):
             self.assertEqual(
                 country_merge._default_input_dir(paths),
                 Path("legacy-preparation") / "og_csvs_inputs",
@@ -123,11 +123,11 @@ class CanonicalTrainingRouteTests(unittest.TestCase):
 
     def test_profile_subcommand_help_needs_no_prepared_workspace(self) -> None:
         commands = (
-            ["example", "report", "unescap", "--help"],
-            ["--profile", "unescap", "country", "template", "--help"],
-            ["--profile", "unescap", "country", "merge", "--help"],
-            ["--profile", "unescap", "country", "validate", "--help"],
-            ["--profile", "unescap", "scenario", "sync-country", "--help"],
+            ["example", "report", "unescap_training", "--help"],
+            ["--setup", "unescap_training", "country", "template", "--help"],
+            ["--setup", "unescap_training", "country", "merge", "--help"],
+            ["--setup", "unescap_training", "country", "validate", "--help"],
+            ["--setup", "unescap_training", "scenario", "sync-country", "--help"],
         )
         with tempfile.TemporaryDirectory() as temp:
             workspace = Path(temp) / "never-created"
@@ -177,8 +177,8 @@ class CanonicalTrainingRouteTests(unittest.TestCase):
             ]).to_csv(result, index=False)
             paths = SimpleNamespace(workspace=workspace, execution_workspace=execution)
             manifest = SimpleNamespace(
-                profile_id="unescap",
-                path=EXAMPLE_ROOT / "profile.yaml",
+                setup_id="unescap_training",
+                path=EXAMPLE_ROOT / "setup.yaml",
                 metadata={
                     "country_regions": [
                         {"region": "BGDXX", "label": "Bangladesh"},
@@ -195,7 +195,7 @@ class CanonicalTrainingRouteTests(unittest.TestCase):
                     _report(manifest, "forward")
             self.assertEqual(
                 compared,
-                workspace / "reports" / "unescap-interconnector-comparison.html",
+                workspace / "reports" / "unescap_training-interconnector-comparison.html",
             )
             html = compared.read_text(encoding="utf-8")
             self.assertIn('"forward"', html)
@@ -212,14 +212,14 @@ class CanonicalTrainingRouteTests(unittest.TestCase):
             ]).to_csv(execution / "OSTRAM_Combined_Inputs_Outputs.csv", index=False)
             paths = SimpleNamespace(workspace=workspace, execution_workspace=execution)
             manifest = SimpleNamespace(
-                profile_id="unescap",
-                path=EXAMPLE_ROOT / "profile.yaml",
+                setup_id="unescap_training",
+                path=EXAMPLE_ROOT / "setup.yaml",
                 metadata={
                     "country_regions": [{"region": "BGDXX", "label": "Bangladesh"}],
                     "interconnectors": [{"technology": "TRNBGDXXINDEA"}],
                 },
             )
-            arguments = ["report", "unescap", "--capture", "forward"]
+            arguments = ["report", "unescap_training", "--capture", "forward"]
             with (
                 mock.patch("ostram.examples.resolve_paths", return_value=paths),
                 mock.patch("ostram.examples._active_manifest", return_value=manifest),

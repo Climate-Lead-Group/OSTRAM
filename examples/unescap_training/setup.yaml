@@ -1,14 +1,14 @@
-# UNESCAP South Asia training profile.
+# UNESCAP South Asia training setup.
 #
-# Every runtime authority is explicit. Profile-owned inputs and configuration
+# Every runtime authority is explicit. Setup-owned inputs and configuration
 # never fall back to the South Asia file with the same role. The maintained
 # model, execution support input, and package templates are shared authorities
 # named here rather than implicit compatibility defaults.
 
-schema: ostram-profile-v1
-id: unescap
+schema: ostram-setup-v1
+id: unescap_training
 metadata:
-  title: UNESCAP South Asia training profile
+  title: UNESCAP South Asia training setup
   description: >-
     Bangladesh (BGDXX) and India East (INDEA), joined by TRNBGDXXINDEA,
     over 2023-2050 in twenty timeslices.
@@ -104,7 +104,7 @@ policies:
   # Preserve only their emission rows; other seed parameters stay filtered.
   preserve_declared_extension_emissions: true
   # The training correction replaces legacy hand-entered LID cells. The south_asia
-  # profile explicitly keeps this false in config/profiles/south_asia.yaml.
+  # setup explicitly keeps this false in config/setups/south_asia.yaml.
   lid_rule_new_semantics: true
   # The base-year pin is a South Asia calibration authority (audited on
   # the five-country domain, where pinned 2023-2026 BGD generation balances
@@ -113,48 +113,48 @@ policies:
   # backstop pinned to 0) plus the single 2.496 GW interconnector cannot meet
   # the 427.3 PJ 2023 BGD demand tier, and CBC certifies primal infeasibility.
   # The training pipeline applies no base-year pin to any scenario of this
-  # model, so the profile disables the stage.
+  # model, so the setup disables the stage.
   # config/scenarios/rules/pwr_min_2023_2026_pin.csv is retained as the frozen
   # reference projection only; it is not applied.
   apply_pwr_min_pin: false
 
 authorities:
-  # Profile-owned reduced-model authorities.
-  scenario_registry: profile:config/scenarios/registry.json
+  # Setup-owned reduced-model authorities.
+  scenario_registry: setup:config/scenarios/registry.json
   scenario_inputs:
-    path: profile:inputs/scenarios
+    path: setup:inputs/scenarios
     kind: directory
   scenario_config_root:
-    path: profile:config/scenarios
+    path: setup:config/scenarios
     kind: directory
   scenario_workbook:
-    path: profile:inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
+    path: setup:inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
     mutable: true
   timeslice_workbook:
-    path: profile:inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx
+    path: setup:inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx
     mutable: true
-  ao_decisions: profile:config/scenarios/ao_extension_decisions.csv
+  ao_decisions: setup:config/scenarios/ao_extension_decisions.csv
   interconnector_authority:
-    path: profile:inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
+    path: setup:inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
     mutable: true
-  interconnector_taxonomy: profile:config/scenarios/technology_types.csv
-  compilation_config: profile:config/compilation/Config_MOMF_T1_A.yaml
-  execution_config: profile:config/execution/Config_MOMF_T1_AB.yaml
+  interconnector_taxonomy: setup:config/scenarios/technology_types.csv
+  compilation_config: setup:config/compilation/Config_MOMF_T1_A.yaml
+  execution_config: setup:config/execution/Config_MOMF_T1_AB.yaml
   preparation_config:
-    path: profile:config/preparation
+    path: setup:config/preparation
     kind: directory
-  country_config: profile:config/preparation/Config_country_codes.yaml
-  region_config: profile:config/preparation/Config_region_consolidation.yaml
+  country_config: setup:config/preparation/Config_country_codes.yaml
+  region_config: setup:config/preparation/Config_region_consolidation.yaml
   osemosys_inputs:
-    path: profile:inputs/osemosys_global
+    path: setup:inputs/osemosys_global
     kind: directory
     mutable: true
   preparation_inputs:
-    path: profile:inputs/preparation
+    path: setup:inputs/preparation
     kind: directory
     mutable: true
   secondary_technology_inputs:
-    path: profile:inputs/preparation/secondary_technologies
+    path: setup:inputs/preparation/secondary_technologies
     kind: directory
 
   # Explicit shared project/package authorities (not fallback paths).

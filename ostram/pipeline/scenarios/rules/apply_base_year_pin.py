@@ -37,7 +37,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from ostram.paths import resolve_paths
-from ostram.profiles import profile_policy
+from ostram.setups import setup_policy
 from ostram.pipeline.scenarios.rules.config_keys import check_keys
 
 from openpyxl import load_workbook
@@ -127,7 +127,7 @@ class PinRule:
 
 def calibration_root(scenario: str) -> str | None:
     """Resolve audited authority through the canonical scenario ancestry."""
-    if not profile_policy("apply_pwr_min_pin", True):
+    if not setup_policy("apply_pwr_min_pin", True):
         return None
     from ostram.pipeline.scenarios.registry import load_registry
     registry = load_registry()

@@ -13,18 +13,18 @@ from unittest import mock
 import ostram.__main__ as cli
 from ostram import examples
 from ostram.paths import ProjectPaths
-from ostram.profile_workspace import (
+from ostram.setup_workspace import (
     STAMP_NAME,
-    ProfileWorkspaceError,
-    prepare_profile,
-    prepared_profile,
-    profile_workspace,
+    SetupWorkspaceError,
+    prepare_setup,
+    prepared_setup,
+    setup_workspace,
 )
-from ostram.profiles import (
+from ostram.setups import (
     AuthorityResolutionError,
-    ProfileManifestError,
+    SetupManifestError,
     load_manifest,
-    load_profile,
+    load_setup,
     resolve_authority_reference,
 )
 
@@ -49,73 +49,73 @@ class ManifestSafetyTests(unittest.TestCase):
             root = Path(temp)
             write_project(root)
             paths = project_paths(root)
-            profile_root = root / "profiles" / "tiny"
-            profile_root.mkdir(parents=True)
+            setup_root = root / "setups" / "tiny"
+            setup_root.mkdir(parents=True)
             self.assertEqual(
                 resolve_authority_reference(
-                    "project:inputs/data.csv", paths=paths, profile_root=profile_root
+                    "project:inputs/data.csv", paths=paths, setup_root=setup_root
                 ),
                 (root / "inputs" / "data.csv").resolve(),
             )
             self.assertEqual(
                 resolve_authority_reference(
-                    "profile:seed.xlsx", paths=paths, profile_root=profile_root
+                    "setup:seed.xlsx", paths=paths, setup_root=setup_root
                 ),
-                (profile_root / "seed.xlsx").resolve(),
+                (setup_root / "seed.xlsx").resolve(),
             )
             self.assertEqual(
                 resolve_authority_reference(
-                    "package:resources/table.csv", paths=paths, profile_root=profile_root
+                    "package:resources/table.csv", paths=paths, setup_root=setup_root
                 ),
                 (root / "ostram" / "resources" / "table.csv").resolve(),
             )
             for reference in (
                 "inputs/data.csv", "http:data.csv", "project:",
-                "project:../secret", "profile:/absolute", "package:C:\\secret",
+                "project:../secret", "setup:/absolute", "package:C:\\secret",
             ):
                 with self.subTest(reference=reference), self.assertRaises(
                     AuthorityResolutionError
                 ):
                     resolve_authority_reference(
-                        reference, paths=paths, profile_root=profile_root
+                        reference, paths=paths, setup_root=setup_root
                     )
 
     def test_duplicate_roles_and_invalid_mutability_fail(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            manifest = root / "profile.yaml"
+            manifest = root / "setup.yaml"
             manifest.write_text(
-                "schema: ostram-profile-v1\nid: tiny\nauthorities:\n"
-                "  seed: profile:a.csv\n  seed: profile:b.csv\n",
+                "schema: ostram-setup-v1\nid: tiny\nauthorities:\n"
+                "  seed: setup:a.csv\n  seed: setup:b.csv\n",
                 encoding="utf-8",
             )
-            with self.assertRaisesRegex(ProfileManifestError, "duplicate"):
+            with self.assertRaisesRegex(SetupManifestError, "duplicate"):
                 load_manifest(manifest)
 
             manifest.write_text(
-                "schema: ostram-profile-v1\nid: tiny\nauthorities:\n"
+                "schema: ostram-setup-v1\nid: tiny\nauthorities:\n"
                 "  seed: {path: project:a.csv, mutable: true}\n",
                 encoding="utf-8",
             )
             parsed = load_manifest(manifest)
             write_project(root)
             (root / "a.csv").write_text("x\n", encoding="utf-8")
-            with self.assertRaisesRegex(ProfileManifestError, "must use profile"):
+            with self.assertRaisesRegex(SetupManifestError, "must use setup"):
                 parsed.source_paths(project_paths(root))
 
 
 class AtomicWorkspaceTests(unittest.TestCase):
     def _fixture(self, root: Path):
         write_project(root)
-        profile_root = root / "fixtures" / "tiny"
-        profile_root.mkdir(parents=True)
-        (profile_root / "seed.txt").write_text("version one", encoding="utf-8")
+        setup_root = root / "fixtures" / "tiny"
+        setup_root.mkdir(parents=True)
+        (setup_root / "seed.txt").write_text("version one", encoding="utf-8")
         (root / "inputs" / "readonly.txt").write_text("readonly", encoding="utf-8")
-        manifest_path = profile_root / "profile.yaml"
+        manifest_path = setup_root / "setup.yaml"
         manifest_path.write_text(
-            "schema: ostram-profile-v1\nid: tiny\nauthorities:\n"
-            "  seed: {path: profile:seed.txt, mutable: true}\n"
-            "  seed_alias: {path: profile:seed.txt, mutable: true}\n"
+            "schema: ostram-setup-v1\nid: tiny\nauthorities:\n"
+            "  seed: {path: setup:seed.txt, mutable: true}\n"
+            "  seed_alias: {path: setup:seed.txt, mutable: true}\n"
             "  readonly: project:inputs/readonly.txt\n",
             encoding="utf-8",
         )
@@ -124,7 +124,7 @@ class AtomicWorkspaceTests(unittest.TestCase):
     def test_prepare_reset_stamp_last_and_readonly_authority(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             paths, manifest = self._fixture(Path(temp))
-            result = prepare_profile(manifest, paths=paths)
+            result = prepare_setup(manifest, paths=paths)
             self.assertTrue((result.workspace / STAMP_NAME).is_file())
             self.assertEqual(result.authorities["seed"].read_text(), "version one")
             self.assertEqual(
@@ -135,7 +135,7 @@ class AtomicWorkspaceTests(unittest.TestCase):
                 (paths.project_root / "inputs" / "readonly.txt").resolve(),
             )
             with self.assertRaises(FileExistsError):
-                prepare_profile(manifest, paths=paths)
+                prepare_setup(manifest, paths=paths)
 
             manifest.path.write_text(
                 manifest.path.read_text(encoding="utf-8")
@@ -145,16 +145,16 @@ class AtomicWorkspaceTests(unittest.TestCase):
             changed_manifest = load_manifest(manifest.path)
             prepared_at = result.stamp["prepared_at_utc"]
             # A changed manifest with the same mutable roles keeps the workspace.
-            result = prepared_profile(changed_manifest, paths=paths)
+            result = prepared_setup(changed_manifest, paths=paths)
             self.assertEqual(result.stamp["manifest_sha256"], changed_manifest.digest)
             self.assertEqual(result.stamp["prepared_at_utc"], prepared_at)
-            result = prepare_profile(changed_manifest, paths=paths, reset=True)
+            result = prepare_setup(changed_manifest, paths=paths, reset=True)
             self.assertEqual(result.stamp["manifest_sha256"], changed_manifest.digest)
             manifest = changed_manifest
 
             (manifest.root / "seed.txt").write_text("version two", encoding="utf-8")
             # Mutable sources are now auto-refreshed instead of raising.
-            refreshed = prepared_profile(manifest, paths=paths)
+            refreshed = prepared_setup(manifest, paths=paths)
             self.assertEqual(refreshed.authorities["seed"].read_text(), "version two")
 
     def test_repeated_prepare_prints_the_message_without_a_traceback(self) -> None:
@@ -168,28 +168,28 @@ class AtomicWorkspaceTests(unittest.TestCase):
             ):
                 self.assertEqual(examples.main(["prepare", "tiny"]), 0)
                 self.assertEqual(examples.main(["prepare", "tiny"]), 1)
-            self.assertIn("profile workspace already exists", stderr.getvalue())
+            self.assertIn("setup workspace already exists", stderr.getvalue())
             self.assertNotIn("Traceback", stderr.getvalue())
 
     def test_unedited_copy_refreshes_and_nothing_moves(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             paths, manifest = self._fixture(Path(temp))
-            result = prepare_profile(manifest, paths=paths)
+            result = prepare_setup(manifest, paths=paths)
             (manifest.root / "seed.txt").write_text("version two", encoding="utf-8")
-            refreshed = prepared_profile(manifest, paths=paths)
+            refreshed = prepared_setup(manifest, paths=paths)
             self.assertEqual(refreshed.authorities["seed"].read_text(), "version two")
             self.assertFalse((result.workspace / "authorities_previous").exists())
 
     def test_edited_file_copy_moves_before_refresh(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             paths, manifest = self._fixture(Path(temp))
-            result = prepare_profile(manifest, paths=paths)
+            result = prepare_setup(manifest, paths=paths)
             copy = result.authorities["seed"]
             relative = copy.relative_to(result.workspace)
             copy.write_text("trainee edit", encoding="utf-8")
             (manifest.root / "seed.txt").write_text("version two", encoding="utf-8")
             with mock.patch("builtins.print") as printed:
-                refreshed = prepared_profile(manifest, paths=paths)
+                refreshed = prepared_setup(manifest, paths=paths)
             self.assertEqual(refreshed.authorities["seed"].read_text(), "version two")
             moved = list((result.workspace / "authorities_previous").glob("*"))
             self.assertEqual(len(moved), 1)
@@ -206,15 +206,15 @@ class AtomicWorkspaceTests(unittest.TestCase):
             manifest = self._change_manifest(
                 manifest,
                 "  readonly:",
-                "  data: {path: profile:data, mutable: true, kind: directory}\n  readonly:",
+                "  data: {path: setup:data, mutable: true, kind: directory}\n  readonly:",
             )
-            result = prepare_profile(manifest, paths=paths)
+            result = prepare_setup(manifest, paths=paths)
             copy = result.authorities["data"]
             relative = copy.relative_to(result.workspace)
             (copy / "trainee.csv").write_text("trainee", encoding="utf-8")
             (data / "b.csv").write_text("b", encoding="utf-8")
             with mock.patch("builtins.print"):
-                refreshed = prepared_profile(manifest, paths=paths)
+                refreshed = prepared_setup(manifest, paths=paths)
             self.assertEqual(
                 sorted(path.name for path in refreshed.authorities["data"].iterdir()),
                 ["a.csv", "b.csv"],
@@ -235,12 +235,12 @@ class AtomicWorkspaceTests(unittest.TestCase):
     def test_changed_manifest_with_same_roles_keeps_workspace(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             paths, manifest = self._fixture(Path(temp))
-            result = prepare_profile(manifest, paths=paths)
+            result = prepare_setup(manifest, paths=paths)
             result.authorities["seed"].write_text("trainee edit", encoding="utf-8")
 
             for entry_point in (
-                lambda changed: prepared_profile(changed, paths=paths),
-                lambda changed: prepare_profile(changed, paths=paths),
+                lambda changed: prepared_setup(changed, paths=paths),
+                lambda changed: prepare_setup(changed, paths=paths),
             ):
                 manifest = self._change_manifest(manifest)
                 result = entry_point(manifest)
@@ -258,14 +258,14 @@ class AtomicWorkspaceTests(unittest.TestCase):
     def test_changed_mutable_roles_move_workspace_and_prepare_again(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             paths, manifest = self._fixture(Path(temp))
-            result = prepare_profile(manifest, paths=paths)
+            result = prepare_setup(manifest, paths=paths)
             result.authorities["seed"].write_text("trainee edit", encoding="utf-8")
-            alias = "  seed_alias: {path: profile:seed.txt, mutable: true}\n"
+            alias = "  seed_alias: {path: setup:seed.txt, mutable: true}\n"
             readonly = "  readonly:"
 
             for entry_point, old, new in (
-                (lambda changed: prepared_profile(changed, paths=paths), alias, ""),
-                (lambda changed: prepare_profile(changed, paths=paths), readonly, alias + readonly),
+                (lambda changed: prepared_setup(changed, paths=paths), alias, ""),
+                (lambda changed: prepare_setup(changed, paths=paths), readonly, alias + readonly),
             ):
                 manifest = self._change_manifest(manifest, old, new)
                 result = entry_point(manifest)
@@ -283,25 +283,25 @@ class AtomicWorkspaceTests(unittest.TestCase):
     def test_interrupted_foreign_and_missing_prepared_files_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             paths, manifest = self._fixture(Path(temp))
-            interrupted = paths.workspace / "profiles" / ".tiny.preparing"
+            interrupted = paths.workspace / "setups" / ".tiny.preparing"
             interrupted.mkdir(parents=True)
-            with self.assertRaisesRegex(ProfileWorkspaceError, "interrupted"):
-                prepare_profile(manifest, paths=paths)
+            with self.assertRaisesRegex(SetupWorkspaceError, "interrupted"):
+                prepare_setup(manifest, paths=paths)
             interrupted.rmdir()
 
-            result = prepare_profile(manifest, paths=paths)
+            result = prepare_setup(manifest, paths=paths)
             result.authorities["seed"].unlink()
-            with self.assertRaisesRegex(ProfileWorkspaceError, "missing"):
-                prepared_profile(manifest, paths=paths)
+            with self.assertRaisesRegex(SetupWorkspaceError, "missing"):
+                prepared_setup(manifest, paths=paths)
             # The source still exists: absence in the bundle may not fall back.
             self.assertTrue((manifest.root / "seed.txt").is_file())
 
-            stamp_path = profile_workspace(paths, "tiny") / STAMP_NAME
+            stamp_path = setup_workspace(paths, "tiny") / STAMP_NAME
             stamp = json.loads(stamp_path.read_text(encoding="utf-8"))
-            stamp["profile_id"] = "foreign"
+            stamp["setup_id"] = "foreign"
             stamp_path.write_text(json.dumps(stamp), encoding="utf-8")
-            with self.assertRaisesRegex(ProfileWorkspaceError, "foreign"):
-                prepared_profile(manifest, paths=paths)
+            with self.assertRaisesRegex(SetupWorkspaceError, "foreign"):
+                prepared_setup(manifest, paths=paths)
 
 
 class ProfileCliTests(unittest.TestCase):
@@ -310,30 +310,30 @@ class ProfileCliTests(unittest.TestCase):
             root = Path(temp)
             write_project(root)
             (root / "inputs" / "authority.txt").write_text("ok", encoding="utf-8")
-            profiles = root / "config" / "profiles"
+            profiles = root / "config" / "setups"
             profiles.mkdir(parents=True)
             (profiles / "registry.json").write_text(
                 json.dumps({
-                    "schema": "ostram-profile-registry-v1",
-                    "profiles": {"tiny": "project:config/profiles/tiny.yaml"},
+                    "schema": "ostram-setup-registry-v1",
+                    "setups": {"tiny": "project:config/setups/tiny.yaml"},
                 }), encoding="utf-8"
             )
             (profiles / "tiny.yaml").write_text(
-                "schema: ostram-profile-v1\nid: tiny\nauthorities:\n"
+                "schema: ostram-setup-v1\nid: tiny\nauthorities:\n"
                 "  authority: project:inputs/authority.txt\n",
                 encoding="utf-8",
             )
             events = []
 
             def load_route(route):
-                events.append(("import", os.environ.get("OSTRAM_PROFILE")))
+                events.append(("import", os.environ.get("OSTRAM_SETUP")))
                 return types.SimpleNamespace(
                     main=lambda: events.append(("argv", tuple(__import__("sys").argv)))
                 )
 
             with mock.patch.object(cli, "_load_route_module", side_effect=load_route):
                 result = cli.main([
-                    "--project-root", str(root), "--profile", "tiny",
+                    "--project-root", str(root), "--setup", "tiny",
                     "run", "--sentinel",
                 ])
             self.assertEqual(result, 0)
@@ -348,15 +348,15 @@ class ProfileCliTests(unittest.TestCase):
             main=mock.Mock(side_effect=lambda: seen.append(tuple(sys.argv)))
         )
         with mock.patch.object(cli, "_load_route_module", return_value=fake):
-            cli.main(["run", "--profile", "full"])
+            cli.main(["run", "--setup", "full"])
         self.assertEqual(
-            seen, [("python -m ostram run", "--profile", "full")]
+            seen, [("python -m ostram run", "--setup", "full")]
         )
 
     def test_unqualified_and_explicit_full_have_same_authority_bundle(self) -> None:
         paths = project_paths(REPO_ROOT)
-        implicit = load_profile("south_asia", paths=paths)
-        explicit = load_profile("south_asia", paths=paths)
+        implicit = load_setup("south_asia", paths=paths)
+        explicit = load_setup("south_asia", paths=paths)
         self.assertEqual(implicit.digest, explicit.digest)
         self.assertFalse(implicit.policies["lid_rule_new_semantics"])
         self.assertEqual(
@@ -368,7 +368,7 @@ class ProfileCliTests(unittest.TestCase):
 
     def test_unescap_manifest_is_complete_and_namespaced(self) -> None:
         paths = project_paths(REPO_ROOT)
-        manifest = load_profile("unescap", paths=paths)
+        manifest = load_setup("unescap_training", paths=paths)
         sources = manifest.source_paths(paths)
         required_roles = {
             "scenario_registry", "scenario_inputs", "scenario_config_root",

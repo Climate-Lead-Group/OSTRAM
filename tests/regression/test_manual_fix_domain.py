@@ -11,12 +11,12 @@ import unittest
 
 from openpyxl import Workbook
 
-from ostram.paths import PROFILE_AUTHORITIES_ENV
+from ostram.paths import SETUP_AUTHORITIES_ENV
 from ostram.pipeline.scenarios.transformations.add_ao_c2a import load_taxonomy
 
 
 ROOT = Path(__file__).resolve().parents[2]
-TRAINING_TAXONOMY = ROOT / "examples/unescap/config/scenarios/technology_types.csv"
+TRAINING_TAXONOMY = ROOT / "examples/unescap_training/config/scenarios/technology_types.csv"
 
 
 class ManualFixDomainTests(unittest.TestCase):
@@ -60,7 +60,7 @@ class ManualFixDomainTests(unittest.TestCase):
                 PYTHONUTF8="1",
                 PYTHONDONTWRITEBYTECODE="1",
             )
-            env[PROFILE_AUTHORITIES_ENV] = json.dumps(
+            env[SETUP_AUTHORITIES_ENV] = json.dumps(
                 {"interconnector_taxonomy": str(TRAINING_TAXONOMY)})
             return subprocess.run(
                 [sys.executable, "-B", "-m",

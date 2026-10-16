@@ -1,7 +1,0 @@
-{
-  "schema": "ostram-profile-registry-v1",
-  "profiles": {
-    "south_asia": "project:config/profiles/south_asia.yaml",
-    "unescap": "project:examples/unescap/profile.yaml"
-  }
-}

@@ -107,8 +107,8 @@ def _build(tmp: Path, metadata=METADATA, snapshots=None):
         snapshots = [("baseline", before), ("edited", after)]
     return build_dashboard_data(
         snapshots,
-        profile_id="synthetic",
-        manifest=tmp / "profile.yaml",
+        setup_id="synthetic",
+        manifest=tmp / "setup.yaml",
         workspace=tmp / "workspace",
         metadata=metadata,
     )
@@ -116,7 +116,7 @@ def _build(tmp: Path, metadata=METADATA, snapshots=None):
 
 def _payload(document: str) -> dict:
     match = re.search(
-        r'<script id="ostram-profile-data" type="application/json">(.*?)</script>',
+        r'<script id="ostram-setup-data" type="application/json">(.*?)</script>',
         document,
         re.S,
     )
@@ -352,8 +352,8 @@ class RendererTests(unittest.TestCase):
 
     def test_embedded_profile_report_payload_round_trips(self) -> None:
         payload = _payload(self.document)
-        self.assertEqual(payload["schema"], "ostram-profile-report-v1")
-        self.assertEqual(payload["profile_id"], "synthetic")
+        self.assertEqual(payload["schema"], "ostram-setup-report-v1")
+        self.assertEqual(payload["setup_id"], "synthetic")
         self.assertEqual(payload["snapshot_labels"], ["baseline", "edited"])
         self.assertEqual(
             payload["effective_values"]["interconnector_capacity_gw"], 2.496
@@ -396,7 +396,7 @@ class EscapingTests(unittest.TestCase):
             # Outside the inert JSON payload, the hostile title must appear
             # only in HTML-escaped form.
             without_payload = re.sub(
-                r'<script id="ostram-profile-data"[^>]*>.*?</script>',
+                r'<script id="ostram-setup-data"[^>]*>.*?</script>',
                 "",
                 document,
                 flags=re.S,
@@ -415,8 +415,8 @@ class ReportRouteTests(unittest.TestCase):
         _write_csv(execution / "OSTRAM_Combined_Inputs_Outputs.csv", _alpha_rows())
         paths = SimpleNamespace(workspace=workspace, execution_workspace=execution)
         manifest = SimpleNamespace(
-            profile_id="unescap",
-            path=workspace / "profile.yaml",
+            setup_id="unescap_training",
+            path=workspace / "setup.yaml",
             metadata=METADATA,
         )
         return workspace, execution, paths, manifest
@@ -426,7 +426,7 @@ class ReportRouteTests(unittest.TestCase):
             workspace, execution, paths, manifest = self._workspace(temp)
             with mock.patch("ostram.examples.resolve_paths", return_value=paths):
                 report = _report(manifest, "baseline")
-                self.assertEqual(report, workspace / "reports" / "unescap.html")
+                self.assertEqual(report, workspace / "reports" / "unescap_training.html")
                 self.assertTrue(
                     (workspace / "reports" / "snapshots" / "baseline.csv").exists()
                 )
@@ -439,7 +439,7 @@ class ReportRouteTests(unittest.TestCase):
                 )
                 _report(manifest, "exercise1")
                 rebuilt = _report(manifest, None)
-                self.assertEqual(rebuilt, workspace / "reports" / "unescap.html")
+                self.assertEqual(rebuilt, workspace / "reports" / "unescap_training.html")
                 payload = _payload(rebuilt.read_text(encoding="utf-8"))
                 self.assertEqual(
                     sorted(payload["snapshot_labels"]), ["baseline", "exercise1"]
@@ -458,7 +458,7 @@ class ReportRouteTests(unittest.TestCase):
                 compared = _report(manifest, None, "forward,reverse,bidirectional")
             self.assertEqual(
                 compared,
-                workspace / "reports" / "unescap-interconnector-comparison.html",
+                workspace / "reports" / "unescap_training-interconnector-comparison.html",
             )
             self.assertTrue(compared.resolve().is_relative_to(workspace))
             payload = _payload(compared.read_text(encoding="utf-8"))

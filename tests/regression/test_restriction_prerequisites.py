@@ -39,10 +39,10 @@ from tests.regression.test_run_orchestration import (
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 UNESCAP_REGISTRY = (
-    REPO_ROOT / "examples" / "unescap" / "config" / "scenarios" / "registry.json"
+    REPO_ROOT / "examples" / "unescap_training" / "config" / "scenarios" / "registry.json"
 )
 UNESCAP_WORKBOOK = (
-    REPO_ROOT / "examples" / "unescap" / "inputs" / "scenarios"
+    REPO_ROOT / "examples" / "unescap_training" / "inputs" / "scenarios"
     / "OSTRAM_Scenario_Inputs.xlsx"
 )
 PREPARATION_WORKSPACE = REPO_ROOT / "workspace" / "preparation"

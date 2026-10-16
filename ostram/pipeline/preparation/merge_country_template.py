@@ -12,9 +12,9 @@ from typing import Any, Sequence
 import pandas as pd
 
 from ostram.paths import resolve_paths
-from ostram.profiles import (
-    DEFAULT_PROFILE,
-    active_profile_id,
+from ostram.setups import (
+    DEFAULT_SETUP,
+    active_setup_id,
 )
 
 
@@ -33,9 +33,9 @@ DATASETS = (
 
 
 def _default_input_dir(paths) -> Path:
-    """Keep the default profile's legacy staging target; profiles merge their mutable authority."""
+    """Keep the default setup's legacy staging target; setups merge their mutable authority."""
 
-    if active_profile_id() == DEFAULT_PROFILE:
+    if active_setup_id() == DEFAULT_SETUP:
         return paths.preparation_workspace / "og_csvs_inputs"
     return paths.osemosys_inputs
 
@@ -126,10 +126,10 @@ def _invalidate_stale_snapshots(a1_outputs: Path) -> list[str]:
 
 
 def _find_a1_outputs(paths) -> Path:
-    """Resolve the A1_Outputs directory robustly across profile contexts.
+    """Resolve the A1_Outputs directory robustly across setup contexts.
 
     ``paths.a1_outputs`` applies ``.resolve()`` which can behave differently
-    on Windows depending on the profile environment.  This helper tries
+    on Windows depending on the setup environment.  This helper tries
     multiple strategies to locate the directory that actually contains the
     post-A2 snapshots.
     """
@@ -191,7 +191,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     counts = merge_country_template(template, args.input_dir, args.centerpoints)
     print(f"Merged country template: {counts}")
 
-    # For non-default profiles the primary merge target is the authority
+    # For non-default setups the primary merge target is the authority
     # directory, but A1 reads from og_csvs_inputs.  Mirror the merge there
     # so the next A1 run picks up the new country data.
     og_csvs = paths.preparation_workspace / "og_csvs_inputs"

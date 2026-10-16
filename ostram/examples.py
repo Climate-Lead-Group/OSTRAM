@@ -1,4 +1,4 @@
-"""Prepare registered example bundles and generate profile-aware reports."""
+"""Prepare registered example bundles and generate setup-aware reports."""
 
 from __future__ import annotations
 
@@ -10,26 +10,26 @@ import sys
 from typing import Sequence
 
 from ostram.paths import resolve_paths
-from ostram.profile_workspace import prepare_profile
-from ostram.profiles import PROFILE_ENV, PROFILE_MANIFEST_ENV, load_manifest
+from ostram.setup_workspace import prepare_setup
+from ostram.setups import SETUP_ENV, SETUP_MANIFEST_ENV, load_manifest
 from ostram.reporting.training_dashboard import generate_report
 
 
 _CAPTURE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
 
-def _active_manifest(profile_id: str):
+def _active_manifest(setup_id: str):
     import os
 
-    active = os.environ.get(PROFILE_ENV)
-    if active != profile_id:
+    active = os.environ.get(SETUP_ENV)
+    if active != setup_id:
         raise RuntimeError(
-            f"active profile is {active!r}, but command requested {profile_id!r}"
+            f"active setup is {active!r}, but command requested {setup_id!r}"
         )
-    raw = os.environ.get(PROFILE_MANIFEST_ENV)
+    raw = os.environ.get(SETUP_MANIFEST_ENV)
     if not raw:
-        raise RuntimeError("profile manifest environment is missing")
-    return load_manifest(Path(raw), expected_profile=profile_id)
+        raise RuntimeError("setup manifest environment is missing")
+    return load_manifest(Path(raw), expected_setup=setup_id)
 
 
 def _result_candidates(paths, metadata) -> list[Path]:
@@ -80,7 +80,7 @@ def _report(
         (path.stem, path)
         for path in sorted(snapshots_root.glob("*.csv"))
     ]
-    output_name = f"{manifest.profile_id}.html"
+    output_name = f"{manifest.setup_id}.html"
     if compare is not None:
         requested = _comparison_labels(compare)
         by_label = dict(snapshots)
@@ -91,7 +91,7 @@ def _report(
                 f"available={sorted(by_label)}"
             )
         snapshots = [(label, by_label[label]) for label in requested]
-        output_name = f"{manifest.profile_id}-interconnector-comparison.html"
+        output_name = f"{manifest.setup_id}-interconnector-comparison.html"
     if not snapshots and candidates:
         snapshots = [("current", candidates[-1])]
     if not snapshots:
@@ -99,7 +99,7 @@ def _report(
     return generate_report(
         snapshots,
         report_root / output_name,
-        profile_id=manifest.profile_id,
+        setup_id=manifest.setup_id,
         manifest=manifest.path,
         workspace=paths.workspace,
         metadata=manifest.metadata,
@@ -107,14 +107,14 @@ def _report(
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Run ``example prepare`` or ``example report`` for the active profile."""
+    """Run ``example prepare`` or ``example report`` for the active setup."""
     parser = argparse.ArgumentParser(prog="python -m ostram example")
     subparsers = parser.add_subparsers(dest="action", required=True)
     prepare = subparsers.add_parser("prepare")
-    prepare.add_argument("profile")
+    prepare.add_argument("setup")
     prepare.add_argument("--reset", action="store_true")
     report = subparsers.add_parser("report")
-    report.add_argument("profile")
+    report.add_argument("setup")
     selection = report.add_mutually_exclusive_group()
     selection.add_argument("--capture")
     selection.add_argument(
@@ -122,17 +122,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="comma-separated captured labels to include in a comparison report",
     )
     args = parser.parse_args(argv)
-    manifest = _active_manifest(args.profile)
+    manifest = _active_manifest(args.setup)
     try:
         if args.action == "prepare":
-            prepared = prepare_profile(manifest, paths=resolve_paths(), reset=args.reset)
-            print(f"Prepared profile {manifest.profile_id}: {prepared.workspace}")
+            prepared = prepare_setup(manifest, paths=resolve_paths(), reset=args.reset)
+            print(f"Prepared setup {manifest.setup_id}: {prepared.workspace}")
             return 0
         output = _report(manifest, args.capture, args.compare)
     except FileExistsError as error:
         print(error, file=sys.stderr)
         return 1
-    print(f"Profile report: {output}")
+    print(f"Setup report: {output}")
     return 0
 
 

@@ -2,7 +2,7 @@
 
 ## 1. VRE resource-potential ceilings — reference list
 
-The applied values are the `vre_ceilings` section of `config/profiles/south_asia.yaml`.
+The applied values are the `vre_ceilings` section of `config/setups/south_asia.yaml`.
 
 **India — solar (NISE):**
 - NISE/MNRE state-wise solar potential (2014): **748.98 GWp** (3% of wasteland + Census 2011). https://mnre.gov.in/en/solar-overview/ · PIB https://www.pib.gov.in/Pressreleaseshare.aspx?PRID=2003561

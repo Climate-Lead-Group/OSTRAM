@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import Sequence
 
 from ostram.paths import ProjectPaths, resolve_paths
-from ostram.profiles import PROFILE_MANIFEST_ENV, active_profile_id
+from ostram.setups import SETUP_MANIFEST_ENV, active_setup_id
 from ostram.terminal import RunReporter, activate_reporter, active_reporter
 
 from ostram.pipeline.scenarios.registry import (
@@ -470,13 +470,13 @@ def _create_run_reporter(
     verbose: bool,
     compile_only: bool = False,
 ) -> RunReporter:
-    manifest_value = os.environ.get(PROFILE_MANIFEST_ENV)
+    manifest_value = os.environ.get(SETUP_MANIFEST_ENV)
     return RunReporter(
         project_root=paths.project_root,
         workspace=paths.workspace,
         scenarios=scenarios,
         verbose=verbose,
-        profile_id=active_profile_id(),
+        setup_id=active_setup_id(),
         manifest=Path(manifest_value) if manifest_value else None,
         compile_only=compile_only,
     )
@@ -517,8 +517,8 @@ def main() -> None:
     with activate_reporter(reporter), reporter.capture_output():
         try:
             print(f"Using environment: {env_name}")
-            reporter.note(f"Profile: {active_profile_id()}")
-            reporter.note(f"Manifest: {os.environ.get(PROFILE_MANIFEST_ENV, 'compatibility default')}")
+            reporter.note(f"Setup: {active_setup_id()}")
+            reporter.note(f"Manifest: {os.environ.get(SETUP_MANIFEST_ENV, 'compatibility default')}")
             reporter.note(f"Workspace: {paths.workspace}")
             print(f"DVC config: {dvc_file}")
             reporter.note(f"Selected scenarios: {', '.join(scenarios)}")

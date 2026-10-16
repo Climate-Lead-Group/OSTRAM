@@ -1,6 +1,6 @@
 {
   "schema": "ostram-scenario-registry-v1",
-  "profile": "unescap",
+  "setup": "unescap_training",
   "support_scenarios": [
     "BAU"
   ],

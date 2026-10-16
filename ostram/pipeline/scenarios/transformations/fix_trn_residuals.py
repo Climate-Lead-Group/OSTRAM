@@ -39,7 +39,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
-from ostram.profiles import DEFAULT_PROFILE, active_profile_id
+from ostram.setups import DEFAULT_SETUP, active_setup_id
 from .interconnector_authority import (
     MINIMUM_CONTRIBUTION_TECHS,
     load_minimum_boundary_authority,
@@ -194,7 +194,7 @@ def _validate_authority_mapping(
     authority: Mapping[str, Mapping[int, float]],
 ) -> None:
     techs = set(authority)
-    strict_full = active_profile_id() == DEFAULT_PROFILE
+    strict_full = active_setup_id() == DEFAULT_SETUP
     if strict_full and techs != set(AUTHORITY_TECHS):
         missing = sorted(AUTHORITY_TECHS - techs)
         extra = sorted(techs - AUTHORITY_TECHS)
@@ -237,9 +237,9 @@ def load_rc_authority(authority_path: Path) -> Dict[str, Dict[int, float]]:
             )
         ws = wb[AUTHORITY_SHEET_NAME]
         meta_cols, year_cols = _build_column_index(ws)
-        strict_full = active_profile_id() == DEFAULT_PROFILE
+        strict_full = active_setup_id() == DEFAULT_SETUP
         # Core columns are always required; extended metadata columns are
-        # only present (and validated) in the default profile workbook.
+        # only present (and validated) in the default setup workbook.
         core_meta = {TECH_COL, PARAM_COL, "Unit"}
         extended_meta = {"Parameter.ID", PROJ_MODE_COL, "Projection.Parameter"}
         required_meta = core_meta | extended_meta if strict_full else core_meta
@@ -320,7 +320,7 @@ def apply_rc_authority(
     _validate_authority_mapping(authority)
     authority_techs = frozenset(authority)
     # Determine which years the authority actually covers (may be a subset
-    # of AUTHORITY_YEARS for reduced-profile workbooks).
+    # of AUTHORITY_YEARS for reduced-setup workbooks).
     authority_years = set()
     for tech_years in authority.values():
         authority_years |= set(tech_years)
@@ -740,14 +740,14 @@ def run_fix(
     # All production authority families fail closed before the target workbook
     # is opened or can be mutated.
     authority = load_rc_authority(authority_path)
-    strict_full = active_profile_id() == DEFAULT_PROFILE
+    strict_full = active_setup_id() == DEFAULT_SETUP
     if strict_full:
         contribution_authority = load_minimum_contribution_authority(
             authority_path
         )
         load_minimum_boundary_authority(authority_path)
     else:
-        # Reduced profile workbooks retain their own RC rows but intentionally
+        # Reduced setup workbooks retain their own RC rows but intentionally
         # omit the South Asia model's 11-row additive contribution family and
         # two-row LinkFreeze boundary family.
         contribution_authority = {}

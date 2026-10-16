@@ -21,7 +21,7 @@ EXPECTED_CONFIG_FILES = (
     "config/preparation/Config_country_codes.yaml",
     "config/preparation/Config_region_consolidation.yaml",
     SETUP_FILE.relative_to(REPO_ROOT).as_posix(),
-    "config/profiles/registry.json",
+    "config/setups/registry.json",
     "config/scenarios/A_Calibrated_BAU/bau_calibration.yaml",
     "config/scenarios/A_Calibrated_BAU/lid_rule.yaml",
     "config/scenarios/A_Calibrated_BAU/relax_interconnectors.yaml",
@@ -101,7 +101,7 @@ class ConfigFileTests(unittest.TestCase):
         ]
         problems = [
             f"{label.format(name)} has no registered scenario. Register the "
-            "scenario in scenario_registry in config/profiles/south_asia.yaml, or "
+            "scenario in scenario_registry in config/setups/south_asia.yaml, or "
             "delete the entry."
             for label, name in entries
             if name not in registered

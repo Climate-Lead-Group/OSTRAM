@@ -20,7 +20,7 @@ the [glossary](glossary.md).
 | The internal transmission residuals | `config/scenarios/rules/internal_tx_residuals.csv` | One row per country-region. |
 | The base-year pin table | `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | Reviewed values for 2023 to 2026. The pin code expects the South Asia table, as described below. |
 | The gas and oil allowance | `inputs/execution/firm_capacity_fallbacks_by_cr.xlsx` | One row per country-region. |
-| The profile | `config/profiles/south_asia.yaml` | The sources of record, the scenario registry, the shared VRE ceilings and the scenario edits. A second profile can be registered in `config/profiles/registry.json`, as the training profile `examples/unescap/profile.yaml` is. |
+| The setup | `config/setups/south_asia.yaml` | The sources of record, the scenario registry, the shared VRE ceilings and the scenario edits. A second setup can be registered in `config/setups/registry.json`, as the training setup `examples/unescap_training/setup.yaml` is. |
 | The model file | `model/osemosys_fast_preprocessed.txt` | The demand accounting sets and the historical trade constraints name South Asia fuels and corridors, as described below. |
 
 ## South Asia specifics in code

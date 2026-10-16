@@ -1,6 +1,6 @@
-"""Fail-closed profile manifests and namespaced authority resolution.
+"""Fail-closed setup manifests and namespaced authority resolution.
 
-Profiles are deliberately data-only.  Loading this module never imports a
+Setups are deliberately data-only.  Loading this module never imports a
 pipeline route and never creates a workspace.  A manifest is resolved as one
 bundle so a caller cannot accidentally combine authorities from two models.
 """
@@ -20,29 +20,29 @@ import yaml
 from ostram.paths import ProjectPaths
 
 
-PROFILE_ENV = "OSTRAM_PROFILE"
-PROFILE_MANIFEST_ENV = "OSTRAM_PROFILE_MANIFEST"
-PROFILE_WORKSPACE_ENV = "OSTRAM_PROFILE_WORKSPACE"
-PROFILE_AUTHORITIES_ENV = "OSTRAM_PROFILE_AUTHORITIES"
-PROFILE_POLICIES_ENV = "OSTRAM_PROFILE_POLICIES"
-DEFAULT_PROFILE = "south_asia"
-PROFILE_SCHEMA = "ostram-profile-v1"
-REGISTRY_SCHEMA = "ostram-profile-registry-v1"
-_PROFILE_ID = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
+SETUP_ENV = "OSTRAM_SETUP"
+SETUP_MANIFEST_ENV = "OSTRAM_SETUP_MANIFEST"
+SETUP_WORKSPACE_ENV = "OSTRAM_SETUP_WORKSPACE"
+SETUP_AUTHORITIES_ENV = "OSTRAM_SETUP_AUTHORITIES"
+SETUP_POLICIES_ENV = "OSTRAM_SETUP_POLICIES"
+DEFAULT_SETUP = "south_asia"
+SETUP_SCHEMA = "ostram-setup-v1"
+REGISTRY_SCHEMA = "ostram-setup-registry-v1"
+_SETUP_ID = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 _ROLE = re.compile(r"^[a-z][a-z0-9_]*$")
 _REFERENCE = re.compile(r"^([a-z]+):(.*)$", re.DOTALL)
-SUPPORTED_NAMESPACES = frozenset({"profile", "project", "package"})
+SUPPORTED_NAMESPACES = frozenset({"setup", "project", "package"})
 
 
-class ProfileError(RuntimeError):
-    """Base error for invalid or unavailable profile state."""
+class SetupError(RuntimeError):
+    """Base error for invalid or unavailable setup state."""
 
 
-class ProfileManifestError(ProfileError):
-    """Raised when a profile registry or manifest violates its contract."""
+class SetupManifestError(SetupError):
+    """Raised when a setup registry or manifest violates its contract."""
 
 
-class AuthorityResolutionError(ProfileError):
+class AuthorityResolutionError(SetupError):
     """Raised when a namespaced authority reference is unsafe."""
 
 
@@ -55,7 +55,7 @@ def _construct_unique_mapping(loader, node, deep=False):
     for key_node, value_node in node.value:
         key = loader.construct_object(key_node, deep=deep)
         if key in mapping:
-            raise ProfileManifestError(f"duplicate mapping key/authority role: {key!r}")
+            raise SetupManifestError(f"duplicate mapping key/authority role: {key!r}")
         mapping[key] = loader.construct_object(value_node, deep=deep)
     return mapping
 
@@ -69,12 +69,12 @@ _UniqueKeyLoader.add_constructor(
 def _load_mapping(path: Path) -> Mapping[str, Any]:
     try:
         raw = yaml.load(path.read_text(encoding="utf-8"), Loader=_UniqueKeyLoader)
-    except ProfileError:
+    except SetupError:
         raise
     except Exception as error:
-        raise ProfileManifestError(f"could not parse {path}: {error}") from error
+        raise SetupManifestError(f"could not parse {path}: {error}") from error
     if not isinstance(raw, Mapping):
-        raise ProfileManifestError(f"{path} must contain a mapping")
+        raise SetupManifestError(f"{path} must contain a mapping")
     return raw
 
 
@@ -110,7 +110,7 @@ def resolve_authority_reference(
     reference: str,
     *,
     paths: ProjectPaths,
-    profile_root: Path,
+    setup_root: Path,
 ) -> Path:
     """Resolve one explicit ``scheme:path`` reference inside its allowed root."""
 
@@ -126,7 +126,7 @@ def resolve_authority_reference(
         raise AuthorityResolutionError(f"unsupported authority namespace: {scheme!r}")
     relative = _safe_relative(value)
     roots = {
-        "profile": Path(profile_root),
+        "setup": Path(setup_root),
         "project": paths.project_root,
         "package": paths.package_root,
     }
@@ -135,10 +135,10 @@ def resolve_authority_reference(
 
 @dataclass(frozen=True)
 class AuthoritySpec:
-    """One authority of a profile manifest.
+    """One authority of a setup manifest.
 
     ``reference`` is a ``scheme:path`` reference, ``mutable`` marks an authority
-    that is copied into the profile workspace, and ``kind`` is ``file`` or
+    that is copied into the setup workspace, and ``kind`` is ``file`` or
     ``directory``.
     """
 
@@ -156,10 +156,10 @@ class AuthoritySpec:
 
 
 @dataclass(frozen=True)
-class ProfileManifest:
-    """One loaded profile manifest with its authorities, metadata and policies."""
+class SetupManifest:
+    """One loaded setup manifest with its authorities, metadata and policies."""
 
-    profile_id: str
+    setup_id: str
     path: Path
     authorities: Mapping[str, AuthoritySpec]
     metadata: Mapping[str, Any] = field(default_factory=dict)
@@ -192,11 +192,11 @@ class ProfileManifest:
                 target = resolve_authority_reference(
                     spec.reference,
                     paths=paths,
-                    profile_root=self.root,
+                    setup_root=self.root,
                 )
-                if spec.mutable and spec.namespace != "profile":
-                    raise ProfileManifestError(
-                        f"mutable authority {role!r} must use profile:, "
+                if spec.mutable and spec.namespace != "setup":
+                    raise SetupManifestError(
+                        f"mutable authority {role!r} must use setup:, "
                         f"not {spec.namespace or 'an implicit namespace'}"
                     )
                 if require_exists:
@@ -209,8 +209,8 @@ class ProfileManifest:
             except Exception as error:
                 errors.append(f"{role}: {error}")
         if errors:
-            raise ProfileManifestError(
-                f"profile {self.profile_id!r} authority bundle is invalid; "
+            raise SetupManifestError(
+                f"setup {self.setup_id!r} authority bundle is invalid; "
                 + "; ".join(errors)
             )
         return resolved
@@ -219,37 +219,37 @@ class ProfileManifest:
         """Check that the manifest declares an authority for every role in ``roles``.
 
         Raises:
-            ProfileManifestError: If any role has no authority.
+            SetupManifestError: If any role has no authority.
         """
 
         missing = [role for role in roles if role not in self.authorities]
         if missing:
-            raise ProfileManifestError(
-                f"profile {self.profile_id!r} is missing authorities: {missing}"
+            raise SetupManifestError(
+                f"setup {self.setup_id!r} is missing authorities: {missing}"
             )
 
 
 def _parse_authority(role: str, value: object) -> AuthoritySpec:
     if not _ROLE.fullmatch(role):
-        raise ProfileManifestError(f"invalid authority role: {role!r}")
+        raise SetupManifestError(f"invalid authority role: {role!r}")
     if isinstance(value, str):
         return AuthoritySpec(role=role, reference=value)
     if not isinstance(value, Mapping):
-        raise ProfileManifestError(f"authority {role!r} must be text or a mapping")
+        raise SetupManifestError(f"authority {role!r} must be text or a mapping")
     unknown = set(value) - {"path", "mutable", "kind"}
     if unknown:
-        raise ProfileManifestError(
+        raise SetupManifestError(
             f"authority {role!r} has unsupported keys: {sorted(unknown)}"
         )
     reference = value.get("path")
     if not isinstance(reference, str):
-        raise ProfileManifestError(f"authority {role!r} requires a text path")
+        raise SetupManifestError(f"authority {role!r} requires a text path")
     mutable = value.get("mutable", False)
     if not isinstance(mutable, bool):
-        raise ProfileManifestError(f"authority {role!r} mutable must be boolean")
+        raise SetupManifestError(f"authority {role!r} mutable must be boolean")
     kind = value.get("kind", "file")
     if kind not in ("file", "directory"):
-        raise ProfileManifestError(
+        raise SetupManifestError(
             f"authority {role!r} kind must be 'file' or 'directory'"
         )
     return AuthoritySpec(role=role, reference=reference, mutable=mutable, kind=kind)
@@ -258,35 +258,35 @@ def _parse_authority(role: str, value: object) -> AuthoritySpec:
 def load_manifest(
     path: Path | str,
     *,
-    expected_profile: str | None = None,
-) -> ProfileManifest:
-    """Load and validate one profile manifest file.
+    expected_setup: str | None = None,
+) -> SetupManifest:
+    """Load and validate one setup manifest file.
 
     Raises:
         FileNotFoundError: If ``path`` is not a file.
-        ProfileManifestError: If the schema, id, authorities, metadata or
-            policies are invalid, or if the id differs from ``expected_profile``.
+        SetupManifestError: If the schema, id, authorities, metadata or
+            policies are invalid, or if the id differs from ``expected_setup``.
     """
 
     manifest_path = Path(path).resolve()
     if not manifest_path.is_file():
-        raise FileNotFoundError(f"profile manifest not found: {manifest_path}")
+        raise FileNotFoundError(f"setup manifest not found: {manifest_path}")
     raw = _load_mapping(manifest_path)
-    if raw.get("schema") != PROFILE_SCHEMA:
-        raise ProfileManifestError(
-            f"unsupported profile schema in {manifest_path}: {raw.get('schema')!r}"
+    if raw.get("schema") != SETUP_SCHEMA:
+        raise SetupManifestError(
+            f"unsupported setup schema in {manifest_path}: {raw.get('schema')!r}"
         )
-    profile_id = raw.get("id")
-    if not isinstance(profile_id, str) or not _PROFILE_ID.fullmatch(profile_id):
-        raise ProfileManifestError(f"invalid profile id: {profile_id!r}")
-    if expected_profile is not None and profile_id != expected_profile:
-        raise ProfileManifestError(
-            f"registry requested profile {expected_profile!r}, but manifest declares "
-            f"{profile_id!r}"
+    setup_id = raw.get("id")
+    if not isinstance(setup_id, str) or not _SETUP_ID.fullmatch(setup_id):
+        raise SetupManifestError(f"invalid setup id: {setup_id!r}")
+    if expected_setup is not None and setup_id != expected_setup:
+        raise SetupManifestError(
+            f"registry requested setup {expected_setup!r}, but manifest declares "
+            f"{setup_id!r}"
         )
     authorities_raw = raw.get("authorities")
     if not isinstance(authorities_raw, Mapping) or not authorities_raw:
-        raise ProfileManifestError("profile must declare a non-empty authorities mapping")
+        raise SetupManifestError("setup must declare a non-empty authorities mapping")
     authorities = {
         str(role): _parse_authority(str(role), value)
         for role, value in authorities_raw.items()
@@ -294,9 +294,9 @@ def load_manifest(
     metadata = raw.get("metadata", {})
     policies = raw.get("policies", {})
     if not isinstance(metadata, Mapping) or not isinstance(policies, Mapping):
-        raise ProfileManifestError("profile metadata and policies must be mappings")
-    return ProfileManifest(
-        profile_id=profile_id,
+        raise SetupManifestError("setup metadata and policies must be mappings")
+    return SetupManifest(
+        setup_id=setup_id,
         path=manifest_path,
         authorities=authorities,
         metadata=dict(metadata),
@@ -305,72 +305,72 @@ def load_manifest(
 
 
 def default_registry_path(paths: ProjectPaths) -> Path:
-    """Return the path of the profile registry.
+    """Return the path of the setup registry.
 
-    This is the project's ``config/profiles/registry.json`` when it exists,
-    else the ``config/profiles/registry.json`` beside the installed package.
+    This is the project's ``config/setups/registry.json`` when it exists,
+    else the ``config/setups/registry.json`` beside the installed package.
     """
 
-    project_registry = (paths.config_root / "profiles" / "registry.json").resolve()
+    project_registry = (paths.config_root / "setups" / "registry.json").resolve()
     if project_registry.is_file():
         return project_registry
-    # Compatibility project bundles created before profiles do not contain a
+    # Compatibility project bundles created before setups do not contain a
     # registry.  Use the installed registry as one indivisible contract while
     # still resolving its project: authorities against the selected bundle.
-    return (Path(__file__).resolve().parent.parent / "config" / "profiles" / "registry.json").resolve()
+    return (Path(__file__).resolve().parent.parent / "config" / "setups" / "registry.json").resolve()
 
 
-def load_profile(
-    profile_id: str,
+def load_setup(
+    setup_id: str,
     *,
     paths: ProjectPaths,
     registry_path: Path | str | None = None,
-) -> ProfileManifest:
-    """Load the manifest of ``profile_id`` through the profile registry.
+) -> SetupManifest:
+    """Load the manifest of ``setup_id`` through the setup registry.
 
     The registry is ``registry_path``, or :func:`default_registry_path` when it
-    is ``None``. When the installed registry is used for the ``full`` profile,
+    is ``None``. When the installed registry is used for the ``full`` setup,
     the manifest is the ``south_asia.yaml`` beside that registry.
 
     Raises:
         FileNotFoundError: If the registry or the manifest file is missing.
-        ProfileManifestError: If the id, the registry or the manifest is invalid,
-            or if the registry lists no such profile.
+        SetupManifestError: If the id, the registry or the manifest is invalid,
+            or if the registry lists no such setup.
         AuthorityResolutionError: If the manifest reference is unsafe.
     """
 
-    if not _PROFILE_ID.fullmatch(profile_id):
-        raise ProfileManifestError(f"invalid profile id: {profile_id!r}")
+    if not _SETUP_ID.fullmatch(setup_id):
+        raise SetupManifestError(f"invalid setup id: {setup_id!r}")
     registry = (
         default_registry_path(paths)
         if registry_path is None
         else Path(registry_path).resolve()
     )
     if not registry.is_file():
-        raise FileNotFoundError(f"profile registry not found: {registry}")
+        raise FileNotFoundError(f"setup registry not found: {registry}")
     raw = _load_mapping(registry)
     if raw.get("schema") != REGISTRY_SCHEMA:
-        raise ProfileManifestError(
-            f"unsupported profile registry schema: {raw.get('schema')!r}"
+        raise SetupManifestError(
+            f"unsupported setup registry schema: {raw.get('schema')!r}"
         )
-    profiles = raw.get("profiles")
-    if not isinstance(profiles, Mapping):
-        raise ProfileManifestError("profile registry requires a profiles mapping")
-    if profile_id not in profiles:
-        raise ProfileManifestError(
-            f"unknown profile {profile_id!r}; available: {sorted(profiles)}"
+    setups = raw.get("setups")
+    if not isinstance(setups, Mapping):
+        raise SetupManifestError("setup registry requires a setups mapping")
+    if setup_id not in setups:
+        raise SetupManifestError(
+            f"unknown setup {setup_id!r}; available: {sorted(setups)}"
         )
-    entry = profiles[profile_id]
+    entry = setups[setup_id]
     reference = entry.get("manifest") if isinstance(entry, Mapping) else entry
     if not isinstance(reference, str):
-        raise ProfileManifestError(
-            f"profile registry entry {profile_id!r} requires a manifest reference"
+        raise SetupManifestError(
+            f"setup registry entry {setup_id!r} requires a manifest reference"
         )
-    # A registry is not itself a profile root, so profile: would be ambiguous.
-    if reference.startswith("profile:"):
-        raise ProfileManifestError("registry manifest references cannot use profile:")
-    project_registry = (paths.config_root / "profiles" / "registry.json").resolve()
-    if registry != project_registry and profile_id == DEFAULT_PROFILE:
+    # A registry is not itself a setup root, so setup: would be ambiguous.
+    if reference.startswith("setup:"):
+        raise SetupManifestError("registry manifest references cannot use setup:")
+    project_registry = (paths.config_root / "setups" / "registry.json").resolve()
+    if registry != project_registry and setup_id == DEFAULT_SETUP:
         # The compatibility registry and default manifest travel together; the
         # manifest's own project: authorities still bind to ``paths``.
         manifest_path = (registry.parent / PurePosixPath(reference).name).resolve()
@@ -378,66 +378,66 @@ def load_profile(
         manifest_path = resolve_authority_reference(
             reference,
             paths=paths,
-            profile_root=registry.parent,
+            setup_root=registry.parent,
         )
-    return load_manifest(manifest_path, expected_profile=profile_id)
+    return load_manifest(manifest_path, expected_setup=setup_id)
 
 
 def encoded_environment(
-    manifest: ProfileManifest,
+    manifest: SetupManifest,
     *,
     authorities: Mapping[str, Path],
-    profile_workspace: Path,
+    setup_workspace: Path,
 ) -> dict[str, str]:
-    """Return the complete child-process profile environment."""
+    """Return the complete child-process setup environment."""
 
     return {
-        PROFILE_ENV: manifest.profile_id,
-        PROFILE_MANIFEST_ENV: str(manifest.path),
-        PROFILE_WORKSPACE_ENV: str(Path(profile_workspace).resolve()),
-        PROFILE_AUTHORITIES_ENV: json.dumps(
+        SETUP_ENV: manifest.setup_id,
+        SETUP_MANIFEST_ENV: str(manifest.path),
+        SETUP_WORKSPACE_ENV: str(Path(setup_workspace).resolve()),
+        SETUP_AUTHORITIES_ENV: json.dumps(
             {role: str(path.resolve()) for role, path in authorities.items()},
             sort_keys=True,
         ),
-        PROFILE_POLICIES_ENV: json.dumps(dict(manifest.policies), sort_keys=True),
+        SETUP_POLICIES_ENV: json.dumps(dict(manifest.policies), sort_keys=True),
     }
 
 
-def active_profile_id(environ: Mapping[str, str] | None = None) -> str:
-    """Return the profile id in ``OSTRAM_PROFILE``, or ``south_asia`` when it is unset."""
+def active_setup_id(environ: Mapping[str, str] | None = None) -> str:
+    """Return the setup id in ``OSTRAM_SETUP``, or ``south_asia`` when it is unset."""
 
     environment = os.environ if environ is None else environ
-    return environment.get(PROFILE_ENV, DEFAULT_PROFILE)
+    return environment.get(SETUP_ENV, DEFAULT_SETUP)
 
 
 def active_policies(environ: Mapping[str, str] | None = None) -> dict[str, Any]:
-    """Return the profile policies decoded from ``OSTRAM_PROFILE_POLICIES``.
+    """Return the setup policies decoded from ``OSTRAM_SETUP_POLICIES``.
 
     An unset or empty value gives an empty dict.
 
     Raises:
-        ProfileError: If the value is not a JSON object.
+        SetupError: If the value is not a JSON object.
     """
 
     environment = os.environ if environ is None else environ
-    raw = environment.get(PROFILE_POLICIES_ENV)
+    raw = environment.get(SETUP_POLICIES_ENV)
     if not raw:
         return {}
     try:
         value = json.loads(raw)
     except json.JSONDecodeError as error:
-        raise ProfileError(f"invalid {PROFILE_POLICIES_ENV}: {error}") from error
+        raise SetupError(f"invalid {SETUP_POLICIES_ENV}: {error}") from error
     if not isinstance(value, dict):
-        raise ProfileError(f"{PROFILE_POLICIES_ENV} must encode an object")
+        raise SetupError(f"{SETUP_POLICIES_ENV} must encode an object")
     return value
 
 
-def profile_policy(
+def setup_policy(
     name: str,
     default: Any = None,
     *,
     environ: Mapping[str, str] | None = None,
 ) -> Any:
-    """Return the active profile policy ``name``, or ``default`` when it is absent."""
+    """Return the active setup policy ``name``, or ``default`` when it is absent."""
 
     return active_policies(environ).get(name, default)

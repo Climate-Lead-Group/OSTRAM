@@ -1,11 +1,11 @@
-# Config_MOMF_T1_AB.yaml — UNESCAP training profile (execution authority)
+# Config_MOMF_T1_AB.yaml — UNESCAP training setup (execution authority)
 #
-# Profile: unescap  (examples/unescap/profile.yaml)
+# Setup: unescap_training  (examples/unescap_training/setup.yaml)
 #
 # Model external dependencies: Directories, Files, sheets and columns.
 #
-# Paths below are LOGICAL. Every ${...} token is declared in profile.yaml under
-# the profile:, project:, package:, or workspace: authority. Nothing here is
+# Paths below are LOGICAL. Every ${...} token is declared in setup.yaml under
+# the setup:, project:, package:, or workspace: authority. Nothing here is
 # resolved against the caller's working directory, and there is no per-file
 # fallback to the project-root configuration of the same name.
 ########################################################################################
@@ -106,7 +106,7 @@ annualize_capital: False
 # not overwritten. The maintained model at ${project.maintained_model} is never
 # modified in place.
 #
-# ON for this profile: storage exists from the start of the horizon in the
+# ON for this setup: storage exists from the start of the horizon in the
 # input data, but the first five years are reserved for the calibrated build-out
 # so the optimiser cannot front-load batteries into the calibration window.
 storage_delay_active: True
@@ -125,7 +125,7 @@ storage_delay_root_datafile: "OSTRAM_data_storage_delay.txt"
 # === Storage stripping diagnostic ===
 # Master switch. False (or absent) = pipeline runs unchanged (no strip).
 #
-# OFF for this profile. The UNESCAP training model deliberately carries four
+# OFF for this setup. The UNESCAP training model deliberately carries four
 # storage technologies — LDSBGDXX01, LDSINDEA01, SDSBGDXX01, SDSINDEA01 — and
 # the B/C scenarios put storage floors on them. Stripping storage would delete
 # the object the exercises study. Turn this on only for a deliberate
@@ -159,7 +159,7 @@ open_pwrbck_suffix: "OpenBCK"
 ########################################################################################
 # === Older blunt reserve-margin repair ===
 # Keep this disabled for the careful XLSX path. It is preserved for
-# compatibility; the XLSX repair below is the one intended for this profile.
+# compatibility; the XLSX repair below is the one intended for this setup.
 reserve_margin_repair_active: False
 
 ########################################################################################

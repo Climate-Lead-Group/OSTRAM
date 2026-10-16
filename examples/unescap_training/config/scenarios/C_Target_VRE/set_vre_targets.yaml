@@ -42,7 +42,7 @@
 ##    the capacity-MW NDC targets (NPL 15 GW, BTN 5 GW solar) enforce those
 ##    via a minimum-capacity-floor rule added to C's chain.
 
-## Logical path. ${workspace.execution} is declared in examples/unescap/profile.yaml;
+## Logical path. ${workspace.execution} is declared in examples/unescap_training/setup.yaml;
 ## the completed-A dependency is declared in config/scenarios/registry.json, which
 ## is what makes C refuse to run before A has results.
 bau_results_path: ${workspace.execution}/Executables/A_Calibrated_BAU_0   # dir holding the CalBAU output; the *output.csv is found inside it

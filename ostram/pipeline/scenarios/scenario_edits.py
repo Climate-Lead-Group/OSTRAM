@@ -7,9 +7,9 @@ the ``base_scenario`` declared by its canonical registry/scenario-edit contract 
 applying, in order:
 
     1. the SHARED VRE physical-potential ceiling layer
-       (config/profiles/south_asia.yaml::vre_ceilings)
+       (config/setups/south_asia.yaml::vre_ceilings)
     2. the run-specific edits in
-       config/profiles/south_asia.yaml::scenario_inputs[scenario]
+       config/setups/south_asia.yaml::scenario_inputs[scenario]
 
 Design (patterned on the rules_scripts):
   * Non-destructive to the SOURCE: the declared root A-O is never mutated.
@@ -685,17 +685,17 @@ def build_scenario(
 
     a1_outputs = Path(a1_outputs)
     configs = Path(configs)
-    profile_path = Path(ceiling_path)
-    if not profile_path.is_file():
-        raise FileNotFoundError(f"scenario YAML not found: {profile_path}")
-    scenario_inputs = yaml.safe_load(profile_path.read_text(encoding="utf-8"))["scenario_inputs"][scenario]
+    setup_path = Path(ceiling_path)
+    if not setup_path.is_file():
+        raise FileNotFoundError(f"scenario YAML not found: {setup_path}")
+    scenario_inputs = yaml.safe_load(setup_path.read_text(encoding="utf-8"))["scenario_inputs"][scenario]
     declared_source = scenario_inputs.get("base_scenario")
     if not declared_source:
-        raise ValueError(f"{profile_path} does not declare base_scenario")
+        raise ValueError(f"{setup_path} does not declare base_scenario")
     if source is not None and source != declared_source:
         raise ValueError(
             f"source override {source!r} conflicts with "
-            f"{profile_path.name}::base_scenario={declared_source!r}"
+            f"{setup_path.name}::base_scenario={declared_source!r}"
         )
     source = declared_source
 
@@ -720,7 +720,7 @@ def build_scenario(
     shutil.copytree(src_dir, tgt_dir)
 
     log = {"scenario": scenario, "source": source, "timestamp": stamp,
-           "scenario_yaml": str(profile_path), "target": str(tgt_dir),
+           "scenario_yaml": str(setup_path), "target": str(tgt_dir),
            "backup_dir": str(backup_dir) if backup_dir else None,
            "cells": [], "rows_created": [], "skipped": []}
 
@@ -738,11 +738,11 @@ def build_scenario(
 
     # Generic descendant ceilings must not replace reviewed calibration.
     # Resolve the declared ancestry; retain descendant edits outside the table.
-    from ostram.profiles import profile_policy
+    from ostram.setups import setup_policy
     from .rules import apply_base_year_pin as pins
     root = pins.calibration_root(scenario)
     if root is not None:
-        rules = Path(profile_policy("pwr_min_pin_rules_path", str(pins.RULES_CSV)))
+        rules = Path(setup_policy("pwr_min_pin_rules_path", str(pins.RULES_CSV)))
         log["reviewed_calibration"] = pins.apply_pin_rules(
             tgt_dir, root, rules, skip_backup=True,
         )
@@ -847,7 +847,7 @@ def main():
         "--scenario",
         help=(
             "derived scenario name; reads scenario_inputs.<scenario> from "
-            "config/profiles/south_asia.yaml and writes "
+            "config/setups/south_asia.yaml and writes "
             "workspace/preparation/A1_Outputs/A1_Outputs_<scenario>"
         ),
     )

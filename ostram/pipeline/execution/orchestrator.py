@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from ostram.paths import resolve_paths
-from ostram.validation.profile import validate_active_compiled_domain
+from ostram.validation.setup_domain import validate_active_compiled_domain
 
 
 @dataclass(frozen=True)
@@ -268,7 +268,7 @@ def build_run_plan(
                 str(storage_delay_output)
             ).name
 
-    # Storage-delay defaults must be derived after profile model/path
+    # Storage-delay defaults must be derived after setup model/path
     # authorities have replaced any declarative manifest tokens.
     apply_configuration_overrides(params)
     if compile_only:
@@ -325,7 +325,7 @@ def run_compiled_input_stage(
         if domain is not None:
             counts = domain["compiled"]
             print(
-                "[profile-domain] compiled domain accepted: "
+                "[setup-domain] compiled domain accepted: "
                 f"TECHNOLOGY={counts['TECHNOLOGY']['count']}, "
                 f"FUEL={counts['FUEL']['count']}, "
                 f"scenario={scenario_name}"
@@ -1006,8 +1006,8 @@ def run_scenario_output_stage(
             "ostram.pipeline.execution.concatenate",
             file_path_outputs, paths.output_file,
         ]
-        from ostram.profiles import profile_policy
-        if profile_policy('reconcile_variable_cost_exports', False):
+        from ostram.setups import setup_policy
+        if setup_policy('reconcile_variable_cost_exports', False):
             concatenate_command += ['--datafile', paths.data_file+'.txt',
                                     '--parameter-csv', str(Path(file_path_template)/'VariableCost.csv')]
         if params["concat_otoole_csv"]:

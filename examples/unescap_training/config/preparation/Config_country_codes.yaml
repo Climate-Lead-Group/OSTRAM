@@ -1,13 +1,13 @@
-# Config_country_codes.yaml — UNESCAP training profile
+# Config_country_codes.yaml — UNESCAP training setup
 # Single source of truth for country codes, names, and technology mappings.
 #
-# Profile:  unescap  (examples/unescap/profile.yaml)
+# Setup:  unescap_training  (examples/unescap_training/setup.yaml)
 # Scope:    the reduced two-region training model — Bangladesh (BGDXX) and
 #           India East (INDEA), joined by the real TRNBGDXXINDEA corridor.
 #
 # The full ten-region SOASIA configuration is the project-root authority
 # (config/preparation/Config_country_codes.yaml); it is NOT inherited here.
-# This profile authority is complete on its own.
+# This setup authority is complete on its own.
 
 # ============================================================
 # COUNTRY CONFIGURATION (Single Source of Truth)
@@ -134,13 +134,13 @@ countries:
 # TEMPLATE GENERATION
 # ============================================================
 # Configure the entries below, then run:
-#   python -m ostram --profile unescap country template
+#   python -m ostram --setup unescap_training country template
 # The command processes each entry in the list sequentially.
 #
 # Fields per entry:
 #   new_country:          3-letter ISO code for the new country
 #   reference_country:    existing country to clone data from (must be a
-#                         country this profile already models: BGD or IND)
+#                         country this setup already models: BGD or IND)
 #   region:               region code (default: XX). Use a 2-letter code for
 #                         sub-regions
 #   interconnections:     list of neighbour codes (3-letter = region XX,
@@ -209,7 +209,7 @@ template_generation:
     interconnections: []
     demand_scale: 0.18
 
-# Implausible technology-country combinations based on the profile input CSVs
+# Implausible technology-country combinations based on the setup input CSVs
 # (ResidualCapacity, CapitalCost, TotalAnnualMaxCapacityInvestment, TotalAnnualMaxCapacity)
 # A combo is implausible when all four parameters are zero for every year.
 # Format: technology_code -> list of country codes where it is implausible.

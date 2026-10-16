@@ -16,10 +16,10 @@ reads it. Stage names and other terms are in the [glossary](glossary.md).
 | `dvc.yaml`, `.dvc/`, `.dvcignore` | DVC stage definitions and local DVC state. | `python -m ostram run` without `--skip-pull`. |
 | `.gitattributes` | Line-ending rules. It keeps `pwr_min_2023_2026_pin.csv` with CRLF endings. | Git. |
 | `.readthedocs.yaml` | Read the Docs build settings. | Read the Docs. |
-| `.github/workflows/unescap-macos-acceptance.yml` | The CI workflow that runs the training profile on macOS. | GitHub Actions. |
+| `.github/workflows/unescap-macos-acceptance.yml` | The CI workflow that runs the training setup on macOS. | GitHub Actions. |
 | `config/` | Configuration. See the table below. | A1 to B2. |
 | `docs/` | This documentation. | Sphinx. |
-| `examples/unescap/` | The two-region training profile with its own inputs, configuration and registry. | `python -m ostram --profile unescap`. |
+| `examples/unescap_training/` | The two-region training setup with its own inputs, configuration and registry. | `python -m ostram --setup unescap_training`. |
 | `inputs/` | Model inputs. See the table below. | A1, A3 and B2. |
 | `model/osemosys_fast_preprocessed.txt` | The OSeMOSYS model file in GMPL. | B2. The storage delay writes an adjusted copy, and `glpsol` reads that copy. |
 | `ostram/` | The Python package. See the table below. | Every command. |
@@ -32,8 +32,8 @@ reads it. Stage names and other terms are in the [glossary](glossary.md).
 
 | Path | What it holds | Read by |
 |---|---|---|
-| `config/profiles/registry.json` | The profile names and their profile files. | The command line option `--profile`. |
-| `config/profiles/south_asia.yaml` | The South Asia profile: policies, sources of record, the scenario registry, the shared VRE ceilings and the scenario edits. See the [section map](south-asia-yaml.md). | A3, B2 and the tests. |
+| `config/setups/registry.json` | The setup names and their setup files. | The command line option `--setup`. |
+| `config/setups/south_asia.yaml` | The South Asia setup: policies, sources of record, the scenario registry, the shared VRE ceilings and the scenario edits. See the [section map](south-asia-yaml.md). | A3, B2 and the tests. |
 | `config/preparation/Config_country_codes.yaml` | Countries, regions, technology mappings, transmission defaults and the internal transmission settings. | A1, A2 and the A3 rules for internal transmission. |
 | `config/preparation/Config_region_consolidation.yaml` | An optional merge of sub-regions into one region. Disabled. | A1. |
 | `config/compilation/Config_MOMF_T1_A.yaml` | Compiler settings: years, timeslices, the storage set, workbook names and parameter lists. | A1 writes a runtime copy. A3, B1 and B2 read it. |
@@ -70,10 +70,10 @@ under `config/` and fails when a file is added, removed or left unregistered.
 |---|---|
 | `ostram/__main__.py` | The command line: `run`, `transform`, `compile-inputs`, `inspect-resources`, `example`, `country` and `scenario`. |
 | `ostram/paths.py` | Path resolution: project root, workspace and the sources of record. |
-| `ostram/profiles.py`, `ostram/profile_workspace.py` | Profile loading and profile workspaces. |
+| `ostram/setups.py`, `ostram/setup_workspace.py` | Setup loading and setup workspaces. |
 | `ostram/examples.py` | The training example commands `example prepare` and `example report`. |
 | `ostram/terminal.py` | The run display and the run log. |
-| `ostram/validation/profile.py` | Checks of a profile's compiled domain. |
+| `ostram/validation/setup_domain.py` | Checks of a setup's compiled domain. |
 | `ostram/reporting/` | The training dashboard, the direction comparison and the summary workbook. |
 | `ostram/pipeline/orchestration.py` | `python -m ostram run`: the environment check, DVC, and the stages A1 to B2 in order. |
 | `ostram/pipeline/preparation/` | A1 in `base_inputs.py`, A2 in `transmission.py`, the country template and validation commands and the secondary-technology helpers. |

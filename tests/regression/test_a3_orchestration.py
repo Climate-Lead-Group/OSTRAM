@@ -1039,7 +1039,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
             )
             for policies, expected_calls in cases:
                 with self.subTest(policies=policies):
-                    environ = {"OSTRAM_PROFILE_POLICIES": policies} if policies else {}
+                    environ = {"OSTRAM_SETUP_POLICIES": policies} if policies else {}
                     with (
                         mock.patch.dict(os.environ, environ, clear=False),
                         mock.patch.object(module, "RULES_SCRIPTS_DIR", rules_dir),
@@ -1048,7 +1048,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                         mock.patch.object(module, "run_subproc") as run_subproc,
                     ):
                         if policies is None:
-                            os.environ.pop("OSTRAM_PROFILE_POLICIES", None)
+                            os.environ.pop("OSTRAM_SETUP_POLICIES", None)
                         module.stage_base_year_pin(stage5, "B_Optimised_VRE")
                     self.assertEqual(run_subproc.call_count, expected_calls)
 

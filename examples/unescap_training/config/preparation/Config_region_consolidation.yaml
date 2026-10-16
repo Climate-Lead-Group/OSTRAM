@@ -1,10 +1,10 @@
-# Region Consolidation Configuration — UNESCAP training profile
+# Region Consolidation Configuration — UNESCAP training setup
 # This file controls the consolidation of multiple regions into a unified
 # region for countries that have sub-regional granularity in the model.
 #
-# Profile: unescap  (examples/unescap/profile.yaml)
+# Setup: unescap_training  (examples/unescap_training/setup.yaml)
 #
-# DISABLED for this profile. The training model carries exactly two regions,
+# DISABLED for this setup. The training model carries exactly two regions,
 # BGDXX and INDEA, and INDEA is deliberately kept as a distinct region so the
 # cross-border corridor TRNBGDXXINDEA stays visible. Consolidation would erase
 # the very interconnector the exercises are built around.
@@ -17,7 +17,7 @@ enabled: false
 #   - regions: list of region codes to consolidate
 #   - unified_region: the code to use for the consolidated region
 countries:
-  # No entries. Example shape, for a future profile that models all of India:
+  # No entries. Example shape, for a future setup that models all of India:
   # IND:
   #   regions: ["EA", "NE", "NO", "SO", "WE"]
   #   unified_region: "XX"
