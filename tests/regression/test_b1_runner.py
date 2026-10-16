@@ -462,8 +462,8 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
                 final_year=params["final_year"],
                 time_range_vector=[],
                 wide_param_header=params["sets"],
-                other_setup_params=params["xtra_scen"],
-                other_setup_params_timeslices=[],
+                run_settings=params["xtra_scen"],
+                run_settings_timeslices=[],
             )
             selected_workbook = Path(
                 plan.scenario_workbook("Print_Base_Year")
@@ -705,8 +705,8 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
                 final_year=2050,
                 time_range_vector=[],
                 wide_param_header=[],
-                other_setup_params={},
-                other_setup_params_timeslices=[],
+                run_settings={},
+                run_settings_timeslices=[],
             )
             for key in live_contract:
                 with self.subTest(missing_active_key=key):

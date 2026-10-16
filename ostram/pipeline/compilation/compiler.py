@@ -63,8 +63,8 @@ time_range_vector = transform_plan.time_range_vector
 #
 Wide_Param_Header = transform_plan.wide_param_header
 #
-other_setup_params_timeslices = transform_plan.other_setup_params_timeslices
-other_setup_params = transform_plan.other_setup_params
+run_settings_timeslices = transform_plan.run_settings_timeslices
+run_settings = transform_plan.run_settings
 #
 print_aid_parameter = False
 #------------------------------------------------------------------------------
@@ -258,8 +258,8 @@ for g in range( len( groups_list ) ):
                     
                     oar_row = {
                         'PARAMETER': 'OutputActivityRatio',
-                        'Scenario': other_setup_params['Main_Scenario'],
-                        'REGION': other_setup_params['Region'],
+                        'Scenario': run_settings['Main_Scenario'],
+                        'REGION': run_settings['Region'],
                         'TECHNOLOGY': this_tech,
                         'FUEL': output_fuel,
                         'MODE_OF_OPERATION': this_mode_of_operation,
@@ -313,8 +313,8 @@ for g in range( len( groups_list ) ):
                         # Create a new dictionary for each row to append
                         iar_row = {
                             'PARAMETER': this_param, 
-                            'Scenario': other_setup_params['Main_Scenario'],
-                            'REGION': other_setup_params['Region'], 
+                            'Scenario': run_settings['Main_Scenario'],
+                            'REGION': run_settings['Region'], 
                             'TECHNOLOGY': this_tech, 
                             'FUEL': this_input_fuel,
                             'MODE_OF_OPERATION': this_mode_of_operation, 
@@ -416,8 +416,8 @@ for s in range( len( param_sheets ) ):
                 # SpecifiedAnnualDemand
                 spec_annual_demand_row = {
                     'PARAMETER': 'SpecifiedAnnualDemand', 
-                    'Scenario': other_setup_params['Main_Scenario'],
-                    'REGION': other_setup_params['Region'], 
+                    'Scenario': run_settings['Main_Scenario'],
+                    'REGION': run_settings['Region'], 
                     'FUEL': this_fuel,
                     'YEAR': time_range_vector[y],
                     'Value': Demand_df.loc[m, str(time_range_vector[y])]
@@ -426,21 +426,21 @@ for s in range( len( param_sheets ) ):
                 
             
             _validation.validate_demand_timeslices(
-                other_setup_params_timeslices,
-                other_setup_params['Timeslice'],
+                run_settings_timeslices,
+                run_settings['Timeslice'],
                 timeslices_list_check,
             )
             if (
-                other_setup_params_timeslices == timeslices_list_check
-                and other_setup_params['Timeslice'] == 'Some'
+                run_settings_timeslices == timeslices_list_check
+                and run_settings['Timeslice'] == 'Some'
                 and timeslices_list_check != []
             ):
                 timeslices_list = timeslices_list_check
             elif (
-                other_setup_params['Timeslice'] == 'All'
+                run_settings['Timeslice'] == 'All'
                 and timeslices_list_check == []
             ):
-                timeslices_list = [other_setup_params['Timeslice']]
+                timeslices_list = [run_settings['Timeslice']]
             
     
             for ts in range(len(timeslices_list)):  
@@ -451,8 +451,8 @@ for s in range( len( param_sheets ) ):
                     if param_sheets[s] != 'Profiles' and len(timeslices_list_check)<2:
                         spec_demand_profile_row = {
                             'PARAMETER': 'SpecifiedDemandProfile', 
-                            'Scenario': other_setup_params['Main_Scenario'],
-                            'REGION': other_setup_params['Region'], 
+                            'Scenario': run_settings['Main_Scenario'],
+                            'REGION': run_settings['Region'], 
                             'FUEL': this_fuel,
                             'TIMESLICE': timeslices_list[ts], 
                             'YEAR': time_range_vector[y],
@@ -471,8 +471,8 @@ for s in range( len( param_sheets ) ):
                 # if Demand_df.loc[m, 'Timeslices'] == timeslices_sdp[m]:
                 spec_demand_profile_row = {
                     'PARAMETER': 'SpecifiedDemandProfile', 
-                    'Scenario': other_setup_params['Main_Scenario'],
-                    'REGION': other_setup_params['Region'], 
+                    'Scenario': run_settings['Main_Scenario'],
+                    'REGION': run_settings['Region'], 
                     'FUEL': this_fuel,
                     'TIMESLICE': timeslices_sdp[m], 
                     'YEAR': time_range_vector[y],
@@ -576,8 +576,8 @@ if params['Use_Transport']:
                             'PARAMETER': param,
                                          
                                               
-                            'Scenario': other_setup_params['Main_Scenario'],
-                            'REGION': other_setup_params['Region'],
+                            'Scenario': run_settings['Main_Scenario'],
+                            'REGION': run_settings['Region'],
                             'TECHNOLOGY': groups_list[g],
                             'YEAR': time_range_vector[y],
                             'Value': deepcopy(adjusted_value)
@@ -592,8 +592,8 @@ if params['Use_Transport']:
                 for param in params['cap_params_Rail']:
                     accumulated_data[param].append({
                         'PARAMETER': param,
-                        'Scenario': other_setup_params['Main_Scenario'],
-                        'REGION': other_setup_params['Region'],
+                        'Scenario': run_settings['Main_Scenario'],
+                        'REGION': run_settings['Region'],
                         'TECHNOLOGY': groups_list[g],
                         'YEAR': time_range_vector[y],
                         'Value': deepcopy(round(ref_cap, 4))
@@ -815,8 +815,8 @@ for s in range( len( param_sheets ) ):
                                 #
                                 new_row = {
                                     'PARAMETER': this_param,
-                                    'Scenario': other_setup_params['Main_Scenario'],
-                                    'REGION': other_setup_params['Region'],
+                                    'Scenario': run_settings['Main_Scenario'],
+                                    'REGION': run_settings['Region'],
                                     'TECHNOLOGY': this_tech,
                                     'YEAR': time_range_vector[y],
                                     'Value': deepcopy(round(this_correct_capacity[-1], 4))
@@ -858,8 +858,8 @@ for s in range( len( param_sheets ) ):
                                 # Inside your condition where you're preparing this_dict_4_wide
                                 new_row = {
                                     'PARAMETER': this_param,
-                                    'Scenario': other_setup_params['Main_Scenario'],
-                                    'REGION': other_setup_params['Region'],
+                                    'Scenario': run_settings['Main_Scenario'],
+                                    'REGION': run_settings['Region'],
                                     'TECHNOLOGY': this_tech,
                                     'YEAR': time_range_vector[y],
                                     'Value': deepcopy(round(this_main_cap_list[-1] * interpolated_values[y], 4))
@@ -878,8 +878,8 @@ for s in range( len( param_sheets ) ):
             if s == 0:  # we store the parameters without years
                 new_row = {
                     'PARAMETER': this_param,
-                    'Scenario': other_setup_params['Main_Scenario'],
-                    'REGION': other_setup_params['Region'],
+                    'Scenario': run_settings['Main_Scenario'],
+                    'REGION': run_settings['Region'],
                     'TECHNOLOGY': this_tech,
                     'Value': deepcopy(this_df_new_2.loc[n, 'Value'])
                 }
@@ -891,21 +891,21 @@ for s in range( len( param_sheets ) ):
                 if this_param in ['CapacityFactor']:
                     
                     _validation.validate_capacity_timeslices(
-                        other_setup_params_timeslices,
-                        other_setup_params['Timeslice'],
+                        run_settings_timeslices,
+                        run_settings['Timeslice'],
                         timeslices_list_check,
                     )
                     if (
-                        other_setup_params_timeslices == timeslices_list_check
-                        and other_setup_params['Timeslice'] == 'Some'
+                        run_settings_timeslices == timeslices_list_check
+                        and run_settings['Timeslice'] == 'Some'
                         and timeslices_list_check != []
                     ):
                         timeslices_list = timeslices_list_check
                     elif (
-                        other_setup_params['Timeslice'] == 'All'
+                        run_settings['Timeslice'] == 'All'
                         and timeslices_list_check == []
                     ):
-                        timeslices_list = [other_setup_params['Timeslice']]
+                        timeslices_list = [run_settings['Timeslice']]
                     
                     timeslices_capacities = this_df_new_2['Timeslices'].tolist()
    
@@ -916,8 +916,8 @@ for s in range( len( param_sheets ) ):
                             # Prepare dictionary to accumulate data based on conditions
                             new_row = {
                                 'PARAMETER': this_param,
-                                'Scenario': other_setup_params['Main_Scenario'],
-                                'REGION': other_setup_params['Region'],
+                                'Scenario': run_settings['Main_Scenario'],
+                                'REGION': run_settings['Region'],
                                 'TECHNOLOGY': this_tech,
                                 'YEAR': time_range_vector[y],
                                 'Value': deepcopy(_parameter_number(this_df_new_2.loc[n, str(time_range_vector[y])], this_param)),
@@ -928,12 +928,12 @@ for s in range( len( param_sheets ) ):
                             # Prepare dictionary to accumulate data based on conditions
                             new_row = {
                                 'PARAMETER': this_param,
-                                'Scenario': other_setup_params['Main_Scenario'],
-                                'REGION': other_setup_params['Region'],
+                                'Scenario': run_settings['Main_Scenario'],
+                                'REGION': run_settings['Region'],
                                 'TECHNOLOGY': this_tech,
                                 'YEAR': time_range_vector[y],
                                 'Value': deepcopy(_parameter_number(this_df_new_2.loc[n, str(time_range_vector[y])], this_param)),
-                                'TIMESLICE': other_setup_params['Timeslice']
+                                'TIMESLICE': run_settings['Timeslice']
                             }   
                             
                         # Accumulate data for bulk append
@@ -943,8 +943,8 @@ for s in range( len( param_sheets ) ):
                         
                 elif this_param in ['VariableCost']:
                     
-                    if len(other_setup_params['Mode_of_Operation'])>1:
-                        modes_of_operation = other_setup_params['Mode_of_Operation']
+                    if len(run_settings['Mode_of_Operation'])>1:
+                        modes_of_operation = run_settings['Mode_of_Operation']
                     
                         # for moo in range(len(modes_of_operation)):    
                         for y in range(len(time_range_vector)):
@@ -954,8 +954,8 @@ for s in range( len( param_sheets ) ):
                                 # Prepare dictionary to accumulate data based on conditions
                                 new_row = {
                                     'PARAMETER': this_param,
-                                    'Scenario': other_setup_params['Main_Scenario'],
-                                    'REGION': other_setup_params['Region'],
+                                    'Scenario': run_settings['Main_Scenario'],
+                                    'REGION': run_settings['Region'],
                                     'TECHNOLOGY': this_tech,
                                     'YEAR': time_range_vector[y],
                                     'MODE_OF_OPERATION': this_df_new_2.loc[n, 'Mode.Operation'],
@@ -975,8 +975,8 @@ for s in range( len( param_sheets ) ):
                         if this_param not in params['sheets_exceptions_to_fuel']:
                             new_row = {
                                 'PARAMETER': this_param,
-                                'Scenario': other_setup_params['Main_Scenario'],
-                                'REGION': other_setup_params['Region'],
+                                'Scenario': run_settings['Main_Scenario'],
+                                'REGION': run_settings['Region'],
                                 'TECHNOLOGY': this_tech,
                                 'YEAR': time_range_vector[y],
                                 'Value': deepcopy(_parameter_number(this_df_new_2.loc[n, str(time_range_vector[y])], this_param))
@@ -985,16 +985,16 @@ for s in range( len( param_sheets ) ):
                         elif this_param in params['sheets_exceptions_to_fuel']:
                             new_row = {
                                 'PARAMETER': this_param,
-                                'Scenario': other_setup_params['Main_Scenario'],
-                                'REGION': other_setup_params['Region'],
+                                'Scenario': run_settings['Main_Scenario'],
+                                'REGION': run_settings['Region'],
                                 'FUEL': this_tech,
                                 'YEAR': time_range_vector[y],
                                 'Value': deepcopy(_parameter_number(this_df_new_2.loc[n, str(time_range_vector[y])], this_param))
                             }
         
                         # Additional conditions for specific parameters
-                        if this_param in ['VariableCost'] and len(other_setup_params['Mode_of_Operation'])<2:
-                            new_row['MODE_OF_OPERATION'] = other_setup_params['Mode_of_Operation'][0]
+                        if this_param in ['VariableCost'] and len(run_settings['Mode_of_Operation'])<2:
+                            new_row['MODE_OF_OPERATION'] = run_settings['Mode_of_Operation'][0]
         
                         # Accumulate data for bulk append
                         if this_param not in accumulated_data:
@@ -1028,11 +1028,11 @@ df_Yearsplit = pd.DataFrame( columns = Wide_Param_Header )
 accumulated_dicts_Yearsplit = []
 
 _validation.validate_yearsplit_timeslices(
-    other_setup_params['Timeslice'],
-    other_setup_params_timeslices,
+    run_settings['Timeslice'],
+    run_settings_timeslices,
 )
-if other_setup_params['Timeslice'] == 'Some' and other_setup_params_timeslices != []:
-    timeslices_list = other_setup_params_timeslices
+if run_settings['Timeslice'] == 'Some' and run_settings_timeslices != []:
+    timeslices_list = run_settings_timeslices
     this_df = params_dict[ 'Yearsplit' ]
     
     df_index_list = this_df.index.tolist()
@@ -1045,7 +1045,7 @@ if other_setup_params['Timeslice'] == 'Some' and other_setup_params_timeslices !
             # Create a dictionary for the current iteration
             this_dict_4_wide = {
                 'PARAMETER': 'YearSplit',
-                'Scenario': other_setup_params['Main_Scenario'],
+                'Scenario': run_settings['Main_Scenario'],
                 'TIMESLICE': this_ts,
                 'YEAR': time_range_vector[y],
                 'Value': deepcopy(this_df.loc[n, str(time_range_vector[y])])
@@ -1053,8 +1053,8 @@ if other_setup_params['Timeslice'] == 'Some' and other_setup_params_timeslices !
             # Add the dictionary to the list
             accumulated_dicts_Yearsplit.append(this_dict_4_wide)
     
-elif other_setup_params['Timeslice'] == 'All':
-    timeslices_list = [other_setup_params['Timeslice']]
+elif run_settings['Timeslice'] == 'All':
+    timeslices_list = [run_settings['Timeslice']]
 
     for ts in range(len(timeslices_list)):
         # Loop through the time range vector
@@ -1062,7 +1062,7 @@ elif other_setup_params['Timeslice'] == 'All':
             # Create a dictionary for the current iteration
             this_dict_4_wide = {
                 'PARAMETER': 'YearSplit',
-                'Scenario': other_setup_params['Main_Scenario'],
+                'Scenario': run_settings['Main_Scenario'],
                 'TIMESLICE': timeslices_list[ts],
                 'YEAR': time_range_vector[y],
                 'Value': 1
@@ -1085,11 +1085,11 @@ df_DaySplit = pd.DataFrame( columns = Wide_Param_Header )
 accumulated_dicts_DaySplit = []
 
 _validation.validate_daysplit_time_brackets(
-    other_setup_params['DailyTimeBracket'],
-    other_setup_params_timeslices,
+    run_settings['DailyTimeBracket'],
+    run_settings_timeslices,
 )
-if len(other_setup_params['DailyTimeBracket']) > 1:
-    timeslices_list = other_setup_params_timeslices
+if len(run_settings['DailyTimeBracket']) > 1:
+    timeslices_list = run_settings_timeslices
     this_df = params_dict[ 'DaySplit' ]
     
     df_index_list = this_df.index.tolist()
@@ -1102,7 +1102,7 @@ if len(other_setup_params['DailyTimeBracket']) > 1:
             # Create a dictionary for the current iteration
             this_dict_4_wide = {
                 'PARAMETER': 'DaySplit',
-                'Scenario': other_setup_params['Main_Scenario'],
+                'Scenario': run_settings['Main_Scenario'],
                 'DAILYTIMEBRACKET': this_dtb,
                 'YEAR': time_range_vector[y],
                 'Value': deepcopy(this_df.loc[n, str(time_range_vector[y])])
@@ -1110,16 +1110,16 @@ if len(other_setup_params['DailyTimeBracket']) > 1:
             # Add the dictionary to the list
             accumulated_dicts_DaySplit.append(this_dict_4_wide)
     
-elif other_setup_params['DailyTimeBracket'] == 1:
-    timeslices_list = [other_setup_params['DailyTimeBracket'][0]]
+elif run_settings['DailyTimeBracket'] == 1:
+    timeslices_list = [run_settings['DailyTimeBracket'][0]]
 
     # Loop through the time range vector
     for y in range(len(time_range_vector)):
         # Create a dictionary for the current iteration
         this_dict_4_wide = {
             'PARAMETER': 'DaySplit',
-            'Scenario': other_setup_params['Main_Scenario'],
-            'DAILYTIMEBRACKET': other_setup_params['DailyTimeBracket'][0],
+            'Scenario': run_settings['Main_Scenario'],
+            'DAILYTIMEBRACKET': run_settings['DailyTimeBracket'][0],
             'YEAR': time_range_vector[y],
             'Value': 1
         }
@@ -1163,8 +1163,8 @@ for e in range(len(these_emissions)):
     for y in range(len(time_range_vector)):
         new_row = {
             'PARAMETER': 'EmissionActivityRatio',
-            'Scenario': other_setup_params['Main_Scenario'],
-            'REGION': other_setup_params['Region'],
+            'Scenario': run_settings['Main_Scenario'],
+            'REGION': run_settings['Region'],
             'TECHNOLOGY': this_tech,
             'EMISSION': this_emission,
             'MODE_OF_OPERATION': these_e_modeofoperation[e],
@@ -1218,8 +1218,8 @@ for e in range(len(these_emissions)):
         # # Accumulate EmissionActivityRatio data
         # accumulated_emission_data = {
         #     'PARAMETER': 'EmissionActivityRatio',
-        #     'Scenario': other_setup_params['Main_Scenario'],
-        #     'REGION': other_setup_params['Region'],
+        #     'Scenario': run_settings['Main_Scenario'],
+        #     'REGION': run_settings['Region'],
         #     'TECHNOLOGY': this_tech,
         #     'EMISSION': this_emission,
         #     'MODE_OF_OPERATION': these_e_modeofoperation,
@@ -1232,8 +1232,8 @@ for e in range(len(these_emissions)):
         if emission_year_key not in emission_unique_set:
             new_row = {
                 'PARAMETER': 'EmissionsPenalty',
-                'Scenario': other_setup_params['Main_Scenario'],
-                'REGION': other_setup_params['Region'],
+                'Scenario': run_settings['Main_Scenario'],
+                'REGION': run_settings['Region'],
                 'TECHNOLOGY': '',  # Empty as per the structure for penalties
                 'EMISSION': this_emission,
                 'YEAR': time_range_vector[y],
@@ -1284,8 +1284,8 @@ for p in range(len(additional_params_list)):
     for y in range(len(time_range_vector)):
         new_row = {
             'PARAMETER': this_param,
-            'Scenario': other_setup_params['Main_Scenario'],
-            'REGION': other_setup_params['Region'],
+            'Scenario': run_settings['Main_Scenario'],
+            'REGION': run_settings['Region'],
             'TECHNOLOGY': this_tech,
             'FUEL': this_fuel,
             'YEAR': time_range_vector[y],
@@ -1294,7 +1294,7 @@ for p in range(len(additional_params_list)):
 
         # Special handling for OutputActivityRatio
         if this_param == 'OutputActivityRatio':
-            new_row['MODE_OF_OPERATION'] = other_setup_params['Mode_of_Operation']
+            new_row['MODE_OF_OPERATION'] = run_settings['Mode_of_Operation']
             new_row['Value'] = deepcopy(round(additional_params_df.loc[p, time_range_vector[y]], 4))
 
         # Accumulate data based on parameter
@@ -1334,8 +1334,8 @@ for n in range( len( df_index_list ) ):
     if this_parameter_storage == 'StorageLevelStart':
         new_row = {
             'PARAMETER': this_parameter_storage,
-            'Scenario': other_setup_params['Main_Scenario'],
-            'REGION': other_setup_params['Region'],
+            'Scenario': run_settings['Main_Scenario'],
+            'REGION': run_settings['Region'],
             'STORAGE': this_storage,
             'Value': these_s_values
         }
@@ -1344,8 +1344,8 @@ for n in range( len( df_index_list ) ):
     elif this_parameter_storage == 'OperationalLifeStorage':
         new_row = {
             'PARAMETER': this_parameter_storage,
-            'Scenario': other_setup_params['Main_Scenario'],
-            'REGION': other_setup_params['Region'],
+            'Scenario': run_settings['Main_Scenario'],
+            'REGION': run_settings['Region'],
             'STORAGE': this_storage,
             'Value': these_s_values
         }
@@ -1385,8 +1385,8 @@ for n in range( len( df_index_list ) ):
         if this_parameter == 'CapitalCostStorage':
             new_row = {
                 'PARAMETER': this_parameter,
-                'Scenario': other_setup_params['Main_Scenario'],
-                'REGION': other_setup_params['Region'],
+                'Scenario': run_settings['Main_Scenario'],
+                'REGION': run_settings['Region'],
                 'STORAGE': this_storage,
                 'YEAR': time_range_vector[y],
                 'Value': this_value_storage
@@ -1397,8 +1397,8 @@ for n in range( len( df_index_list ) ):
         elif this_parameter == 'ResidualStorageCapacity':
             new_row = {
                 'PARAMETER': this_parameter,
-                'Scenario': other_setup_params['Main_Scenario'],
-                'REGION': other_setup_params['Region'],
+                'Scenario': run_settings['Main_Scenario'],
+                'REGION': run_settings['Region'],
                 'STORAGE': this_storage,
                 'YEAR': time_range_vector[y],
                 'Value': this_value_storage
@@ -1438,8 +1438,8 @@ for n in range( len( df_index_list ) ):
         # Create a dictionary for the current iteration
         new_row = {
             'PARAMETER': this_parameter_storage,
-            'Scenario': other_setup_params['Main_Scenario'],
-            'REGION': other_setup_params['Region'],
+            'Scenario': run_settings['Main_Scenario'],
+            'REGION': run_settings['Region'],
             'MODE_OF_OPERATION': this_modeofoperation,
             'TECHNOLOGY': this_tech,
             'STORAGE': this_storage,
@@ -1452,8 +1452,8 @@ for n in range( len( df_index_list ) ):
         # Create a dictionary for the current iteration
         new_row = {
             'PARAMETER': this_parameter_storage,
-            'Scenario': other_setup_params['Main_Scenario'],
-            'REGION': other_setup_params['Region'],
+            'Scenario': run_settings['Main_Scenario'],
+            'REGION': run_settings['Region'],
             'MODE_OF_OPERATION': this_modeofoperation,
             'TECHNOLOGY': this_tech,
             'STORAGE': this_storage,
@@ -1511,8 +1511,8 @@ if params['xtra_scen']['Timeslice'] == 'Some':
                 
                 new_row = {
                     'PARAMETER': this_param,
-                    'Scenario': other_setup_params['Main_Scenario'],
-                    # 'REGION': other_setup_params['Region'],
+                    'Scenario': run_settings['Main_Scenario'],
+                    # 'REGION': run_settings['Region'],
                     'TIMESLICE': params['xtra_scen']['Timeslices'][t],
                     set_by_param: params['xtra_scen'][name_by_set][l], # Quantity of values
                     'Value': params[this_param][count_values] # List with that quantity
@@ -1555,7 +1555,7 @@ if 'System Parameters' in Parametrization.sheet_names:
     new_rows_sys_df = _tables.build_system_parameter_rows(
         Parametrization.parse('System Parameters'),
         time_range_vector,
-        other_setup_params,
+        run_settings,
     )
     if not new_rows_sys_df.empty:
         for param_name in new_rows_sys_df['PARAMETER'].unique():
@@ -1611,7 +1611,7 @@ structure_tables = _tables.build_structure_tables(
     All_Tech_list,
     All_Fuel_list,
     emissions_list,
-    other_setup_params,
+    run_settings,
     params,
 )
 _effects.write_structure_workbook(
@@ -1631,7 +1631,7 @@ overall_param_df_dict = allocate_country_fuel_costs(
     overall_param_df_dict,
     params.get('fuel_cost_allocation'),
     Path(transform_plan.main_output_root()) / (
-        '_fuel_cost_allocation_' + str(other_setup_params['Main_Scenario']) + '.csv'
+        '_fuel_cost_allocation_' + str(run_settings['Main_Scenario']) + '.csv'
     ),
 )
 overall_param_df_dict, overall_param_df_dict_ndp = (
@@ -1639,17 +1639,17 @@ overall_param_df_dict, overall_param_df_dict_ndp = (
 )
 _delivery.deliver_main_csvs(
     transform_plan.main_output_root(),
-    other_setup_params['Main_Scenario'],
+    run_settings['Main_Scenario'],
     overall_param_df_dict,
     structure_dict,
 )
 
 # Check if there are additional scenarios defined
-if other_setup_params['Other_Scenarios']:
+if run_settings['Other_Scenarios']:
     _delivery.deliver_additional_csvs(
         transform_plan.additional_output_root(),
-        other_setup_params['Other_Scenarios'],
-        other_setup_params['Main_Scenario'],
+        run_settings['Other_Scenarios'],
+        run_settings['Main_Scenario'],
         overall_param_df_dict_ndp,
         structure_dict,
     )

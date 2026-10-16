@@ -27,18 +27,13 @@ class TransformPlan:
     final_year: Any
     time_range_vector: list[int]
     wide_param_header: Any
-    other_setup_params: dict[str, Any]
-    other_setup_params_timeslices: list[Any]
+    run_settings: dict[str, Any]  # the ``xtra_scen`` mapping
+    run_settings_timeslices: list[Any]
 
     @property
     def years(self) -> list[int]:
         """Model years from the base year to the final year."""
         return self.time_range_vector
-
-    @property
-    def setup(self) -> dict[str, Any]:
-        """Settings of the ``xtra_scen`` mapping."""
-        return self.other_setup_params
 
     def scenario_workbook(self, suffix_key: str) -> str:
         """Return the canonical nested A1 scenario workbook path."""
@@ -80,7 +75,7 @@ def build_transform_plan(params: MutableMapping[str, Any]) -> TransformPlan:
     """Derive the plan while retaining the compiler's mutation and failure behavior.
 
     In particular, the configured ``Timeslices`` list is sorted in place.  The
-    returned setup mapping is a new mapping whose values retain their predecessor
+    returned run settings mapping is a new mapping whose values retain their predecessor
     identities, including that same sorted list.
     """
     base_year = params["base_year"]
@@ -91,14 +86,14 @@ def build_transform_plan(params: MutableMapping[str, Any]) -> TransformPlan:
     wide_param_header = params["sets"]
 
     extra_scenarios = params["xtra_scen"]
-    setup_names = list(extra_scenarios.keys())
-    setup_values = list(extra_scenarios.values())
-    configured_timeslices = setup_values[setup_names.index("Timeslices")]
+    run_setting_names = list(extra_scenarios.keys())
+    run_setting_values = list(extra_scenarios.values())
+    configured_timeslices = run_setting_values[run_setting_names.index("Timeslices")]
     configured_timeslices.sort()
 
-    other_setup_params: dict[str, Any] = {}
-    for index in range(len(setup_names)):
-        other_setup_params.update({setup_names[index]: setup_values[index]})
+    run_settings: dict[str, Any] = {}
+    for index in range(len(run_setting_names)):
+        run_settings.update({run_setting_names[index]: run_setting_values[index]})
 
     return TransformPlan(
         params=params,
@@ -106,6 +101,6 @@ def build_transform_plan(params: MutableMapping[str, Any]) -> TransformPlan:
         final_year=final_year,
         time_range_vector=time_range_vector,
         wide_param_header=wide_param_header,
-        other_setup_params=other_setup_params,
-        other_setup_params_timeslices=configured_timeslices,
+        run_settings=run_settings,
+        run_settings_timeslices=configured_timeslices,
     )
