@@ -409,13 +409,15 @@ class ProjectPaths:
     def scenario_registry(self) -> Path:
         """Return the scenario registry file.
 
-        The default is ``<project_root>/config/profiles/full.yaml``. The active
-        profile's ``scenario_registry`` authority replaces it when a profile is
-        active.
+        The default is the manifest of the default profile, as the profile
+        registry names it. The active profile's ``scenario_registry`` authority
+        replaces it when a profile is active.
         """
 
+        from ostram.profiles import DEFAULT_PROFILE, load_profile
+
         return self.authority(
-            "scenario_registry", self.config_root / "profiles" / "full.yaml"
+            "scenario_registry", load_profile(DEFAULT_PROFILE, paths=self).path
         )
 
     @property

@@ -20,6 +20,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
+from tests.regression.setup_file import SETUP_FILE
+
 
 TEST_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = TEST_ROOT.parents[1]
@@ -27,7 +29,7 @@ SCENARIO_PACKAGE = REPO_ROOT / "ostram" / "pipeline" / "scenarios"
 A3_ENTRYPOINT = SCENARIO_PACKAGE / "transform.py"
 A3_ORCHESTRATOR = SCENARIO_PACKAGE / "orchestrator.py"
 SCENARIO_HELPER = SCENARIO_PACKAGE / "transformations" / "scenario_workbooks.py"
-SCENARIO_REGISTRY = REPO_ROOT / "config" / "profiles" / "full.yaml"
+SCENARIO_REGISTRY = SETUP_FILE
 
 ACTIVE_SCENARIOS = (
     "BAU",

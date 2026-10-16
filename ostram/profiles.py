@@ -371,9 +371,9 @@ def load_profile(
         raise ProfileManifestError("registry manifest references cannot use profile:")
     project_registry = (paths.config_root / "profiles" / "registry.json").resolve()
     if registry != project_registry and profile_id == DEFAULT_PROFILE:
-        # The compatibility registry and full manifest travel together; the
+        # The compatibility registry and default manifest travel together; the
         # manifest's own project: authorities still bind to ``paths``.
-        manifest_path = (registry.parent / "full.yaml").resolve()
+        manifest_path = (registry.parent / PurePosixPath(reference).name).resolve()
     else:
         manifest_path = resolve_authority_reference(
             reference,

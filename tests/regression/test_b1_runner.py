@@ -21,6 +21,7 @@ from ostram.paths import ProjectPaths
 from ostram.pipeline.compilation.transforms import effects as b1_effects
 from ostram.pipeline.compilation.transforms import planning as b1_planning
 from ostram.pipeline.scenarios.registry import DECISION_SCENARIOS
+from tests.regression.setup_file import SETUP_FILE
 
 
 TEST_ROOT = Path(__file__).resolve().parent
@@ -627,7 +628,7 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
             REPO_ROOT / "ostram" / "pipeline" / "preparation" / "base_inputs.py"
         )
         effects_path = B1_ENTRYPOINT.parent / "transforms" / "effects.py"
-        registry_path = REPO_ROOT / "config" / "profiles" / "full.yaml"
+        registry_path = SETUP_FILE
         templates = REPO_ROOT / "inputs" / "preparation" / "workbook_templates"
 
         compiler_source = compiler_path.read_text(encoding="utf-8-sig")

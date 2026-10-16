@@ -1,8 +1,12 @@
 """Regenerate the generated block of the scenario catalogue page. Run from the repository root."""
 from pathlib import Path
+import sys
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from ostram.paths import resolve_paths  # noqa: E402
+
 PAGE = ROOT / "docs" / "reference" / "scenarios" / "scenario_catalogue.md"
 START, END = "<!-- generated: start -->", "<!-- generated: end -->"
 
@@ -17,7 +21,7 @@ def _edits(edits):
 
 
 def generated_block():
-    profile = yaml.safe_load((ROOT / "config/profiles/full.yaml").read_text(encoding="utf-8"))
+    profile = yaml.safe_load(resolve_paths(project_root=ROOT).scenario_registry.read_text(encoding="utf-8"))
     execution = yaml.safe_load((ROOT / "config/execution/Config_MOMF_T1_AB.yaml").read_text(encoding="utf-8"))
     registry, inputs = profile["scenario_registry"], profile["scenario_inputs"]
     roots = {r["name"]: r for r in registry["root_scenarios"]}

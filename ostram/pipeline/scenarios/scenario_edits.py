@@ -87,7 +87,7 @@ REPO = _PROJECT_PATHS.project_root
 A1_OUTPUTS = _PROJECT_PATHS.a1_outputs
 A3_PROCESS_DIR = SCRIPT_DIR / "transformations"
 CONFIGS = _PROJECT_PATHS.scenario_config_root
-CEIL_BASE = CONFIGS.parent / "profiles" / "full.yaml"
+CEIL_BASE = _PROJECT_PATHS.scenario_registry
 SOASIA_V18 = _PROJECT_PATHS.scenario_workbook
 MINIMUM_BOUNDARY_SOURCE = "minimum_investment_boundary"
 
@@ -685,7 +685,7 @@ def build_scenario(
 
     a1_outputs = Path(a1_outputs)
     configs = Path(configs)
-    profile_path = configs.parent / "profiles" / "full.yaml"
+    profile_path = Path(ceiling_path)
     if not profile_path.is_file():
         raise FileNotFoundError(f"scenario YAML not found: {profile_path}")
     scenario_inputs = yaml.safe_load(profile_path.read_text(encoding="utf-8"))["scenario_inputs"][scenario]

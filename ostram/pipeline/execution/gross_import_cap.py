@@ -19,7 +19,7 @@ def render_policy(input_folder, scenario_name):
     ``D4ImportCountry`` set when the scenario has no policy. Raises
     ValueError for an invalid policy or a country without demand.
     """
-    cfg = yaml.safe_load((resolve_paths().project_root/'config/profiles/full.yaml').read_text(encoding='utf8'))
+    cfg = yaml.safe_load(resolve_paths().scenario_registry.read_text(encoding='utf8'))
     policy = cfg.get('scenario_inputs', {}).get(scenario_name, {}).get('gross_import_cap')
     if not policy:
         return 'set D4ImportCountry := ;\n'

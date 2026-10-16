@@ -7,6 +7,8 @@ import unittest
 
 import yaml
 
+from tests.regression.setup_file import SETUP_FILE
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CONFIG = REPO_ROOT / "config"
@@ -18,7 +20,7 @@ EXPECTED_CONFIG_FILES = (
     "config/execution/Config_MOMF_T1_AB.yaml",
     "config/preparation/Config_country_codes.yaml",
     "config/preparation/Config_region_consolidation.yaml",
-    "config/profiles/full.yaml",
+    SETUP_FILE.relative_to(REPO_ROOT).as_posix(),
     "config/profiles/registry.json",
     "config/scenarios/A_Calibrated_BAU/bau_calibration.yaml",
     "config/scenarios/A_Calibrated_BAU/lid_rule.yaml",
@@ -70,7 +72,7 @@ class ConfigFileTests(unittest.TestCase):
 
     def test_every_scenario_entry_has_a_registered_scenario(self) -> None:
         profile = yaml.safe_load(
-            (CONFIG / "profiles" / "full.yaml").read_text(encoding="utf-8")
+            SETUP_FILE.read_text(encoding="utf-8")
         )
         execution = yaml.safe_load(
             (CONFIG / "execution" / "Config_MOMF_T1_AB.yaml").read_text(encoding="utf-8")
