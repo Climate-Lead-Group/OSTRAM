@@ -9,7 +9,8 @@ import tempfile
 import unittest
 from unittest import mock
 
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
+import yaml
 
 from ostram.pipeline.scenarios import scenario_edits as edits
 
@@ -230,6 +231,120 @@ class CopyFromTechTests(unittest.TestCase):
             f'Scenario {SCENARIO}: the edit to CapitalCost for "PWRSOLBGDXX" '
             'has no source row. Sheet "Secondary Techs" has no CapitalCost row '
             "for PWRSOLINDNO.",
+        )
+
+
+class ReuseEditsFromTests(unittest.TestCase):
+    """``reuse_edits_from`` applies another derived scenario's edits first."""
+
+    def _build(self, scenarios, name):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            outputs, configs = root / "A1_Outputs", root / "configs"
+            for base in ("B_Optimised_VRE", "A_Calibrated_BAU"):
+                (outputs / f"A1_Outputs_{base}").mkdir(parents=True)
+                _workbook().save(outputs / f"A1_Outputs_{base}" / edits.PARAM_FILE)
+            (configs / "B_Optimised_VRE").mkdir(parents=True)
+            for scenario, body in scenarios.items():
+                (configs / scenario).mkdir(parents=True)
+                (configs / scenario / "scenario.yaml").write_text(
+                    yaml.safe_dump({"scenario": scenario, "apply_vre_ceiling_layer": False, **body}),
+                    encoding="utf-8",
+                )
+            target = outputs / f"A1_Outputs_{name}"
+            try:
+                with mock.patch(
+                    "ostram.pipeline.scenarios.rules.apply_base_year_pin.apply_pin_rules",
+                    return_value={},
+                ):
+                    log = edits.build_scenario(
+                        name, a1_outputs=outputs, configs=configs,
+                        authority_path=root / "unused.xlsx",
+                    )
+            except edits.ScenarioEditError:
+                self.assertFalse(target.exists())
+                raise
+            sheet = load_workbook(target / edits.PARAM_FILE)["Secondary Techs"]
+            columns, years = edits.scan_columns(sheet)
+            values = {
+                param: sheet.cell(
+                    edits.find_row(sheet, columns, "PWRSOLBGDXX", param), years[2030]
+                ).value
+                for param in ("CapitalCost", "TotalAnnualMaxCapacity")
+            }
+            return log, values
+
+    COST = {
+        "base_scenario": "B_Optimised_VRE",
+        "edits": [{
+            "sheet": "Secondary Techs", "tech": "PWRSOLBGDXX",
+            "param": "CapitalCost", "op": "set_flat", "value": 7.0,
+        }],
+    }
+    OWN = [{
+        "sheet": "Secondary Techs", "tech": "PWRSOLBGDXX",
+        "param": "TotalAnnualMaxCapacity", "op": "set_flat", "value": 3.0,
+    }]
+
+    def assert_refused(self, scenarios, message):
+        with self.assertRaises(edits.ScenarioEditError) as caught:
+            self._build(scenarios, "B_Opt_Both")
+        self.assertIn(message, str(caught.exception))
+
+    def test_reused_edits_are_applied_before_the_own_edits(self) -> None:
+        log, values = self._build(
+            {
+                "B_Opt_Cost": self.COST,
+                "B_Opt_Both": {
+                    "base_scenario": "B_Optimised_VRE",
+                    "reuse_edits_from": "B_Opt_Cost", "edits": self.OWN,
+                },
+            },
+            "B_Opt_Both",
+        )
+        self.assertEqual(values, {"CapitalCost": 7.0, "TotalAnnualMaxCapacity": 3.0})
+        self.assertEqual(
+            [cell["param"] for cell in log["cells"]],
+            ["CapitalCost"] * len(YEARS) + ["TotalAnnualMaxCapacity"] * len(YEARS),
+        )
+        self.assertEqual(log["reused_edits_from"], {"scenario": "B_Opt_Cost", "edits": 1})
+
+    def test_a_scenario_that_is_not_derived_is_refused(self) -> None:
+        self.assert_refused(
+            {"B_Opt_Both": {
+                "base_scenario": "B_Optimised_VRE",
+                "reuse_edits_from": "B_Optimised_VRE", "edits": self.OWN,
+            }},
+            "reuse_edits_from names B_Optimised_VRE, which is not a derived scenario",
+        )
+
+    def test_a_scenario_with_another_base_is_refused(self) -> None:
+        self.assert_refused(
+            {
+                "B_Opt_Cost": {**self.COST, "base_scenario": "A_Calibrated_BAU"},
+                "B_Opt_Both": {
+                    "base_scenario": "B_Optimised_VRE",
+                    "reuse_edits_from": "B_Opt_Cost", "edits": self.OWN,
+                },
+            },
+            "reuse_edits_from names B_Opt_Cost, whose base_scenario A_Calibrated_BAU "
+            "is not B_Optimised_VRE.",
+        )
+
+    def test_a_scenario_that_itself_reuses_edits_is_refused(self) -> None:
+        self.assert_refused(
+            {
+                "B_Opt_Cost": self.COST,
+                "B_Opt_Middle": {
+                    "base_scenario": "B_Optimised_VRE",
+                    "reuse_edits_from": "B_Opt_Cost", "edits": [],
+                },
+                "B_Opt_Both": {
+                    "base_scenario": "B_Optimised_VRE",
+                    "reuse_edits_from": "B_Opt_Middle", "edits": self.OWN,
+                },
+            },
+            "reuse_edits_from names B_Opt_Middle, which itself uses reuse_edits_from.",
         )
 
 

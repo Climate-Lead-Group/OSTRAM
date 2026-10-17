@@ -52,7 +52,8 @@ edits:
 ```
 
 The [scenario edits](scenario-edits.md) page lists the fields and the
-operations. An edit that matches nothing stops the run with a message that
+operations. Write the basis of each edit in its `note`, as that page
+describes. An edit that matches nothing stops the run with a message that
 names the edit.
 
 A scenario that changes interconnector directions also has an overlay file in

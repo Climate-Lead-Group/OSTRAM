@@ -9,7 +9,8 @@ applying, in order:
     1. the SHARED VRE physical-potential ceiling layer
        (config/setups/south_asia.yaml::vre_ceilings)
     2. the run-specific edits in
-       config/scenarios/<scenario>/scenario.yaml
+       config/scenarios/<scenario>/scenario.yaml, after the edits of the
+       scenario named by its optional reuse_edits_from key
 
 Design (patterned on the rules_scripts):
   * Non-destructive to the SOURCE: the declared root A-O is never mutated.
@@ -665,6 +666,31 @@ def apply_scenario_edits(wb, scenario_inputs, log, minimum_boundaries=None):
         )
 
 
+def reused_edits(scenario, scenario_inputs, configs=CONFIGS):
+    """Return the edits of the scenario named by ``reuse_edits_from``, or [] when it is absent.
+
+    The named scenario must be a derived scenario with the same
+    ``base_scenario`` that does not itself use ``reuse_edits_from``;
+    otherwise ScenarioEditError says why.
+    """
+    name = scenario_inputs.get("reuse_edits_from")
+    if name is None:
+        return []
+    prefix = f"Scenario {scenario}: reuse_edits_from names {name}"
+    path = Path(configs) / str(name) / "scenario.yaml"
+    if not path.is_file():
+        raise ScenarioEditError(f"{prefix}, which is not a derived scenario (no file {path}).")
+    other = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if other.get("base_scenario") != scenario_inputs.get("base_scenario"):
+        raise ScenarioEditError(
+            f"{prefix}, whose base_scenario {other.get('base_scenario')} is not "
+            f"{scenario_inputs.get('base_scenario')}."
+        )
+    if "reuse_edits_from" in other:
+        raise ScenarioEditError(f"{prefix}, which itself uses reuse_edits_from.")
+    return list(other.get("edits") or [])
+
+
 def validate_edit_authorities(scenario_inputs, authority_path=None):
     """Validate external edit authorities before target-directory mutation."""
     requires_minimum_boundary = False
@@ -711,6 +737,12 @@ def build_scenario(
             f"{scenario_path}::base_scenario={declared_source!r}"
         )
     source = declared_source
+    reused = reused_edits(scenario, scenario_inputs, configs)
+    if reused:
+        scenario_inputs = {
+            **scenario_inputs,
+            "edits": reused + list(scenario_inputs.get("edits") or []),
+        }
 
     src_dir = a1_outputs / f"A1_Outputs_{source}"
     tgt_dir = a1_outputs / f"A1_Outputs_{scenario}"
@@ -736,6 +768,11 @@ def build_scenario(
            "scenario_yaml": str(scenario_path), "target": str(tgt_dir),
            "backup_dir": str(backup_dir) if backup_dir else None,
            "cells": [], "rows_created": [], "skipped": []}
+    if "reuse_edits_from" in scenario_inputs:
+        log["reused_edits_from"] = {
+            "scenario": scenario_inputs["reuse_edits_from"],
+            "edits": len(reused),
+        }
 
     wb = load_workbook(tgt_dir / PARAM_FILE)
     if scenario_inputs.get("apply_vre_ceiling_layer", True):

@@ -33,6 +33,9 @@ def generated_block(names=None):
         scenario_file = paths.scenario_config_root / name / "scenario.yaml"
         block = {} if name in roots else yaml.safe_load(scenario_file.read_text(encoding="utf-8"))
         root = name if name in roots else block["base_scenario"]
+        reused = block.get("reuse_edits_from")
+        inherited = (yaml.safe_load((paths.scenario_config_root / reused / "scenario.yaml").read_text(encoding="utf-8"))
+                     .get("edits", []) if reused else [])
         seeds = [d["scenario"] for d in roots[root]["dependencies"] if d.get("type") == "result"]
         policy = []
         if root in setup["policies"].get("historical_trade_roots", []):
@@ -49,14 +52,15 @@ def generated_block(names=None):
             overlay = block.get("direction_overlay")
             out += [f"- Parent: `{root}`.",
                     f"- Shared VRE ceilings: {'applied' if block.get('apply_vre_ceiling_layer', True) else 'skipped'}.",
-                    f"- Scenario edits: {len(block.get('edits', []))}.",
+                    f"- Scenario edits: {len(block.get('edits', []))}"
+                    + (f", after the {len(inherited)} edits of `{reused}`." if reused else "."),
                     "- Overlay: " + (f"`config/scenarios/{name}/{overlay}` from {block['direction_study_start_year']}."
                                      if overlay else "none.")]
         out += [f"- B2 policy: {'; '.join(policy) or 'none'}.",
                 f"- Seed needs: {', '.join('a solved `' + s + '` result' for s in seeds) or 'none'}."]
         if name not in roots:
             out.append(f"- Description: {block.get('description') or block.get('rule')}")
-            out += _edits(block["edits"]) if block.get("edits") else []
+            out += _edits(inherited + block.get("edits", [])) if inherited or block.get("edits") else []
         out.append("")
     return "\n".join(out + [END])
 

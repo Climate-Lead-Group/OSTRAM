@@ -106,11 +106,11 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 
 - Parent: `B_Optimised_VRE`.
 - Shared VRE ceilings: applied.
-- Scenario edits: 39.
+- Scenario edits: 7, after the 32 edits of `B_Opt_IndiaCosts`.
 - Overlay: none.
 - B2 policy: the historical trade constraints are active.
 - Seed needs: none.
-- Description: The shared VRE ceilings applied to B_Optimised_VRE. The CapitalCost and FixedCost of the existing generation and storage technologies of Bangladesh, Bhutan, Nepal, Sri Lanka and the Maldives, except the backstop, are set to the India values of the same family in each year. Where the India regions differ (coal, hydro and offshore wind), the values of the INDNO region are used. The fuel prices of these five countries (the VariableCost of their MIN fuel-supply technologies) are set to the India prices. Transmission is unchanged.
+- Description: The shared VRE ceilings applied to B_Optimised_VRE, then the edits of B_Opt_IndiaCosts: the CapitalCost and FixedCost of the existing generation and storage technologies of Bangladesh, Bhutan, Nepal, Sri Lanka and the Maldives, except the backstop, are set to the India values of the same family in each year. Where the India regions differ (coal, hydro and offshore wind), the values of the INDNO region are used. Then the fuel prices of these five countries (the VariableCost of their MIN fuel-supply technologies) are set to the India prices. Transmission is unchanged.
 
 | Sheet | Parameter | Operation | Technologies |
 |---|---|---|---|
