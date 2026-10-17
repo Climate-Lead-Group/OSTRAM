@@ -191,6 +191,48 @@ class UnmatchedScenarioEditTests(unittest.TestCase):
         )
 
 
+class CopyFromTechTests(unittest.TestCase):
+    def test_copy_sets_every_year_to_the_source_row(self) -> None:
+        workbook = _workbook()
+        source = [100.0 + year - 2023 for year in YEARS]
+        workbook["Secondary Techs"].append([
+            4, "PWRSOLINDNO", "solar", 2, "CapitalCost", "USD", "User defined", 0,
+            *source,
+        ])
+        log = _apply(
+            workbook,
+            {
+                "sheet": "Secondary Techs", "techs": ["PWRSOLBGDXX"],
+                "param": "CapitalCost", "op": "copy_from_tech",
+                "source_tech": "PWRSOLINDNO",
+            },
+        )
+        sheet = workbook["Secondary Techs"]
+        columns, years = edits.scan_columns(sheet)
+        row = edits.find_row(sheet, columns, "PWRSOLBGDXX", "CapitalCost")
+        self.assertEqual(
+            [sheet.cell(row, years[year]).value for year in YEARS], source
+        )
+        self.assertEqual(len(log["cells"]), len(YEARS) - 1)
+
+    def test_missing_source_row_stops(self) -> None:
+        with self.assertRaises(edits.ScenarioEditError) as caught:
+            _apply(
+                _workbook(),
+                {
+                    "sheet": "Secondary Techs", "tech": "PWRSOLBGDXX",
+                    "param": "CapitalCost", "op": "copy_from_tech",
+                    "source_tech": "PWRSOLINDNO",
+                },
+            )
+        self.assertEqual(
+            str(caught.exception),
+            f'Scenario {SCENARIO}: the edit to CapitalCost for "PWRSOLBGDXX" '
+            'has no source row. Sheet "Secondary Techs" has no CapitalCost row '
+            "for PWRSOLINDNO.",
+        )
+
+
 class StandaloneStopMessageTests(unittest.TestCase):
     def test_main_prints_the_stop_message_without_a_traceback(self) -> None:
         message = f"Scenario {SCENARIO}: the edit changed nothing."

@@ -49,6 +49,7 @@ either `values` or one `op`. The edits recognise year columns from 2020 to
 | `op: set_to_residual` | none | Sets every year to the technology's `ResidualCapacity` on the same sheet. |
 | `op: clamp_to_residual` | optional `residual_source` | Lowers each numeric cell to the technology's `ResidualCapacity` where the cell is higher. With `residual_source: minimum_investment_boundary`, allowed only for `TotalAnnualMinCapacityInvestment`, the bound comes from the scenario workbook. |
 | `op: set_to_residual_factor_floor` | `factor`, `residual_year`, `base_window_floor`, `years` | Sets the listed years to the larger of the factor multiplied by `ResidualCapacity` in `residual_year` and the floor, rounded to six decimals. The target row must exist. |
+| `op: copy_from_tech` | `source_tech` | Sets every year to the value of the same parameter in the `source_tech` row on the same sheet, as that row stands when the edit runs. |
 
 ## The shared VRE ceilings
 
@@ -80,7 +81,8 @@ The build stops with an error when an edit changes nothing:
 - a `tech_prefix` edit matches no technology;
 - a `values` edit, or a `multiply` edit with `years`, names a year that is
   not a year column; the message lists the missing years;
-- a shared VRE ceiling finds no `TotalAnnualMaxCapacity` row for its technology.
+- a shared VRE ceiling finds no `TotalAnnualMaxCapacity` row for its technology;
+- a `copy_from_tech` edit finds no row of its `source_tech` for the parameter.
 
 The message names the scenario, the edit and the reason, and suggests the
 closest name when one exists:
@@ -92,6 +94,8 @@ Scenario B_Opt_MyTest: the edit to TotalAnnualMaxCapacity for "PWRSOLBGXX" chang
 The other reasons read `Sheet "<sheet>" has no parameter "<param>".`,
 `No technology starts with "<prefix>".`, `None of the years <years> is a
 column in the workbook.` and `Sheet "<sheet>" has no <param> row for it.`
+A missing `copy_from_tech` source reads `has no source row. Sheet "<sheet>"
+has no <param> row for <source_tech>.`
 The `run` command prints the message and exits with code 1.
 
 ## Rebuilding one derived scenario by hand

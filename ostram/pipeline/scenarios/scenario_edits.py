@@ -50,6 +50,9 @@ scenario YAML edit schema (one dict per edit):
                                          when residual_source is
                                          "minimum_investment_boundary"
                                          (minimum only)
+        op:"copy_from_tech"+source_tech -> set every year to the value of the
+                                         same parameter in the source_tech
+                                         row (same sheet)
     create_if_absent : bool (default False) -> create the param row if missing
     note             : free text (audit only)
 """
@@ -489,6 +492,16 @@ def apply_edit(
                     return round(min(float(old), cap), 6)
                 except (TypeError, ValueError):
                     return old
+        elif edit.get("op") == "copy_from_tech":
+            source_tech = edit.get("source_tech")
+            source = read_row_values(ws, col_map, year_cols, source_tech, param)
+            if source is None:
+                raise ScenarioEditError(
+                    f"Scenario {log.get('scenario')}: the edit to {param} for "
+                    f'"{selector}" has no source row. Sheet "{ws.title}" has '
+                    f"no {param} row for {source_tech}."
+                )
+            newfn = lambda y, old, sv=source: sv[y]
         else:
             raise ValueError(f"edit for {tech}/{param}: no valid operation")
 
