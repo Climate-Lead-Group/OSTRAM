@@ -8,8 +8,31 @@ in the [glossary](glossary.md).
 
 ## 1. The scenario file
 
-Copy the folder of a scenario that is close to the new one, for example
-`config/scenarios/B_Opt_SolarCapex130/`, to `config/scenarios/B_Opt_SolarCapex120/`.
+Start from a scenario that is close to the new one, for example
+`B_Opt_SolarCapex130`. From the repository root, with the environment's Python:
+
+```powershell
+python -m ostram new-scenario B_Opt_SolarCapex120 --from B_Opt_SolarCapex130
+```
+
+```text
+Created config/scenarios/B_Opt_SolarCapex120/scenario.yaml (copied from B_Opt_SolarCapex130).
+
+Next:
+1. Rewrite the description and edits in that file.
+2. Add this line at the end of decision_scenarios in config/setups/south_asia.yaml:
+  - B_Opt_SolarCapex120
+```
+
+The command copies the folder `config/scenarios/B_Opt_SolarCapex130/` to
+`config/scenarios/B_Opt_SolarCapex120/` and sets the `scenario` line of the
+copied `scenario.yaml` to the new name. Everything else in the folder is copied
+as it is. It stops without copying when the new name is already a folder or a
+registered scenario, or when the source is not a derived scenario. It never
+edits `config/setups/south_asia.yaml`.
+
+To do the same by hand, copy the folder and change the `scenario` line.
+
 Then edit `scenario.yaml`. The folder name and the `scenario` field must be
 equal, and `base_scenario` must be a root.
 

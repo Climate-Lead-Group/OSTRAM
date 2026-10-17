@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from contextlib import redirect_stderr, redirect_stdout
+import io
 import json
 import os
 from pathlib import Path
@@ -291,6 +293,60 @@ class ScenarioRegistryTests(unittest.TestCase):
             self.assertEqual(record["required_roots"], ["BAU"])
             self.assertEqual(record["derived"], [])
             self.assertFalse(record["solver_invoked"])
+
+
+class NewScenarioCommandTests(unittest.TestCase):
+    """``python -m ostram new-scenario`` in a temporary copy of the project's config."""
+
+    def _project(self, temp: str) -> Path:
+        root = Path(temp)
+        for directory in ("ostram", "inputs", "model"):
+            (root / directory).mkdir()
+        (root / "ostram" / "__init__.py").write_text("", encoding="utf-8")
+        (root / "environment.yaml").write_text("name: fixture\n", encoding="utf-8")
+        shutil.copytree(REPO_ROOT / "config", root / "config")
+        return root
+
+    def _run(self, root: Path, *arguments: str) -> tuple[int, str, str]:
+        from ostram.__main__ import main
+
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            code = main(["--project-root", str(root), "new-scenario", *arguments])
+        return code, stdout.getvalue(), stderr.getvalue()
+
+    def test_copies_the_folder_and_renames_the_scenario(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = self._project(temp)
+            code, out, _ = self._run(root, "B_Opt_MyCopy", "--from", "B_Opt_DirBidir")
+            self.assertEqual(code, 0)
+            source = root / "config" / "scenarios" / "B_Opt_DirBidir"
+            target = root / "config" / "scenarios" / "B_Opt_MyCopy"
+            self.assertEqual(
+                sorted(p.name for p in target.iterdir()),
+                sorted(p.name for p in source.iterdir()),
+            )
+            old = (source / "scenario.yaml").read_text(encoding="utf-8")
+            new = (target / "scenario.yaml").read_text(encoding="utf-8")
+            self.assertEqual(new.splitlines()[0], "scenario: B_Opt_MyCopy")
+            self.assertEqual(new.splitlines()[1:], old.splitlines()[1:])
+            self.assertIn(
+                "decision_scenarios in config/setups/south_asia.yaml:\n  - B_Opt_MyCopy",
+                out,
+            )
+
+    def test_refuses_an_existing_name(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = self._project(temp)
+            before = (root / "config" / "scenarios" / "B_Opt_Clipped" / "scenario.yaml").read_bytes()
+            code, out, err = self._run(root, "B_Opt_Clipped", "--from", "B_Opt_SolarCapex130")
+            self.assertEqual(code, 1)
+            self.assertEqual(out, "")
+            self.assertIn("config/scenarios/B_Opt_Clipped already exists", err)
+            self.assertEqual(
+                (root / "config" / "scenarios" / "B_Opt_Clipped" / "scenario.yaml").read_bytes(),
+                before,
+            )
 
 
 if __name__ == "__main__":
