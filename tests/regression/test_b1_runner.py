@@ -20,7 +20,7 @@ import yaml
 from ostram.paths import ProjectPaths
 from ostram.pipeline.compilation.transforms import effects as b1_effects
 from ostram.pipeline.compilation.transforms import planning as b1_planning
-from ostram.pipeline.scenarios.registry import DECISION_SCENARIOS
+from ostram.pipeline.scenarios.registry import load_registry
 from tests.regression.setup_file import SETUP_FILE
 
 
@@ -462,8 +462,8 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
                 final_year=params["final_year"],
                 time_range_vector=[],
                 wide_param_header=params["sets"],
-                other_setup_params=params["xtra_scen"],
-                other_setup_params_timeslices=[],
+                run_settings=params["xtra_scen"],
+                run_settings_timeslices=[],
             )
             selected_workbook = Path(
                 plan.scenario_workbook("Print_Base_Year")
@@ -705,8 +705,8 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
                 final_year=2050,
                 time_range_vector=[],
                 wide_param_header=[],
-                other_setup_params={},
-                other_setup_params_timeslices=[],
+                run_settings={},
+                run_settings_timeslices=[],
             )
             for key in live_contract:
                 with self.subTest(missing_active_key=key):
@@ -714,7 +714,10 @@ class B1IsolatedBoundaryTests(unittest.TestCase):
                         b1_effects.open_workbook(plan.extra_input(key))
 
         registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))["scenario_registry"]
-        self.assertEqual(len(registry["decision_scenarios"]), len(DECISION_SCENARIOS))
+        self.assertEqual(
+            tuple(registry["decision_scenarios"]),
+            load_registry(registry_path).decision_scenarios,
+        )
         governed_sources = []
         for path in registry_path.parent.rglob("*"):
             if path.is_file() and path.suffix.lower() in {

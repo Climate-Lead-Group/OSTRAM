@@ -26,8 +26,8 @@ summary they need.
   python -m unittest discover -s tests -p "test_*.py"
   ```
 
-- Changes under `config/`, `inputs/` or `ostram/pipeline/`: build all 18
-  registered scenarios with `--compile-only` on `main` and on the branch, in
+- Changes under `config/`, `inputs/` or `ostram/pipeline/`: build every
+  registered scenario with `--compile-only` on `main` and on the branch, in
   separate clones, and compare `workspace/compilation/A2_Output_Params/<S>/`,
   `workspace/execution/A2_Outputs_Params_otoole/<S>/` and
   `workspace/execution/Executables/<S>_0/` byte for byte. The steps are in
@@ -37,8 +37,8 @@ summary they need.
   `docs/requirements.txt`, with `<out-dir>` outside the clone.
 - Docstring-only changes: with docstrings stripped, every module's AST is
   unchanged.
-- When a scenario is added, regenerate the scenario catalogue with
-  `python tools/generate_scenario_catalogue.py`.
+- When a delivered scenario's file or the scenario list changes, regenerate
+  the scenario catalogue with `python tools/generate_scenario_catalogue.py`.
 
 ## After changing inputs
 
@@ -48,7 +48,7 @@ This applies to changes under `config/`, `inputs/` or `ostram/pipeline/`.
    drive, with `main` checked out in one and the branch in the other.
 2. Use one conda environment. It holds an editable install of one clone, so
    build each clone from its own root with `PYTHONPATH` set to that root.
-3. In each clone, build all 18 registered scenarios. Omit `--scenarios`. The two
+3. In each clone, build every registered scenario. Omit `--scenarios`. The two
    C scenarios need a solved `A_Calibrated_BAU` result: pass the same folder
    to both clones. The
    [portfolio sequence](docs/pipeline.md#17-scenario-portfolio) shows

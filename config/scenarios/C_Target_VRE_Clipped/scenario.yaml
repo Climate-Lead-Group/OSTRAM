@@ -1,0 +1,21 @@
+scenario: C_Target_VRE_Clipped
+base_scenario: C_Target_VRE
+description: >-
+  The shared VRE ceilings applied to C_Target_VRE. It also restates the Maldives
+  solar assumption for 2028 that C_Target_VRE already carries: a minimum total
+  of 0.3841 GW, with earlier builds counting towards it. This is a modelling
+  assumption. It is not an official target.
+apply_vre_ceiling_layer: true
+edits:
+- sheet: Secondary Techs
+  tech: PWRSPVMDVXX
+  param: TotalAnnualMinCapacityInvestment
+  values: {'2028': 0.0}
+  note: C-only timing correction; earlier annual minima retained.
+- sheet: Secondary Techs
+  tech: PWRSPVMDVXX
+  param: TotalAnnualMinCapacity
+  values: {'2028': 0.3841}
+  create_if_absent: true
+  note: By-2028 total stock; credits earlier builds. Modelling assumption, not an
+    official target.

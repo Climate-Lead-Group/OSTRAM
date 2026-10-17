@@ -13,7 +13,7 @@ maps the terms to the names used in the code.
 | Build cap | The most new capacity of one technology that the model may build in one country-region in one year. Model parameter `TotalAnnualMaxCapacityInvestment`. |
 | Cap multiplier | A factor on the build cap that rises over time. |
 | Country-region | One of the ten nodes of the South Asia model: BGDXX, BTNXX, INDEA, INDNE, INDNO, INDSO, INDWE, LKAXX, MDVXX and NPLXX. File and column names abbreviate it as `cr`. |
-| Decision scenario | One of the 17 scenarios whose results the study compares. They are listed under `decision_scenarios` in `config/setups/south_asia.yaml`. |
+| Decision scenario | A scenario whose results the study compares. The decision scenarios are listed under `decision_scenarios` in `config/setups/south_asia.yaml`. |
 | Demand-scaled fleet | The residual capacity of a country-region multiplied by the growth of its demand since 2024. The build-cap rule computes it. |
 | Derived scenario | A scenario built from a root's finished A3 output by the shared VRE ceilings, its scenario edits, the base-year pin and, for the two direction variants, an overlay. Its parent is always a root. |
 | Edit log | The JSON file written beside a derived scenario's A-O workbooks. It lists every cell changed, every row created and every edit skipped. Its name is `apply_patches_CHANGES_<stamp>.json`. |
@@ -28,8 +28,8 @@ maps the terms to the names used in the code.
 | Reserve margin | The requirement that the capacity tagged as firm exceeds demand by a set fraction. OSeMOSYS parameter `ReserveMargin`. |
 | Residual capacity | The capacity that exists in the base year and survives in each later year after retirements. Model parameter `ResidualCapacity`. |
 | Root scenario | A scenario built by A1, A2 and the A3 rules named in the Control sheet of the scenario workbook. The roots are `BAU`, `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE`. |
-| Scenario edits | The ordered changes under `scenario_inputs/<name>` in `config/setups/south_asia.yaml` that build a derived scenario from its parent's A-O workbooks. |
-| Scenario registry | The `scenario_registry` section of `config/setups/south_asia.yaml`: the roots, the decision scenarios, and the derived scenarios with their parents and overlays. |
+| Scenario edits | The ordered changes in a derived scenario's file `config/scenarios/<name>/scenario.yaml` that build the scenario from its parent's A-O workbooks. |
+| Scenario registry | The `scenario_registry` section of `config/setups/south_asia.yaml`: the roots and the decision scenarios. Each derived scenario's parent and overlay are in its own file, `config/scenarios/<name>/scenario.yaml`. |
 | Security factor | The factor 1.1 in the build-cap formula. It leaves 10 per cent to spare above each technology's share of the required growth. It is a model margin and has no link to energy security. |
 | Shared VRE ceilings | Twenty fixed values of `TotalAnnualMaxCapacity` for solar and onshore wind technologies, applied in every year to every derived scenario. Section `vre_ceilings` of `config/setups/south_asia.yaml`. |
 | Solver datafile | The final text file that `glpsol` reads: `Executables/<S>_0/Pre_processed_<S>_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt` under `workspace/execution/`. |
@@ -45,19 +45,19 @@ maps the terms to the names used in the code.
 
 | Docs term | Code name | Where |
 |---|---|---|
-| build cap | `lid` | `ostram/pipeline/scenarios/rules/build_cap_rule.py` |
+| build cap | `build_cap` | `ostram/pipeline/scenarios/rules/build_cap_rule.py` |
 | cap multiplier | `cap_multiplier_schedule` | `config/scenarios/<root>/build_cap_rule.yaml` |
 | family limit | `family_limits` | `config/scenarios/<root>/build_cap_rule.yaml` |
 | technology top-up | `technology_top_up_gw` | `config/scenarios/<root>/build_cap_rule.yaml` |
 | adequacy top-up | `adequacy_share_schedule` | `config/scenarios/<root>/build_cap_rule.yaml` |
 | demand-scaled fleet | `scaled_pool` | `build_cap_rule.py` |
 | security factor | `margin_factor` | `config/scenarios/<root>/build_cap_rule.yaml` |
-| scenario edits | `scenario_inputs`, `scenario_edits.py` | `config/setups/south_asia.yaml`, `ostram/pipeline/scenarios/` |
+| scenario edits | `edits`, `scenario_edits.py` | `config/scenarios/<scenario>/scenario.yaml`, `ostram/pipeline/scenarios/` |
 | model-file adjustments | `model_file_adjustments/` | `ostram/pipeline/execution/` |
 | edit log | `apply_patches_CHANGES_<stamp>.json` | `workspace/preparation/A1_Outputs/A1_Outputs_<scenario>/` |
 | shared VRE ceilings | `vre_ceilings` | `config/setups/south_asia.yaml` |
-| overlay | `direction_overlay`, `set_interconnector_direction.yaml` | `config/setups/south_asia.yaml`, `config/scenarios/<scenario>/` |
-| parent | `base_scenario` | `config/setups/south_asia.yaml` |
+| overlay | `direction_overlay`, `set_interconnector_direction.yaml` | `config/scenarios/<scenario>/` |
+| parent | `base_scenario` | `config/scenarios/<scenario>/scenario.yaml` |
 | gas and oil allowance | `reserve_margin_xlsx_*` | `config/execution/Config_MOMF_T1_AB.yaml` |
 | storage delay | `storage_delay_*` | `config/execution/Config_MOMF_T1_AB.yaml` |
 | backstop | `PWRBCK` | technology names |

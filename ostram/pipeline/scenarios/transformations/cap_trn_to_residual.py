@@ -2,7 +2,7 @@
 cap_trn_to_residual.py
 ======================
 
-Pre-lid data fix for transmission interconnection (TRN*) techs in
+Data fix, before the build-cap rule, for transmission interconnection (TRN*) techs in
 the 'Secondary Techs' sheet. Caps each TRN tech's TotalAnnualMaxCapacity
 to its ResidualCapacity year-by-year, and resets TotalAnnualMaxCapacityInvestment
 to 9999, a finite cap, across the full 2023-2050 horizon.
@@ -71,7 +71,7 @@ Usage
 
 Chain with clear_stale_unbinding_caps.py: order doesn't strictly matter
 since they touch disjoint techs (TRN vs PWR), but conventional ordering
-is FIXED -> POST_TRN_CAP -> POST_CAP_RESET -> lid script.
+is FIXED -> POST_TRN_CAP -> POST_CAP_RESET -> build cap script.
 """
 
 from __future__ import annotations

@@ -103,6 +103,17 @@ class ManifestSafetyTests(unittest.TestCase):
             with self.assertRaisesRegex(SetupManifestError, "must use setup"):
                 parsed.source_paths(project_paths(root))
 
+    def test_old_build_cap_policy_name_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            manifest = Path(temp) / "setup.yaml"
+            manifest.write_text(
+                "schema: ostram-setup-v1\nid: tiny\nauthorities:\n"
+                "  seed: setup:a.csv\npolicies:\n  lid_rule_new_semantics: true\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(SetupManifestError, "build_cap_replaces_workbook_values"):
+                load_manifest(manifest)
+
 
 class AtomicWorkspaceTests(unittest.TestCase):
     def _fixture(self, root: Path):
@@ -358,7 +369,7 @@ class SetupCliTests(unittest.TestCase):
         implicit = load_setup("south_asia", paths=paths)
         explicit = load_setup("south_asia", paths=paths)
         self.assertEqual(implicit.digest, explicit.digest)
-        self.assertFalse(implicit.policies["lid_rule_new_semantics"])
+        self.assertFalse(implicit.policies["build_cap_replaces_workbook_values"])
         self.assertEqual(
             implicit.metadata["effective_values"][
                 "TRNBGDXXINDEA_residual_capacity_gw"
@@ -383,7 +394,7 @@ class SetupCliTests(unittest.TestCase):
         }
         self.assertTrue(required_roles.issubset(manifest.authorities))
         self.assertTrue(all(path.exists() for path in sources.values()))
-        self.assertEqual(manifest.policies["lid_rule_new_semantics"], True)
+        self.assertEqual(manifest.policies["build_cap_replaces_workbook_values"], True)
         # The base-year pin of the South Asia model is not domain-valid on the
         # reduced two-region model (CBC-certified infeasible); the setup
         # keeps it disabled.

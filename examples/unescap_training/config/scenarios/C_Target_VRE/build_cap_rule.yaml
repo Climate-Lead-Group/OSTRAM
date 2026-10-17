@@ -3,7 +3,7 @@
 ##
 ## Solar is handled entirely by set_vre_targets.yaml via the cap_envelope
 ## feature (bounded MaxCap/MaxCapInv following each region's NDC floor
-## trajectory). Wind sits on the normal proportional lid — its NDC floors
+## trajectory). Wind sits on the normal proportional build cap — its NDC floors
 ## (<=19%) are within the 3.0x relaxation ceiling.
 
 rule_mode: proportional

@@ -1745,7 +1745,7 @@ for label in ("AR_Base", "AR_Proj"):
 
 # (f) Require every small-hydro technology declared by the active authority.
 # Use the input taxonomy, not the generated rows: losing an in-domain code
-# must still fail. The reduced UNESCAP domain declares only PWRSHPINDEA.
+# must still fail. The reduced training domain declares only PWRSHPINDEA.
 shp_codes = {
     code for code in load_taxonomy(resolve_paths().interconnector_taxonomy)
     if code.startswith("PWRSHP")

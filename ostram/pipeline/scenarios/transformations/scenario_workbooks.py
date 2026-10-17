@@ -3,7 +3,7 @@
 scenario_workbooks.py: multi-scenario reader/writer for SOASIA Template v18.
 
 This module isolates all scenario-aware logic so the rest of the A3 pipeline
-(stage-1 timeslice merge, ao extensions, lid rules, etc.) keeps consuming a
+(stage-1 timeslice merge, ao extensions, build cap rules, etc.) keeps consuming a
 flat v17-shaped template per scenario, unchanged.
 
 Public surface:

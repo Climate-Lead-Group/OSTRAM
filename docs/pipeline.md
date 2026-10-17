@@ -91,7 +91,7 @@ in a working folder `scenarios/_run_<stamp>/`. The modules are in
 | Stage 5 | the root's rule chain in `ostram/pipeline/scenarios/rules/` | `config/scenarios/<root>/*.yaml` | the A-O workbooks in `stage5/` |
 | Shared rules | `apply_interconnector_costs`, `apply_internal_transmission`, `apply_internal_tx_losses` in `rules/`, then `apply_base_year_pin` for `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE` | the merged workbook, `config/preparation/Config_country_codes.yaml`, `config/scenarios/rules/internal_tx_residuals.csv`, `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | the A-O workbooks in `stage5/` |
 | Stage 6 | `sync_og_to_ts20`, then `transform` | `SOASIA_OSeMOSYS_WV.xlsx`, the change records of stage 5 | the timeslice sets and parameters in `preparation/og_csvs_inputs/`, `_scenario_run_state_<root>.xlsx`, the four A-O workbooks in `A1_Outputs_<root>/`; `BAU` also receives its transmission ceilings |
-| Derived scenario | `ostram/pipeline/scenarios/scenario_edits.py` | `A1_Outputs_<parent>/`, `config/setups/south_asia.yaml`, the base-year pin table | `A1_Outputs_<scenario>/` with its edit log; the overlay for the two direction variants |
+| Derived scenario | `ostram/pipeline/scenarios/scenario_edits.py` | `A1_Outputs_<parent>/`, `config/scenarios/<scenario>/scenario.yaml`, the shared VRE ceilings in `config/setups/south_asia.yaml`, the base-year pin table | `A1_Outputs_<scenario>/` with its edit log; the overlay for the two direction variants |
 
 The [rules page](rules.md) lists the rule chain of each root and the
 [scenario edits page](scenario-edits.md) describes the derived build.
@@ -101,7 +101,7 @@ The [rules page](rules.md) lists the rule chain of each root and the
 | B2 step | Module | Reads | Writes |
 |---|---|---|---|
 | Normalise | `ostram.pipeline.execution.runner` | `compilation/A2_Output_Params/<S>/*.csv`, the package CSV templates | `execution/A2_Outputs_Params_otoole/<S>/*.csv` |
-| Convert | otoole, driven by the runner | the normalised CSVs, `conversion_format.yaml`, the gross import policy and the historical trade roots in `south_asia.yaml`, the model file | `execution/Executables/<S>_0/<S>_0.txt` |
+| Convert | otoole, driven by the runner | the normalised CSVs, `conversion_format.yaml`, the gross import policy in the scenario's file, the historical trade roots in `south_asia.yaml`, the model file | `execution/Executables/<S>_0/<S>_0.txt` |
 | Preprocess | `ostram.pipeline.execution.preprocess` | the datafile | `Pre_processed_<S>_0.txt` |
 | Adjustment 1 | `model_file_adjustments.days_in_day_type` | the preprocessed datafile | the same file, in place |
 | Adjustment 2 | `model_file_adjustments.storage_delay` | the datafile and `model/osemosys_fast_preprocessed.txt` | `Pre_processed_<S>_0_StorageDelayN5.txt` and `osemosys_fast_preprocessed_storage_delay.txt` |
@@ -120,6 +120,7 @@ older reserve-margin repair are switched off in the tracked configuration.
 |---|---|
 | `config/setups/registry.json` | `run`, for the setup selection |
 | `config/setups/south_asia.yaml` | `run`, A3, B2 |
+| `config/scenarios/<scenario>/scenario.yaml` | A3, B2 |
 | `environment.yaml` | `run` |
 | `config/preparation/Config_country_codes.yaml` | A1, A2, A3 |
 | `config/preparation/Config_region_consolidation.yaml` | A1 |
@@ -153,7 +154,7 @@ The maintained authorities are:
 - `config/setups/south_asia.yaml::scenario_registry`
 - scenario-specific rule YAML files in `config/scenarios/<scenario>/`
 
-Derived edits of the `south_asia` setup live in `config/setups/south_asia.yaml`.
+Each derived scenario of the `south_asia` setup has its own file, `config/scenarios/<scenario>/scenario.yaml`.
 
 The registry declares four roots and the derived scenarios. A root is
 transformed through the ordered workbook stages. A derived scenario begins
@@ -280,7 +281,7 @@ omits rows marked `EMPTY`, even when their year cells contain numbers.
 The policy runs **only on the final `south_asia` `BAU` output**, after disposable
 restriction-state export and delivery. Shared preparation, post-A2 snapshots,
 and inherited Restrictions retain their existing values. The
-UNESCAP setup does not enable this policy. Validation remains enabled and
+training setup does not enable this policy. Validation remains enabled and
 does not apply repairs. `support_bau_transmission.json` beside the final
 parametrization workbook records all 504 technology/year ceilings and sources.
 

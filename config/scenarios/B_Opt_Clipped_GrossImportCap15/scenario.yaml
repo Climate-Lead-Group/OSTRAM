@@ -1,0 +1,20 @@
+scenario: B_Opt_Clipped_GrossImportCap15
+base_scenario: B_Optimised_VRE
+description: >-
+  The shared VRE ceilings applied to B_Optimised_VRE. From 2027 to 2050, the
+  electricity each of the six countries receives through its cross-border
+  interconnectors is at most 15 per cent of its yearly demand. India counts as
+  one country.
+apply_vre_ceiling_layer: true
+edits: []
+gross_import_cap:
+  countries:
+  - BGD
+  - BTN
+  - IND
+  - LKA
+  - MDV
+  - NPL
+  fraction: 0.15
+  first_year: 2027
+  last_year: 2050

@@ -2,7 +2,7 @@
 
 A derived scenario is built from its parent's A-O workbooks by
 `ostram/pipeline/scenarios/scenario_edits.py`, which reads the scenario's
-block under `scenario_inputs` in `config/setups/south_asia.yaml`. Terms are in
+file `config/scenarios/<name>/scenario.yaml`. Terms are in
 the [glossary](glossary.md).
 
 ## Order of the build
@@ -11,9 +11,9 @@ the [glossary](glossary.md).
    under `workspace/preparation/A1_Outputs/`. An existing target folder is
    first copied to `A1_Outputs_<scenario>_PREPATCH_<stamp>`, unless backups are
    skipped. The `run` command skips them.
-2. The shared VRE ceilings are applied, unless the block sets
+2. The shared VRE ceilings are applied, unless the scenario file sets
    `apply_vre_ceiling_layer: false`.
-3. The edits in the block's `edits` list are applied in list order. Each edit
+3. The edits in the file's `edits` list are applied in list order. Each edit
    sees the changes of the earlier ones.
 4. `A-O_Parametrization.xlsx` is saved and the base-year pin is applied again.
 5. The edit log is written to the target folder.

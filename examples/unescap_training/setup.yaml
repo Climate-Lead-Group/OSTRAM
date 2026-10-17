@@ -103,9 +103,9 @@ policies:
   # A3 introduces declared extensions after A1's technology-country filter.
   # Preserve only their emission rows; other seed parameters stay filtered.
   preserve_declared_extension_emissions: true
-  # The training correction replaces legacy hand-entered LID cells. The south_asia
-  # setup explicitly keeps this false in config/setups/south_asia.yaml.
-  lid_rule_new_semantics: true
+  # The computed build cap replaces hand-entered build-cap cells. The south_asia
+  # setup keeps this false in config/setups/south_asia.yaml.
+  build_cap_replaces_workbook_values: true
   # The base-year pin is a South Asia calibration authority (audited on
   # the five-country domain, where pinned 2023-2026 BGD generation balances
   # against several import corridors). Projected onto this reduced two-region

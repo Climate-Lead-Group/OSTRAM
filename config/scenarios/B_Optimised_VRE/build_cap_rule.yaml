@@ -12,7 +12,7 @@ cap_multiplier_schedule:
   2045: 15.0       # was 2.0
   2050: 25.0      # was 3.0
 
-## Minimum MaxCapInv (GW) per tech per year.  Prevents the lid from
+## Minimum MaxCapInv (GW) per tech per year.  Prevents the build cap from
 ## collapsing to zero when retirement drives pool_delta negative.
 technology_top_up_gw: 0.1
 
@@ -23,7 +23,7 @@ technology_top_up_gw: 0.1
 ##
 ## IMPORTANT: families with ceiling <= 1.0 are "locked" families.
 ## The technology_top_up_gw does NOT apply to locked families; their effective
-## lid is purely proportional (share × pool_delta × ceiling).  This
+## build cap is purely proportional (share × pool_delta × ceiling).  This
 ## prevents the floor from acting as an implicit per-tech subsidy
 ## for families with near-zero BAU share.
 family_limits:
@@ -47,7 +47,7 @@ exempt_prefixes:
 
 ## Adequacy floor: ensures the sum of gen MaxCapInv in each (cr, year)
 ## is at least this fraction of scaled_pool (ResidualCapacity × demand_mult).
-## When the proportional lid produces a total below this floor, ALL per-tech
+## When the proportional build cap produces a total below this floor, ALL per-tech
 ## lids are scaled up by the same factor (preserving tech-share structure
 ## and family ceilings).
 ##

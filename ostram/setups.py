@@ -295,6 +295,11 @@ def load_manifest(
     policies = raw.get("policies", {})
     if not isinstance(metadata, Mapping) or not isinstance(policies, Mapping):
         raise SetupManifestError("setup metadata and policies must be mappings")
+    if "lid_rule_new_semantics" in policies:
+        raise SetupManifestError(
+            f"{manifest_path}: the policy lid_rule_new_semantics is called "
+            "build_cap_replaces_workbook_values; rename it"
+        )
     return SetupManifest(
         setup_id=setup_id,
         path=manifest_path,

@@ -1,4 +1,4 @@
-# Config_country_codes.yaml — UNESCAP training setup
+# Config_country_codes.yaml — training setup
 # Single source of truth for country codes, names, and technology mappings.
 #
 # Setup:  unescap_training  (examples/unescap_training/setup.yaml)
@@ -125,7 +125,7 @@ shares_tech_mapping:
 # ============================================================
 
 # List of country-region codes used when building region pairs.
-# UNESCAP training model: two interconnected regions only.
+# Training model: two interconnected regions only.
 countries:
   - "BGD"
   - "INDEA"

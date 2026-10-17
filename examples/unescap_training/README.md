@@ -120,6 +120,7 @@ python -m ostram --setup unescap_training inspect-resources
 `setup.yaml` sets `metadata.requires_prepare: true`. The setup ships input CSVs and a
 scenario workbook, not a built model, so `example prepare unescap_training` must succeed before any
 scenario can be compiled or solved.
+A workspace prepared before the setup was named `unescap_training` must be prepared again with `python -m ostram --workspace <ws> example prepare unescap_training --reset`.
 
 ## Path resolution
 

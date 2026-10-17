@@ -2,15 +2,15 @@
 clear_stale_unbinding_caps.py
 ==============================
 
-Pre-lid data fix. Resets stale 'unbinding cap' values in
+Data fix before the build-cap rule. Resets stale 'unbinding cap' values in
 TotalAnnualMaxCapacityInvestment cells of PWRSPV* and PWRWON* techs
-that are flat across the full 2024-2050 horizon, so the lid script
+that are flat across the full 2024-2050 horizon, so the build cap script
 (build_cap_rule.py) can write the year-schedule
 into them.
 
 Background
 ----------
-The lid script preserves any existing non-9999 cell value as a
+The build cap script preserves any existing non-9999 cell value as a
 'manual calibration'. A subset of PWR techs in the c2a-updated
 workbook have flat (non-9999) numbers in MaxCapInv for some
 contiguous block starting at 2024. Two variants of the same
@@ -19,26 +19,26 @@ disease:
   Pattern A -- full-horizon cliff (PWRSPV*, PWRWON*, 14 techs):
     2023=9999, 2024-2050 = a single flat number
     e.g. PWRWONINDNO = 186.004 every year
-    Causes a sudden 30x jump in lid headroom from 2023 to 2024
+    Causes a sudden 30x jump in build cap headroom from 2023 to 2024
     and lets the deferred 2023 surge land as a ~440 GW dump.
 
   Pattern B -- planning-window cap (PWRHYD*, PWRSHP*, 13 techs):
     2023=9999, 2024-2030 = a single flat number,
     2031-2050 = 9999
     e.g. PWRHYDINDNO = 36.776 for 2024-2030 then 9999 thereafter
-    Causes the same lid cliff in 2024-2030 then a transition.
+    Causes the same build cap cliff in 2024-2030 then a transition.
 
 Both patterns are stale unbinding caps unrelated to actual
 project schedules. The real project commit data lives in
 TotalAnnualMinCapacityInvestment (year-specific non-flat values
-matching plant commit dates). The lid script's untie rule
-(MinCap >= proposed lid -> bump lid to MinCap * 1.01) preserves
+matching plant commit dates). The build cap script's untie rule
+(MinCap >= proposed build cap -> bump build cap to MinCap * 1.01) preserves
 those floors automatically, so resetting the MaxCapInv values
 does not lose any planning information.
 
 This script resets MaxCapInv 2024-2050 to 9999 for all 27 affected
-techs. On the next lid-script run, the year-schedule writes into
-every cell, with the untie rule raising the lid above the MinCap
+techs. On the next run of the build cap script, the year-schedule writes into
+every cell, with the untie rule raising the build cap above the MinCap
 floor wherever a real project commitment is scheduled.
 
 Scope
@@ -52,7 +52,7 @@ ONLY changes techs in TECHS_TO_RESET (27 techs) that satisfy ALL of:
 Does NOT touch:
   - TotalAnnualMinCapacityInvestment (where real project floors live)
   - Any other parameter or sheet
-  - TRN* transmission interconnects (lid script skips these by design)
+  - TRN* transmission interconnects (build cap script skips these by design)
   - Any tech outside TECHS_TO_RESET, even if it matches the
     pattern -- explicit allowlist for safety
 
@@ -62,7 +62,7 @@ Output
   stem. Long mutable-workspace paths are deterministically compacted while
   retaining that stage identity. The input file is left untouched.
 - Per-tech summary printed to stdout.
-- The lid script should be pointed at the new POST_CAP_RESET file.
+- The build cap script should be pointed at the new POST_CAP_RESET file.
 
 Usage
 -----
@@ -96,15 +96,15 @@ PLACEHOLDER = 9999
 RESET_YEARS = list(range(2024, 2051))  # 2024 through 2050 inclusive
 
 # Allowlist: techs whose stale flat caps in MaxCapInv should be reset
-# to 9999 so the lid script can write the year-schedule.
+# to 9999 so the build cap script can write the year-schedule.
 #
 # Pattern A -- full-horizon cliff (PWRSPV*, PWRWON*): 14 techs,
 #   2023=9999, 2024-2050 all equal a single flat number.
 # Pattern B -- planning-window cap (PWRHYD*, PWRSHP*): 13 techs,
 #   2023=9999, 2024-2030 a single flat number, 2031-2050 = 9999.
 #   Real project floors are in MinCapInv; resetting MaxCapInv loses
-#   no planning data because the lid script's untie rule re-derives
-#   a lid above MinCap automatically.
+#   no planning data because the build cap script's untie rule re-derives
+#   a build cap above MinCap automatically.
 TECHS_TO_RESET = {
     # Pattern A
     "PWRSPVBGDXX", "PWRSPVBTNXX", "PWRSPVINDEA", "PWRSPVINDNE",

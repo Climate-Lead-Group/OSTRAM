@@ -1,5 +1,5 @@
 # C-only planning allowances; existing set_min_capacity_floors ceiling schema.
-# Invoked before the generic lid, which preserves explicit manual values.
+# Invoked before the generic build cap, which preserves explicit manual values.
 # This filename is fixed by the existing rule; floors are empty and calibration is unchanged.
 warn_on_untie: true
 floors: []

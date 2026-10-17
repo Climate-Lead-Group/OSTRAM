@@ -2,7 +2,7 @@
 build_cap_rule.py
 ===================================
 
-Independent rule: applies a per-year LID and the V1 UNTIE RULE to
+Independent rule: applies a per-year build cap and the V1 UNTIE RULE to
 TotalAnnualMaxCapacityInvestment for GENERATION technologies that have
 either ResidualCapacity > 0 or TotalAnnualMinCapacityInvestment > 0 in any
 year.
@@ -10,7 +10,7 @@ year.
 This script is INDEPENDENT of add_max_capacity_investment_rule.py. It can run:
   - On a fresh A-O_Parametrization.xlsx (operates on empty MaxInv cells).
   - On the output of the first rule script (treats blank, 0 and 9999 cells
-    as placeholders and replaces them with the lid).
+    as placeholders and replaces them with the build cap).
   - Repeatedly (idempotent: second run produces no changes).
 
 PROBLEM
@@ -20,14 +20,14 @@ was left either blank, which reaches the model as -1 and skips the
 constraint, or at 9999, a finite cap far above any realistic ramp. Without a real upper
 bound, the optimizer can over-invest in candidate techs whose annual ramp
 should be physically constrained. And without a year-by-year *ramp* tied to
-demand, a constant lid either binds in late years (when demand has scaled
+demand, a constant build cap either binds in late years (when demand has scaled
 3x) or is too generous in early years.
 
 RULE
 ----
 For each tech in the ALLOWED ∩ GENERATION set, the per-year
-MaxCapacityInvestment lid is computed in one of two modes, selected by
-LID_RULE_MODE.
+MaxCapacityInvestment build cap is computed in one of two modes, selected by
+BUILD_CAP_RULE_MODE.
 
 Common quantities (used by both modes):
     pool(cr, y)         = sum of ResidualCapacity(t, y) for every ALLOWED
@@ -37,11 +37,11 @@ Common quantities (used by both modes):
     country_region(t)   = chars 6..10 of the tech code (e.g. BGDXX, INDNE)
 
 Mode "uniform" (default):
-    Every allowed tech in the same cr gets the SAME lid value.
+    Every allowed tech in the same cr gets the SAME build cap value.
 
         pct(cr, y) = base_pct(y) * mult(cr, y)
-        where base_pct(y) = LID_PERCENTAGE_BY_YEAR.get(y, LID_PERCENTAGE_DEFAULT)
-        lid(t, y)  = pct(cr, y) * pool(cr, y)
+        where base_pct(y) = BUILD_CAP_PERCENTAGE_BY_YEAR.get(y, BUILD_CAP_PERCENTAGE_DEFAULT)
+        build cap(t, y)  = pct(cr, y) * pool(cr, y)
                    = base_pct(y) * scaled_pool(cr, y)
 
     The base_pct schedule is a per-decade plateau encoding "tight while we
@@ -50,21 +50,21 @@ Mode "uniform" (default):
     proportionally more headroom.
 
 Mode "proportional":
-    Each tech gets a lid sized to its share of the 2024 fleet. Total
+    Each tech gets a build cap sized to its share of the 2024 fleet. Total
     headroom is the year-over-year growth in scaled_pool, distributed
     proportionally and slackened by a security factor.
 
         tech_share(t)     = ResidualCapacity(t, ref_year) / pool(cr, ref_year)
         pool_delta(cr, y) = max(0, scaled_pool(cr, y) - scaled_pool(cr, y-1))
-        lid(t, y)         = LID_SECURITY_FACTOR * tech_share(t) * pool_delta(cr, y)
+        build cap(t, y)         = MARGIN_FACTOR * tech_share(t) * pool_delta(cr, y)
 
     The max(0, ...) guard ensures that flat-or-declining demand years
-    yield zero new headroom (no negative lids). For the reference year and
-    earlier, lid = 0 (no prior year to delta against), so MinCapInv must
+    yield zero new headroom (no negative build caps). For the reference year and
+    earlier, build cap = 0 (no prior year to delta against), so MinCapInv must
     cover any required ref-year build via the untie rule.
 
 Both modes are floored by the V1 untie rule: if MinCapInv(t, y) > 0 and
-the proposed lid <= MinCapInv(t, y), we push the lid to
+the proposed build cap <= MinCapInv(t, y), we push the build cap to
 MinCapInv(t, y) * UNTIE_MULTIPLIER. This guarantees the LP-feasibility
 invariant MinCapInv < MaxCapInv whenever MinCapInv > 0.
 
@@ -73,7 +73,7 @@ GENERATION FILTER
 "Generation" is defined by config/scenarios/technology_types.csv (columns:
 'Technology (PWR)', 'Technology'). Only techs categorized as 'GENERATION'
 are eligible. This correctly excludes storage (e.g. PWRSDSLKAXX),
-interconnectors, primary fuels, etc., which need separate lid policies.
+interconnectors, primary fuels, etc., which need separate build cap policies.
 
 DEMAND-ANCHORED RAMP
 --------------------
@@ -84,7 +84,7 @@ Demand rows are summed within each cr and divided by the value at the
 reference year (default 2024) to obtain mult(cr, y).
 
 Cell-by-cell, for each MaxInv cell of an ALLOWED tech:
-    1. Blank (None), 0 or 9999 placeholder  ->  proposed = lid
+    1. Blank (None), 0 or 9999 placeholder  ->  proposed = build cap
     2. Other explicit value (manual cal)  ->  proposed = current value (preserved)
     3. V1 UNTIE RULE (cf. check V1 of pre_solver_validation.py):
          if MinCapacityInvestment(tech, y) >= proposed:
@@ -103,11 +103,11 @@ SCOPE
 
 CONFIGURATION
 -------------
-Edit LID_PERCENTAGE_DEFAULT and LID_PERCENTAGE_BY_YEAR at the top of this
-file to change the lid:
+Edit BUILD_CAP_PERCENTAGE_DEFAULT and BUILD_CAP_PERCENTAGE_BY_YEAR at the top of this
+file to change the build cap:
 
-    LID_PERCENTAGE_DEFAULT = 0.005       # default 0.5% of pool per year
-    LID_PERCENTAGE_BY_YEAR = {            # per-year overrides (optional)
+    BUILD_CAP_PERCENTAGE_DEFAULT = 0.005       # default 0.5% of pool per year
+    BUILD_CAP_PERCENTAGE_BY_YEAR = {            # per-year overrides (optional)
         2030: 0.01,
         2040: 0.02,
     }
@@ -129,12 +129,12 @@ USAGE
         --input-dir A1_Outputs/A1_Outputs_BAU \\
         --sheets "Secondary Techs"
 
-    # Restore from the most recent _PRE_LID_* backup:
+    # Restore from the most recent _PRE_BUILD_CAP_* backup:
     python build_cap_rule.py --restore
 
     # Restore from a specific backup folder:
     python build_cap_rule.py \\
-        --restore-from A1_Outputs/A1_Outputs_BAU_PRE_LID_20260430_204529
+        --restore-from A1_Outputs/A1_Outputs_BAU_PRE_BUILD_CAP_20260430_204529
 """
 
 from __future__ import annotations
@@ -198,7 +198,7 @@ PROJ_MODE_EMPTY = "EMPTY"
 PROJ_MODE_USER = "User defined"
 
 # The 9999 written by add_max_capacity_investment_rule.py. A cell holding
-# blank, 0 or this value is a placeholder and is replaced with the lid; any
+# blank, 0 or this value is a placeholder and is replaced with the build cap; any
 # other value is a manually calibrated value and is preserved.
 PLACEHOLDER_VALUE = 9999
 
@@ -213,7 +213,7 @@ COUNTRY_REGION_SLICE = slice(6, 11)  # for length-11 PWR* codes: chars 6..10
 # The technology taxonomy, config/scenarios/technology_types.csv, is read
 # through resolve_paths().interconnector_taxonomy. It lists techs by category
 # (GENERATION, INTERCONNECTORS, STORAGE_LONG, STORAGE_SHORT, etc.). Only
-# techs in GENERATION_CATEGORY are eligible for the lid + untie rule.
+# techs in GENERATION_CATEGORY are eligible for the build cap + untie rule.
 # Set RESTRICT_TO_GENERATION = False to fall back to the prior behavior
 # (any allowed tech with a length-11 PWR* shape).
 TECH_TYPES_FILE = "TECH_TYPES.csv"
@@ -223,37 +223,37 @@ GENERATION_CATEGORY = "GENERATION"
 RESTRICT_TO_GENERATION = True
 
 # ---------------------------------------------------------------------------
-# Lid rule configuration
+# Build cap rule configuration
 # ---------------------------------------------------------------------------
-# LID_RULE_MODE selects which lid formula to use. Both modes share the same
-# pool definition and demand multiplier; they differ in *how* the lid is
+# BUILD_CAP_RULE_MODE selects which build cap formula to use. Both modes share the same
+# pool definition and demand multiplier; they differ in *how* the build cap is
 # distributed among techs. See top-of-file RULE block for full formulas.
 #
 #   "uniform"     : Per-decade pct schedule, applied uniformly across all
-#                    techs in the same cr. Same lid value for every allowed
+#                    techs in the same cr. Same build cap value for every allowed
 #                    gen tech in cr per year. Use this for "let the optimizer
 #                    pick winners" scenarios and for late-horizon stress tests
 #                    where the planning anchor is intentionally relaxed.
 #
-#   "proportional": Each tech gets a lid sized to its 2024 fleet share,
+#   "proportional": Each tech gets a build cap sized to its 2024 fleet share,
 #                    times the year-over-year growth in scaled_pool, times
 #                    a slack factor. Use this when the BAU narrative is
 #                    "fleet evolves proportionally to current composition."
-LID_RULE_MODE = "proportional"
+BUILD_CAP_RULE_MODE = "proportional"
 
 # --- Uniform mode parameters --------------------------------------------------
 # Per-year base percentage. Encodes "tight near-term, loose late-horizon."
-# In uniform mode: pct(cr, y) = LID_PERCENTAGE_BY_YEAR[y] * mult(cr, y)
+# In uniform mode: pct(cr, y) = BUILD_CAP_PERCENTAGE_BY_YEAR[y] * mult(cr, y)
 # Schedule rationale:
-#   2023-2030 = 0.5%   - matches current near-term lid; respects national IRPs
+#   2023-2030 = 0.5%   - matches current near-term build cap; respects national IRPs
 #                        which typically have visibility through ~2030.
 #   2031-2040 = 10%    - planning data thins past 2030; 20x jump frees the
 #                        optimizer enough to substitute for storage if needed.
 #   2041-2050 = 50%    - effectively unbounded; build rates past 2045 are
 #                        left to the optimizer.
-# Years not in this dict fall back to LID_PERCENTAGE_DEFAULT.
-LID_PERCENTAGE_DEFAULT = 0.5
-LID_PERCENTAGE_BY_YEAR: dict = {
+# Years not in this dict fall back to BUILD_CAP_PERCENTAGE_DEFAULT.
+BUILD_CAP_PERCENTAGE_DEFAULT = 0.5
+BUILD_CAP_PERCENTAGE_BY_YEAR: dict = {
     2023: 0.05, 2024: 0.05, 2025: 0.05, 2026: 0.05, 2027: 0.05,
     2028: 0.05, 2029: 0.05, 2030: 0.1,
     2031: 0.1,  2032: 0.1,  2033: 0.1,  2034: 0.1,  2035: 0.1,
@@ -263,17 +263,17 @@ LID_PERCENTAGE_BY_YEAR: dict = {
 }
 
 # --- Proportional mode parameters --------------------------------------------
-# Slack on the proportional-share lid:
-#   lid(t, y) = LID_SECURITY_FACTOR * tech_share(t) * pool_delta(cr, y)
-# Setting this to exactly 1.0 means each tech's lid equals its proportional
+# Slack on the proportional-share build cap:
+#   build cap(t, y) = MARGIN_FACTOR * tech_share(t) * pool_delta(cr, y)
+# Setting this to exactly 1.0 means each tech's build cap equals its proportional
 # share of the year's pool growth. Values >= 1.0 add slack to avoid binding
 # the optimizer at the strict proportional split. 1.1 is a debugging knob
 # for unblocking solver edge cases; values much above 1.5 dilute the
 # proportional-allocation narrative.
-LID_SECURITY_FACTOR = 1.1
+MARGIN_FACTOR = 1.1
 
 # --- Relaxation schedule (used by both modes) --------------------------------
-# Year-keyed multiplier on the computed lid.  Default {}: multiplier = 1.0 for
+# Year-keyed multiplier on the computed build cap.  Default {}: multiplier = 1.0 for
 # every year (BAU behaviour).
 #
 # For optimisation scenarios, set anchor points in the YAML, e.g.:
@@ -285,12 +285,12 @@ LID_SECURITY_FACTOR = 1.1
 #
 # Years between anchors are linearly interpolated. Years before the first
 # anchor get its value; years after the last anchor get the last value.
-# The final lid is  min(relaxation(year) * lid_base, 9999).
+# The final build cap is  min(relaxation(year) * build_cap_base, 9999).
 #
 # This lets the optimizer gradually diverge from the BAU fleet-share trajectory
 # without a spike (near-term ≈ BAU) and without single-tech dominance (the
 # proportional structure is preserved: all families get the same multiplier).
-LID_RELAXATION_SCHEDULE: dict = {}
+CAP_MULTIPLIER_SCHEDULE: dict = {}
 
 # --- Family-specific relaxation ceilings (used by both modes) ----------------
 # When non-empty, caps the relaxation multiplier for techs belonging to a
@@ -304,14 +304,14 @@ LID_RELAXATION_SCHEDULE: dict = {}
 #     COA: 1.0    # coal locked to BAU proportions
 #     PET: 1.0    # petroleum locked
 #     NGA: 1.2    # gas gets slight room
-LID_FAMILY_RELAXATION_CEILINGS: dict = {}
+FAMILY_LIMITS: dict = {}
 
 # --- Exempt prefixes (used by both modes) ------------------------------------
 # When non-empty, any tech whose code starts with one of these prefixes gets
-# MaxCapInv = 9999, a finite cap, in place of the computed lid.
+# MaxCapInv = 9999, a finite cap, in place of the computed build cap.
 # Kept for backward compatibility; cap_multiplier_schedule is the preferred
-# mechanism.  Default: empty list (all techs get the lid).
-LID_EXEMPT_PREFIXES: list = []
+# mechanism.  Default: empty list (all techs get the build cap).
+EXEMPT_PREFIXES: list = []
 
 # --- Exempt max capacity (optional, per-prefix) ----------------------------
 # When an exempt prefix has an entry here, TotalAnnualMaxCapacity is set to the
@@ -349,17 +349,17 @@ def _exempt_max_cap_for(tech: str, year: int) -> float:
             return float(PLACEHOLDER_VALUE)
     return float(PLACEHOLDER_VALUE)
 
-# --- Lid floor (used by both modes) ------------------------------------------
-# Minimum MaxCapInv (GW) per tech per year.  When the computed lid (after
+# --- Technology top-up (used by both modes) ----------------------------------
+# Minimum MaxCapInv (GW) per tech per year.  When the computed build cap (after
 # relaxation) falls below this value, the floor is used instead.  This
-# prevents the lid from collapsing to zero when retirement drives pool_delta
+# prevents the build cap from collapsing to zero when retirement drives pool_delta
 # negative.  Default 0.0 = no floor (BAU behaviour unchanged).
-LID_FLOOR_GW: float = 0.0
+TECHNOLOGY_TOP_UP_GW: float = 0.0
 
 # --- Adequacy floor (used by both modes) ------------------------------------
 # Year-keyed schedule: minimum total gen MaxCapInv in each (cr, year) as a
-# fraction of scaled_pool.  When the sum of per-tech lids in a cr is below
-# this threshold, ALL lids in that cr are scaled up by the same factor so the
+# fraction of scaled_pool.  When the sum of per-tech build caps in a cr is below
+# this threshold, ALL build caps in that cr are scaled up by the same factor so the
 # total meets the floor.  The proportional tech-share structure and family
 # ceilings are preserved: the floor only sets a system-level minimum.
 #
@@ -372,16 +372,16 @@ LID_FLOOR_GW: float = 0.0
 #     2040: 0.0       # no floor through 2040: preserve BAU calibration
 #     2045: 0.08      # 8% by 2045
 #     2050: 0.20      # 20% by 2050
-LID_ADEQUACY_FLOOR_SCHEDULE: dict = {}
+ADEQUACY_SHARE_SCHEDULE: dict = {}
 
 # --- Demand ramp (used by both modes) ----------------------------------------
-# When LID_RAMP_FROM_DEMAND is True, mult(cr, y) is computed and applied:
+# When RAMP_FROM_DEMAND is True, mult(cr, y) is computed and applied:
 #   uniform mode      -> pct(cr, y) = base_pct(y) * mult(cr, y)
 #   proportional mode -> scaled_pool(cr, y) = pool(cr, y) * mult(cr, y)
 # When False, mult collapses to 1.0 everywhere (uniform mode becomes flat
 # pct schedule; proportional mode becomes share * unscaled pool delta,
 # which is typically zero since residual is roughly flat).
-LID_RAMP_FROM_DEMAND = True
+RAMP_FROM_DEMAND = True
 
 DEMAND_FILE_NAME = "A-O_Demand.xlsx"
 DEMAND_SHEET = "Demand_Projection"
@@ -419,20 +419,20 @@ def _rmtree_robust(path: Path, attempts: int = 5) -> None:
 
 
 def find_latest_backup(input_dir: Path) -> Path | None:
-    """Return the most recent _PRE_LID_* sibling backup of input_dir, or None."""
+    """Return the most recent _PRE_BUILD_CAP_* sibling backup of input_dir, or None."""
     parent = input_dir.parent
     candidates = sorted(
         (p for p in parent.iterdir()
-         if p.is_dir() and p.name.startswith(f"{input_dir.name}_PRE_LID_")),
+         if p.is_dir() and p.name.startswith(f"{input_dir.name}_PRE_BUILD_CAP_")),
         key=lambda p: p.name,
     )
     return candidates[-1] if candidates else None
 
 
 def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path:
-    """Restore the input directory from a _PRE_LID_* backup.
+    """Restore the input directory from a _PRE_BUILD_CAP_* backup.
 
-    If `backup_dir` is None, use the most recent _PRE_LID_* sibling backup.
+    If `backup_dir` is None, use the most recent _PRE_BUILD_CAP_* sibling backup.
     Removes the current input_dir (after a safety copy in case the user wants
     to undo the restore) and replaces it with the backup contents.
 
@@ -443,7 +443,7 @@ def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path
         backup_dir = find_latest_backup(input_dir)
         if backup_dir is None:
             raise FileNotFoundError(
-                f"No _PRE_LID_* backup found next to {input_dir}. "
+                f"No _PRE_BUILD_CAP_* backup found next to {input_dir}. "
                 f"Pass --restore-from <folder> to specify one."
             )
     else:
@@ -451,11 +451,11 @@ def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path
         if not backup_dir.is_dir():
             raise FileNotFoundError(f"Backup folder does not exist: {backup_dir}")
 
-    # Safety: keep what's currently in input_dir as a "POST_LID" snapshot in
+    # Safety: keep what's currently in input_dir as a "POST_BUILD_CAP" snapshot in
     # case the user runs --restore by mistake. Same parent, timestamped.
     if input_dir.is_dir():
         stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        snapshot = input_dir.parent / f"{input_dir.name}_POST_LID_pre_restore_{stamp}"
+        snapshot = input_dir.parent / f"{input_dir.name}_POST_BUILD_CAP_pre_restore_{stamp}"
         if not snapshot.exists():
             shutil.copytree(input_dir, snapshot)
         _rmtree_robust(input_dir)
@@ -468,7 +468,7 @@ def make_backup(input_dir: Path) -> Path:
     if not input_dir.is_dir():
         raise FileNotFoundError(f"Input directory does not exist: {input_dir}")
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup = input_dir.parent / f"{input_dir.name}_PRE_LID_{stamp}"
+    backup = input_dir.parent / f"{input_dir.name}_PRE_BUILD_CAP_{stamp}"
     if backup.exists():
         raise FileExistsError(f"Backup folder already exists: {backup}")
     shutil.copytree(input_dir, backup)
@@ -586,56 +586,56 @@ def load_config(yaml_path: Path) -> dict:
 
 
 def apply_config(cfg: dict) -> None:
-    """Mutate the module-level lid constants in place.
+    """Mutate the module-level build cap constants in place.
 
     The script's helper functions reference these constants directly, so
     overriding them here propagates to every downstream call without touching
     any function signatures.
     """
-    global LID_RULE_MODE, LID_PERCENTAGE_DEFAULT, LID_PERCENTAGE_BY_YEAR
-    global LID_SECURITY_FACTOR, LID_RAMP_FROM_DEMAND
-    global LID_EXEMPT_PREFIXES, LID_RELAXATION_SCHEDULE, EXEMPT_MAX_CAP
-    global LID_FLOOR_GW, LID_FAMILY_RELAXATION_CEILINGS
-    global LID_ADEQUACY_FLOOR_SCHEDULE
+    global BUILD_CAP_RULE_MODE, BUILD_CAP_PERCENTAGE_DEFAULT, BUILD_CAP_PERCENTAGE_BY_YEAR
+    global MARGIN_FACTOR, RAMP_FROM_DEMAND
+    global EXEMPT_PREFIXES, CAP_MULTIPLIER_SCHEDULE, EXEMPT_MAX_CAP
+    global TECHNOLOGY_TOP_UP_GW, FAMILY_LIMITS
+    global ADEQUACY_SHARE_SCHEDULE
     if "rule_mode" in cfg:
-        LID_RULE_MODE = cfg["rule_mode"]
+        BUILD_CAP_RULE_MODE = cfg["rule_mode"]
     if "percentage_default" in cfg:
-        LID_PERCENTAGE_DEFAULT = cfg["percentage_default"]
+        BUILD_CAP_PERCENTAGE_DEFAULT = cfg["percentage_default"]
     if "percentage_by_year" in cfg:
-        LID_PERCENTAGE_BY_YEAR = cfg["percentage_by_year"]
+        BUILD_CAP_PERCENTAGE_BY_YEAR = cfg["percentage_by_year"]
     if "margin_factor" in cfg:
-        LID_SECURITY_FACTOR = cfg["margin_factor"]
+        MARGIN_FACTOR = cfg["margin_factor"]
     if "ramp_from_demand" in cfg:
-        LID_RAMP_FROM_DEMAND = cfg["ramp_from_demand"]
+        RAMP_FROM_DEMAND = cfg["ramp_from_demand"]
     if "exempt_prefixes" in cfg:
-        LID_EXEMPT_PREFIXES = list(cfg["exempt_prefixes"])
+        EXEMPT_PREFIXES = list(cfg["exempt_prefixes"])
     if "exempt_max_cap" in cfg:
         EXEMPT_MAX_CAP = dict(cfg["exempt_max_cap"])
     if "cap_multiplier_schedule" in cfg:
-        LID_RELAXATION_SCHEDULE = {
+        CAP_MULTIPLIER_SCHEDULE = {
             int(k): float(v) for k, v in cfg["cap_multiplier_schedule"].items()
         }
     if "technology_top_up_gw" in cfg:
-        LID_FLOOR_GW = float(cfg["technology_top_up_gw"])
+        TECHNOLOGY_TOP_UP_GW = float(cfg["technology_top_up_gw"])
     if "family_limits" in cfg:
-        LID_FAMILY_RELAXATION_CEILINGS = dict(cfg["family_limits"])
+        FAMILY_LIMITS = dict(cfg["family_limits"])
     if "adequacy_share_schedule" in cfg:
-        LID_ADEQUACY_FLOOR_SCHEDULE = {
+        ADEQUACY_SHARE_SCHEDULE = {
             int(k): float(v) for k, v in cfg["adequacy_share_schedule"].items()
         }
 
 
 def relaxation_multiplier_for_year(year: int) -> float:
     """Return the relaxation multiplier for *year* by linearly interpolating
-    LID_RELAXATION_SCHEDULE.
+    CAP_MULTIPLIER_SCHEDULE.
 
     If the schedule is empty, returns 1.0 (BAU behaviour).
     Years before the first anchor get the first anchor's value.
     Years after the last anchor get the last anchor's value.
     """
-    if not LID_RELAXATION_SCHEDULE:
+    if not CAP_MULTIPLIER_SCHEDULE:
         return 1.0
-    anchors = sorted(LID_RELAXATION_SCHEDULE.items())  # [(y, mult), ...]
+    anchors = sorted(CAP_MULTIPLIER_SCHEDULE.items())  # [(y, mult), ...]
     if year <= anchors[0][0]:
         return anchors[0][1]
     if year >= anchors[-1][0]:
@@ -652,16 +652,16 @@ def relaxation_multiplier_for_year(year: int) -> float:
 
 def adequacy_floor_pct_for_year(year: int) -> float:
     """Return the adequacy floor percentage for *year* by linearly
-    interpolating LID_ADEQUACY_FLOOR_SCHEDULE.
+    interpolating ADEQUACY_SHARE_SCHEDULE.
 
     Same interpolation logic as relaxation_multiplier_for_year.
     If the schedule is empty, returns 0.0 (no adequacy floor).
     Years before the first anchor get the first anchor's value.
     Years after the last anchor get the last anchor's value.
     """
-    if not LID_ADEQUACY_FLOOR_SCHEDULE:
+    if not ADEQUACY_SHARE_SCHEDULE:
         return 0.0
-    anchors = sorted(LID_ADEQUACY_FLOOR_SCHEDULE.items())
+    anchors = sorted(ADEQUACY_SHARE_SCHEDULE.items())
     if year <= anchors[0][0]:
         return anchors[0][1]
     if year >= anchors[-1][0]:
@@ -678,42 +678,42 @@ def adequacy_floor_pct_for_year(year: int) -> float:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-def lid_pct_for_cr_year(cr: str, year: int,
+def build_cap_pct_for_cr_year(cr: str, year: int,
                         demand_mult_map: dict | None = None) -> float:
-    """Return the *uniform-mode* lid percentage for (country_region, year).
+    """Return the *uniform-mode* build cap percentage for (country_region, year).
 
     This function is used by uniform mode to compute pct(cr, y). Proportional
-    mode does not call this: it computes lid directly via tech_share and
-    pool_delta (see proportional_lid_for_tech_year).
+    mode does not call this: it computes build cap directly via tech_share and
+    pool_delta (see proportional_build_cap_for_tech_year).
 
     Formula:
-        base_pct(y) = LID_PERCENTAGE_BY_YEAR.get(y, LID_PERCENTAGE_DEFAULT)
+        base_pct(y) = BUILD_CAP_PERCENTAGE_BY_YEAR.get(y, BUILD_CAP_PERCENTAGE_DEFAULT)
         pct(cr, y)  = base_pct(y) * mult(cr, y)              if ramp on
                     = base_pct(y)                            if ramp off
 
     The base_pct schedule encodes the per-decade plateau ("tight near-term,
     loose late-horizon"). The demand multiplier layers on top, scaling pct
     linearly with each cr's demand growth from the reference year. So a
-    region whose demand triples gets a lid that is 3x what the schedule
+    region whose demand triples gets a build cap that is 3x what the schedule
     alone would imply.
 
     At the reference year, mult=1 by construction, so pct equals base_pct
     regardless of the ramp setting.
     """
-    if year in LID_PERCENTAGE_BY_YEAR:
-        base_pct = float(LID_PERCENTAGE_BY_YEAR[year])
+    if year in BUILD_CAP_PERCENTAGE_BY_YEAR:
+        base_pct = float(BUILD_CAP_PERCENTAGE_BY_YEAR[year])
     else:
-        base_pct = LID_PERCENTAGE_DEFAULT
-    if LID_RAMP_FROM_DEMAND and demand_mult_map:
+        base_pct = BUILD_CAP_PERCENTAGE_DEFAULT
+    if RAMP_FROM_DEMAND and demand_mult_map:
         mult = demand_mult_map.get((cr, year), 1.0)
         return base_pct * mult
     return base_pct
 
 
-def lid_pct_for_year(year: int) -> float:
-    """Backwards-compat shim: flat lid for `year`, ignoring cr and demand.
-    Equivalent to lid_pct_for_cr_year with no ramp."""
-    return float(LID_PERCENTAGE_BY_YEAR.get(year, LID_PERCENTAGE_DEFAULT))
+def build_cap_pct_for_year(year: int) -> float:
+    """Backwards-compat shim: flat build cap for `year`, ignoring cr and demand.
+    Equivalent to build_cap_pct_for_cr_year with no ramp."""
+    return float(BUILD_CAP_PERCENTAGE_BY_YEAR.get(year, BUILD_CAP_PERCENTAGE_DEFAULT))
 
 
 def load_generation_techs(tech_types_path: Path) -> set:
@@ -824,7 +824,7 @@ def find_named_columns(ws, names) -> dict:
 
 def identify_allowed_techs(df: pd.DataFrame, year_cols: list,
                            generation_techs: set | None = None) -> set:
-    """Return the set of techs eligible for the lid + untie rule.
+    """Return the set of techs eligible for the build cap + untie rule.
 
     Eligibility = (ResidualCapacity > 0 OR MinCapInvestment > 0 in any year)
     AND (in `generation_techs` if RESTRICT_TO_GENERATION and the set is given).
@@ -849,7 +849,7 @@ def country_region_for(tech: str) -> str | None:
     Returns e.g. 'BGDXX' for PWRHYDBGDXX, 'INDNE' for PWRHYDINDNE.
     Returns None for tech codes that don't fit the PWR* length-11 convention
     (e.g. TRN* transmission interconnects of length 13): those should be
-    excluded from pool computation and pool-based lid application.
+    excluded from pool computation and pool-based build cap application.
     """
     if not isinstance(tech, str) or len(tech) != PWR_TECH_LENGTH:
         return None
@@ -917,11 +917,11 @@ def build_scaled_pool_map(pool_map: dict,
                           demand_mult_map: dict | None) -> dict:
     """Return {(cr, year): scaled_pool} where scaled_pool = pool * mult.
 
-    If demand_mult_map is None or LID_RAMP_FROM_DEMAND is False, mult collapses
-    to 1.0 and scaled_pool == pool (consistent with how lid_pct_for_cr_year
+    If demand_mult_map is None or RAMP_FROM_DEMAND is False, mult collapses
+    to 1.0 and scaled_pool == pool (consistent with how build_cap_pct_for_cr_year
     treats the ramp-off case).
     """
-    use_mult = LID_RAMP_FROM_DEMAND and demand_mult_map is not None
+    use_mult = RAMP_FROM_DEMAND and demand_mult_map is not None
     out: dict = {}
     for (cr, y), pool in pool_map.items():
         if use_mult:
@@ -938,7 +938,7 @@ def build_pool_delta_map(scaled_pool_map: dict, year_cols: list) -> dict:
     delta = 0 (no prior year to delta against).
 
     The max(0, ...) guard ensures negative or flat demand growth in any year
-    yields zero new headroom rather than a negative lid. Per project hygiene:
+    yields zero new headroom rather than a negative build cap. Per project hygiene:
     we don't model demand dips, but if a year happens to be flat or slightly
     declining due to projection methodology, this prevents propagation of
     nonsense values into the LP.
@@ -959,11 +959,11 @@ def build_pool_delta_map(scaled_pool_map: dict, year_cols: list) -> dict:
     return out
 
 
-def proportional_lid_for_tech_year(tech: str, year: int,
+def proportional_build_cap_for_tech_year(tech: str, year: int,
                                    tech_share_map: dict,
                                    pool_delta_map: dict) -> float:
-    """Compute proportional-mode lid for (tech, year):
-        lid = LID_SECURITY_FACTOR * tech_share(t) * pool_delta(cr, y)
+    """Compute proportional-mode build cap for (tech, year):
+        build cap = MARGIN_FACTOR * tech_share(t) * pool_delta(cr, y)
 
     Returns 0.0 if cr cannot be parsed from tech (TRN* etc.) or if either
     share or delta is missing/zero.
@@ -973,7 +973,7 @@ def proportional_lid_for_tech_year(tech: str, year: int,
         return 0.0
     share = tech_share_map.get(tech, 0.0)
     delta = pool_delta_map.get((cr, year), 0.0)
-    return LID_SECURITY_FACTOR * share * delta
+    return MARGIN_FACTOR * share * delta
 
 
 def compute_adequacy_scale_factors(
@@ -988,17 +988,17 @@ def compute_adequacy_scale_factors(
     """Pre-compute {(cr, year): scale_factor} for the adequacy floor.
 
     For each (cr, year) where the adequacy floor schedule is active:
-      1. Compute the per-tech lid (same formula as the main loop, including
+      1. Compute the per-tech build cap (same formula as the main loop, including
          relaxation, family ceiling, and per-tech floor, and without the untie
          rule, which is a downstream correction).
-      2. Sum across all gen techs in that cr to get total_lid.
-      3. Compare total_lid against adequacy_floor_pct(y) × scaled_pool(cr, y).
-      4. If total_lid < floor, the scale factor is floor / total_lid (≥ 1.0).
+      2. Sum across all gen techs in that cr to get total_build_cap.
+      3. Compare total_build_cap against adequacy_floor_pct(y) × scaled_pool(cr, y).
+      4. If total_build_cap < floor, the scale factor is floor / total_build_cap (≥ 1.0).
 
     Returns an empty dict when the adequacy floor schedule is not set or
     when the floor never binds (all scale factors would be 1.0).
     """
-    if not LID_ADEQUACY_FLOOR_SCHEDULE:
+    if not ADEQUACY_SHARE_SCHEDULE:
         return {}
 
     # Group allowed techs by country_region.
@@ -1020,28 +1020,28 @@ def compute_adequacy_scale_factors(
             if sp <= 0:
                 continue
 
-            # Replicate the lid computation for each tech (same as main loop).
-            total_lid = 0.0
+            # Replicate the build cap computation for each tech (same as main loop).
+            total_build_cap = 0.0
             for tech in techs:
-                # Exempt techs get 9999 and are outside the gen lid.
-                if LID_EXEMPT_PREFIXES and any(
-                    tech.startswith(p) for p in LID_EXEMPT_PREFIXES
+                # Exempt techs get 9999 and are outside the gen build cap.
+                if EXEMPT_PREFIXES and any(
+                    tech.startswith(p) for p in EXEMPT_PREFIXES
                 ):
                     continue
 
-                if LID_RULE_MODE == "proportional":
-                    lid = proportional_lid_for_tech_year(
+                if BUILD_CAP_RULE_MODE == "proportional":
+                    build_cap = proportional_build_cap_for_tech_year(
                         tech, year, tech_share_map, pool_delta_map
                     )
                 else:  # uniform
-                    pct = lid_pct_for_cr_year(cr, year, demand_mult_map)
+                    pct = build_cap_pct_for_cr_year(cr, year, demand_mult_map)
                     pool = pool_map.get((cr, year), 0.0)
-                    lid = pct * pool
+                    build_cap = pct * pool
 
                 # Relaxation + family ceiling.
                 relax_mult = relaxation_multiplier_for_year(year)
                 family_code = tech[3:6]
-                family_ceiling = LID_FAMILY_RELAXATION_CEILINGS.get(
+                family_ceiling = FAMILY_LIMITS.get(
                     family_code
                 )
                 if family_ceiling is not None and relax_mult > family_ceiling:
@@ -1050,24 +1050,24 @@ def compute_adequacy_scale_factors(
                     family_ceiling is not None and family_ceiling <= 1.0
                 )
                 if relax_mult != 1.0:
-                    lid = min(lid * relax_mult, float(PLACEHOLDER_VALUE))
+                    build_cap = min(build_cap * relax_mult, float(PLACEHOLDER_VALUE))
 
                 # Per-tech floor (locked families skip it).
                 if (
                     not family_locked
-                    and LID_FLOOR_GW > 0
-                    and lid < LID_FLOOR_GW
+                    and TECHNOLOGY_TOP_UP_GW > 0
+                    and build_cap < TECHNOLOGY_TOP_UP_GW
                 ):
-                    lid = LID_FLOOR_GW
+                    build_cap = TECHNOLOGY_TOP_UP_GW
 
-                total_lid += lid
+                total_build_cap += build_cap
 
-            if total_lid <= 0:
+            if total_build_cap <= 0:
                 continue
 
             floor_gw = floor_pct * sp
-            if total_lid < floor_gw:
-                scale_factors[(cr, year)] = floor_gw / total_lid
+            if total_build_cap < floor_gw:
+                scale_factors[(cr, year)] = floor_gw / total_build_cap
 
     return scale_factors
 
@@ -1075,21 +1075,21 @@ def compute_adequacy_scale_factors(
 # ---------------------------------------------------------------------------
 # Core logic
 # ---------------------------------------------------------------------------
-def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
+def apply_build_cap_to_sheet(ws, allowed: set, pool_map: dict,
                        mininv_map: dict,
                        demand_mult_map: dict | None = None,
                        tech_share_map: dict | None = None,
                        pool_delta_map: dict | None = None,
                        adequacy_scale_factors: dict | None = None) -> dict:
     """
-    Edit a worksheet in place, applying the lid + untie rule to the
+    Edit a worksheet in place, applying the build cap + untie rule to the
     TotalAnnualMaxCapacityInvestment row of every PWR* tech in `allowed`.
 
-    The lid formula depends on LID_RULE_MODE:
-      "uniform"      - lid(t, y) = pct(cr, y) * pool(cr, y)
+    The build cap formula depends on BUILD_CAP_RULE_MODE:
+      "uniform"      - build cap(t, y) = pct(cr, y) * pool(cr, y)
                        where pct(cr, y) = base_pct(y) * mult(cr, y).
-                       Same lid for every allowed tech in cr per year.
-      "proportional" - lid(t, y) = LID_SECURITY_FACTOR * tech_share(t)
+                       Same build cap for every allowed tech in cr per year.
+      "proportional" - build cap(t, y) = MARGIN_FACTOR * tech_share(t)
                                    * pool_delta(cr, y).
                        Per-tech, weighted by 2024 fleet share.
 
@@ -1099,12 +1099,12 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
     Techs not in `allowed`, and TRN* transmission interconnects (whose names
     don't fit the PWR* country+region format), are entirely untouched.
     """
-    if LID_RULE_MODE not in ("uniform", "proportional"):
+    if BUILD_CAP_RULE_MODE not in ("uniform", "proportional"):
         raise ValueError(
-            f"LID_RULE_MODE={LID_RULE_MODE!r} is not recognized. "
+            f"BUILD_CAP_RULE_MODE={BUILD_CAP_RULE_MODE!r} is not recognized. "
             f"Expected 'uniform' or 'proportional'."
         )
-    if LID_RULE_MODE == "proportional" and (
+    if BUILD_CAP_RULE_MODE == "proportional" and (
         tech_share_map is None or pool_delta_map is None
     ):
         raise ValueError(
@@ -1113,7 +1113,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             "build_tech_share_map and build_pool_delta_map."
         )
 
-    override_inherited = bool(setup_policy("lid_rule_new_semantics", False))
+    override_inherited = bool(setup_policy("build_cap_replaces_workbook_values", False))
 
     year_cols = find_year_columns(ws)
     headers = find_named_columns(ws, ["Tech", "Parameter", PROJ_MODE_COL])
@@ -1126,10 +1126,10 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
     param_col = headers["Parameter"]
     proj_mode_col = headers.get(PROJ_MODE_COL)
 
-    # Snapshot the uniform-mode lid pct per (cr, year). Always logged for
+    # Snapshot the uniform-mode build cap pct per (cr, year). Always logged for
     # traceability: under proportional mode this is informational only.
     pct_used = {
-        f"{cr}_{y}": lid_pct_for_cr_year(cr, y, demand_mult_map)
+        f"{cr}_{y}": build_cap_pct_for_cr_year(cr, y, demand_mult_map)
         for (cr, y) in pool_map.keys()
     }
 
@@ -1137,7 +1137,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
         "sheet": ws.title,
         "years_found": sorted(year_cols.keys()),
         "allowed_count": len(allowed),
-        "rule_mode": LID_RULE_MODE,
+        "rule_mode": BUILD_CAP_RULE_MODE,
         "changes": [],
         "preserved": [],
         "projection_mode_flips": [],
@@ -1145,7 +1145,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
         "pool_map": {  # serializable version: {"BGDXX_2030": 7.123, ...}
             f"{cr}_{y}": v for (cr, y), v in pool_map.items()
         },
-        "lid_pct_by_cr_year": pct_used,
+        "build_cap_pct_by_cr_year": pct_used,
         "demand_mult_by_cr_year": (
             {f"{cr}_{y}": v for (cr, y), v in demand_mult_map.items()}
             if demand_mult_map else {}
@@ -1159,7 +1159,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             if pool_delta_map else {}
         ),
         "margin_factor": (
-            LID_SECURITY_FACTOR if LID_RULE_MODE == "proportional" else None
+            MARGIN_FACTOR if BUILD_CAP_RULE_MODE == "proportional" else None
         ),
     }
 
@@ -1168,13 +1168,13 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
         param = ws.cell(row=row_idx, column=param_col).value
         # Allow exempt-prefix techs through even if not in the GENERATION set.
         _is_exempt_prefix = (
-            LID_EXEMPT_PREFIXES
-            and any(tech.startswith(p) for p in LID_EXEMPT_PREFIXES)
+            EXEMPT_PREFIXES
+            and any(tech.startswith(p) for p in EXEMPT_PREFIXES)
         ) if tech else False
         # Normal rows: must be allowed (or exempt) AND MaxCapInv param.
         # Exempt techs also get TotalAnnualMaxCapacity set, to 9999 or to the
         # exempt_max_cap schedule (the total installed-cap ceiling, separate
-        # from the per-year investment lid).
+        # from the per-year investment build cap).
         _is_target_param = (
             param == MAX_INV_PARAM
             or (_is_exempt_prefix and param == MAX_CAP_PARAM)
@@ -1210,32 +1210,32 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                         "old": old, "new": proposed,
                         "reason": reason,
                         "pool": 0.0, "min_inv": 0.0,
-                        "lid": proposed, "relax_mult": 1.0,
+                        "build_cap": proposed, "relax_mult": 1.0,
                     })
                 continue
 
             pool = pool_map.get((cr, year), 0.0)
             min_inv = mininv_map.get((tech, year), 0.0)
 
-            # Compute lid per the active mode.
+            # Compute build cap per the active mode.
             # --- Exempt prefixes: uncap techs matching any prefix in the list.
-            is_exempt = any(tech.startswith(p) for p in LID_EXEMPT_PREFIXES)
+            is_exempt = any(tech.startswith(p) for p in EXEMPT_PREFIXES)
             if is_exempt:
-                lid = float(PLACEHOLDER_VALUE)
-            elif LID_RULE_MODE == "uniform":
-                pct = lid_pct_for_cr_year(cr, year, demand_mult_map)
+                build_cap = float(PLACEHOLDER_VALUE)
+            elif BUILD_CAP_RULE_MODE == "uniform":
+                pct = build_cap_pct_for_cr_year(cr, year, demand_mult_map)
                 # Layer the demand multiplier onto pct * pool. Note that
-                # lid_pct_for_cr_year already applies mult once, so the
-                # final formula is lid = base_pct(y) * pool * mult(cr, y).
-                lid = pct * pool
+                # build_cap_pct_for_cr_year already applies mult once, so the
+                # final formula is build cap = base_pct(y) * pool * mult(cr, y).
+                build_cap = pct * pool
             else:  # "proportional"
-                lid = proportional_lid_for_tech_year(
+                build_cap = proportional_build_cap_for_tech_year(
                     tech, year, tech_share_map, pool_delta_map
                 )
 
-            # --- Relaxation schedule: multiply the base lid by a year-varying
+            # --- Relaxation schedule: multiply the base build cap by a year-varying
             # factor.  Has no effect when the schedule is empty (mult = 1.0)
-            # or when the tech is already exempt (lid = 9999).
+            # or when the tech is already exempt (build cap = 9999).
             relax_mult = relaxation_multiplier_for_year(year)
             # --- Family-specific ceiling: cap the relaxation multiplier for
             # techs whose family (chars 3..6) has a ceiling defined.  E.g.
@@ -1243,9 +1243,9 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             # get the full cap_multiplier_schedule value.
             family_ceiling = None
             family_capped = False
-            if LID_FAMILY_RELAXATION_CEILINGS and not is_exempt:
+            if FAMILY_LIMITS and not is_exempt:
                 family_code = tech[3:6]
-                family_ceiling = LID_FAMILY_RELAXATION_CEILINGS.get(family_code)
+                family_ceiling = FAMILY_LIMITS.get(family_code)
                 if family_ceiling is not None and relax_mult > family_ceiling:
                     relax_mult = family_ceiling
                     family_capped = True
@@ -1262,20 +1262,20 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                 and family_ceiling <= 1.0
             )
             if not is_exempt and relax_mult != 1.0:
-                lid = min(lid * relax_mult, float(PLACEHOLDER_VALUE))
+                build_cap = min(build_cap * relax_mult, float(PLACEHOLDER_VALUE))
 
-            # --- Lid floor: prevent lid from collapsing to zero when
+            # --- Technology top-up: prevent build cap from collapsing to zero when
             # pool_delta goes negative due to retirement.
             # EXCEPTION: locked families (ceiling <= 1.0) skip the floor.
             # Without this, families with near-zero BAU share get a guaranteed
             # 0.5 GW/yr from the floor, accumulating ~14 GW per tech over the
             # horizon (the BIO/WAS accumulation bug).
             floored = False
-            if not is_exempt and not family_locked and LID_FLOOR_GW > 0 and lid < LID_FLOOR_GW:
-                lid = LID_FLOOR_GW
+            if not is_exempt and not family_locked and TECHNOLOGY_TOP_UP_GW > 0 and build_cap < TECHNOLOGY_TOP_UP_GW:
+                build_cap = TECHNOLOGY_TOP_UP_GW
                 floored = True
 
-            # --- Adequacy floor: scale up the lid when the system-level
+            # --- Adequacy floor: scale up the build cap when the system-level
             # total across all gen techs in this (cr, year) falls below
             # adequacy_floor_pct(y) × scaled_pool(cr, y).  The scale
             # factor is pre-computed by compute_adequacy_scale_factors()
@@ -1286,43 +1286,43 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
             if not is_exempt and adequacy_scale_factors:
                 sf = adequacy_scale_factors.get((cr, year))
                 if sf is not None and sf > 1.0:
-                    lid = min(lid * sf, float(PLACEHOLDER_VALUE))
+                    build_cap = min(build_cap * sf, float(PLACEHOLDER_VALUE))
                     adequacy_scaled = True
                     adequacy_sf = sf
 
             # Decide the proposed value (before untie):
-            #   placeholder cell -> lid; manual value -> preserve.
+            #   placeholder cell -> build cap; manual value -> preserve.
             is_placeholder = (
                 old is None
                 or (isinstance(old, (int, float))
                     and not pd.isna(old)
                     and float(old) in (0.0, float(PLACEHOLDER_VALUE)))
             )
-            has_active_relaxation = bool(LID_RELAXATION_SCHEDULE)
+            has_active_relaxation = bool(CAP_MULTIPLIER_SCHEDULE)
             if is_placeholder or (
                 override_inherited and has_active_relaxation and not is_exempt
             ):
-                proposed = lid
+                proposed = build_cap
                 if is_exempt:
                     reason = "exempt_9999"
                 elif adequacy_scaled:
                     reason = "adequacy_top_up"
                 elif floored:
-                    reason = "lid_floor"
-                elif family_locked and LID_FLOOR_GW > 0 and lid < LID_FLOOR_GW:
-                    reason = "lid_floor_suppressed"
+                    reason = "technology_top_up"
+                elif family_locked and TECHNOLOGY_TOP_UP_GW > 0 and build_cap < TECHNOLOGY_TOP_UP_GW:
+                    reason = "top_up_skipped_locked_family"
                 elif family_capped:
-                    reason = "lid_family_capped"
+                    reason = "family_limit"
                 elif relax_mult != 1.0:
-                    reason = "lid_relaxed"
+                    reason = "cap_multiplier"
                 elif not is_placeholder:
-                    reason = "lid_override_inherited"
+                    reason = "workbook_value_replaced"
                 else:
-                    reason = "lid_fill"
+                    reason = "build_cap"
             elif is_exempt:
                 # Exempt techs ALWAYS get 9999, even if the cell had a
                 # manual value (e.g. 0 set by upstream add_max scripts).
-                proposed = lid  # lid is already 9999 for exempt techs
+                proposed = build_cap  # build cap is already 9999 for exempt techs
                 reason = "exempt_9999"
             else:
                 proposed = float(old) if isinstance(old, (int, float)) else old
@@ -1346,7 +1346,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
                         "reason": reason,
                         "pool": pool,
                         "min_inv": min_inv,
-                        "lid": lid,
+                        "build_cap": build_cap,
                         "relax_mult": relax_mult,
                         "family_ceiling": family_ceiling,
                         "adequacy_sf": adequacy_sf,
@@ -1370,7 +1370,7 @@ def apply_lid_to_sheet(ws, allowed: set, pool_map: dict,
 def edit_parametrization(filepath: Path, sheets: list,
                          generation_techs: set | None = None,
                          demand_mult_map: dict | None = None) -> dict:
-    """Apply the lid + untie rule to `sheets` in the parametrization workbook."""
+    """Apply the build cap + untie rule to `sheets` in the parametrization workbook."""
     df_all = pd.read_excel(filepath, sheet_name=None)
     wb = load_workbook(filepath)
 
@@ -1409,7 +1409,7 @@ def edit_parametrization(filepath: Path, sheets: list,
             )
 
             ws = wb[sheet]
-            sheet_log = apply_lid_to_sheet(
+            sheet_log = apply_build_cap_to_sheet(
                 ws, allowed, pool_map, mininv_map, demand_mult_map,
                 tech_share_map=tech_share_map,
                 pool_delta_map=pool_delta_map,
@@ -1469,7 +1469,7 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
     # Load the per-cr demand multipliers (from the input dir).
     demand_mult_map: dict = {}
     demand_path = input_dir / DEMAND_FILE_NAME
-    if LID_RAMP_FROM_DEMAND:
+    if RAMP_FROM_DEMAND:
         demand_mult_map = build_demand_multiplier_map(
             demand_path, ref_year=DEMAND_REFERENCE_YEAR
         )
@@ -1479,28 +1479,28 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
     )
     log["backup_dir"] = str(backup_dir) if backup_dir else None
     log["timestamp"] = datetime.now().isoformat()
-    log["lid_percentage_default"] = LID_PERCENTAGE_DEFAULT
-    log["lid_percentage_by_year"] = {
-        str(k): v for k, v in LID_PERCENTAGE_BY_YEAR.items()
+    log["build_cap_percentage_default"] = BUILD_CAP_PERCENTAGE_DEFAULT
+    log["build_cap_percentage_by_year"] = {
+        str(k): v for k, v in BUILD_CAP_PERCENTAGE_BY_YEAR.items()
     }
-    log["lid_ramp_from_demand"] = LID_RAMP_FROM_DEMAND
-    log["build_cap_rule_mode"] = LID_RULE_MODE
-    log["lid_margin_factor"] = (
-        LID_SECURITY_FACTOR if LID_RULE_MODE == "proportional" else None
+    log["build_cap_ramp_from_demand"] = RAMP_FROM_DEMAND
+    log["build_cap_rule_mode"] = BUILD_CAP_RULE_MODE
+    log["build_cap_margin_factor"] = (
+        MARGIN_FACTOR if BUILD_CAP_RULE_MODE == "proportional" else None
     )
     log["restrict_to_generation"] = RESTRICT_TO_GENERATION
-    log["exempt_prefixes"] = list(LID_EXEMPT_PREFIXES)
-    log["cap_multiplier_schedule"] = dict(LID_RELAXATION_SCHEDULE)
-    log["technology_top_up_gw"] = LID_FLOOR_GW
-    log["family_limits"] = dict(LID_FAMILY_RELAXATION_CEILINGS)
-    log["adequacy_share_schedule"] = dict(LID_ADEQUACY_FLOOR_SCHEDULE)
+    log["exempt_prefixes"] = list(EXEMPT_PREFIXES)
+    log["cap_multiplier_schedule"] = dict(CAP_MULTIPLIER_SCHEDULE)
+    log["technology_top_up_gw"] = TECHNOLOGY_TOP_UP_GW
+    log["family_limits"] = dict(FAMILY_LIMITS)
+    log["adequacy_share_schedule"] = dict(ADEQUACY_SHARE_SCHEDULE)
     log["generation_techs_count"] = (
         len(generation_techs) if generation_techs is not None else None
     )
     log["tech_types_file"] = str(tech_types_path) if tech_types_path else None
-    log["demand_file"] = str(demand_path) if LID_RAMP_FROM_DEMAND else None
+    log["demand_file"] = str(demand_path) if RAMP_FROM_DEMAND else None
     log["demand_reference_year"] = (
-        DEMAND_REFERENCE_YEAR if LID_RAMP_FROM_DEMAND else None
+        DEMAND_REFERENCE_YEAR if RAMP_FROM_DEMAND else None
     )
     log["demand_mult_loaded"] = bool(demand_mult_map)
     log["yaml_config_path"] = str(yaml_path) if yaml_loaded else None
@@ -1517,40 +1517,40 @@ def print_summary(log: dict) -> None:
     """Pretty-print the run summary."""
     bar = "=" * 72
     print(bar)
-    print("MaxCapacityInvestment lid + untie rule: applied")
+    print("MaxCapacityInvestment build cap + untie rule: applied")
     print(bar)
     print(f"Backup folder : {log.get('backup_dir', '(skipped)')}")
     print(f"Edited file   : {log['file']}")
-    print(f"Rule mode     : {LID_RULE_MODE}"
-          + (f"  (security factor = {LID_SECURITY_FACTOR})"
-             if LID_RULE_MODE == "proportional" else ""))
-    print(f"Lid base pct  : {LID_PERCENTAGE_DEFAULT * 100:.3f}% "
+    print(f"Rule mode     : {BUILD_CAP_RULE_MODE}"
+          + (f"  (security factor = {MARGIN_FACTOR})"
+             if BUILD_CAP_RULE_MODE == "proportional" else ""))
+    print(f"Build cap base pct  : {BUILD_CAP_PERCENTAGE_DEFAULT * 100:.3f}% "
           f"(anchored at {DEMAND_REFERENCE_YEAR})")
-    print(f"Demand ramp   : {'ON' if log.get('lid_ramp_from_demand') else 'OFF'}"
+    print(f"Demand ramp   : {'ON' if log.get('build_cap_ramp_from_demand') else 'OFF'}"
           f"{' (per country+region)' if log.get('demand_mult_loaded') else ''}")
-    if LID_EXEMPT_PREFIXES:
-        print(f"Exempt (9999) : {', '.join(LID_EXEMPT_PREFIXES)}")
-    if LID_RELAXATION_SCHEDULE:
-        anchors = sorted(LID_RELAXATION_SCHEDULE.items())
+    if EXEMPT_PREFIXES:
+        print(f"Exempt (9999) : {', '.join(EXEMPT_PREFIXES)}")
+    if CAP_MULTIPLIER_SCHEDULE:
+        anchors = sorted(CAP_MULTIPLIER_SCHEDULE.items())
         sched = ", ".join(f"{y}:{m:.2f}×" for y, m in anchors)
         print(f"Relaxation    : {sched}")
-    if LID_FAMILY_RELAXATION_CEILINGS:
+    if FAMILY_LIMITS:
         caps = ", ".join(f"{f}:{c:.2f}×" for f, c in
-                         sorted(LID_FAMILY_RELAXATION_CEILINGS.items()))
+                         sorted(FAMILY_LIMITS.items()))
         print(f"Family caps   : {caps}  (others: full schedule)")
-    if LID_FLOOR_GW > 0:
-        print(f"Lid floor     : {LID_FLOOR_GW} GW")
-    if LID_ADEQUACY_FLOOR_SCHEDULE:
-        anchors = sorted(LID_ADEQUACY_FLOOR_SCHEDULE.items())
+    if TECHNOLOGY_TOP_UP_GW > 0:
+        print(f"Technology top-up   : {TECHNOLOGY_TOP_UP_GW} GW")
+    if ADEQUACY_SHARE_SCHEDULE:
+        anchors = sorted(ADEQUACY_SHARE_SCHEDULE.items())
         sched = ", ".join(f"{y}:{v*100:.0f}%" for y, v in anchors)
         print(f"Adequacy floor: {sched}  (% of scaled_pool, interpolated)")
     print(f"GEN-only      : {'ON' if log.get('restrict_to_generation') else 'OFF'}"
           f" ({log.get('generation_techs_count')} GENERATION techs"
           f" loaded from {log.get('tech_types_file')})"
           if log.get('restrict_to_generation') else "")
-    if LID_PERCENTAGE_BY_YEAR and LID_RULE_MODE == "uniform":
+    if BUILD_CAP_PERCENTAGE_BY_YEAR and BUILD_CAP_RULE_MODE == "uniform":
         # Collapse contiguous-equal pct runs for readable display.
-        items = sorted(LID_PERCENTAGE_BY_YEAR.items())
+        items = sorted(BUILD_CAP_PERCENTAGE_BY_YEAR.items())
         groups = []
         cur_start, cur_pct = items[0]
         cur_end = cur_start
@@ -1583,36 +1583,36 @@ def print_summary(log: dict) -> None:
             print(f"  Country+region pools: {len(pool_keys)} "
                   f"({', '.join(pool_keys[:6])}{' ...' if len(pool_keys) > 6 else ''})")
         # Show the spread of pct used at first vs last year
-        pct_map = s.get("lid_pct_by_cr_year", {})
+        pct_map = s.get("build_cap_pct_by_cr_year", {})
         if pct_map and pool_keys:
             y_first, y_last = years[0], years[-1]
             sample_cr = pool_keys[0]
             pct_first = pct_map.get(f"{sample_cr}_{y_first}")
             pct_last = pct_map.get(f"{sample_cr}_{y_last}")
             if pct_first is not None and pct_last is not None:
-                print(f"  Lid pct ({sample_cr}): "
+                print(f"  Build cap pct ({sample_cr}): "
                       f"{pct_first*100:.3f}% in {y_first} -> "
                       f"{pct_last*100:.3f}% in {y_last}")
         from collections import Counter
         reason_counts = Counter(c.get("reason", "?") for c in s["changes"])
-        n_lid = reason_counts.get("lid_fill", 0)
-        n_relaxed = reason_counts.get("lid_relaxed", 0)
-        n_family_capped = reason_counts.get("lid_family_capped", 0)
-        n_floor = reason_counts.get("lid_floor", 0)
-        n_floor_suppressed = reason_counts.get("lid_floor_suppressed", 0)
+        n_build_cap = reason_counts.get("build_cap", 0)
+        n_relaxed = reason_counts.get("cap_multiplier", 0)
+        n_family_capped = reason_counts.get("family_limit", 0)
+        n_floor = reason_counts.get("technology_top_up", 0)
+        n_floor_suppressed = reason_counts.get("top_up_skipped_locked_family", 0)
         n_adequacy = reason_counts.get("adequacy_top_up", 0)
         n_untie = reason_counts.get("untie_min_inv", 0)
         n_other = (sum(reason_counts.values())
-                   - n_lid - n_relaxed - n_family_capped - n_floor
+                   - n_build_cap - n_relaxed - n_family_capped - n_floor
                    - n_floor_suppressed - n_adequacy - n_untie)
         print(f"  MaxInv cells written:")
-        print(f"    - filled with lid (pct * pool)    : {n_lid}")
+        print(f"    - filled with build cap (pct * pool)    : {n_build_cap}")
         if n_relaxed:
-            print(f"    - filled with relaxed lid          : {n_relaxed}")
+            print(f"    - filled with relaxed build cap          : {n_relaxed}")
         if n_family_capped:
             print(f"    - relaxed but family-capped        : {n_family_capped}")
         if n_floor:
-            print(f"    - filled with floor ({LID_FLOOR_GW} GW)       : {n_floor}")
+            print(f"    - filled with floor ({TECHNOLOGY_TOP_UP_GW} GW)       : {n_floor}")
         if n_floor_suppressed:
             print(f"    - floor suppressed (locked family)  : {n_floor_suppressed}")
         if n_adequacy:
@@ -1652,8 +1652,8 @@ def main() -> int:
     parser.add_argument(
         "--restore",
         action="store_true",
-        help="Restore input dir from the most recent _PRE_LID_* backup, then exit. "
-             "Saves a snapshot of the current input dir as _POST_LID_pre_restore_<ts>/ "
+        help="Restore input dir from the most recent _PRE_BUILD_CAP_* backup, then exit. "
+             "Saves a snapshot of the current input dir as _POST_BUILD_CAP_pre_restore_<ts>/ "
              "before overwriting, so the restore itself is reversible.",
     )
     parser.add_argument(

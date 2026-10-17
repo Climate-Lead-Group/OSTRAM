@@ -9,7 +9,7 @@ applying, in order:
     1. the SHARED VRE physical-potential ceiling layer
        (config/setups/south_asia.yaml::vre_ceilings)
     2. the run-specific edits in
-       config/setups/south_asia.yaml::scenario_inputs[scenario]
+       config/scenarios/<scenario>/scenario.yaml
 
 Design (patterned on the rules_scripts):
   * Non-destructive to the SOURCE: the declared root A-O is never mutated.
@@ -525,7 +525,7 @@ def _neq(a, b):
 def clamp_row_to(ws, col_map, year_cols, tech, param, cap, log):
     """Clamp an existing (tech,param) row down so no year exceeds `cap`.
     Preserves coherence when a ceiling lowers TotalAnnualMaxCapacity below an
-    existing investment lid/floor (e.g. MaxCapInv > MaxCap after a clip)."""
+    existing investment build cap/floor (e.g. MaxCapInv > MaxCap after a clip)."""
     r = find_row(ws, col_map, tech, param)
     if r is None:
         return
@@ -566,7 +566,7 @@ def scale_activity_to_ceiling(ws, col_map, year_cols, tech, ceil, maxcap_orig, l
 
     ONLY the lower limit is touched -- never the pinned upper limit:
       * B_Opt-derived scenarios have lower limit == 0 on every VRE tech (they
-        use investment lids, not activity floors), so scaling is a pure no-op
+        use investment build caps, not activity floors), so scaling is a pure no-op
         for them (0 -> 0), and their upper limit is -1, which skips the
         constraint and must NOT be scaled into a bogus negative bound.
       * Leaving C_Target's upper pin unscaled just makes it non-binding above
@@ -625,7 +625,7 @@ def apply_ceiling_layer(wb, log, ceiling_path=CEIL_BASE):
         maxcap_orig = read_row_values(ws, col_map, year_cols, tech, param) or {}
         edit = {"param": param, "tech": tech, "op": "set_flat", "value": ceil}
         apply_edit(ws, col_map, year_cols, edit, log)
-        # coherence: no annual investment lid/floor may exceed the total ceiling
+        # coherence: no annual investment build cap/floor may exceed the total ceiling
         clamp_row_to(ws, col_map, year_cols, tech, "TotalAnnualMaxCapacityInvestment", ceil, log)
         clamp_row_to(ws, col_map, year_cols, tech, "TotalAnnualMinCapacityInvestment", ceil, log)
         # coherence: an activity floor sized above the ceiling is unproducible
@@ -685,17 +685,17 @@ def build_scenario(
 
     a1_outputs = Path(a1_outputs)
     configs = Path(configs)
-    setup_path = Path(ceiling_path)
-    if not setup_path.is_file():
-        raise FileNotFoundError(f"scenario YAML not found: {setup_path}")
-    scenario_inputs = yaml.safe_load(setup_path.read_text(encoding="utf-8"))["scenario_inputs"][scenario]
+    scenario_path = configs / scenario / "scenario.yaml"
+    if not scenario_path.is_file():
+        raise FileNotFoundError(f"scenario YAML not found: {scenario_path}")
+    scenario_inputs = yaml.safe_load(scenario_path.read_text(encoding="utf-8"))
     declared_source = scenario_inputs.get("base_scenario")
     if not declared_source:
-        raise ValueError(f"{setup_path} does not declare base_scenario")
+        raise ValueError(f"{scenario_path} does not declare base_scenario")
     if source is not None and source != declared_source:
         raise ValueError(
             f"source override {source!r} conflicts with "
-            f"{setup_path.name}::base_scenario={declared_source!r}"
+            f"{scenario_path}::base_scenario={declared_source!r}"
         )
     source = declared_source
 
@@ -720,7 +720,7 @@ def build_scenario(
     shutil.copytree(src_dir, tgt_dir)
 
     log = {"scenario": scenario, "source": source, "timestamp": stamp,
-           "scenario_yaml": str(setup_path), "target": str(tgt_dir),
+           "scenario_yaml": str(scenario_path), "target": str(tgt_dir),
            "backup_dir": str(backup_dir) if backup_dir else None,
            "cells": [], "rows_created": [], "skipped": []}
 
@@ -846,8 +846,8 @@ def main():
     ap.add_argument(
         "--scenario",
         help=(
-            "derived scenario name; reads scenario_inputs.<scenario> from "
-            "config/setups/south_asia.yaml and writes "
+            "derived scenario name; reads "
+            "config/scenarios/<scenario>/scenario.yaml and writes "
             "workspace/preparation/A1_Outputs/A1_Outputs_<scenario>"
         ),
     )

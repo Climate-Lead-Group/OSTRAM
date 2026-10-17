@@ -123,7 +123,7 @@ def _run_system_parameter_block(
         "_tables": tables,
         "Parametrization": workbook,
         "time_range_vector": years,
-        "other_setup_params": {"Main_Scenario": "MAIN", "Region": "GLOBAL"},
+        "run_settings": {"Main_Scenario": "MAIN", "Region": "GLOBAL"},
         "overall_param_df_dict": {} if main is None else main,
         "overall_param_df_dict_ndp": {} if additional is None else additional,
     }
@@ -199,7 +199,7 @@ def _delivery_fixture(
     planning = _candidate_modules()["planning"]
     effect_recorder = _DeliveryRecorder() if recorder is None else recorder
     columns4 = list(STRUCTURE_KEYS)
-    setup = {
+    run_settings = {
         "Main_Scenario": "MAIN",
         "Other_Scenarios": ["C", "A", "C"],
         "Timeslices": ["L2", "L1"],
@@ -212,7 +212,7 @@ def _delivery_fixture(
     }
     params = {
         "A1_outputs": "A1ROOT",
-        "xtra_scen": setup,
+        "xtra_scen": run_settings,
         "Print_Dem_Completed": "/Demand_COMPLETED.xlsx",
         "initial_year": "2023",
         "A_O_Dem": "Demand",
@@ -231,8 +231,8 @@ def _delivery_fixture(
         final_year="2024",
         time_range_vector=[2023, 2024],
         wide_param_header=None,
-        other_setup_params=setup,
-        other_setup_params_timeslices=setup["Timeslices"],
+        run_settings=run_settings,
+        run_settings_timeslices=run_settings["Timeslices"],
     )
 
     demand = pd.DataFrame({"2023": ["1.23456"], "Other": [2.34567]})
@@ -279,7 +279,7 @@ def _delivery_fixture(
         },
         "time_range_vector": [2023, 2024],
         "All_Tech_list": ["TECH2", "TECH1", "TECH1"],
-        "other_setup_params": setup,
+        "run_settings": run_settings,
         "All_Fuel_list": ["FUEL1"],
         "emissions_list": ["CO2"],
         "overall_param_df_dict": {
@@ -301,7 +301,7 @@ def _run_delivery(
     delivery = modules["delivery"]
     params = namespace["params"]
     plan = namespace["transform_plan"]
-    setup = namespace["other_setup_params"]
+    run_settings = namespace["run_settings"]
 
     namespace["Demand_df_new"] = effects.write_completed_demand_workbook(
         plan.scenario_workbook("Print_Dem_Completed"),
@@ -334,7 +334,7 @@ def _run_delivery(
         namespace["All_Tech_list"],
         namespace["All_Fuel_list"],
         namespace["emissions_list"],
-        setup,
+        run_settings,
         params,
     )
     namespace["df_structure"] = structure.table
@@ -353,18 +353,18 @@ def _run_delivery(
     namespace["overall_param_df_dict_ndp"] = additional_tables
     delivery.deliver_main_csvs(
         plan.main_output_root(),
-        setup["Main_Scenario"],
+        run_settings["Main_Scenario"],
         main_tables,
         structure.values,
         makedirs=recorder.makedirs,
         dataframe_factory=pd.DataFrame,
         csv_writer=recorder.to_csv,
     )
-    if setup["Other_Scenarios"]:
+    if run_settings["Other_Scenarios"]:
         delivery.deliver_additional_csvs(
             plan.additional_output_root(),
-            setup["Other_Scenarios"],
-            setup["Main_Scenario"],
+            run_settings["Other_Scenarios"],
+            run_settings["Main_Scenario"],
             additional_tables,
             structure.values,
             makedirs=recorder.makedirs,
@@ -560,16 +560,16 @@ class B1ConfigurationAndSourcePathCharacterizationTests(unittest.TestCase):
             loaded["xtra_scen"]["Timeslices"], ["L1", "L2", "L3"]
         )
         self.assertEqual(
-            plan.other_setup_params,
+            plan.run_settings,
             {
                 "Region": "GLOBAL",
                 "Timeslices": ["L1", "L2", "L3"],
                 "Main_Scenario": "MAIN",
             },
         )
-        self.assertIsNot(plan.other_setup_params, loaded["xtra_scen"])
+        self.assertIsNot(plan.run_settings, loaded["xtra_scen"])
         self.assertIs(
-            plan.other_setup_params["Timeslices"],
+            plan.run_settings["Timeslices"],
             loaded["xtra_scen"]["Timeslices"],
         )
 
@@ -1000,7 +1000,7 @@ class B1StructureCharacterizationTests(unittest.TestCase):
             namespace["All_Tech_list"],
             namespace["All_Fuel_list"],
             namespace["emissions_list"],
-            namespace["other_setup_params"],
+            namespace["run_settings"],
             namespace["params"],
         )
 

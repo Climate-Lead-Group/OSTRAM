@@ -1,7 +1,8 @@
 # Scenario catalogue
 
-The block between the two markers is generated from `config/setups/south_asia.yaml`
-and `config/execution/Config_MOMF_T1_AB.yaml` by
+The block between the two markers is generated from `config/setups/south_asia.yaml`,
+the scenario files `config/scenarios/<name>/scenario.yaml` and
+`config/execution/Config_MOMF_T1_AB.yaml` by
 `python tools/generate_scenario_catalogue.py`, run from the repository root.
 The test `tests/regression/test_scenario_catalogue.py` fails when the block
 or the origin table is out of date. Terms are in the [glossary](../../glossary.md).
@@ -84,7 +85,7 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 - Overlay: `config/scenarios/B_Opt_DirContractual/set_interconnector_direction.yaml` from 2027.
 - B2 policy: the historical trade constraints are active.
 - Seed needs: none.
-- Description: Interconnector directions locked to real contractual/physical flows (9 corridors one-way, Nepal<->India pair bidirectional). Shared VRE ceiling layer via scenario edits; direction overlay via set_interconnector_direction.py. Full per-corridor justification + citations in docs/reference/scenarios/interconnector_direction_references.md.
+- Description: The shared VRE ceilings applied to B_Optimised_VRE. Nine interconnectors carry power in one direction only, the direction of their contracts and physical flows. The two Nepal to India interconnectors carry power both ways. Its direction file sets the direction of each interconnector.
 
 ### B_Opt_IndiaCosts
 
@@ -94,7 +95,7 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 - Overlay: none.
 - B2 policy: the historical trade constraints are active.
 - Seed needs: none.
-- Description: CapitalCost and FixedCost of the existing non-India generation and storage technologies, except the backstop, set to the India values for each family and year. Where the India regions differ (coal, hydro and offshore wind), the INDNO values are used. Transmission and fuel prices are unchanged. Applied after the shared VRE ceilings. The values were first copied from the B_Optimised_VRE workbook and were updated in the September 2026 cost release.
+- Description: The shared VRE ceilings applied to B_Optimised_VRE. The CapitalCost and FixedCost of the existing generation and storage technologies of Bangladesh, Bhutan, Nepal, Sri Lanka and the Maldives, except the backstop, are set to the India values of the same family in each year. Where the India regions differ (coal, hydro and offshore wind), the values of the INDNO region are used. Transmission and fuel prices are unchanged.
 
 | Sheet | Parameter | Operation | Technologies |
 |---|---|---|---|
@@ -111,7 +112,7 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 - Overlay: none.
 - B2 policy: the historical trade constraints are active.
 - Seed needs: none.
-- Description: CapitalCost and FixedCost of the existing non-India generation and storage technologies, except the backstop, set to the India values for each family and year. Where the India regions differ (coal, hydro and offshore wind), the INDNO values are used. Transmission is unchanged. Non-India fuel prices (VariableCost of the MIN fuel-supply technologies) are also set to the India prices; these are higher for some fuels and years and lower for others. Applied after the shared VRE ceilings. The values were first copied from the B_Optimised_VRE workbook and were updated in the September 2026 cost release.
+- Description: The shared VRE ceilings applied to B_Optimised_VRE. The CapitalCost and FixedCost of the existing generation and storage technologies of Bangladesh, Bhutan, Nepal, Sri Lanka and the Maldives, except the backstop, are set to the India values of the same family in each year. Where the India regions differ (coal, hydro and offshore wind), the values of the INDNO region are used. The fuel prices of these five countries (the VariableCost of their MIN fuel-supply technologies) are set to the India prices. Transmission is unchanged.
 
 | Sheet | Parameter | Operation | Technologies |
 |---|---|---|---|
@@ -130,7 +131,7 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 - Overlay: none.
 - B2 policy: the historical trade constraints are active.
 - Seed needs: none.
-- Description: PRIMARY sustained solar CAPEX stress. Solar CapitalCost x1.30 for all PWRSPV<node> (10 nodes), all years, over the shared VRE-ceiling layer. Literature-anchored: NREL ATB Conservative-vs-Moderate spread ~30%, IEA diversification premium, WACC-stress equivalent. Same mechanism as SolarCapexHi, factor 1.30.
+- Description: The shared VRE ceilings applied to B_Optimised_VRE. The CapitalCost of every solar technology (PWRSPV, all ten nodes) is multiplied by 1.30 in every year.
 
 | Sheet | Parameter | Operation | Technologies |
 |---|---|---|---|
@@ -144,7 +145,7 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 - Overlay: none.
 - B2 policy: the historical trade constraints are active.
 - Seed needs: none.
-- Description: Solar CapitalCost multiplied by 'factor' (setting, default 1.10) for all PWRSPV<node>, all 10 nodes, all years. Over the shared VRE-ceiling layer (expected not to bind: dearer solar -> less solar). To change the stress level before CPLEX, edit the single 'factor' value below.
+- Description: The shared VRE ceilings applied to B_Optimised_VRE. The CapitalCost of every solar technology (PWRSPV, all ten nodes) is multiplied by 1.10 in every year. To change the increase, edit the factor of its one edit.
 
 | Sheet | Parameter | Operation | Technologies |
 |---|---|---|---|
@@ -158,7 +159,7 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 - Overlay: none.
 - B2 policy: the historical trade constraints are active.
 - Seed needs: none.
-- Description: Transient severe solar CAPEX spike x1.50 for 2028-2030 ONLY (other years keep the parent cost). Uses the multiply op's optional per-year 'years' filter (added to scenario_edits.py for this scenario). Over the shared VRE-ceiling layer.
+- Description: The shared VRE ceilings applied to B_Optimised_VRE. The CapitalCost of every solar technology (PWRSPV, all ten nodes) is multiplied by 1.50 in 2028, 2029 and 2030. The other years keep the cost of B_Optimised_VRE.
 
 | Sheet | Parameter | Operation | Technologies |
 |---|---|---|---|
@@ -172,7 +173,7 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 - Overlay: none.
 - B2 policy: the historical trade constraints are active; CPLEX numerical emphasis.
 - Seed needs: none.
-- Description: Fixed upper limits on the yearly flow of Bangladesh's four import corridors from 2027 to 2050. They were calculated once as 15 per cent of Bangladesh's demand, split by each corridor's share of imports in a historical B_Optimised_VRE run, with no allowance for exports. The activity of Bangladesh's new and repowered internal lines (TRNNLIBGDXX, TRNRPOBGDXX) is set to zero from 2027. Applied after the shared VRE ceilings. This scenario differs from the gross import cap of B_Opt_Clipped_GrossImportCap15.
+- Description: The shared VRE ceilings applied to B_Optimised_VRE. The yearly flow on Bangladesh's four import interconnectors has an upper limit from 2027 to 2050, with no allowance for exports. The activity of Bangladesh's new and repowered internal lines (TRNNLIBGDXX, TRNRPOBGDXX) is set to zero from 2027. ASSUMPTION: the limits were worked out once from an earlier model run, as 15 per cent of Bangladesh's demand split by each interconnector's share of imports in that run. They cannot be reproduced from the repository. This scenario is not the gross import cap of B_Opt_Clipped_GrossImportCap15.
 
 | Sheet | Parameter | Operation | Technologies |
 |---|---|---|---|
@@ -187,7 +188,7 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 - Overlay: none.
 - B2 policy: the historical trade constraints are active.
 - Seed needs: none.
-- Description: TotalAnnualMaxCapacity = max(1.5 x ResidualCapacity_2023, calibrated base-window capacity) for every cross-border TRN corridor, applied to the STUDY PERIOD 2027+ only (base years 2023-2026 revert to the source/pinned calibrated mix). The base-window grandfather is required because interconnector capacity is cumulative and long-lived: the base-year pin fixes each node's base-year net import, which needs the calibrated base-window corridor capacity, so a bare 1.5x-residual cap on 2027 would retroactively starve the pinned base years (genuine demand-balance infeasibility). India-internal corridors kept at B_Opt. Non-India TRNNLI*/TRNRPO* backstops -> AUL 0 from 2027+ (base years = calibrated). Zero-residual, never-built corridors stay blocked.
+- Description: The shared VRE ceilings applied to B_Optimised_VRE. From 2027, the TotalAnnualMaxCapacity and TotalAnnualMaxCapacityInvestment of every cross-border interconnector are the larger of 1.5 times its 2023 residual capacity and its capacity in the base years 2023 to 2026. The base years keep the values of B_Optimised_VRE. The base-year floor is needed because capacity built in the base years lasts into the study period, and the base-year pin needs it. TotalAnnualMinCapacityInvestment is lowered where it would exceed the new limit. Interconnectors inside India are unchanged, and interconnectors with no residual capacity that were never built stay closed. The activity of the new and repowered internal lines outside India (TRNNLI, TRNRPO) is set to zero from 2027. ASSUMPTION: the base-year capacities and the minimum investments were worked out once from an earlier model run. They cannot be reproduced from the repository.
 
 | Sheet | Parameter | Operation | Technologies |
 |---|---|---|---|
@@ -225,7 +226,7 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 - Overlay: none.
 - B2 policy: the historical trade constraints are active.
 - Seed needs: none.
-- Description: Clipped A with all eleven international corridors limited from 2027 to their end-2026 capacity in the historical M0 A_Calibrated_BAU_Clipped run. This is an upper limit. New investment in 2023 to 2026 is fixed to the values of that run. Corridors with zero capacity are included. The reference values are fixed and are not recalculated from a new A run.
+- Description: The shared VRE ceilings applied to A_Calibrated_BAU. From 2027, the capacity of each of the eleven international interconnectors has an upper limit equal to its capacity at the end of 2026, including interconnectors with no capacity. New investment in these interconnectors in 2023 to 2026 is fixed. ASSUMPTION: the end-2026 capacities and the 2023 to 2026 investments were worked out once from an earlier model run of A_Calibrated_BAU_Clipped. They cannot be reproduced from the repository and are not recalculated.
 
 | Sheet | Parameter | Operation | Technologies |
 |---|---|---|---|
@@ -241,7 +242,7 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 - Overlay: none.
 - B2 policy: the historical trade constraints are active; gross imports capped at 0.15 of annual demand in 2027 to 2050 for BGD, BTN, IND, LKA, MDV, NPL.
 - Seed needs: none.
-- Description: Clipped B with annual aggregate gross received-import cap, all six countries per the documented region-wide scope; India aggregated nationally.
+- Description: The shared VRE ceilings applied to B_Optimised_VRE. From 2027 to 2050, the electricity each of the six countries receives through its cross-border interconnectors is at most 15 per cent of its yearly demand. India counts as one country.
 
 <!-- generated: end -->
 
@@ -265,5 +266,5 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 | `B_Opt_TxCap150` | `B_Opt_Clipped` with the capacity of each international corridor in 2027 to 2050 capped at the larger of 1.5 times its 2023 residual capacity and its calibrated base-window capacity, plus literal tables of minimum investments and backstop limits. |
 | `C_Target_VRE` | The target root: retirement, the minimum capacity floors with the Nepal hydro ceiling, the build cap, the VRE targets sized from the solved A result, interconnector relaxation and storage minimum investments. |
 | `C_Target_VRE_Clipped` | `C_Target_VRE` with the shared VRE ceilings, plus the restated Maldives 2028 solar assumption: a minimum total of 0.3841 GW with earlier builds counting towards it. |
-| `A_Calibrated_BAU_Clipped_TxFreeze2026` | `A_Calibrated_BAU_Clipped` with upper capacity limits and fixed early investments for the eleven international corridors, derived once from a historical A-clipped reference at the end of 2026. The tables are literal values in `south_asia.yaml`; the pipeline never recomputes them from a current A result. |
+| `A_Calibrated_BAU_Clipped_TxFreeze2026` | `A_Calibrated_BAU_Clipped` with upper capacity limits and fixed early investments for the eleven international corridors, derived once from a historical A-clipped reference at the end of 2026. The tables are literal values in its scenario file; the pipeline never recomputes them from a current A result. |
 | `B_Opt_Clipped_GrossImportCap15` | `B_Opt_Clipped` with a policy that caps the gross received imports of each country at 15 per cent of its annual demand in 2027 to 2050, for all six countries with India counted nationally. |

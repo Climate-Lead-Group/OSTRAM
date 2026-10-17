@@ -23,7 +23,7 @@ from ostram.reporting.training_dashboard import (
 )
 
 
-# Deliberately non-UNESCAP scenario names, regions and emission codes: the
+# Deliberately non-training scenario names, regions and emission codes: the
 # dashboard must take every identity from the data/metadata, not constants.
 METADATA = {
     "title": "Synthetic Training Profile",
@@ -221,13 +221,13 @@ class AggregationTests(unittest.TestCase):
             )
 
     def test_lid_diagnostic_labels_use_setup_region_names(self) -> None:
-        lid = self.alpha["System"]["lid_diagnostic"]
-        self.assertIn("PWRSPVMMRXX01", lid)
-        self.assertEqual(lid["PWRSPVMMRXX01"]["label"], "Solar PV (Myanmar)")
-        self.assertEqual(lid["PWRSPVMMRXX01"]["newcap"], {2030: 1.0, 2050: 2.0})
-        self.assertEqual(lid["PWRSPVMMRXX01"]["lid"], {2030: 3.0, 2050: 3.0})
-        self.assertEqual(lid["PWRCOALKAXX01"]["label"], "Coal (Sri Lanka)")
-        self.assertNotIn("PWRSPVMMRXX01", self.alpha["LKAXX"]["lid_diagnostic"])
+        build_cap = self.alpha["System"]["build_cap_diagnostic"]
+        self.assertIn("PWRSPVMMRXX01", build_cap)
+        self.assertEqual(build_cap["PWRSPVMMRXX01"]["label"], "Solar PV (Myanmar)")
+        self.assertEqual(build_cap["PWRSPVMMRXX01"]["newcap"], {2030: 1.0, 2050: 2.0})
+        self.assertEqual(build_cap["PWRSPVMMRXX01"]["build_cap"], {2030: 3.0, 2050: 3.0})
+        self.assertEqual(build_cap["PWRCOALKAXX01"]["label"], "Coal (Sri Lanka)")
+        self.assertNotIn("PWRSPVMMRXX01", self.alpha["LKAXX"]["build_cap_diagnostic"])
 
     def test_scenarios_and_regions_come_from_data_and_metadata(self) -> None:
         self.assertEqual(
@@ -273,7 +273,7 @@ class EdgeCaseTests(unittest.TestCase):
             self.assertTrue(metrics["available"])
             self.assertEqual(metrics["generation"], {2030: {"Solar PV": 10.0}})
             for key in ("capacity", "new_capacity", "emissions", "storage",
-                        "interconnectors", "lid_diagnostic"):
+                        "interconnectors", "build_cap_diagnostic"):
                 self.assertEqual(metrics[key], {}, key)
             self.assertEqual(
                 metrics["cost"], {"total_discounted": 0.0, "capex": 0.0}
@@ -325,7 +325,7 @@ class RendererTests(unittest.TestCase):
             'id="sel-scen-a"', 'id="sel-scen-b"', 'id="sel-region"',
         ):
             self.assertIn(control, self.document)
-        self.assertIn("sel-lid-tech", self.document)
+        self.assertIn("sel-cap-tech", self.document)
 
     def test_expected_chart_panels_and_kpi_cards(self) -> None:
         for marker in (
@@ -337,7 +337,7 @@ class RendererTests(unittest.TestCase):
             "Interconnector capacity (GW)",
             "Interconnector trade flow (PJ)",
             "VRE share of generation",
-            "Lid diagnostic",
+            "Build-cap diagnostic",
             "System cost (NPV)",
             "Capital investment",
             "VRE share",

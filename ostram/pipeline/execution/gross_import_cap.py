@@ -1,6 +1,6 @@
 """Serialize maintained aggregate annual received-import policies during compilation.
 
-The policy lives in south_asia.yaml; flow membership is derived from actual CSV ratios.
+The policy lives in the scenario's file; flow membership is derived from actual CSV ratios.
 Domestic transfers (including all Indian interregional corridors) are excluded.
 """
 from pathlib import Path
@@ -13,14 +13,15 @@ def render_policy(input_folder, scenario_name):
     """Return the GMPL sets and parameter of the gross import cap of
     ``scenario_name``.
 
-    The policy is read from ``scenario_inputs`` in
-    ``config/setups/south_asia.yaml``; the demand fuels and cross-border TRN
-    flows come from the CSVs in ``input_folder``. Returns an empty
+    The policy is read from ``config/scenarios/<scenario>/scenario.yaml``;
+    the demand fuels and cross-border TRN flows come from the CSVs in
+    ``input_folder``. Returns an empty
     ``D4ImportCountry`` set when the scenario has no policy. Raises
     ValueError for an invalid policy or a country without demand.
     """
-    cfg = yaml.safe_load(resolve_paths().scenario_registry.read_text(encoding='utf8'))
-    policy = cfg.get('scenario_inputs', {}).get(scenario_name, {}).get('gross_import_cap')
+    scenario_file = resolve_paths().scenario_config_root / scenario_name / 'scenario.yaml'
+    cfg = yaml.safe_load(scenario_file.read_text(encoding='utf8')) if scenario_file.is_file() else {}
+    policy = cfg.get('gross_import_cap')
     if not policy:
         return 'set D4ImportCountry := ;\n'
     countries = policy['countries']

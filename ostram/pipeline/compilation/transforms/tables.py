@@ -33,7 +33,7 @@ def normalize_year_like_columns(df: pd.DataFrame) -> pd.DataFrame:
 def build_system_parameter_rows(
     system_parameters: pd.DataFrame,
     years: Sequence[int],
-    setup: Mapping[str, Any],
+    run_settings: Mapping[str, Any],
 ) -> pd.DataFrame:
     """Expand non-missing system-parameter cells into long-form rows.
 
@@ -53,8 +53,8 @@ def build_system_parameter_rows(
                 accumulated_rows.append(
                     {
                         "PARAMETER": parameter,
-                        "Scenario": setup["Main_Scenario"],
-                        "REGION": setup["Region"],
+                        "Scenario": run_settings["Main_Scenario"],
+                        "REGION": run_settings["Region"],
                         "YEAR": years[year_index],
                         "Value": round(float(value), 4),
                     }
@@ -74,22 +74,22 @@ def build_structure_tables(
     all_tech_list: list[Any],
     all_fuel_list: list[Any],
     emissions_list: list[Any],
-    other_setup_params: Mapping[str, Any],
+    run_settings: Mapping[str, Any],
     params: Mapping[str, Any],
 ) -> StructureTables:
     """Build the predecessor's padded structure table without sorting or deduping."""
     lengths = [
         len(time_range_vector),
         len(all_tech_list),
-        len(other_setup_params["Timeslices"]),
+        len(run_settings["Timeslices"]),
         len(all_fuel_list),
         len(emissions_list),
-        len(other_setup_params["Mode_of_Operation"]),
-        len([other_setup_params["Region"]]),
-        len(other_setup_params["Season"]),
-        len(other_setup_params["DayType"]),
-        len(other_setup_params["DailyTimeBracket"]),
-        len(other_setup_params["Storage"]),
+        len(run_settings["Mode_of_Operation"]),
+        len([run_settings["Region"]]),
+        len(run_settings["Season"]),
+        len(run_settings["DayType"]),
+        len(run_settings["DailyTimeBracket"]),
+        len(run_settings["Storage"]),
     ]
     maximum_length = max(lengths)
 
@@ -99,7 +99,7 @@ def build_structure_tables(
     structure_technology = all_tech_list + [
         "" for _ in range(maximum_length - lengths[1])
     ]
-    structure_timeslice = other_setup_params["Timeslices"] + [
+    structure_timeslice = run_settings["Timeslices"] + [
         "" for _ in range(maximum_length - lengths[2])
     ]
     structure_fuel = all_fuel_list + [
@@ -108,22 +108,22 @@ def build_structure_tables(
     structure_emission = emissions_list + [
         "" for _ in range(maximum_length - lengths[4])
     ]
-    structure_mode = other_setup_params["Mode_of_Operation"] + [
+    structure_mode = run_settings["Mode_of_Operation"] + [
         "" for _ in range(maximum_length - lengths[5])
     ]
-    structure_region = [other_setup_params["Region"]] + [
+    structure_region = [run_settings["Region"]] + [
         "" for _ in range(maximum_length - lengths[6])
     ]
-    structure_season = other_setup_params["Season"] + [
+    structure_season = run_settings["Season"] + [
         "" for _ in range(maximum_length - lengths[7])
     ]
-    structure_daytype = other_setup_params["DayType"] + [
+    structure_daytype = run_settings["DayType"] + [
         "" for _ in range(maximum_length - lengths[8])
     ]
-    structure_daily_time_bracket = other_setup_params["DailyTimeBracket"] + [
+    structure_daily_time_bracket = run_settings["DailyTimeBracket"] + [
         "" for _ in range(maximum_length - lengths[9])
     ]
-    structure_storage = other_setup_params["Storage"] + [
+    structure_storage = run_settings["Storage"] + [
         "" for _ in range(maximum_length - lengths[10])
     ]
 

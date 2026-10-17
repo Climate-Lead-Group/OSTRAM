@@ -1,0 +1,11 @@
+scenario: B_Opt_DirContractual
+base_scenario: B_Optimised_VRE
+description: >-
+  The shared VRE ceilings applied to B_Optimised_VRE. Nine interconnectors carry
+  power in one direction only, the direction of their contracts and physical
+  flows. The two Nepal to India interconnectors carry power both ways. Its
+  direction file sets the direction of each interconnector.
+direction_overlay: set_interconnector_direction.yaml
+direction_study_start_year: 2027
+apply_vre_ceiling_layer: true
+edits: []

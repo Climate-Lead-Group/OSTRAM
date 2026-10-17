@@ -13,7 +13,7 @@
 ## held flat through 2027, so the floor early on == CalBAU production and is
 ## therefore NON-BINDING (C reproduces the calibrated baseline at the start).
 ## It then ramps to the NDC milestone. This is the direct analog of B's
-## lid cap_multiplier_schedule sitting at 1.0 through 2027 — differentiation from
+## build-cap rule's cap_multiplier_schedule sitting at 1.0 through 2027 — differentiation from
 ## BAU starts smooth, not abrupt. (Source-share = current; floor only bites
 ## as the ramp rises above the calibrated trajectory.)
 ##
@@ -52,7 +52,7 @@ max_floor_share: 0.95     # safety cap; high enough for the NPL/BTN hydro locks
 ## cap_envelope: for targets flagged cap_envelope: true (the solar floors),
 ## set_vre_targets writes a bounded MaxCap/MaxCapInv that follows the floor's
 ## capacity trajectory (cap_needed = floor_gen / realized_yield from CalBAU).
-## This replaces lid-exemption: solar is pinned near residual early and rises
+## This replaces build-cap exemption: solar is pinned near residual early and rises
 ## only as the NDC floor rises — no front-loading, no 9999. headroom is the
 ## slack above the floor-implied capacity (raise it if a solar floor goes
 ## infeasible due to curtailment at high penetration).
@@ -67,7 +67,7 @@ default_capacity_factor: 0.10    # fallback yield (× c2a) if CalBAU never built
 pin_generation_to_target: true
 pin_slack: 0.01                  # upper limit sits 1% above the floor (a narrow range, not an exact lower==upper equality)
 
-## NOTE: targets cover the UNESCAP training subset (Bangladesh + India East) only.
+## NOTE: targets cover the training subset (Bangladesh + India East) only.
 targets:
 
   # =========================================================================
