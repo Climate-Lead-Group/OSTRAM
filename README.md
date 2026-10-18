@@ -18,8 +18,8 @@ package in editable mode and set `PYTHONUTF8=1`.
 ```powershell
 git clone https://github.com/Climate-Lead-Group/OSTRAM.git OSTRAM
 cd OSTRAM
-conda env create -n ostram -f environment.yaml
-conda activate ostram
+conda env create -f environment.yaml
+conda activate OSTRAM-env
 python -m pip install -e .
 $env:PYTHONUTF8 = '1'
 python -m ostram inspect-resources
@@ -30,15 +30,15 @@ choices.
 
 ## Commands
 
-Every command starts with `python -m ostram`. Pass the name of the environment
-created above to `run`, so that the command checks that environment and
-creates none.
+Every command starts with `python -m ostram`. `run` checks the environment
+`OSTRAM-env` and creates none when it exists. Add `--env-name <name>` only when
+you created the environment under another name.
 
 ```powershell
 python -m ostram --help
 python -m ostram inspect-resources
-python -m ostram run --skip-pull --compile-only --env-name ostram --scenarios A_Calibrated_BAU
-python -m ostram run --skip-pull --env-name ostram --scenarios A_Calibrated_BAU --verbose
+python -m ostram run --skip-pull --compile-only --scenarios A_Calibrated_BAU
+python -m ostram run --skip-pull --scenarios A_Calibrated_BAU --verbose
 python -m ostram transform --scenario A_Calibrated_BAU
 python -m ostram compile-inputs --scenarios "A_Calibrated_BAU,B_Optimised_VRE"
 ```
@@ -75,15 +75,8 @@ The [file map](docs/file-map.md) describes each folder and key file.
 
 ## Checks
 
-These commands run no solver and build no matrix.
-
-```powershell
-python -B -m compileall -q ostram tests
-python -B -m unittest discover -s tests -p "test_*.py"
-python -B -m tests.validation.test_scenarios_lite
-python -m ostram inspect-resources
-git diff --check
-```
+The solver-free checks are listed under Tests in
+[`CONTRIBUTING.md`](CONTRIBUTING.md#tests).
 
 ## Documentation
 

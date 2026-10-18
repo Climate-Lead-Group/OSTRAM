@@ -54,6 +54,35 @@ TRN{ORIGIN 5-char}{DEST 5-char}
 
 Each 5-char block is a 3-letter country code + 2-letter region code (13 characters total after `TRN`). Examples from the live data: `TRNBGDXXINDEA` (Bangladesh ↔ India-East), `TRNINDEAINDNE` (India-East ↔ India-North-East). These pre-exist in the raw input data and have their fuel codes rewritten by Stage A2; `TRNNLI*`-prefixed per-country technologies (not to be confused with this pair-level `TRN` code) represent *unplanned candidate* lines rather than existing/committed ones.
 
+#### The interconnector technologies
+
+The South Asia model has 18 technologies of this form. Eleven link two
+countries. Seven link two regions of India and are domestic. The first block of
+the name is the first end and the second block is the second end. The blocks
+are not in alphabetical order, as `TRNBTNXXBGDXX` and `TRNMDVXXINDSO` show. One
+technology serves both directions: its mode 1 sends electricity from the first
+end to the second and its mode 2 sends it the other way.
+
+| Technology | First end | Second end |
+|---|---|---|
+| `TRNBGDXXINDEA` | `BGDXX` Bangladesh | `INDEA` India East |
+| `TRNBGDXXINDNE` | `BGDXX` Bangladesh | `INDNE` India North-East |
+| `TRNBTNXXBGDXX` | `BTNXX` Bhutan | `BGDXX` Bangladesh |
+| `TRNBTNXXINDEA` | `BTNXX` Bhutan | `INDEA` India East |
+| `TRNBTNXXINDNE` | `BTNXX` Bhutan | `INDNE` India North-East |
+| `TRNINDEANPLXX` | `INDEA` India East | `NPLXX` Nepal |
+| `TRNINDNONPLXX` | `INDNO` India North | `NPLXX` Nepal |
+| `TRNINDSOLKAXX` | `INDSO` India South | `LKAXX` Sri Lanka |
+| `TRNLKAXXMDVXX` | `LKAXX` Sri Lanka | `MDVXX` Maldives |
+| `TRNMDVXXINDSO` | `MDVXX` Maldives | `INDSO` India South |
+| `TRNNPLXXBGDXX` | `NPLXX` Nepal | `BGDXX` Bangladesh |
+
+The seven domestic links are `TRNINDEAINDNE`, `TRNINDEAINDNO`, `TRNINDEAINDSO`,
+`TRNINDEAINDWE`, `TRNINDNEINDNO`, `TRNINDNOINDWE` and `TRNINDSOINDWE`. They
+join the five Indian regions `INDEA`, `INDNE`, `INDNO`, `INDSO` and `INDWE`.
+The gross import cap of a scenario counts only the eleven cross-border
+technologies. The list comes from `TECHNOLOGY.csv` of the compiled inputs.
+
 ### Fuel Codes
 
 Fuel names follow a similar pattern, with a 2-digit tier suffix instead of a region suffix on electricity buses:

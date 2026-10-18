@@ -42,11 +42,19 @@ names.
 ## 3. Run a solver-free preparation gate
 
 ```powershell
-python -m ostram run --skip-pull --compile-only --env-name ostram --scenarios A_Calibrated_BAU
+python -m ostram run --skip-pull --compile-only --scenarios A_Calibrated_BAU
 ```
 
 `--compile-only` reaches the final preprocessed text inputs and stops before
 matrix creation, every solver adapter, cleanup, and result post-processing.
+
+The run takes minutes. In one run on one machine, compiling two derived
+scenarios took about 20 minutes: A1 4 minutes, A2 45 seconds, A3 8 minutes, B1
+5.5 minutes and B2 25 seconds. A3 and B1 are the longest stages. Other machines
+differ. Progress goes to stderr. When output is redirected in Windows
+PowerShell 5.1, the normal progress lines appear as `NativeCommandError`. The
+exit code decides success: `$LASTEXITCODE` is 0 after a successful run, which
+ends with `OSTRAM compile-only run completed successfully`.
 
 Useful focused commands are:
 
@@ -61,7 +69,7 @@ After selecting and configuring a solver in
 `config/execution/Config_MOMF_T1_AB.yaml`:
 
 ```powershell
-python -m ostram run --skip-pull --env-name ostram --scenarios A_Calibrated_BAU
+python -m ostram run --skip-pull --scenarios A_Calibrated_BAU
 ```
 
 The runner conditionally prepares A1/A2 snapshots, materializes the exact
@@ -99,11 +107,5 @@ it or treat generated state as source authority.
 
 ## 6. Run solver-free validation
 
-```powershell
-python -B -m compileall -q ostram tests
-python -B -m unittest discover -s tests -p "test_*.py"
-python -B -m tests.validation.test_scenarios_lite
-```
-
-The scenario-lite command validates all seven compact scenarios without
-calling a matrix builder or solver.
+The solver-free checks are listed under [Tests](https://github.com/Climate-Lead-Group/OSTRAM/blob/main/CONTRIBUTING.md#tests) in `CONTRIBUTING.md`.
+They call no matrix builder or solver.

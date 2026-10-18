@@ -1,5 +1,11 @@
-"""Regenerate the generated block of the scenario catalogue page. Run from the repository root."""
+"""Regenerate the generated block of the scenario catalogue page. Run from the repository root.
+
+The block documents the delivered scenarios: the registered scenarios that have a
+row in the origin table of the page, in registry order. A scenario registered later
+appears only after its row is added to the table.
+"""
 from pathlib import Path
+import re
 import sys
 import yaml
 
@@ -9,6 +15,12 @@ from ostram.paths import resolve_paths  # noqa: E402
 
 PAGE = ROOT / "docs" / "reference" / "scenarios" / "scenario_catalogue.md"
 START, END = "<!-- generated: start -->", "<!-- generated: end -->"
+
+
+def origin_rows(page):
+    """Return the scenario names that have a row in the origin table of ``page``."""
+    origin = page.split("## Origin of each scenario", 1)[1]
+    return re.findall(r"^\| `([A-Za-z0-9_]+)` \|", origin, flags=re.MULTILINE)
 
 
 def _edits(edits):
@@ -21,15 +33,18 @@ def _edits(edits):
 
 
 def generated_block(names=None):
-    """Return the generated block for ``names``, or for every registered scenario."""
+    """Return the generated block for ``names``, or for the delivered scenarios."""
     paths = resolve_paths(project_root=ROOT)
     setup = yaml.safe_load(paths.scenario_registry.read_text(encoding="utf-8"))
     execution = yaml.safe_load((ROOT / "config/execution/Config_MOMF_T1_AB.yaml").read_text(encoding="utf-8"))
     registry = setup["scenario_registry"]
     roots = {r["name"]: r for r in registry["root_scenarios"]}
     registered = list(registry["support_scenarios"]) + list(registry["decision_scenarios"])
+    if names is None:
+        listed = set(origin_rows(PAGE.read_text(encoding="utf-8")))
+        names = [name for name in registered if name in listed]
     out = [START]
-    for name in registered if names is None else names:
+    for name in names:
         scenario_file = paths.scenario_config_root / name / "scenario.yaml"
         block = {} if name in roots else yaml.safe_load(scenario_file.read_text(encoding="utf-8"))
         root = name if name in roots else block["base_scenario"]

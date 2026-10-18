@@ -42,7 +42,33 @@ either `values` or one `op`. The edits recognise year columns from 2020 to
 
 The `note` of an edit is where its basis goes: an external source, as a URL or
 a DOI, or `ASSUMPTION` followed by a short reason. The existing notes are being
-sourced separately.
+sourced separately. Put the note in quotes when it holds a colon followed by a
+space, because a bare colon inside an unquoted YAML value stops the file from
+loading:
+
+```yaml
+  note: "ASSUMPTION: test case, a 20 per cent rise"
+```
+
+## Sheets and technology prefixes
+
+The `sheet` field names the worksheet that holds the technology and the
+parameter. The delivered scenarios edit `Secondary Techs`, `Demand Techs` and
+`VariableCost`. The table shows what the sheets of `A-O_Parametrization.xlsx`
+hold after A2. A technology name starts with its prefix; the
+[data reference](data-reference.md#technology-prefixes) describes the prefixes.
+
+| Sheet | Prefixes | Parameters |
+|---|---|---|
+| `Primary Techs` | `MIN`: fuel supply | `CapitalCost`, `FixedCost`, `ResidualCapacity`, `TotalAnnualMaxCapacity`, the investment limits and the annual activity limits |
+| `Secondary Techs` | `PWR`: power plants and storage; `TRN`: the interconnector technologies, 13 characters long, such as `TRNBGDXXINDEA`; `ELC`: electricity distribution | The same parameters as `Primary Techs` |
+| `Demand Techs` | `RNW`, `TRN` and `PWR`: the per-country grid-tier technologies `RNWNLI`, `RNWRPO`, `RNWTRN`, `TRNNLI`, `TRNRPO` and `PWRTRN`; `DSP`: `DSPTRN` | `CapitalCost`, `FixedCost`, `ResidualCapacity`, `TotalAnnualMaxCapacity`, `TotalAnnualMinCapacityInvestment` |
+| `VariableCost` | `MIN`: fuel prices; `PWR`: backstop and storage; `TRN`: interconnectors | `VariableCost` |
+
+An edit changes the first row of its technology and parameter on the sheet. The
+sheet `Capacities` holds several rows per technology for `CapacityFactor`, one
+for each value of its `Timeslices` column, so it is not a target of the
+delivered scenarios.
 
 ## Operations
 
@@ -89,6 +115,50 @@ previous maximum, scales a positive activity lower limit by the same ratio.
 The ceiling is written as a flat value. A ceiling above the previous maximum
 raises it; the pipeline never takes the lower of the two.
 
+## Gross import cap
+
+A scenario file can hold a `gross_import_cap` block. It is a policy, not an
+edit. `ostram/pipeline/execution/gross_import_cap.py` reads it when B2 converts
+the compiled files into the solver datafile. The edit stage and the edit log do
+not see it. `B_Opt_Clipped_GrossImportCap15` holds one for six countries. A
+block for one country reads:
+
+```yaml
+gross_import_cap:
+  countries: [BGD]
+  fraction: 0.15
+  first_year: 2027
+  last_year: 2050
+```
+
+| Field | Meaning |
+|---|---|
+| `countries` | A list of country codes: `BGD`, `BTN`, `IND`, `LKA`, `MDV` and `NPL`. A repeated code or a code outside the list stops the run. India is one country, with its five regions. |
+| `fraction` | The cap as a share of the country's annual demand, from 0 to 1. A value outside that range stops the run. |
+| `first_year`, `last_year` | The first and the last year of the cap, both included. `first_year` must not be later than `last_year`. |
+
+In each of these years, the gross electricity that the country receives from
+other countries must not exceed `fraction` times its annual demand. The
+received electricity is the sum, over the timeslices, of the activity of each
+flow multiplied by the year split and by the output activity ratio. The annual
+demand is the `SpecifiedAnnualDemand` of the country's demand fuels, the fuels
+that start with `ELC`, the country code and end with `03`. For India that is
+the sum of its five regions.
+
+The flows that count are the modes of the cross-border `TRN` technologies whose
+two country codes differ and whose output fuel starts with `ELC` and the code
+of the country, with a positive output activity ratio in the compiled
+`OutputActivityRatio.csv`. Links between Indian regions are excluded, because
+both ends are in India. A flow from India into another country counts for that
+country.
+
+The cap is applied at compilation. The final datafile holds it as
+`set D4ImportCountry`, `set D4ImportDemand`, `set D4ImportFlow` and
+`param D4ImportFraction`, in
+`workspace/execution/Executables/<scenario>_0/Pre_processed_<scenario>_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt`.
+A scenario without the block has an empty `set D4ImportCountry`. The edit log
+does not list the cap.
+
 ## The edit log and the backup folder
 
 The edit log is `apply_patches_CHANGES_<stamp>.json` in `A1_Outputs_<scenario>`.
@@ -98,6 +168,20 @@ changed cell with its old and new value, every row created, every
 applied, the record of the base-year pin and, for a scenario with
 `reuse_edits_from`, the reused scenario and its number of edits. The backup
 folder, when one is made, is `A1_Outputs_<scenario>_PREPATCH_<stamp>` beside the target.
+
+The `cells` list also holds the cells of the shared VRE ceilings, so it is
+longer than the edits of the file suggest. This command shows the cells of one
+parameter:
+
+```powershell
+(Get-Content apply_patches_CHANGES_<stamp>.json -Raw | ConvertFrom-Json).cells |
+  Where-Object { $_.param -eq 'CapitalCost' } | Format-Table tech, year, old, new
+```
+
+The `old` value of a cell is its value when the edit ran. That is the parent's
+value, unless the shared VRE ceilings or an earlier edit of the same file
+changed the cell first. A comparison with the parent therefore needs no build
+of the parent scenario.
 
 ## Edits that match nothing
 

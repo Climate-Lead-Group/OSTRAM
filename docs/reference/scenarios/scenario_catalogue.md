@@ -4,8 +4,12 @@ The block between the two markers is generated from `config/setups/south_asia.ya
 the scenario files `config/scenarios/<name>/scenario.yaml` and
 `config/execution/Config_MOMF_T1_AB.yaml` by
 `python tools/generate_scenario_catalogue.py`, run from the repository root.
-The test `tests/regression/test_scenario_catalogue.py` fails when the block
-or the origin table is out of date. Terms are in the [glossary](../../glossary.md).
+The block documents the delivered scenarios, the rows of the table "Origin of
+each scenario" at the end of this page, in the order of the registry. A scenario
+registered later is left out until its row is added to the table. The generator
+is safe to run at any time. The test
+`tests/regression/test_scenario_catalogue.py` fails when the block or the
+origin table is out of date. Terms are in the [glossary](../../glossary.md).
 
 ## Facts that apply across scenarios
 
@@ -26,7 +30,7 @@ or the origin table is out of date. Terms are in the [glossary](../../glossary.m
 - `C_Target_VRE_Clipped` restates the Maldives solar assumption for 2028 that
   `C_Target_VRE` already carries from the scenario workbook.
 
-## Registered scenarios
+## Delivered scenarios
 
 <!-- generated: start -->
 ### BAU

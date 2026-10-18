@@ -18,13 +18,25 @@ summary they need.
 
 ## Tests
 
-- Regression checks are the test command below and, for input changes, the
-  steps in [After changing inputs](#after-changing-inputs).
-- Every change: the solver-free tests pass.
+- Regression checks are the solver-free checks below and, for input changes,
+  the steps in [After changing inputs](#after-changing-inputs).
+- Every change: the solver-free checks pass. This is the one list of them.
+  Other pages link here. They run no solver and build no matrix. Run them from
+  the repository root, in the activated environment:
 
   ```powershell
-  python -m unittest discover -s tests -p "test_*.py"
+  python -B -m compileall -q ostram tests
+  python -B -m unittest discover -s tests -p "test_*.py"
+  python -B -m tests.validation.test_scenarios_lite
+  python -m ostram inspect-resources
+  git diff --check
   ```
+
+  `tests.validation.test_scenarios_lite` validates the seven compact scenarios
+  without a matrix builder or a solver. `git diff --check` needs a Git
+  checkout. Five tests in `tests/regression/test_materialization_paths.py` create
+  folders named `tmp*` in the folder that holds the clone, and remove them
+  when each test ends. That folder must be writable.
 
 - Changes under `config/`, `inputs/` or `ostram/pipeline/`: build every
   registered scenario with `--compile-only` on `main` and on the branch, in
@@ -37,8 +49,12 @@ summary they need.
   `docs/requirements.txt`, with `<out-dir>` outside the clone.
 - Docstring-only changes: with docstrings stripped, every module's AST is
   unchanged.
-- When a delivered scenario's file or the scenario list changes, regenerate
-  the scenario catalogue with `python tools/generate_scenario_catalogue.py`.
+- Scenario catalogue: the page lists the delivered scenarios, the rows of its
+  origin table. The generator is safe to run at any time. It rewrites only the
+  generated block and leaves out a registered scenario that has no row in the
+  origin table. A new scenario appears in the catalogue only after its row is
+  added to that table. After a delivered scenario's file changes, run
+  `python tools/generate_scenario_catalogue.py` and commit the page.
 
 ## After changing inputs
 
