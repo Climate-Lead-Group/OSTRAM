@@ -81,14 +81,14 @@ run workspace (`--workspace` / `OSTRAM_WORKSPACE`), never inside `examples/unesc
 ## Commands
 
 Install a clean checkout with the [installation](../../docs/installation.md) page.
-The commands below use its `ostram` environment and a new workspace.
+The commands below use its `OSTRAM-env` environment and a new workspace.
 The setup is named, not located, so no command depends on your working directory.
 
 ```
 python -m ostram --workspace workspace/unescap_training example prepare unescap_training
-python -m ostram --workspace workspace/unescap_training --setup unescap_training run --env-name ostram --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --compile-only --skip-pull
-python -m ostram --workspace workspace/unescap_training --setup unescap_training run --env-name ostram --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --skip-pull
-python -m ostram --workspace workspace/unescap_training --setup unescap_training run --env-name ostram --scenarios "C_Target_VRE" --skip-pull
+python -m ostram --workspace workspace/unescap_training --setup unescap_training run --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --compile-only --skip-pull
+python -m ostram --workspace workspace/unescap_training --setup unescap_training run --scenarios "A_Calibrated_BAU,B_Optimised_VRE" --skip-pull
+python -m ostram --workspace workspace/unescap_training --setup unescap_training run --scenarios "C_Target_VRE" --skip-pull
 python -m ostram --workspace workspace/unescap_training example report unescap_training --capture baseline
 python -m ostram --workspace workspace/unescap_training example report unescap_training
 ```

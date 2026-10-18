@@ -26,6 +26,10 @@ summary they need.
   python -m unittest discover -s tests -p "test_*.py"
   ```
 
+  Five tests in `tests/regression/test_materialization_paths.py` create
+  folders named `tmp*` in the folder that holds the clone, and remove them
+  when each test ends. That folder must be writable.
+
 - Changes under `config/`, `inputs/` or `ostram/pipeline/`: build every
   registered scenario with `--compile-only` on `main` and on the branch, in
   separate clones, and compare `workspace/compilation/A2_Output_Params/<S>/`,

@@ -60,7 +60,7 @@ are under the workspace. Terms are in the [glossary](glossary.md).
 
 | Step | Command or module | Reads | Writes |
 |---|---|---|---|
-| Start | `python -m ostram run --skip-pull --env-name <env> --scenarios B_Opt_TxCap150` | `config/setups/registry.json`, the scenario registry in `config/setups/south_asia.yaml`, `environment.yaml` | `logs/<run-id>/run.log` |
+| Start | `python -m ostram run --skip-pull --scenarios B_Opt_TxCap150` | `config/setups/registry.json`, the scenario registry in `config/setups/south_asia.yaml`, `environment.yaml` | `logs/<run-id>/run.log` |
 | Environment | `conda env list`; `conda env create` when the named environment is missing; one check per dependency | `environment.yaml` | the conda environment, when it is missing |
 | DVC | `dvc init` and `dvc pull`; skipped with `--skip-pull` | `dvc.yaml`, `.dvc/config` | `.dvc/` |
 | A1 | `python -B -m ostram.pipeline.preparation.base_inputs`, from `preparation/` | `inputs/osemosys_global/*.csv`, `config/preparation/Config_country_codes.yaml`, `config/preparation/Config_region_consolidation.yaml`, `inputs/preparation/secondary_technologies/Tech_Country_Matrix.xlsx`, the six templates in `inputs/preparation/workbook_templates/`, `config/compilation/Config_MOMF_T1_A.yaml` | `preparation/og_csvs_inputs/`, `preparation/extra_inputs/`, `preparation/A1_Outputs/A1_Outputs_<root>/` for all four roots, a runtime copy of the compilation configuration |
@@ -240,7 +240,7 @@ with the number of scenarios already on disk — so, after completing A, pass
 the remaining selection to one invocation:
 
 ```powershell
-python -m ostram --workspace $workspace run --skip-pull --env-name ostram --scenarios "B_Optimised_VRE,C_Target_VRE" --a-result-seed $aResult
+python -m ostram --workspace $workspace run --skip-pull --scenarios "B_Optimised_VRE,C_Target_VRE" --a-result-seed $aResult
 ```
 
 Driving a campaign as one invocation per scenario instead makes B2 — and
@@ -291,7 +291,7 @@ activated environment:
 ```powershell
 $workspace = Join-Path (Resolve-Path '..').Path 'support-bau-workspace'
 if (Test-Path -LiteralPath $workspace) { throw 'Choose a new empty workspace path' }
-python -m ostram --setup south_asia --workspace $workspace run --env-name ostram --skip-pull --scenarios BAU --verbose
+python -m ostram --setup south_asia --workspace $workspace run --skip-pull --scenarios BAU --verbose
 if ($LASTEXITCODE -ne 0) { throw 'Support BAU preparation/compilation/solve/export failed' }
 ```
 
@@ -320,13 +320,13 @@ and the newly solved A.
 ```powershell
 $workspace = Join-Path (Resolve-Path '..').Path 'w'
 if (Test-Path -LiteralPath $workspace) { throw 'Choose a new empty workspace path' }
-python -m ostram --workspace $workspace run --skip-pull --env-name ostram --scenarios A_Calibrated_BAU --verbose
+python -m ostram --workspace $workspace run --skip-pull --scenarios A_Calibrated_BAU --verbose
 if ($LASTEXITCODE -ne 0) { throw 'A preparation/compilation/solve/export failed' }
 
 $remaining = python -c "from ostram.pipeline.scenarios.registry import load_registry; r=load_registry(); assert len(r.decision_scenarios)==17; print(','.join(n for n in r.decision_scenarios if n!='A_Calibrated_BAU'))"
 if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve the scenario selection' }
 $aResult = Join-Path $workspace 'execution\Executables\A_Calibrated_BAU_0'
-python -m ostram --workspace $workspace run --skip-pull --env-name ostram --scenarios $remaining --a-result-seed $aResult --verbose
+python -m ostram --workspace $workspace run --skip-pull --scenarios $remaining --a-result-seed $aResult --verbose
 if ($LASTEXITCODE -ne 0) { throw 'Remaining portfolio failed' }
 ```
 

@@ -42,7 +42,7 @@ names.
 ## 3. Run a solver-free preparation gate
 
 ```powershell
-python -m ostram run --skip-pull --compile-only --env-name ostram --scenarios A_Calibrated_BAU
+python -m ostram run --skip-pull --compile-only --scenarios A_Calibrated_BAU
 ```
 
 `--compile-only` reaches the final preprocessed text inputs and stops before
@@ -61,7 +61,7 @@ After selecting and configuring a solver in
 `config/execution/Config_MOMF_T1_AB.yaml`:
 
 ```powershell
-python -m ostram run --skip-pull --env-name ostram --scenarios A_Calibrated_BAU
+python -m ostram run --skip-pull --scenarios A_Calibrated_BAU
 ```
 
 The runner conditionally prepares A1/A2 snapshots, materializes the exact
