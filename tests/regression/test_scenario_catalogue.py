@@ -1,7 +1,8 @@
 """The scenario catalogue page matches south_asia.yaml and the scenario registry.
 
 The page documents the delivered scenarios, the rows of its origin table. A
-scenario registered after them needs no change to the page.
+scenario registered after them needs no change to the page, and the generator
+leaves it out until its row is added to the table.
 """
 
 from __future__ import annotations
@@ -9,7 +10,10 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 import re
+import tempfile
 import unittest
+from types import SimpleNamespace
+from unittest import mock
 
 import yaml
 
@@ -68,6 +72,23 @@ class ScenarioCatalogueTests(unittest.TestCase):
             f"`{REGENERATE}` from the repository root for the generated block.",
         )
         self.assertEqual(len(listed), len(set(listed)), "duplicate rows in the origin table")
+
+    def test_generator_leaves_out_a_registered_scenario_without_a_row(self) -> None:
+        generator = _generator()
+        page = generator.PAGE.read_text(encoding="utf-8")
+        real = generator.resolve_paths(project_root=REPO_ROOT)
+        setup = yaml.safe_load(SETUP_FILE.read_text(encoding="utf-8"))
+        setup["scenario_registry"]["decision_scenarios"].append("Z_Unlisted_Test_Scenario")
+        with tempfile.TemporaryDirectory() as folder:
+            copy = Path(folder) / "setup.yaml"
+            copy.write_text(yaml.safe_dump(setup, sort_keys=False), encoding="utf-8")
+            paths = SimpleNamespace(
+                scenario_registry=copy, scenario_config_root=real.scenario_config_root
+            )
+            with mock.patch.object(generator, "resolve_paths", return_value=paths):
+                block = generator.generated_block()
+        self.assertNotIn("Z_Unlisted_Test_Scenario", block)
+        self.assertEqual(generator.current_block(page), block)
 
 
 if __name__ == "__main__":

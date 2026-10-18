@@ -79,9 +79,11 @@ The registry reads the parent and the overlay from the scenario's file. The
 order of `decision_scenarios` is the order in which `run` builds the scenarios.
 
 The [scenario catalogue](reference/scenarios/scenario_catalogue.md) documents
-the delivered scenarios, and the tests check that they come first in the list.
-To add the new scenario to the catalogue as well, add one row for it to the
-catalogue's origin table and run, from the repository root:
+the delivered scenarios, the rows of its origin table, and the tests check that
+they come first in the list. A new scenario does not appear in it, and the
+generator leaves the page unchanged for it. To add the new scenario to the
+catalogue as well, add one row for it to the origin table and run, from the
+repository root:
 
 ```powershell
 python tools/generate_scenario_catalogue.py

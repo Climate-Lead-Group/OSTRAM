@@ -37,8 +37,12 @@ summary they need.
   `docs/requirements.txt`, with `<out-dir>` outside the clone.
 - Docstring-only changes: with docstrings stripped, every module's AST is
   unchanged.
-- When a delivered scenario's file or the scenario list changes, regenerate
-  the scenario catalogue with `python tools/generate_scenario_catalogue.py`.
+- Scenario catalogue: the page lists the delivered scenarios, the rows of its
+  origin table. The generator is safe to run at any time. It rewrites only the
+  generated block and leaves out a registered scenario that has no row in the
+  origin table. A new scenario appears in the catalogue only after its row is
+  added to that table. After a delivered scenario's file changes, run
+  `python tools/generate_scenario_catalogue.py` and commit the page.
 
 ## After changing inputs
 
