@@ -15,9 +15,10 @@ Its top-level sections, in file order, hold the following. Terms are in the
 
 Each derived scenario has its own file, `config/scenarios/<name>/scenario.yaml`.
 It holds `scenario`, `base_scenario`, `description`, `apply_vre_ceiling_layer`,
-the `edits` list and, for `B_Opt_Clipped_GrossImportCap15`, the
-`gross_import_cap` policy. The scenario edits in A3 read it, and B2 reads the
-gross import policy. The `description` and `note` strings are documentation.
+the `edits` list and, optionally, a `gross_import_cap` policy. Any derived
+scenario may have one, and `B_Opt_Clipped_GrossImportCap15` is the delivered
+case. The scenario edits in A3 read the file, and B2 reads the gross import
+policy. The `description` and `note` strings are documentation.
 Nothing reads them. The [scenario edits](scenario-edits.md) page describes the
 edit fields and operations, and the [scenario catalogue](reference/scenarios/scenario_catalogue.md)
 lists every scenario.

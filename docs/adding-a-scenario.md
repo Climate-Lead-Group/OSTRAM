@@ -1,5 +1,9 @@
 # Adding a scenario
 
+To add a scenario, copy a scenario (with `new-scenario` or by hand), write your
+change in the new file, and add one line to `decision_scenarios`. The middle
+step is the scenario itself.
+
 A derived scenario is one file, `config/scenarios/<name>/scenario.yaml`, and one
 line in the scenario list of `config/setups/south_asia.yaml`. It needs no
 workbook row, no code change and no test change. The example adds
@@ -55,6 +59,38 @@ The [scenario edits](scenario-edits.md) page lists the fields and the
 operations. Write the basis of each edit in its `note`, as that page
 describes. An edit that matches nothing stops the run with a message that
 names the edit.
+
+### Which kind of import cap
+
+Two scenarios limit imports, and they work differently. Copy the one that
+matches your case:
+
+- `B_Opt_Clipped_GrossImportCap15` caps the gross imports of any set of
+  countries as a share of each country's annual demand. It has no edits, only
+  a `gross_import_cap` block, which the
+  [scenario edits](scenario-edits.md#gross-import-cap) page describes.
+- `B_Opt_TradeCap15` sets a fixed upper limit on the yearly flow of each import
+  corridor of one country, through edits. Its values come from an earlier
+  model run, and its description and notes label them `ASSUMPTION`.
+
+A policy block has no edits, so it has no `note` of an edit. Write its basis in
+a `note:` line inside the block, in the same form as the note of an edit: an
+external source, or `ASSUMPTION` followed by a short reason, in quotes when it
+holds a colon. The cap reader takes only the four keys of the block, so the
+note does not change the model.
+
+```yaml
+gross_import_cap:
+  countries: [BGD]
+  fraction: 0.15
+  first_year: 2027
+  last_year: 2050
+  note: "ASSUMPTION: test case, a 15 per cent share"
+```
+
+A gross import cap does not appear in the edit log. It appears in the final
+datafile, as the sets and the parameter that the
+[scenario edits](scenario-edits.md#gross-import-cap) page names.
 
 A scenario that changes interconnector directions also has an overlay file in
 its folder, and two more lines in `scenario.yaml`:
