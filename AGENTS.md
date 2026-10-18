@@ -27,7 +27,7 @@ The pipeline runs in this order:
 ## Scenarios
 
 - A root runs the A3 rule scripts named in the Control sheet. Each script reads its YAML from `config/scenarios/<root>/`.
-- A derived scenario copies its root's finished A3 output, applies the VRE ceiling layer, applies its ordered edits from `config/scenarios/<name>/scenario.yaml`, then re-applies the base-year pin. Its parent is always a root. `B_Opt_DirBidir` and `B_Opt_DirContractual` then also get their direction overlay.
+- A derived scenario copies its root's finished A3 output, applies the VRE ceiling layer, applies its ordered edits from `config/scenarios/<name>/scenario.yaml` (after the edits of the scenario its `reuse_edits_from` names, if any), then re-applies the base-year pin. Its parent is always a root. `B_Opt_DirBidir` and `B_Opt_DirContractual` then also get their direction overlay.
 - `C_Target_VRE` and `C_Target_VRE_Clipped` need a solved `A_Calibrated_BAU` result, passed with `--a-result-seed`.
 
 ## Which config is live
@@ -50,6 +50,7 @@ The pipeline runs in this order:
 ## Commands
 
 - Build model inputs without solving: `python -m ostram run --skip-pull --compile-only --env-name <env> --scenarios <name1,name2> [--a-result-seed <dir>]`. `--scenarios` takes one comma-separated list.
+- Create a derived scenario as a copy of another: `python -m ostram new-scenario <new> --from <existing>`. It copies the folder and sets the `scenario:` line; add the name to `decision_scenarios` yourself.
 - Rebuild one derived scenario from an existing root output: `python -B -m ostram.pipeline.scenarios.scenario_edits --scenario <name> --source-scenario <root>`, then `python -m ostram compile-inputs --scenarios <name>`. Direction variants also need the direction overlay (`set_interconnector_direction.run`).
 - Tests, no solver: `python -m unittest discover -s tests -p 'test_*.py'`
 - Documentation: `python -m sphinx -b html docs <out-dir>`, with the packages in `docs/requirements.txt`. Put `<out-dir>` outside the clone; `docs/_build` is not git-ignored.

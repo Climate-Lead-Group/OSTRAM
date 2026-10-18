@@ -69,7 +69,7 @@ under `config/` and fails when a file is added, removed or left unregistered.
 
 | Path | What it holds |
 |---|---|
-| `ostram/__main__.py` | The command line: `run`, `transform`, `compile-inputs`, `inspect-resources`, `example`, `country` and `scenario`. |
+| `ostram/__main__.py` | The command line: `run`, `transform`, `compile-inputs`, `inspect-resources`, `example`, `country`, `scenario` and `new-scenario`. |
 | `ostram/paths.py` | Path resolution: project root, workspace and the sources of record. |
 | `ostram/setups.py`, `ostram/setup_workspace.py` | Setup loading and setup workspaces. |
 | `ostram/examples.py` | The training example commands `example prepare` and `example report`. |
@@ -78,7 +78,7 @@ under `config/` and fails when a file is added, removed or left unregistered.
 | `ostram/reporting/` | The training dashboard, the direction comparison and the summary workbook. |
 | `ostram/pipeline/orchestration.py` | `python -m ostram run`: the environment check, DVC, and the stages A1 to B2 in order. |
 | `ostram/pipeline/preparation/` | A1 in `base_inputs.py`, A2 in `transmission.py`, the country template and validation commands and the secondary-technology helpers. |
-| `ostram/pipeline/scenarios/` | A3: `materializer.py` builds the roots and then the derived scenarios, `transform.py` runs the root stages, `registry.py` validates the scenario registry, `scenario_edits.py` applies the scenario edits, `transformations/` holds the stage scripts and `rules/` holds the 11 rule modules. |
+| `ostram/pipeline/scenarios/` | A3: `materializer.py` builds the roots and then the derived scenarios, `transform.py` runs the root stages, `registry.py` validates the scenario registry, `scenario_edits.py` applies the scenario edits, `new_scenario.py` copies a derived scenario under a new name, `transformations/` holds the stage scripts and `rules/` holds the 11 rule modules. |
 | `ostram/pipeline/compilation/` | B1: `runner.py`, `compiler.py` and `transforms/`. |
 | `ostram/pipeline/execution/` | B2: `runner.py` normalises the CSVs, converts them with otoole and applies the model-file adjustments; `orchestrator.py` writes the matrix, runs the solver and collects results; `preprocess.py`, `model_file_adjustments/`, `gross_import_cap.py`, `annualization.py` and the concatenation modules. |
 | `ostram/resources/compilation/conversion_format.yaml` | The otoole conversion schema. It gives -1 to capacity caps that are absent from the datafile. |

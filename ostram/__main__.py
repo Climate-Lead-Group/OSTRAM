@@ -79,6 +79,12 @@ EXTENDED_ROUTES = {
         help="Run setup-aware scenario preparation operations.",
         exit_policy="main-result",
     ),
+    "new-scenario": Route(
+        module_name="ostram.pipeline.scenarios.new_scenario",
+        program="python -m ostram new-scenario",
+        help="Create a derived scenario as a copy of an existing one.",
+        exit_policy="main-result",
+    ),
 }
 
 

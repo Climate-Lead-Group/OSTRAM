@@ -28,7 +28,7 @@ maps the terms to the names used in the code.
 | Reserve margin | The requirement that the capacity tagged as firm exceeds demand by a set fraction. OSeMOSYS parameter `ReserveMargin`. |
 | Residual capacity | The capacity that exists in the base year and survives in each later year after retirements. Model parameter `ResidualCapacity`. |
 | Root scenario | A scenario built by A1, A2 and the A3 rules named in the Control sheet of the scenario workbook. The roots are `BAU`, `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE`. |
-| Scenario edits | The ordered changes in a derived scenario's file `config/scenarios/<name>/scenario.yaml` that build the scenario from its parent's A-O workbooks. |
+| Scenario edits | The ordered changes in a derived scenario's file `config/scenarios/<name>/scenario.yaml` that build the scenario from its parent's A-O workbooks. With `reuse_edits_from`, the edits of the named scenario come first. |
 | Scenario registry | The `scenario_registry` section of `config/setups/south_asia.yaml`: the roots and the decision scenarios. Each derived scenario's parent and overlay are in its own file, `config/scenarios/<name>/scenario.yaml`. |
 | Security factor | The factor 1.1 in the build-cap formula. It leaves 10 per cent to spare above each technology's share of the required growth. It is a model margin and has no link to energy security. |
 | Shared VRE ceilings | Twenty fixed values of `TotalAnnualMaxCapacity` for solar and onshore wind technologies, applied in every year to every derived scenario. Section `vre_ceilings` of `config/setups/south_asia.yaml`. |

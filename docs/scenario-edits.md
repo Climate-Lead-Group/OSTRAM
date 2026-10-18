@@ -14,7 +14,8 @@ the [glossary](glossary.md).
 2. The shared VRE ceilings are applied, unless the scenario file sets
    `apply_vre_ceiling_layer: false`.
 3. The edits in the file's `edits` list are applied in list order. Each edit
-   sees the changes of the earlier ones.
+   sees the changes of the earlier ones. When the file names another scenario
+   in `reuse_edits_from`, that scenario's edits are applied first.
 4. `A-O_Parametrization.xlsx` is saved and the base-year pin is applied again.
 5. The edit log is written to the target folder.
 
@@ -39,6 +40,10 @@ either `values` or one `op`. The edits recognise year columns from 2020 to
 2060. A changed row whose `Projection.Mode` is blank or `EMPTY` is set to
 `User defined`, so that B1 exports it.
 
+The `note` of an edit is where its basis goes: an external source, as a URL or
+a DOI, or `ASSUMPTION` followed by a short reason. The existing notes are being
+sourced separately.
+
 ## Operations
 
 | Operation | Fields | Effect |
@@ -49,6 +54,30 @@ either `values` or one `op`. The edits recognise year columns from 2020 to
 | `op: set_to_residual` | none | Sets every year to the technology's `ResidualCapacity` on the same sheet. |
 | `op: clamp_to_residual` | optional `residual_source` | Lowers each numeric cell to the technology's `ResidualCapacity` where the cell is higher. With `residual_source: minimum_investment_boundary`, allowed only for `TotalAnnualMinCapacityInvestment`, the bound comes from the scenario workbook. |
 | `op: set_to_residual_factor_floor` | `factor`, `residual_year`, `base_window_floor`, `years` | Sets the listed years to the larger of the factor multiplied by `ResidualCapacity` in `residual_year` and the floor, rounded to six decimals. The target row must exist. |
+| `op: copy_from_tech` | `source_tech` | Sets every year to the value of the same parameter in the `source_tech` row on the same sheet, as that row stands when the edit runs. |
+
+## Reusing another scenario's edits
+
+A scenario file can name another derived scenario whose edits it applies before
+its own:
+
+```yaml
+scenario: B_Opt_IndiaCostsFuel
+base_scenario: B_Optimised_VRE
+reuse_edits_from: B_Opt_IndiaCosts
+edits:
+- sheet: VariableCost
+  techs: [MINCOABGD, MINCOABTN, MINCOALKA, MINCOAMDV, MINCOANPL]
+  param: VariableCost
+  op: copy_from_tech
+  source_tech: MINCOAIND
+```
+
+The named scenario must have its own file under `config/scenarios/`, the same
+`base_scenario`, and no `reuse_edits_from` of its own. Otherwise the build
+stops before it copies the parent, with a message that says which rule failed.
+The named scenario's shared VRE ceilings setting is not used; the reusing
+scenario's own setting applies.
 
 ## The shared VRE ceilings
 
@@ -66,8 +95,9 @@ The edit log is `apply_patches_CHANGES_<stamp>.json` in `A1_Outputs_<scenario>`.
 It records the scenario, its parent, the time stamp, the backup folder, every
 changed cell with its old and new value, every row created, every
 `tech_prefix` member skipped for lack of a row, the number of ceilings
-applied and the record of the base-year pin. The backup folder, when one is
-made, is `A1_Outputs_<scenario>_PREPATCH_<stamp>` beside the target.
+applied, the record of the base-year pin and, for a scenario with
+`reuse_edits_from`, the reused scenario and its number of edits. The backup
+folder, when one is made, is `A1_Outputs_<scenario>_PREPATCH_<stamp>` beside the target.
 
 ## Edits that match nothing
 
@@ -80,7 +110,8 @@ The build stops with an error when an edit changes nothing:
 - a `tech_prefix` edit matches no technology;
 - a `values` edit, or a `multiply` edit with `years`, names a year that is
   not a year column; the message lists the missing years;
-- a shared VRE ceiling finds no `TotalAnnualMaxCapacity` row for its technology.
+- a shared VRE ceiling finds no `TotalAnnualMaxCapacity` row for its technology;
+- a `copy_from_tech` edit finds no row of its `source_tech` for the parameter.
 
 The message names the scenario, the edit and the reason, and suggests the
 closest name when one exists:
@@ -92,6 +123,8 @@ Scenario B_Opt_MyTest: the edit to TotalAnnualMaxCapacity for "PWRSOLBGXX" chang
 The other reasons read `Sheet "<sheet>" has no parameter "<param>".`,
 `No technology starts with "<prefix>".`, `None of the years <years> is a
 column in the workbook.` and `Sheet "<sheet>" has no <param> row for it.`
+A missing `copy_from_tech` source reads `has no source row. Sheet "<sheet>"
+has no <param> row for <source_tech>.`
 The `run` command prints the message and exits with code 1.
 
 ## Rebuilding one derived scenario by hand
