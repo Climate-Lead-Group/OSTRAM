@@ -52,7 +52,7 @@ Mode "uniform" (default):
 Mode "proportional":
     Each tech gets a build cap sized to its share of the 2024 fleet. Total
     headroom is the year-over-year growth in scaled_pool, distributed
-    proportionally and slackened by a security factor.
+    proportionally and slackened by a margin factor.
 
         tech_share(t)     = ResidualCapacity(t, ref_year) / pool(cr, ref_year)
         pool_delta(cr, y) = max(0, scaled_pool(cr, y) - scaled_pool(cr, y-1))
@@ -1522,7 +1522,7 @@ def print_summary(log: dict) -> None:
     print(f"Backup folder : {log.get('backup_dir', '(skipped)')}")
     print(f"Edited file   : {log['file']}")
     print(f"Rule mode     : {BUILD_CAP_RULE_MODE}"
-          + (f"  (security factor = {MARGIN_FACTOR})"
+          + (f"  (margin factor = {MARGIN_FACTOR})"
              if BUILD_CAP_RULE_MODE == "proportional" else ""))
     print(f"Build cap base pct  : {BUILD_CAP_PERCENTAGE_DEFAULT * 100:.3f}% "
           f"(anchored at {DEMAND_REFERENCE_YEAR})")

@@ -107,7 +107,7 @@ settings are in `config/scenarios/<root>/build_cap_rule.yaml`.
 1. Formula. The required growth of a country-region in a year is the increase
    of its demand-scaled fleet from the year before. It is zero when the fleet
    shrinks. Each technology's cap starts as the required growth multiplied by
-   the technology's share of the 2024 fleet and by the security factor.
+   the technology's share of the 2024 fleet and by the margin factor.
 2. Cap multiplier. The cap is multiplied by the factor for the year. Years
    between the listed years are interpolated.
 3. Family limits. A family takes the cap multiplier only up to its family
@@ -126,7 +126,7 @@ both of their caps are set to 9999. Interconnectors are skipped.
 
 | Setting | `A_Calibrated_BAU` | `B_Optimised_VRE` | `C_Target_VRE` |
 |---|---|---|---|
-| Security factor | 1.1 | 1.1 | 1.1 |
+| Margin factor | 1.1 | 1.1 | 1.1 |
 | Cap multiplier | 1.0 in every year | 1.0 to 2027, 3.0 in 2030, 6.0 in 2035, 10.0 in 2040, 15.0 in 2045, 25.0 in 2050 | 1.0 to 2027, 1.1 in 2030, 1.3 in 2035, 1.5 in 2040, 2.0 in 2045, 3.0 in 2050 |
 | Family limits | COA, PET, OIL, BIO and WAS 1.0 | COA, BIO and WAS 1.0; PET and OIL 1.01; NGS 1.2; URN 1.5; HYD and SHP 3.0 | COA, BIO and WAS 1.0; PET and OIL 1.01; NGS 1.2; URN 1.5 |
 | Technology top-up | 0.0 GW | 0.1 GW | 0.1 GW |

@@ -21,6 +21,7 @@ maps the terms to the names used in the code.
 | Family limit | The largest cap multiplier that a technology family may take. A family limit of 1.0 or less makes a locked family. |
 | Gas and oil allowance | The model-file adjustment that replaces a build cap of 0 or 9999 for gas and oil plants with 0.5 GW per year in each country-region. |
 | Locked family | A family with a family limit of 1.0 or less. It keeps its proportional build cap and receives no technology top-up. |
+| Margin factor | The factor 1.1 in the build-cap formula. It leaves 10 per cent to spare above each technology's share of the required growth. It is a model margin and has no link to energy security. |
 | Model-file adjustments | The B2 changes to the solver datafile and the model file after the otoole conversion: days in day type, the storage delay, backstop opening and the gas and oil allowance. |
 | Overlay | A YAML file under `config/scenarios/<scenario>/` that sets each listed interconnector to forward, reverse or bidirectional flow. It is applied after the scenario edits of `B_Opt_DirBidir` and `B_Opt_DirContractual`. Also called the direction overlay. |
 | Parent | The root scenario from which a derived scenario is built. |
@@ -30,7 +31,6 @@ maps the terms to the names used in the code.
 | Root scenario | A scenario built by A1, A2 and the A3 rules named in the Control sheet of the scenario workbook. The roots are `BAU`, `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE`. |
 | Scenario edits | The ordered changes in a derived scenario's file `config/scenarios/<name>/scenario.yaml` that build the scenario from its parent's A-O workbooks. With `reuse_edits_from`, the edits of the named scenario come first. |
 | Scenario registry | The `scenario_registry` section of `config/setups/south_asia.yaml`: the roots and the decision scenarios. Each derived scenario's parent and overlay are in its own file, `config/scenarios/<name>/scenario.yaml`. |
-| Security factor | The factor 1.1 in the build-cap formula. It leaves 10 per cent to spare above each technology's share of the required growth. It is a model margin and has no link to energy security. |
 | Shared VRE ceilings | Twenty fixed values of `TotalAnnualMaxCapacity` for solar and onshore wind technologies, applied in every year to every derived scenario. Section `vre_ceilings` of `config/setups/south_asia.yaml`. |
 | Solver datafile | The final text file that `glpsol` reads: `Executables/<S>_0/Pre_processed_<S>_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt` under `workspace/execution/`. |
 | Source of record | The tracked file whose values the pipeline reads for an input. A generated copy in the workspace is never the source of record. |
@@ -51,7 +51,8 @@ maps the terms to the names used in the code.
 | technology top-up | `technology_top_up_gw` | `config/scenarios/<root>/build_cap_rule.yaml` |
 | adequacy top-up | `adequacy_share_schedule` | `config/scenarios/<root>/build_cap_rule.yaml` |
 | demand-scaled fleet | `scaled_pool` | `build_cap_rule.py` |
-| security factor | `margin_factor` | `config/scenarios/<root>/build_cap_rule.yaml` |
+| margin factor | `margin_factor` | `config/scenarios/<root>/build_cap_rule.yaml` |
+| security factor | `margin_factor` | The earlier name of the margin factor. |
 | scenario edits | `edits`, `scenario_edits.py` | `config/scenarios/<scenario>/scenario.yaml`, `ostram/pipeline/scenarios/` |
 | model-file adjustments | `model_file_adjustments/` | `ostram/pipeline/execution/` |
 | edit log | `apply_patches_CHANGES_<stamp>.json` | `workspace/preparation/A1_Outputs/A1_Outputs_<scenario>/` |
