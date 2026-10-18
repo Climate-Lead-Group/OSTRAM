@@ -169,6 +169,20 @@ applied, the record of the base-year pin and, for a scenario with
 `reuse_edits_from`, the reused scenario and its number of edits. The backup
 folder, when one is made, is `A1_Outputs_<scenario>_PREPATCH_<stamp>` beside the target.
 
+The `cells` list also holds the cells of the shared VRE ceilings, so it is
+longer than the edits of the file suggest. This command shows the cells of one
+parameter:
+
+```powershell
+(Get-Content apply_patches_CHANGES_<stamp>.json -Raw | ConvertFrom-Json).cells |
+  Where-Object { $_.param -eq 'CapitalCost' } | Format-Table tech, year, old, new
+```
+
+The `old` value of a cell is its value when the edit ran. That is the parent's
+value, unless the shared VRE ceilings or an earlier edit of the same file
+changed the cell first. A comparison with the parent therefore needs no build
+of the parent scenario.
+
 ## Edits that match nothing
 
 The build stops with an error when an edit changes nothing:

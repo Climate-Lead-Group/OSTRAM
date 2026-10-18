@@ -18,15 +18,23 @@ summary they need.
 
 ## Tests
 
-- Regression checks are the test command below and, for input changes, the
-  steps in [After changing inputs](#after-changing-inputs).
-- Every change: the solver-free tests pass.
+- Regression checks are the solver-free checks below and, for input changes,
+  the steps in [After changing inputs](#after-changing-inputs).
+- Every change: the solver-free checks pass. This is the one list of them.
+  Other pages link here. They run no solver and build no matrix. Run them from
+  the repository root, in the activated environment:
 
   ```powershell
-  python -m unittest discover -s tests -p "test_*.py"
+  python -B -m compileall -q ostram tests
+  python -B -m unittest discover -s tests -p "test_*.py"
+  python -B -m tests.validation.test_scenarios_lite
+  python -m ostram inspect-resources
+  git diff --check
   ```
 
-  Five tests in `tests/regression/test_materialization_paths.py` create
+  `tests.validation.test_scenarios_lite` validates the seven compact scenarios
+  without a matrix builder or a solver. `git diff --check` needs a Git
+  checkout. Five tests in `tests/regression/test_materialization_paths.py` create
   folders named `tmp*` in the folder that holds the clone, and remove them
   when each test ends. That folder must be writable.
 

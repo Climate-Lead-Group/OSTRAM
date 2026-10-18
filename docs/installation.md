@@ -80,7 +80,8 @@ Windows PowerShell. Terms are in the [glossary](glossary.md).
    cbc -stop
    ```
 
-5. Run the solver-free tests:
+5. Run the install check. The full list of solver-free checks is under
+   [Tests](https://github.com/Climate-Lead-Group/OSTRAM/blob/main/CONTRIBUTING.md#tests) in `CONTRIBUTING.md`.
 
    ```powershell
    python -B -m unittest discover -s tests -p "test_*.py"
@@ -133,11 +134,11 @@ the environment folder.
 ```powershell
 python -m ostram --help
 python -m ostram inspect-resources
-python -B -m unittest discover -s tests -p "test_*.py"
 python -m ostram run --skip-pull --compile-only --scenarios A_Calibrated_BAU
 ```
 
-The last command prepares the base model, builds `A_Calibrated_BAU`, compiles
+The solver-free checks are listed under [Tests](https://github.com/Climate-Lead-Group/OSTRAM/blob/main/CONTRIBUTING.md#tests) in `CONTRIBUTING.md`.
+The last command above prepares the base model, builds `A_Calibrated_BAU`, compiles
 its inputs and stops after the solver datafile. It runs no solver.
 
 From outside the checkout, name the project root explicitly:

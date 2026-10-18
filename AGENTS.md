@@ -32,7 +32,7 @@ The pipeline runs in this order:
 
 ## Which config is live
 
-- Every file under `config/` is read by the pipeline. `tests/regression/test_config_files.py` lists the delivered files and fails when one is missing, when a file is added outside the folder of a newly registered scenario, or when a scenario folder is not registered.
+- Every file under `config/` is read by the pipeline. `tests/regression/test_config_files.py` lists the delivered files. What it checks for a new scenario is in `docs/adding-a-scenario.md`, section "The checks".
 - A root's rule YAML is read only when the Control sheet names the rule script for that root. A3 copies the root's YAMLs into its run folder and each rule reads its own file by name.
 - `config/setups/south_asia.yaml` is the source of record for the scenario registry and the shared VRE ceilings, and each scenario's file for its edits. Their `description` and `note` strings are documentation; nothing reads them.
 - B2 reads `config/execution/Config_MOMF_T1_AB.yaml`, unless `workspace/execution/Config_MOMF_T1_AB.yaml` exists; then that copy and the `Config_MOMF_T1_A.yaml` beside it are read instead.

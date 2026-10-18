@@ -49,8 +49,9 @@ reads it. Stage names and other terms are in the [glossary](glossary.md).
 | `config/scenarios/B_Opt_DirContractual/set_interconnector_direction.yaml` | The overlay of `B_Opt_DirContractual`. | A3, after the scenario edits. |
 
 `BAU` has no folder. Its only rule, the build-cap rule, runs on its built-in
-defaults. The test `tests/regression/test_config_files.py` lists every file
-under `config/` and fails when a file is added, removed or left unregistered.
+defaults. The test `tests/regression/test_config_files.py` lists the delivered files
+under `config/`. See [adding a scenario](adding-a-scenario.md#the-checks) for
+what it checks.
 
 ## inputs
 

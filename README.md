@@ -75,15 +75,8 @@ The [file map](docs/file-map.md) describes each folder and key file.
 
 ## Checks
 
-These commands run no solver and build no matrix.
-
-```powershell
-python -B -m compileall -q ostram tests
-python -B -m unittest discover -s tests -p "test_*.py"
-python -B -m tests.validation.test_scenarios_lite
-python -m ostram inspect-resources
-git diff --check
-```
+The solver-free checks are listed under Tests in
+[`CONTRIBUTING.md`](CONTRIBUTING.md#tests).
 
 ## Documentation
 

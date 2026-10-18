@@ -127,20 +127,39 @@ python tools/generate_scenario_catalogue.py
 
 ## The checks
 
-From the repository root, with the environment's Python:
+From the repository root, in the activated environment:
 
 ```powershell
-python -m unittest discover -s tests -p "test_*.py"
-python -m ostram run --skip-pull --compile-only --env-name <env> --scenarios B_Opt_SolarCapex120
+python -m ostram run --skip-pull --compile-only --scenarios B_Opt_SolarCapex120
 ```
 
-The run prepares the four roots when their post-A2 snapshots are missing,
-builds the parent root and the new scenario, and stops after the solver
-datafile. The edit log is in
-`workspace/preparation/A1_Outputs/A1_Outputs_B_Opt_SolarCapex120/` and the
-solver datafile is in `workspace/execution/Executables/B_Opt_SolarCapex120_0/`.
-A scenario derived from `C_Target_VRE` also needs `--a-result-seed` with a
-solved `A_Calibrated_BAU` result.
+If you created the environment under another name, add `--env-name <name>`.
+The [quickstart](quickstart.md#3-run-a-solver-free-preparation-gate) gives the
+run time and says how to read the output. The run prepares the four roots when
+their post-A2 snapshots are missing, builds the parent root and the new
+scenario, and stops after the solver datafile. A scenario derived from
+`C_Target_VRE` also needs `--a-result-seed` with a solved `A_Calibrated_BAU`
+result. Then look at these files under `workspace/`:
+
+| What | File |
+|---|---|
+| The edit log | `preparation/A1_Outputs/A1_Outputs_B_Opt_SolarCapex120/apply_patches_CHANGES_<stamp>.json` |
+| A compiled parameter | `execution/A2_Outputs_Params_otoole/B_Opt_SolarCapex120/CapitalCost.csv`, with rows `GLOBAL,<technology>,<year>,<value>` |
+| The final datafile | `execution/Executables/B_Opt_SolarCapex120_0/Pre_processed_B_Opt_SolarCapex120_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt` |
+
+Each changed cell in the edit log has an `old` and a `new` value. The `old`
+value is the parent's value, unless the shared VRE ceilings or an earlier edit
+of the same file changed the cell first. So you can compare the compiled value
+with the parent without building a second scenario.
+The [scenario edits](scenario-edits.md#the-edit-log-and-the-backup-folder) page
+shows how to filter the log. The solver-free checks are listed under
+[Tests](https://github.com/Climate-Lead-Group/OSTRAM/blob/main/CONTRIBUTING.md#tests) in `CONTRIBUTING.md`.
+
+The test `tests/regression/test_config_files.py` passes for a new scenario when
+its folder `config/scenarios/<name>/` holds the files you mean to add and the
+name is in `decision_scenarios`. It fails when the folder is not registered,
+and when a file is added anywhere else under `config/`, including the folders
+of the delivered scenarios, unless the file is added to the list in the test.
 
 A new root scenario is a different task. It needs a Control row in the
 scenario workbook, its own rule YAMLs under `config/scenarios/<root>/`, root
