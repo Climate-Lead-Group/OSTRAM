@@ -95,13 +95,19 @@ class RestrictionDependencyContractTests(unittest.TestCase):
             ["A_Calibrated_BAU"],
         )
 
-    def test_south_asia_registry_declares_no_restriction_prerequisites(self) -> None:
+    def test_south_asia_registry_declares_the_bau_prerequisite_for_a(self) -> None:
         registry = load_registry()
+        roots = registry.roots_by_name
+        self.assertEqual(
+            roots["A_Calibrated_BAU"].restriction_dependencies,
+            ("BAU",),
+        )
         for root in registry.roots:
-            self.assertEqual(root.restriction_dependencies, ())
+            if root.name != "A_Calibrated_BAU":
+                self.assertEqual(root.restriction_dependencies, ())
         self.assertEqual(
             registry.required_roots(registry.select("A_Calibrated_BAU")),
-            ("A_Calibrated_BAU",),
+            ("BAU", "A_Calibrated_BAU"),
         )
 
     def test_selection_expansion_matches_the_declared_contract(self) -> None:

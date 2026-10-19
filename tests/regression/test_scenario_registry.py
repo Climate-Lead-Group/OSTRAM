@@ -169,6 +169,7 @@ class ScenarioRegistryTests(unittest.TestCase):
         self.assertEqual(
             registry.required_roots(selected),
             (
+                "BAU",
                 "A_Calibrated_BAU",
                 "B_Optimised_VRE",
                 "C_Target_VRE",
