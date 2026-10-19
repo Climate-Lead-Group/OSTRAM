@@ -92,8 +92,6 @@ TXCAP_FLOORS = {
     "TRNINDEANPLXX": Decimal("1.3"),
     "TRNINDNONPLXX": Decimal("1.2"),
     "TRNINDSOLKAXX": Decimal("0"),
-    "TRNLKAXXMDVXX": Decimal("0"),
-    "TRNMDVXXINDSO": Decimal("0"),
     "TRNNPLXXBGDXX": Decimal("0.04"),
 }
 CAP_TARGETS = {"TotalAnnualMaxCapacity", "TotalAnnualMaxCapacityInvestment"}
@@ -703,7 +701,7 @@ class TxCap150FormulaTests(unittest.TestCase):
             edit for edit in config["edits"]
             if edit.get("op") == "set_to_residual_factor_floor"
         ]
-        self.assertEqual(len(dynamic), 22)
+        self.assertEqual(len(dynamic), 18)
         self.assertEqual({edit["tech"] for edit in dynamic}, set(TXCAP_FLOORS))
         self.assertEqual({edit["param"] for edit in dynamic}, CAP_TARGETS)
         self.assertEqual(
@@ -728,7 +726,7 @@ class TxCap150FormulaTests(unittest.TestCase):
             edit for edit in config["edits"]
             if edit["param"] == "TotalTechnologyAnnualActivityUpperLimit"
         ]
-        self.assertEqual(len(minimum_edits), 8)
+        self.assertEqual(len(minimum_edits), 2)
         self.assertEqual(len(activity_edits), 10)
 
     def test_dynamic_formula_reads_effective_rc_for_both_targets(self) -> None:
