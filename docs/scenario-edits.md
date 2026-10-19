@@ -157,7 +157,8 @@ The cap is applied at compilation. The final datafile holds it as
 `param D4ImportFraction`, in
 `workspace/execution/Executables/<scenario>_0/Pre_processed_<scenario>_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt`.
 A scenario without the block has an empty `set D4ImportCountry`. The edit log
-does not list the cap.
+does not list the cap. The run stops with an error when a scenario holds the
+block and the model file lacks the parameter `D4HistoricalTradeActive`.
 
 ## The edit log and the backup folder
 

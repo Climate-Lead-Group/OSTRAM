@@ -319,6 +319,17 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
     from .gross_import_cap import render_policy
     import_policy = render_policy(input_folder, scenario_name)
     trade_active = historical_trade_activation(input_folder, scenario_name)
+    if trade_active is None:
+        # The import cap is written only beside the trade parameters, so a
+        # model file without them would drop the scenario's cap.
+        scenario_file = resolve_paths().scenario_config_root / scenario_name / 'scenario.yaml'
+        cfg = yaml.safe_load(scenario_file.read_text(encoding='utf8')) if scenario_file.is_file() else {}
+        if cfg.get('gross_import_cap'):
+            raise ValueError(
+                f"Scenario '{scenario_name}' has a gross_import_cap block, but the model file "
+                f"{resolve_paths().maintained_model} lacks the parameter D4HistoricalTradeActive, "
+                "so the cap cannot be written to the solver datafile."
+            )
     context.convert(input_folder, output_file)
     if trade_active is not None:
         datafile = Path(output_file)
