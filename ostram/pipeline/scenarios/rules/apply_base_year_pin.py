@@ -1,4 +1,4 @@
-"""Materialize the generation calibration and retained controls.
+"""Materialize the generation calibration and the capacity corrections.
 
 Only explicit complete keys in the frozen table may change a workbook cell.
 Historical evidence limits follow the documented 0.98/1.02 convention;
@@ -16,7 +16,8 @@ Pairs in GWh: coal (10081,19138), gas (46013,46579), combined oil
 (20650,11797), hydro (610,825). Bounds remain reference * 0.0036 * 0.98/1.02.
 SUPPORT.xlsx Current reference sheet keeps the original observations,
 both saved-source paths/hashes and the averaging method separately.
-The original 787 India/Sri Lanka capacity and investment controls are retained.
+The 787 India/Sri Lanka capacity and investment controls stored from an earlier
+run were removed; no row of the table uses the PWR_MIN_PIN operation.
 The original observations and the supporting evidence are not read in production.
 """
 
