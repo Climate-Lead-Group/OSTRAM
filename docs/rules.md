@@ -75,6 +75,22 @@ The order is load-bearing in these places.
   A derived scenario applies it again after its edits, so that the shared
   ceilings and the edits cannot replace a reviewed value.
 
+## Base-year pin
+
+The pin holds each country's 2023 to 2025 generation by fuel between 98% and
+102% of its reference where both limits apply, and 2026 generation above a
+lower limit only. The workbook `README` sheet, rows 188 and 189, gives the
+references and their sources.
+
+ASSUMPTION: in 2025, as in 2026, Bangladesh generation by fuel has a lower
+limit of 98% of BPDB's FY2024-25 figure (coal 27,040 GWh, gas 44,613 GWh,
+furnace oil 10,860 GWh, hydro 957 GWh, solar 1,222 GWh, wind 99 GWh) and no
+upper limit. Calendar-2025 demand, 105,155 GWh, is 3.9% above BPDB's
+FY2024-25 net generation including imports, 101,187 GWh: the fiscal year runs
+from July 2024 to June 2025, half a year behind the calendar year, while
+demand grows 6.8% from 2024 to 2025, so upper limits at 102% of the fiscal
+figures cannot meet calendar demand.
+
 ## Internal transmission residuals
 
 Each root computes, in every run, the base-year `ResidualCapacity` of
