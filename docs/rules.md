@@ -295,6 +295,18 @@ beyond the plants the workbook lists for those years, because those years are
 history or under construction and their builds are already known. The
 backstop stays open so that a shortfall shows as backstop use.
 
+Committed plants enter in the calendar year of their commercial operation
+date, 2026 at the earliest. In Bangladesh, Patuakhali (1,320 MW coal) and
+Rooppur unit 1 (1,200 MW nuclear) enter in 2026, and Rooppur unit 2
+(1,200 MW) and Rupsha (800 MW gas) in 2027. The workbook's `Secondary_Techs`
+and `Planned_Generation` sheets give the dates and their sources.
+
+ASSUMPTION: Patuakhali (1,320 MW coal), which generated on test from January
+and April 2025 and reached initial operation in September 2025, enters in
+2026, the year of its commercial operation date, because Bangladesh's 2025
+generation follows BPDB's FY2024-25 figures, which include at most its
+test-run output.
+
 B2 applies the lock to the normalised CSVs of every scenario, before the
 otoole conversion, in `ostram/pipeline/execution/base_year_lock.py`. In each
 lock year, the build cap of every technology of the GENERATION family except
