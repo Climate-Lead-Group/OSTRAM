@@ -5,7 +5,8 @@ from __future__ import annotations
 # Read by apply_internal_transmission and apply_internal_tx_losses from the
 # shared ``internal_transmission`` block of Config_country_codes.yaml.
 INTERNAL_TRANSMISSION_KEYS = frozenset({
-    "base_capital_cost", "base_fixed_cost", "re_capex_multiplier",
+    "esmap_capital_cost_usd2010_per_kw", "muv_2010", "muv_2022", "muv_2023",
+    "fixed_cost_share", "gec2_cost_rs_crore", "gec2_capacity_mw", "inr_per_usd_2022",
     "operational_life", "transmission_loss", "residual_peak_margin",
 })
 

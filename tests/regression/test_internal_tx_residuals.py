@@ -81,8 +81,9 @@ def _write_inputs(folder: Path, demand=DEMAND, cf=CF, residual=RESIDUAL) -> None
 
 
 def _write_config(folder: Path, margin=1.2) -> Path:
-    block = {"base_capital_cost": 100, "base_fixed_cost": 4,
-             "re_capex_multiplier": 2.0, "operational_life": 40}
+    block = {"esmap_capital_cost_usd2010_per_kw": 100, "muv_2010": 100, "muv_2022": 100,
+             "muv_2023": 100, "fixed_cost_share": 0.04, "gec2_cost_rs_crore": 10,
+             "gec2_capacity_mw": 1000, "inr_per_usd_2022": 1, "operational_life": 40}
     if margin is not None:
         block[itx.MARGIN_KEY] = margin
     path = folder / itx.CONFIG_NAME

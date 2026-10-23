@@ -46,10 +46,11 @@ Values applied
         PWRTRN<node> = residual_peak_margin x peak - RNWTRN<node>
                 (RNWTRN = margin x peak and PWRTRN = 0 when that is negative)
         RNWNLI/RNWRPO/TRNNLI/TRNRPO = 0          (new-build / repower mechanisms)
-  * CapitalCost / FixedCost, the same in every node:
+  * CapitalCost / FixedCost, the same in every node, computed in every run from
+    the sourced inputs of the YAML block (internal_grid_costs):
         non-RE (PWRTRN/TRNNLI/TRNRPO) = base_capital_cost / base_fixed_cost
         RE     (RNWTRN/RNWNLI/RNWRPO) = base x re_capex_multiplier
-    Each value and its source or ASSUMPTION is in the YAML block.
+    Each input and its source or ASSUMPTION is in the YAML block.
   * OperationalLife = operational_life for all 6 families.
 
 Scope (intentionally narrow): the four params above, on the six internal
@@ -112,11 +113,17 @@ VALUE_COL = "Value"
 
 # Defaults mirror the YAML block; used only if the YAML omits a key.
 DEFAULTS = {
-    "base_capital_cost": 131.15,
-    "base_fixed_cost": 3.93,
-    "re_capex_multiplier": 1.0,
     "operational_life": 40,
 }
+
+# The sourced inputs of the internal grid costs, all required. The costs are
+# computed from them in every run (internal_grid_costs).
+COST_INPUTS = (
+    "esmap_capital_cost_usd2010_per_kw", "muv_2010", "muv_2022", "muv_2023",
+    "fixed_cost_share", "gec2_cost_rs_crore", "gec2_capacity_mw", "inr_per_usd_2022",
+)
+RUPEES_PER_CRORE = 1e7
+KW_PER_MW = 1e3
 
 BACKUP_TAG = "_PRE_INTERNAL_TX_"
 CONFIG_NAME = "Config_country_codes.yaml"
@@ -188,10 +195,38 @@ def has_config_block(config_path: Path) -> bool:
     return bool(data.get(CONFIG_BLOCK))
 
 
-def read_config(config_path: Path) -> dict:
-    """Read the internal_transmission knob block; fall back to DEFAULTS per key.
+def internal_grid_costs(blk: dict) -> dict:
+    """Return the internal grid costs computed from the sourced inputs of ``blk``.
 
-    The residual margin has no default: the residual part stops when it is absent.
+        base_capital_cost   = ESMAP capital cost x MUV(2023) / MUV(2010)        USD2023/kW
+        base_fixed_cost     = fixed_cost_share x base_capital_cost              USD2023/kW/yr
+        re_add_on           = GEC-II cost in rupees / GEC-II capacity in kW
+                              / rupees per USD (2022) x MUV(2023) / MUV(2022)   USD2023/kW
+        re_capex_multiplier = (base_capital_cost + re_add_on) / base_capital_cost
+
+    Raises ValueError naming every missing input.
+    """
+    missing = [k for k in COST_INPUTS if blk.get(k) is None]
+    if missing:
+        raise ValueError(f"{CONFIG_BLOCK}: missing cost inputs: {', '.join(missing)}")
+    v = {k: float(blk[k]) for k in COST_INPUTS}
+    base = v["esmap_capital_cost_usd2010_per_kw"] * v["muv_2023"] / v["muv_2010"]
+    add_on = (v["gec2_cost_rs_crore"] * RUPEES_PER_CRORE / (v["gec2_capacity_mw"] * KW_PER_MW)
+              / v["inr_per_usd_2022"] * v["muv_2023"] / v["muv_2022"])
+    return {
+        "base_capital_cost": base,
+        "base_fixed_cost": v["fixed_cost_share"] * base,
+        "re_add_on": add_on,
+        "re_capex_multiplier": (base + add_on) / base,
+    }
+
+
+def read_config(config_path: Path) -> dict:
+    """Read the internal_transmission knob block and compute the costs from it.
+
+    The operational life falls back to DEFAULTS. The cost inputs have no
+    default: the rule stops when one is absent. The residual margin has no
+    default: the residual part stops when it is absent.
     """
     with open(config_path, "r", encoding="utf-8") as fh:
         data = yaml.safe_load(fh) or {}
@@ -201,6 +236,7 @@ def read_config(config_path: Path) -> dict:
     for k in DEFAULTS:
         if k in blk and blk[k] is not None:
             knobs[k] = blk[k]
+    knobs.update(internal_grid_costs(blk))
     if blk.get(MARGIN_KEY) is not None:
         knobs[MARGIN_KEY] = float(blk[MARGIN_KEY])
     return knobs
@@ -661,11 +697,13 @@ def run_self_test() -> int:
     ok = True
     with tempfile.TemporaryDirectory() as td:
         td = Path(td)
-        # synthetic config
+        # synthetic config: base 100, fixed 4, add-on 100 (10 crore for 1,000 MW
+        # at 1 rupee per dollar), so the RE multiplier is 2
         cfg = {
             "internal_transmission": {
-                "base_capital_cost": 100, "base_fixed_cost": 4,
-                "re_capex_multiplier": 2.0, "operational_life": 40,
+                "esmap_capital_cost_usd2010_per_kw": 100, "muv_2010": 100, "muv_2022": 100,
+                "muv_2023": 100, "fixed_cost_share": 0.04, "gec2_cost_rs_crore": 10,
+                "gec2_capacity_mw": 1000, "inr_per_usd_2022": 1, "operational_life": 40,
             }
         }
         cfg_path = td / CONFIG_NAME
