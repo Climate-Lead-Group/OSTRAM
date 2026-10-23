@@ -29,7 +29,7 @@ maps the terms to the names used in the code.
 | Overlay | A YAML file under `config/scenarios/<scenario>/` that sets each listed interconnector to forward, reverse or bidirectional flow. It is applied after the scenario edits of `B_Opt_DirBidir` and `B_Opt_DirContractual`. Also called the direction overlay. |
 | Parent | The root scenario from which a derived scenario is built. |
 | Setup | A named set of inputs, configuration and scenario registry. `south_asia` is the South Asia model and `unescap_training` is the two-region training model. `config/setups/registry.json` maps each name to its setup file. |
-| Reserve margin | The requirement that the capacity tagged as firm exceeds demand by a set fraction. OSeMOSYS parameter `ReserveMargin`. |
+| Reserve margin | The requirement that the capacity tagged as firm exceeds demand by a set fraction. OSeMOSYS parameter `ReserveMargin`. The demand is plant output, so imports are not counted. |
 | Residual capacity | The capacity that exists in the base year and survives in each later year after retirements. Model parameter `ResidualCapacity`. |
 | Root scenario | A scenario built by A1, A2 and the A3 rules named in the Control sheet of the scenario workbook. The roots are `BAU`, `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE`. |
 | Scenario edits | The ordered changes in a derived scenario's file `config/scenarios/<name>/scenario.yaml` that build the scenario from its parent's A-O workbooks. With `reuse_edits_from`, the edits of the named scenario come first. |
