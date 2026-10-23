@@ -4,7 +4,7 @@
 propagate_timeslice_fabric.py
 
 Propagates the timeslice fabric (shape derived from the WV workbook) from
-SOASIA_OSeMOSYS_WV.xlsx into A-O_Parametrization_wvaligned_v2.xlsx.
+SOASIA_OSeMOSYS_WV.xlsx into A-O_Parametrization_wvaligned.xlsx.
 
 This is a strictly additive post-step that runs after script 4. It does NOT
 modify scripts 1-4. It rewrites only the Yearsplit and DaySplit sheets in the
@@ -31,10 +31,10 @@ A-O conventions preserved:
 
 Inputs:
     SOASIA_OSeMOSYS_WV.xlsx
-    A-O_Parametrization_wvaligned_v2.xlsx
+    A-O_Parametrization_wvaligned.xlsx
 
 Output:
-    A-O_Parametrization_wvaligned_v2_ts20.xlsx   (new file; original untouched)
+    A-O_Parametrization_wvaligned_ts20.xlsx   (new file; original untouched)
 """
 
 from pathlib import Path
@@ -51,8 +51,8 @@ import pandas as pd
 SCRIPT_DIR = Path(os.environ["OSTRAM_STAGE_WORKDIR"]).resolve()
 
 WV_FILE     = SCRIPT_DIR / "SOASIA_OSeMOSYS_WV.xlsx"
-AO_IN       = SCRIPT_DIR / "wvaligned_outputs_v2" / "A-O_Parametrization_wvaligned_v2.xlsx"
-AO_OUT      = SCRIPT_DIR / "wvaligned_outputs_v2" / "A-O_Parametrization_wvaligned_v2_ts20.xlsx"
+AO_IN       = SCRIPT_DIR / "wvaligned_outputs" / "A-O_Parametrization_wvaligned.xlsx"
+AO_OUT      = SCRIPT_DIR / "wvaligned_outputs" / "A-O_Parametrization_wvaligned_ts20.xlsx"
 
 # DaySplit unit conversion: WV fraction-of-year  ->  A-O fraction-of-day
 DAYSPLIT_UNIT_FACTOR = 365.0

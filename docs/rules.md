@@ -255,10 +255,8 @@ given to every interconnector that OSeMOSYS Global does not list. With the
 OSeMOSYS Global rates and the route used for its cost, 800 km of DC sea cable
 with one converter pair, the loss would be 4.1%.
 
-The 0.95 of the Bangladesh links is set in
-`ostram/pipeline/scenarios/transformations/apply_manual_fixes.py`
-(`OAR_CORRECTIONS`); the 0.95 of the other two links is the interconnector
-`OutputActivityRatio` of the workbook's `Fixed_Horizon_Parameters` sheet.
+The 0.95 of these four links is the interconnector `OutputActivityRatio` of
+the workbook's `Fixed_Horizon_Parameters` sheet.
 
 ### Costs
 

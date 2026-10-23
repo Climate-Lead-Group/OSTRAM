@@ -232,12 +232,12 @@ def _run_stage3_chain(root: Path) -> tuple[Path, Path]:
         directory.mkdir(parents=True, exist_ok=True)
     source = stage2 / "A-O_Parametrization_c2a_patched.xlsx"
     _build_cap_fixture(source)
-    aligned = stage1 / "wvaligned_outputs_v2"
+    aligned = stage1 / "wvaligned_outputs"
     aligned.mkdir()
     for name in (
-        "A-O_AR_Model_Base_Year_wvaligned_v2.xlsx",
-        "A-O_AR_Projections_wvaligned_v2.xlsx",
-        "A-O_Demand_wvaligned_v2.xlsx",
+        "A-O_AR_Model_Base_Year_wvaligned.xlsx",
+        "A-O_AR_Projections_wvaligned.xlsx",
+        "A-O_Demand_wvaligned.xlsx",
     ):
         shutil.copy(source, aligned / name)
     authority = root / "_materialized_A_Calibrated_BAU.xlsx"
@@ -382,29 +382,29 @@ class WorkbookRoundTripAndMaterializationTests(unittest.TestCase):
             authority_hash = _sha256(SCENARIO_AUTHORITY)
 
             def stage1(stage1_dir: Path) -> None:
-                aligned = stage1_dir / "wvaligned_outputs_v2"
+                aligned = stage1_dir / "wvaligned_outputs"
                 aligned.mkdir()
                 shutil.copy(
                     stage1_dir / "A-O_Parametrization.xlsx",
-                    aligned / "A-O_Parametrization_wvaligned_v2_ts20.xlsx",
+                    aligned / "A-O_Parametrization_wvaligned_ts20.xlsx",
                 )
                 for source_name, target_name in (
                     (
                         "A-O_AR_Model_Base_Year.xlsx",
-                        "A-O_AR_Model_Base_Year_wvaligned_v2.xlsx",
+                        "A-O_AR_Model_Base_Year_wvaligned.xlsx",
                     ),
                     (
                         "A-O_AR_Projections.xlsx",
-                        "A-O_AR_Projections_wvaligned_v2.xlsx",
+                        "A-O_AR_Projections_wvaligned.xlsx",
                     ),
-                    ("A-O_Demand.xlsx", "A-O_Demand_wvaligned_v2.xlsx"),
+                    ("A-O_Demand.xlsx", "A-O_Demand_wvaligned.xlsx"),
                 ):
                     shutil.copy(stage1_dir / source_name, aligned / target_name)
 
             def stage1b(_wd: Path, stage1_dir: Path, stage1b_dir: Path) -> None:
-                aligned = stage1_dir / "wvaligned_outputs_v2"
+                aligned = stage1_dir / "wvaligned_outputs"
                 shutil.copy(
-                    aligned / "A-O_Parametrization_wvaligned_v2_ts20.xlsx",
+                    aligned / "A-O_Parametrization_wvaligned_ts20.xlsx",
                     stage1b_dir / "A-O_Parametrization.xlsx",
                 )
 

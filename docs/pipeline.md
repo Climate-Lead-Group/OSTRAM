@@ -83,7 +83,7 @@ in a working folder `scenarios/_run_<stamp>/`. The modules are in
 |---|---|---|---|
 | Working folder | `transform` | `inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx`, `config/scenarios/technology_types.csv`, the compilation configuration, the root's rule YAMLs | copies of all four in the working folder; the taxonomy is copied as `TECH_TYPES.csv` |
 | Stage 0 | `scenario_workbooks` | `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx` | `_materialized_<root>.xlsx`, the root's rows merged over the `BAU` rows |
-| Stage 1 | `merge_timeslices`, `extract_ao_extensions`, `ao_extension_decisions`, `update_ao_from_extensions`, `apply_manual_fixes`, `propagate_timeslice_fabric` | the merged workbook, the timeslice workbook, the post-A2 A-O workbooks | `SOASIA_OSeMOSYS_WV.xlsx`, `OSTRAM_AO_Extensions.xlsx`, the aligned A-O workbooks |
+| Stage 1 | `merge_timeslices`, `extract_ao_extensions`, `ao_extension_decisions`, `update_ao_from_extensions`, `propagate_timeslice_fabric` | the merged workbook, the timeslice workbook, the post-A2 A-O workbooks, the `AO_Extension_Decisions` sheet | `SOASIA_OSeMOSYS_WV.xlsx`, `OSTRAM_AO_Extensions.xlsx`, the aligned A-O workbooks |
 | Stage 1b | `insert_reserve_margin`, `add_max_capacity_investment_rule --fill-zeros`, `fix_elc_pmode_revert`, `pre_solver_validation` | the parameter workbook | the parameter workbook; the validation is report-only under `validation_no_mutation` |
 | Stage 2 | `add_ao_c2a`, `fix_pwrpet_clear` | `TECH_TYPES.csv` | `A-O_Parametrization_c2a_patched.xlsx` |
 | Stage 3 | `fix_trn_residuals`, `clear_stale_unbinding_caps`, `cap_trn_to_residual` | the interconnector data of the scenario workbook | the `_FIXED`, `_POST_CAP_RESET` and `_POST_TRN_CAP` workbooks |

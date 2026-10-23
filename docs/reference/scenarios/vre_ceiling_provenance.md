@@ -6,7 +6,7 @@ The applied values are the `vre_ceilings` section of `config/setups/south_asia.y
 
 **India — solar (NISE):**
 - NISE/MNRE state-wise solar potential (2014): **748.98 GWp** (3% of wasteland + Census 2011). https://mnre.gov.in/en/solar-overview/ · PIB https://www.pib.gov.in/Pressreleaseshare.aspx?PRID=2003561
-- NISE/MNRE ground-mounted solar PV potential (2025): **3,343.37 GWp** (6.69% of feasible wasteland ~27,571 km²), released 23 Sep 2025. https://nise.res.in/wp-content/uploads/2025/09/Poster-and-Momento.pdf
+- NISE/MNRE ground-mounted solar PV potential (2025): **3,343.37 GWp** on 27,571 km² of feasible wasteland, 6.69% of the 412,458 km² of identified wasteland (Table 5, total row and the paragraph below it, printed p. 32), released 23 Sep 2025. https://nise.res.in/upload/Solar_PV_potential_ground_mounted_2025.pdf
 - Model uses the **2025 vintage** (India solar ceilings sum ~1,925 GW — a subset of 3,343; impossible under 2014's 749).
 
 **India — wind (NIWE):**

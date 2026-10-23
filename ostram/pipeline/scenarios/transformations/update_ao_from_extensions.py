@@ -14,7 +14,7 @@ Pipeline:
   extract_ao_extensions.py         WV  + A-O             -> Extensions xlsx
   ao_extension_decisions.py        maintained decisions  -> overlaid Extensions
   update_ao_from_extensions.py     Extensions + A-O      -> *_wvaligned    <- THIS
-  apply_manual_fixes.py            *_wvaligned           -> *_wvaligned_v2
+  propagate_timeslice_fabric.py    *_wvaligned           -> Parametrization *_wvaligned_ts20
 
 Design B (non-negotiable)
 -------------------------
@@ -239,6 +239,28 @@ def substitute_code_regions(text, template_code, new_code):
     return out
 
 
+def clone_fuel_code(code, template_code, new_code, produced):
+    """Return the fuel a cloned generator draws, from the template's fuel ``code``.
+
+    For an 11-character PWR clone, a country-level fuel of the template's
+    country (GASIND for template PWRNGSINDEA) takes the new technology's
+    country (GASBGD for PWRNGSBGDXX), and a fuel named after the template's
+    family and the region (HYDINDNO for template PWRHYDINDNO) takes the new
+    family (GEOINDNO for PWRGEOINDNO). The new code is used only when it is in
+    ``produced``, the fuels the A-O Primary sheets supply; otherwise ``code``
+    stays.
+    """
+    t, n = str(template_code), str(new_code)
+    if not isinstance(code, str) or len(t) != 11 or len(n) != 11 or not t.startswith("PWR"):
+        return code
+    cand = code
+    if len(code) == 6 and code[3:] == t[6:9] and t[6:9] != n[6:9]:
+        cand = code[:3] + n[6:9]
+    elif len(code) == 8 and code[:3] == t[3:6] and t[3:6] != n[3:6] and code[3:] == n[6:11]:
+        cand = n[3:6] + code[3:]
+    return cand if cand in produced else code
+
+
 _ZERO_WIDTH_REGION = "@@RNAME@@"  # placeholder unlikely to appear in real data
 
 
@@ -429,6 +451,19 @@ for (label, src, _) in AO_WORKBOOKS:
     for s in xl.sheet_names:
         ao_data[label][s] = pd.read_excel(xl, s)
     print(f"  {label:8s}  {len(ao_data[label])} sheets loaded")
+
+# Fuels the A-O Primary sheets supply, with the name they give each one: a
+# cloned generator's fuel and its name come from here (clone_fuel_code).
+PRIMARY_FUEL_NAMES = {}
+for (label, code_col, name_col) in (("AR_Base", "Fuel.O", "Fuel.O.Name"),
+                                    ("AR_Proj", "Fuel", "Fuel.Name")):
+    df = ao_data[label].get("Primary")
+    if df is None or code_col not in df.columns or name_col not in df.columns:
+        continue
+    for code, name in zip(df[code_col], df[name_col]):
+        if isinstance(code, str) and isinstance(name, str):
+            PRIMARY_FUEL_NAMES.setdefault(code.strip(), name.strip())
+
 
 def sheets_with_template(label, template_code):
     """List of sheet names where this template code appears in the workbook,
@@ -1302,6 +1337,17 @@ for idx, row in include_y.reset_index(drop=True).iterrows():
                         new_vals[h] = substitute_region_names(new_vals.get(h), tmpl, new_code)
                     else:
                         new_vals[h] = substitute_code_regions(new_vals.get(h), tmpl, new_code)
+                # A cloned generator draws the fuel of its own country and
+                # family, under the name the Primary sheets give that fuel.
+                for h in fuel_link_cols:
+                    if not isinstance(h, str) or "Name" in h:
+                        continue
+                    fuel = new_vals.get(h)
+                    own = clone_fuel_code(fuel, tmpl, new_code, PRIMARY_FUEL_NAMES)
+                    if own != fuel:
+                        new_vals[h] = own
+                        if f"{h}.Name" in new_vals:
+                            new_vals[f"{h}.Name"] = PRIMARY_FUEL_NAMES[own]
 
                 # Three-tier lookup -- determine Parameter and Timeslice.
                 # Param/AR_Base/AR_Proj diverge in how Parameter is identified:
