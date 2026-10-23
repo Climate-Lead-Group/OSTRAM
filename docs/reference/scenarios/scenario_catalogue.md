@@ -89,7 +89,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 - Overlay: `config/scenarios/B_Opt_DirContractual/set_interconnector_direction.yaml` from 2027.
 - B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
 - Seed needs: none.
-- Description: The shared VRE ceilings applied to B_Optimised_VRE. Nine interconnectors carry power in one direction only, the direction of their contracts and physical flows. The two Nepal to India interconnectors carry power both ways. Its direction file sets the direction of each interconnector.
+- Description: The shared VRE ceilings applied to B_Optimised_VRE. Seven interconnectors carry power in one direction only, the direction of their contracts and physical flows. The two Nepal to India and the two Bhutan to India interconnectors carry power both ways. Its direction file sets the direction of each interconnector.
 
 ### B_Opt_IndiaCosts
 
@@ -257,7 +257,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 | `B_Optimised_VRE` | The least-cost root: retirement, the build cap with a rising cap multiplier, interconnector relaxation and storage minimum investments. |
 | `B_Opt_Clipped` | `B_Optimised_VRE` with the shared VRE ceilings and nothing else. The other B variants are compared with it. |
 | `B_Opt_DirBidir` | `B_Opt_Clipped` with an overlay that lists no corridor, so every interconnector flows both ways. It is the reference case for `B_Opt_DirContractual`. |
-| `B_Opt_DirContractual` | `B_Opt_Clipped` with an overlay that sets nine corridors to one direction, from their contracts and physical flows, and leaves the two Nepal to India corridors bidirectional. The justification is in the [direction references](interconnector_direction_references.md). |
+| `B_Opt_DirContractual` | `B_Opt_Clipped` with an overlay that sets seven corridors to one direction, from their contracts and physical flows, and leaves the two Nepal to India and the two Bhutan to India corridors bidirectional. The justification is in the [direction references](interconnector_direction_references.md). |
 | `B_Opt_IndiaCosts` | `B_Opt_Clipped` with the capital and fixed costs of the non-India generation and storage technologies set to the India values of the same family and year. The values were first generated from the `B_Optimised_VRE` workbook. |
 | `B_Opt_IndiaCostsFuel` | `B_Opt_IndiaCosts` plus the fuel prices of the non-India MIN technologies set to the India prices. |
 | `B_Opt_SolarCapex130` | `B_Opt_Clipped` with the solar capital cost multiplied by 1.30 in every year. |
