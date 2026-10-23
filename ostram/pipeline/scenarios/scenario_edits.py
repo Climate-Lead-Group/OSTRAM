@@ -61,6 +61,7 @@ scenario YAML edit schema (one dict per edit):
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import yaml
 import math
@@ -266,6 +267,118 @@ def residual_values_for_edit(
     raise ValueError(f"unsupported residual_source {source!r}")
 
 
+class ParentResultError(FileNotFoundError):
+    """A solved parent result that a scenario edit reads is missing or empty."""
+
+
+class ParentResults:
+    """Read the solved parent results a derived scenario's edits use.
+
+    ``paths`` maps each parent scenario to its result folder
+    (``Executables/<parent>_0``); its ``Outputs/<Variable>.csv`` tables are read.
+    A value absent from a table is 0, as the result tables omit zeros.
+    """
+
+    def __init__(self, scenario, paths=None):
+        self.scenario = scenario
+        self.paths = {name: Path(path) for name, path in (paths or {}).items()}
+        self._tables = {}
+
+    def _table(self, parent, variable):
+        key = (parent, variable)
+        if key in self._tables:
+            return self._tables[key]
+        if parent not in self.paths:
+            raise ParentResultError(
+                f"Scenario {self.scenario}: an edit reads the solved {parent} result, "
+                f"which is not a declared result dependency of the scenario."
+            )
+        path = self.paths[parent] / "Outputs" / f"{variable}.csv"
+        if not path.is_file():
+            raise ParentResultError(
+                f"Scenario {self.scenario}: the solved {parent} result has no {path}."
+            )
+        with path.open(encoding="utf-8", newline="") as fh:
+            rows = list(csv.DictReader(fh))
+        if not rows:
+            raise ParentResultError(
+                f"Scenario {self.scenario}: the solved {parent} result table {path} is empty."
+            )
+        self._tables[key] = rows
+        return rows
+
+    def by_tech_year(self, parent, variable):
+        """Return {(technology, year): value} of a TECHNOLOGY x YEAR result table."""
+        out = {}
+        for row in self._table(parent, variable):
+            key = (row["TECHNOLOGY"], int(float(row["YEAR"])))
+            out[key] = out.get(key, 0.0) + float(row["VALUE"])
+        return out
+
+    def value(self, parent, variable, tech, year):
+        """Return the parent's ``variable`` of ``tech`` in ``year`` (0 when absent)."""
+        return self.by_tech_year(parent, variable).get((tech, int(year)), 0.0)
+
+    def production_into(self, parent, tech, node, year):
+        """Return the parent's annual production of ``tech`` into fuels of ``node``."""
+        return sum(
+            float(row["VALUE"])
+            for row in self._table(parent, "ProductionByTechnologyAnnual")
+            if row["TECHNOLOGY"] == tech and row["FUEL"][3:-2] == node
+            and int(float(row["YEAR"])) == int(year)
+        )
+
+    def demand(self, parent, fuel, year):
+        """Return the parent's annual demand of ``fuel`` (sum over time slices)."""
+        return sum(
+            float(row["VALUE"])
+            for row in self._table(parent, "Demand")
+            if row["FUEL"] == fuel and int(float(row["YEAR"])) == int(year)
+        )
+
+
+def base_window_floor(edit, tech, results):
+    """Return the base-window floor of a ``set_to_residual_factor_floor`` edit.
+
+    Either the edit's ``base_window_floor`` or, with ``base_window_result``, the
+    largest ``TotalCapacityAnnual`` of ``tech`` in the solved parent over the
+    years ``base_window_years`` (first and last, inclusive).
+    """
+    if ("base_window_floor" in edit) == ("base_window_result" in edit):
+        raise ValueError(
+            f"{tech}: set exactly one of base_window_floor and base_window_result"
+        )
+    if "base_window_floor" in edit:
+        return finite_nonnegative(edit["base_window_floor"], f"{tech} base_window_floor")
+    first, last = (int(y) for y in edit["base_window_years"])
+    parent = edit["base_window_result"]
+    return max(
+        results.value(parent, "TotalCapacityAnnual", tech, year)
+        for year in range(first, last + 1)
+    )
+
+
+def import_share_caps(edit, results):
+    """Return {(tech, year): cap} for an ``import_share_cap`` edit.
+
+    cap = share x the parent's demand of ``demand_fuel`` that year x the tech's
+    share of the parent's imports into ``importer`` that year. Imports are the
+    parent's production of the listed technologies into the importer's fuels.
+    A year in which the parent imports nothing gives every listed technology a
+    cap of 0.
+    """
+    parent, techs = edit["result"], list(edit["techs"])
+    share = finite_nonnegative(edit["share"], "import_share_cap share")
+    caps = {}
+    for year in (int(y) for y in edit["years"]):
+        imports = {t: results.production_into(parent, t, edit["importer"], year) for t in techs}
+        total = sum(imports.values())
+        demand = results.demand(parent, edit["demand_fuel"], year)
+        for t in techs:
+            caps[(t, year)] = share * demand * imports[t] / total if total > 0 else 0.0
+    return caps
+
+
 def find_any_row_for_tech(ws, col_map, tech):
     """Return the first row of ``tech`` on the sheet, or None when absent."""
     tc = col_map["tech"]
@@ -376,6 +489,7 @@ def apply_edit(
     edit,
     log,
     minimum_boundaries=None,
+    results=None,
 ):
     """Apply one scenario edit to each selected technology and record the changes in the edit log.
 
@@ -385,7 +499,10 @@ def apply_edit(
     validate_residual_source(edit)
     create = bool(edit.get("create_if_absent", False))
     selector = edit.get("tech") or edit.get("tech_prefix") or ", ".join(edit.get("techs", []))
-    if edit.get("op") != "set_to_residual_factor_floor":
+    if results is None:
+        results = ParentResults(log.get("scenario"))
+    import_caps = import_share_caps(edit, results) if edit.get("op") == "import_share_cap" else None
+    if edit.get("op") not in ("set_to_residual_factor_floor", "from_result", "import_share_cap"):
         if "values" in edit:
             named_years = edit["values"] or {}
         else:
@@ -397,6 +514,10 @@ def apply_edit(
     for tech in techs_matching(ws, col_map, edit):
         r = find_row(ws, col_map, tech, param)
         if r is None:
+            if edit.get("op") == "set_to_residual_factor_floor" and edit.get("clamp"):
+                log["skipped"].append({"tech": tech, "param": param,
+                                       "reason": "row absent, nothing to lower"})
+                continue
             if edit.get("op") == "set_to_residual_factor_floor":
                 raise ValueError(f"required target row missing: {tech}/{param}")
             if not create:
@@ -423,10 +544,7 @@ def apply_edit(
             )
             if factor <= 0:
                 raise ValueError(f"{tech}/{param}: factor must be positive")
-            floor = finite_nonnegative(
-                edit["base_window_floor"],
-                f"{tech}/{param} base_window_floor",
-            )
+            floor = base_window_floor(edit, tech, results)
             years = tuple(int(year) for year in edit["years"])
             if not years or len(set(years)) != len(years):
                 raise ValueError(
@@ -444,13 +562,52 @@ def apply_edit(
                 ws.cell(residual_row, year_cols[residual_year]).value,
                 f"effective {tech}/{RES_PARAM}/{residual_year}",
             )
-            formula_value = round(
-                max(round(factor * residual, 6), floor), 6
+            factor_value = round(factor * residual, 6)
+            # A floor read from a solved parent is used exactly: rounded down, it
+            # would cap below the capacity the parent built in the base years.
+            formula_value = (
+                max(factor_value, floor) if "base_window_result" in edit
+                else round(max(factor_value, floor), 6)
             )
             year_set = set(years)
-            newfn = lambda y, old, value=formula_value, yrs=year_set: (
-                value if y in yrs else old
-            )
+            if edit.get("clamp") and "base_window_result" in edit:
+                # Lower the listed years, in order, to the headroom the limit leaves
+                # above the parent's base-year capacity and the minimum investment of
+                # earlier listed years, so the forced builds fit under the limit.
+                headroom = max(formula_value - floor, 0.0)
+                clamped = {}
+                for y in sorted(year_set):
+                    old = ws.cell(r, year_cols[y]).value
+                    if old is None or (isinstance(old, str) and not old.strip()):
+                        continue
+                    clamped[y] = min(float(old), headroom)
+                    headroom = max(headroom - clamped[y], 0.0)
+                newfn = lambda y, old, v=clamped: v.get(y, old)
+            elif edit.get("clamp"):
+                # Lower the existing value to the limit where it exceeds it.
+                def newfn(y, old, value=formula_value, yrs=year_set):
+                    """Return min(``old``, the limit) in the listed years; keep others."""
+                    if y not in yrs or old is None or (isinstance(old, str) and not old.strip()):
+                        return old
+                    return min(float(old), value)
+            else:
+                newfn = lambda y, old, value=formula_value, yrs=year_set: (
+                    value if y in yrs else old
+                )
+        elif edit.get("op") == "from_result":
+            years = {int(year) for year in edit["years"]}
+            missing_years = sorted(years - set(year_cols))
+            if missing_years:
+                raise ValueError(f"{tech}/{param}: target years missing {missing_years}")
+            fixed = edit.get("result_year")
+            values = {
+                y: results.value(edit["result"], edit["variable"], tech,
+                                 int(fixed) if fixed is not None else y)
+                for y in years
+            }
+            newfn = lambda y, old, v=values: v.get(y, old)
+        elif edit.get("op") == "import_share_cap":
+            newfn = lambda y, old, t=tech, v=import_caps: v.get((t, y), old)
         elif "values" in edit:
             newfn = lambda y, old, v=edit["values"]: (
                 v[str(y)] if str(y) in v else (v[y] if y in v else old))
@@ -511,7 +668,10 @@ def apply_edit(
             cell = ws.cell(row=r, column=c)
             old = cell.value
             nv = newfn(y, old)
-            if nv is not None and (old is None or _neq(old, nv)):
+            # A parent result is written exactly, so that edits reading the same
+            # result (minimum and maximum investment) give equal cells.
+            differs = (old != nv) if edit.get("op") == "from_result" else _neq(old, nv)
+            if nv is not None and (old is None or differs):
                 cell.value = nv
                 changed = True
                 log["cells"].append({"tech": tech, "param": param, "year": y,
@@ -651,8 +811,12 @@ def apply_ceiling_layer(wb, log, ceiling_path=CEIL_BASE):
     }
 
 
-def apply_scenario_edits(wb, scenario_inputs, log, minimum_boundaries=None):
-    """Apply the scenario edits listed under ``edits`` in their listed order."""
+def apply_scenario_edits(wb, scenario_inputs, log, minimum_boundaries=None, results=None):
+    """Apply the scenario edits listed under ``edits`` in their listed order.
+
+    ``results`` (ParentResults) holds the solved parent results that edits with
+    ``op: from_result``, ``op: import_share_cap`` or ``base_window_result`` read.
+    """
     for edit in scenario_inputs.get("edits", []):
         ws = wb[edit["sheet"]]
         col_map, year_cols = scan_columns(ws)
@@ -663,6 +827,7 @@ def apply_scenario_edits(wb, scenario_inputs, log, minimum_boundaries=None):
             edit,
             log,
             minimum_boundaries=minimum_boundaries,
+            results=results,
         )
 
 
@@ -713,8 +878,12 @@ def build_scenario(
     configs=CONFIGS,
     ceiling_path=CEIL_BASE,
     authority_path=SOASIA_V18,
+    result_paths=None,
 ):
     """Rebuild one derived scenario from its explicitly declared root.
+
+    ``result_paths`` maps each parent whose solved result the edits read to its
+    result folder; the materializer resolves it from the registry.
 
     ``source`` is retained as a fail-closed compatibility override.  When it
     is supplied it must equal ``scenario YAML::base_scenario``; omitting it uses
@@ -782,6 +951,7 @@ def build_scenario(
         scenario_inputs,
         log,
         minimum_boundaries=minimum_boundaries,
+        results=ParentResults(scenario, result_paths),
     )
     wb.save(tgt_dir / PARAM_FILE)
     wb.close()

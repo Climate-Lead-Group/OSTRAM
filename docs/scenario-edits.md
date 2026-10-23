@@ -79,8 +79,33 @@ delivered scenarios.
 | `op: set_flat` | `value` | Sets every year to the value. |
 | `op: set_to_residual` | none | Sets every year to the technology's `ResidualCapacity` on the same sheet. |
 | `op: clamp_to_residual` | optional `residual_source` | Lowers each numeric cell to the technology's `ResidualCapacity` where the cell is higher. With `residual_source: minimum_investment_boundary`, allowed only for `TotalAnnualMinCapacityInvestment`, the bound comes from the scenario workbook. |
-| `op: set_to_residual_factor_floor` | `factor`, `residual_year`, `base_window_floor`, `years` | Sets the listed years to the larger of the factor multiplied by `ResidualCapacity` in `residual_year` and the floor, rounded to six decimals. The target row must exist. |
+| `op: set_to_residual_factor_floor` | `factor`, `residual_year`, `years`, and either `base_window_floor` or `base_window_result` with `base_window_years`; optional `clamp` | Sets the listed years to the larger of the factor multiplied by `ResidualCapacity` in `residual_year` and the floor, rounded to six decimals. The floor is `base_window_floor`, or the largest `TotalCapacityAnnual` of the technology over `base_window_years` in the solved parent named by `base_window_result`. With `clamp: true` it only lowers cells, and a missing row is skipped: with `base_window_result`, the listed years in order to the headroom the value leaves above the parent's base-year capacity and the earlier listed years; with `base_window_floor`, to the value. Otherwise the target row must exist. |
+| `op: from_result` | `result`, `variable`, `years`, optional `result_year` | Sets the listed years to the technology's `variable` (`TotalCapacityAnnual` or `NewCapacity`) in the solved parent named by `result`, in the same year or in `result_year`. |
+| `op: import_share_cap` | `techs`, `result`, `share`, `demand_fuel`, `importer`, `years` | Sets each listed technology's value in each listed year to `share` times the parent's demand of `demand_fuel` that year times the technology's share of the parent's imports into `importer` that year. A year in which the parent imports nothing gives 0. |
 | `op: copy_from_tech` | `source_tech` | Sets every year to the value of the same parameter in the `source_tech` row on the same sheet, as that row stands when the edit runs. |
+
+## Edits that read a solved parent
+
+`op: from_result`, `op: import_share_cap` and `base_window_result` read the
+result tables of a solved scenario of the same run, from
+`Executables/<parent>_0/Outputs/` under the execution workspace. The scenario
+declares that parent under `derived_dependencies` in
+`config/setups/south_asia.yaml`, with an environment variable that can point to
+another result folder instead. A value missing from a result table is 0, as the
+tables leave out zeros. The run stops before A3 when the folder is missing, and
+an edit stops when the table it reads is missing or empty; both messages name
+the scenario and the parent.
+
+| Scenario | Parent | Environment variable |
+|---|---|---|
+| `B_Opt_TxCap150` | `B_Optimised_VRE` | `OSTRAM_B_OPTIMISED_VRE_RESULT` |
+| `B_Opt_TradeCap15` | `B_Optimised_VRE` | `OSTRAM_B_OPTIMISED_VRE_RESULT` |
+| `A_Calibrated_BAU_Clipped_TxFreeze2026` | `A_Calibrated_BAU_Clipped` | `OSTRAM_A_CALIBRATED_BAU_CLIPPED_RESULT` |
+
+So the parent is solved first, as `A_Calibrated_BAU` is for `C_Target_VRE`; the
+[portfolio sequence](pipeline.md#17-scenario-portfolio) gives the order. The
+factor 1.5 of `B_Opt_TxCap150` and the share 0.15 of `B_Opt_TradeCap15` are the
+scenarios' design settings and stay in their files.
 
 ## Reusing another scenario's edits
 

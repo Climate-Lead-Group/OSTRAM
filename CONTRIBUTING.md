@@ -66,12 +66,17 @@ This applies to changes under `config/`, `inputs/` or `ostram/pipeline/`.
    build each clone from its own root with `PYTHONPATH` set to that root.
 3. In each clone, build every registered scenario. Omit `--scenarios`. The two
    C scenarios need a solved `A_Calibrated_BAU` result: pass the same folder
-   to both clones. The
+   to both clones. `B_Opt_TxCap150` and `B_Opt_TradeCap15` need a solved
+   `B_Optimised_VRE` result and `A_Calibrated_BAU_Clipped_TxFreeze2026` a solved
+   `A_Calibrated_BAU_Clipped` result: set the two environment variables below
+   to the same folders in both clones. The
    [portfolio sequence](docs/pipeline.md#17-scenario-portfolio) shows
-   how to make it.
+   how to make them.
 
    ```powershell
    $env:PYTHONUTF8 = '1'; $env:PYTHONPATH = (Get-Location).Path
+   $env:OSTRAM_B_OPTIMISED_VRE_RESULT = '<folder of B_Optimised_VRE_0>'
+   $env:OSTRAM_A_CALIBRATED_BAU_CLIPPED_RESULT = '<folder of A_Calibrated_BAU_Clipped_0>'
    python -m ostram run --skip-pull --compile-only --env-name <env> --a-result-seed <folder of A_Calibrated_BAU_0>
    ```
 

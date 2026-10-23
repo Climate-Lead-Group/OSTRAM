@@ -6,6 +6,7 @@ import inspect
 import json
 import yaml
 import sys
+import tempfile
 import unittest
 from decimal import Decimal
 from pathlib import Path
@@ -83,17 +84,17 @@ MINIMUM_BOUNDARIES = {
     "TRNBGDXXINDEA": Decimal("2.5"),
     "TRNNPLXXBGDXX": Decimal("0.04"),
 }
-TXCAP_FLOORS = {
-    "TRNBGDXXINDEA": Decimal("8.236183089312995"),
-    "TRNBGDXXINDNE": Decimal("0.32"),
-    "TRNBTNXXBGDXX": Decimal("0"),
-    "TRNBTNXXINDEA": Decimal("5.526"),
-    "TRNBTNXXINDNE": Decimal("0.11"),
-    "TRNINDEANPLXX": Decimal("1.3"),
-    "TRNINDNONPLXX": Decimal("1.2"),
-    "TRNINDSOLKAXX": Decimal("0"),
-    "TRNNPLXXBGDXX": Decimal("0.04"),
-}
+TXCAP_CORRIDORS = (
+    "TRNBGDXXINDEA",
+    "TRNBGDXXINDNE",
+    "TRNBTNXXBGDXX",
+    "TRNBTNXXINDEA",
+    "TRNBTNXXINDNE",
+    "TRNINDEANPLXX",
+    "TRNINDNONPLXX",
+    "TRNINDSOLKAXX",
+    "TRNNPLXXBGDXX",
+)
 CAP_TARGETS = {"TotalAnnualMaxCapacity", "TotalAnnualMaxCapacityInvestment"}
 
 
@@ -700,33 +701,34 @@ class TxCap150FormulaTests(unittest.TestCase):
         dynamic = [
             edit for edit in config["edits"]
             if edit.get("op") == "set_to_residual_factor_floor"
+            and edit["param"] in CAP_TARGETS
         ]
         self.assertEqual(len(dynamic), 18)
-        self.assertEqual({edit["tech"] for edit in dynamic}, set(TXCAP_FLOORS))
-        self.assertEqual({edit["param"] for edit in dynamic}, CAP_TARGETS)
+        self.assertEqual({edit["tech"] for edit in dynamic}, set(TXCAP_CORRIDORS))
         self.assertEqual(
             {(edit["tech"], edit["param"]) for edit in dynamic},
-            {(tech, param) for tech in TXCAP_FLOORS for param in CAP_TARGETS},
+            {(tech, param) for tech in TXCAP_CORRIDORS for param in CAP_TARGETS},
         )
-        for edit in dynamic:
-            with self.subTest(tech=edit["tech"], parameter=edit["param"]):
-                self.assertEqual(_decimal(edit["factor"]), Decimal("1.5"))
-                self.assertEqual(edit["residual_year"], 2023)
-                self.assertEqual(tuple(edit["years"]), STUDY_YEARS)
-                self.assertEqual(
-                    _decimal(edit["base_window_floor"]),
-                    TXCAP_FLOORS[edit["tech"]],
-                )
-
         minimum_edits = [
             edit for edit in config["edits"]
             if edit["param"] == "TotalAnnualMinCapacityInvestment"
         ]
+        for edit in dynamic + minimum_edits:
+            with self.subTest(tech=edit["tech"], parameter=edit["param"]):
+                self.assertEqual(edit["op"], "set_to_residual_factor_floor")
+                self.assertEqual(_decimal(edit["factor"]), Decimal("1.5"))
+                self.assertEqual(edit["residual_year"], 2023)
+                self.assertEqual(tuple(edit["years"]), STUDY_YEARS)
+                self.assertNotIn("base_window_floor", edit)
+                self.assertEqual(edit["base_window_result"], "B_Optimised_VRE")
+                self.assertEqual(edit["base_window_years"], [2023, 2026])
+        self.assertEqual({edit["tech"] for edit in minimum_edits}, set(TXCAP_CORRIDORS))
+        self.assertTrue(all(edit.get("clamp") for edit in minimum_edits))
         activity_edits = [
             edit for edit in config["edits"]
             if edit["param"] == "TotalTechnologyAnnualActivityUpperLimit"
         ]
-        self.assertEqual(len(minimum_edits), 2)
+        self.assertEqual(len(minimum_edits), 9)
         self.assertEqual(len(activity_edits), 10)
 
     def test_dynamic_formula_reads_effective_rc_for_both_targets(self) -> None:
@@ -736,12 +738,22 @@ class TxCap150FormulaTests(unittest.TestCase):
             edit for edit in config["edits"]
             if edit.get("op") == "set_to_residual_factor_floor"
             and edit["tech"] == "TRNBTNXXINDNE"
+            and edit["param"] in CAP_TARGETS
         ]
         workbook, worksheet = _edit_fixture("TRNBTNXXINDNE", 0.170)
         columns, year_columns = module.scan_columns(worksheet)
         log = _edit_log()
-        for edit in edits:
-            module.apply_edit(worksheet, columns, year_columns, edit, log)
+        with tempfile.TemporaryDirectory() as parent:
+            outputs = Path(parent) / "Outputs"
+            outputs.mkdir()
+            (outputs / "TotalCapacityAnnual.csv").write_text(
+                "REGION,TECHNOLOGY,YEAR,VALUE\n"
+                "GLOBAL,TRNBTNXXINDNE,2023,0.17\nGLOBAL,TRNBTNXXINDNE,2026,0.2\n",
+                encoding="utf-8",
+            )
+            results = module.ParentResults("B_Opt_TxCap150", {"B_Optimised_VRE": parent})
+            for edit in edits:
+                module.apply_edit(worksheet, columns, year_columns, edit, log, results=results)
         for parameter in CAP_TARGETS:
             row = module.find_row(worksheet, columns, "TRNBTNXXINDNE", parameter)
             self.assertIsNotNone(row)

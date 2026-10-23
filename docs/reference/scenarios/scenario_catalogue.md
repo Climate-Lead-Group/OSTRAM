@@ -168,32 +168,32 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 
 - Parent: `B_Optimised_VRE`.
 - Shared VRE ceilings: applied.
-- Scenario edits: 6.
+- Scenario edits: 3.
 - Overlay: none.
 - B2 policy: the historical trade constraints are active; CPLEX numerical emphasis.
 - Seed needs: none.
-- Description: The shared VRE ceilings applied to B_Optimised_VRE. The yearly flow on Bangladesh's four import interconnectors has an upper limit from 2027 to 2050, with no allowance for exports. The activity of Bangladesh's new and repowered internal lines (TRNNLIBGDXX, TRNRPOBGDXX) is set to zero from 2027. ASSUMPTION: the limits were worked out once from an earlier model run, as 15 per cent of Bangladesh's demand split by each interconnector's share of imports in that run. They cannot be reproduced from the repository. This scenario is not the gross import cap of B_Opt_Clipped_GrossImportCap15.
+- Description: The shared VRE ceilings applied to B_Optimised_VRE. From 2027 to 2050, the yearly flow on each of Bangladesh's four import interconnectors is at most 15 per cent of Bangladesh's demand that year (ELCBGDXX03) times that interconnector's share of Bangladesh's imports that year in the solved B_Optimised_VRE of the same run, with no allowance for exports. A year in which that result imports nothing gives each interconnector a limit of zero. The run stops when that result is missing. The activity of Bangladesh's new and repowered internal lines (TRNNLIBGDXX, TRNRPOBGDXX) is set to zero from 2027. This scenario is not the gross import cap of B_Opt_Clipped_GrossImportCap15.
 
 | Sheet | Parameter | Operation | Technologies |
 |---|---|---|---|
-| Secondary Techs | `TotalTechnologyAnnualActivityUpperLimit` | values | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNNPLXXBGDXX |
+| Secondary Techs | `TotalTechnologyAnnualActivityUpperLimit` | import_share_cap | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNNPLXXBGDXX |
 | Demand Techs | `TotalTechnologyAnnualActivityUpperLimit` | values | TRNNLIBGDXX, TRNRPOBGDXX |
 
 ### B_Opt_TxCap150
 
 - Parent: `B_Optimised_VRE`.
 - Shared VRE ceilings: applied.
-- Scenario edits: 30.
+- Scenario edits: 37.
 - Overlay: none.
 - B2 policy: the historical trade constraints are active.
 - Seed needs: none.
-- Description: The shared VRE ceilings applied to B_Optimised_VRE. From 2027, the TotalAnnualMaxCapacity and TotalAnnualMaxCapacityInvestment of every cross-border interconnector are the larger of 1.5 times its 2023 residual capacity and its capacity in the base years 2023 to 2026. The base years keep the values of B_Optimised_VRE. The base-year floor is needed because capacity built in the base years lasts into the study period, and the base-year pin needs it. TotalAnnualMinCapacityInvestment is lowered where it would exceed the new limit. Interconnectors inside India are unchanged, and interconnectors with no residual capacity that were never built stay closed. The activity of the new and repowered internal lines outside India (TRNNLI, TRNRPO) is set to zero from 2027. ASSUMPTION: the base-year capacities and the minimum investments were worked out once from an earlier model run. They cannot be reproduced from the repository.
+- Description: The shared VRE ceilings applied to B_Optimised_VRE. From 2027, the TotalAnnualMaxCapacity and TotalAnnualMaxCapacityInvestment of every cross-border interconnector are the larger of 1.5 times its 2023 residual capacity and its capacity in the base years 2023 to 2026. The base-year capacity is the largest TotalCapacityAnnual of 2023 to 2026 in the solved B_Optimised_VRE of the same run; the run stops when that result is missing. The base years keep the values of B_Optimised_VRE. The base-year floor is needed because capacity built in the base years lasts into the study period, and the base-year pin needs it. TotalAnnualMinCapacityInvestment is lowered where, with the base-year capacity and the earlier minimum investment, it would exceed the new limit. Interconnectors inside India are unchanged, and interconnectors with no residual capacity that were never built stay closed. The activity of the new and repowered internal lines outside India (TRNNLI, TRNRPO) is set to zero from 2027.
 
 | Sheet | Parameter | Operation | Technologies |
 |---|---|---|---|
 | Secondary Techs | `TotalAnnualMaxCapacity` | set_to_residual_factor_floor | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNNPLXXBGDXX |
 | Secondary Techs | `TotalAnnualMaxCapacityInvestment` | set_to_residual_factor_floor | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNNPLXXBGDXX |
-| Secondary Techs | `TotalAnnualMinCapacityInvestment` | values | TRNBTNXXBGDXX, TRNNPLXXBGDXX |
+| Secondary Techs | `TotalAnnualMinCapacityInvestment` | set_to_residual_factor_floor | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNNPLXXBGDXX |
 | Demand Techs | `TotalTechnologyAnnualActivityUpperLimit` | values | TRNNLIBGDXX, TRNNLIBTNXX, TRNNLILKAXX, TRNNLIMDVXX, TRNNLINPLXX, TRNRPOBGDXX, TRNRPOBTNXX, TRNRPOLKAXX, TRNRPOMDVXX, TRNRPONPLXX |
 
 ### C_Target_VRE
@@ -221,17 +221,19 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 
 - Parent: `A_Calibrated_BAU`.
 - Shared VRE ceilings: applied.
-- Scenario edits: 23.
+- Scenario edits: 37.
 - Overlay: none.
 - B2 policy: the historical trade constraints are active.
 - Seed needs: none.
-- Description: The shared VRE ceilings applied to A_Calibrated_BAU. From 2027, the capacity of each of the eleven international interconnectors has an upper limit equal to its capacity at the end of 2026, including interconnectors with no capacity. New investment in these interconnectors in 2023 to 2026 is fixed. ASSUMPTION: the end-2026 capacities and the 2023 to 2026 investments were worked out once from an earlier model run of A_Calibrated_BAU_Clipped. They cannot be reproduced from the repository and are not recalculated.
+- Description: The shared VRE ceilings applied to A_Calibrated_BAU. From 2027, the capacity of each of the eleven international interconnectors has an upper limit equal to its capacity at the end of 2026 (TotalCapacityAnnual 2026) in the solved A_Calibrated_BAU_Clipped of the same run, including interconnectors with no capacity. New investment in these interconnectors in 2023 to 2026 is fixed to that result's NewCapacity. The committed investments after 2026 in TRNBTNXXBGDXX (2035) and TRNNPLXXBGDXX (2033) are set to zero, because the capacity is frozen. The run stops when the solved A_Calibrated_BAU_Clipped result is missing.
 
 | Sheet | Parameter | Operation | Technologies |
 |---|---|---|---|
-| Secondary Techs | `TotalAnnualMaxCapacity` | values | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNNPLXXBGDXX |
-| Secondary Techs | `TotalAnnualMinCapacityInvestment` | values | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNINDNONPLXX, TRNMDVXXINDSO, TRNNPLXXBGDXX |
-| Secondary Techs | `TotalAnnualMaxCapacityInvestment` | values | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNNPLXXBGDXX |
+| Secondary Techs | `TotalAnnualMaxCapacity` | from_result | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNLKAXXMDVXX, TRNMDVXXINDSO, TRNNPLXXBGDXX |
+| Secondary Techs | `TotalAnnualMinCapacityInvestment` | from_result | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNLKAXXMDVXX, TRNMDVXXINDSO, TRNNPLXXBGDXX |
+| Secondary Techs | `TotalAnnualMaxCapacityInvestment` | from_result | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNLKAXXMDVXX, TRNMDVXXINDSO, TRNNPLXXBGDXX |
+| Secondary Techs | `TotalAnnualMinCapacityInvestment` | values | TRNBTNXXBGDXX, TRNNPLXXBGDXX |
+| Secondary Techs | `TotalAnnualMaxCapacityInvestment` | values | TRNBTNXXBGDXX, TRNNPLXXBGDXX |
 
 ### B_Opt_Clipped_GrossImportCap15
 

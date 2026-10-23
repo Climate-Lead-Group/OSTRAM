@@ -313,8 +313,10 @@ restriction inheritance. The portfolio does not require a BAU solve.
 Use an empty, local workspace and an editable installation of this checkout.
 The runner's default selection includes support BAU, and its single A3 pass
 does not solve A before materializing C. Select the decision cases explicitly
-and complete A first. These two invocations use only maintained checkout inputs
-and the newly solved A.
+and complete A first, then the parents of the corridor scenarios,
+`B_Optimised_VRE` and `A_Calibrated_BAU_Clipped`. These three invocations use
+only maintained checkout inputs and the newly solved results of the same
+workspace.
 
 ```powershell
 $workspace = Join-Path (Resolve-Path '..').Path 'w'
@@ -322,15 +324,18 @@ if (Test-Path -LiteralPath $workspace) { throw 'Choose a new empty workspace pat
 python -m ostram --workspace $workspace run --skip-pull --scenarios A_Calibrated_BAU --verbose
 if ($LASTEXITCODE -ne 0) { throw 'A preparation/compilation/solve/export failed' }
 
-$remaining = python -c "from ostram.pipeline.scenarios.registry import load_registry; r=load_registry(); assert len(r.decision_scenarios)==17; print(','.join(n for n in r.decision_scenarios if n!='A_Calibrated_BAU'))"
-if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve the scenario selection' }
 $aResult = Join-Path $workspace 'execution\Executables\A_Calibrated_BAU_0'
+python -m ostram --workspace $workspace run --skip-pull --scenarios "B_Optimised_VRE,A_Calibrated_BAU_Clipped" --a-result-seed $aResult --verbose
+if ($LASTEXITCODE -ne 0) { throw 'Parents of the corridor scenarios failed' }
+
+$remaining = python -c "from ostram.pipeline.scenarios.registry import load_registry; r=load_registry(); assert len(r.decision_scenarios)==17; print(','.join(n for n in r.decision_scenarios if n not in ('A_Calibrated_BAU','B_Optimised_VRE','A_Calibrated_BAU_Clipped')))"
+if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve the scenario selection' }
 python -m ostram --workspace $workspace run --skip-pull --scenarios $remaining --a-result-seed $aResult --verbose
 if ($LASTEXITCODE -ne 0) { throw 'Remaining portfolio failed' }
 ```
 
 If the environment has another name, pass that name with `--env-name` in
-both `run` invocations. Confirm A's solver status and
+every `run` invocation. Confirm the solver status of A and the two parents and
 feasibility before allowing dependent materialization. `--compile-only` cannot
 create this result dependency. For a solver-free single-case preparation check,
 use `run --skip-pull --compile-only --scenarios A_Calibrated_BAU` in another
