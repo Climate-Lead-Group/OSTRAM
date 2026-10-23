@@ -788,8 +788,10 @@ def stage_internal_tx_losses(s5: Path) -> None:
     0.03 -> 0.97) on the internal families' Output rows in the A-O_AR files'
     'Demand Techs' sheet, matching how the interconnectors carry per-corridor
     losses, and multiplies the SpecifiedAnnualDemand of every demand row whose
-    Measured_at is bus-bar in the materialized template by the same factor.
-    Runs after the internal-tx cost stage; interconnectors, DSPTRN, generators
+    Measured_at is bus-bar in the materialized template by the same factor, and
+    sets the input of every interconnector mode sent from a bus-bar node to the
+    same factor, because a bus-bar requirement already holds the losses that
+    export flows cause. Runs after the internal-tx cost stage; DSPTRN, generators
     and storage untouched.
     """
     script = RULES_SCRIPTS_DIR / "apply_internal_tx_losses.py"
