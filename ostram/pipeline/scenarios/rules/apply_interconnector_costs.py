@@ -21,7 +21,8 @@ the sheet's values, across two sheets with different layouts:
 Scope (intentionally narrow): CapitalCost, FixedCost, OperationalLife only.
 ResidualCapacity and the *Max*Capacity/Investment caps are owned by
 fix_trn_residuals / cap_trn_to_residual / relax_interconnectors and are left
-untouched; TransmissionLossFactor / CapacityFactor are out of scope.
+untouched. The sheet holds no capacity factor or loss rows: interconnectors
+take capacity factor 1 and their OutputActivityRatio losses.
 
 Scenario support: when run inside A3, the template read is the per-scenario
 MATERIALIZED template ($OSTRAM_TEMPLATE_PATH), which already has BAU + any
