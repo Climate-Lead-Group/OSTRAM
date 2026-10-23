@@ -32,6 +32,18 @@ Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Guides
+
+   guides/index
+   guides/transmission-costs
+   guides/internal-expansion
+   guides/import-caps
+   guides/build-limits
+   guides/checking-a-run
+   guides/known-limitations
+
+.. toctree::
+   :maxdepth: 2
    :caption: Reference
 
    configuration
