@@ -4,6 +4,7 @@ Only explicit complete keys in the frozen table may change a workbook cell.
 Historical evidence limits follow the documented 0.98/1.02 convention;
 Nepal fallback is lower-only. The 2026 transition is lower-only at 0.95,
 except two waste-mapping waivers (2023-2026 lower limits zero).
+Bangladesh 2025 is lower-only at 0.98 of BPDB's FY2024-25 references.
 ABSENT operations retire replay values and expressly removed upper bounds.
 Original observations and unresolved source cells remain unchanged.
 Bangladesh 2023 coal/gas/combined-oil/hydro references are provisional
