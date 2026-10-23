@@ -242,7 +242,7 @@ def _parse_rule(row: dict[str, str], row_number: int) -> PinRule:
             raise ValueError(f"{label}: invalid physical input correction")
         operation_kind = CAPACITY_OPERATION
     elif operation == "D4_INPUT_CORRECTION":
-        if parameter != P_MAX_CAP or technology not in {"TRNINDNOINDWE", "TRNINDEAINDWE"} or year not in CAPACITY_YEARS or not present:
+        if parameter not in {P_MAX_CAP, P_MIN_INV} or technology not in {"TRNINDNOINDWE", "TRNINDEAINDWE"} or year not in CAPACITY_YEARS or not present:
             raise ValueError(f"{label}: invalid input correction")
         operation_kind = CAPACITY_OPERATION
     elif operation == "D4_R2_RESIDUAL":
