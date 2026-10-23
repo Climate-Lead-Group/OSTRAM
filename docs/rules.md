@@ -23,7 +23,7 @@ settings files live in `config/scenarios/<root>/`.
 | `apply_interconnector_costs.py` | the `Interconnector_Params` sheet of the scenario workbook | Overwrites `CapitalCost`, `FixedCost` and `OperationalLife` of the interconnectors with the sheet's values. The sheet holds one central capital and fixed cost per corridor, constant in real 2023 USD over 2023 to 2050. The `Transmission_Cost_Basis` sheet of the same workbook holds their sources, assumptions and calculations; B1 does not read it. The six cost bounding scenarios replace these costs through their scenario edits; see [Costs](#costs). |
 | `apply_internal_transmission.py` | `Config_country_codes.yaml` | Writes `CapitalCost`, `FixedCost` and `OperationalLife` of the six internal transmission families, 60 technologies in all, and, after the base-year pin, their `ResidualCapacity`, computed as described [below](#internal-transmission-residuals). |
 | `apply_internal_tx_losses.py` | `Config_country_codes.yaml` and the `Measured_at` column of the `Demand_Projection` sheet | Sets the output activity ratio of the internal transmission families to 1 minus the loss setting `internal_transmission.transmission_loss`, which is 0.03 on `main`, writes each demand row measured at the bus bar as its workbook value times 1 minus the loss, and sets the input of each interconnector mode sent from a bus-bar node to 1 minus the loss, as described [below](#internal-transmission-losses-and-bus-bar-demand). |
-| `apply_base_year_pin.py` | `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | Writes the reviewed 2023 to 2026 values of the table over the matching workbook rows. |
+| `apply_base_year_pin.py` | `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | Writes the table's values over the matching workbook rows: 2023 to 2026, and up to 2050 residual capacity, corridor capacity and three required builds. [Where the base-year values come from](reference/base_year_value_sources.md) gives the source of each value. |
 | `set_interconnector_direction.py` | `config/scenarios/<scenario>/set_interconnector_direction.yaml` | Zeroes one flow mode of each listed interconnector, so that power flows one way. The empty map of `B_Opt_DirBidir` changes nothing. |
 
 ## Order of the rules
@@ -80,8 +80,7 @@ The order is load-bearing in these places.
 
 The pin holds each country's 2023 to 2025 generation by fuel between 98% and
 102% of its reference where both limits apply, and 2026 generation above a
-lower limit only. The workbook `README` sheet, rows 188 and 189, gives the
-references and their sources.
+lower limit only. [Where the base-year values come from](reference/base_year_value_sources.md) gives each reference and its source.
 
 ASSUMPTION: in 2025 Bangladesh generation by fuel has a lower limit of 98%
 of BPDB's FY2024-25 figure (coal 27,040 GWh, gas 44,613 GWh,
