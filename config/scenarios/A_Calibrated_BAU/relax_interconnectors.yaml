@@ -1,14 +1,21 @@
 ## relax_interconnectors.yaml: A_Calibrated_BAU
 ##
-## Same evidence-based corridor overrides as B_Optimised_VRE (these
-## represent the project pipeline in the Interconnectors sheet of the scenario workbook),
-## but with headroom_factor: 1.0 (no slack beyond the pipeline data).
+## The same per-corridor overrides as B_Optimised_VRE. Each value is the
+## corridor's pipeline total for that year, in GW: existing capacity plus the
+## projects in the Interconnectors sheet of the scenario workbook, by
+## commissioning year. relax_interconnectors.py uses it as the most new
+## capacity the link may add in that year (TotalAnnualMaxCapacityInvestment),
+## interpolated between the listed years, held after the last one and never
+## below the link's residual capacity. A schedule of 0 in every year allows no
+## new capacity. For every other overridden link the rule sets
+## TotalAnnualMaxCapacity to 9999, a finite cap, so total size is set by cost.
 ##
-## B_Opt uses 1.5× on the 3 India-internal corridors without project
-## data; A_CalBAU uses 1.0× (strict pipeline only).
+## The three India-internal corridors without project data have no override.
+## Their build cap is headroom_factor times residual capacity: 1.0 here,
+## 1.5 in B_Optimised_VRE.
 
 mode: multiplicative
-headroom_factor: 1.0      # pipeline only, no extra slack
+headroom_factor: 1.0      # build cap of corridors without an override = factor x residual capacity
 
 overrides:
   # ── New corridors (currently zero capacity) ──

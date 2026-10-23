@@ -1,5 +1,10 @@
 ## relax_interconnectors.yaml: C_Target_VRE
-## IDENTICAL to B_Optimised_VRE. Same evidence-based pipeline caps.
+## The same settings and overrides as B_Optimised_VRE. Each override value is
+## the corridor's pipeline total for that year, in GW (existing capacity plus
+## listed projects by commissioning year), used as the most new capacity the
+## link may add in that year. Total link size is set by cost: the rule sets
+## TotalAnnualMaxCapacity of each overridden link with new investment to 9999,
+## a finite cap. The B_Optimised_VRE file explains the rule in full.
 ##
 ## Sources: IEPMP 2023 + BPC PDB 2024 + NEA Annual 2024/25 + NEP Vol.II + LTGEP 2025-2044.
 
