@@ -77,8 +77,8 @@ registry selection, compiles it, and executes B2. Use `--scenarios` for an
 explicit comma-separated selection and the documented `--skip-*` flags when a
 stage is already satisfied.
 
-For all 17 decision cases, use the
-[portfolio sequence](pipeline.md#17-scenario-portfolio): solve A, then
+For all 23 decision cases, use the
+[portfolio sequence](pipeline.md#23-scenario-portfolio): solve A, then
 materialize and solve the remaining decision cases using that new A result.
 Support `BAU` has a separate [standalone execution command](pipeline.md#support-bau)
 and permits existing transmission plus committed additions. It is not the

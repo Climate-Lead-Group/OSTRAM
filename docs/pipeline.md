@@ -298,12 +298,12 @@ if ($LASTEXITCODE -ne 0) { throw 'Support BAU preparation/compilation/solve/expo
 This performs A1, A2, A3, B1, B2, export and cost reconciliation from maintained
 checkout inputs, without an A-result seed.
 Support `BAU` is a separate case; it is neither `A_Calibrated_BAU` nor a member
-of the 17-case portfolio. A full portfolio run still needs the A-first
+of the 23-case portfolio. A full portfolio run still needs the A-first
 sequence below.
 
-### 17-scenario portfolio
+### 23-scenario portfolio
 
-The `south_asia` registry distinguishes support `BAU` from the 17 decision
+The `south_asia` registry distinguishes support `BAU` from the 23 decision
 scenarios. A1, A2, A3, B1 and B2
 name stages; B1 does not mean `B_Optimised_VRE`.
 
@@ -329,7 +329,7 @@ $aResult = Join-Path $workspace 'execution\Executables\A_Calibrated_BAU_0'
 python -m ostram --workspace $workspace run --skip-pull --scenarios "B_Optimised_VRE,A_Calibrated_BAU_Clipped" --a-result-seed $aResult --verbose
 if ($LASTEXITCODE -ne 0) { throw 'Parents of the corridor scenarios failed' }
 
-$remaining = python -c "from ostram.pipeline.scenarios.registry import load_registry; r=load_registry(); assert len(r.decision_scenarios)==17; print(','.join(n for n in r.decision_scenarios if n not in ('A_Calibrated_BAU','B_Optimised_VRE','A_Calibrated_BAU_Clipped')))"
+$remaining = python -c "from ostram.pipeline.scenarios.registry import load_registry; r=load_registry(); assert len(r.decision_scenarios)==23; print(','.join(n for n in r.decision_scenarios if n not in ('A_Calibrated_BAU','B_Optimised_VRE','A_Calibrated_BAU_Clipped')))"
 if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve the scenario selection' }
 python -m ostram --workspace $workspace run --skip-pull --scenarios $remaining --a-result-seed $aResult --verbose
 if ($LASTEXITCODE -ne 0) { throw 'Remaining portfolio failed' }
