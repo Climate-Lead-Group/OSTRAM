@@ -22,7 +22,7 @@ settings files live in `config/scenarios/<root>/`.
 | `add_storage_min_investment.py` | `storage_floors.yaml` | Writes small minimum investments for the storage families per year. |
 | `apply_interconnector_costs.py` | the `Interconnector_Params` sheet of the scenario workbook | Overwrites `CapitalCost`, `FixedCost` and `OperationalLife` of the interconnectors with the sheet's values. The sheet holds one central capital and fixed cost per corridor, constant in real 2023 USD over 2023 to 2050. The `Transmission_Cost_Basis` sheet of the same workbook holds their sources, assumptions and calculations; B1 does not read it. The six cost bounding scenarios replace these costs through their scenario edits; see [Costs](#costs). |
 | `apply_internal_transmission.py` | `Config_country_codes.yaml` | Writes `CapitalCost`, `FixedCost` and `OperationalLife` of the six internal transmission families, 60 technologies in all, and, after the base-year pin, their `ResidualCapacity`, computed as described [below](#internal-transmission-residuals). |
-| `apply_internal_tx_losses.py` | `Config_country_codes.yaml` and the `Measured_at` column of the `Demand_Projection` sheet | Sets the output activity ratio of the internal transmission families to 1 minus the loss setting `internal_transmission.transmission_loss`, which is 0.03 on `main`, and writes each demand row measured at the bus bar as its workbook value times 1 minus the loss, as described [below](#internal-transmission-losses-and-bus-bar-demand). |
+| `apply_internal_tx_losses.py` | `Config_country_codes.yaml` and the `Measured_at` column of the `Demand_Projection` sheet | Sets the output activity ratio of the internal transmission families to 1 minus the loss setting `internal_transmission.transmission_loss`, which is 0.03 on `main`, writes each demand row measured at the bus bar as its workbook value times 1 minus the loss, and sets the input of each interconnector mode sent from a bus-bar node to 1 minus the loss, as described [below](#internal-transmission-losses-and-bus-bar-demand). |
 | `apply_base_year_pin.py` | `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | Writes the reviewed 2023 to 2026 values of the table over the matching workbook rows. |
 | `set_interconnector_direction.py` | `config/scenarios/<scenario>/set_interconnector_direction.yaml` | Zeroes one flow mode of each listed interconnector, so that power flows one way. The empty map of `B_Opt_DirBidir` changes nothing. |
 
@@ -122,14 +122,16 @@ the demand fuel, from which the interconnectors export. The energy balance has
 its standard form: production of a fuel meets its demand, its use and its
 trade.
 
-```text
-plant output of a bus-bar node = published requirement - imports + exports / (1 - loss)
-```
+Each interconnector mode sent from a bus-bar node draws (1 - loss) of
+`ELC<node>03` per unit of activity, because a bus-bar requirement equals net
+generation plus imports minus exports and so already holds the losses that
+export flows cause. Modes sent from a node measured at consumption draw 1.
+The historical export bounds of Bhutan and Nepal bound link activity, the energy
+sent at the border.
 
-ASSUMPTION: exports leave after the sending node's internal grid and pay its
-loss. Where a country's published requirement already holds the losses its
-export flows cause, generation runs high by exports x loss / (1 - loss), about
-1.5% of Bhutan's generation in 2023.
+```text
+plant output of a bus-bar node = published requirement - imports + exports
+```
 
 The rules that read demand read the published requirement: the internal
 transmission residuals below divide a bus-bar row's 2023 demand by (1 - loss);
@@ -190,7 +192,7 @@ Each input carries its source or ASSUMPTION sentence there:
 | `gec2_cost_rs_crore`, `gec2_capacity_mw` | Rs 12,031.33 crore, 19,431 MW | MNRE, *Scheme Sanction and Guidelines of GEC-II*, F. No. 367-12/1/2022-GEC, 4 March 2022, listed on <https://mnre.gov.in/en/gec-phase-ii/>: estimated project cost excluding interest during construction (p. 1, para 3; p. 6, section 3.1); renewable addition envisaged (Annexure I, section 2.2, table total, pp. 5 to 6). |
 | `inr_per_usd_2022` | 78.5792 Rs per USD | FRED series AEXINUS, Federal Reserve G.5A annual average for 2022 (<https://fred.stlouisfed.org/series/AEXINUS>). |
 | `operational_life` | 40 years | ESMAP (2026). |
-| `transmission_loss` | 0.03 | ASSUMPTION: a transmission-only loss of 3% inside each node, uniform across nodes, rounded below Grid-India's all-India interstate transmission loss notices (<https://web.archive.org/web/20250118134515/https://posoco.in/en/side-menu-pages/applicable-transmission-losses/>). Demand rows measured at the bus bar are multiplied by 1 - loss; imports cross the receiving node's internal grid; exports leave after it. |
+| `transmission_loss` | 0.03 | ASSUMPTION: a transmission-only loss of 3% inside each node, uniform across nodes, rounded below Grid-India's all-India interstate transmission loss notices (<https://web.archive.org/web/20250118134515/https://posoco.in/en/side-menu-pages/applicable-transmission-losses/>). Demand rows measured at the bus bar are multiplied by 1 - loss; imports cross the receiving node's internal grid; an interconnector sent from a bus-bar node draws 1 - loss per unit of activity, because the published requirement already holds the losses export flows cause. |
 
 The costs, in USD2023, the same in every node:
 

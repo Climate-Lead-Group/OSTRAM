@@ -383,7 +383,9 @@ internal_transmission:
   # nodes, rounded below Grid-India's all-India interstate transmission loss notices
   # (https://web.archive.org/web/20250118134515/https://posoco.in/en/side-menu-pages/applicable-transmission-losses/).
   # Demand rows measured at the bus bar are multiplied by 1 - loss; imports cross the
-  # receiving node's internal grid; exports leave after it.
+  # receiving node's internal grid; an interconnector sent from a bus-bar node draws
+  # 1 - loss per unit of activity, because the published requirement already holds
+  # the losses export flows cause.
   # OutputActivityRatio of the six internal families = 1 - loss.
   transmission_loss: 0.03
   # ASSUMPTION: the 2023 internal grid of a node carries 1.2 times its 2023 peak

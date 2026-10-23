@@ -22,15 +22,24 @@ Loss value: `internal_transmission.transmission_loss` in Config_country_codes.ya
 0.03, an ASSUMPTION explained beside the key. Uniform across nodes, as the costs
 of stage_internal_transmission are.
 
-Scope: the 6 internal families only, on the two AR files' "Demand Techs" sheet.
-Interconnectors, DSPTRN, generators, storage untouched.
+Scope: the 6 internal families on the two AR files' "Demand Techs" sheet, and
+the interconnector input rows on their "Secondary" sheet. DSPTRN, generators and
+storage untouched.
+
+Interconnectors: every interconnector mode whose input fuel is the
+`ELC<node>03` of a bus-bar node draws (1 - loss) per unit of activity, because a
+bus-bar requirement equals net generation plus imports minus exports and so
+already holds the losses that export flows cause. This edits the Direction Input
+year cells of A-O_AR_Projections and Value.Fuel.I of A-O_AR_Model_Base_Year.
+Modes switched off by a direction rule (0) and modes whose input fuel is measured
+at consumption keep their value; output rows and link loss ratios do not change.
 
 Demand: when the configuration has an `internal_transmission` block, every
 Demand row whose `Measured_at` is `bus-bar` in the scenario workbook's
 Demand_Projection sheet gets SpecifiedAnnualDemand = workbook value x (1 - loss)
 in A-O_Demand.xlsx, every year. Rows measured at `consumption` keep the workbook
 value. A cell that already holds the scaled value is left as it is, so a second
-run changes nothing.
+run changes nothing; the same holds for the interconnector input cells.
 
 OUTPUT: timestamped backup, in-place edit of the two AR files and A-O_Demand.xlsx,
 JSON change log.
@@ -53,6 +62,7 @@ from pathlib import Path
 import yaml
 from openpyxl import load_workbook, Workbook
 from ostram.paths import resolve_paths
+from ostram.pipeline.preparation.transmission import TRN_INTERCONNECTION
 from ostram.pipeline.scenarios.rules.config_keys import INTERNAL_TRANSMISSION_KEYS, check_keys
 
 PROJ_FILE = "A-O_AR_Projections.xlsx"
@@ -63,6 +73,7 @@ MEASURED_AT_COL = "Measured_at"
 BUS_BAR = "bus-bar"
 MEASURED_AT_VALUES = (BUS_BAR, "consumption")
 SHEET = "Demand Techs"
+LINK_SHEET = "Secondary"
 CONFIG_NAME = "Config_country_codes.yaml"
 
 INTERNAL_FAMILIES = ("RNWTRN", "RNWNLI", "RNWRPO", "PWRTRN", "TRNNLI", "TRNRPO")
@@ -72,10 +83,18 @@ BACKUP_TAG = "_PRE_INTERNAL_LOSS_"
 COL_TECH = "Tech"
 COL_DIRECTION = "Direction"
 COL_VALUE_O = "Value.Fuel.O"
+COL_MODE = "Mode.Operation"
+COL_FUEL = "Fuel"
+COL_FUEL_I = "Fuel.I"
+COL_VALUE_I = "Value.Fuel.I"
 
 
 def _is_internal(t) -> bool:
     return isinstance(t, str) and len(t) == 11 and t[:6] in INTERNAL_FAMILIES
+
+
+def _is_interconnector(t) -> bool:
+    return isinstance(t, str) and bool(TRN_INTERCONNECTION.match(t))
 
 
 def _values_differ(a, b, tol=1e-9) -> bool:
@@ -339,6 +358,89 @@ def edit_demand(path: Path, rows: dict, oar: float) -> dict:
     return log
 
 
+def _link_input_value(value, iar, where):
+    """Return iar for an interconnector input holding 1; None when it is empty, 0
+    (mode switched off) or already iar. Raise ValueError for any other value."""
+    if value is None or not _values_differ(value, iar) or not _values_differ(value, 0.0):
+        return None
+    if not _values_differ(value, 1.0):
+        return iar
+    raise ValueError(f"{where}: input holds {value}, neither 1, 0 nor {iar}")
+
+
+def edit_link_projections(path: Path, bus_bar: set, iar: float) -> dict:
+    """A-O_AR_Projections 'Secondary': set the year cells of each interconnector
+    Input row whose fuel is in ``bus_bar`` to iar (see _link_input_value)."""
+    wb = load_workbook(path)
+    log = {"file": str(path), "sheet": LINK_SHEET, "cells": 0, "rows": 0, "edited": []}
+    try:
+        if LINK_SHEET not in wb.sheetnames:
+            log["skipped"] = "sheet absent"; return log
+        ws = wb[LINK_SHEET]
+        h = _hdr_map(ws)
+        tc, dc, fc, mc = h.get(COL_TECH), h.get(COL_DIRECTION), h.get(COL_FUEL), h.get(COL_MODE)
+        ycols = _year_cols(ws)
+        if None in (tc, dc, fc, mc) or not ycols:
+            log["skipped"] = f"missing Tech/Direction/Fuel/Mode/year cols (tc={tc} dc={dc} fc={fc} mc={mc})"
+            return log
+        for r in range(2, ws.max_row + 1):
+            tech = ws.cell(row=r, column=tc).value
+            fuel = ws.cell(row=r, column=fc).value
+            if not _is_interconnector(tech) or str(ws.cell(row=r, column=dc).value) != "Input":
+                continue
+            if fuel not in bus_bar:
+                continue
+            cells = 0
+            for y, c in ycols.items():
+                cell = ws.cell(row=r, column=c)
+                new = _link_input_value(cell.value, iar, f"{path} {tech} {fuel} {y}")
+                if new is not None:
+                    cell.value = new
+                    cells += 1
+            if cells:
+                log["cells"] += cells
+                log["rows"] += 1
+                log["edited"].append({"tech": tech, "mode": ws.cell(row=r, column=mc).value,
+                                      "fuel": fuel, "cells": cells})
+        wb.save(path)
+    finally:
+        wb.close()
+    return log
+
+
+def edit_link_base_year(path: Path, bus_bar: set, iar: float) -> dict:
+    """A-O_AR_Model_Base_Year 'Secondary': set Value.Fuel.I of each interconnector
+    row whose Fuel.I is in ``bus_bar`` to iar (see _link_input_value)."""
+    wb = load_workbook(path)
+    log = {"file": str(path), "sheet": LINK_SHEET, "cells": 0, "rows": 0, "edited": []}
+    try:
+        if LINK_SHEET not in wb.sheetnames:
+            log["skipped"] = "sheet absent"; return log
+        ws = wb[LINK_SHEET]
+        h = _hdr_map(ws)
+        tc, fc, vc, mc = h.get(COL_TECH), h.get(COL_FUEL_I), h.get(COL_VALUE_I), h.get(COL_MODE)
+        if None in (tc, fc, vc, mc):
+            log["skipped"] = f"missing Tech/Fuel.I/Value.Fuel.I/Mode cols (tc={tc} fc={fc} vc={vc} mc={mc})"
+            return log
+        for r in range(2, ws.max_row + 1):
+            tech = ws.cell(row=r, column=tc).value
+            fuel = ws.cell(row=r, column=fc).value
+            if not _is_interconnector(tech) or fuel not in bus_bar:
+                continue
+            cell = ws.cell(row=r, column=vc)
+            new = _link_input_value(cell.value, iar, f"{path} {tech} {fuel}")
+            if new is not None:
+                cell.value = new
+                log["cells"] += 1
+                log["rows"] += 1
+                log["edited"].append({"tech": tech, "mode": ws.cell(row=r, column=mc).value,
+                                      "fuel": fuel, "cells": 1})
+        wb.save(path)
+    finally:
+        wb.close()
+    return log
+
+
 # --------------------------------------------------------------------------- backup / restore
 def make_backup(d: Path) -> Path:
     """Copy the input folder to a timestamped `_PRE_INTERNAL_LOSS_` sibling and return its path."""
@@ -368,8 +470,9 @@ def restore(d: Path, frm=None) -> Path:
 # --------------------------------------------------------------------------- orchestration
 def run(input_dir, skip_backup=False, config=None, template=None) -> dict:
     """Set the output activity of the internal transmission families to 1 - loss in
-    both AR workbooks, scale the bus-bar demand rows by 1 - loss when the
-    configuration has an `internal_transmission` block, and return the change log."""
+    both AR workbooks and, when the configuration has an `internal_transmission`
+    block, scale the bus-bar demand rows by 1 - loss and set the input of each
+    interconnector mode sent from a bus-bar node to 1 - loss; return the change log."""
     input_dir = Path(input_dir)
     config_path = resolve_config(config)
     loss = read_loss(config_path)
@@ -388,6 +491,13 @@ def run(input_dir, skip_backup=False, config=None, template=None) -> dict:
            "base_year": edit_base_year(base, oar) if base.exists() else {"skipped": "absent"},
            "demand": (edit_demand(input_dir / DEMAND_FILE, demand_rows, oar) if demand_rows is not None
                       else {"skipped": "no internal_transmission block"})}
+    if demand_rows is not None:
+        bus_bar = {f for f, row in demand_rows.items() if row["measured_at"] == BUS_BAR}
+        log["link_projections"] = edit_link_projections(proj, bus_bar, oar)
+        log["link_base_year"] = (edit_link_base_year(base, bus_bar, oar) if base.exists()
+                                 else {"skipped": "absent"})
+    else:
+        log["link_projections"] = log["link_base_year"] = {"skipped": "no internal_transmission block"}
     if backup is not None:
         p = backup.parent / f"{backup.name}_CHANGES.json"
         p.write_text(json.dumps(log, indent=2, default=str))
@@ -406,6 +516,12 @@ def print_summary(log):
             print(f"  {k}: SKIPPED ({s['skipped']})")
         else:
             print(f"  {k}: {s['cells']} cells / {s['rows']} rows -> {log['oar']}")
+    for k in ("link_projections", "link_base_year"):
+        s = log[k]
+        if "skipped" in s:
+            print(f"  {k}: SKIPPED ({s['skipped']})")
+        else:
+            print(f"  {k}: {s['cells']} interconnector input cells / {s['rows']} rows -> {log['oar']}")
     s = log["demand"]
     if "skipped" in s:
         print(f"  demand: SKIPPED ({s['skipped']})")
@@ -440,6 +556,16 @@ def run_self_test() -> int:
         for ri, row in enumerate(rows, 2):
             for c, v in enumerate(row, 1):
                 ws.cell(row=ri, column=c, value=v)
+        ls = pw.create_sheet(LINK_SHEET)
+        ls.append(["Mode.Operation", "Tech", "Fuel", "Direction", 2023, 2024, 2025])
+        link_rows = [
+            (1, "TRNINDWEMDVXX", "ELCINDWE03", "Input", 1, 1, 1),         # bus-bar sender -> 0.97
+            (2, "TRNINDWEMDVXX", "ELCMDVXX03", "Input", 1, 1, 1),         # consumption sender stays 1
+            (1, "TRNINDWEMDVXX", "ELCMDVXX04", "Output", 0.95, 0.95, 0.95),  # output unchanged
+            (2, "TRNINDWEMDVXX", "ELCINDWE04", "Output", 0.95, 0.95, 0.95),  # output unchanged
+        ]
+        for row in link_rows:
+            ls.append(list(row))
         pw.save(idir / PROJ_FILE); pw.close()
         # Base year: Demand Techs with Value.Fuel.O
         bw = Workbook(); bs = bw.active; bs.title = SHEET
@@ -450,6 +576,10 @@ def run_self_test() -> int:
         for ri, row in enumerate(brows, 2):
             for c, v in enumerate(row, 1):
                 bs.cell(row=ri, column=c, value=v)
+        lb = bw.create_sheet(LINK_SHEET)
+        lb.append(["Mode.Operation", "Fuel.I", COL_VALUE_I, "Tech", "Fuel.O", COL_VALUE_O])
+        lb.append([1, "ELCINDWE03", 1, "TRNINDWEMDVXX", "ELCMDVXX04", 1])
+        lb.append([2, "ELCMDVXX03", 1, "TRNINDWEMDVXX", "ELCINDWE04", 1])
         bw.save(idir / BASE_FILE); bw.close()
         # Scenario workbook: one bus-bar row, one consumption row
         tw = Workbook(); ts = tw.active; ts.title = DEMAND_SHEET
@@ -482,6 +612,18 @@ def run_self_test() -> int:
         ck(got.get(("PWRSPVINDWE", "Output")) == 1, "non-tx UNCHANGED")
         ck(gotb.get("RNWTRNINDWE") == 0.97, "base-year internal Value.Fuel.O -> 0.97")
         ck(gotb.get("PWRSPVINDWE") == 1, "base-year non-tx UNCHANGED")
+        lv = load_workbook(idir / PROJ_FILE, data_only=True)[LINK_SHEET]
+        gotl = {(lv.cell(row=r, column=1).value, lv.cell(row=r, column=4).value):
+                [lv.cell(row=r, column=c).value for c in (5, 6, 7)] for r in range(2, lv.max_row + 1)}
+        ck(gotl.get((1, "Input")) == [0.97] * 3, "interconnector input from a bus-bar node 1 -> 0.97")
+        ck(gotl.get((2, "Input")) == [1] * 3, "interconnector input from a consumption node stays 1")
+        ck(gotl.get((1, "Output")) == [0.95] * 3 and gotl.get((2, "Output")) == [0.95] * 3,
+           "interconnector outputs UNCHANGED")
+        lbv = load_workbook(idir / BASE_FILE, data_only=True)[LINK_SHEET]
+        gotlb = {lbv.cell(row=r, column=1).value: (lbv.cell(row=r, column=3).value, lbv.cell(row=r, column=6).value)
+                 for r in range(2, lbv.max_row + 1)}
+        ck(gotlb.get(1) == (0.97, 1) and gotlb.get(2) == (1, 1),
+           "base-year interconnector Value.Fuel.I 0.97 (bus-bar) / 1 (consumption), outputs UNCHANGED")
         dv = load_workbook(idir / DEMAND_FILE, data_only=True).active
         gotd = {dv.cell(row=r, column=2).value: (dv.cell(row=r, column=4).value, dv.cell(row=r, column=5).value)
                 for r in range(2, dv.max_row + 1)}
@@ -489,7 +631,8 @@ def run_self_test() -> int:
         ck(gotd.get("ELCMDVXX03") == (5.0, 6.0), "consumption demand UNCHANGED")
         log2 = run(idir, skip_backup=True, config=td / CONFIG_NAME, template=td / "template.xlsx")
         ck(log2["projections"]["cells"] == 0 and log2["base_year"]["cells"] == 0
-           and log2["demand"]["cells"] == 0, "idempotent (2nd run 0 cells)")
+           and log2["demand"]["cells"] == 0 and log2["link_projections"]["cells"] == 0
+           and log2["link_base_year"]["cells"] == 0, "idempotent (2nd run 0 cells)")
     print("=" * 68); print("SELF-TEST", "PASSED" if ok else "FAILED"); print("=" * 68)
     return 0 if ok else 1
 

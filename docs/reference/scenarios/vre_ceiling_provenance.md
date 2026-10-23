@@ -81,8 +81,10 @@ ceiling where they exceed it. The [scenario edits](../../scenario-edits.md) page
 The demand rows of Bangladesh, Bhutan, the five India regions, Nepal and Sri Lanka
 are measured at the bus bar and hold the published requirement x (1 - loss), with the 3%
 above, so the plants and imports that feed them through the internal grid meet the
-published requirement. Imports cross the receiving node's internal grid; exports leave
-after the sending node's internal grid. The Maldives row is consumption and keeps its value.
+published requirement. Imports cross the receiving node's internal grid; an
+interconnector sent from a bus-bar node draws 1 - loss per unit of activity, because the
+published requirement already holds the losses export flows cause. The Maldives row is
+consumption and keeps its value.
 The `Measured_at` column of the `Demand_Projection` sheet in
 `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx` marks each row, and
 `ostram/pipeline/scenarios/rules/apply_internal_tx_losses.py` applies the factor.
