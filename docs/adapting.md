@@ -40,7 +40,7 @@ These lines are described as they are. Changing them is a code change.
   `TRNBGDXXINDEA` and its fuels `ELCBGDXX02` and `ELCINDEA01`.
 - The `Measured_at` column of the `Demand_Projection` sheet marks each demand
   row `bus-bar` or `consumption`; a new country-region's demand row needs one.
-- `model/osemosys_fast_preprocessed.txt`, lines 584 onwards, hold the 50
+- `model/osemosys_fast_preprocessed.txt`, lines 585 onwards, hold the 50
   historical trade constraints on named South Asia corridors for 2023 to
   2025, which B2 activates for the scenarios of the roots listed in
   `historical_trade_roots`. After them, the constraint `D4_LinkImportCap`
