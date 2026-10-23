@@ -364,16 +364,22 @@ def import_share_caps(edit, results):
     cap = share x the parent's demand of ``demand_fuel`` that year x the tech's
     share of the parent's imports into ``importer`` that year. Imports are the
     parent's production of the listed technologies into the importer's fuels.
-    A year in which the parent imports nothing gives every listed technology a
-    cap of 0.
+    A ``demand_fuel`` measured at the bus bar holds the published requirement x
+    (1 - loss) in the parent, so its demand is divided by (1 - loss) and the cap
+    is the share of the published requirement. A year in which the parent
+    imports nothing gives every listed technology a cap of 0.
     """
+    from .rules.apply_internal_tx_losses import bus_bar_fuels, read_loss
     parent, techs = edit["result"], list(edit["techs"])
     share = finite_nonnegative(edit["share"], "import_share_cap share")
+    scale = 1.0
+    if edit["demand_fuel"] in bus_bar_fuels(_PROJECT_PATHS.scenario_workbook, parent):
+        scale = 1.0 / (1.0 - read_loss(_PROJECT_PATHS.country_config))
     caps = {}
     for year in (int(y) for y in edit["years"]):
         imports = {t: results.production_into(parent, t, edit["importer"], year) for t in techs}
         total = sum(imports.values())
-        demand = results.demand(parent, edit["demand_fuel"], year)
+        demand = results.demand(parent, edit["demand_fuel"], year) * scale
         for t in techs:
             caps[(t, year)] = share * demand * imports[t] / total if total > 0 else 0.0
     return caps

@@ -158,8 +158,10 @@ class CorridorLimitTests(unittest.TestCase):
             "demand_fuel": "ELCBGDXX03", "importer": "BGDXX", "years": [2027, 2028]}, results)
         a = _row(ws, cols, ycols, "TRNBGDXXINDEA", "TotalTechnologyAnnualActivityUpperLimit")
         b = _row(ws, cols, ycols, "TRNNPLXXBGDXX", "TotalTechnologyAnnualActivityUpperLimit")
-        self.assertAlmostEqual(a[2027], 0.15 * 100 * 30 / 40, places=12)
-        self.assertAlmostEqual(b[2027], 0.15 * 100 * 10 / 40, places=12)
+        # ELCBGDXX03 is measured at the bus bar: the parent's 100 is the published
+        # requirement x 0.97, so the cap is 15 per cent of 100 / 0.97.
+        self.assertAlmostEqual(a[2027], 0.15 * 100 / 0.97 * 30 / 40, places=12)
+        self.assertAlmostEqual(b[2027], 0.15 * 100 / 0.97 * 10 / 40, places=12)
         # 2028: the parent imports nothing, so every limit is 0.
         self.assertEqual((a[2028], b[2028]), (0.0, 0.0))
         self.assertIsNone(a[2029])

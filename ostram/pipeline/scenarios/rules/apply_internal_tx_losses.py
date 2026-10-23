@@ -5,7 +5,8 @@ apply_internal_tx_losses.py
 Late A3 stage stage_internal_tx_losses. Gives the six INTERNAL (intra-node)
 transmission families a non-zero
 transmission loss, matching how the interconnectors carry losses (via the
-output activity ratio in the A-O_AR files).
+output activity ratio in the A-O_AR files), and puts the demand rows measured at
+the bus bar on the far side of that loss.
 
 Background
 ----------
@@ -24,10 +25,18 @@ of stage_internal_transmission are.
 Scope: the 6 internal families only, on the two AR files' "Demand Techs" sheet.
 Interconnectors, DSPTRN, generators, storage untouched.
 
-OUTPUT: timestamped backup, in-place edit of the two AR files, JSON change log.
+Demand: when the configuration has an `internal_transmission` block, every
+Demand row whose `Measured_at` is `bus-bar` in the scenario workbook's
+Demand_Projection sheet gets SpecifiedAnnualDemand = workbook value x (1 - loss)
+in A-O_Demand.xlsx, every year. Rows measured at `consumption` keep the workbook
+value. A cell that already holds the scaled value is left as it is, so a second
+run changes nothing.
+
+OUTPUT: timestamped backup, in-place edit of the two AR files and A-O_Demand.xlsx,
+JSON change log.
 
 USAGE
-    python apply_internal_tx_losses.py --input-dir <stage5 or A1_Outputs/...>
+    python apply_internal_tx_losses.py --input-dir <stage5 or A1_Outputs/...> [--template <workbook>]
     python apply_internal_tx_losses.py --self-test
     python apply_internal_tx_losses.py --input-dir <dir> --restore
 """
@@ -43,10 +52,16 @@ from pathlib import Path
 
 import yaml
 from openpyxl import load_workbook, Workbook
+from ostram.paths import resolve_paths
 from ostram.pipeline.scenarios.rules.config_keys import INTERNAL_TRANSMISSION_KEYS, check_keys
 
 PROJ_FILE = "A-O_AR_Projections.xlsx"
 BASE_FILE = "A-O_AR_Model_Base_Year.xlsx"
+DEMAND_FILE = "A-O_Demand.xlsx"
+DEMAND_SHEET = "Demand_Projection"
+MEASURED_AT_COL = "Measured_at"
+BUS_BAR = "bus-bar"
+MEASURED_AT_VALUES = (BUS_BAR, "consumption")
 SHEET = "Demand Techs"
 CONFIG_NAME = "Config_country_codes.yaml"
 
@@ -103,6 +118,93 @@ def read_loss(config_path) -> float:
     if not (0.0 <= loss < 1.0):
         raise ValueError(f"transmission_loss must be in [0,1); got {loss}")
     return loss
+
+
+def has_loss_block(config_path) -> bool:
+    """True when the configuration has an `internal_transmission` block, the
+    setups whose demand rows declare where they are measured."""
+    with open(config_path, "r", encoding="utf-8") as fh:
+        data = yaml.safe_load(fh) or {}
+    return bool(data.get("internal_transmission"))
+
+
+# --------------------------------------------------------------------------- demand rows
+def resolve_workbook(explicit=None) -> Path:
+    """Return the first existing workbook among the explicit path,
+    $OSTRAM_TEMPLATE_PATH (the materialized scenario template A3 sets) and the
+    setup's scenario workbook.
+
+    Raises FileNotFoundError when none exists.
+    """
+    cands = []
+    if explicit:
+        cands.append(Path(explicit))
+    env = os.environ.get("OSTRAM_TEMPLATE_PATH")
+    if env:
+        cands.append(Path(env))
+    cands.append(Path(resolve_paths().scenario_workbook))
+    for c in cands:
+        if c.is_file():
+            return c
+    raise FileNotFoundError("scenario workbook not found; tried " + ", ".join(map(str, cands)))
+
+
+def read_demand_rows(workbook, scenario=None) -> dict:
+    """Return {fuel: {"measured_at": ..., "values": {year: value}}} for the Demand
+    rows of the workbook's Demand_Projection sheet.
+
+    A sheet with a `scenario` column gives the BAU rows, replaced by the rows of
+    ``scenario``. Raises ValueError when the sheet or the `Measured_at` column is
+    absent, or when a Demand row's `Measured_at` is blank or not one of
+    MEASURED_AT_VALUES.
+    """
+    wb = load_workbook(workbook, read_only=True, data_only=True)
+    try:
+        if DEMAND_SHEET not in wb.sheetnames:
+            raise ValueError(f"{workbook}: no {DEMAND_SHEET} sheet")
+        rows = wb[DEMAND_SHEET].iter_rows(values_only=True)
+        hdr = list(next(rows, ()))
+        for col in ("Demand/Share", "Fuel/Tech", MEASURED_AT_COL):
+            if col not in hdr:
+                raise ValueError(f"{workbook} {DEMAND_SHEET}: no {col} column")
+        kind, code, flag = hdr.index("Demand/Share"), hdr.index("Fuel/Tech"), hdr.index(MEASURED_AT_COL)
+        scen = hdr.index("scenario") if "scenario" in hdr else None
+        years = {}
+        for c, h in enumerate(hdr):
+            if isinstance(h, int) and 1900 <= h <= 2200:
+                years[h] = c
+            elif isinstance(h, str) and h.strip().isdigit() and 1900 <= int(h) <= 2200:
+                years[int(h)] = c
+        base, own = {}, {}
+        for r in rows:
+            if r[code] is None or r[kind] != "Demand":
+                continue
+            if scen is not None and r[scen] not in ("BAU", scenario):
+                continue
+            value = r[flag].strip() if isinstance(r[flag], str) else r[flag]
+            if value not in MEASURED_AT_VALUES:
+                raise ValueError(
+                    f"{workbook} {DEMAND_SHEET} {r[code]}: {MEASURED_AT_COL} is {r[flag]!r}; "
+                    f"expected one of {', '.join(MEASURED_AT_VALUES)}")
+            target = own if scen is not None and r[scen] != "BAU" else base
+            target[str(r[code]).strip()] = {
+                "measured_at": value,
+                "values": {y: float(r[c]) for y, c in years.items() if r[c] is not None},
+            }
+        base.update(own)
+        return base
+    finally:
+        wb.close()
+
+
+def read_measured_at(workbook, scenario=None) -> dict:
+    """Return {fuel: Measured_at} for the Demand rows of Demand_Projection (see read_demand_rows)."""
+    return {fuel: row["measured_at"] for fuel, row in read_demand_rows(workbook, scenario).items()}
+
+
+def bus_bar_fuels(workbook, scenario=None) -> set:
+    """Return the demand fuels whose Demand_Projection row is measured at the bus bar."""
+    return {fuel for fuel, flag in read_measured_at(workbook, scenario).items() if flag == BUS_BAR}
 
 
 # --------------------------------------------------------------------------- header helper
@@ -182,6 +284,61 @@ def edit_base_year(path: Path, oar: float) -> dict:
     return log
 
 
+def edit_demand(path: Path, rows: dict, oar: float) -> dict:
+    """A-O_Demand 'Demand_Projection': set every year cell of each bus-bar row of
+    ``rows`` (read_demand_rows) to the workbook value x oar.
+
+    A cell that already holds that value is left as it is. Raises ValueError when a
+    bus-bar fuel has no row, or a cell holds neither the workbook value nor the
+    scaled value.
+    """
+    wb = load_workbook(path)
+    log = {"file": str(path), "sheet": DEMAND_SHEET, "cells": 0, "rows": 0, "fuels": []}
+    try:
+        ws = wb[DEMAND_SHEET]
+        h = _hdr_map(ws)
+        fc = h.get("Fuel/Tech")
+        ycols = _year_cols(ws)
+        if fc is None or not ycols:
+            raise ValueError(f"{path} {DEMAND_SHEET}: no Fuel/Tech or year columns")
+        wanted = {f: row["values"] for f, row in rows.items() if row["measured_at"] == BUS_BAR}
+        seen = set()
+        for r in range(2, ws.max_row + 1):
+            fuel = ws.cell(row=r, column=fc).value
+            fuel = fuel.strip() if isinstance(fuel, str) else fuel
+            if fuel not in wanted:
+                continue
+            seen.add(fuel)
+            touched = False
+            for y, c in ycols.items():
+                cell = ws.cell(row=r, column=c)
+                if cell.value is None:
+                    continue
+                if y not in wanted[fuel]:
+                    raise ValueError(f"{path} {fuel} {y}: no workbook value to scale")
+                stat = wanted[fuel][y]
+                scaled = stat * oar
+                if not _values_differ(cell.value, scaled, 1e-12 * max(1.0, abs(scaled))):
+                    continue
+                if _values_differ(cell.value, stat, 1e-12 * max(1.0, abs(stat))):
+                    raise ValueError(
+                        f"{path} {fuel} {y}: holds {cell.value}, neither the workbook value "
+                        f"{stat} nor {stat} x {oar}")
+                cell.value = scaled
+                log["cells"] += 1
+                touched = True
+            if touched:
+                log["rows"] += 1
+        missing = sorted(set(wanted) - seen)
+        if missing:
+            raise ValueError(f"{path} {DEMAND_SHEET}: no row for bus-bar fuels {', '.join(missing)}")
+        log["fuels"] = sorted(wanted)
+        wb.save(path)
+    finally:
+        wb.close()
+    return log
+
+
 # --------------------------------------------------------------------------- backup / restore
 def make_backup(d: Path) -> Path:
     """Copy the input folder to a timestamped `_PRE_INTERNAL_LOSS_` sibling and return its path."""
@@ -209,20 +366,28 @@ def restore(d: Path, frm=None) -> Path:
 
 
 # --------------------------------------------------------------------------- orchestration
-def run(input_dir, skip_backup=False, config=None) -> dict:
-    """Set the output activity of the internal transmission families to 1 - loss in both AR workbooks and return the change log."""
+def run(input_dir, skip_backup=False, config=None, template=None) -> dict:
+    """Set the output activity of the internal transmission families to 1 - loss in
+    both AR workbooks, scale the bus-bar demand rows by 1 - loss when the
+    configuration has an `internal_transmission` block, and return the change log."""
     input_dir = Path(input_dir)
-    loss = read_loss(resolve_config(config))
+    config_path = resolve_config(config)
+    loss = read_loss(config_path)
     oar = round(1.0 - loss, 6)
     proj, base = input_dir / PROJ_FILE, input_dir / BASE_FILE
     if not proj.exists():
         raise FileNotFoundError(proj)
+    demand_rows = None
+    if has_loss_block(config_path):
+        demand_rows = read_demand_rows(resolve_workbook(template))
     backup = None if skip_backup else make_backup(input_dir)
     log = {"loss": loss, "oar": oar, "families": list(INTERNAL_FAMILIES),
            "timestamp": datetime.now().isoformat(),
            "backup_dir": str(backup) if backup else None,
            "projections": edit_projections(proj, oar),
-           "base_year": edit_base_year(base, oar) if base.exists() else {"skipped": "absent"}}
+           "base_year": edit_base_year(base, oar) if base.exists() else {"skipped": "absent"},
+           "demand": (edit_demand(input_dir / DEMAND_FILE, demand_rows, oar) if demand_rows is not None
+                      else {"skipped": "no internal_transmission block"})}
     if backup is not None:
         p = backup.parent / f"{backup.name}_CHANGES.json"
         p.write_text(json.dumps(log, indent=2, default=str))
@@ -241,6 +406,12 @@ def print_summary(log):
             print(f"  {k}: SKIPPED ({s['skipped']})")
         else:
             print(f"  {k}: {s['cells']} cells / {s['rows']} rows -> {log['oar']}")
+    s = log["demand"]
+    if "skipped" in s:
+        print(f"  demand: SKIPPED ({s['skipped']})")
+    else:
+        print(f"  demand: {s['cells']} cells / {s['rows']} rows x {log['oar']} "
+              f"(bus-bar fuels: {', '.join(s['fuels'])})")
     print(f"  backup: {log.get('backup_dir', '(skipped)')}")
 
 
@@ -280,8 +451,19 @@ def run_self_test() -> int:
             for c, v in enumerate(row, 1):
                 bs.cell(row=ri, column=c, value=v)
         bw.save(idir / BASE_FILE); bw.close()
+        # Scenario workbook: one bus-bar row, one consumption row
+        tw = Workbook(); ts = tw.active; ts.title = DEMAND_SHEET
+        ts.append(["Demand/Share", "Fuel/Tech", "Name", MEASURED_AT_COL, 2023, 2024])
+        ts.append(["Demand", "ELCINDWE03", "bus bar", BUS_BAR, 100.0, 110.0])
+        ts.append(["Demand", "ELCMDVXX03", "consumption", "consumption", 5.0, 6.0])
+        tw.save(td / "template.xlsx"); tw.close()
+        dw = Workbook(); ds = dw.active; ds.title = DEMAND_SHEET
+        ds.append(["Demand/Share", "Fuel/Tech", "Name", "2023", "2024"])
+        ds.append(["Demand", "ELCINDWE03", "x", 100.0, 110.0])
+        ds.append(["Demand", "ELCMDVXX03", "x", 5.0, 6.0])
+        dw.save(idir / DEMAND_FILE); dw.close()
 
-        run(idir, skip_backup=True, config=td / CONFIG_NAME)
+        run(idir, skip_backup=True, config=td / CONFIG_NAME, template=td / "template.xlsx")
 
         pv = load_workbook(idir / PROJ_FILE, data_only=True).active
         got = {}
@@ -300,8 +482,14 @@ def run_self_test() -> int:
         ck(got.get(("PWRSPVINDWE", "Output")) == 1, "non-tx UNCHANGED")
         ck(gotb.get("RNWTRNINDWE") == 0.97, "base-year internal Value.Fuel.O -> 0.97")
         ck(gotb.get("PWRSPVINDWE") == 1, "base-year non-tx UNCHANGED")
-        log2 = run(idir, skip_backup=True, config=td / CONFIG_NAME)
-        ck(log2["projections"]["cells"] == 0 and log2["base_year"]["cells"] == 0, "idempotent (2nd run 0 cells)")
+        dv = load_workbook(idir / DEMAND_FILE, data_only=True).active
+        gotd = {dv.cell(row=r, column=2).value: (dv.cell(row=r, column=4).value, dv.cell(row=r, column=5).value)
+                for r in range(2, dv.max_row + 1)}
+        ck(gotd.get("ELCINDWE03") == (100.0 * 0.97, 110.0 * 0.97), "bus-bar demand x 0.97")
+        ck(gotd.get("ELCMDVXX03") == (5.0, 6.0), "consumption demand UNCHANGED")
+        log2 = run(idir, skip_backup=True, config=td / CONFIG_NAME, template=td / "template.xlsx")
+        ck(log2["projections"]["cells"] == 0 and log2["base_year"]["cells"] == 0
+           and log2["demand"]["cells"] == 0, "idempotent (2nd run 0 cells)")
     print("=" * 68); print("SELF-TEST", "PASSED" if ok else "FAILED"); print("=" * 68)
     return 0 if ok else 1
 
@@ -311,6 +499,8 @@ def main() -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--input-dir", type=Path, default=Path("A1_Outputs/A1_Outputs_BAU"))
     p.add_argument("--config", type=Path, default=None)
+    p.add_argument("--template", type=Path, default=None,
+                   help="workbook with Demand_Projection (default $OSTRAM_TEMPLATE_PATH, then the setup's)")
     p.add_argument("--skip-backup", action="store_true")
     p.add_argument("--self-test", action="store_true")
     p.add_argument("--restore", action="store_true")
@@ -325,7 +515,7 @@ def main() -> int:
             print(f"ERROR: {e}", file=sys.stderr); return 1
         print(f"Restored {a.input_dir} from {used}"); return 0
     try:
-        log = run(a.input_dir, a.skip_backup, a.config)
+        log = run(a.input_dir, a.skip_backup, a.config, a.template)
     except Exception as e:
         print(f"ERROR: {e}", file=sys.stderr); return 1
     print_summary(log)

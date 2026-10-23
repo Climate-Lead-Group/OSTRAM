@@ -39,7 +39,9 @@ Values applied
   * ResidualCapacity (existing stock, base year, held flat across the horizon),
     computed in every run for each node from the workbooks in --input-dir:
         peak  = max over time slices of 2023 SpecifiedAnnualDemand(ELC<node>03)
-                x SpecifiedDemandProfile / (YearSplit x 8760 h), in GW
+                x SpecifiedDemandProfile / (YearSplit x 8760 h), in GW, where a
+                demand row measured at the bus bar is divided by (1 - loss), so
+                the peak is that of the published statistic
         RE    = sum of the node's 2023 renewable generator ResidualCapacity x
                 CapacityFactor in the peak slice (see compute_node_residuals)
         RNWTRN<node> = residual_peak_margin x RE
@@ -87,6 +89,7 @@ from pathlib import Path
 import yaml
 from openpyxl import load_workbook, Workbook
 from ostram.pipeline.scenarios.rules.config_keys import INTERNAL_TRANSMISSION_KEYS, check_keys
+from ostram.pipeline.scenarios.rules.apply_internal_tx_losses import bus_bar_fuels, read_loss, resolve_workbook
 
 # --------------------------------------------------------------------------- config
 PARAM_FILE_NAME = "A-O_Parametrization.xlsx"
@@ -291,13 +294,14 @@ def _compiled(mode, where: str) -> bool:
     raise MissingInputError(f"{where}: Projection.Mode {mode!r} is not read by this rule")
 
 
-def read_residual_inputs(input_dir: Path) -> dict:
+def read_residual_inputs(input_dir: Path, bus_bar=frozenset(), loss: float = 0.0) -> dict:
     """Read the base-year inputs of the residual computation that B1 compiles.
 
     From ``A-O_Demand.xlsx``: SpecifiedAnnualDemand (Demand_Projection) and
     SpecifiedDemandProfile (Profiles). From ``A-O_Parametrization.xlsx``: YearSplit
     (Yearsplit), CapacityFactor (Capacities), the ResidualCapacity of the PWR
-    technologies and the internal transmission nodes.
+    technologies and the internal transmission nodes. The demand of a fuel in
+    ``bus_bar`` is divided by (1 - ``loss``), which the loss stage applied to it.
     """
     input_dir = Path(input_dir)
     out = {"demand": {}, "profile": {}, "yearsplit": {}, "cf": {}, "residual": {}, "nodes": set()}
@@ -309,7 +313,7 @@ def read_residual_inputs(input_dir: Path) -> dict:
         for r in rows:
             if (_is_node_demand(r[f]) and _compiled(r[m], f"Demand_Projection {r[f]}")
                     and r[y] is not None):
-                out["demand"][r[f]] = float(r[y])
+                out["demand"][r[f]] = float(r[y]) / (1.0 - loss) if r[f] in bus_bar else float(r[y])
         hdr, rows = _sheet_rows(dem, "Profiles")
         y, f, m = _year_index(hdr, "Profiles"), hdr.index("Fuel/Tech"), hdr.index(PROJ_MODE_COL)
         t = hdr.index("Timeslices")
@@ -404,9 +408,10 @@ def compute_node_residuals(inputs: dict, node: str, margin: float) -> dict:
             "peak_timeslice": peak_ts, "RE_at_peak_GW": re_at_peak}
 
 
-def compute_residuals(input_dir: Path, margin: float, nodes=None) -> dict:
+def compute_residuals(input_dir: Path, margin: float, nodes=None, bus_bar=frozenset(),
+                      loss: float = 0.0) -> dict:
     """Return {node: computed residuals} for every internal transmission node."""
-    inputs = read_residual_inputs(input_dir)
+    inputs = read_residual_inputs(input_dir, bus_bar, loss)
     node_list = list(nodes) if nodes else inputs["nodes"]
     if not node_list:
         raise MissingInputError("no RNWTRN<node> ResidualCapacity row in the workbook")
@@ -601,12 +606,15 @@ def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path
 
 # --------------------------------------------------------------------------- orchestration
 def run(input_dir, sheets=None, skip_backup=False, config=None, dry_run=False,
-        desk_check_csv=None, nodes=None, parts=PARTS) -> dict:
+        desk_check_csv=None, nodes=None, parts=PARTS, template=None) -> dict:
     """Apply the selected parts to the internal transmission families and return the change log.
 
     ``costs``: CapitalCost, FixedCost and OperationalLife from the configuration.
     ``residuals``: the base-year ResidualCapacity computed from the workbooks in
-    ``input_dir`` (see ``compute_node_residuals``).
+    ``input_dir`` (see ``compute_node_residuals``), after the loss stage. The
+    bus-bar demand rows are read from ``template`` (see
+    ``apply_internal_tx_losses.resolve_workbook``) and the loss from the
+    configuration.
     """
     input_dir = Path(input_dir)
     sheets = sheets or DEFAULT_TARGET_SHEETS
@@ -620,7 +628,8 @@ def run(input_dir, sheets=None, skip_backup=False, config=None, dry_run=False,
     if "residuals" in parts:
         if MARGIN_KEY not in knobs:
             raise MissingInputError(f"{config_path}: {CONFIG_BLOCK}.{MARGIN_KEY} is not set")
-        computed = compute_residuals(input_dir, knobs[MARGIN_KEY], nodes)
+        computed = compute_residuals(input_dir, knobs[MARGIN_KEY], nodes,
+                                     bus_bar_fuels(resolve_workbook(template)), read_loss(config_path))
         node_list = list(computed)
     else:
         node_list = list(nodes) if nodes else read_residual_inputs(input_dir)["nodes"]
@@ -789,6 +798,8 @@ def main() -> int:
     p.add_argument("--part", choices=PARTS + ("all",), default="all",
                    help="costs (CapitalCost, FixedCost, OperationalLife), residuals, or all")
     p.add_argument("--sheets", nargs="+", default=DEFAULT_TARGET_SHEETS)
+    p.add_argument("--template", type=Path, default=None,
+                   help="workbook with Demand_Projection (default $OSTRAM_TEMPLATE_PATH, then the setup's)")
     p.add_argument("--skip-backup", action="store_true")
     p.add_argument("--dry-run", action="store_true",
                    help="compute + write the desk-check CSV but do NOT edit the workbook")
@@ -810,7 +821,7 @@ def main() -> int:
     try:
         parts = PARTS if args.part == "all" else (args.part,)
         log = run(args.input_dir, args.sheets, args.skip_backup, args.config,
-                  args.dry_run, args.desk_check_csv, parts=parts)
+                  args.dry_run, args.desk_check_csv, parts=parts, template=args.template)
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr); return 1
     print_summary(log)

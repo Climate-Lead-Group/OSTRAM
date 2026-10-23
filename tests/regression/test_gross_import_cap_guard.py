@@ -48,6 +48,8 @@ def _convert(root: Path, scenario_text: str, context: mock.Mock):
     project_paths = SimpleNamespace(
         maintained_model=model,
         scenario_config_root=root / "scenarios",
+        scenario_workbook=REPO_ROOT / "inputs" / "scenarios" / "OSTRAM_Scenario_Inputs.xlsx",
+        country_config=REPO_ROOT / "config" / "preparation" / "Config_country_codes.yaml",
     )
     params = {
         "executables": str(root / "Executables"),

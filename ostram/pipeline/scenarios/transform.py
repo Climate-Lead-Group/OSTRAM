@@ -767,8 +767,10 @@ def stage_internal_tx_residuals(s5: Path) -> None:
 
     Runs after the base-year pin, so it reads the 2023 demand, demand profile,
     year split, capacity factors and generator residual capacity that the model
-    compiles. Writes ResidualCapacity of RNWTRN<node> and PWRTRN<node> (the
-    other four families get 0) on the final A-O_Parametrization.xlsx.
+    compiles; a demand row measured at the bus bar is divided by (1 - loss), so
+    the peak is that of the published statistic. Writes ResidualCapacity of
+    RNWTRN<node> and PWRTRN<node> (the other four families get 0) on the final
+    A-O_Parametrization.xlsx.
     """
     config = _internal_transmission_config()
     if config is None:
@@ -786,8 +788,10 @@ def stage_internal_tx_losses(s5: Path) -> None:
     OutputActivityRatio = 1 - internal_transmission.transmission_loss (default
     0.03 -> 0.97) on the internal families' Output rows in the A-O_AR files'
     'Demand Techs' sheet, matching how the interconnectors carry per-corridor
-    losses. Runs after the internal-tx cost/residual stage; interconnectors,
-    DSPTRN, generators and storage untouched.
+    losses, and multiplies the SpecifiedAnnualDemand of every demand row whose
+    Measured_at is bus-bar in the materialized template by the same factor.
+    Runs after the internal-tx cost stage; interconnectors, DSPTRN, generators
+    and storage untouched.
     """
     script = RULES_SCRIPTS_DIR / "apply_internal_tx_losses.py"
     config = _PROJECT_PATHS.country_config

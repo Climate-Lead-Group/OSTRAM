@@ -100,7 +100,7 @@ Fuel names follow a similar pattern, with a 2-digit tier suffix instead of a reg
 | `ELCBGDXX00` | Renewable power plant output, Bangladesh |
 | `ELCBGDXX01` | Non-renewable power plant output, Bangladesh |
 | `ELCBGDXX02` | Transmission line output (feeds domestic demand and export dispatch), Bangladesh |
-| `ELCBGDXX03` | Dispatch-ready for interconnection (export side), Bangladesh |
+| `ELCBGDXX03` | Demand fuel and dispatch-ready for interconnection (export side), Bangladesh |
 | `ELCBGDXX04` | Imported electricity (import side, from a cross-border interconnector), Bangladesh |
 
 The four-tier `ELC*00`-`ELC*04` electricity scheme (five codes: 00, 01, 02, 03, 04) is central to how cross-border trade is modeled -- see **Model Architecture** below for the full flow.
@@ -361,13 +361,13 @@ flowchart TB
     PWR --> E01["ELC*00/01 (plant output)"]
     E01 --> GRID["Grid-tier conversion<br/>(RNWTRN/PWRTRN/RNWRPO/TRNRPO/RNWNLI/TRNNLI)"]
     GRID --> E02["ELC*02 (line output)"]
-    E02 --> DEM["Demand"]
-    E02 --> D1["DSPTRN Mode 1 (export)"]
-    D1 --> E03["ELC*03 (dispatch-ready)"]
+    E02 --> D1["DSPTRN Mode 1"]
+    D1 --> E03["ELC*03 (demand and dispatch-ready)"]
+    E03 --> DEM["Demand"]
     E03 --> TRN["Cross-border interconnector<br/>(TRN{origin}{dest})"]
     TRN --> E04["ELC*04 (imported, at destination)"]
     E04 --> D2["DSPTRN Mode 2 (import)"]
-    D2 --> E03B["ELC*03 (dispatch-ready again, available locally)"]
+    D2 --> E01B["ELC*01 (crosses the destination's internal grid)"]
 ```
 
 ### Energy Flow
@@ -375,7 +375,7 @@ flowchart TB
 1. **Mining technologies** (`MIN`) extract primary commodities (coal, gas, oil, etc.), country-level (not region-split).
 2. **Power technologies** (`PWR`) convert fuels into electricity: `ELC*00` for renewable output, `ELC*01` for non-renewable output.
 3. **Renewable resource technologies** (`RNW`) supply renewable primary energy, region-split.
-4. **Grid-tier conversion technologies** (`RNWTRN`/`PWRTRN`/`RNWRPO`/`TRNRPO`/`RNWNLI`/`TRNNLI`, one set per country-region, added by Stage A2) convert `ELC*00`/`ELC*01` into `ELC*02`, the tier available to meet domestic demand.
-5. **Dispatch technology** (`DSPTRN`) routes electricity to/from cross-border interconnections: Mode 1 converts `ELC*02` → `ELC*03` (dispatch-ready for export); Mode 2 converts `ELC*04` (imported) → `ELC*03` (dispatch-ready again, for local use).
+4. **Grid-tier conversion technologies** (`RNWTRN`/`PWRTRN`/`RNWRPO`/`TRNRPO`/`RNWNLI`/`TRNNLI`, one set per country-region, added by Stage A2) convert `ELC*00`/`ELC*01` into `ELC*02`, at 1 - `internal_transmission.transmission_loss` of what they carry.
+5. **Dispatch technology** (`DSPTRN`) routes electricity to/from cross-border interconnections: Mode 1 converts `ELC*02` → `ELC*03`, the demand fuel, from which the interconnectors export; Mode 2 converts `ELC*04` (imported) → `ELC*01`, so imports cross the receiving node's internal grid before they meet demand.
 6. **Cross-border interconnector technologies** (`TRN{origin}{dest}`, a pre-existing pair-level code, distinct from the per-country A2-generated technologies above) transport electricity between countries/regions, consuming `ELC*03` at the origin and producing `ELC*04` at the destination.
 7. **Storage technologies** (`LDS`/`SDS`) balance supply and demand across timeslices, exchanging with the `ELC*00` renewable-output tier.

@@ -349,7 +349,7 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
         datafile = Path(output_file)
         text = datafile.read_text(encoding="utf-8")
         text, count = re.subn(r"(?m)^end;\s*$",
-                             f"param D4HistoricalTradeActive := {trade_active};\nparam D4BusbarAccountingActive := {trade_active};\n{import_policy}{link_cap}end;\n", text)
+                             f"param D4HistoricalTradeActive := {trade_active};\n{import_policy}{link_cap}end;\n", text)
         if count != 1:
             raise ValueError("Expected one otoole data terminator for trade activation")
         datafile.write_text(text, encoding="utf-8")
