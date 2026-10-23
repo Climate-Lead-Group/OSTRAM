@@ -4,13 +4,15 @@
 ##   sensitivity_expansion/reference/interconnector_direction_references.md
 ##
 ## Convention: TRN<SRC><DST>; forward = SRC->DST, reverse = DST->SRC.
-## Corridors omitted below are bidirectional (Nepal<->India, genuinely seasonal).
+## Corridors omitted below are bidirectional (Nepal<->India and Bhutan<->India, seasonal).
 
 directions:
   TRNBGDXXINDEA: reverse   # India (ER)  -> Bangladesh   [Adani Godda PPA 2017; Bheramara HVDC]
   TRNBGDXXINDNE: reverse   # India (NER) -> Bangladesh   [Tripura-Comilla 160 MW since 2016]
-  TRNBTNXXINDEA: forward   # Bhutan -> India (ER)        [Tala/Chukha/Mangdechhu, ~70% exported]
-  TRNBTNXXINDNE: forward   # Bhutan -> India (NER)       [Kurichhu-Salakati]
+  # TRNBTNXXINDEA: bidirectional  (Bhutan <-> India ER, exports in summer, imports from India in the lean season -- omitted)
+  #   [BPC Power Data Book 2025, https://www.bpc.bt/wp-content/themes/bpc/assets/downloads/PDB_2025.pdf, Table 1.0 printed p. 2; Chapter 3 printed p. 26]
+  # TRNBTNXXINDNE: bidirectional  (Bhutan <-> India NER, exports in summer, imports from India in the lean season -- omitted)
+  #   [BPC Power Data Book 2025, https://www.bpc.bt/wp-content/themes/bpc/assets/downloads/PDB_2025.pdf, Table 1.0 printed p. 2; Chapter 3 printed p. 26]
   TRNBTNXXBGDXX: forward   # Bhutan -> Bangladesh        [Dorjilung trilateral, planned]
   TRNNPLXXBGDXX: forward   # Nepal  -> Bangladesh        [2024 tripartite deal, flow since 15 Nov 2024]
   TRNINDSOLKAXX: forward   # India  -> Sri Lanka         [CEB LTGEP import link; reverse uncontracted]

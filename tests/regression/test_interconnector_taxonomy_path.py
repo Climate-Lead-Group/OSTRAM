@@ -214,8 +214,12 @@ class InterconnectorTaxonomyPathTests(unittest.TestCase):
         self.assertEqual(rule.load_interconnector_techs(taxonomy), EXPECTED_INTERCONNECTORS)
 
         configured = rule.load_config(CONTRACTUAL_OVERLAY)["directions"]
-        self.assertEqual(len(configured), 9)
+        self.assertEqual(len(configured), 7)
         self.assertLessEqual(set(configured), EXPECTED_INTERCONNECTORS)
+        # The Nepal and Bhutan links to India carry power both ways.
+        self.assertFalse(
+            {"TRNBTNXXINDEA", "TRNBTNXXINDNE", "TRNINDEANPLXX", "TRNINDNONPLXX"} & set(configured)
+        )
 
     def test_configured_rule_from_external_cwd_changes_only_direction_cells(self) -> None:
         configured = rule.load_config(CONTRACTUAL_OVERLAY)["directions"]
@@ -258,7 +262,7 @@ class InterconnectorTaxonomyPathTests(unittest.TestCase):
                 )
 
             load_taxonomy.assert_called_once_with(AUTHORITATIVE_TAXONOMY)
-            self.assertEqual(len(log["projections"]["changes"]), 9)
+            self.assertEqual(len(log["projections"]["changes"]), 7)
             self.assertEqual(log["projections"]["warnings"], [])
             self.assertEqual(
                 {change["tech"] for change in log["projections"]["changes"]},
