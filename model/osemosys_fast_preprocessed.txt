@@ -642,6 +642,12 @@ s.t. D4_I1_TRADE_049_NPL_IND_ALL_EXPORT_2025_Lower{r in REGION: D4HistoricalTrad
 s.t. D4_I1_TRADE_049_NPL_IND_ALL_EXPORT_2025_Upper{r in REGION: D4HistoricalTradeActive = 1}: sum{l in TIMESLICE} (RateOfActivity[r,l,"TRNINDNONPLXX",2,2025]*YearSplit[l,2025]*InputActivityRatio[r,"TRNINDNONPLXX","ELCNPLXX03",2,2025] + RateOfActivity[r,l,"TRNINDEANPLXX",2,2025]*YearSplit[l,2025]*InputActivityRatio[r,"TRNINDEANPLXX","ELCNPLXX03",2,2025]) <= 8.739360;
 # End D4 R2 trade calibration.
 
+# Import cap at existing link capacity. From its first year, the annual activity of each
+# listed link in the listed mode stays within what the link's residual capacity carries.
+# B2 writes the set for the scenarios of the historical trade roots; by default it is empty.
+set D4LinkImportCap dimen 3 within TECHNOLOGY cross MODE_OF_OPERATION cross YEAR default {t in TECHNOLOGY, m in MODE_OF_OPERATION, y in YEAR: 1 = 0};
+s.t. D4_LinkImportCap{r in REGION, (t,m,y0) in D4LinkImportCap, y in YEAR: D4HistoricalTradeActive = 1 and y >= y0}: sum{l in TIMESLICE} RateOfActivity[r,l,t,m,y]*YearSplit[l,y] <= ResidualCapacity[r,t,y]*CapacityToActivityUnit[r,t]*sum{l in TIMESLICE} CapacityFactor[r,t,l,y]*YearSplit[l,y];
+
 solve;
 #
 #########################################################################################################

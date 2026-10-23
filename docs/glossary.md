@@ -21,6 +21,7 @@ maps the terms to the names used in the code.
 | Family | The three-letter technology family code in characters 4 to 6 of a technology name, for example COA in `PWRCOAINDNO`. |
 | Family limit | The largest cap multiplier that a technology family may take. A family limit of 1.0 or less makes a locked family. |
 | Gas and oil allowance | The model-file adjustment that replaces a build cap of 0 or 9999 for gas and oil plants with 0.5 GW per year in each country-region. |
+| Link import cap | The B2 constraint `D4_LinkImportCap`: from its first year, the annual flow of each listed link in the listed direction is at most what the link's residual capacity carries, `ResidualCapacity` x `CapacityToActivityUnit` x the sum over time slices of `CapacityFactor` x `YearSplit`. It applies to the two India-Nepal links from 2027, in the direction from India to Nepal, in the scenarios with active historical trade constraints. |
 | Locked family | A family with a family limit of 1.0 or less. It keeps its proportional build cap and receives no technology top-up. |
 | Margin factor | The factor 1.1 in the build-cap formula. It leaves 10 per cent to spare above each technology's share of the required growth. It is a model margin and has no link to energy security. |
 | Model-file adjustments | The B2 changes to the solver datafile and the model file after the otoole conversion: days in day type, the storage delay, backstop opening and the gas and oil allowance. |
@@ -63,6 +64,7 @@ maps the terms to the names used in the code.
 | gas and oil allowance | `reserve_margin_xlsx_*` | `config/execution/Config_MOMF_T1_AB.yaml` |
 | storage delay | `storage_delay_*` | `config/execution/Config_MOMF_T1_AB.yaml` |
 | base-year build lock | `base_year_lock.py`, `base_year_lock_*` | `ostram/pipeline/execution/`, `config/execution/Config_MOMF_T1_AB.yaml` |
+| link import cap | `link_import_cap`, `D4LinkImportCap`, `D4_LinkImportCap` | `config/setups/south_asia.yaml`, `model/osemosys_fast_preprocessed.txt` |
 | backstop | `PWRBCK` | technology names |
 | country-region | `cr` | file and column names |
 | base-year pin | `apply_base_year_pin.py`, `pwr_min_2023_2026_pin.csv` | `ostram/pipeline/scenarios/rules/`, `config/scenarios/rules/` |

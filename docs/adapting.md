@@ -43,4 +43,7 @@ These lines are described as they are. Changing them is a code change.
   `ELCINDNE03`, with the Maldives left out. Lines 593 onwards hold the 50
   historical trade constraints on named South Asia corridors for 2023 to
   2025, which B2 activates for the scenarios of the roots listed in
-  `historical_trade_roots`.
+  `historical_trade_roots`. After them, the constraint `D4_LinkImportCap`
+  caps the flow of each link in the set `D4LinkImportCap` at what its
+  residual capacity carries. B2 fills the set from the setup policy
+  `link_import_cap`, which names the India-Nepal links.

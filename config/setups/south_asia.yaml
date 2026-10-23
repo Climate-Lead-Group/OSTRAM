@@ -15,6 +15,23 @@ policies:
   - B_Optimised_VRE
   - C_Target_VRE
   build_cap_replaces_workbook_values: false
+  # Import cap at existing link capacity, active with the historical trade
+  # roots. From first_year, the flow of each link from from_country to
+  # to_country stays within what the link's residual capacity carries.
+  # ASSUMPTION: new India-Nepal capacity serves Nepal's exports to India, as the
+  # long-term power trade agreement of January 2024 (10,000 MW from Nepal to
+  # India within ten years) describes, so India's flows into Nepal stay within
+  # what the existing links carry.
+  # Source: Embassy of India, Kathmandu, Visit of External Affairs Minister
+  # Dr. S. Jaishankar to Nepal (04-05 January 2024),
+  # https://www.indembkathmandu.gov.in/media-detail/146
+  link_import_cap:
+    links:
+    - TRNINDEANPLXX
+    - TRNINDNONPLXX
+    from_country: IND
+    to_country: NPL
+    first_year: 2027
 authorities:
   scenario_registry: project:config/setups/south_asia.yaml
   scenario_inputs:

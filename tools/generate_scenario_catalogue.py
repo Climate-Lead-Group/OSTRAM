@@ -55,6 +55,10 @@ def generated_block(names=None):
         policy = []
         if root in setup["policies"].get("historical_trade_roots", []):
             policy.append("the historical trade constraints are active")
+            if link_cap := setup["policies"].get("link_import_cap"):
+                policy.append(f"flows from {link_cap['from_country']} to {link_cap['to_country']} on "
+                              f"{' and '.join('`' + link + '`' for link in link_cap['links'])} capped at existing "
+                              f"link capacity from {link_cap['first_year']}")
         if name in execution.get("cplex_numerical_emphasis_scenarios", []):
             policy.append("CPLEX numerical emphasis")
         if cap := block.get("gross_import_cap"):
