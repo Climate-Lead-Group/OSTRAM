@@ -213,10 +213,10 @@ class ProductionRuleContractTests(unittest.TestCase):
         years_by_row: dict[tuple[str, str, str], set[int]] = defaultdict(set)
         for rule in rules:
             years_by_row[(rule.technology, rule.parameter, rule.timeslice)].add(rule.year)
-        self.assertEqual(len(years_by_row), 778)
+        self.assertEqual(len(years_by_row), 563)
         self.assertEqual(
             Counter(len(years) for years in years_by_row.values()),
-            {4: 628, 3: 108, 2: 13, 1: 9, 28: 19, 26: 1},
+            {4: 468, 3: 65, 2: 7, 1: 3, 28: 19, 26: 1},
         )
         with PRODUCTION_RULES.open(
             "r", encoding="utf-8", newline=""
