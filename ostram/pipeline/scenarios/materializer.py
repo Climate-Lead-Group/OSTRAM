@@ -285,6 +285,13 @@ def materialize_scenarios(
     process_environment.update(
         {name: str(path) for name, path in resolved_dependencies.items()}
     )
+    # Derived scenarios that read a solved parent result stop here, before any
+    # materialization, when that result is missing.
+    derived_results = active_registry.derived_result_dependencies(
+        selected,
+        execution_workspace=resolve_paths().execution_workspace,
+        environment=process_environment,
+    )
 
     # Declared restriction prerequisites hand their generated Restrictions
     # rows to dependents through exported disposable run states.  The wiring
@@ -372,6 +379,7 @@ def materialize_scenarios(
                     resolve_paths().scenario_registry
                 ),
                 authority_path=active_paths.soasia,
+                result_paths=derived_results.get(scenario),
             )
             target = active_paths.a1_outputs / f"A1_Outputs_{scenario}"
             direction_record: dict | None = None
@@ -415,6 +423,10 @@ def materialize_scenarios(
         "restriction_prerequisites": restriction_prerequisites,
         "result_dependencies": {
             name: str(path) for name, path in resolved_dependencies.items()
+        },
+        "derived_result_dependencies": {
+            name: {parent: str(path) for parent, path in parents.items()}
+            for name, parents in derived_results.items()
         },
         "roots": root_records,
         "derived": derived_records,

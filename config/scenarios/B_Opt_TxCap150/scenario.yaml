@@ -4,25 +4,27 @@ description: >-
   The shared VRE ceilings applied to B_Optimised_VRE. From 2027, the
   TotalAnnualMaxCapacity and TotalAnnualMaxCapacityInvestment of every
   cross-border interconnector are the larger of 1.5 times its 2023 residual
-  capacity and its capacity in the base years 2023 to 2026. The base years keep
-  the values of B_Optimised_VRE. The base-year floor is needed because capacity
-  built in the base years lasts into the study period, and the base-year pin
-  needs it. TotalAnnualMinCapacityInvestment is lowered where it would exceed
-  the new limit. Interconnectors inside India are unchanged, and interconnectors
-  with no residual capacity that were never built stay closed. The activity of
-  the new and repowered internal lines outside India (TRNNLI, TRNRPO) is set to
-  zero from 2027. ASSUMPTION: the base-year capacities and the minimum
-  investments were worked out once from an earlier model run. They cannot be
-  reproduced from the repository.
+  capacity and its capacity in the base years 2023 to 2026. The base-year
+  capacity is the largest TotalCapacityAnnual of 2023 to 2026 in the solved
+  B_Optimised_VRE of the same run; the run stops when that result is missing.
+  The base years keep the values of B_Optimised_VRE. The base-year floor is
+  needed because capacity built in the base years lasts into the study period,
+  and the base-year pin needs it. TotalAnnualMinCapacityInvestment is lowered
+  where, with the base-year capacity and the earlier minimum investment, it would
+  exceed the new limit. Interconnectors inside India are
+  unchanged, and interconnectors with no residual capacity that were never built
+  stay closed. The activity of the new and repowered internal lines outside India
+  (TRNNLI, TRNRPO) is set to zero from 2027.
 apply_vre_ceiling_layer: true
 edits:
 - sheet: Secondary Techs
   tech: TRNBGDXXINDEA
   param: TotalAnnualMaxCapacity
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: &cap_factor 1.5  # the scenario's design setting: the cap is 1.5 times the 2023 residual capacity
   residual_year: 2023
-  base_window_floor: 8.236183089312995
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: cross-border cap = max(1.5 x Residual_2023, base-window capacity); study
     period 2027+ only
@@ -30,18 +32,32 @@ edits:
   tech: TRNBGDXXINDEA
   param: TotalAnnualMaxCapacityInvestment
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: *cap_factor
   residual_year: 2023
-  base_window_floor: 8.236183089312995
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: 'coherence: MaxCapInv <= MaxCap (study period 2027+ only)'
+- sheet: Secondary Techs
+  tech: TRNBGDXXINDEA
+  param: TotalAnnualMinCapacityInvestment
+  op: set_to_residual_factor_floor
+  factor: *cap_factor
+  residual_year: 2023
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
+  clamp: true
+  years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
+  note: 'coherence: MinCapInv lowered to the headroom above base-year capacity
+    (study period 2027+ only)'
 - sheet: Secondary Techs
   tech: TRNBGDXXINDNE
   param: TotalAnnualMaxCapacity
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: *cap_factor
   residual_year: 2023
-  base_window_floor: 0.32
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: cross-border cap = max(1.5 x Residual_2023, base-window capacity); study
     period 2027+ only
@@ -49,18 +65,32 @@ edits:
   tech: TRNBGDXXINDNE
   param: TotalAnnualMaxCapacityInvestment
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: *cap_factor
   residual_year: 2023
-  base_window_floor: 0.32
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: 'coherence: MaxCapInv <= MaxCap (study period 2027+ only)'
+- sheet: Secondary Techs
+  tech: TRNBGDXXINDNE
+  param: TotalAnnualMinCapacityInvestment
+  op: set_to_residual_factor_floor
+  factor: *cap_factor
+  residual_year: 2023
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
+  clamp: true
+  years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
+  note: 'coherence: MinCapInv lowered to the headroom above base-year capacity
+    (study period 2027+ only)'
 - sheet: Secondary Techs
   tech: TRNBTNXXBGDXX
   param: TotalAnnualMaxCapacity
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: *cap_factor
   residual_year: 2023
-  base_window_floor: 0.0
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: cross-border cap = max(1.5 x Residual_2023, base-window capacity); study
     period 2027+ only
@@ -68,23 +98,32 @@ edits:
   tech: TRNBTNXXBGDXX
   param: TotalAnnualMaxCapacityInvestment
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: *cap_factor
   residual_year: 2023
-  base_window_floor: 0.0
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: 'coherence: MaxCapInv <= MaxCap (study period 2027+ only)'
 - sheet: Secondary Techs
   tech: TRNBTNXXBGDXX
   param: TotalAnnualMinCapacityInvestment
-  values: {'2027': 0.0, '2028': 0.0, '2029': 0.0, '2030': 0.0, '2031': 0.0, '2032': 0.0, '2033': 0.0, '2034': 0.0, '2035': 0.0, '2036': 0.0, '2037': 0.0, '2038': 0.0, '2039': 0.0, '2040': 0.0, '2041': 0.0, '2042': 0.0, '2043': 0.0, '2044': 0.0, '2045': 0.0, '2046': 0.0, '2047': 0.0, '2048': 0.0, '2049': 0.0, '2050': 0.0}
-  note: 'coherence: MinCapInv <= MaxCap-Residual (0.0) (study period 2027+ only)'
+  op: set_to_residual_factor_floor
+  factor: *cap_factor
+  residual_year: 2023
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
+  clamp: true
+  years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
+  note: 'coherence: MinCapInv lowered to the headroom above base-year capacity
+    (study period 2027+ only)'
 - sheet: Secondary Techs
   tech: TRNBTNXXINDEA
   param: TotalAnnualMaxCapacity
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: *cap_factor
   residual_year: 2023
-  base_window_floor: 5.526
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: cross-border cap = max(1.5 x Residual_2023, base-window capacity); study
     period 2027+ only
@@ -92,18 +131,32 @@ edits:
   tech: TRNBTNXXINDEA
   param: TotalAnnualMaxCapacityInvestment
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: *cap_factor
   residual_year: 2023
-  base_window_floor: 5.526
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: 'coherence: MaxCapInv <= MaxCap (study period 2027+ only)'
+- sheet: Secondary Techs
+  tech: TRNBTNXXINDEA
+  param: TotalAnnualMinCapacityInvestment
+  op: set_to_residual_factor_floor
+  factor: *cap_factor
+  residual_year: 2023
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
+  clamp: true
+  years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
+  note: 'coherence: MinCapInv lowered to the headroom above base-year capacity
+    (study period 2027+ only)'
 - sheet: Secondary Techs
   tech: TRNBTNXXINDNE
   param: TotalAnnualMaxCapacity
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: *cap_factor
   residual_year: 2023
-  base_window_floor: 0.11
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: cross-border cap = max(1.5 x Residual_2023, base-window capacity); study
     period 2027+ only
@@ -111,18 +164,32 @@ edits:
   tech: TRNBTNXXINDNE
   param: TotalAnnualMaxCapacityInvestment
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: *cap_factor
   residual_year: 2023
-  base_window_floor: 0.11
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: 'coherence: MaxCapInv <= MaxCap (study period 2027+ only)'
+- sheet: Secondary Techs
+  tech: TRNBTNXXINDNE
+  param: TotalAnnualMinCapacityInvestment
+  op: set_to_residual_factor_floor
+  factor: *cap_factor
+  residual_year: 2023
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
+  clamp: true
+  years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
+  note: 'coherence: MinCapInv lowered to the headroom above base-year capacity
+    (study period 2027+ only)'
 - sheet: Secondary Techs
   tech: TRNINDEANPLXX
   param: TotalAnnualMaxCapacity
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: *cap_factor
   residual_year: 2023
-  base_window_floor: 1.3
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: cross-border cap = max(1.5 x Residual_2023, base-window capacity); study
     period 2027+ only
@@ -130,18 +197,32 @@ edits:
   tech: TRNINDEANPLXX
   param: TotalAnnualMaxCapacityInvestment
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: *cap_factor
   residual_year: 2023
-  base_window_floor: 1.3
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: 'coherence: MaxCapInv <= MaxCap (study period 2027+ only)'
+- sheet: Secondary Techs
+  tech: TRNINDEANPLXX
+  param: TotalAnnualMinCapacityInvestment
+  op: set_to_residual_factor_floor
+  factor: *cap_factor
+  residual_year: 2023
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
+  clamp: true
+  years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
+  note: 'coherence: MinCapInv lowered to the headroom above base-year capacity
+    (study period 2027+ only)'
 - sheet: Secondary Techs
   tech: TRNINDNONPLXX
   param: TotalAnnualMaxCapacity
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: *cap_factor
   residual_year: 2023
-  base_window_floor: 1.2
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: cross-border cap = max(1.5 x Residual_2023, base-window capacity); study
     period 2027+ only
@@ -149,18 +230,32 @@ edits:
   tech: TRNINDNONPLXX
   param: TotalAnnualMaxCapacityInvestment
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: *cap_factor
   residual_year: 2023
-  base_window_floor: 1.2
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: 'coherence: MaxCapInv <= MaxCap (study period 2027+ only)'
+- sheet: Secondary Techs
+  tech: TRNINDNONPLXX
+  param: TotalAnnualMinCapacityInvestment
+  op: set_to_residual_factor_floor
+  factor: *cap_factor
+  residual_year: 2023
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
+  clamp: true
+  years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
+  note: 'coherence: MinCapInv lowered to the headroom above base-year capacity
+    (study period 2027+ only)'
 - sheet: Secondary Techs
   tech: TRNINDSOLKAXX
   param: TotalAnnualMaxCapacity
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: *cap_factor
   residual_year: 2023
-  base_window_floor: 0.0
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: cross-border cap = max(1.5 x Residual_2023, base-window capacity); study
     period 2027+ only
@@ -168,18 +263,32 @@ edits:
   tech: TRNINDSOLKAXX
   param: TotalAnnualMaxCapacityInvestment
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: *cap_factor
   residual_year: 2023
-  base_window_floor: 0.0
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: 'coherence: MaxCapInv <= MaxCap (study period 2027+ only)'
+- sheet: Secondary Techs
+  tech: TRNINDSOLKAXX
+  param: TotalAnnualMinCapacityInvestment
+  op: set_to_residual_factor_floor
+  factor: *cap_factor
+  residual_year: 2023
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
+  clamp: true
+  years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
+  note: 'coherence: MinCapInv lowered to the headroom above base-year capacity
+    (study period 2027+ only)'
 - sheet: Secondary Techs
   tech: TRNNPLXXBGDXX
   param: TotalAnnualMaxCapacity
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: *cap_factor
   residual_year: 2023
-  base_window_floor: 0.04
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: cross-border cap = max(1.5 x Residual_2023, base-window capacity); study
     period 2027+ only
@@ -187,16 +296,24 @@ edits:
   tech: TRNNPLXXBGDXX
   param: TotalAnnualMaxCapacityInvestment
   op: set_to_residual_factor_floor
-  factor: 1.5
+  factor: *cap_factor
   residual_year: 2023
-  base_window_floor: 0.04
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
   years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
   note: 'coherence: MaxCapInv <= MaxCap (study period 2027+ only)'
 - sheet: Secondary Techs
   tech: TRNNPLXXBGDXX
   param: TotalAnnualMinCapacityInvestment
-  values: {'2027': 0.0, '2028': 0.0, '2029': 0.0, '2030': 0.0, '2031': 0.0, '2032': 0.0, '2033': 0.02, '2034': 0.0, '2035': 0.0, '2036': 0.0, '2037': 0.0, '2038': 0.0, '2039': 0.0, '2040': 0.0, '2041': 0.0, '2042': 0.0, '2043': 0.0, '2044': 0.0, '2045': 0.0, '2046': 0.0, '2047': 0.0, '2048': 0.0, '2049': 0.0, '2050': 0.0}
-  note: 'coherence: MinCapInv <= MaxCap-Residual (0.02) (study period 2027+ only)'
+  op: set_to_residual_factor_floor
+  factor: *cap_factor
+  residual_year: 2023
+  base_window_result: B_Optimised_VRE
+  base_window_years: [2023, 2026]
+  clamp: true
+  years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
+  note: 'coherence: MinCapInv lowered to the headroom above base-year capacity
+    (study period 2027+ only)'
 - sheet: Demand Techs
   tech: TRNNLIBGDXX
   param: TotalTechnologyAnnualActivityUpperLimit

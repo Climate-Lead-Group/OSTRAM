@@ -69,9 +69,11 @@ matches your case:
   countries as a share of each country's annual demand. It has no edits, only
   a `gross_import_cap` block, which the
   [scenario edits](scenario-edits.md#gross-import-cap) page describes.
-- `B_Opt_TradeCap15` sets a fixed upper limit on the yearly flow of each import
-  corridor of one country, through edits. Its values come from an earlier
-  model run, and its description and notes label them `ASSUMPTION`.
+- `B_Opt_TradeCap15` sets an upper limit on the yearly flow of each import
+  corridor of one country, through an `import_share_cap` edit. Each run
+  computes the limits from the solved `B_Optimised_VRE` of the same run, as the
+  [scenario edits](scenario-edits.md#edits-that-read-a-solved-parent) page
+  describes.
 
 A policy block has no edits, so it has no `note` of an edit. Write its basis in
 a `note:` line inside the block, in the same form as the note of an edit: an

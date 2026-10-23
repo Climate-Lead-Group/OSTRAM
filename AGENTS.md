@@ -29,6 +29,7 @@ The pipeline runs in this order:
 - A root runs the A3 rule scripts named in the Control sheet. Each script reads its YAML from `config/scenarios/<root>/`.
 - A derived scenario copies its root's finished A3 output, applies the VRE ceiling layer, applies its ordered edits from `config/scenarios/<name>/scenario.yaml` (after the edits of the scenario its `reuse_edits_from` names, if any), then re-applies the base-year pin. Its parent is always a root. `B_Opt_DirBidir` and `B_Opt_DirContractual` then also get their direction overlay.
 - `C_Target_VRE` and `C_Target_VRE_Clipped` need a solved `A_Calibrated_BAU` result, passed with `--a-result-seed`.
+- `B_Opt_TxCap150` and `B_Opt_TradeCap15` need a solved `B_Optimised_VRE` result, and `A_Calibrated_BAU_Clipped_TxFreeze2026` a solved `A_Calibrated_BAU_Clipped` result: solve the parent first in the same workspace, or set `OSTRAM_B_OPTIMISED_VRE_RESULT` and `OSTRAM_A_CALIBRATED_BAU_CLIPPED_RESULT` to the result folders.
 
 ## Which config is live
 

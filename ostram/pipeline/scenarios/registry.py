@@ -56,6 +56,7 @@ class DerivedScenario:
     base_scenario: str
     direction_overlay: Path | None = None
     direction_study_start_year: int | None = None
+    dependencies: tuple[ResultDependency, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -181,6 +182,68 @@ class ScenarioRegistry:
                 resolved[dependency.environment] = path
         return resolved
 
+    def derived_result_dependencies(
+        self,
+        selected: Iterable[str],
+        *,
+        execution_workspace: Path | None = None,
+        environment: Mapping[str, str] | None = None,
+    ) -> dict[str, dict[str, Path]]:
+        """Resolve the solved parent results of the selected derived scenarios.
+
+        Returns {derived scenario: {parent scenario: result folder}}. A parent
+        result folder comes from its environment variable, else from its
+        ``default_path`` under the execution workspace. A missing folder stops
+        the run with an error naming the scenario and the parent.
+        """
+
+        environ = os.environ if environment is None else environment
+        workspace = (
+            resolve_paths().execution_workspace
+            if execution_workspace is None
+            else execution_workspace
+        )
+        derived = self.derived_by_name
+        resolved: dict[str, dict[str, Path]] = {}
+        for name in selected:
+            scenario = derived.get(name)
+            if scenario is None or not scenario.dependencies:
+                continue
+            for dependency in scenario.dependencies:
+                override = environ.get(dependency.environment)
+                path = (
+                    Path(override).expanduser().resolve()
+                    if override
+                    else (workspace / dependency.default_path).resolve()
+                )
+                if not path.is_dir():
+                    raise FileNotFoundError(
+                        f"{name} requires the solved {dependency.scenario} "
+                        f"result at {path}. Solve {dependency.scenario} first "
+                        f"or set {dependency.environment}."
+                    )
+                resolved.setdefault(name, {})[dependency.scenario] = path
+        return resolved
+
+
+def _result_dependency(owner, dependency: Mapping) -> ResultDependency:
+    """Return a validated ``type: result`` dependency declared for ``owner``."""
+
+    if dependency.get("type") != "result":
+        raise ValueError(
+            f"unsupported dependency type for {owner}: {dependency.get('type')}"
+        )
+    default_path = Path(str(dependency["default_path"]))
+    if default_path.is_absolute() or ".." in default_path.parts:
+        raise ValueError(
+            f"unsafe dependency default_path for {owner}: {default_path}"
+        )
+    return ResultDependency(
+        scenario=str(dependency["scenario"]),
+        environment=str(dependency["environment"]),
+        default_path=default_path,
+    )
+
 
 def _duplicates(values: Sequence[str]) -> list[str]:
     return sorted({value for value in values if values.count(value) > 1})
@@ -233,24 +296,7 @@ def load_registry(
                     )
                 restriction_dependencies.append(str(scenario).strip())
                 continue
-            if dependency.get("type") != "result":
-                raise ValueError(
-                    f"unsupported dependency type for {entry.get('name')}: "
-                    f"{dependency.get('type')}"
-                )
-            default_path = Path(str(dependency["default_path"]))
-            if default_path.is_absolute() or ".." in default_path.parts:
-                raise ValueError(
-                    f"unsafe dependency default_path for {entry.get('name')}: "
-                    f"{default_path}"
-                )
-            dependencies.append(
-                ResultDependency(
-                    scenario=str(dependency["scenario"]),
-                    environment=str(dependency["environment"]),
-                    default_path=default_path,
-                )
-            )
+            dependencies.append(_result_dependency(entry.get("name"), dependency))
         roots.append(
             RootScenario(
                 name=str(entry["name"]),
@@ -262,6 +308,10 @@ def load_registry(
 
     decision_scenarios = tuple(raw.get("decision_scenarios", ()))
     root_names = {root.name for root in roots}
+    derived_dependencies = raw.get("derived_dependencies") or {}
+    unknown = sorted(set(derived_dependencies) - (set(decision_scenarios) - root_names))
+    if unknown:
+        raise ValueError(f"derived_dependencies name no derived scenario: {unknown}")
     derived: list[DerivedScenario] = []
     for name in decision_scenarios:
         if name in root_names:
@@ -289,6 +339,10 @@ def load_registry(
                 ),
                 direction_study_start_year=inputs.get(
                     "direction_study_start_year"
+                ),
+                dependencies=tuple(
+                    _result_dependency(name, dependency)
+                    for dependency in derived_dependencies.get(name) or ()
                 ),
             )
         )
@@ -343,6 +397,17 @@ def _validate_registry(
 
     root_set = set(root_names)
     for scenario in registry.derived:
+        for dependency in scenario.dependencies:
+            if not _ENVIRONMENT_NAME.fullmatch(dependency.environment):
+                raise ValueError(
+                    f"unsafe dependency environment for {scenario.name}: "
+                    f"{dependency.environment!r}"
+                )
+            if dependency.scenario not in known or dependency.scenario == scenario.name:
+                raise ValueError(
+                    f"{scenario.name} depends on unknown scenario "
+                    f"{dependency.scenario}"
+                )
         if scenario.base_scenario not in root_set:
             raise ValueError(
                 f"{scenario.name} has non-root base {scenario.base_scenario}"

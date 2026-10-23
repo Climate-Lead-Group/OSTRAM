@@ -65,3 +65,4 @@ maps the terms to the names used in the code.
 | country-region | `cr` | file and column names |
 | base-year pin | `apply_base_year_pin.py`, `pwr_min_2023_2026_pin.csv` | `ostram/pipeline/scenarios/rules/`, `config/scenarios/rules/` |
 | A-result seed | `--a-result-seed`, `OSTRAM_A_CALIBRATED_BAU_RESULT` | the `run` command, the environment |
+| parent result | `derived_dependencies`, `OSTRAM_B_OPTIMISED_VRE_RESULT`, `OSTRAM_A_CALIBRATED_BAU_CLIPPED_RESULT` | `config/setups/south_asia.yaml`, the environment |

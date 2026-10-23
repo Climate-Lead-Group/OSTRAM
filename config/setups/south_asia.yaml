@@ -98,6 +98,25 @@ scenario_registry:
   - C_Target_VRE_Clipped
   - A_Calibrated_BAU_Clipped_TxFreeze2026
   - B_Opt_Clipped_GrossImportCap15
+  # Derived scenarios whose edits read a solved parent of the same run. Each
+  # result folder is read from the environment variable, or else from
+  # default_path under the execution workspace.
+  derived_dependencies:
+    B_Opt_TxCap150:
+    - type: result
+      scenario: B_Optimised_VRE
+      environment: OSTRAM_B_OPTIMISED_VRE_RESULT
+      default_path: Executables/B_Optimised_VRE_0
+    B_Opt_TradeCap15:
+    - type: result
+      scenario: B_Optimised_VRE
+      environment: OSTRAM_B_OPTIMISED_VRE_RESULT
+      default_path: Executables/B_Optimised_VRE_0
+    A_Calibrated_BAU_Clipped_TxFreeze2026:
+    - type: result
+      scenario: A_Calibrated_BAU_Clipped
+      environment: OSTRAM_A_CALIBRATED_BAU_CLIPPED_RESULT
+      default_path: Executables/A_Calibrated_BAU_Clipped_0
 vre_ceilings:
   description: Shared VRE ceilings. Each value sets TotalAnnualMaxCapacity (GW) of
     one solar or onshore wind technology to the same value in every year. The values
