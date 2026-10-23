@@ -4,8 +4,8 @@ apply_internal_transmission.py
 
 Late A3 stage stage_internal_transmission. Calibrates the INTERNAL (intra-node)
 transmission families in the
-model's `A-O_Parametrization.xlsx`, making `Config_country_codes.yaml` +
-a desk-checked per-node residuals file the source of truth for:
+model's `A-O_Parametrization.xlsx`, making `Config_country_codes.yaml` and the
+workbooks' own 2023 inputs the source of truth for:
 
     * ResidualCapacity   -> Demand Techs            (year-indexed rows)
     * CapitalCost         -> Demand Techs            (year-indexed rows)
@@ -28,26 +28,29 @@ life 20) into `Demand Techs` / `Fixed Horizon Parameters`. But:
     stick.
   * There is no RE-vs-non-RE cost differentiation.
 
-This stage runs LAST (after stage 5 and the interconnector-cost stage), so its
-writes are authoritative and cannot be clobbered downstream: the same pattern
-proven by apply_interconnector_costs.py. It leaves the flat post-A2 snapshot
-untouched and does the calibration transparently in the delivered workbook.
+The rule has two parts. A3 runs the costs part (stage_internal_transmission)
+after stage 5 and the interconnector-cost stage, and the residuals part
+(stage_internal_tx_residuals) after the base-year pin, so the residuals read
+the 2023 values the model compiles. It leaves the flat post-A2 snapshot
+untouched and writes the delivered workbook.
 
 Values applied
 --------------
-  * ResidualCapacity (existing stock, base year, held flat across the horizon):
-        RNWTRN<node> = residuals[node].RNWTRN   (RE available at peak x margin)
-        PWRTRN<node> = residuals[node].PWRTRN   (peak x margin - RE x margin)
+  * ResidualCapacity (existing stock, base year, held flat across the horizon),
+    computed in every run for each node from the workbooks in --input-dir:
+        peak  = max over time slices of 2023 SpecifiedAnnualDemand(ELC<node>03)
+                x SpecifiedDemandProfile / (YearSplit x 8760 h), in GW
+        RE    = sum of the node's 2023 renewable generator ResidualCapacity x
+                CapacityFactor in the peak slice (see compute_node_residuals)
+        RNWTRN<node> = residual_peak_margin x RE
+        PWRTRN<node> = residual_peak_margin x peak - RNWTRN<node>
+                (RNWTRN = margin x peak and PWRTRN = 0 when that is negative)
         RNWNLI/RNWRPO/TRNNLI/TRNRPO = 0          (new-build / repower mechanisms)
-    Per-node values come from the frozen, desk-checked
-    `internal_tx_residuals.csv` (peak x 1.2).
-  * CapitalCost / FixedCost (uniform across nodes: intra-node tx is accounting;
-    the study is about interties):
+  * CapitalCost / FixedCost, the same in every node:
         non-RE (PWRTRN/TRNNLI/TRNRPO) = base_capital_cost / base_fixed_cost
         RE     (RNWTRN/RNWNLI/RNWRPO) = base x re_capex_multiplier
-    Basis: per-kW RE transmission premium ~1.5-2.3x (LBNL 2019); default 2.0.
-    The multiplier is a single exposed YAML knob for sensitivity runs.
-  * OperationalLife = operational_life (default 40) for all 6 families.
+    Each value and its source or ASSUMPTION is in the YAML block.
+  * OperationalLife = operational_life for all 6 families.
 
 Scope (intentionally narrow): the four params above, on the six internal
 families only. Interconnectors (13-char TRN*****), DSPTRN, generators (PWR***),
@@ -63,7 +66,7 @@ OUTPUT
 
 USAGE
 -----
-    python apply_internal_transmission.py --input-dir A1_Outputs/A1_Outputs_BAU
+    python apply_internal_transmission.py --input-dir A1_Outputs/A1_Outputs_BAU [--part costs|residuals]
     python apply_internal_transmission.py --input-dir <dir> --dry-run \\
         --desk-check-csv desk_check.csv          # preview only, no mutation
     python apply_internal_transmission.py --self-test
@@ -109,15 +112,39 @@ VALUE_COL = "Value"
 
 # Defaults mirror the YAML block; used only if the YAML omits a key.
 DEFAULTS = {
-    "base_capital_cost": 100.0,
-    "base_fixed_cost": 4.0,
-    "re_capex_multiplier": 2.0,
+    "base_capital_cost": 131.15,
+    "base_fixed_cost": 3.93,
+    "re_capex_multiplier": 1.0,
     "operational_life": 40,
 }
 
 BACKUP_TAG = "_PRE_INTERNAL_TX_"
 CONFIG_NAME = "Config_country_codes.yaml"
-RESIDUALS_NAME = "internal_tx_residuals.csv"
+CONFIG_BLOCK = "internal_transmission"
+MARGIN_KEY = "residual_peak_margin"
+
+# The two parts of the rule. A3 runs "costs" before the base-year pin and
+# "residuals" after it, so the residuals read the values the model compiles.
+PARTS = ("costs", "residuals")
+COST_PARAMS = ("CapitalCost", "FixedCost", "OperationalLife")
+RESIDUAL_PARAMS = ("ResidualCapacity",)
+
+# Inputs of the residual computation, all read from the delivered workbooks.
+DEMAND_FILE_NAME = "A-O_Demand.xlsx"
+BASE_YEAR = 2023
+HOURS_PER_YEAR = 8760
+GWH_PER_PJ = 1e6 / 3600
+# B1 compiles no value from a row whose Projection.Mode is one of these.
+NOT_COMPILED_MODES = ("EMPTY", "Zero", "", None, "According to demand")
+RESIDUAL_SHEETS = ("Primary Techs", "Secondary Techs", "Demand Techs")
+# ASSUMPTION: biomass, geothermal and waste plants count at capacity factor 1 at
+# the peak, because they are dispatchable and their time-slice capacity factor is
+# not a measure of their availability at the peak.
+RE_FIRM_CODES = frozenset({"BIO", "GEO", "WAS"})
+RE_VARIABLE_CODES = frozenset({"HYD", "SPV", "WON", "WOF", "CSP"})
+# ASSUMPTION: small hydro (SHP) counts as non-renewable here, as in the method the
+# residuals came from; its code is not in the renewable list of that method.
+RE_CODES = RE_FIRM_CODES | RE_VARIABLE_CODES
 
 
 def _is_internal_tx(tech) -> bool:
@@ -154,75 +181,226 @@ def resolve_config(explicit: Path | None) -> Path:
     )
 
 
-def resolve_residuals(explicit: Path | None) -> Path:
-    """Return the residuals CSV given by --residuals, or the copy beside this module."""
-    if explicit:
-        p = Path(explicit)
-        if p.is_file():
-            return p
-    p = Path(__file__).resolve().parent / RESIDUALS_NAME
-    if p.is_file():
-        return p
-    raise FileNotFoundError(
-        f"Could not locate {RESIDUALS_NAME}. Tried --residuals and {p}"
-    )
+def has_config_block(config_path: Path) -> bool:
+    """True when the configuration file has an ``internal_transmission`` block."""
+    with open(config_path, "r", encoding="utf-8") as fh:
+        data = yaml.safe_load(fh) or {}
+    return bool(data.get(CONFIG_BLOCK))
 
 
 def read_config(config_path: Path) -> dict:
-    """Read the internal_transmission knob block; fall back to DEFAULTS per key."""
+    """Read the internal_transmission knob block; fall back to DEFAULTS per key.
+
+    The residual margin has no default: the residual part stops when it is absent.
+    """
     with open(config_path, "r", encoding="utf-8") as fh:
         data = yaml.safe_load(fh) or {}
-    blk = data.get("internal_transmission", {}) or {}
-    check_keys(blk, INTERNAL_TRANSMISSION_KEYS, config_path, "internal_transmission")
+    blk = data.get(CONFIG_BLOCK, {}) or {}
+    check_keys(blk, INTERNAL_TRANSMISSION_KEYS, config_path, CONFIG_BLOCK)
     knobs = dict(DEFAULTS)
     for k in DEFAULTS:
         if k in blk and blk[k] is not None:
             knobs[k] = blk[k]
+    if blk.get(MARGIN_KEY) is not None:
+        knobs[MARGIN_KEY] = float(blk[MARGIN_KEY])
     return knobs
 
 
-def read_residuals(residuals_path: Path) -> dict:
-    """Return {node: {'RNWTRN': gw, 'PWRTRN': gw}} from the frozen CSV.
-    Comment lines starting with '#' are skipped."""
-    out: dict = {}
-    with open(residuals_path, newline="", encoding="utf-8") as f:
-        rows = [r for r in csv.reader(f) if r and not str(r[0]).startswith("#")]
+# --------------------------------------------------------------------------- residuals
+class MissingInputError(ValueError):
+    """An input of the residual computation is missing for a node."""
+
+
+def _sheet_rows(wb, sheet: str):
+    """Return (header, data rows) of a workbook sheet."""
+    if sheet not in wb.sheetnames:
+        raise MissingInputError(f"sheet '{sheet}' not found")
+    rows = list(wb[sheet].iter_rows(values_only=True))
     if not rows:
-        raise ValueError(f"{residuals_path} has no data rows")
-    hdr = [h.strip() for h in rows[0]]
-    ni, ri, pi = hdr.index("node"), hdr.index("RNWTRN"), hdr.index("PWRTRN")
-    for r in rows[1:]:
-        if len(r) <= max(ni, ri, pi) or not r[ni].strip():
-            continue
-        out[r[ni].strip()] = {"RNWTRN": float(r[ri]), "PWRTRN": float(r[pi])}
+        raise MissingInputError(f"sheet '{sheet}' is empty")
+    return list(rows[0]), rows[1:]
+
+
+def _year_index(header, sheet: str) -> int:
+    """Return the column index of the base year in a sheet header."""
+    for i, h in enumerate(header):
+        if h is not None and str(h).strip() in (str(BASE_YEAR), f"{BASE_YEAR}.0"):
+            return i
+    raise MissingInputError(f"sheet '{sheet}' has no {BASE_YEAR} column")
+
+
+def _is_node_demand(fuel) -> bool:
+    """True for a node's dispatch-ready demand fuel, ELC<node>03."""
+    return isinstance(fuel, str) and len(fuel) == 10 and fuel.startswith("ELC") and fuel.endswith("03")
+
+
+def _re_code(tech):
+    """Return the renewable code of a PWR<code><node> generator, else None."""
+    if not isinstance(tech, str) or not tech.startswith("PWR") or _is_internal_tx(tech):
+        return None
+    code = tech[3:-5]
+    return code if code in RE_CODES else None
+
+
+def _compiled(mode, where: str) -> bool:
+    """True when B1 compiles the row's year values as they stand.
+
+    A row with a mode in NOT_COMPILED_MODES compiles nothing. Any other mode than
+    ``User defined`` makes B1 project the values, which this rule does not repeat.
+    """
+    if mode == PROJ_MODE_USER:
+        return True
+    if mode in NOT_COMPILED_MODES:
+        return False
+    raise MissingInputError(f"{where}: Projection.Mode {mode!r} is not read by this rule")
+
+
+def read_residual_inputs(input_dir: Path) -> dict:
+    """Read the base-year inputs of the residual computation that B1 compiles.
+
+    From ``A-O_Demand.xlsx``: SpecifiedAnnualDemand (Demand_Projection) and
+    SpecifiedDemandProfile (Profiles). From ``A-O_Parametrization.xlsx``: YearSplit
+    (Yearsplit), CapacityFactor (Capacities), the ResidualCapacity of the PWR
+    technologies and the internal transmission nodes.
+    """
+    input_dir = Path(input_dir)
+    out = {"demand": {}, "profile": {}, "yearsplit": {}, "cf": {}, "residual": {}, "nodes": set()}
+    dem = load_workbook(input_dir / DEMAND_FILE_NAME, read_only=True, data_only=True)
+    par = load_workbook(input_dir / PARAM_FILE_NAME, read_only=True, data_only=True)
+    try:
+        hdr, rows = _sheet_rows(dem, "Demand_Projection")
+        y, f, m = _year_index(hdr, "Demand_Projection"), hdr.index("Fuel/Tech"), hdr.index(PROJ_MODE_COL)
+        for r in rows:
+            if (_is_node_demand(r[f]) and _compiled(r[m], f"Demand_Projection {r[f]}")
+                    and r[y] is not None):
+                out["demand"][r[f]] = float(r[y])
+        hdr, rows = _sheet_rows(dem, "Profiles")
+        y, f, m = _year_index(hdr, "Profiles"), hdr.index("Fuel/Tech"), hdr.index(PROJ_MODE_COL)
+        t = hdr.index("Timeslices")
+        for r in rows:
+            if (_is_node_demand(r[f]) and _compiled(r[m], f"Profiles {r[f]} {r[t]}")
+                    and r[y] is not None):
+                out["profile"][(r[f], r[t])] = float(r[y])
+        hdr, rows = _sheet_rows(par, "Yearsplit")
+        y, t, m = _year_index(hdr, "Yearsplit"), hdr.index("Timeslices"), hdr.index(PROJ_MODE_COL)
+        for r in rows:
+            if r[t] and _compiled(r[m], f"Yearsplit {r[t]}") and r[y] is not None:
+                out["yearsplit"][r[t]] = float(r[y])
+        hdr, rows = _sheet_rows(par, "Capacities")
+        y, t, m = _year_index(hdr, "Capacities"), hdr.index("Timeslices"), hdr.index(PROJ_MODE_COL)
+        te, p = hdr.index("Tech"), hdr.index("Parameter")
+        for r in rows:
+            if (r[p] == "CapacityFactor" and _re_code(r[te]) in RE_VARIABLE_CODES
+                    and _compiled(r[m], f"Capacities {r[te]} {r[t]}") and r[y] is not None):
+                out["cf"][(r[te], r[t])] = float(r[y])
+        for sheet in RESIDUAL_SHEETS:
+            if sheet not in par.sheetnames:
+                continue
+            hdr, rows = _sheet_rows(par, sheet)
+            y, te, p, m = (_year_index(hdr, sheet), hdr.index("Tech"), hdr.index("Parameter"),
+                           hdr.index(PROJ_MODE_COL))
+            for r in rows:
+                tech = r[te]
+                if r[p] != "ResidualCapacity" or not isinstance(tech, str):
+                    continue
+                if _is_internal_tx(tech) and _family_of(tech) == "RNWTRN":
+                    out["nodes"].add(_node_of(tech))
+                if _re_code(tech) is None:
+                    continue
+                if _compiled(r[m], f"{sheet} {tech}") and r[y] is not None:
+                    if tech in out["residual"]:
+                        raise MissingInputError(f"{tech}: two ResidualCapacity rows")
+                    out["residual"][tech] = float(r[y])
+    finally:
+        dem.close()
+        par.close()
+    out["nodes"] = sorted(out["nodes"])
     return out
 
 
-def build_target_values(knobs: dict, residuals: dict, nodes: list) -> dict:
-    """Return {tech: {param: value}} for all 60 internal-tx techs."""
-    base_cap = float(knobs["base_capital_cost"])
-    base_fom = float(knobs["base_fixed_cost"])
-    mult = float(knobs["re_capex_multiplier"])
-    life = knobs["operational_life"]
+def compute_node_residuals(inputs: dict, node: str, margin: float) -> dict:
+    """Return the base-year residual capacity (GW) of RNWTRN<node> and PWRTRN<node>.
 
+    peak = the largest, over time slices, of 2023 SpecifiedAnnualDemand of
+    ELC<node>03 x SpecifiedDemandProfile share / (YearSplit share x 8760 h).
+    RE at peak = sum over the node's renewable generators of 2023 ResidualCapacity
+    x CapacityFactor in the peak slice (1 for biomass, geothermal and waste; the
+    generator's mean 2023 capacity factor when it has none in the peak slice).
+    RNWTRN = margin x RE at peak; PWRTRN = margin x peak - RNWTRN. When that is
+    negative, RNWTRN = margin x peak and PWRTRN = 0.
+    """
+    fuel = f"ELC{node}03"
+    if not inputs["yearsplit"]:
+        raise MissingInputError(f"{node}: no compiled {BASE_YEAR} YearSplit")
+    if fuel not in inputs["demand"]:
+        raise MissingInputError(f"{node}: no compiled {BASE_YEAR} SpecifiedAnnualDemand of {fuel}")
+    demand = inputs["demand"][fuel]
+    powers = {}
+    for ts, share in inputs["yearsplit"].items():
+        if (fuel, ts) not in inputs["profile"]:
+            raise MissingInputError(
+                f"{node}: no compiled {BASE_YEAR} SpecifiedDemandProfile of {fuel} in {ts}")
+        powers[ts] = demand * inputs["profile"][(fuel, ts)] * GWH_PER_PJ / (share * HOURS_PER_YEAR)
+    peak_ts = max(powers, key=powers.get)
+    peak = powers[peak_ts]
+    re_at_peak = 0.0
+    for tech, cap in sorted(inputs["residual"].items()):
+        code = _re_code(tech)
+        if tech[-5:] != node or code is None:
+            continue
+        if code in RE_FIRM_CODES:
+            cf = 1.0
+        elif (tech, peak_ts) in inputs["cf"]:
+            cf = inputs["cf"][(tech, peak_ts)]
+        else:
+            # ASSUMPTION: a renewable generator with no capacity factor in the peak
+            # slice counts at the mean of its 2023 capacity factors in the other
+            # slices, or 1 when it has none, as in the method the residuals came from.
+            own = [v for (t, _ts), v in inputs["cf"].items() if t == tech]
+            cf = sum(own) / len(own) if own else 1.0
+        re_at_peak += cap * cf
+    rnwtrn = re_at_peak * margin
+    pwrtrn = peak * margin - re_at_peak * margin
+    if pwrtrn < 0:
+        rnwtrn = peak * margin
+        pwrtrn = 0.0
+    return {"RNWTRN": rnwtrn, "PWRTRN": pwrtrn, "peak_GW": peak,
+            "peak_timeslice": peak_ts, "RE_at_peak_GW": re_at_peak}
+
+
+def compute_residuals(input_dir: Path, margin: float, nodes=None) -> dict:
+    """Return {node: computed residuals} for every internal transmission node."""
+    inputs = read_residual_inputs(input_dir)
+    node_list = list(nodes) if nodes else inputs["nodes"]
+    if not node_list:
+        raise MissingInputError("no RNWTRN<node> ResidualCapacity row in the workbook")
+    return {node: compute_node_residuals(inputs, node, margin) for node in node_list}
+
+
+def build_target_values(knobs: dict, residuals: dict, nodes: list, parts=PARTS) -> dict:
+    """Return {tech: {param: value}} for the 60 internal-tx techs and the selected parts."""
     out: dict = {}
     for fam in ALL_FAMILIES:
-        is_re = fam in RE_FAMILIES
-        cap = base_cap * (mult if is_re else 1.0)
-        fom = base_fom * (mult if is_re else 1.0)
         for node in nodes:
-            tech = f"{fam}{node}"
-            vals = {
-                "CapitalCost": cap,
-                "FixedCost": fom,
-                "OperationalLife": life,
-            }
-            if fam in RESIDUAL_FAMILY:
-                key = RESIDUAL_FAMILY[fam]
-                vals["ResidualCapacity"] = float(residuals.get(node, {}).get(key, 0.0))
-            else:
-                vals["ResidualCapacity"] = 0.0
-            out[tech] = vals
+            out[f"{fam}{node}"] = {}
+    if "costs" in parts:
+        base_cap = float(knobs["base_capital_cost"])
+        base_fom = float(knobs["base_fixed_cost"])
+        mult = float(knobs["re_capex_multiplier"])
+        life = knobs["operational_life"]
+        for fam in ALL_FAMILIES:
+            is_re = fam in RE_FAMILIES
+            for node in nodes:
+                out[f"{fam}{node}"].update({
+                    "CapitalCost": base_cap * (mult if is_re else 1.0),
+                    "FixedCost": base_fom * (mult if is_re else 1.0),
+                    "OperationalLife": life,
+                })
+    if "residuals" in parts:
+        for fam in ALL_FAMILIES:
+            for node in nodes:
+                value = residuals[node][RESIDUAL_FAMILY[fam]] if fam in RESIDUAL_FAMILY else 0.0
+                out[f"{fam}{node}"]["ResidualCapacity"] = float(value)
     return out
 
 
@@ -386,17 +564,31 @@ def restore_from_backup(input_dir: Path, backup_dir: Path | None = None) -> Path
 
 
 # --------------------------------------------------------------------------- orchestration
-def run(input_dir, sheets=None, skip_backup=False, config=None, residuals=None,
-        dry_run=False, desk_check_csv=None, nodes=None) -> dict:
-    """Apply the configured costs, operational life and per-node residual capacity to the internal transmission families and return the change log."""
+def run(input_dir, sheets=None, skip_backup=False, config=None, dry_run=False,
+        desk_check_csv=None, nodes=None, parts=PARTS) -> dict:
+    """Apply the selected parts to the internal transmission families and return the change log.
+
+    ``costs``: CapitalCost, FixedCost and OperationalLife from the configuration.
+    ``residuals``: the base-year ResidualCapacity computed from the workbooks in
+    ``input_dir`` (see ``compute_node_residuals``).
+    """
     input_dir = Path(input_dir)
     sheets = sheets or DEFAULT_TARGET_SHEETS
+    parts = tuple(parts)
+    unknown = [part for part in parts if part not in PARTS]
+    if unknown or not parts:
+        raise ValueError(f"parts must be taken from {PARTS}, got {parts}")
     config_path = resolve_config(config)
-    residuals_path = resolve_residuals(residuals)
     knobs = read_config(config_path)
-    resid = read_residuals(residuals_path)
-    node_list = nodes or sorted(resid.keys())
-    target_values = build_target_values(knobs, resid, node_list)
+    computed = {}
+    if "residuals" in parts:
+        if MARGIN_KEY not in knobs:
+            raise MissingInputError(f"{config_path}: {CONFIG_BLOCK}.{MARGIN_KEY} is not set")
+        computed = compute_residuals(input_dir, knobs[MARGIN_KEY], nodes)
+        node_list = list(computed)
+    else:
+        node_list = list(nodes) if nodes else read_residual_inputs(input_dir)["nodes"]
+    target_values = build_target_values(knobs, computed, node_list, parts)
 
     paramfile = input_dir / PARAM_FILE_NAME
     if not paramfile.exists():
@@ -409,14 +601,16 @@ def run(input_dir, sheets=None, skip_backup=False, config=None, residuals=None,
     file_log = edit_parametrization(paramfile, sheets, target_values, dry_run)
     file_log.update({
         "config": str(config_path),
-        "residuals": str(residuals_path),
+        "parts": list(parts),
         "knobs": knobs,
         "nodes": node_list,
+        "residuals_computed": computed,
         "dry_run": dry_run,
         "backup_dir": str(backup_dir) if backup_dir else None,
         "timestamp": datetime.now().isoformat(),
         "families": {"RE": list(RE_FAMILIES), "non_RE": list(NONRE_FAMILIES)},
-        "applied_params": list(APPLIED_PARAMS),
+        "applied_params": [p for part in parts
+                           for p in (COST_PARAMS if part == "costs" else RESIDUAL_PARAMS)],
     })
     if desk_check_csv:
         write_desk_check_csv(file_log, Path(desk_check_csv))
@@ -429,15 +623,17 @@ def run(input_dir, sheets=None, skip_backup=False, config=None, residuals=None,
 
 
 def print_summary(log: dict) -> None:
-    """Print the inputs, per-sheet changes and unmatched pairs of a run log."""
+    """Print the inputs, computed residuals, per-sheet changes and unmatched pairs of a run log."""
     bar = "=" * 72
     print(bar)
-    print("apply_internal_transmission: YAML + residuals -> model"
+    print("apply_internal_transmission: " + " + ".join(log.get("parts", []))
           + ("  [DRY RUN]" if log.get("dry_run") else ""))
     print(bar)
     print(f"Config (knobs)   : {log.get('config')}")
-    print(f"Residuals        : {log.get('residuals')}")
     print(f"Knobs            : {log.get('knobs')}")
+    for node, r in (log.get("residuals_computed") or {}).items():
+        print(f"Residuals {node}  : peak {r['peak_GW']!r} GW in {r['peak_timeslice']}, "
+              f"RE at peak {r['RE_at_peak_GW']!r} GW -> RNWTRN {r['RNWTRN']!r}, PWRTRN {r['PWRTRN']!r}")
     print(f"Backup folder    : {log.get('backup_dir', '(skipped)')}")
     for s in log.get("sheets", []):
         if "skipped" in s:
@@ -458,7 +654,7 @@ def print_summary(log: dict) -> None:
 
 # --------------------------------------------------------------------------- self-test
 def run_self_test() -> int:
-    """Run the rule twice on synthetic inputs, print each check and return 0 on success."""
+    """Run the costs part twice on synthetic inputs, print each check and return 0 on success."""
     import tempfile
     bar = "=" * 72
     print(bar); print("apply_internal_transmission.py: SELF-TEST"); print(bar)
@@ -474,12 +670,6 @@ def run_self_test() -> int:
         }
         cfg_path = td / CONFIG_NAME
         cfg_path.write_text(yaml.safe_dump(cfg), encoding="utf-8")
-        # synthetic residuals (2 nodes)
-        resid_path = td / RESIDUALS_NAME
-        resid_path.write_text(
-            "# comment line\nnode,RNWTRN,PWRTRN,status_flags\n"
-            "INDWE,19.552,68.075,ok\nMDVXX,0.001,0.295,SMALL_GRID\n",
-            encoding="utf-8")
 
         # synthetic A-O_Parametrization: Demand Techs (year) + FHP (scalar)
         idir = td / "A1_Outputs" / "A1_Outputs_BAU"; idir.mkdir(parents=True)
@@ -488,12 +678,11 @@ def run_self_test() -> int:
         for c, h in enumerate(["Tech", "Parameter", PROJ_MODE_COL, 2023, 2024, 2025], 1):
             dt.cell(row=1, column=c, value=h)
         dt_rows = [
-            ("RNWTRNINDWE", "ResidualCapacity", "User defined", 5, 5, 5),   # -> 19.552
+            ("RNWTRNINDWE", "ResidualCapacity", "User defined", 5, 5, 5),   # residual part only
             ("RNWTRNINDWE", "CapitalCost", "User defined", 100, 100, 100),  # RE -> 200
             ("RNWTRNINDWE", "FixedCost", "User defined", 4, 4, 4),          # RE -> 8
-            ("PWRTRNMDVXX", "ResidualCapacity", "User defined", 5, 5, 5),   # -> 0.295
+            ("PWRTRNMDVXX", "ResidualCapacity", "User defined", 5, 5, 5),   # residual part only
             ("PWRTRNMDVXX", "CapitalCost", "User defined", 100, 100, 100),  # non-RE -> 100 (unchanged)
-            ("RNWNLIINDWE", "ResidualCapacity", "EMPTY", "", "", ""),       # NLI -> 0
             ("DSPTRNINDWE", "ResidualCapacity", "User defined", 9999, 9999, 9999),  # must NOT change
             ("PWRSPVINDWE", "CapitalCost", "User defined", 560, 560, 560),  # non-tx, must NOT change
         ]
@@ -514,7 +703,7 @@ def run_self_test() -> int:
                 fhp.cell(row=ri, column=c, value=v)
         pwb.save(idir / PARAM_FILE_NAME); pwb.close()
 
-        run(idir, skip_backup=True, config=cfg_path, residuals=resid_path)
+        run(idir, skip_backup=True, config=cfg_path, nodes=["INDWE", "MDVXX"], parts=("costs",))
 
         chk = load_workbook(idir / PARAM_FILE_NAME, data_only=True)
         dt = chk["Demand Techs"]; got = {}
@@ -532,9 +721,8 @@ def run_self_test() -> int:
             nonlocal ok
             print(("  PASS " if cond else "  FAIL ") + label)
             ok = ok and cond
-        ck(got.get(("RNWTRNINDWE", "ResidualCapacity")) == [19.552, 19.552, 19.552], "RNWTRN residual 5 -> per-node 19.552")
-        ck(got.get(("PWRTRNMDVXX", "ResidualCapacity")) == [0.295, 0.295, 0.295], "PWRTRN residual 5 -> per-node 0.295")
-        ck(got.get(("RNWNLIINDWE", "ResidualCapacity")) == [0.0, 0.0, 0.0], "RNWNLI residual empty -> 0")
+        ck(got.get(("RNWTRNINDWE", "ResidualCapacity")) == [5, 5, 5], "costs part leaves RNWTRN residual")
+        ck(got.get(("PWRTRNMDVXX", "ResidualCapacity")) == [5, 5, 5], "costs part leaves PWRTRN residual")
         ck(got.get(("RNWTRNINDWE", "CapitalCost")) == [200.0, 200.0, 200.0], "RE CapitalCost 100 -> 200 (2x)")
         ck(got.get(("RNWTRNINDWE", "FixedCost")) == [8.0, 8.0, 8.0], "RE FixedCost 4 -> 8 (2x)")
         ck(got.get(("PWRTRNMDVXX", "CapitalCost")) == [100.0, 100.0, 100.0], "non-RE CapitalCost stays 100")
@@ -546,7 +734,7 @@ def run_self_test() -> int:
         ck(got_f.get(("DSPTRNINDWE", "OperationalLife")) == 20, "DSPTRN life UNCHANGED")
 
         # idempotency: a second run should change nothing
-        log2 = run(idir, skip_backup=True, config=cfg_path, residuals=resid_path)
+        log2 = run(idir, skip_backup=True, config=cfg_path, nodes=["INDWE", "MDVXX"], parts=("costs",))
         n2 = sum(len(s.get("changes", [])) for s in log2["sheets"])
         ck(n2 == 0, f"idempotent (2nd run: {n2} changes)")
     print(bar); print("SELF-TEST", "PASSED" if ok else "FAILED"); print(bar)
@@ -560,7 +748,8 @@ def main() -> int:
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--input-dir", type=Path, default=Path("A1_Outputs/A1_Outputs_BAU"))
     p.add_argument("--config", type=Path, default=None, help="Config_country_codes.yaml")
-    p.add_argument("--residuals", type=Path, default=None, help="internal_tx_residuals.csv")
+    p.add_argument("--part", choices=PARTS + ("all",), default="all",
+                   help="costs (CapitalCost, FixedCost, OperationalLife), residuals, or all")
     p.add_argument("--sheets", nargs="+", default=DEFAULT_TARGET_SHEETS)
     p.add_argument("--skip-backup", action="store_true")
     p.add_argument("--dry-run", action="store_true",
@@ -581,8 +770,9 @@ def main() -> int:
             print(f"ERROR: {exc}", file=sys.stderr); return 1
         print(f"Restored {args.input_dir} from {used}"); return 0
     try:
+        parts = PARTS if args.part == "all" else (args.part,)
         log = run(args.input_dir, args.sheets, args.skip_backup, args.config,
-                  args.residuals, args.dry_run, args.desk_check_csv)
+                  args.dry_run, args.desk_check_csv, parts=parts)
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr); return 1
     print_summary(log)

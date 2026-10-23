@@ -89,7 +89,7 @@ in a working folder `scenarios/_run_<stamp>/`. The modules are in
 | Stage 3 | `fix_trn_residuals`, `clear_stale_unbinding_caps`, `cap_trn_to_residual` | the interconnector data of the scenario workbook | the `_FIXED`, `_POST_CAP_RESET` and `_POST_TRN_CAP` workbooks |
 | Stage 4 | `transform` | the Control sheet | `stage5/` with the four A-O workbooks; `A_Calibrated_BAU` inherits the restrictions of `BAU` |
 | Stage 5 | the root's rule chain in `ostram/pipeline/scenarios/rules/` | `config/scenarios/<root>/*.yaml` | the A-O workbooks in `stage5/` |
-| Shared rules | `apply_interconnector_costs`, `apply_internal_transmission`, `apply_internal_tx_losses` in `rules/`, then `apply_base_year_pin` for `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE` | the merged workbook, `config/preparation/Config_country_codes.yaml`, `config/scenarios/rules/internal_tx_residuals.csv`, `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | the A-O workbooks in `stage5/` |
+| Shared rules | `apply_interconnector_costs`, `apply_internal_transmission`, `apply_internal_tx_losses` in `rules/`, then `apply_base_year_pin` for `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE`, then the residual part of `apply_internal_transmission` for every root | the merged workbook, `config/preparation/Config_country_codes.yaml`, `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | the A-O workbooks in `stage5/` |
 | Stage 6 | `sync_og_to_ts20`, then `transform` | `SOASIA_OSeMOSYS_WV.xlsx`, the change records of stage 5 | the timeslice sets and parameters in `preparation/og_csvs_inputs/`, `_scenario_run_state_<root>.xlsx`, the four A-O workbooks in `A1_Outputs_<root>/`; `BAU` also receives its transmission ceilings |
 | Derived scenario | `ostram/pipeline/scenarios/scenario_edits.py` | `A1_Outputs_<parent>/`, `config/scenarios/<scenario>/scenario.yaml`, the shared VRE ceilings in `config/setups/south_asia.yaml`, the base-year pin table | `A1_Outputs_<scenario>/` with its edit log; the overlay for the two direction variants |
 
@@ -128,7 +128,6 @@ older reserve-margin repair are switched off in the tracked configuration.
 | `config/execution/Config_MOMF_T1_AB.yaml` | B2 |
 | `config/scenarios/technology_types.csv` | A3 |
 | `config/scenarios/<root>/*.yaml` | A3 |
-| `config/scenarios/rules/internal_tx_residuals.csv` | A3 |
 | `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | A3, and B2 for the gas and oil allowance |
 | `config/scenarios/<scenario>/set_interconnector_direction.yaml` | A3 |
 | `ostram/resources/compilation/conversion_format.yaml` | B2 |

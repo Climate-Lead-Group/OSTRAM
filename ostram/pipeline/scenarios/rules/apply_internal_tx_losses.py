@@ -17,10 +17,9 @@ A-O_AR_Model_Base_Year "Demand Techs" (Value.Fuel.O). This stage sets the
 internal families' output activity to (1 - loss), so B1 compiles
 OutputActivityRatio = 1 - loss for them.
 
-Loss value: `internal_transmission.transmission_loss` in Config_country_codes.yaml
-(default 0.03 = 3%, CEA all-India *transmission* loss ~3-4%; distribution is out
-of scope). Uniform across nodes, as the costs of stage_internal_transmission
-are. OAR = 0.97.
+Loss value: `internal_transmission.transmission_loss` in Config_country_codes.yaml,
+0.03, an ASSUMPTION explained beside the key. Uniform across nodes, as the costs
+of stage_internal_transmission are.
 
 Scope: the 6 internal families only, on the two AR files' "Demand Techs" sheet.
 Interconnectors, DSPTRN, generators, storage untouched.

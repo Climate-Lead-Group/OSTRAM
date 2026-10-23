@@ -56,7 +56,6 @@ EXPECTED_CONFIG_FILES = (
     "config/scenarios/C_Target_VRE/set_vre_targets.yaml",
     "config/scenarios/C_Target_VRE/storage_floors.yaml",
     "config/scenarios/C_Target_VRE_Clipped/scenario.yaml",
-    "config/scenarios/rules/internal_tx_residuals.csv",
     "config/scenarios/rules/pwr_min_2023_2026_pin.csv",
     "config/scenarios/technology_types.csv",
 )
