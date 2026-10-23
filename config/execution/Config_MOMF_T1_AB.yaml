@@ -86,6 +86,19 @@ concat_scenarios_csv: True
 annualize_capital: False
 
 ########################################################################################
+# === Base-year build lock ===
+# Runs on the normalised CSVs before the otoole conversion
+# (ostram/pipeline/execution/base_year_lock.py). In the lock years, generation
+# (except the PWRBCK backstop), storage and interconnectors add only the plants
+# the workbook lists: TotalAnnualMaxCapacityInvestment equals the
+# TotalAnnualMinCapacityInvestment the model receives, 0 where none is given.
+# ASSUMPTION: 2023 to 2026 are history or under construction, so their builds
+# are already known.
+base_year_lock_active: True
+base_year_lock_first_year: 2023
+base_year_lock_last_year: 2026
+
+########################################################################################
 # === Storage delay (block storage builds for first N years, then release) ===
 # Master switch. False (or absent) = pipeline runs unchanged.
 # When True: mutually exclusive with strip_storage_active (strip is silently

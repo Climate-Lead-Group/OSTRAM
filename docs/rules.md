@@ -146,9 +146,10 @@ treats it as follows.
 | A3 build-cap rule | Treats blank, 0 and 9999 as placeholders and replaces them with the computed cap. Storage is exempt and receives 9999 for both caps. |
 | A3 base-year pin | Writes the reviewed values, including zeros. |
 | B1 | Exports a row only when its `Projection.Mode` is a text other than `EMPTY`, `Zero`, blank or `According to demand`. A 0 on an exported row stays 0. An omitted row receives -1 from the otoole conversion configuration. |
+| B2 base-year build lock | Sets the 2023 to 2026 build caps of plants, storage and interconnectors to the minimum investment of the same cell, and to 0 where there is none. See [Base-year build lock](#base-year-build-lock). |
 | B2 storage delay | Sets both caps of the 20 storage-linked technologies to 0 in 2023 to 2027 and to -1 from 2028. |
 | B2 backstop opening | Turns 0 into 9999 for both caps of `PWRBCK*`. |
-| B2 gas and oil allowance | Replaces a build cap of 0 or 9999 of `PWRPET*`, `PWROIL*` and `PWRNGS*` with 0.5 GW per year, and a total capacity cap of 0 with 10 GW. For a technology with a positive minimum investment in any year, it keeps the build caps and still replaces a total capacity cap of 0. A replaced total capacity cap is raised to the higher of the minimum total capacity and the residual capacity plus the minimum investment of the same year, where that value is higher than 10 GW. It restores the values of the base-year pin. |
+| B2 gas and oil allowance | Replaces a build cap of 0 or 9999 of `PWRPET*`, `PWROIL*` and `PWRNGS*` with 0.5 GW per year, and a total capacity cap of 0 with 10 GW. For a technology with a positive minimum investment in any year, it keeps the build caps and still replaces a total capacity cap of 0. A replaced total capacity cap is raised to the higher of the minimum total capacity and the residual capacity plus the minimum investment of the same year, where that value is higher than 10 GW. It restores the values of the base-year pin. It does not replace a build cap that the base-year build lock holds. |
 
 Read the final datafile before relying on a value:
 `workspace/execution/Executables/<S>_0/Pre_processed_<S>_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt`.
@@ -244,6 +245,37 @@ country-region. Column `TotalAnnualMaxCapacity` of the same sheet holds the
 step on and select the technologies and the replaced values are in
 `config/execution/Config_MOMF_T1_AB.yaml`: `reserve_margin_xlsx_active`,
 `reserve_margin_xlsx_target_prefixes` and `reserve_margin_xlsx_sentinel_values`.
+The allowance does not replace a build cap that the base-year build lock
+holds.
+
+## Base-year build lock
+
+ASSUMPTION: no plant, storage or interconnector adds capacity in 2023 to 2026
+beyond the plants the workbook lists for those years, because those years are
+history or under construction and their builds are already known. The
+backstop stays open so that a shortfall shows as backstop use.
+
+B2 applies the lock to the normalised CSVs of every scenario, before the
+otoole conversion, in `ostram/pipeline/execution/base_year_lock.py`. In each
+lock year, the build cap of every technology of the GENERATION family except
+`PWRBCK*`, of the two STORAGE families and of the INTERCONNECTORS family in
+`config/scenarios/technology_types.csv` equals the minimum investment that the
+model receives for the same cell, and 0 where there is none. Where a scenario
+already holds a lower build cap, the lower value stays. The internal
+transmission families, fuel supply and the backstop keep their own rules. The
+gas and oil allowance skips the locked cells, and the storage delay sets the
+storage caps of these years to 0.
+
+Two pre-solve checks run with the lock. The B2 log lists their findings.
+
+| Check | What it compares | What happens |
+|---|---|---|
+| Activity floors | For each locked technology with an annual activity lower limit in a lock year: the limit against the most the locked fleet can generate, which is its residual capacity plus its cumulative locked builds, times `CapacityToActivityUnit`, times the sum over time slices of `CapacityFactor` x `YearSplit`, times `AvailabilityFactor` where it is below 1. | A limit above that value cannot be met. It is lowered to that value, and the log lists the technology, the year, the observed limit and the fleet value as a plant-list gap. |
+| Trade floors | In the scenarios with active trade bounds, for each `D4_I1_TRADE_*` lower bound in a lock year: the bound against what its links can carry with their residual capacity and locked builds. | Where the links cannot carry it, they stay out of the lock and their build caps in the lock years keep their values. |
+
+The settings are in `config/execution/Config_MOMF_T1_AB.yaml`:
+`base_year_lock_active`, `base_year_lock_first_year` and
+`base_year_lock_last_year`.
 
 ## Storage delay
 

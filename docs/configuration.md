@@ -487,6 +487,14 @@ annualize_capital: False
 
 B2 applies a fixed chain of model-file adjustments to the preprocessed OSeMOSYS datafile before solving, each gated by its own flag. See {doc}`pipeline` (Stage B2) for the exact application order and how they interact.
 
+**Base-year build lock** -- runs on the normalised CSVs before the otoole conversion. In the lock years, generation (except the backstop), storage and interconnectors may build only their minimum investment; see {doc}`rules`:
+
+```yaml
+base_year_lock_active: True
+base_year_lock_first_year: 2023
+base_year_lock_last_year: 2026
+```
+
 **Storage delay** -- blocks storage builds/operation for the first N years, then releases them. Mutually exclusive with storage stripping (storage delay silently wins if both are `true`):
 
 ```yaml

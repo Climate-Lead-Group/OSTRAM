@@ -237,6 +237,13 @@ def parse_args() -> argparse.Namespace:
         help=f"Optional CLI fallback for {FLOW_PARAM}; overrides general workbook values when more specific.",
     )
     parser.add_argument(
+        "--locked-years",
+        nargs=2,
+        type=int,
+        metavar=("FIRST", "LAST"),
+        help=f"Years of the base-year build lock; {FLOW_PARAM} of locked technologies is not replaced in them.",
+    )
+    parser.add_argument(
         "--warnings-file",
         help="Optional file to write warnings to. Warnings are always printed to stderr.",
     )
@@ -280,6 +287,16 @@ def reviewed_capacity_keys(input_path):
     path=Path(setup_policy("pwr_min_pin_rules_path",str(pins.RULES_CSV)))
     rules=pins.load_pin_rules(path)
     return {(r.parameter,r.technology,r.year) for r in rules if r.parameter in (STOCK_PARAM,FLOW_PARAM) and scenario in r.root_scenarios}
+
+
+def locked_capacity_keys(locked_years):
+    """Return the (parameter, technology, year) keys of the build cap that the
+    base-year lock holds, or an empty set without lock years.
+    """
+    if not locked_years:return set()
+    from ostram.pipeline.execution.base_year_lock import locked_technologies
+    first,last=locked_years
+    return {(FLOW_PARAM,t,y) for t in locked_technologies() for y in range(first,last+1)}
 
 
 def main() -> int:
@@ -332,6 +349,8 @@ def main() -> int:
     )
     adjusted, protected_restored = preserve_reviewed_capacity_rows(lines, adjusted, reviewed_capacity_keys(input_path))
     print(f"Reviewed capacity rows protected from fallback replacement: {protected_restored}")
+    adjusted, locked_restored = preserve_reviewed_capacity_rows(lines, adjusted, locked_capacity_keys(args.locked_years))
+    print(f"Base-year lock rows protected from fallback replacement: {locked_restored}")
     consistency_warnings = stock_flow_warnings(adjusted, args.target_prefixes)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)

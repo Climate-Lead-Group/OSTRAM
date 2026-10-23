@@ -101,6 +101,7 @@ The [rules page](rules.md) lists the rule chain of each root and the
 | B2 step | Module | Reads | Writes |
 |---|---|---|---|
 | Normalise | `ostram.pipeline.execution.runner` | `compilation/A2_Output_Params/<S>/*.csv`, the package CSV templates | `execution/A2_Outputs_Params_otoole/<S>/*.csv` |
+| Base-year build lock | `ostram.pipeline.execution.base_year_lock`, called by the runner | the normalised CSVs, `config/scenarios/technology_types.csv`, the model file | `TotalAnnualMaxCapacityInvestment.csv` and `TotalTechnologyAnnualActivityLowerLimit.csv` of `execution/A2_Outputs_Params_otoole/<S>/`, in place |
 | Convert | otoole, driven by the runner | the normalised CSVs, `conversion_format.yaml`, the gross import policy in the scenario's file, the historical trade roots in `south_asia.yaml`, the model file | `execution/Executables/<S>_0/<S>_0.txt` |
 | Preprocess | `ostram.pipeline.execution.preprocess` | the datafile | `Pre_processed_<S>_0.txt` |
 | Adjustment 1 | `model_file_adjustments.days_in_day_type` | the preprocessed datafile | the same file, in place |
@@ -126,7 +127,7 @@ older reserve-margin repair are switched off in the tracked configuration.
 | `config/preparation/Config_region_consolidation.yaml` | A1 |
 | `config/compilation/Config_MOMF_T1_A.yaml` | A1, A3, B1, B2 |
 | `config/execution/Config_MOMF_T1_AB.yaml` | B2 |
-| `config/scenarios/technology_types.csv` | A3 |
+| `config/scenarios/technology_types.csv` | A3, B2 |
 | `config/scenarios/<root>/*.yaml` | A3 |
 | `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | A3, and B2 for the gas and oil allowance |
 | `config/scenarios/<scenario>/set_interconnector_direction.yaml` | A3 |
