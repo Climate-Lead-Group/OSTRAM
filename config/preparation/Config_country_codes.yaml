@@ -324,8 +324,15 @@ TRNNLI:
 # authoritative for the delivered model: it overrides the flat A2 placeholders and the Stage-1
 # OperationalLife (50/20) with the values below, on the six internal families
 # (RE: RNWTRN/RNWNLI/RNWRPO, non-RE: PWRTRN/TRNNLI/TRNRPO).
-#   * CapitalCost/FixedCost are the same in every node. non-RE = base; RE = base x
-#     re_capex_multiplier. Each constant below names its source or ASSUMPTION.
+#   * CapitalCost/FixedCost are the same in every node and computed in every run from
+#     the sourced inputs below (internal_grid_costs in the rule):
+#       base_capital_cost   = esmap_capital_cost_usd2010_per_kw x muv_2023 / muv_2010
+#       base_fixed_cost     = fixed_cost_share x base_capital_cost
+#       re_add_on           = gec2_cost_rs_crore x 1e7 / (gec2_capacity_mw x 1e3)
+#                             / inr_per_usd_2022 x muv_2023 / muv_2022
+#       re_capex_multiplier = (base_capital_cost + re_add_on) / base_capital_cost
+#     non-RE = base; RE = base x re_capex_multiplier. Each input names its source or
+#     ASSUMPTION.
 #   * OperationalLife applies to all 6 families.
 #   * The base-year ResidualCapacity of RNWTRN<node> and PWRTRN<node> is computed in
 #     every run by the A3 stage `stage_internal_tx_residuals`, after the base-year pin,
@@ -334,24 +341,41 @@ TRNNLI:
 #     margin x peak and PWRTRN = 0 when RE at peak exceeds the peak). NLI/RPO = 0.
 #     docs/rules.md gives the inputs and the formula.
 internal_transmission:
-  # USD2023 per kW. ESMAP (2026), Understanding the Cost of Transmission Infrastructure,
+  # USD2010 per kW. ESMAP (2026), Understanding the Cost of Transmission Infrastructure,
   # Table 4.3, South Asia, 400 kV line carrying 1,000 MW over 250 km: US$96 million, so
   # 96 $/kW in 2010 US dollars
   # (https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf).
-  # Brought to 2023 US dollars with the BEA GDP implicit price deflator, FRED series
-  # A191RD3A086NBEA (https://fred.stlouisfed.org/series/A191RD3A086NBEA), 89.632 (2010)
-  # and 122.451 (2023): 96 x 122.451 / 89.632 = 131.15.
   # ASSUMPTION: 400 kV is the backbone voltage of the India nodes and 250 km is the
   # shorter of ESMAP's two example lengths; real distances and voltages vary greatly
   # between nodes, and one value is used for every node.
-  base_capital_cost: 131.15
-  # USD2023 per kW per year: 3% of base_capital_cost. ESMAP (2026) reports O&M of 2 to 3%
-  # of capital cost in 41 World Bank projects and uses 3% in its cost tables (same URL).
-  base_fixed_cost: 3.93
-  # ASSUMPTION: the same per-kW internal grid cost for every plant; no published ratio
-  # between renewable and other plants was found. The grid is sized to peak flow, so
-  # plants that use it less already pay more per MWh.
-  re_capex_multiplier: 1.0
+  esmap_capital_cost_usd2010_per_kw: 96
+  # World Bank MUV index, 2010 = 100. Commodity Markets "Pink Sheet" annual file
+  # (https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx),
+  # worksheet "Annual Indices (Real)", column R "Deflator MUV Index": row 60 (2010),
+  # row 72 (2022) and row 73 (2023).
+  muv_2010: 100
+  muv_2022: 117.5
+  muv_2023: 114.1
+  # Share of the capital cost paid each year as fixed O&M. ESMAP (2026) reports O&M of
+  # 2 to 3% of capital cost in 41 World Bank projects and uses 3% in its cost tables
+  # (same URL as the capital cost).
+  fixed_cost_share: 0.03
+  # ASSUMPTION: renewable plants pay a connection cost of 76.52 USD2023/kW on top of the
+  # shared internal grid cost, because renewable parks sit away from load and need
+  # pooling stations and connection lines. The value is the average of India's Green
+  # Energy Corridor Phase II (Rs 12,031.33 crore for 19,431 MW), an approved estimate
+  # taken as 2022 prices. It may overlap some backbone reinforcement inside the shared
+  # cost, and it is one value for every node.
+  # MNRE, Scheme Sanction and Guidelines of GEC-II, F. No. 367-12/1/2022-GEC, 4 March
+  # 2022, listed on https://mnre.gov.in/en/gec-phase-ii/: estimated project cost
+  # Rs 12,031.33 crore excluding interest during construction (p. 1, para 3; p. 6,
+  # section 3.1); renewable addition envisaged 19,431 MW (Annexure I, section 2.2, table
+  # total, pp. 5 to 6).
+  gec2_cost_rs_crore: 12031.33
+  gec2_capacity_mw: 19431
+  # Rupees per US dollar, 2022 annual average. FRED series AEXINUS, Federal Reserve G.5A
+  # (https://fred.stlouisfed.org/series/AEXINUS).
+  inr_per_usd_2022: 78.5792
   # Years, all six internal families: the transmission asset life ESMAP (2026) assumes
   # in its cost tables (same URL).
   operational_life: 40

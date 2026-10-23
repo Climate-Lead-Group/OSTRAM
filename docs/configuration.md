@@ -610,7 +610,7 @@ The three decision roots `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE
 | `set_vre_targets.yaml` | `set_vre_targets.py` | `bau_results_path` (relative path to a prior solved scenario's output, typically `A_Calibrated_BAU`), `constraint_type`, `max_floor_share`, `cap_envelope_headroom`, `cap_envelope_min_inv_gw`, `default_capacity_factor`, `pin_generation_to_target`, `pin_slack`, `activity_lower_caps` (entries with `region`, `technology`, `year`, `maximum`), `targets` (entries with `cr`, `tech`, `schedule`, `cap_envelope`) |
 | `set_interconnector_direction.yaml` | `set_interconnector_direction.py` | `directions` |
 
-Each rule stops when its file holds a key outside its row, and the message names the file and the unknown keys. The same check covers the `internal_transmission` block of `Config_country_codes.yaml` (`base_capital_cost`, `base_fixed_cost`, `re_capex_multiplier`, `operational_life`, `transmission_loss`) and the header of `config/scenarios/rules/pwr_min_2023_2026_pin.csv`.
+Each rule stops when its file holds a key outside its row, and the message names the file and the unknown keys. The same check covers the `internal_transmission` block of `Config_country_codes.yaml` (`esmap_capital_cost_usd2010_per_kw`, `muv_2010`, `muv_2022`, `muv_2023`, `fixed_cost_share`, `gec2_cost_rs_crore`, `gec2_capacity_mw`, `inr_per_usd_2022`, `operational_life`, `transmission_loss`, `residual_peak_margin`) and the header of `config/scenarios/rules/pwr_min_2023_2026_pin.csv`.
 
 A rule reads only the exact file name it expects, for example `build_cap_rule.yaml`. The test `tests/regression/test_config_files.py` lists every file under `config/` and fails when another file appears there.
 

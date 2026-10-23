@@ -113,16 +113,40 @@ node and the input.
   counts at the mean of its 2023 capacity factors in the other slices, or 1
   when it has none, as in that method.
 
-The costs and life of the six families come from the same block. Each
-constant carries its source or ASSUMPTION sentence there:
+The costs and life of the six families come from the same block. The rule
+computes the costs in every run from the sourced inputs; no cost is typed.
+Each input carries its source or ASSUMPTION sentence there:
 
 | Key | Value | Basis |
 |---|---|---|
-| `base_capital_cost` | 131.15 USD2023/kW | ESMAP (2026), *Understanding the Cost of Transmission Infrastructure*, Table 4.3, South Asia, 400 kV line of 1,000 MW over 250 km, US$96 million, 96 $/kW in 2010 dollars (<https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf>), times the BEA GDP implicit price deflator ratio 122.451 / 89.632 (2023 / 2010, <https://fred.stlouisfed.org/series/A191RD3A086NBEA>). ASSUMPTION: one value for every node. |
-| `base_fixed_cost` | 3.93 USD2023/kW/yr | 3% of the capital cost, ESMAP (2026). |
-| `re_capex_multiplier` | 1.0 | ASSUMPTION: the same per-kW cost for every plant; no published ratio was found. |
+| `esmap_capital_cost_usd2010_per_kw` | 96 USD2010/kW | ESMAP (2026), *Understanding the Cost of Transmission Infrastructure*, Table 4.3, South Asia, 400 kV line of 1,000 MW over 250 km, US$96 million (<https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf>). ASSUMPTION: 400 kV and 250 km for every node, one value for every node. |
+| `muv_2010`, `muv_2022`, `muv_2023` | 100, 117.5, 114.1 | World Bank MUV index, 2010 = 100, Commodity Markets "Pink Sheet" annual file (<https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx>), worksheet "Annual Indices (Real)", column R "Deflator MUV Index", rows 60, 72 and 73. |
+| `fixed_cost_share` | 0.03 | O&M of 3% of the capital cost, ESMAP (2026) cost tables. |
+| `gec2_cost_rs_crore`, `gec2_capacity_mw` | Rs 12,031.33 crore, 19,431 MW | MNRE, *Scheme Sanction and Guidelines of GEC-II*, F. No. 367-12/1/2022-GEC, 4 March 2022, listed on <https://mnre.gov.in/en/gec-phase-ii/>: estimated project cost excluding interest during construction (p. 1, para 3; p. 6, section 3.1); renewable addition envisaged (Annexure I, section 2.2, table total, pp. 5 to 6). |
+| `inr_per_usd_2022` | 78.5792 Rs per USD | FRED series AEXINUS, Federal Reserve G.5A annual average for 2022 (<https://fred.stlouisfed.org/series/AEXINUS>). |
 | `operational_life` | 40 years | ESMAP (2026). |
 | `transmission_loss` | 0.03 | ASSUMPTION: a transmission-only loss inside a node, below Grid-India's interstate loss notices (<https://posoco.in/en/side-menu-pages/applicable-transmission-losses/>). In the A, B and C ancestry the energy balance credits it back. |
+
+The costs, in USD2023, the same in every node:
+
+```text
+base capital cost   = 96 x MUV(2023) / MUV(2010)                              = 109.536 per kW
+base fixed cost     = 0.03 x base capital cost                                = 3.28608 per kW per year
+renewable add-on    = 12,031.33 crore x 1e7 / (19,431 MW x 1e3) / 78.5792
+                      x MUV(2023) / MUV(2022)                                 = 76.517 per kW
+renewable multiplier = (base capital cost + renewable add-on) / base capital cost = 1.6986
+```
+
+`PWRTRN`, `TRNNLI` and `TRNRPO` take the base capital and fixed costs.
+`RNWTRN`, `RNWNLI` and `RNWRPO` take both times the renewable multiplier:
+186.053 per kW and 5.582 per kW per year.
+
+ASSUMPTION: renewable plants pay a connection cost of 76.52 USD2023/kW on top
+of the shared internal grid cost, because renewable parks sit away from load
+and need pooling stations and connection lines. The value is the average of
+India's Green Energy Corridor Phase II (Rs 12,031.33 crore for 19,431 MW), an
+approved estimate taken as 2022 prices. It may overlap some backbone
+reinforcement inside the shared cost, and it is one value for every node.
 
 ## 0, -1 and 9999
 
