@@ -1,21 +1,26 @@
 ## relax_interconnectors.yaml: B_Optimised_VRE
 ##
-## Evidence-based interconnector expansion caps derived from the project
-## pipeline in the Interconnectors sheet of the scenario workbook (IEPMP 2023 + BPC PDB 2024
+## Interconnector build caps from the project pipeline in the
+## Interconnectors sheet of the scenario workbook (IEPMP 2023 + BPC PDB 2024
 ## + NEA Annual 2024/25 + NEP Vol.II + LTGEP 2025-2044).
 ##
-## Default mode: multiplicative with a conservative 1.5× factor for
-## corridors without explicit project data.  Per-corridor overrides
-## use ABSOLUTE MaxCapInv values (GW) staged by COD year, linearly
-## interpolated between knots and clamped after the last knot.
+## Each override value is the corridor's pipeline total for that year, in GW:
+## existing capacity plus the listed projects by commissioning year.
+## relax_interconnectors.py uses it as the most new capacity the link may add
+## in that year (TotalAnnualMaxCapacityInvestment), interpolated linearly
+## between the listed years, held after the last one and never below the
+## link's residual capacity. A schedule of 0 in every year allows no new
+## capacity and holds the link at its 2023 residual capacity.
 ##
-## The script also opens TotalAnnualMaxCapacity = 9999 for any
-## overridden tech with non-zero investment, removing the MaxCap
-## ceiling from cap_trn_to_residual that would otherwise block
-## new-build corridors (ResCap = 0).
+## For every overridden link with new investment the rule sets
+## TotalAnnualMaxCapacity to 9999, a finite cap, so total size is set by cost,
+## not by the schedule.
+##
+## Corridors without an override take headroom_factor times residual capacity
+## as their build cap.
 
 mode: multiplicative
-headroom_factor: 1.5          # conservative default for corridors without overrides
+headroom_factor: 1.5          # build cap of corridors without an override = factor x residual capacity
 
 overrides:
   # ==========================================================================
@@ -39,7 +44,8 @@ overrides:
   # ==========================================================================
   # CORRIDORS WHERE 3× UNDERSHOOTS THE PIPELINE
   # ==========================================================================
-  # Values are ResidualCapacity + cumulative pipeline additions at each COD year
+  # Each value is the pipeline total for that year (residual capacity plus the
+  # additions commissioned by then), used as the link's build cap
   #
   # BGD ↔ INDNE (ResCap 0.16 GW, pipeline 2.66 GW = 16.6× ResCap)
   #   Bornagar-Parbotipur 1.0 GW COD 2028, Cumilla B2B 0.75 GW COD 2032,
