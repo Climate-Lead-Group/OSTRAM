@@ -23,8 +23,7 @@ the preparation workflow and resolves all sources through `ostram.paths`.
 Define template generation in `Config_country_codes.yaml`, including the new
 ISO code, reference country, region suffix, coordinates, and interconnections.
 The preparation workflow materializes generated CSV templates beneath the
-selected workspace. Review them before deliberately promoting accepted values
-into maintained `inputs/` authority.
+selected workspace. Review them before copying their values into `inputs/`.
 
 Run the supported workflow with:
 

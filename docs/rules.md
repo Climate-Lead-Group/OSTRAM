@@ -82,10 +82,10 @@ The pin holds each country's 2023 to 2025 generation by fuel between 98% and
 lower limit only. The workbook `README` sheet, rows 188 and 189, gives the
 references and their sources.
 
-ASSUMPTION: in 2025, as in 2026, Bangladesh generation by fuel has a lower
-limit of 98% of BPDB's FY2024-25 figure (coal 27,040 GWh, gas 44,613 GWh,
+ASSUMPTION: in 2025 Bangladesh generation by fuel has a lower limit of 98%
+of BPDB's FY2024-25 figure (coal 27,040 GWh, gas 44,613 GWh,
 furnace oil 10,860 GWh, hydro 957 GWh, solar 1,222 GWh, wind 99 GWh) and no
-upper limit. Calendar-2025 demand, 105,155 GWh, is 3.9% above BPDB's
+upper limit, as in 2026, whose lower limits are 95%. Calendar-2025 demand, 105,155 GWh, is 3.9% above BPDB's
 FY2024-25 net generation including imports, 101,187 GWh: the fiscal year runs
 from July 2024 to June 2025, half a year behind the calendar year, while
 demand grows 6.8% from 2024 to 2025, so upper limits at 102% of the fiscal
@@ -167,8 +167,8 @@ node and the input.
 
 - `m` is `internal_transmission.residual_peak_margin` in
   `config/preparation/Config_country_codes.yaml`, 1.2. ASSUMPTION: the 2023
-  internal grid of a node is taken as 1.2 times its 2023 peak time-slice
-  demand; no published figure for internal grid capacity is used.
+  internal grid of a node carries 1.2 times its 2023 peak time-slice demand, a
+  margin above the peak for the spread of load inside the node.
 - Renewable generators are BIO, GEO, WAS, HYD, SPV, WON, WOF and CSP.
   ASSUMPTION: biomass, geothermal and waste plants count at capacity factor 1,
   because they are dispatchable.

@@ -1,10 +1,9 @@
 ## B_Optimised_VRE: thermal retirement schedule
 ##
-## Lifetimes calibrated to midpoints of country-level research from CEA NRAP
-## 2025, IEPMP, CEB LTGEP and the other sources listed below
-## (Energy_Data_for_YAML_ALL_6_Countries.xlsx, "Retirements" sheet, Note 8).
+## ASSUMPTION: thermal plants retire linearly over lifetimes at the midpoints
+## of these design-life ranges, one lifetime per fuel in every country.
 ##
-## Generic lifetime ranges (Note 8):
+## Generic lifetime ranges:
 ##   COA 30–40 yr  →  midpoint 35
 ##   GAS 25–35 yr  →  midpoint 30
 ##   PET 20–30 yr  →  midpoint 25
