@@ -141,7 +141,7 @@ Each input carries its source or ASSUMPTION sentence there:
 | `gec2_cost_rs_crore`, `gec2_capacity_mw` | Rs 12,031.33 crore, 19,431 MW | MNRE, *Scheme Sanction and Guidelines of GEC-II*, F. No. 367-12/1/2022-GEC, 4 March 2022, listed on <https://mnre.gov.in/en/gec-phase-ii/>: estimated project cost excluding interest during construction (p. 1, para 3; p. 6, section 3.1); renewable addition envisaged (Annexure I, section 2.2, table total, pp. 5 to 6). |
 | `inr_per_usd_2022` | 78.5792 Rs per USD | FRED series AEXINUS, Federal Reserve G.5A annual average for 2022 (<https://fred.stlouisfed.org/series/AEXINUS>). |
 | `operational_life` | 40 years | ESMAP (2026). |
-| `transmission_loss` | 0.03 | ASSUMPTION: a transmission-only loss inside a node, below Grid-India's interstate loss notices (<https://posoco.in/en/side-menu-pages/applicable-transmission-losses/>). In the A, B and C ancestry the energy balance credits it back. |
+| `transmission_loss` | 0.03 | ASSUMPTION: a transmission-only loss inside a node, below Grid-India's interstate loss notices (<https://web.archive.org/web/20250118134515/https://posoco.in/en/side-menu-pages/applicable-transmission-losses/>). In the A, B and C ancestry the energy balance credits it back. |
 
 The costs, in USD2023, the same in every node:
 
@@ -163,6 +163,53 @@ and need pooling stations and connection lines. The value is the average of
 India's Green Energy Corridor Phase II (Rs 12,031.33 crore for 19,431 MW), an
 approved estimate taken as 2022 prices. It may overlap some backbone
 reinforcement inside the shared cost, and it is one value for every node.
+
+## Interconnectors
+
+### Capacity factor and losses
+
+ASSUMPTION: every interconnector can carry its full capacity in every time
+slice (capacity factor 1). Link capacities and the cost of new links are both
+stated per kW of usable transfer capacity, so a capacity factor below 1 would
+count the derating twice.
+
+Losses reach the model as each link's `OutputActivityRatio`, the share of the
+energy sent that arrives. Fourteen links take it from
+`inputs/osemosys_global/OutputActivityRatio.csv`, which follows the
+OSeMOSYS Global method:
+
+```text
+loss (%) = distance between node centres / 1,000 km x line loss + converter loss
+ratio    = 1 - loss / 100
+```
+
+The line loss is 6.75% per 1,000 km for AC lines with no converter loss, and
+3.5% per 1,000 km plus 1.3% per converter pair for DC lines
+(OSeMOSYS Global, `config/config.yaml`, lines 128 and 129,
+<https://github.com/OSeMOSYS/osemosys_global/blob/5983d6b9c14160537c5c36cb5c1346a8cd882d3c/config/config.yaml#L128-L129>;
+`set_transmission_losses`,
+<https://github.com/OSeMOSYS/osemosys_global/blob/5983d6b9c14160537c5c36cb5c1346a8cd882d3c/workflow/scripts/osemosys_global/transmission/activity.py#L13>).
+For example, Bangladesh to India East delivers 0.98292 of the energy sent.
+
+ASSUMPTION: Nepal to Bangladesh and Bhutan to Bangladesh deliver 95% of the
+energy sent. With the OSeMOSYS Global rates and the routes used for their
+costs, 580 km and 360 km of 400 kV AC line each with one back-to-back
+converter pair, the losses would be 5.2% and 3.7%.
+
+ASSUMPTION: Bhutan to India North-East delivers 95% of the energy sent, the
+ratio given to every interconnector that OSeMOSYS Global does not list. With
+the OSeMOSYS Global rates and the route used for its cost, 100 km of 400 kV
+AC line, the loss would be 0.7%.
+
+ASSUMPTION: Maldives to India South delivers 95% of the energy sent, the ratio
+given to every interconnector that OSeMOSYS Global does not list. With the
+OSeMOSYS Global rates and the route used for its cost, 800 km of DC sea cable
+with one converter pair, the loss would be 4.1%.
+
+The 0.95 of the Bangladesh links is set in
+`ostram/pipeline/scenarios/transformations/apply_manual_fixes.py`
+(`OAR_CORRECTIONS`); the 0.95 of the other two links is the interconnector
+`OutputActivityRatio` of the workbook's `Fixed_Horizon_Parameters` sheet.
 
 ## 0, -1 and 9999
 

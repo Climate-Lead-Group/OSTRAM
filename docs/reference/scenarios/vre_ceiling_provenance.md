@@ -18,7 +18,7 @@ The applied values are the `vre_ceilings` section of `config/setups/south_asia.y
 - **SRI LANKA** — ADB & UNDP, "100% RE by 2050" (2017): 2050 mix ~15,000 MW wind + ~16,000 MW solar https://www.adb.org/sites/default/files/publication/354591/sri-lanka-power-2050v2.pdf ; ADB Energy Sector Assessment (solar technical ~6,000 MW; wind ~5,600 MW Mannar) https://www.adb.org/sites/default/files/institutional-document/547381/sri-lanka-energy-assessment-strategy-road-map.pdf ; SLSEA RE Resource Development Plan 2021–2026 https://www.energy.gov.lk/images/renewable-energy/renewable-energy-resource-development-plan-en.pdf
 - **NEPAL** — SWERA GIS report (UNEP/NREL/Risø) https://policy.asiapacificenergy.org/node/358 ; provincial assessment, Renewable Energy 2021 https://doi.org/10.1016/j.renene.2021.08.109
 - **BHUTAN** — Cowlin & Gilman, NREL/TP-6A2-46547 (2009) https://www.osti.gov/biblio/964607 ; RGoB Renewable Energy Master Plan 2017–2032 (~12,000 MW solar, ~760 MW wind).
-- **MALDIVES** — Ministry of Environment, Energy Roadmap 2024–2033 (large-scale onshore wind ~80 MW niche, Greater Malé) https://www.environment.gov.mv/v2/wp-content/files/publications/20241107-pub-energy-roadmap-maldives-2024-2033-.pdf ; NREL Wind Atlas of Sri Lanka & Maldives (2003).
+- **MALDIVES** — Ministry of Environment, Energy Roadmap 2024–2033 (large-scale onshore wind ~80 MW niche, Greater Malé) https://media.environment.gov.mv/20241115-pub-energy-roadmap-maldives-2024-2033.pdf ; NREL Wind Atlas of Sri Lanka & Maldives (2003).
 
 **Uniform multi-country option:**
 - Global Solar Atlas (World Bank/ESMAP/Solargis) https://globalsolaratlas.info · Global Wind Atlas (World Bank/DTU) https://globalwindatlas.info
@@ -72,7 +72,7 @@ ceiling where they exceed it. The [scenario edits](../../scenario-edits.md) page
 
 ## 3. Transmission-loss (3%) provenance
 
-- **Primary source:** Grid Controller of India (Grid-India/NLDC), "Applicable Transmission Losses" — weekly all-India ISTS loss notices under CERC (Sharing of ISTS Charges & Losses) Regulations 2020. https://posoco.in/en/side-menu-pages/applicable-transmission-losses/
+- **Primary source:** Grid Controller of India (Grid-India/NLDC), "Applicable Transmission Losses" — weekly all-India ISTS loss notices under CERC (Sharing of ISTS Charges & Losses) Regulations 2020. https://web.archive.org/web/20250118134515/https://posoco.in/en/side-menu-pages/applicable-transmission-losses/
 - **Figures:** all-India ISTS loss **3.96%** (27 Apr–3 May 2026), **4.81%** (12–18 Jan 2026); excludes distribution & intra-state. CERC tariff decomposition ~4% attributable to losses.
 - **Distinguish:** ISTS transmission-only ≈ **3.5–5%** · national transmission (CEA) ≈ 3.5–4% · **combined T&D ≈ 17–20%** (World Bank EG.ELC.LOSS.ZS) · **AT&C ≈ 15–17%** (PFC/MoP). The high figures are distribution-dominated — do NOT conflate.
 
@@ -95,7 +95,7 @@ accounting" of the README sheet in `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
 
 ## 5. Storage cost basis
 
-- The storage costs come from NREL, "Utility-Scale Battery Storage", **2024 ATB** v3, rows 20 (energy) and 26 (power), Moderate trajectories 2023 to 2050, in 2022 US dollars. https://atb.nrel.gov/electricity/2024/utility-scale_battery_storage ; projections: Cole & Karmakar, NREL 2023 update https://www.nrel.gov/docs/fy23osti/85332.pdf
+- The storage costs come from NREL, "Utility-Scale Battery Storage", **2024 ATB** v3, rows 20 (energy) and 26 (power), Moderate trajectories 2023 to 2050, in 2022 US dollars. https://atb.nlr.gov/electricity/2024/utility-scale_battery_storage ; projections: Cole & Karmakar, NREL 2023 update https://doi.org/10.2172/1984976
 - The 2022 values are converted once to constant 2023 US dollars with the DESNZ 2024 US GDP deflator ratio 131.902/127.224. The power component carries the node factors; the energy component is shared across nodes and converted to the model's energy unit.
 - The fixed operating cost is 2.5% of a four-hour reference system per year, including augmentation. This is a power-based approximation, because the model chooses the storage duration.
 - The generic long-duration storage is a study assumption with separate power and energy components. ATB does not establish its costs or lifetimes.

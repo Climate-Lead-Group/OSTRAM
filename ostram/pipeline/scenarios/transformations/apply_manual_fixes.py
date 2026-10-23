@@ -175,11 +175,18 @@ SUBSTITUTIONS = [entry for entry in SUBSTITUTIONS
 # Applied to every Output row (both Mode 1 and Mode 2) in AR_Proj/Secondary.
 # -----------------------------------------------------------------------------
 
+LOSS_ASSUMPTION = (
+    "ASSUMPTION: Nepal to Bangladesh and Bhutan to Bangladesh deliver 95% of the "
+    "energy sent. With the OSeMOSYS Global rates and the routes used for their "
+    "costs, 580 km and 360 km of 400 kV AC line each with one back-to-back "
+    "converter pair, the losses would be 5.2% and 3.7%."
+)
+
 OAR_CORRECTIONS = [
     ("TRNBTNXXBGDXX", 0.95,
-     "Template OAR 0.96716 inherited from TRNBTNXXINDEA; WV standard is 0.95."),
+     "Template OAR 0.96716 inherited from TRNBTNXXINDEA. " + LOSS_ASSUMPTION),
     ("TRNNPLXXBGDXX", 0.95,
-     "Template OAR 0.98292 inherited from TRNBGDXXINDEA; WV standard is 0.95."),
+     "Template OAR 0.98292 inherited from TRNBGDXXINDEA. " + LOSS_ASSUMPTION),
 ]
 
 # -----------------------------------------------------------------------------

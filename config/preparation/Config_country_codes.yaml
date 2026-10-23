@@ -381,7 +381,7 @@ internal_transmission:
   operational_life: 40
   # ASSUMPTION: a transmission-only loss inside a node, rounded below Grid-India's
   # all-India interstate transmission loss notices
-  # (https://posoco.in/en/side-menu-pages/applicable-transmission-losses/). Demand is
+  # (https://web.archive.org/web/20250118134515/https://posoco.in/en/side-menu-pages/applicable-transmission-losses/). Demand is
   # measured at the busbar, and in the A, B and C ancestry the energy balance credits
   # this loss back, so it does not raise generation. OutputActivityRatio = 1 - loss.
   transmission_loss: 0.03
