@@ -81,7 +81,7 @@ delivered scenarios.
 | `op: clamp_to_residual` | optional `residual_source` | Lowers each numeric cell to the technology's `ResidualCapacity` where the cell is higher. With `residual_source: minimum_investment_boundary`, allowed only for `TotalAnnualMinCapacityInvestment`, the bound comes from the scenario workbook. |
 | `op: set_to_residual_factor_floor` | `factor`, `residual_year`, `years`, and either `base_window_floor` or `base_window_result` with `base_window_years`; optional `clamp` | Sets the listed years to the larger of the factor multiplied by `ResidualCapacity` in `residual_year` and the floor, rounded to six decimals. The floor is `base_window_floor`, or the largest `TotalCapacityAnnual` of the technology over `base_window_years` in the solved parent named by `base_window_result`. With `clamp: true` it only lowers cells, and a missing row is skipped: with `base_window_result`, the listed years in order to the headroom the value leaves above the parent's base-year capacity and the earlier listed years; with `base_window_floor`, to the value. Otherwise the target row must exist. |
 | `op: from_result` | `result`, `variable`, `years`, optional `result_year` | Sets the listed years to the technology's `variable` (`TotalCapacityAnnual` or `NewCapacity`) in the solved parent named by `result`, in the same year or in `result_year`. |
-| `op: import_share_cap` | `techs`, `result`, `share`, `demand_fuel`, `importer`, `years` | Sets each listed technology's value in each listed year to `share` times the parent's demand of `demand_fuel` that year times the technology's share of the parent's imports into `importer` that year. A year in which the parent imports nothing gives 0. |
+| `op: import_share_cap` | `techs`, `result`, `share`, `demand_fuel`, `importer`, `years` | Sets each listed technology's value in each listed year to `share` times the parent's demand of `demand_fuel` that year times the technology's share of the parent's imports into `importer` that year. A `demand_fuel` measured at the bus bar (the `Measured_at` column of `Demand_Projection`) holds the published requirement times 1 minus `internal_transmission.transmission_loss`, so its demand is divided by that factor first. A year in which the parent imports nothing gives 0. |
 | `op: copy_from_tech` | `source_tech` | Sets every year to the value of the same parameter in the `source_tech` row on the same sheet, as that row stands when the edit runs. |
 
 ## Edits that read a solved parent
@@ -168,7 +168,13 @@ received electricity is the sum, over the timeslices, of the activity of each
 flow multiplied by the year split and by the output activity ratio. The annual
 demand is the `SpecifiedAnnualDemand` of the country's demand fuels, the fuels
 that start with `ELC`, the country code and end with `03`. For India that is
-the sum of its five regions.
+the sum of its five regions. Demand rows measured at the bus bar hold the
+published requirement x (1 - loss), with the loss of
+`internal_transmission.transmission_loss`, so for a country whose rows are all
+measured at the bus bar `D4ImportFraction` is the fraction divided by
+(1 - loss), and the cap is the fraction of the published requirement. For the
+Maldives, measured at consumption, it is the fraction. A country whose rows are
+measured at both points stops the run.
 
 The flows that count are the modes of the cross-border `TRN` technologies whose
 two country codes differ and whose output fuel starts with `ELC` and the code

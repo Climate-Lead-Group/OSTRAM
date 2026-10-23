@@ -92,7 +92,8 @@ def process_base_year(path, pairs, enable_dsptrn=False):
     RNWTRN, RNWRPO, RNWNLI, PWRTRN, TRNRPO and TRNNLI technologies of each
     country-region in ``pairs``. With ``enable_dsptrn``, interconnector inputs
     move to ELC...03, outputs move to ELC...04 and a DSPTRN technology is added
-    for each country-region.
+    for each country-region: mode 1 takes ELC...02 to ELC...03 and mode 2 takes
+    imports from ELC...04 to ELC...01, so they cross the internal grid.
     """
     print(f"Processing '{path}' …")
     with pd.ExcelWriter(path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
@@ -212,6 +213,7 @@ def process_base_year(path, pairs, enable_dsptrn=False):
             # --- DSPTRN: Dispatch technology (2 operation modes) ---
             if enable_dsptrn:
                 dsp_tech = f"DSPTRN{country}{region}"
+                dsp_01   = f"ELC{country}{region}01"
                 dsp_02   = f"ELC{country}{region}02"
                 dsp_03   = f"ELC{country}{region}03"
                 dsp_04   = f"ELC{country}{region}04"
@@ -230,7 +232,8 @@ def process_base_year(path, pairs, enable_dsptrn=False):
                     'Value.Fuel.O': 1,
                     'Unit.Fuel.O': ''
                 })
-                # Mode 2: ELC...04 -> ELC...03 (receive from interconnection)
+                # Mode 2: ELC...04 -> ELC...01 (receive from interconnection; imports
+                # and transit cross the receiving node's internal grid)
                 rows.append({
                     'Mode.Operation': 2,
                     'Fuel.I': dsp_04,
@@ -239,8 +242,8 @@ def process_base_year(path, pairs, enable_dsptrn=False):
                     'Unit.Fuel.I': '',
                     'Tech': dsp_tech,
                     'Tech.Name': dsp_name,
-                    'Fuel.O': dsp_03,
-                    'Fuel.O.Name': f"Electricity, {countryname}, Region {region}, dispatch-ready for interconnection",
+                    'Fuel.O': dsp_01,
+                    'Fuel.O.Name': f"Electricity, {countryname}, Region {region}, NO renewable power plant output",
                     'Value.Fuel.O': 1,
                     'Unit.Fuel.O': ''
                 })
@@ -261,7 +264,8 @@ def process_projections(path, pairs, enable_dsptrn=False):
     Demand Techs sheet is rebuilt with an input row and an output row, valued 1
     in every year, for each transmission technology of each country-region in
     ``pairs``. With ``enable_dsptrn``, interconnector inputs move to ELC...03,
-    outputs move to ELC...04 and DSPTRN rows are added for each country-region.
+    outputs move to ELC...04 and DSPTRN rows are added for each country-region,
+    with mode 2 delivering imports from ELC...04 to ELC...01.
     """
     print(f"Processing '{path}' …")
     with pd.ExcelWriter(path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
@@ -385,6 +389,7 @@ def process_projections(path, pairs, enable_dsptrn=False):
             # --- DSPTRN: Dispatch technology (2 operation modes) ---
             if enable_dsptrn:
                 dsp_tech = f"DSPTRN{country}{region}"
+                dsp_01   = f"ELC{country}{region}01"
                 dsp_02   = f"ELC{country}{region}02"
                 dsp_03   = f"ELC{country}{region}03"
                 dsp_04   = f"ELC{country}{region}04"
@@ -425,13 +430,13 @@ def process_projections(path, pairs, enable_dsptrn=False):
                     'Projection.Parameter': 0,
                     **{yr: 1 for yr in year_cols}
                 })
-                # Mode 2 Output: ELC...03 (dispatch-ready for interconnection)
+                # Mode 2 Output: ELC...01 (imports cross the receiving node's internal grid)
                 rows.append({
                     'Mode.Operation': 2,
                     'Tech': dsp_tech,
                     'Tech.Name': dsp_name,
-                    'Fuel': dsp_03,
-                    'Fuel.Name': f"Electricity, {countryname}, Region {region}, dispatch-ready for interconnection",
+                    'Fuel': dsp_01,
+                    'Fuel.Name': f"Electricity, {countryname}, Region {region}, NO renewable power plant output",
                     'Direction': 'Output',
                     'Projection.Mode': 'User defined',
                     'Projection.Parameter': 0,

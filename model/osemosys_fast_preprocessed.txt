@@ -397,16 +397,7 @@ s.t. EBa10_EnergyBalanceEachTS4{r in REGION, rr in REGION, l in TIMESLICE, f in 
 	Trade[r,rr,l,f,y]
 	=
 	-Trade[rr,r,l,f,y];
-# Approved demand accounting: upstream requirement, all documented trajectory years.
-param D4BusbarAccountingActive binary default 0;
-set D4BusbarDemandFuels within FUEL := setof {f in FUEL:
-    f = "ELCBGDXX03" or f = "ELCBTNXX03" or f = "ELCNPLXX03" or f = "ELCLKAXX03" or
-    f = "ELCINDNO03" or f = "ELCINDSO03" or f = "ELCINDEA03" or f = "ELCINDWE03" or f = "ELCINDNE03"} f;
-set D4InternalLossLinks{f in D4BusbarDemandFuels} within TECHNOLOGY := setof {t in TECHNOLOGY:
-    t = "PWRTRN" & substr(f,4,5) or t = "RNWTRN" & substr(f,4,5) or
-    t = "RNWNLI" & substr(f,4,5) or t = "RNWRPO" & substr(f,4,5) or
-    t = "TRNNLI" & substr(f,4,5) or t = "TRNRPO" & substr(f,4,5)} t;
-s.t. EBa11_EnergyBalanceEachTS5{r in REGION, l in TIMESLICE, f in FUEL, y in YEAR}: sum{(m,t) in MODExTECHNOLOGYperFUELout[f]} RateOfActivity[r,l,t,m,y]*OutputActivityRatio[r,t,f,m,y]*YearSplit[l,y] + (if D4BusbarAccountingActive = 1 and f in D4BusbarDemandFuels and y >= 2023 and y <= 2050 then sum{t in D4InternalLossLinks[f], m in MODEperTECHNOLOGY[t]} RateOfActivity[r,l,t,m,y]*YearSplit[l,y]*(sum{ff in FUEL: substr(ff,1,3) = "ELC"} (InputActivityRatio[r,t,ff,m,y]-OutputActivityRatio[r,t,ff,m,y])) else 0) >= SpecifiedAnnualDemand[r,f,y]*SpecifiedDemandProfile[r,f,l,y] + sum{(m,t) in MODExTECHNOLOGYperFUELin[f]} RateOfActivity[r,l,t,m,y]*InputActivityRatio[r,t,f,m,y]*YearSplit[l,y] + sum{rr in REGION} Trade[r,rr,l,f,y]*TradeRoute[r,rr,f,y];
+s.t. EBa11_EnergyBalanceEachTS5{r in REGION, l in TIMESLICE, f in FUEL, y in YEAR}: sum{(m,t) in MODExTECHNOLOGYperFUELout[f]} RateOfActivity[r,l,t,m,y]*OutputActivityRatio[r,t,f,m,y]*YearSplit[l,y] >= SpecifiedAnnualDemand[r,f,y]*SpecifiedDemandProfile[r,f,l,y] + sum{(m,t) in MODExTECHNOLOGYperFUELin[f]} RateOfActivity[r,l,t,m,y]*InputActivityRatio[r,t,f,m,y]*YearSplit[l,y] + sum{rr in REGION} Trade[r,rr,l,f,y]*TradeRoute[r,rr,f,y];
 #
 #########                Energy Balance B                         #############
 #

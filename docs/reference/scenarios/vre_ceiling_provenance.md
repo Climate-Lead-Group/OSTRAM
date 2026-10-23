@@ -78,14 +78,14 @@ ceiling where they exceed it. The [scenario edits](../../scenario-edits.md) page
 
 ### The current demand accounting
 
-The demand of Bangladesh, Bhutan, the five India regions,
-Nepal and Sri Lanka for 2023 to 2050 is an upstream requirement. The demand balance of the
-model credits the actual internal transfer losses once, while the physical input and output
-ratios of the internal transmission families stay as they are. Border losses receive no such
-credit, and the Maldives is excluded. The 3% above is the physical loss of the internal
-transmission families, and this accounting does not remove it. The sources are the demand
-balance in `model/osemosys_fast_preprocessed.txt` and the row "Trade and upstream-demand
-accounting" of the README sheet in `inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx`.
+The demand rows of Bangladesh, Bhutan, the five India regions, Nepal and Sri Lanka
+are measured at the bus bar and hold the published requirement x (1 - loss), with the 3%
+above, so the plants and imports that feed them through the internal grid meet the
+published requirement. Imports cross the receiving node's internal grid; exports leave
+after the sending node's internal grid. The Maldives row is consumption and keeps its value.
+The `Measured_at` column of the `Demand_Projection` sheet in
+`inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx` marks each row, and
+`ostram/pipeline/scenarios/rules/apply_internal_tx_losses.py` applies the factor.
 
 ## 4. WACC / discount rate (10%) provenance
 

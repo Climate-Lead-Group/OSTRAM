@@ -379,11 +379,12 @@ internal_transmission:
   # Years, all six internal families: the transmission asset life ESMAP (2026) assumes
   # in its cost tables (same URL).
   operational_life: 40
-  # ASSUMPTION: a transmission-only loss inside a node, rounded below Grid-India's
-  # all-India interstate transmission loss notices
-  # (https://web.archive.org/web/20250118134515/https://posoco.in/en/side-menu-pages/applicable-transmission-losses/). Demand is
-  # measured at the busbar, and in the A, B and C ancestry the energy balance credits
-  # this loss back, so it does not raise generation. OutputActivityRatio = 1 - loss.
+  # ASSUMPTION: a transmission-only loss of 3% inside each node, uniform across
+  # nodes, rounded below Grid-India's all-India interstate transmission loss notices
+  # (https://web.archive.org/web/20250118134515/https://posoco.in/en/side-menu-pages/applicable-transmission-losses/).
+  # Demand rows measured at the bus bar are multiplied by 1 - loss; imports cross the
+  # receiving node's internal grid; exports leave after it.
+  # OutputActivityRatio of the six internal families = 1 - loss.
   transmission_loss: 0.03
   # ASSUMPTION: the 2023 internal grid of a node is taken as 1.2 times its 2023 peak time-slice demand; no published figure for internal grid capacity is used.
   residual_peak_margin: 1.2

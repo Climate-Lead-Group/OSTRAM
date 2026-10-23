@@ -335,7 +335,7 @@ RNWTRN:
   TotalAnnualMaxCapacityInvestment: 5
 ```
 
-DSPTRN is a virtual dispatch node with zero costs and high capacity, used to route electricity to/from cross-border interconnections (`ELC*02` → `ELC*03` on export, `ELC*04` → `ELC*03` on import -- see {doc}`pipeline` Stage A2 for the full fuel-tier routing):
+DSPTRN is a virtual dispatch node with zero costs and high capacity, used to route electricity to/from cross-border interconnections (`ELC*02` → `ELC*03` on export, `ELC*04` → `ELC*01` on import, so imports cross the receiving node's internal grid -- see {doc}`pipeline` Stage A2 for the full fuel-tier routing):
 
 ```yaml
 DSPTRN:
