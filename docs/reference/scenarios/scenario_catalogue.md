@@ -245,6 +245,96 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 - Seed needs: none.
 - Description: The shared VRE ceilings applied to B_Optimised_VRE. From 2027 to 2050, the electricity each of the six countries receives through its cross-border interconnectors is at most 15 per cent of its yearly demand. India counts as one country.
 
+### A_Calibrated_BAU_TxCostLow
+
+- Parent: `A_Calibrated_BAU`.
+- Shared VRE ceilings: skipped.
+- Scenario edits: 36.
+- Overlay: none.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
+- Seed needs: none.
+- Description: A_Calibrated_BAU with the capital and fixed costs of the 18 interconnectors at the low bounding values of the reviewed corridor proposal, constant in real 2023 USD for 2023 to 2050. Each bound sets route length, line rate, endpoint allowance and usable transfer capacity of every corridor to their lowest-cost values together. Everything else equals A_Calibrated_BAU, whose costs are the central case.
+
+| Sheet | Parameter | Operation | Technologies |
+|---|---|---|---|
+| Secondary Techs | `CapitalCost` | set_flat | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDNONPLXX, TRNINDEANPLXX, TRNINDSOLKAXX, TRNINDEAINDNO, TRNINDNOINDWE, TRNINDEAINDNE, TRNINDEAINDSO, TRNINDSOINDWE, TRNMDVXXINDSO, TRNNPLXXBGDXX, TRNBTNXXBGDXX, TRNINDEAINDWE, TRNINDNEINDNO, TRNLKAXXMDVXX |
+| Secondary Techs | `FixedCost` | set_flat | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDNONPLXX, TRNINDEANPLXX, TRNINDSOLKAXX, TRNINDEAINDNO, TRNINDNOINDWE, TRNINDEAINDNE, TRNINDEAINDSO, TRNINDSOINDWE, TRNMDVXXINDSO, TRNNPLXXBGDXX, TRNBTNXXBGDXX, TRNINDEAINDWE, TRNINDNEINDNO, TRNLKAXXMDVXX |
+
+### A_Calibrated_BAU_TxCostHigh
+
+- Parent: `A_Calibrated_BAU`.
+- Shared VRE ceilings: skipped.
+- Scenario edits: 36.
+- Overlay: none.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
+- Seed needs: none.
+- Description: A_Calibrated_BAU with the capital and fixed costs of the 18 interconnectors at the high bounding values of the reviewed corridor proposal, constant in real 2023 USD for 2023 to 2050. Each bound sets route length, line rate, endpoint allowance and usable transfer capacity of every corridor to their highest-cost values together. Everything else equals A_Calibrated_BAU, whose costs are the central case.
+
+| Sheet | Parameter | Operation | Technologies |
+|---|---|---|---|
+| Secondary Techs | `CapitalCost` | set_flat | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDNONPLXX, TRNINDEANPLXX, TRNINDSOLKAXX, TRNINDEAINDNO, TRNINDNOINDWE, TRNINDEAINDNE, TRNINDEAINDSO, TRNINDSOINDWE, TRNMDVXXINDSO, TRNNPLXXBGDXX, TRNBTNXXBGDXX, TRNINDEAINDWE, TRNINDNEINDNO, TRNLKAXXMDVXX |
+| Secondary Techs | `FixedCost` | set_flat | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDNONPLXX, TRNINDEANPLXX, TRNINDSOLKAXX, TRNINDEAINDNO, TRNINDNOINDWE, TRNINDEAINDNE, TRNINDEAINDSO, TRNINDSOINDWE, TRNMDVXXINDSO, TRNNPLXXBGDXX, TRNBTNXXBGDXX, TRNINDEAINDWE, TRNINDNEINDNO, TRNLKAXXMDVXX |
+
+### B_Optimised_VRE_TxCostLow
+
+- Parent: `B_Optimised_VRE`.
+- Shared VRE ceilings: skipped.
+- Scenario edits: 36.
+- Overlay: none.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
+- Seed needs: none.
+- Description: B_Optimised_VRE with the capital and fixed costs of the 18 interconnectors at the low bounding values of the reviewed corridor proposal, constant in real 2023 USD for 2023 to 2050. Each bound sets route length, line rate, endpoint allowance and usable transfer capacity of every corridor to their lowest-cost values together. Everything else equals B_Optimised_VRE, whose costs are the central case.
+
+| Sheet | Parameter | Operation | Technologies |
+|---|---|---|---|
+| Secondary Techs | `CapitalCost` | set_flat | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDNONPLXX, TRNINDEANPLXX, TRNINDSOLKAXX, TRNINDEAINDNO, TRNINDNOINDWE, TRNINDEAINDNE, TRNINDEAINDSO, TRNINDSOINDWE, TRNMDVXXINDSO, TRNNPLXXBGDXX, TRNBTNXXBGDXX, TRNINDEAINDWE, TRNINDNEINDNO, TRNLKAXXMDVXX |
+| Secondary Techs | `FixedCost` | set_flat | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDNONPLXX, TRNINDEANPLXX, TRNINDSOLKAXX, TRNINDEAINDNO, TRNINDNOINDWE, TRNINDEAINDNE, TRNINDEAINDSO, TRNINDSOINDWE, TRNMDVXXINDSO, TRNNPLXXBGDXX, TRNBTNXXBGDXX, TRNINDEAINDWE, TRNINDNEINDNO, TRNLKAXXMDVXX |
+
+### B_Optimised_VRE_TxCostHigh
+
+- Parent: `B_Optimised_VRE`.
+- Shared VRE ceilings: skipped.
+- Scenario edits: 36.
+- Overlay: none.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
+- Seed needs: none.
+- Description: B_Optimised_VRE with the capital and fixed costs of the 18 interconnectors at the high bounding values of the reviewed corridor proposal, constant in real 2023 USD for 2023 to 2050. Each bound sets route length, line rate, endpoint allowance and usable transfer capacity of every corridor to their highest-cost values together. Everything else equals B_Optimised_VRE, whose costs are the central case.
+
+| Sheet | Parameter | Operation | Technologies |
+|---|---|---|---|
+| Secondary Techs | `CapitalCost` | set_flat | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDNONPLXX, TRNINDEANPLXX, TRNINDSOLKAXX, TRNINDEAINDNO, TRNINDNOINDWE, TRNINDEAINDNE, TRNINDEAINDSO, TRNINDSOINDWE, TRNMDVXXINDSO, TRNNPLXXBGDXX, TRNBTNXXBGDXX, TRNINDEAINDWE, TRNINDNEINDNO, TRNLKAXXMDVXX |
+| Secondary Techs | `FixedCost` | set_flat | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDNONPLXX, TRNINDEANPLXX, TRNINDSOLKAXX, TRNINDEAINDNO, TRNINDNOINDWE, TRNINDEAINDNE, TRNINDEAINDSO, TRNINDSOINDWE, TRNMDVXXINDSO, TRNNPLXXBGDXX, TRNBTNXXBGDXX, TRNINDEAINDWE, TRNINDNEINDNO, TRNLKAXXMDVXX |
+
+### C_Target_VRE_TxCostLow
+
+- Parent: `C_Target_VRE`.
+- Shared VRE ceilings: skipped.
+- Scenario edits: 36.
+- Overlay: none.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
+- Seed needs: a solved `A_Calibrated_BAU` result.
+- Description: C_Target_VRE with the capital and fixed costs of the 18 interconnectors at the low bounding values of the reviewed corridor proposal, constant in real 2023 USD for 2023 to 2050. Each bound sets route length, line rate, endpoint allowance and usable transfer capacity of every corridor to their lowest-cost values together. Everything else equals C_Target_VRE, whose costs are the central case.
+
+| Sheet | Parameter | Operation | Technologies |
+|---|---|---|---|
+| Secondary Techs | `CapitalCost` | set_flat | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDNONPLXX, TRNINDEANPLXX, TRNINDSOLKAXX, TRNINDEAINDNO, TRNINDNOINDWE, TRNINDEAINDNE, TRNINDEAINDSO, TRNINDSOINDWE, TRNMDVXXINDSO, TRNNPLXXBGDXX, TRNBTNXXBGDXX, TRNINDEAINDWE, TRNINDNEINDNO, TRNLKAXXMDVXX |
+| Secondary Techs | `FixedCost` | set_flat | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDNONPLXX, TRNINDEANPLXX, TRNINDSOLKAXX, TRNINDEAINDNO, TRNINDNOINDWE, TRNINDEAINDNE, TRNINDEAINDSO, TRNINDSOINDWE, TRNMDVXXINDSO, TRNNPLXXBGDXX, TRNBTNXXBGDXX, TRNINDEAINDWE, TRNINDNEINDNO, TRNLKAXXMDVXX |
+
+### C_Target_VRE_TxCostHigh
+
+- Parent: `C_Target_VRE`.
+- Shared VRE ceilings: skipped.
+- Scenario edits: 36.
+- Overlay: none.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
+- Seed needs: a solved `A_Calibrated_BAU` result.
+- Description: C_Target_VRE with the capital and fixed costs of the 18 interconnectors at the high bounding values of the reviewed corridor proposal, constant in real 2023 USD for 2023 to 2050. Each bound sets route length, line rate, endpoint allowance and usable transfer capacity of every corridor to their highest-cost values together. Everything else equals C_Target_VRE, whose costs are the central case.
+
+| Sheet | Parameter | Operation | Technologies |
+|---|---|---|---|
+| Secondary Techs | `CapitalCost` | set_flat | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDNONPLXX, TRNINDEANPLXX, TRNINDSOLKAXX, TRNINDEAINDNO, TRNINDNOINDWE, TRNINDEAINDNE, TRNINDEAINDSO, TRNINDSOINDWE, TRNMDVXXINDSO, TRNNPLXXBGDXX, TRNBTNXXBGDXX, TRNINDEAINDWE, TRNINDNEINDNO, TRNLKAXXMDVXX |
+| Secondary Techs | `FixedCost` | set_flat | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDNONPLXX, TRNINDEANPLXX, TRNINDSOLKAXX, TRNINDEAINDNO, TRNINDNOINDWE, TRNINDEAINDNE, TRNINDEAINDSO, TRNINDSOINDWE, TRNMDVXXINDSO, TRNNPLXXBGDXX, TRNBTNXXBGDXX, TRNINDEAINDWE, TRNINDNEINDNO, TRNLKAXXMDVXX |
+
 <!-- generated: end -->
 
 ## Origin of each scenario
@@ -269,3 +359,9 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 | `C_Target_VRE_Clipped` | `C_Target_VRE` with the shared VRE ceilings, plus the restated Maldives 2028 solar assumption: a minimum total of 0.3841 GW with earlier builds counting towards it. |
 | `A_Calibrated_BAU_Clipped_TxFreeze2026` | `A_Calibrated_BAU_Clipped` with upper capacity limits and fixed early investments for the eleven international corridors, derived once from a historical A-clipped reference at the end of 2026. The tables are literal values in its scenario file; the pipeline never recomputes them from a current A result. |
 | `B_Opt_Clipped_GrossImportCap15` | `B_Opt_Clipped` with a policy that caps the gross received imports of each country at 15 per cent of its annual demand in 2027 to 2050, for all six countries with India counted nationally. |
+| `A_Calibrated_BAU_TxCostLow` | `A_Calibrated_BAU` with the capital and fixed costs of the 18 interconnectors at the low bounding values of the reviewed corridor proposal (`Transmission_Cost_Basis` columns K and L, record R2). Its parent is the central case. |
+| `A_Calibrated_BAU_TxCostHigh` | `A_Calibrated_BAU` with the capital and fixed costs of the 18 interconnectors at the high bounding values of the reviewed corridor proposal (`Transmission_Cost_Basis` columns K and L, record R2). Its parent is the central case. |
+| `B_Optimised_VRE_TxCostLow` | `B_Optimised_VRE` with the capital and fixed costs of the 18 interconnectors at the low bounding values of the reviewed corridor proposal (`Transmission_Cost_Basis` columns K and L, record R2). Its parent is the central case. |
+| `B_Optimised_VRE_TxCostHigh` | `B_Optimised_VRE` with the capital and fixed costs of the 18 interconnectors at the high bounding values of the reviewed corridor proposal (`Transmission_Cost_Basis` columns K and L, record R2). Its parent is the central case. |
+| `C_Target_VRE_TxCostLow` | `C_Target_VRE` with the capital and fixed costs of the 18 interconnectors at the low bounding values of the reviewed corridor proposal (`Transmission_Cost_Basis` columns K and L, record R2). Its parent is the central case. |
+| `C_Target_VRE_TxCostHigh` | `C_Target_VRE` with the capital and fixed costs of the 18 interconnectors at the high bounding values of the reviewed corridor proposal (`Transmission_Cost_Basis` columns K and L, record R2). Its parent is the central case. |

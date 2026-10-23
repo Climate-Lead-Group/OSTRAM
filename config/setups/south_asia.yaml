@@ -115,6 +115,12 @@ scenario_registry:
   - C_Target_VRE_Clipped
   - A_Calibrated_BAU_Clipped_TxFreeze2026
   - B_Opt_Clipped_GrossImportCap15
+  - A_Calibrated_BAU_TxCostLow
+  - A_Calibrated_BAU_TxCostHigh
+  - B_Optimised_VRE_TxCostLow
+  - B_Optimised_VRE_TxCostHigh
+  - C_Target_VRE_TxCostLow
+  - C_Target_VRE_TxCostHigh
   # Derived scenarios whose edits read a solved parent of the same run. Each
   # result folder is read from the environment variable, or else from
   # default_path under the execution workspace.

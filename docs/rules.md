@@ -20,7 +20,7 @@ settings files live in `config/scenarios/<root>/`.
 | `set_vre_targets.py` | `set_vre_targets.yaml` | C only. Converts fixed renewable generation shares per country-region into activity floors sized from the solved A result, and writes a bounded capacity envelope for solar and onshore wind in place of their build caps. |
 | `relax_interconnectors.py` | `relax_interconnectors.yaml` | Opens the build cap of interconnectors above their residual capacity, by a factor, by a fixed headroom or by per-corridor schedules. It sets `TotalAnnualMaxCapacity` of an overridden corridor with new investment to 9999. |
 | `add_storage_min_investment.py` | `storage_floors.yaml` | Writes small minimum investments for the storage families per year. |
-| `apply_interconnector_costs.py` | the `Interconnector_Params` sheet of the scenario workbook | Overwrites `CapitalCost`, `FixedCost` and `OperationalLife` of the interconnectors with the sheet's values. The sheet holds one central capital and fixed cost per corridor, constant in real 2023 USD over 2023 to 2050. The `Transmission_Cost_Basis` sheet of the same workbook holds their sources, assumptions and calculations; B1 does not read it. |
+| `apply_interconnector_costs.py` | the `Interconnector_Params` sheet of the scenario workbook | Overwrites `CapitalCost`, `FixedCost` and `OperationalLife` of the interconnectors with the sheet's values. The sheet holds one central capital and fixed cost per corridor, constant in real 2023 USD over 2023 to 2050. The `Transmission_Cost_Basis` sheet of the same workbook holds their sources, assumptions and calculations; B1 does not read it. The six cost bounding scenarios replace these costs through their scenario edits; see [Costs](#costs). |
 | `apply_internal_transmission.py` | `Config_country_codes.yaml` | Writes `CapitalCost`, `FixedCost` and `OperationalLife` of the six internal transmission families, 60 technologies in all, and, after the base-year pin, their `ResidualCapacity`, computed as described [below](#internal-transmission-residuals). |
 | `apply_internal_tx_losses.py` | `Config_country_codes.yaml` | Sets the output activity ratio of the internal transmission families to 1 minus the loss setting `internal_transmission.transmission_loss`, which is 0.03 on `main`. |
 | `apply_base_year_pin.py` | `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | Writes the reviewed 2023 to 2026 values of the table over the matching workbook rows. |
@@ -210,6 +210,34 @@ The 0.95 of the Bangladesh links is set in
 `ostram/pipeline/scenarios/transformations/apply_manual_fixes.py`
 (`OAR_CORRECTIONS`); the 0.95 of the other two links is the interconnector
 `OutputActivityRatio` of the workbook's `Fixed_Horizon_Parameters` sheet.
+
+### Costs
+
+Each corridor has one central capital cost and a fixed cost of 1.5% of it,
+constant in real 2023 USD over 2023 to 2050, in the `Interconnector_Params`
+sheet. Its low and high bounding values are columns K and L of the
+`Transmission_Cost_Basis` summary, built by the rules of record R2 of that
+sheet. Six registered scenarios use them: `A_Calibrated_BAU_TxCostLow`,
+`A_Calibrated_BAU_TxCostHigh`, `B_Optimised_VRE_TxCostLow`,
+`B_Optimised_VRE_TxCostHigh`, `C_Target_VRE_TxCostLow` and
+`C_Target_VRE_TxCostHigh`. Each equals its parent root except the capital and
+fixed costs of the 18 interconnectors, which its scenario edits set with
+`op: set_flat`. The parent is the central case.
+
+ASSUMPTION: in A_Calibrated_BAU_TxCostLow, A_Calibrated_BAU_TxCostHigh,
+B_Optimised_VRE_TxCostLow, B_Optimised_VRE_TxCostHigh, C_Target_VRE_TxCostLow
+and C_Target_VRE_TxCostHigh, every corridor's capital cost is at its low or
+high bounding value and fixed cost is 1.5% of capital, constant in real 2023
+USD for 2023 to 2050. Each bound applies the route-length factor (0.75 or
+1.25), the transfer-capacity factor (1.25 or 0.75), all-flat or all-mountain
+line rates and 15 or 30 million USD per endpoint together, so it marks the
+edge of the range for that corridor; Nepal to Bangladesh, for example, is
+665.82 low, 936.37 central and 1,190.46 high USD2023/kW. For 400 kV
+double-circuit lines the World Bank's 2026 transmission cost report gives a
+mean of 0.40 million USD2023 per route-km over 12 projects, against the 0.78
+the central values use (World Bank, *Understanding the Cost of Transmission
+Infrastructure*, 2026, Table 3.5,
+<https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf>).
 
 ## 0, -1 and 9999
 

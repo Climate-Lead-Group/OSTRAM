@@ -1,0 +1,385 @@
+scenario: C_Target_VRE_TxCostLow
+base_scenario: C_Target_VRE
+description: >-
+  C_Target_VRE with the capital and fixed costs of the 18 interconnectors at the low bounding
+  values of the reviewed corridor proposal, constant in real 2023 USD for 2023 to 2050. Each
+  bound sets route length, line rate, endpoint allowance and usable transfer capacity of every
+  corridor to their lowest-cost values together. Everything else equals C_Target_VRE, whose
+  costs are the central case.
+apply_vre_ceiling_layer: false
+edits:
+- sheet: Secondary Techs
+  tech: TRNBGDXXINDEA
+  param: CapitalCost
+  op: set_flat
+  value: 462.57
+  note: 'ASSUMPTION: low bounding capital cost of corridor C01 (Transmission_Cost_Basis record
+    R2), USD2023/kW: [0.75 × 172.36 × 114.1/97.9 + 0.75 × 125 × 0.70 + 1 × 15] / 0.5 = 462.57.
+    Sources of the inputs, as for the central value: https://www.adb.org/sites/default/files/project-documents/44192/44192-016-pcr-en.pdf;
+    https://openjicareport.jica.go.jp/pdf/12375416.pdf; https://www.ctuil.in/uploads/ists_communication_planning/168312036824final_02%20Report_Communication%20Planning_Sep%272022%20%281%29.pdf;
+    https://www.moenr.gov.bt/wp-content/uploads/2018/11/National-Transmission-Grid-Master-Plan-2018.pdf;
+    https://sansad.in/getFile/loksabhaquestions/annex/15/AU618.pdf?source=pqals; https://www.indembthimphu.gov.in/pages/MzI;
+    https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx;
+    https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf;
+    https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf;
+    https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf.'
+- sheet: Secondary Techs
+  tech: TRNBGDXXINDEA
+  param: FixedCost
+  op: set_flat
+  value: 6.9386
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 462.57, 4) = 6.9386.'
+- sheet: Secondary Techs
+  tech: TRNBGDXXINDNE
+  param: CapitalCost
+  op: set_flat
+  value: 395.37
+  note: 'ASSUMPTION: low bounding capital cost of corridor C02 (Transmission_Cost_Basis record
+    R2), USD2023/kW: [0.75 × 172.36 × 114.1/97.9 + 0.75 × 61 × 0.70 + 1 × 15] / 0.5 = 395.37.
+    Sources of the inputs, as for the central value: https://www.adb.org/sites/default/files/project-documents/44192/44192-016-pcr-en.pdf;
+    https://openjicareport.jica.go.jp/pdf/12375416.pdf; https://www.ctuil.in/uploads/ists_communication_planning/168312036824final_02%20Report_Communication%20Planning_Sep%272022%20%281%29.pdf;
+    https://www.moenr.gov.bt/wp-content/uploads/2018/11/National-Transmission-Grid-Master-Plan-2018.pdf;
+    https://sansad.in/getFile/loksabhaquestions/annex/15/AU618.pdf?source=pqals; https://www.indembthimphu.gov.in/pages/MzI;
+    https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx;
+    https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf;
+    https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf;
+    https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf.'
+- sheet: Secondary Techs
+  tech: TRNBGDXXINDNE
+  param: FixedCost
+  op: set_flat
+  value: 5.9306
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 395.37, 4) = 5.9306.'
+- sheet: Secondary Techs
+  tech: TRNBTNXXINDEA
+  param: CapitalCost
+  op: set_flat
+  value: 94.56
+  note: 'ASSUMPTION: low bounding capital cost of corridor C03 (Transmission_Cost_Basis record
+    R2), USD2023/kW: (0.75 × 168 × 0.70 + 2 × 15) / (1.25 × 1.0) = 94.56. Sources of the inputs,
+    as for the central value: https://openjicareport.jica.go.jp/pdf/12375416.pdf; https://www.ctuil.in/uploads/ists_communication_planning/168312036824final_02%20Report_Communication%20Planning_Sep%272022%20%281%29.pdf;
+    https://www.skipperlimited.com/uploads/prospectus/681pdctfile_intimationofnoticeofagm.pdf;
+    https://www.moenr.gov.bt/wp-content/uploads/2018/11/National-Transmission-Grid-Master-Plan-2018.pdf;
+    https://sansad.in/getFile/loksabhaquestions/annex/15/AU618.pdf?source=pqals; https://www.indembthimphu.gov.in/pages/MzI;
+    https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx;
+    https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf;
+    https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf.'
+- sheet: Secondary Techs
+  tech: TRNBTNXXINDEA
+  param: FixedCost
+  op: set_flat
+  value: 1.4184
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 94.56, 4) = 1.4184.'
+- sheet: Secondary Techs
+  tech: TRNBTNXXINDNE
+  param: CapitalCost
+  op: set_flat
+  value: 66.0
+  note: 'ASSUMPTION: low bounding capital cost of corridor C04 (Transmission_Cost_Basis record
+    R2), USD2023/kW: (0.75 × 100 × 0.70 + 2 × 15) / (1.25 × 1.0) = 66.00. Sources of the inputs,
+    as for the central value: https://openjicareport.jica.go.jp/pdf/12375416.pdf; https://www.moenr.gov.bt/wp-content/uploads/2018/11/National-Transmission-Grid-Master-Plan-2018.pdf;
+    https://sansad.in/getFile/loksabhaquestions/annex/15/AU618.pdf?source=pqals; https://www.indembthimphu.gov.in/pages/MzI;
+    https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx;
+    https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf;
+    https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf.'
+- sheet: Secondary Techs
+  tech: TRNBTNXXINDNE
+  param: FixedCost
+  op: set_flat
+  value: 0.99
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 66.00, 4) = 0.9900.'
+- sheet: Secondary Techs
+  tech: TRNINDNONPLXX
+  param: CapitalCost
+  op: set_flat
+  value: 82.8
+  note: 'ASSUMPTION: low bounding capital cost of corridor C05 (Transmission_Cost_Basis record
+    R2), USD2023/kW: (0.75 × 140 × 0.70 + 2 × 15) / (1.25 × 1.0) = 82.80. Sources of the inputs,
+    as for the central value: https://openjicareport.jica.go.jp/pdf/12375416.pdf; https://www.ctuil.in/uploads/ists_communication_planning/168312036824final_02%20Report_Communication%20Planning_Sep%272022%20%281%29.pdf;
+    https://www.moenr.gov.bt/wp-content/uploads/2018/11/National-Transmission-Grid-Master-Plan-2018.pdf;
+    https://sansad.in/getFile/loksabhaquestions/annex/15/AU618.pdf?source=pqals; https://www.indembthimphu.gov.in/pages/MzI;
+    https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx;
+    https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf;
+    https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf.'
+- sheet: Secondary Techs
+  tech: TRNINDNONPLXX
+  param: FixedCost
+  op: set_flat
+  value: 1.242
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 82.80, 4) = 1.2420.'
+- sheet: Secondary Techs
+  tech: TRNINDEANPLXX
+  param: CapitalCost
+  op: set_flat
+  value: 78.6
+  note: 'ASSUMPTION: low bounding capital cost of corridor C06 (Transmission_Cost_Basis record
+    R2), USD2023/kW: (0.75 × 130 × 0.70 + 2 × 15) / (1.25 × 1.0) = 78.60. Sources of the inputs,
+    as for the central value: https://openjicareport.jica.go.jp/pdf/12375416.pdf; https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf;
+    https://www.ctuil.in/uploads/ists_communication_planning/168312036824final_02%20Report_Communication%20Planning_Sep%272022%20%281%29.pdf;
+    https://www.moenr.gov.bt/wp-content/uploads/2018/11/National-Transmission-Grid-Master-Plan-2018.pdf;
+    https://sansad.in/getFile/loksabhaquestions/annex/15/AU618.pdf?source=pqals; https://www.indembthimphu.gov.in/pages/MzI;
+    https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx;
+    https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf.'
+- sheet: Secondary Techs
+  tech: TRNINDEANPLXX
+  param: FixedCost
+  op: set_flat
+  value: 1.179
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 78.60, 4) = 1.1790.'
+- sheet: Secondary Techs
+  tech: TRNINDSOLKAXX
+  param: CapitalCost
+  op: set_flat
+  value: 1751.47
+  note: 'ASSUMPTION: low bounding capital cost of corridor C07 (Transmission_Cost_Basis record
+    R2), USD2023/kW: 0.8 × (1,094.67 / 0.5) = 1751.47. Sources of the inputs, as for the central
+    value: https://asiacleanenergyforum.adb.org/wp-content/uploads/2025/06/Spotlight-Session-2-Case-Prof.-KTMU-Hemapala.pptx.pdf;
+    https://www.ceb.lk/front_img/img_reports/1748839124LTGEP-2025-2044-FINAL_c.pdf; https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf;
+    https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf;
+    https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf;
+    https://openjicareport.jica.go.jp/pdf/12375416.pdf.'
+- sheet: Secondary Techs
+  tech: TRNINDSOLKAXX
+  param: FixedCost
+  op: set_flat
+  value: 26.2721
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 1751.47, 4) = 26.2721.'
+- sheet: Secondary Techs
+  tech: TRNINDEAINDNO
+  param: CapitalCost
+  op: set_flat
+  value: 106.09
+  note: 'ASSUMPTION: low bounding capital cost of corridor C08 (Transmission_Cost_Basis record
+    R2), USD2023/kW: (0.75 × 273 × 1.65 + 2 × 30) / (1.25 × 3.0) = 106.09. Sources of the
+    inputs, as for the central value: https://openjicareport.jica.go.jp/pdf/12375416.pdf;
+    https://www.ctuil.in/uploads/ists_communication_planning/168312036824final_02%20Report_Communication%20Planning_Sep%272022%20%281%29.pdf;
+    https://www.erpc.gov.in/meetings/multiple-document/download/eyJpdiI6ImxLMWgvSTdla1lIcjdFa2VVVGJuVHc9PSIsInZhbHVlIjoid1NhUGUwenlQOE84V3Ryc2xFcXo5dz09IiwibWFjIjoiYWYwN2M5ZjNlMmJjMTRkM2MyMDMyOGUzMmYzNjJlMDhkOGRjOTQ2NmNhNTIyOTAwYTQ3NjViMDhlY2I5ZmEwYyIsInRhZyI6IiJ9;
+    https://www.moenr.gov.bt/wp-content/uploads/2018/11/National-Transmission-Grid-Master-Plan-2018.pdf;
+    https://sansad.in/getFile/loksabhaquestions/annex/15/AU618.pdf?source=pqals; https://www.indembthimphu.gov.in/pages/MzI;
+    https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx;
+    https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf;
+    https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf;
+    https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf.'
+- sheet: Secondary Techs
+  tech: TRNINDEAINDNO
+  param: FixedCost
+  op: set_flat
+  value: 1.5914
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 106.09, 4) = 1.5914.'
+- sheet: Secondary Techs
+  tech: TRNINDNOINDWE
+  param: CapitalCost
+  op: set_flat
+  value: 302.34
+  note: 'ASSUMPTION: low bounding capital cost of corridor C09 (Transmission_Cost_Basis record
+    R2), USD2023/kW: 0.75 × (403.12591000 (record H1)) = 302.34. Sources of the inputs, as
+    for the central value: https://www.cercind.gov.in/2023/orders/33-TT-2021.pdf; https://sansad.in/getFile/loksabhaquestions/annex/15/AU618.pdf?source=pqals;
+    https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx;
+    https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf;
+    https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf;
+    https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf;
+    https://openjicareport.jica.go.jp/pdf/12375416.pdf.'
+- sheet: Secondary Techs
+  tech: TRNINDNOINDWE
+  param: FixedCost
+  op: set_flat
+  value: 4.5351
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 302.34, 4) = 4.5351.'
+- sheet: Secondary Techs
+  tech: TRNINDEAINDNE
+  param: CapitalCost
+  op: set_flat
+  value: 115.98
+  note: 'ASSUMPTION: low bounding capital cost of corridor C10 (Transmission_Cost_Basis record
+    R2), USD2023/kW: (0.75 × 219 × 0.70 + 2 × 15) / (1.25 × 1.0) = 115.98. Sources of the
+    inputs, as for the central value: https://openjicareport.jica.go.jp/pdf/12375416.pdf;
+    https://www.indigrid.co.in/wp-content/uploads/2023/12/outcome.pdf; https://www.ctuil.in/uploads/ists_communication_planning/168312036824final_02%20Report_Communication%20Planning_Sep%272022%20%281%29.pdf;
+    https://www.moenr.gov.bt/wp-content/uploads/2018/11/National-Transmission-Grid-Master-Plan-2018.pdf;
+    https://sansad.in/getFile/loksabhaquestions/annex/15/AU618.pdf?source=pqals; https://www.indembthimphu.gov.in/pages/MzI;
+    https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx;
+    https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf;
+    https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf.'
+- sheet: Secondary Techs
+  tech: TRNINDEAINDNE
+  param: FixedCost
+  op: set_flat
+  value: 1.7397
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 115.98, 4) = 1.7397.'
+- sheet: Secondary Techs
+  tech: TRNINDEAINDSO
+  param: CapitalCost
+  op: set_flat
+  value: 292.94
+  note: 'ASSUMPTION: low bounding capital cost of corridor C11 (Transmission_Cost_Basis record
+    R2), USD2023/kW: 0.7 × (158.615763 + 0.189829 × 1,369) = 292.94. Sources of the inputs,
+    as for the central value: https://www.cercind.gov.in/2023/orders/33-TT-2021.pdf; https://cercind.gov.in/2018/draft_reg/list_stakeholders/Power%20Grid.pdf;
+    https://sansad.in/getFile/loksabhaquestions/annex/15/AU618.pdf?source=pqals; https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx;
+    https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf;
+    https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf;
+    https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf;
+    https://openjicareport.jica.go.jp/pdf/12375416.pdf.'
+- sheet: Secondary Techs
+  tech: TRNINDEAINDSO
+  param: FixedCost
+  op: set_flat
+  value: 4.3941
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 292.94, 4) = 4.3941.'
+- sheet: Secondary Techs
+  tech: TRNINDSOINDWE
+  param: CapitalCost
+  op: set_flat
+  value: 84.64
+  note: 'ASSUMPTION: low bounding capital cost of corridor C12 (Transmission_Cost_Basis record
+    R2), USD2023/kW: (0.75 × 208 × 1.65 + 2 × 30) / (1.25 × 3.0) = 84.64. Sources of the inputs,
+    as for the central value: https://openjicareport.jica.go.jp/pdf/12375416.pdf; https://www.pib.gov.in/newsite/PrintRelease.aspx?lang=2&reg=48&relid=102244;
+    https://www.ctuil.in/uploads/ists_communication_planning/168312036824final_02%20Report_Communication%20Planning_Sep%272022%20%281%29.pdf;
+    https://www.moenr.gov.bt/wp-content/uploads/2018/11/National-Transmission-Grid-Master-Plan-2018.pdf;
+    https://sansad.in/getFile/loksabhaquestions/annex/15/AU618.pdf?source=pqals; https://www.indembthimphu.gov.in/pages/MzI;
+    https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx;
+    https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf;
+    https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf;
+    https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf.'
+- sheet: Secondary Techs
+  tech: TRNINDSOINDWE
+  param: FixedCost
+  op: set_flat
+  value: 1.2696
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 84.64, 4) = 1.2696.'
+- sheet: Secondary Techs
+  tech: TRNMDVXXINDSO
+  param: CapitalCost
+  op: set_flat
+  value: 6914.45
+  note: 'ASSUMPTION: low bounding capital cost of corridor C13 (Transmission_Cost_Basis record
+    R2), USD2023/kW: (614.15 + 710 × 480.52/120 × 1.00) / 0.5 = 6914.45. Sources of the inputs,
+    as for the central value: https://asiacleanenergyforum.adb.org/wp-content/uploads/2025/06/Spotlight-Session-2-Case-Prof.-KTMU-Hemapala.pptx.pdf;
+    https://www.ceb.lk/front_img/img_reports/1748839124LTGEP-2025-2044-FINAL_c.pdf; https://www.cochinport.gov.in/sites/default/files/inline-files/Disaster_Management_Plan_0.pdf;
+    https://www.meteorology.gov.mv/about-us; https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf;
+    https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf;
+    https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf;
+    https://openjicareport.jica.go.jp/pdf/12375416.pdf.'
+- sheet: Secondary Techs
+  tech: TRNMDVXXINDSO
+  param: FixedCost
+  op: set_flat
+  value: 103.7168
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 6914.45, 4) = 103.7168.'
+- sheet: Secondary Techs
+  tech: TRNNPLXXBGDXX
+  param: CapitalCost
+  op: set_flat
+  value: 665.82
+  note: 'ASSUMPTION: low bounding capital cost of corridor C14 (Transmission_Cost_Basis record
+    R2), USD2023/kW: [0.75 × 2 × 172.36 × 114.1/97.9 + 0.75 × 580 × 0.70 + 4 × 15] / 1 = 665.82.
+    Sources of the inputs, as for the central value: https://www.adb.org/sites/default/files/project-documents/44192/44192-016-pcr-en.pdf;
+    https://openjicareport.jica.go.jp/pdf/12375416.pdf; https://www.moenr.gov.bt/wp-content/uploads/2018/11/National-Transmission-Grid-Master-Plan-2018.pdf;
+    https://sansad.in/getFile/loksabhaquestions/annex/15/AU618.pdf?source=pqals; https://www.indembthimphu.gov.in/pages/MzI;
+    https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx;
+    https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf;
+    https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf;
+    https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf.'
+- sheet: Secondary Techs
+  tech: TRNNPLXXBGDXX
+  param: FixedCost
+  op: set_flat
+  value: 9.9873
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 665.82, 4) = 9.9873.'
+- sheet: Secondary Techs
+  tech: TRNBTNXXBGDXX
+  param: CapitalCost
+  op: set_flat
+  value: 578.72
+  note: 'ASSUMPTION: low bounding capital cost of corridor C15 (Transmission_Cost_Basis record
+    R2), USD2023/kW: [0.75 × 1.5 × 172.36 × 114.1/97.9 + 0.75 × (330 × 0.70 + 30 × 0.88) +
+    1 × 15] / 0.75 = 578.72. Sources of the inputs, as for the central value: https://www.adb.org/sites/default/files/project-documents/44192/44192-016-pcr-en.pdf;
+    https://openjicareport.jica.go.jp/pdf/12375416.pdf; https://www.moenr.gov.bt/wp-content/uploads/2018/11/National-Transmission-Grid-Master-Plan-2018.pdf;
+    https://sansad.in/getFile/loksabhaquestions/annex/15/AU618.pdf?source=pqals; https://www.indembthimphu.gov.in/pages/MzI;
+    https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx;
+    https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf;
+    https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf;
+    https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf.'
+- sheet: Secondary Techs
+  tech: TRNBTNXXBGDXX
+  param: FixedCost
+  op: set_flat
+  value: 8.6808
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 578.72, 4) = 8.6808.'
+- sheet: Secondary Techs
+  tech: TRNINDEAINDWE
+  param: CapitalCost
+  op: set_flat
+  value: 115.99
+  note: 'ASSUMPTION: low bounding capital cost of corridor C16 (Transmission_Cost_Basis record
+    R2), USD2023/kW: (0.75 × 303 × 1.65 + 2 × 30) / (1.25 × 3.0) = 115.99. Sources of the
+    inputs, as for the central value: https://openjicareport.jica.go.jp/pdf/12375416.pdf;
+    https://www.ctuil.in/uploads/ists_communication_planning/168312036824final_02%20Report_Communication%20Planning_Sep%272022%20%281%29.pdf;
+    https://www.erpc.gov.in/meetings/multiple-document/download/eyJpdiI6ImxLMWgvSTdla1lIcjdFa2VVVGJuVHc9PSIsInZhbHVlIjoid1NhUGUwenlQOE84V3Ryc2xFcXo5dz09IiwibWFjIjoiYWYwN2M5ZjNlMmJjMTRkM2MyMDMyOGUzMmYzNjJlMDhkOGRjOTQ2NmNhNTIyOTAwYTQ3NjViMDhlY2I5ZmEwYyIsInRhZyI6IiJ9;
+    https://www.moenr.gov.bt/wp-content/uploads/2018/11/National-Transmission-Grid-Master-Plan-2018.pdf;
+    https://sansad.in/getFile/loksabhaquestions/annex/15/AU618.pdf?source=pqals; https://www.indembthimphu.gov.in/pages/MzI;
+    https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx;
+    https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf;
+    https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf;
+    https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf.'
+- sheet: Secondary Techs
+  tech: TRNINDEAINDWE
+  param: FixedCost
+  op: set_flat
+  value: 1.7399
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 115.99, 4) = 1.7399.'
+- sheet: Secondary Techs
+  tech: TRNINDNEINDNO
+  param: CapitalCost
+  op: set_flat
+  value: 343.97
+  note: 'ASSUMPTION: low bounding capital cost of corridor C17 (Transmission_Cost_Basis record
+    R2), USD2023/kW: 0.7 × (158.615763 + 0.189829 × 1,753) = 343.97. Sources of the inputs,
+    as for the central value: https://www.cercind.gov.in/2023/orders/33-TT-2021.pdf; https://cercind.gov.in/2018/draft_reg/list_stakeholders/Power%20Grid.pdf;
+    https://www.cercind.gov.in/2017/orders/67TT.pdf; https://sansad.in/getFile/loksabhaquestions/annex/15/AU618.pdf?source=pqals;
+    https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Annual.xlsx;
+    https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf;
+    https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf;
+    https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf;
+    https://openjicareport.jica.go.jp/pdf/12375416.pdf.'
+- sheet: Secondary Techs
+  tech: TRNINDNEINDNO
+  param: FixedCost
+  op: set_flat
+  value: 5.1596
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 343.97, 4) = 5.1596.'
+- sheet: Secondary Techs
+  tech: TRNLKAXXMDVXX
+  param: CapitalCost
+  op: set_flat
+  value: 7354.93
+  note: 'ASSUMPTION: low bounding capital cost of corridor C18 (Transmission_Cost_Basis record
+    R2), USD2023/kW: (614.15 + 765 × 480.52/120 × 1.00) / 0.5 = 7354.93. Sources of the inputs,
+    as for the central value: https://asiacleanenergyforum.adb.org/wp-content/uploads/2025/06/Spotlight-Session-2-Case-Prof.-KTMU-Hemapala.pptx.pdf;
+    https://www.ceb.lk/front_img/img_reports/1748839124LTGEP-2025-2044-FINAL_c.pdf; https://www.slpa.lk/port-colombo/location;
+    https://www.meteorology.gov.mv/about-us; https://www.adb.org/sites/default/files/project-documents/37192/37192-043-pcr-en.pdf;
+    https://documents1.worldbank.org/curated/en/158731468114883648/pdf/598930PAD0P1150e0only0900BOX361476B.pdf;
+    https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf;
+    https://openjicareport.jica.go.jp/pdf/12375416.pdf.'
+- sheet: Secondary Techs
+  tech: TRNLKAXXMDVXX
+  param: FixedCost
+  op: set_flat
+  value: 110.324
+  note: 'ASSUMPTION: fixed cost is 1.5% of the low capital cost (Transmission_Cost_Basis record
+    O1), USD2023/kW-year: ROUND(0.015 × 7354.93, 4) = 110.3240.'

@@ -70,7 +70,7 @@ This applies to changes under `config/`, `inputs/` or `ostram/pipeline/`.
    `B_Optimised_VRE` result and `A_Calibrated_BAU_Clipped_TxFreeze2026` a solved
    `A_Calibrated_BAU_Clipped` result: set the two environment variables below
    to the same folders in both clones. The
-   [portfolio sequence](docs/pipeline.md#17-scenario-portfolio) shows
+   [portfolio sequence](docs/pipeline.md#23-scenario-portfolio) shows
    how to make them.
 
    ```powershell
