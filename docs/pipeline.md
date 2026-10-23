@@ -102,7 +102,7 @@ The [rules page](rules.md) lists the rule chain of each root and the
 |---|---|---|---|
 | Normalise | `ostram.pipeline.execution.runner` | `compilation/A2_Output_Params/<S>/*.csv`, the package CSV templates | `execution/A2_Outputs_Params_otoole/<S>/*.csv` |
 | Base-year build lock | `ostram.pipeline.execution.base_year_lock`, called by the runner | the normalised CSVs, `config/scenarios/technology_types.csv`, the model file | `TotalAnnualMaxCapacityInvestment.csv` and `TotalTechnologyAnnualActivityLowerLimit.csv` of `execution/A2_Outputs_Params_otoole/<S>/`, in place |
-| Convert | otoole, driven by the runner | the normalised CSVs, `conversion_format.yaml`, the gross import policy in the scenario's file, the historical trade roots in `south_asia.yaml`, the model file | `execution/Executables/<S>_0/<S>_0.txt` |
+| Convert | otoole, driven by the runner | the normalised CSVs, `conversion_format.yaml`, the gross import policy in the scenario's file, the historical trade roots and the link import cap in `south_asia.yaml`, the model file | `execution/Executables/<S>_0/<S>_0.txt` |
 | Preprocess | `ostram.pipeline.execution.preprocess` | the datafile | `Pre_processed_<S>_0.txt` |
 | Adjustment 1 | `model_file_adjustments.days_in_day_type` | the preprocessed datafile | the same file, in place |
 | Adjustment 2 | `model_file_adjustments.storage_delay` | the datafile and `model/osemosys_fast_preprocessed.txt` | `Pre_processed_<S>_0_StorageDelayN5.txt` and `osemosys_fast_preprocessed_storage_delay.txt` |

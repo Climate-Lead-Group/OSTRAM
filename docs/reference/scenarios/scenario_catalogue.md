@@ -42,7 +42,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 ### A_Calibrated_BAU
 
 - Parent: none. `A_Calibrated_BAU` is a decision root.
-- B2 policy: the historical trade constraints are active.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
 - Seed needs: none.
 
 ### A_Calibrated_BAU_Clipped
@@ -51,14 +51,14 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 - Shared VRE ceilings: applied.
 - Scenario edits: 0.
 - Overlay: none.
-- B2 policy: the historical trade constraints are active.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
 - Seed needs: none.
 - Description: The shared VRE ceilings applied to A_Calibrated_BAU. No other changes.
 
 ### B_Optimised_VRE
 
 - Parent: none. `B_Optimised_VRE` is a decision root.
-- B2 policy: the historical trade constraints are active.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
 - Seed needs: none.
 
 ### B_Opt_Clipped
@@ -67,7 +67,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 - Shared VRE ceilings: applied.
 - Scenario edits: 0.
 - Overlay: none.
-- B2 policy: the historical trade constraints are active.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
 - Seed needs: none.
 - Description: The shared VRE ceilings applied to B_Optimised_VRE. No other changes.
 
@@ -77,7 +77,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 - Shared VRE ceilings: applied.
 - Scenario edits: 0.
 - Overlay: `config/scenarios/B_Opt_DirBidir/set_interconnector_direction.yaml` from 2027.
-- B2 policy: the historical trade constraints are active.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
 - Seed needs: none.
 - Description: The shared VRE ceilings applied to B_Optimised_VRE. Every interconnector may carry power in both directions; its direction file lists no one-way corridors.
 
@@ -87,7 +87,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 - Shared VRE ceilings: applied.
 - Scenario edits: 0.
 - Overlay: `config/scenarios/B_Opt_DirContractual/set_interconnector_direction.yaml` from 2027.
-- B2 policy: the historical trade constraints are active.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
 - Seed needs: none.
 - Description: The shared VRE ceilings applied to B_Optimised_VRE. Nine interconnectors carry power in one direction only, the direction of their contracts and physical flows. The two Nepal to India interconnectors carry power both ways. Its direction file sets the direction of each interconnector.
 
@@ -97,7 +97,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 - Shared VRE ceilings: applied.
 - Scenario edits: 32.
 - Overlay: none.
-- B2 policy: the historical trade constraints are active.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
 - Seed needs: none.
 - Description: The shared VRE ceilings applied to B_Optimised_VRE. The CapitalCost and FixedCost of the existing generation and storage technologies of Bangladesh, Bhutan, Nepal, Sri Lanka and the Maldives, except the backstop, are set to the India values of the same family in each year. Where the India regions differ (coal, hydro and offshore wind), the values of the INDNO region are used. Transmission and fuel prices are unchanged.
 
@@ -112,7 +112,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 - Shared VRE ceilings: applied.
 - Scenario edits: 7, after the 32 edits of `B_Opt_IndiaCosts`.
 - Overlay: none.
-- B2 policy: the historical trade constraints are active.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
 - Seed needs: none.
 - Description: The shared VRE ceilings applied to B_Optimised_VRE, then the edits of B_Opt_IndiaCosts: the CapitalCost and FixedCost of the existing generation and storage technologies of Bangladesh, Bhutan, Nepal, Sri Lanka and the Maldives, except the backstop, are set to the India values of the same family in each year. Where the India regions differ (coal, hydro and offshore wind), the values of the INDNO region are used. Then the fuel prices of these five countries (the VariableCost of their MIN fuel-supply technologies) are set to the India prices. Transmission is unchanged.
 
@@ -128,7 +128,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 - Shared VRE ceilings: applied.
 - Scenario edits: 1.
 - Overlay: none.
-- B2 policy: the historical trade constraints are active.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
 - Seed needs: none.
 - Description: The shared VRE ceilings applied to B_Optimised_VRE. The CapitalCost of every solar technology (PWRSPV, all ten nodes) is multiplied by 1.30 in every year.
 
@@ -142,7 +142,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 - Shared VRE ceilings: applied.
 - Scenario edits: 1.
 - Overlay: none.
-- B2 policy: the historical trade constraints are active.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
 - Seed needs: none.
 - Description: The shared VRE ceilings applied to B_Optimised_VRE. The CapitalCost of every solar technology (PWRSPV, all ten nodes) is multiplied by 1.10 in every year. To change the increase, edit the factor of its one edit.
 
@@ -156,7 +156,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 - Shared VRE ceilings: applied.
 - Scenario edits: 1.
 - Overlay: none.
-- B2 policy: the historical trade constraints are active.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
 - Seed needs: none.
 - Description: The shared VRE ceilings applied to B_Optimised_VRE. The CapitalCost of every solar technology (PWRSPV, all ten nodes) is multiplied by 1.50 in 2028, 2029 and 2030. The other years keep the cost of B_Optimised_VRE.
 
@@ -170,7 +170,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 - Shared VRE ceilings: applied.
 - Scenario edits: 3.
 - Overlay: none.
-- B2 policy: the historical trade constraints are active; CPLEX numerical emphasis.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027; CPLEX numerical emphasis.
 - Seed needs: none.
 - Description: The shared VRE ceilings applied to B_Optimised_VRE. From 2027 to 2050, the yearly flow on each of Bangladesh's four import interconnectors is at most 15 per cent of Bangladesh's demand that year (ELCBGDXX03) times that interconnector's share of Bangladesh's imports that year in the solved B_Optimised_VRE of the same run, with no allowance for exports. A year in which that result imports nothing gives each interconnector a limit of zero. The run stops when that result is missing. The activity of Bangladesh's new and repowered internal lines (TRNNLIBGDXX, TRNRPOBGDXX) is set to zero from 2027. This scenario is not the gross import cap of B_Opt_Clipped_GrossImportCap15.
 
@@ -185,7 +185,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 - Shared VRE ceilings: applied.
 - Scenario edits: 37.
 - Overlay: none.
-- B2 policy: the historical trade constraints are active.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
 - Seed needs: none.
 - Description: The shared VRE ceilings applied to B_Optimised_VRE. From 2027, the TotalAnnualMaxCapacity and TotalAnnualMaxCapacityInvestment of every cross-border interconnector are the larger of 1.5 times its 2023 residual capacity and its capacity in the base years 2023 to 2026. The base-year capacity is the largest TotalCapacityAnnual of 2023 to 2026 in the solved B_Optimised_VRE of the same run; the run stops when that result is missing. The base years keep the values of B_Optimised_VRE. The base-year floor is needed because capacity built in the base years lasts into the study period, and the base-year pin needs it. TotalAnnualMinCapacityInvestment is lowered where, with the base-year capacity and the earlier minimum investment, it would exceed the new limit. Interconnectors inside India are unchanged, and interconnectors with no residual capacity that were never built stay closed. The activity of the new and repowered internal lines outside India (TRNNLI, TRNRPO) is set to zero from 2027.
 
@@ -199,7 +199,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 ### C_Target_VRE
 
 - Parent: none. `C_Target_VRE` is a decision root.
-- B2 policy: the historical trade constraints are active.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
 - Seed needs: a solved `A_Calibrated_BAU` result.
 
 ### C_Target_VRE_Clipped
@@ -208,7 +208,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 - Shared VRE ceilings: applied.
 - Scenario edits: 2.
 - Overlay: none.
-- B2 policy: the historical trade constraints are active.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
 - Seed needs: a solved `A_Calibrated_BAU` result.
 - Description: The shared VRE ceilings applied to C_Target_VRE. It also restates the Maldives solar assumption for 2028 that C_Target_VRE already carries: a minimum total of 0.3841 GW, with earlier builds counting towards it. This is a modelling assumption. It is not an official target.
 
@@ -223,7 +223,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 - Shared VRE ceilings: applied.
 - Scenario edits: 37.
 - Overlay: none.
-- B2 policy: the historical trade constraints are active.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
 - Seed needs: none.
 - Description: The shared VRE ceilings applied to A_Calibrated_BAU. From 2027, the capacity of each of the eleven international interconnectors has an upper limit equal to its capacity at the end of 2026 (TotalCapacityAnnual 2026) in the solved A_Calibrated_BAU_Clipped of the same run, including interconnectors with no capacity. New investment in these interconnectors in 2023 to 2026 is fixed to that result's NewCapacity. The committed investments after 2026 in TRNBTNXXBGDXX (2035) and TRNNPLXXBGDXX (2033) are set to zero, because the capacity is frozen. The run stops when the solved A_Calibrated_BAU_Clipped result is missing.
 
@@ -241,7 +241,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 - Shared VRE ceilings: applied.
 - Scenario edits: 0.
 - Overlay: none.
-- B2 policy: the historical trade constraints are active; gross imports capped at 0.15 of annual demand in 2027 to 2050 for BGD, BTN, IND, LKA, MDV, NPL.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027; gross imports capped at 0.15 of annual demand in 2027 to 2050 for BGD, BTN, IND, LKA, MDV, NPL.
 - Seed needs: none.
 - Description: The shared VRE ceilings applied to B_Optimised_VRE. From 2027 to 2050, the electricity each of the six countries receives through its cross-border interconnectors is at most 15 per cent of its yearly demand. India counts as one country.
 
