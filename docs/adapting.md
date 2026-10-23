@@ -17,7 +17,7 @@ the [glossary](glossary.md).
 | The timeslice workbook | `inputs/scenarios/OSTRAM_Timeslice_Inputs.xlsx` | Year splits, demand profiles and capacity factors for the chosen timeslices. The generator is in `timeslice_module/`. |
 | The technology taxonomy | `config/scenarios/technology_types.csv` | Every technology with its category. |
 | The rule settings | `config/scenarios/<root>/*.yaml` | Retirement lifetimes, build caps, interconnector relaxation, storage floors and targets. See the [rules](rules.md) page. |
-| The internal transmission residuals | `config/scenarios/rules/internal_tx_residuals.csv` | One row per country-region. |
+| The internal transmission residuals | computed in every run, no file | A new country-region needs, for its node, the 2023 demand of `ELC<node>03` with its demand profile, and its renewable generators with 2023 residual capacity and capacity factors. The rule is on the [rules](rules.md#internal-transmission-residuals) page. |
 | The base-year pin table | `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | Reviewed values for 2023 to 2026. The pin code expects the South Asia table, as described below. |
 | The gas and oil allowance | `inputs/execution/firm_capacity_fallbacks_by_cr.xlsx` | One row per country-region. |
 | The setup | `config/setups/south_asia.yaml` | The sources of record, the scenario registry and the shared VRE ceilings. The scenario edits are in `config/scenarios/<name>/scenario.yaml`. A second setup can be registered in `config/setups/registry.json`, as the training setup `examples/unescap_training/setup.yaml` is. |

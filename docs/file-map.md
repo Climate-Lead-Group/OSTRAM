@@ -39,7 +39,6 @@ reads it. Stage names and other terms are in the [glossary](glossary.md).
 | `config/compilation/Config_MOMF_T1_A.yaml` | Compiler settings: years, timeslices, the storage set, workbook names and parameter lists. | A1 writes a runtime copy. A3, B1 and B2 read it. |
 | `config/execution/Config_MOMF_T1_AB.yaml` | The solver choice and the settings of the model-file adjustments. | B2. |
 | `config/scenarios/technology_types.csv` | The technology taxonomy. | A3. |
-| `config/scenarios/rules/internal_tx_residuals.csv` | The residual capacity of the internal transmission families per country-region. | The A3 rule `apply_internal_transmission`. |
 | `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | The reviewed 2023 to 2026 values written by the base-year pin. | The A3 rule `apply_base_year_pin`. |
 | `config/scenarios/A_Calibrated_BAU/` | `retirement_schedule.yaml`, `build_cap_rule.yaml`, `bau_calibration.yaml` and `relax_interconnectors.yaml`. | The A3 rules of `A_Calibrated_BAU`. |
 | `config/scenarios/B_Optimised_VRE/` | `retirement_schedule.yaml`, `build_cap_rule.yaml`, `relax_interconnectors.yaml` and `storage_floors.yaml`. | The A3 rules of `B_Optimised_VRE`. |

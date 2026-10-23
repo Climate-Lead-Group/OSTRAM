@@ -445,6 +445,7 @@ class WorkbookRoundTripAndMaterializationTests(unittest.TestCase):
                 stage_internal_transmission=lambda *_args: None,
                 stage_internal_tx_losses=lambda *_args: None,
                 stage_base_year_pin=lambda *_args: None,
+                stage_internal_tx_residuals=lambda *_args: None,
                 stage_6_sync_og_to_ts20=lambda *_args: None,
                 stage_6_persist_restrictions=lambda *_args: None,
                 deliver_outputs=deliver,

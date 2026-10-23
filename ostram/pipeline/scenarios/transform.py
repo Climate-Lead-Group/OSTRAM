@@ -29,6 +29,8 @@ Pipeline:
   Stage 5    <rules_script>                 applies the scenario's rules
   Late       apply_base_year_pin            exact audited 2023-2026 PWR/MIN
                                             keys on the three canonical roots
+             apply_internal_transmission    internal grid ResidualCapacity
+               --part residuals             computed from the compiled 2023 inputs
   Stage 6    persist_run_restrictions       write CHANGES.json into a
                                             disposable scenario-state copy
 
@@ -724,27 +726,57 @@ def stage_internal_transmission(s5: Path) -> None:
     A2 (transmission.py) injects RNWTRN/RNWNLI/RNWRPO (RE) and PWRTRN/TRNNLI/TRNRPO (non-RE)
     flat (CapEx 100, FOM 4, ResidualCapacity 5, life 20); the Stage-1 template
     merge then rewrites their OperationalLife to 50/20. This late stage makes
-    Config_country_codes.yaml + a desk-checked per-node residuals file the source
-    of truth, writing on the final A-O_Parametrization.xlsx:
-      * Demand Techs -> per-node ResidualCapacity (RNWTRN/PWRTRN; NLI/RPO = 0),
-        RE CapitalCost/FixedCost = base x re_capex_multiplier, non-RE = base;
-      * Fixed Horizon Parameters -> OperationalLife = 40 (all six families).
+    Config_country_codes.yaml the source of truth for costs and life, writing on
+    the final A-O_Parametrization.xlsx:
+      * Demand Techs -> RE CapitalCost/FixedCost = base x re_capex_multiplier,
+        non-RE = base;
+      * Fixed Horizon Parameters -> OperationalLife (all six families).
+    The residual capacity is written later, by stage_internal_tx_residuals.
     Runs after stage 5 and the interconnector-cost stage, so nothing downstream
     clobbers it. Interconnectors (13-char TRN*****), DSPTRN, generators, storage
     and losses are all left untouched. Uniform across nodes (intra-node tx is
     accounting; the study is about interties).
     """
+    config = _internal_transmission_config()
+    if config is None:
+        return
+    banner("stage_internal_transmission: calibrate internal transmission (RE CapEx / OperationalLife)")
+    run_subproc("ostram.pipeline.scenarios.rules.apply_internal_transmission", [
+        "--input-dir", s5, "--skip-backup", "--config", config, "--part", "costs",
+    ], label="apply internal transmission")
+
+
+def _internal_transmission_config() -> Path | None:
+    """Return the country configuration when the internal transmission rule applies.
+
+    The rule applies when its script exists and the setup's
+    ``Config_country_codes.yaml`` has an ``internal_transmission`` block.
+    """
+    from .rules.apply_internal_transmission import has_config_block
+
     script = RULES_SCRIPTS_DIR / "apply_internal_transmission.py"
     config = _PROJECT_PATHS.country_config
-    residuals = SCENARIO_RULE_DATA / "internal_tx_residuals.csv"
-    if not (script.is_file() and config.is_file() and residuals.is_file()):
-        print("    [SKIP] internal-transmission stage: script/config/residuals missing")
+    if not (script.is_file() and config.is_file() and has_config_block(config)):
+        print("    [SKIP] internal-transmission stage: script or internal_transmission block missing")
+        return None
+    return config
+
+
+def stage_internal_tx_residuals(s5: Path) -> None:
+    """Compute the base-year residual capacity of the internal transmission families.
+
+    Runs after the base-year pin, so it reads the 2023 demand, demand profile,
+    year split, capacity factors and generator residual capacity that the model
+    compiles. Writes ResidualCapacity of RNWTRN<node> and PWRTRN<node> (the
+    other four families get 0) on the final A-O_Parametrization.xlsx.
+    """
+    config = _internal_transmission_config()
+    if config is None:
         return
-    banner("stage_internal_transmission: calibrate internal transmission (per-node ResidualCapacity / RE CapEx / OperationalLife=40)")
+    banner("stage_internal_tx_residuals: internal transmission ResidualCapacity from the peak and RE at peak")
     run_subproc("ostram.pipeline.scenarios.rules.apply_internal_transmission", [
-        "--input-dir", s5, "--skip-backup",
-        "--config", config, "--residuals", residuals,
-    ], label="apply internal transmission")
+        "--input-dir", s5, "--skip-backup", "--config", config, "--part", "residuals",
+    ], label="apply internal transmission residuals")
 
 
 def stage_internal_tx_losses(s5: Path) -> None:
@@ -1014,6 +1046,7 @@ def _orchestration_dependencies(
         stage_internal_transmission=stage_internal_transmission,
         stage_internal_tx_losses=stage_internal_tx_losses,
         stage_base_year_pin=stage_base_year_pin,
+        stage_internal_tx_residuals=stage_internal_tx_residuals,
         stage_6_sync_og_to_ts20=stage_6_sync_og_to_ts20,
         stage_6_persist_restrictions=stage_6,
         deliver_outputs=deliver_outputs,

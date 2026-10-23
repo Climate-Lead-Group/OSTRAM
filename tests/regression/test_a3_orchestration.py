@@ -286,6 +286,9 @@ class A3TraceHarness:
             "stage_base_year_pin": inert_stage(
                 "stage_base_year_pin"
             ),
+            "stage_internal_tx_residuals": inert_stage(
+                "stage_internal_tx_residuals"
+            ),
             "stage_6_sync_og_to_ts20": inert_stage("stage_6_sync_og_to_ts20"),
             "stage_6_persist_restrictions": inert_stage(
                 "stage_6_persist_restrictions"
@@ -409,6 +412,7 @@ class A3ImportAndCliCharacterizationTests(unittest.TestCase):
             "stage_internal_transmission",
             "stage_internal_tx_losses",
             "stage_base_year_pin",
+            "stage_internal_tx_residuals",
             "stage_6_sync_og_to_ts20",
             "stage_6_persist_restrictions",
             "deliver_outputs",
@@ -909,6 +913,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                         template_value,
                         harness.caller,
                     ),
+                    ("stage_internal_tx_residuals", harness.paths["s5"], template_value, harness.caller),
                     ("stage_6_sync_og_to_ts20", harness.workdir, harness.paths["s1"], template_value, harness.caller),
                     (
                         "copy",

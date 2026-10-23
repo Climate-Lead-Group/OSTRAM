@@ -2,7 +2,8 @@
 
 A3 builds each root scenario by running rule scripts in the order that the
 Control sheet of the scenario workbook lists them, followed by three shared
-rules and, for three of the roots, the base-year pin. A derived scenario is
+rules, for three of the roots the base-year pin, and then the internal
+transmission residuals. A derived scenario is
 then built from its root by the
 [scenario edits](scenario-edits.md). Terms are in the [glossary](glossary.md).
 
@@ -20,7 +21,7 @@ settings files live in `config/scenarios/<root>/`.
 | `relax_interconnectors.py` | `relax_interconnectors.yaml` | Opens the build cap of interconnectors above their residual capacity, by a factor, by a fixed headroom or by per-corridor schedules. It sets `TotalAnnualMaxCapacity` of an overridden corridor with new investment to 9999. |
 | `add_storage_min_investment.py` | `storage_floors.yaml` | Writes small minimum investments for the storage families per year. |
 | `apply_interconnector_costs.py` | the `Interconnector_Params` sheet of the scenario workbook | Overwrites `CapitalCost`, `FixedCost` and `OperationalLife` of the interconnectors with the sheet's values. |
-| `apply_internal_transmission.py` | `Config_country_codes.yaml` and `config/scenarios/rules/internal_tx_residuals.csv` | Writes `ResidualCapacity`, `CapitalCost`, `FixedCost` and `OperationalLife` of the six internal transmission families, 60 technologies in all. |
+| `apply_internal_transmission.py` | `Config_country_codes.yaml` | Writes `CapitalCost`, `FixedCost` and `OperationalLife` of the six internal transmission families, 60 technologies in all, and, after the base-year pin, their `ResidualCapacity`, computed as described [below](#internal-transmission-residuals). |
 | `apply_internal_tx_losses.py` | `Config_country_codes.yaml` | Sets the output activity ratio of the internal transmission families to 1 minus the loss setting `internal_transmission.transmission_loss`, which is 0.03 on `main`. |
 | `apply_base_year_pin.py` | `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | Writes the reviewed 2023 to 2026 values of the table over the matching workbook rows. |
 | `set_interconnector_direction.py` | `config/scenarios/<scenario>/set_interconnector_direction.yaml` | Zeroes one flow mode of each listed interconnector, so that power flows one way. The empty map of `B_Opt_DirBidir` changes nothing. |
@@ -42,7 +43,8 @@ After the chain, every root runs interconnector costs, internal transmission
 and internal transmission losses, in that order. The base-year pin then runs
 for the roots listed in `PWR_MIN_PIN_ROOT_SCENARIOS` in
 `ostram/pipeline/scenarios/orchestrator.py`: `A_Calibrated_BAU`,
-`B_Optimised_VRE` and `C_Target_VRE`. Support `BAU` does not run it. A derived
+`B_Optimised_VRE` and `C_Target_VRE`. Support `BAU` does not run it. Every
+root then computes its internal transmission residuals. A derived
 scenario then receives the shared VRE ceilings, its scenario edits and the
 base-year pin again. The two direction variants receive their overlay last.
 
@@ -66,9 +68,61 @@ The order is load-bearing in these places.
   its position is not recorded.
 - The internal transmission rule runs after the stage 1 template merge,
   because that merge rewrites `OperationalLife`, and the rule has to win.
-- The base-year pin runs last, so that reviewed values are the final values.
+- The internal transmission residuals are computed after the base-year pin,
+  because the pin sets the 2023 renewable `ResidualCapacity` and the hydro and
+  solar `CapacityFactor` that the computation reads.
+- The base-year pin runs after the other rules, so that reviewed values are the final values.
   A derived scenario applies it again after its edits, so that the shared
   ceilings and the edits cannot replace a reviewed value.
+
+## Internal transmission residuals
+
+Each root computes, in every run, the base-year `ResidualCapacity` of
+`RNWTRN<node>` and `PWRTRN<node>` for each of its country-regions. The rule
+reads the delivered A3 workbooks after the base-year pin, and only rows that
+B1 compiles, so it uses the values the model compiles. A derived scenario
+keeps its root's values; no scenario edit changes these inputs.
+
+Inputs, all for 2023: `SpecifiedAnnualDemand` and `SpecifiedDemandProfile` of
+`ELC<node>03`, `YearSplit`, `CapacityFactor` and the `ResidualCapacity` of the
+node's generators.
+
+```text
+peak(ts)   = SpecifiedAnnualDemand x SpecifiedDemandProfile(ts) / (YearSplit(ts) x 8760 h), in GW
+peak       = the largest peak(ts); its slice is the peak slice
+RE at peak = sum over renewable generators of ResidualCapacity x CapacityFactor(peak slice)
+RNWTRN     = m x RE at peak
+PWRTRN     = m x peak - RNWTRN
+```
+
+When `PWRTRN` would be negative, `RNWTRN = m x peak` and `PWRTRN = 0`, as in
+Bhutan. `RNWNLI`, `RNWRPO`, `TRNNLI` and `TRNRPO` get 0. A missing demand,
+demand profile, year split or `m` stops the run with an error that names the
+node and the input.
+
+- `m` is `internal_transmission.residual_peak_margin` in
+  `config/preparation/Config_country_codes.yaml`, 1.2. ASSUMPTION: the 2023
+  internal grid of a node is taken as 1.2 times its 2023 peak time-slice
+  demand; no published figure for internal grid capacity is used.
+- Renewable generators are BIO, GEO, WAS, HYD, SPV, WON, WOF and CSP.
+  ASSUMPTION: biomass, geothermal and waste plants count at capacity factor 1,
+  because they are dispatchable.
+- ASSUMPTION: small hydro (SHP) counts as non-renewable, as in the method the
+  residuals came from.
+- ASSUMPTION: a renewable generator with no capacity factor in the peak slice
+  counts at the mean of its 2023 capacity factors in the other slices, or 1
+  when it has none, as in that method.
+
+The costs and life of the six families come from the same block. Each
+constant carries its source or ASSUMPTION sentence there:
+
+| Key | Value | Basis |
+|---|---|---|
+| `base_capital_cost` | 131.15 USD2023/kW | ESMAP (2026), *Understanding the Cost of Transmission Infrastructure*, Table 4.3, South Asia, 400 kV line of 1,000 MW over 250 km, US$96 million, 96 $/kW in 2010 dollars (<https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf>), times the BEA GDP implicit price deflator ratio 122.451 / 89.632 (2023 / 2010, <https://fred.stlouisfed.org/series/A191RD3A086NBEA>). ASSUMPTION: one value for every node. |
+| `base_fixed_cost` | 3.93 USD2023/kW/yr | 3% of the capital cost, ESMAP (2026). |
+| `re_capex_multiplier` | 1.0 | ASSUMPTION: the same per-kW cost for every plant; no published ratio was found. |
+| `operational_life` | 40 years | ESMAP (2026). |
+| `transmission_loss` | 0.03 | ASSUMPTION: a transmission-only loss inside a node, below Grid-India's interstate loss notices (<https://posoco.in/en/side-menu-pages/applicable-transmission-losses/>). In the A, B and C ancestry the energy balance credits it back. |
 
 ## 0, -1 and 9999
 

@@ -69,6 +69,7 @@ class A3Dependencies:
     stage_internal_transmission: Callable[[Path], object]
     stage_internal_tx_losses: Callable[[Path], object]
     stage_base_year_pin: Callable[[Path, str], object]
+    stage_internal_tx_residuals: Callable[[Path], object]
     stage_6_sync_og_to_ts20: Callable[[Path, Path], object]
     stage_6_persist_restrictions: Callable[
         [Path, Path, str, list[str]], object
@@ -242,6 +243,7 @@ def execute_plan(
     dependencies.stage_internal_tx_losses(stage5)
     if plan.scenario in PWR_MIN_PIN_ROOT_SCENARIOS:
         dependencies.stage_base_year_pin(stage5, plan.scenario)
+    dependencies.stage_internal_tx_residuals(stage5)
     dependencies.stage_6_sync_og_to_ts20(workdir, stage1)
     scenario_run_state = (
         workdir / f"_scenario_run_state_{plan.scenario}.xlsx"

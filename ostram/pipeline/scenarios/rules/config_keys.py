@@ -6,7 +6,7 @@ from __future__ import annotations
 # shared ``internal_transmission`` block of Config_country_codes.yaml.
 INTERNAL_TRANSMISSION_KEYS = frozenset({
     "base_capital_cost", "base_fixed_cost", "re_capex_multiplier",
-    "operational_life", "transmission_loss",
+    "operational_life", "transmission_loss", "residual_peak_margin",
 })
 
 

@@ -324,21 +324,45 @@ TRNNLI:
 # authoritative for the delivered model: it overrides the flat A2 placeholders and the Stage-1
 # OperationalLife (50/20) with the values below, on the six internal families
 # (RE: RNWTRN/RNWNLI/RNWRPO, non-RE: PWRTRN/TRNNLI/TRNRPO).
-#   * CapitalCost/FixedCost are UNIFORM across nodes (intra-node tx is just
-#     accounting; the study is about interties). non-RE = base; RE = base x
-#     re_capex_multiplier.
-#   * re_capex_multiplier is the sensitivity slider (per-kW RE tx premium ~1.5-2.3x,
-#     LBNL 2019; default 2.0). Set 1.5 / 1.8 / 2.0 / 3.0 to sensitise.
+#   * CapitalCost/FixedCost are the same in every node. non-RE = base; RE = base x
+#     re_capex_multiplier. Each constant below names its source or ASSUMPTION.
 #   * OperationalLife applies to all 6 families.
-#   * Per-node ResidualCapacity comes from the maintained, desk-checked
-#     config/scenarios/rules/internal_tx_residuals.csv (peak x 1.2, as its header states;
-#     NLI/RPO = 0).
+#   * The base-year ResidualCapacity of RNWTRN<node> and PWRTRN<node> is computed in
+#     every run by the A3 stage `stage_internal_tx_residuals`, after the base-year pin,
+#     from the 2023 inputs the model compiles: RNWTRN = residual_peak_margin x RE at the
+#     node's peak time slice, PWRTRN = residual_peak_margin x peak - RNWTRN (RNWTRN =
+#     margin x peak and PWRTRN = 0 when RE at peak exceeds the peak). NLI/RPO = 0.
+#     docs/rules.md gives the inputs and the formula.
 internal_transmission:
-  base_capital_cost: 100        # non-RE $/kW
-  base_fixed_cost: 4            # non-RE $/kW/yr (4% of CapEx)
-  re_capex_multiplier: 2.0      # sensitivity slider: 1.5 / 1.8 / 2.0 / 3.0
-  operational_life: 40          # years, all 6 internal families
-  transmission_loss: 0.03       # intra-node tx loss -> OutputActivityRatio = 1-loss = 0.97 (CEA ~3-4%, distribution excluded)
+  # USD2023 per kW. ESMAP (2026), Understanding the Cost of Transmission Infrastructure,
+  # Table 4.3, South Asia, 400 kV line carrying 1,000 MW over 250 km: US$96 million, so
+  # 96 $/kW in 2010 US dollars
+  # (https://documents1.worldbank.org/curated/en/099040926152055780/pdf/P506480-a2f4b5e4-cca9-437b-b33d-38293adae0e7.pdf).
+  # Brought to 2023 US dollars with the BEA GDP implicit price deflator, FRED series
+  # A191RD3A086NBEA (https://fred.stlouisfed.org/series/A191RD3A086NBEA), 89.632 (2010)
+  # and 122.451 (2023): 96 x 122.451 / 89.632 = 131.15.
+  # ASSUMPTION: 400 kV is the backbone voltage of the India nodes and 250 km is the
+  # shorter of ESMAP's two example lengths; real distances and voltages vary greatly
+  # between nodes, and one value is used for every node.
+  base_capital_cost: 131.15
+  # USD2023 per kW per year: 3% of base_capital_cost. ESMAP (2026) reports O&M of 2 to 3%
+  # of capital cost in 41 World Bank projects and uses 3% in its cost tables (same URL).
+  base_fixed_cost: 3.93
+  # ASSUMPTION: the same per-kW internal grid cost for every plant; no published ratio
+  # between renewable and other plants was found. The grid is sized to peak flow, so
+  # plants that use it less already pay more per MWh.
+  re_capex_multiplier: 1.0
+  # Years, all six internal families: the transmission asset life ESMAP (2026) assumes
+  # in its cost tables (same URL).
+  operational_life: 40
+  # ASSUMPTION: a transmission-only loss inside a node, rounded below Grid-India's
+  # all-India interstate transmission loss notices
+  # (https://posoco.in/en/side-menu-pages/applicable-transmission-losses/). Demand is
+  # measured at the busbar, and in the A, B and C ancestry the energy balance credits
+  # this loss back, so it does not raise generation. OutputActivityRatio = 1 - loss.
+  transmission_loss: 0.03
+  # ASSUMPTION: the 2023 internal grid of a node is taken as 1.2 times its 2023 peak time-slice demand; no published figure for internal grid capacity is used.
+  residual_peak_margin: 1.2
 
 # Enable DSPTRN dispatch technology (adds ELC03/ELC04 tier for interconnections)
 enable_dsptrn: true
