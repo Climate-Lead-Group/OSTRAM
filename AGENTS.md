@@ -68,9 +68,11 @@ The pipeline runs in this order:
   the datafile.
 - A 0 in the A-O workbook may not reach the solver as 0. B1 omits rows whose
   `Projection.Mode` is `Zero`, `EMPTY`, blank or `According to demand`. A3
-  rules can overwrite zeros. B2 rewrites storage-linked caps, turns
-  `PWRBCK*` zeros into 9999, and replaces some fossil zeros with fallback
-  values. Reviewed calibration zeros are kept.
+  rules can overwrite zeros. B2 sets the 2023 to 2026 build caps of
+  plants, storage and interconnectors to their minimum investment, rewrites
+  storage-linked caps, turns `PWRBCK*` zeros into 9999, and replaces some
+  fossil zeros with fallback values outside the locked cells. Reviewed
+  calibration zeros are kept.
 - `TotalAnnualMaxCapacity` caps residual plus surviving new capacity. A final
   0 means zero total capacity. -1 skips the cap. Setting it equal to
   `ResidualCapacity` prevents capacity above the residual path, provided later

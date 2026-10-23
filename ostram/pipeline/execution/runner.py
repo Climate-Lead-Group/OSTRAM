@@ -330,6 +330,16 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
                 f"{resolve_paths().maintained_model} lacks the parameter D4HistoricalTradeActive, "
                 "so the cap cannot be written to the solver datafile."
             )
+    from .base_year_lock import apply_base_year_lock, lock_years
+    years = lock_years(params)
+    if years is not None:
+        report = apply_base_year_lock(
+            input_folder, scenario_name, years,
+            trade_active=bool(trade_active),
+            model_text=resolve_paths().maintained_model.read_text(encoding="utf-8"),
+        )
+        for line in report.lines():
+            print(line)
     context.convert(input_folder, output_file)
     if trade_active is not None:
         datafile = Path(output_file)
@@ -753,6 +763,11 @@ def run_reserve_margin_xlsx_adjustment(params, scenario_name):
 
     sentinel_values = params.get('reserve_margin_xlsx_sentinel_values', [0, 9999])
     command += ['--sentinel-values'] + [str(value) for value in sentinel_values]
+
+    from .base_year_lock import lock_years
+    years = lock_years(params)
+    if years is not None:
+        command += ['--locked-years', str(years[0]), str(years[-1])]
 
     if not _renamed_param(params, 'reserve_margin_xlsx_adjust_backstop', True):
         command.append('--skip-backstop-credit')

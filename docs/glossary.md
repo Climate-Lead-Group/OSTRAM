@@ -10,6 +10,7 @@ maps the terms to the names used in the code.
 | Adequacy top-up | The last step of the build-cap rule. When the build caps of a country-region in one year add up to less than a set share of its demand-scaled fleet, every cap is multiplied by one factor so that the sum reaches that share. |
 | Backstop | A very expensive generation technology, `PWRBCK` followed by the country-region, that the solver uses only when the other limits leave demand unmet. |
 | Base-year pin | The A3 rule that writes reviewed values for 2023 to 2026 from `config/scenarios/rules/pwr_min_2023_2026_pin.csv`. It runs after the shared rules of `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE`, the roots listed in `PWR_MIN_PIN_ROOT_SCENARIOS`, and again after the scenario edits of a derived scenario. Support `BAU` does not run it. |
+| Base-year build lock | The B2 step that sets the 2023 to 2026 build caps of generation (except the backstop), storage and interconnectors to the minimum investment of the same cell, and to 0 where there is none, with its two pre-solve checks. |
 | Build cap | The most new capacity of one technology that the model may build in one country-region in one year. Model parameter `TotalAnnualMaxCapacityInvestment`. |
 | Cap multiplier | A factor on the build cap that rises over time. |
 | Country-region | One of the ten nodes of the South Asia model: BGDXX, BTNXX, INDEA, INDNE, INDNO, INDSO, INDWE, LKAXX, MDVXX and NPLXX. File and column names abbreviate it as `cr`. |
@@ -61,6 +62,7 @@ maps the terms to the names used in the code.
 | parent | `base_scenario` | `config/scenarios/<scenario>/scenario.yaml` |
 | gas and oil allowance | `reserve_margin_xlsx_*` | `config/execution/Config_MOMF_T1_AB.yaml` |
 | storage delay | `storage_delay_*` | `config/execution/Config_MOMF_T1_AB.yaml` |
+| base-year build lock | `base_year_lock.py`, `base_year_lock_*` | `ostram/pipeline/execution/`, `config/execution/Config_MOMF_T1_AB.yaml` |
 | backstop | `PWRBCK` | technology names |
 | country-region | `cr` | file and column names |
 | base-year pin | `apply_base_year_pin.py`, `pwr_min_2023_2026_pin.csv` | `ostram/pipeline/scenarios/rules/`, `config/scenarios/rules/` |
