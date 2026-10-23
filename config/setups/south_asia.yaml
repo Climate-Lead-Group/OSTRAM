@@ -67,7 +67,9 @@ scenario_registry:
     dependencies: []
   - name: A_Calibrated_BAU
     role: decision
-    dependencies: []
+    dependencies:
+    - type: restrictions
+      scenario: BAU
   - name: B_Optimised_VRE
     role: decision
     dependencies: []

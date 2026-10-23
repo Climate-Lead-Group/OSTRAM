@@ -26,19 +26,19 @@ ceilings:
     2038: 1.4889
     2039: 1.7677
     2040: 1.6868
-    2041: 0.5781296441465428
-    2042: 0.6142627469057033
-    2043: 0.6503958496648605
-    2044: 0.6865290840285425
-    2045: 0.7226620551831803
-    2046: 0.7949282607014984
-    2047: 0.9233504530380445
-    2048: 1.155595635460757
-    2049: 1.405557751216517
-    2050: 1.673030044942914
+    2041: 9999
+    2042: 9999
+    2043: 9999
+    2044: 9999
+    2045: 9999
+    2046: 9999
+    2047: 9999
+    2048: 9999
+    2049: 9999
+    2050: 9999
   note: 'Scenario-C planning allowances from JICA/MoEWRI December 2024
     Chapter 7.2 Figure 7.2-2, PDF p179: net annual ROR+PROR+STO additions, 2026-2040.
     These are scenario planning allowances, not committed projects, forecasts or national
     construction limits. Calibrated residual fleet retained; no pre-2026 catch-up.
-    Historical 2023-2025 zero controls and existing 2041-2050 model-assumption limits
-    retained. https://openjicareport.jica.go.jp/pdf/12387999_01.pdf#page=179'
+    Historical 2023-2025 zero controls retained. 2041-2050 are left to C''s build-cap
+    rule. https://openjicareport.jica.go.jp/pdf/12387999_01.pdf#page=179'

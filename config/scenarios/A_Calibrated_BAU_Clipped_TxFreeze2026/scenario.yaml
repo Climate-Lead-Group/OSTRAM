@@ -82,15 +82,8 @@ edits:
     fixed; original retirement schedule retained.
 - sheet: Secondary Techs
   tech: TRNBTNXXINDEA
-  param: TotalAnnualMinCapacityInvestment
-  values: &id004 {'2023': 0, '2024': 0, '2025': 0, '2026': 0}
-  create_if_absent: true
-  note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
-    fixed; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNBTNXXINDEA
   param: TotalAnnualMaxCapacityInvestment
-  values: *id004
+  values: {'2023': 0, '2024': 0, '2025': 0, '2026': 0}
   create_if_absent: true
   note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
     fixed; original retirement schedule retained.
@@ -103,15 +96,8 @@ edits:
     fixed; original retirement schedule retained.
 - sheet: Secondary Techs
   tech: TRNBTNXXINDNE
-  param: TotalAnnualMinCapacityInvestment
-  values: &id005 {'2023': 0, '2024': 0, '2025': 0, '2026': 0}
-  create_if_absent: true
-  note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
-    fixed; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNBTNXXINDNE
   param: TotalAnnualMaxCapacityInvestment
-  values: *id005
+  values: {'2023': 0, '2024': 0, '2025': 0, '2026': 0}
   create_if_absent: true
   note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
     fixed; original retirement schedule retained.
@@ -124,15 +110,8 @@ edits:
     fixed; original retirement schedule retained.
 - sheet: Secondary Techs
   tech: TRNINDEANPLXX
-  param: TotalAnnualMinCapacityInvestment
-  values: &id006 {'2023': 0, '2024': 0, '2025': 0, '2026': 0}
-  create_if_absent: true
-  note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
-    fixed; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNINDEANPLXX
   param: TotalAnnualMaxCapacityInvestment
-  values: *id006
+  values: {'2023': 0, '2024': 0, '2025': 0, '2026': 0}
   create_if_absent: true
   note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
     fixed; original retirement schedule retained.
@@ -165,58 +144,9 @@ edits:
   note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
     fixed; original retirement schedule retained.
 - sheet: Secondary Techs
-  tech: TRNINDSOLKAXX
-  param: TotalAnnualMinCapacityInvestment
-  values: &id008 {'2023': 0, '2024': 0, '2025': 0, '2026': 0}
-  create_if_absent: true
-  note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
-    fixed; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNINDSOLKAXX
-  param: TotalAnnualMaxCapacityInvestment
-  values: *id008
-  create_if_absent: true
-  note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
-    fixed; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNLKAXXMDVXX
-  param: TotalAnnualMaxCapacity
-  values: {'2027': 0.0, '2028': 0.0, '2029': 0.0, '2030': 0.0, '2031': 0.0, '2032': 0.0, '2033': 0.0, '2034': 0.0, '2035': 0.0, '2036': 0.0, '2037': 0.0, '2038': 0.0, '2039': 0.0, '2040': 0.0, '2041': 0.0, '2042': 0.0, '2043': 0.0, '2044': 0.0, '2045': 0.0, '2046': 0.0, '2047': 0.0, '2048': 0.0, '2049': 0.0, '2050': 0.0}
-  create_if_absent: true
-  note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
-    fixed; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNLKAXXMDVXX
-  param: TotalAnnualMinCapacityInvestment
-  values: &id009 {'2023': 0, '2024': 0, '2025': 0, '2026': 0}
-  create_if_absent: true
-  note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
-    fixed; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNLKAXXMDVXX
-  param: TotalAnnualMaxCapacityInvestment
-  values: *id009
-  create_if_absent: true
-  note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
-    fixed; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNMDVXXINDSO
-  param: TotalAnnualMaxCapacity
-  values: {'2027': 0.0, '2028': 0.0, '2029': 0.0, '2030': 0.0, '2031': 0.0, '2032': 0.0, '2033': 0.0, '2034': 0.0, '2035': 0.0, '2036': 0.0, '2037': 0.0, '2038': 0.0, '2039': 0.0, '2040': 0.0, '2041': 0.0, '2042': 0.0, '2043': 0.0, '2044': 0.0, '2045': 0.0, '2046': 0.0, '2047': 0.0, '2048': 0.0, '2049': 0.0, '2050': 0.0}
-  create_if_absent: true
-  note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
-    fixed; original retirement schedule retained.
-- sheet: Secondary Techs
   tech: TRNMDVXXINDSO
   param: TotalAnnualMinCapacityInvestment
   values: &id010 {'2023': 0, '2024': 0, '2025': 0, '2026': 0}
-  create_if_absent: true
-  note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
-    fixed; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNMDVXXINDSO
-  param: TotalAnnualMaxCapacityInvestment
-  values: *id010
   create_if_absent: true
   note: Historical M0 A-clipped end-2026 capacity limit; historical new vintages
     fixed; original retirement schedule retained.

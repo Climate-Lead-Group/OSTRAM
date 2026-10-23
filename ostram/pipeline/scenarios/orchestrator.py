@@ -258,8 +258,9 @@ def execute_plan(
         rules_scripts,
     )
     dependencies.deliver_outputs(stage5, plan.output_dir)
-    # Final support output only: inherited Restrictions and shared snapshots
-    # above must retain their accepted values for the decision scenarios.
+    # Final support output only. It runs after stage 6, so the Restrictions
+    # rows exported above and the shared snapshots keep this run's rule
+    # output for the decision scenarios.
     if dependencies.finalize_support_bau is not None:
         dependencies.finalize_support_bau(plan.output_dir, plan.scenario)
 

@@ -183,7 +183,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 
 - Parent: `B_Optimised_VRE`.
 - Shared VRE ceilings: applied.
-- Scenario edits: 40.
+- Scenario edits: 30.
 - Overlay: none.
 - B2 policy: the historical trade constraints are active.
 - Seed needs: none.
@@ -191,9 +191,9 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 
 | Sheet | Parameter | Operation | Technologies |
 |---|---|---|---|
-| Secondary Techs | `TotalAnnualMaxCapacity` | set_to_residual_factor_floor | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNLKAXXMDVXX, TRNMDVXXINDSO, TRNNPLXXBGDXX |
-| Secondary Techs | `TotalAnnualMaxCapacityInvestment` | set_to_residual_factor_floor | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNLKAXXMDVXX, TRNMDVXXINDSO, TRNNPLXXBGDXX |
-| Secondary Techs | `TotalAnnualMinCapacityInvestment` | values | TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNLKAXXMDVXX, TRNNPLXXBGDXX |
+| Secondary Techs | `TotalAnnualMaxCapacity` | set_to_residual_factor_floor | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNNPLXXBGDXX |
+| Secondary Techs | `TotalAnnualMaxCapacityInvestment` | set_to_residual_factor_floor | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNNPLXXBGDXX |
+| Secondary Techs | `TotalAnnualMinCapacityInvestment` | values | TRNBTNXXBGDXX, TRNNPLXXBGDXX |
 | Demand Techs | `TotalTechnologyAnnualActivityUpperLimit` | values | TRNNLIBGDXX, TRNNLIBTNXX, TRNNLILKAXX, TRNNLIMDVXX, TRNNLINPLXX, TRNRPOBGDXX, TRNRPOBTNXX, TRNRPOLKAXX, TRNRPOMDVXX, TRNRPONPLXX |
 
 ### C_Target_VRE
@@ -221,7 +221,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 
 - Parent: `A_Calibrated_BAU`.
 - Shared VRE ceilings: applied.
-- Scenario edits: 33.
+- Scenario edits: 23.
 - Overlay: none.
 - B2 policy: the historical trade constraints are active.
 - Seed needs: none.
@@ -229,9 +229,9 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 
 | Sheet | Parameter | Operation | Technologies |
 |---|---|---|---|
-| Secondary Techs | `TotalAnnualMaxCapacity` | values | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNLKAXXMDVXX, TRNMDVXXINDSO, TRNNPLXXBGDXX |
-| Secondary Techs | `TotalAnnualMinCapacityInvestment` | values | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNLKAXXMDVXX, TRNMDVXXINDSO, TRNNPLXXBGDXX |
-| Secondary Techs | `TotalAnnualMaxCapacityInvestment` | values | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNLKAXXMDVXX, TRNMDVXXINDSO, TRNNPLXXBGDXX |
+| Secondary Techs | `TotalAnnualMaxCapacity` | values | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNNPLXXBGDXX |
+| Secondary Techs | `TotalAnnualMinCapacityInvestment` | values | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNINDNONPLXX, TRNMDVXXINDSO, TRNNPLXXBGDXX |
+| Secondary Techs | `TotalAnnualMaxCapacityInvestment` | values | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNNPLXXBGDXX |
 
 ### B_Opt_Clipped_GrossImportCap15
 
