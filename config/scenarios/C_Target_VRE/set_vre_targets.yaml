@@ -1,7 +1,7 @@
 ## C_Target_VRE: fixed external resource-specific generation shares (fractions).
-## Source and arithmetic: inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx,
-## README and RE_Targets_Policies notes (paths relative to the project root).
-## India: original CEA-observation regional allocation, not demand reweighting.
+## Each share's public source and arithmetic are in the RE_Targets_Policies
+## sheet of the scenario workbook.
+## India: regional allocation of CEA observations, not demand reweighting.
 ## Sri Lanka: Scenario 3 fallback; Annexes 8.3/8.4 contain MW, not GWh.
 ## Bangladesh: ATS In-Between; Table 4.3-1 imports removed from denominator.
 ## Maldives: 33% renewable-demand milestone used as an explicit solar proxy.
@@ -33,8 +33,8 @@ default_capacity_factor: 0.10    # fallback yield (× c2a) if CalBAU never built
 pin_generation_to_target: true
 pin_slack: 0.01                  # upper limit sits 1% above the floor (a narrow range, not an exact lower==upper equality)
 
-## Target-side 2027 boundary exception. The canonical A-dependent
-## value is retained in the change log as raw_derived_value before this cap.
+## Upper caps on the 2027 and 2028 generation floors of PWRWONINDWE; the
+## floor before the cap is in the change log as raw_derived_value.
 activity_lower_caps:
   - {region: GLOBAL, technology: PWRWONINDWE, year: 2027, maximum: 227.414}
   - {region: GLOBAL, technology: PWRWONINDWE, year: 2028, maximum: 255.078}

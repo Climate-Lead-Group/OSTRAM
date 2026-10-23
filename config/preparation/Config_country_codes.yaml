@@ -386,7 +386,8 @@ internal_transmission:
   # receiving node's internal grid; exports leave after it.
   # OutputActivityRatio of the six internal families = 1 - loss.
   transmission_loss: 0.03
-  # ASSUMPTION: the 2023 internal grid of a node is taken as 1.2 times its 2023 peak time-slice demand; no published figure for internal grid capacity is used.
+  # ASSUMPTION: the 2023 internal grid of a node carries 1.2 times its 2023 peak
+  # time-slice demand, a margin above the peak for the spread of load inside the node.
   residual_peak_margin: 1.2
 
 # Enable DSPTRN dispatch technology (adds ELC03/ELC04 tier for interconnections)

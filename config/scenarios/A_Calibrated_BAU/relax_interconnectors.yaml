@@ -1,7 +1,7 @@
 ## relax_interconnectors.yaml: A_Calibrated_BAU
 ##
 ## Same evidence-based corridor overrides as B_Optimised_VRE (these
-## represent the project pipeline from the maintained v18 Interconnectors sheet),
+## represent the project pipeline in the Interconnectors sheet of the scenario workbook),
 ## but with headroom_factor: 1.0 (no slack beyond the pipeline data).
 ##
 ## B_Opt uses 1.5× on the 3 India-internal corridors without project

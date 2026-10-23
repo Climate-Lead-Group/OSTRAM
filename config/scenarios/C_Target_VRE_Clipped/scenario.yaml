@@ -11,7 +11,7 @@ edits:
   tech: PWRSPVMDVXX
   param: TotalAnnualMinCapacityInvestment
   values: {'2028': 0.0}
-  note: C-only timing correction; earlier annual minima retained.
+  note: C only; the 2028 minimum investment is 0, the earlier annual minima stay.
 - sheet: Secondary Techs
   tech: PWRSPVMDVXX
   param: TotalAnnualMinCapacity

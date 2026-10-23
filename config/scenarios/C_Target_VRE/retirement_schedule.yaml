@@ -2,7 +2,8 @@
 ## IDENTICAL to B_Optimised_VRE. Thermal retirements are physical
 ## and do not change between scenarios.
 ##
-## Lifetime midpoints from project research:
+## ASSUMPTION: thermal plants retire linearly over lifetimes at the midpoints
+## of design-life ranges, one lifetime per fuel in every country:
 ##   COA 35yr, NGS 30yr, PET 25yr, NUC 50yr
 
 base_year: 2028
