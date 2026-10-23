@@ -424,10 +424,10 @@ def build_workdir(
 # Pipeline stages
 # ---------------------------------------------------------------------------
 def stage_1_scripts_1_to_5(s1: Path) -> None:
-    """Stage 1: run the six A-O alignment modules in ``s1``, from the
+    """Stage 1: run the five A-O alignment modules in ``s1``, from the
     timeslice merge to the timeslice fabric propagation.
     """
-    banner("Stage 1: six alignment modules (AO/WV alignment pipeline)")
+    banner("Stage 1: five alignment modules (AO/WV alignment pipeline)")
     run_subproc("ostram.pipeline.scenarios.transformations.merge_timeslices", cwd=s1, label="merge timeslices")
     run_subproc("ostram.pipeline.scenarios.transformations.extract_ao_extensions", cwd=s1, label="extract AO extensions")
     run_subproc(
@@ -440,7 +440,6 @@ def stage_1_scripts_1_to_5(s1: Path) -> None:
         label="apply AO extension decisions",
     )
     run_subproc("ostram.pipeline.scenarios.transformations.update_ao_from_extensions", cwd=s1, label="update AO from extensions")
-    run_subproc("ostram.pipeline.scenarios.transformations.apply_manual_fixes", cwd=s1, label="apply manual fixes")
     run_subproc("ostram.pipeline.scenarios.transformations.propagate_timeslice_fabric", cwd=s1, label="propagate timeslice fabric")
 
 
@@ -453,14 +452,14 @@ def stage_1b(wd: Path, s1: Path, s1b: Path) -> None:
     banner("Stage 1b: A0 + add_max (fill-zeros) + ELC revert + B1b")
 
     # Move stage1 outputs into stage1b/
-    src_dir = s1 / "wvaligned_outputs_v2"
-    shutil.copy(src_dir / "A-O_Parametrization_wvaligned_v2_ts20.xlsx",
+    src_dir = s1 / "wvaligned_outputs"
+    shutil.copy(src_dir / "A-O_Parametrization_wvaligned_ts20.xlsx",
                 s1b / "A-O_Parametrization.xlsx")
-    shutil.copy(src_dir / "A-O_AR_Model_Base_Year_wvaligned_v2.xlsx",
+    shutil.copy(src_dir / "A-O_AR_Model_Base_Year_wvaligned.xlsx",
                 s1b / "A-O_AR_Model_Base_Year.xlsx")
-    shutil.copy(src_dir / "A-O_AR_Projections_wvaligned_v2.xlsx",
+    shutil.copy(src_dir / "A-O_AR_Projections_wvaligned.xlsx",
                 s1b / "A-O_AR_Projections.xlsx")
-    shutil.copy(src_dir / "A-O_Demand_wvaligned_v2.xlsx",
+    shutil.copy(src_dir / "A-O_Demand_wvaligned.xlsx",
                 s1b / "A-O_Demand.xlsx")
     print("    (Stage 1 outputs copied into stage1b/)")
 
@@ -592,12 +591,12 @@ def stage_4_consolidate(s1: Path, s3: Path, s5: Path, post_trn_cap: Path) -> Non
     so stage 4.5 (inherit restrictions) can run between them."""
     banner("Stage 4: consolidate 4 final files into stage5/")
     shutil.copy(post_trn_cap, s5 / "A-O_Parametrization.xlsx")
-    src_dir = s1 / "wvaligned_outputs_v2"
-    shutil.copy(src_dir / "A-O_AR_Model_Base_Year_wvaligned_v2.xlsx",
+    src_dir = s1 / "wvaligned_outputs"
+    shutil.copy(src_dir / "A-O_AR_Model_Base_Year_wvaligned.xlsx",
                 s5 / "A-O_AR_Model_Base_Year.xlsx")
-    shutil.copy(src_dir / "A-O_AR_Projections_wvaligned_v2.xlsx",
+    shutil.copy(src_dir / "A-O_AR_Projections_wvaligned.xlsx",
                 s5 / "A-O_AR_Projections.xlsx")
-    shutil.copy(src_dir / "A-O_Demand_wvaligned_v2.xlsx",
+    shutil.copy(src_dir / "A-O_Demand_wvaligned.xlsx",
                 s5 / "A-O_Demand.xlsx")
     print(f"    Consolidated 4 files into {s5.name}/")
 
