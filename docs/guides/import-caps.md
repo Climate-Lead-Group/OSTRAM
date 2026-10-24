@@ -131,7 +131,8 @@ published requirement.
 
 ### Step by step: cap one country's gross imports
 
-This example caps Bangladesh at 20 per cent from 2027 to 2050, starting from
+This example caps Bangladesh at 20 per cent from 2027 to 2050. It copies
+`B_Opt_Clipped_GrossImportCap15` and keeps that scenario's parent,
 `B_Optimised_VRE`.
 
 1. **Copy the scenario folder.**
@@ -143,7 +144,8 @@ This example caps Bangladesh at 20 per cent from 2027 to 2050, starting from
    The command copies the folder and sets the `scenario` line to the new name.
 
 2. **Edit `config/scenarios/B_Opt_GrossImportCap20BGD/scenario.yaml`.** Rewrite
-   the `description`, and set the block:
+   the `description`, and replace the whole `gross_import_cap` block of the
+   copied file with:
 
    ```yaml
    gross_import_cap:
@@ -153,6 +155,10 @@ This example caps Bangladesh at 20 per cent from 2027 to 2050, starting from
      last_year: 2050
      note: "ASSUMPTION: test case, a 20 per cent share"
    ```
+
+   Delete every line of the copied block. If its lines stay below the new
+   ones, the last value of each repeated key is read and the run uses the old
+   cap without an error.
 
    Keep `base_scenario: B_Optimised_VRE`, `apply_vre_ceiling_layer: true` and
    `edits: []` to compare with `B_Opt_Clipped`, which has the same parent and
@@ -189,6 +195,8 @@ This example caps Bangladesh at 20 per cent from 2027 to 2050, starting from
    `workspace/execution/A2_Outputs_Params_otoole/B_Opt_GrossImportCap20BGD/`;
    for 2027 it is 0.20 / 0.97 x 418.69468 = 86.3288 PJ. An empty
    `set D4ImportCountry := ;` means the block was not read: check its spelling.
+   A line that lists `BGD BTN IND LKA MDV NPL` means the copied block is still
+   in the file (step 2).
    The compiled CSV files of the new scenario equal those of `B_Opt_Clipped`,
    because the cap lives only in the datafile.
 
@@ -198,9 +206,10 @@ This example caps Bangladesh at 20 per cent from 2027 to 2050, starting from
    python -m ostram run --skip-pull --scenarios B_Opt_GrossImportCap20BGD
    ```
 
-   When the run writes an LP file beside the datafile (`..._output.lp`), the
-   row `D4_GrossImportCap(GLOBAL,BGD,2027):` holds the same right-hand side
-   after its `<=` sign.
+   The run writes an LP file beside the datafile (`..._output.lp`) and keeps
+   it unless `del_files` in `config/execution/Config_MOMF_T1_AB.yaml` is
+   `True`. The row `D4_GrossImportCap(GLOBAL,BGD,2027):` holds the same
+   right-hand side after its `<=` sign.
 
 7. **Check the import share from the outputs.** In
    `workspace/execution/Executables/B_Opt_GrossImportCap20BGD_0/Outputs/`:
