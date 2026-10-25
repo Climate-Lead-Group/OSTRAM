@@ -33,13 +33,14 @@ class B1Paths:
         paths at the workspace and return the B1 paths.
         """
         import yaml
+        from ostram import yaml_io
 
         project = resolve_paths()
         runtime_root = project.stage_workspace("compilation", create=True)
         runtime_config = runtime_root / "Config_MOMF_T1_A.yaml"
         if not runtime_config.exists():
             shutil.copy2(project.compilation_config, runtime_config)
-        data = yaml.safe_load(runtime_config.read_text(encoding="utf-8"))
+        data = yaml_io.load_file(runtime_config)
         data.update(
             {
                 "A1_outputs": str(project.a1_outputs),
@@ -173,8 +174,10 @@ def write_yaml_ruamel(yaml_path: Path, data, yaml_obj):
 
 def read_yaml_pyyaml(yaml_path: Path, pyyaml):
     """Read YAML using PyYAML (comments will be lost)."""
+    from ostram import yaml_io
+
     with yaml_path.open("r", encoding="utf-8") as file:
-        data = pyyaml.safe_load(file)
+        data = yaml_io.safe_load(file)
     return data
 
 

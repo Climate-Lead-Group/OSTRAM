@@ -19,7 +19,7 @@ Author: Climate Lead Group, Andrey Salazar-Vargas
 """
 
 import pandas as pd
-import yaml
+from ostram import yaml_io
 import os
 import shutil
 import sys
@@ -502,7 +502,7 @@ def clone_timeslice_sheets(ref_cc, ref_rr, new_cc, new_rr):
     # multi-region codes like INDEA are handled correctly.
     ref_prefix = _resolve_sheet_prefix(ref_cc, ref_rr)
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-        cfg = yaml.safe_load(f)
+        cfg = yaml_io.safe_load(f)
     countries = cfg.get("countries", [])
     for c in countries:
         if c.upper().startswith(ref_cc):
@@ -671,7 +671,7 @@ def load_yaml_config():
     if not os.path.exists(CONFIG_PATH):
         return None
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-        cfg = yaml.safe_load(f)
+        cfg = yaml_io.safe_load(f)
     tg = cfg.get("template_generation")
     if tg is None:
         return None

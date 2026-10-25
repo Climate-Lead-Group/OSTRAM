@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 from datetime import datetime
 import shutil
-import yaml
+from ostram import yaml_io
 from ostram.paths import resolve_paths
 from ..configuration import (
     get_ostram_country_mapping, get_ostram_country_mapping_normalized,
@@ -76,7 +76,7 @@ def read_base_scenario():
     yaml_path = resolve_paths().execution_config
     try:
         with open(yaml_path, 'r', encoding='utf-8') as f:
-            config = yaml.safe_load(f)
+            config = yaml_io.safe_load(f)
             base_scenario = config.get('base_scenario', 'BAU')
             return base_scenario
     except Exception as e:
@@ -2343,7 +2343,6 @@ class SecondaryTechsUpdater:
         Returns:
             dict: Parameter defaults (e.g., {'CapacityFactor': 1, 'AvailabilityFactor': 1, ...})
         """
-        import yaml
         from pathlib import Path
 
         yaml_path = resolve_paths().compilation_resources / 'conversion_format.yaml'
@@ -2353,7 +2352,7 @@ class SecondaryTechsUpdater:
 
         try:
             with open(yaml_path, 'r', encoding='utf-8') as f:
-                config = yaml.safe_load(f)
+                config = yaml_io.safe_load(f)
 
             defaults = {}
             for param_name, param_config in config.items():

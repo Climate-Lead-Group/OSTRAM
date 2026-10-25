@@ -21,7 +21,7 @@ import argparse
 import csv
 import shutil
 import sys
-import yaml
+from ostram import yaml_io
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -59,7 +59,7 @@ def read_base_year_from_config():
         return None
     try:
         with open(cfg, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
+            data = yaml_io.safe_load(f)
         v = data.get("base_year")
         return int(v) if v is not None else None
     except Exception:

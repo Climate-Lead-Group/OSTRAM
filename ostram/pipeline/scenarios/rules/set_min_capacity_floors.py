@@ -54,9 +54,10 @@ from openpyxl import load_workbook, Workbook
 
 try:
     import yaml as _yaml
+    from ostram import yaml_io as _yaml_io
     def _load_yaml(path: Path) -> dict:
         with open(path, "r", encoding="utf-8") as f:
-            return _yaml.safe_load(f)
+            return _yaml_io.safe_load(f)
 except ImportError:
     _yaml = None
     def _load_yaml(path: Path) -> dict:

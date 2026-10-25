@@ -13,7 +13,7 @@ This script creates:
 Author: Climate Lead Group, Andrey Salazar-Vargas
 """
 
-import yaml
+from ostram import yaml_io
 import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -90,7 +90,7 @@ TECH_DESCRIPTIONS = {
 def _load_implausible_combinations():
     config_path = _PROJECT_PATHS.country_config
     with open(config_path, "r", encoding="utf-8") as f:
-        config = yaml.safe_load(f)
+        config = yaml_io.safe_load(f)
     combos = set()
     for tech, countries in config.get("implausible_combinations", {}).items():
         for country in countries:

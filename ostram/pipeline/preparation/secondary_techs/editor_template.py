@@ -14,7 +14,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 import sys
 from pathlib import Path
 from datetime import datetime
-import yaml
+from ostram import yaml_io
 from ostram.paths import resolve_paths
 from ..configuration import get_ostram_country_mapping, get_ostram_tech_mapping, get_country_names, get_multi_region_map
 
@@ -33,7 +33,7 @@ def read_base_scenario():
     yaml_path = resolve_paths().execution_config
     try:
         with open(yaml_path, 'r', encoding='utf-8') as f:
-            config = yaml.safe_load(f)
+            config = yaml_io.safe_load(f)
             base_scenario = config.get('base_scenario', 'BAU')
             print(f"Base scenario from YAML: {base_scenario}")
             return base_scenario

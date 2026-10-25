@@ -39,7 +39,7 @@ from pathlib import Path
 import re
 import sys
 from openpyxl import load_workbook
-import yaml
+from ostram import yaml_io
 
 from ostram.paths import resolve_paths
 
@@ -86,7 +86,7 @@ def configured_country_region_map(config_path: Path | None = None) -> dict[str, 
     Raises ValueError when the file does not hold a mapping.
     """
     path = resolve_paths().country_config if config_path is None else Path(config_path)
-    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    raw = yaml_io.load_file(path)
     if not isinstance(raw, dict):
         raise ValueError(f"country configuration must be a mapping: {path}")
     return country_region_map(raw.get("countries"))

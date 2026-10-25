@@ -7,11 +7,12 @@ appears only after its row is added to the table.
 from pathlib import Path
 import re
 import sys
-import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from ostram import yaml_io  # noqa: E402
 from ostram.paths import resolve_paths  # noqa: E402
+from ostram.pipeline.scenarios.registry import load_scenario_file  # noqa: E402
 
 PAGE = ROOT / "docs" / "reference" / "scenarios" / "scenario_catalogue.md"
 START, END = "<!-- generated: start -->", "<!-- generated: end -->"
@@ -35,8 +36,8 @@ def _edits(edits):
 def generated_block(names=None):
     """Return the generated block for ``names``, or for the delivered scenarios."""
     paths = resolve_paths(project_root=ROOT)
-    setup = yaml.safe_load(paths.scenario_registry.read_text(encoding="utf-8"))
-    execution = yaml.safe_load((ROOT / "config/execution/Config_MOMF_T1_AB.yaml").read_text(encoding="utf-8"))
+    setup = yaml_io.load_file(paths.scenario_registry)
+    execution = yaml_io.load_file(ROOT / "config/execution/Config_MOMF_T1_AB.yaml")
     registry = setup["scenario_registry"]
     roots = {r["name"]: r for r in registry["root_scenarios"]}
     registered = list(registry["support_scenarios"]) + list(registry["decision_scenarios"])
@@ -46,10 +47,10 @@ def generated_block(names=None):
     out = [START]
     for name in names:
         scenario_file = paths.scenario_config_root / name / "scenario.yaml"
-        block = {} if name in roots else yaml.safe_load(scenario_file.read_text(encoding="utf-8"))
+        block = {} if name in roots else load_scenario_file(scenario_file)
         root = name if name in roots else block["base_scenario"]
         reused = block.get("reuse_edits_from")
-        inherited = (yaml.safe_load((paths.scenario_config_root / reused / "scenario.yaml").read_text(encoding="utf-8"))
+        inherited = (load_scenario_file(paths.scenario_config_root / reused / "scenario.yaml")
                      .get("edits", []) if reused else [])
         seeds = [d["scenario"] for d in roots[root]["dependencies"] if d.get("type") == "result"]
         policy = []

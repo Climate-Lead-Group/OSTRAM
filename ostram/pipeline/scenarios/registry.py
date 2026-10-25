@@ -10,6 +10,7 @@ workbook or solver effects.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from difflib import get_close_matches
 import yaml
 import os
 from pathlib import Path
@@ -17,6 +18,7 @@ import re
 from typing import Iterable, Mapping, Sequence
 
 from ostram.paths import resolve_paths
+from ostram import yaml_io
 
 SUPPORT_SCENARIOS = ("BAU",)
 ROOT_SCENARIOS = (
@@ -27,6 +29,22 @@ ROOT_SCENARIOS = (
 )
 _SCENARIO_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
 _ENVIRONMENT_NAME = re.compile(r"^[A-Z][A-Z0-9_]*$")
+# Keys a derived scenario's scenario.yaml may hold. ``description`` and
+# ``gross_import_cap.note`` are documentation; ``rule`` is read only by the
+# scenario catalogue generator, as a fallback for ``description``.
+SCENARIO_FILE_KEYS = (
+    "scenario",
+    "base_scenario",
+    "description",
+    "apply_vre_ceiling_layer",
+    "edits",
+    "direction_overlay",
+    "direction_study_start_year",
+    "gross_import_cap",
+    "reuse_edits_from",
+    "rule",
+)
+GROSS_IMPORT_CAP_KEYS = ("countries", "fraction", "first_year", "last_year", "note")
 
 
 @dataclass(frozen=True)
@@ -262,6 +280,59 @@ def _registry_relative(base: Path, value: object, *, label: str) -> Path:
     return resolved
 
 
+class ScenarioFileError(ValueError):
+    """Raised when a scenario.yaml holds a key the model does not read."""
+
+
+def _unknown_keys(mapping, allowed, lines, source, block=None) -> list[str]:
+    errors = []
+    where = f" in '{block}'" if block else ""
+    for key in mapping:
+        if key in allowed:
+            continue
+        close = get_close_matches(str(key), allowed, n=1)
+        hint = f" Did you mean '{close[0]}'?" if close else ""
+        errors.append(
+            f"{source}, line {lines.get(str(key), '?')}: unknown key {str(key)!r}{where}."
+            f"{hint} Allowed keys: {', '.join(allowed)}."
+        )
+    return errors
+
+
+def load_scenario_file(path: Path | str):
+    """Return the mapping of a derived scenario's ``scenario.yaml``.
+
+    The file is read with the strict YAML reader, so a repeated key stops the
+    run. A top-level key outside SCENARIO_FILE_KEYS, or a key of the
+    ``gross_import_cap`` block outside GROSS_IMPORT_CAP_KEYS, raises
+    ScenarioFileError naming the file, the key, its line and the allowed keys.
+    """
+
+    path = Path(path)
+    text = path.read_text(encoding="utf-8")
+    inputs = yaml_io.safe_load(text, source=path)
+    if not isinstance(inputs, dict):
+        return inputs
+    cap = inputs.get("gross_import_cap")
+    if set(inputs) <= set(SCENARIO_FILE_KEYS) and (
+        not isinstance(cap, dict) or set(cap) <= set(GROSS_IMPORT_CAP_KEYS)
+    ):
+        return inputs
+    root = yaml.compose(text, Loader=yaml.SafeLoader)
+    lines = {key.value: key.start_mark.line + 1 for key, _ in root.value}
+    cap_node = next((value for key, value in root.value if key.value == "gross_import_cap"), None)
+    cap_lines = (
+        {key.value: key.start_mark.line + 1 for key, _ in cap_node.value}
+        if isinstance(cap_node, yaml.MappingNode)
+        else {}
+    )
+    source = yaml_io.display_path(path)
+    errors = _unknown_keys(inputs, SCENARIO_FILE_KEYS, lines, source)
+    if isinstance(cap, dict):
+        errors += _unknown_keys(cap, GROSS_IMPORT_CAP_KEYS, cap_lines, source, "gross_import_cap")
+    raise ScenarioFileError("\n".join(errors))
+
+
 def load_registry(
     path: Path | str | None = None,
     *,
@@ -274,7 +345,7 @@ def load_registry(
         if path is None
         else Path(path).resolve()
     )
-    raw = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+    raw = yaml_io.load_file(registry_path)
     consolidated = "scenario_registry" in raw
     raw = raw.get("scenario_registry", raw)
     if raw.get("schema") != "ostram-scenario-registry-v1":
@@ -320,7 +391,7 @@ def load_registry(
         scenario_file = folder / "scenario.yaml"
         if not scenario_file.is_file():
             raise ValueError(f"{name} has no scenario file {scenario_file}")
-        inputs = yaml.safe_load(scenario_file.read_text(encoding="utf-8"))
+        inputs = load_scenario_file(scenario_file)
         if inputs.get("scenario") != name:
             raise ValueError(
                 f"{scenario_file} declares scenario="

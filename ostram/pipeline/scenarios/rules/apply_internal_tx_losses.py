@@ -60,6 +60,8 @@ from datetime import datetime
 from pathlib import Path
 
 import yaml
+
+from ostram import yaml_io
 from openpyxl import load_workbook, Workbook
 from ostram.paths import resolve_paths
 from ostram.pipeline.preparation.transmission import TRN_INTERCONNECTION
@@ -129,7 +131,7 @@ def resolve_config(explicit):
 def read_loss(config_path) -> float:
     """Return `internal_transmission.transmission_loss` from the config, or DEFAULT_LOSS when absent; raise ValueError outside [0, 1)."""
     with open(config_path, "r", encoding="utf-8") as fh:
-        data = yaml.safe_load(fh) or {}
+        data = yaml_io.safe_load(fh) or {}
     blk = data.get("internal_transmission", {}) or {}
     check_keys(blk, INTERNAL_TRANSMISSION_KEYS, config_path, "internal_transmission")
     loss = blk.get("transmission_loss", DEFAULT_LOSS)
@@ -143,7 +145,7 @@ def has_loss_block(config_path) -> bool:
     """True when the configuration has an `internal_transmission` block, the
     setups whose demand rows declare where they are measured."""
     with open(config_path, "r", encoding="utf-8") as fh:
-        data = yaml.safe_load(fh) or {}
+        data = yaml_io.safe_load(fh) or {}
     return bool(data.get("internal_transmission"))
 
 
