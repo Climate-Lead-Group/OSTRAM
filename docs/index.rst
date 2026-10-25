@@ -51,6 +51,7 @@ Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
    glossary
    file-map
    south-asia-yaml
+   reference/base_year_value_sources
    reference/scenarios/scenario_catalogue
    reference/scenarios/vre_ceiling_provenance
    reference/scenarios/interconnector_direction_references
