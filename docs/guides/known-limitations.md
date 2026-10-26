@@ -79,6 +79,22 @@ that their base-year value has no retrievable reference.
 [Where the base-year values come from](../reference/base_year_value_sources.md)
 cites a published document for each of these values.
 
+**India's base-year solar is calibrated through the residual.** For 2023 to
+2025, the yearly minimum builds follow CEA's National Electricity Plan 2023,
+and the installed stock follows [MNRE's published year-end tables](../reference/base_year_value_sources.md).
+The residual capacity of India North and South solar is set so that residual
+plus minimum builds equals MNRE's stock in each year, which leaves the plan's
+builds unchanged. The split between existing and new capacity in those years
+therefore follows the plan, not actual additions; read actual additions from
+MNRE's tables. Sri Lanka's solar and hydro residuals are set the same way. A
+later version could take the 2023 to 2025 builds from actual additions
+instead.
+
+**Existing solar never retires.** India's solar stock of 2022 and earlier
+(22.76 GW North, 25.04 GW South) and Sri Lanka's stock of 2023 and earlier
+(0.95 GW) stay in service to 2050, while all other solar retires after 25
+years.
+
 ## Reserve margin and storage
 
 **Storage earns reserve credit without stored energy.** The reserve margin
@@ -116,6 +132,13 @@ listed corridors with new investment.
 regions pays only the interconnector's loss. Whether CEA's regional bus-bar
 requirements already include inter-regional losses is not checked.
 
+**India South to West gains 5.8 GW in 2025 and 2026.** The minimum builds of
+`TRNINDSOINDWE` add 4.2 GW in 2025 and 1.6 GW in 2026, while CEA's
+transmission growth statement for March 2026 shows the West-South total at
+22,320 MW from March 2024 to March 2026, with no addition
+([Internet Archive copy](http://web.archive.org/web/20260715234209/https://cea.nic.in/wp-content/uploads/transmission/2026/03/TL_GS_March___2026.pdf)).
+The corridor is therefore larger than CEA reports from 2025.
+
 **The 40-year interconnector life has no external source.** The
 `OperationalLife` rows of `Interconnector_Params` give 40 years for every
 interconnector without a source that states an interconnector life. Test
@@ -126,15 +149,15 @@ them.** Several Bangladesh interconnector projects in the `Interconnectors`
 sheet, from which the `relax_interconnectors.yaml` schedules are built, and
 some Bangladesh plant capital and fixed costs cite the IEPMP 2023, which gives
 no such project, capacity, date or cost. A number of other IEPMP citations give
-no page or table. Treat those schedules and costs as ASSUMPTIONs.
+no page or table. Treat those schedules and costs as ASSUMPTIONs. The minimum
+builds of 0.75 GW on Bhutan to Bangladesh in 2035 and 1.0 GW on Nepal to
+Bangladesh in 2033 rest on the [IEPMP 2023](https://objectstorage.ap-dcc-gazipur-1.oraclecloud15.com/n/axvjbnqprylg/b/V2Ministry/o/office-powerdivision/2024/12/6aa63b99c7bf4b9083c7dc1b6bb07c28.pdf)
+alone, which names Bhutan and Nepal as possible import sources without a
+project or size (section 5.5.4).
 
 **The official IEPMP host fails certificate checks.** The IEPMP URL on the
 ministry site does not pass a certificate check; the citations also name a
 copy hosted by Power Division.
-
-**The India to Sri Lanka design has no source.** The voltage, capacity and
-technology stated for the India to Sri Lanka link in the interconnector
-direction references have no source that states them.
 
 **Dorjilung's link flows to Bangladesh in `B_Opt_DirContractual`.** The
 scenario sets `TRNBTNXXBGDXX` to flow from Bhutan to Bangladesh for Dorjilung,

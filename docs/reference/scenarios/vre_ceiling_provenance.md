@@ -7,7 +7,7 @@ The applied values are the `vre_ceilings` section of `config/setups/south_asia.y
 **India — solar (NISE):**
 - NISE/MNRE state-wise solar potential: **748.99 GWp** (748,990 MWp), estimated by NISE from the Wasteland Atlas of India 2010, with 3% of wasteland covered by solar PV. MNRE solar overview (Internet Archive copy, 23 Jan 2026) https://web.archive.org/web/20260123045204/https://mnre.gov.in/en/solar-overview/ · PIB, Ministry of New and Renewable Energy, 7 Feb 2024, state-wise table, total row https://www.pib.gov.in/Pressreleaseshare.aspx?PRID=2003561
 - NISE/MNRE ground-mounted solar PV potential (2025): **3,343.37 GWp** on 27,571 km² of feasible wasteland, 6.69% of the 412,458 km² of identified wasteland (Table 5, total row and the paragraph below it, printed p. 32), released 23 Sep 2025. https://nise.res.in/upload/Solar_PV_potential_ground_mounted_2025.pdf
-- Model uses the **2025 vintage** (India solar ceilings sum ~1,925 GW — a subset of 3,343; impossible under 2014's 749).
+- Model uses the **2025 vintage** (India solar ceilings sum ~1,925 GW, a subset of 3,343).
 
 **India — wind (NIWE):**
 - NIWE India Wind Potential Atlas at 150 m agl: **1,163.9 GW** (695.50 GW at 120 m). https://maps.niwe.res.in/media/150m-report.pdf · interactive map, with no national total https://maps.niwe.res.in/resource_map/map/150m/ · https://mnre.gov.in/en/wind-overview/
@@ -18,7 +18,7 @@ The applied values are the `vre_ceilings` section of `config/setups/south_asia.y
 - **SRI LANKA**: ADB & UNDP, "100% RE by 2050" (2017): 2050 mix ~15,000 MW wind + ~16,000 MW solar https://www.adb.org/sites/default/files/publication/354591/sri-lanka-power-2050v2.pdf ; ADB Energy Sector Assessment, Strategy, and Road Map (2019), PDF p. 12: national solar technical potential 6,000 MW and national exploitable wind potential 5,600 MW https://www.adb.org/sites/default/files/institutional-document/547381/sri-lanka-energy-assessment-strategy-road-map.pdf ; SLSEA RE Resource Development Plan 2021–2026 https://www.energy.gov.lk/images/renewable-energy/renewable-energy-resource-development-plan-en.pdf
 - **NEPAL**: SWERA GIS report (UNEP/NREL/Risø) https://policy.asiapacificenergy.org/node/358 ; provincial assessment: Neupane et al., Solar and wind energy potential assessment at provincial level in Nepal, Renewable Energy 181 (2022), 278-291, up to about 47,628 MW of solar and 1,686 MW of wind https://doi.org/10.1016/j.renene.2021.09.027
 - **BHUTAN**: Cowlin & Gilman, NREL/TP-6A2-46547 (2009) https://www.osti.gov/biblio/964607 ; RGoB Renewable Energy Master Plan 2017-2032: 12 GW of solar and 760 MW of wind in technical terms, as reported in IRENA and Bhutan's Department of Renewable Energy, Renewables Readiness Assessment: Kingdom of Bhutan (December 2019), printed p. II (PDF p. 4) https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2019/Dec/IRENA_RRA_Bhutan_2019.pdf
-- **MALDIVES**: Ministry of Environment, Energy Roadmap 2024-2033 (large-scale onshore wind ~80 MW niche, Greater Malé) https://media.environment.gov.mv/20241115-pub-energy-roadmap-maldives-2024-2033.pdf ; NREL, Wind Energy Resource Atlas of Sri Lanka and the Maldives (NREL/TP-500-34518, August 2003) https://docs.nlr.gov/docs/fy03osti/34518.pdf
+- **MALDIVES**: Ministry of Climate Change, Environment and Energy, Energy Roadmap 2024-2033 (large-scale onshore wind ~80 MW niche, Greater Malé) https://media.environment.gov.mv/20241115-pub-energy-roadmap-maldives-2024-2033.pdf ; NREL, Wind Energy Resource Atlas of Sri Lanka and the Maldives (NREL/TP-500-34518, August 2003) https://docs.nlr.gov/docs/fy03osti/34518.pdf
 
 **Uniform multi-country option:**
 - Global Solar Atlas (World Bank/ESMAP/Solargis): method and country results in World Bank, Global Photovoltaic Power Potential by Country (June 2020) https://documents1.worldbank.org/curated/en/466331592817725242/pdf/Global-Photovoltaic-Power-Potential-by-Country.pdf · Global Wind Atlas (World Bank/DTU): DTU, Global Wind Atlas v3 dataset and method (250 m grid, ERA5 2008 to 2017, posted 13 Mar 2024) https://data.dtu.dk/articles/dataset/Global_Wind_Atlas_v3/9420803
@@ -45,9 +45,9 @@ The applied values are the `vre_ceilings` section of `config/setups/south_asia.y
 | INDEA | Wind | 0 | ASSUMPTION; see the `B_Optimised_VRE` limits below (NIWE 150 m, 17,449 MW for OD/WB/BR/JH) |
 | INDNE | Wind | 0 | ASSUMPTION; see the `B_Optimised_VRE` limits below (NIWE 150 m, 760 MW for the NE states) |
 | BGD | Wind | 3 ★ | ASSUMPTION; see the clips below (NREL, >30 GW gross, unscreened) |
-| LKA | Wind | 15 | ADB/UNDP 2050 (15,000 MW); ADB tech ~5,600 MW |
+| LKA | Wind | 15 | ADB/UNDP 2050 (15,000 MW); ADB 2019: 5,600 MW exploitable wind potential |
 | NPL | Wind | 0 | ASSUMPTION; see the `B_Optimised_VRE` limits below (Neupane et al., 1,686 MW) |
-| BTN | Wind | 0.5 | Bhutan RE Master Plan (~760 MW) |
+| BTN | Wind | 0.5 | ASSUMPTION: 0.5 GW, a round value below the 760 MW of technical wind potential in IRENA's Renewables Readiness Assessment of Bhutan (2019, printed p. II), so the model cannot use all of it |
 | MDV | Wind | 0 ★ | ASSUMPTION; see the clips below (Maldives Roadmap, ~80 MW niche) |
 
 ### The applied values and the `B_Optimised_VRE` limits
