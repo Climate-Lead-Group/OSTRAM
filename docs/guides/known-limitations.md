@@ -39,10 +39,21 @@ less wheeled energy differs from Bhutan's stated requirement by a few tens of
 GWh in 2023 and 2024 and by more in 2025. The model follows the requirement
 table; small mismatches with the generation table are expected.
 
-**Bhutan hydro availability is lowered twice.** Bhutan's hydro capacity factors
-come from observed output, and an `AvailabilityFactor` of 0.95 applies on top,
-so the most the fleet can produce is lower than the observed factors allow.
-New Bhutan hydro capacity carries the same factors.
+**Bhutan hydro availability is lowered twice from 2027.** From 2027, Bhutan's
+hydro capacity factors come from observed output, and an `AvailabilityFactor`
+of 0.95 applies on top, so the most the fleet can produce is lower than the
+observed factors allow. New Bhutan hydro capacity carries the same factors. In
+2023 to 2026 the base-year values divide observed output by 0.95, so the two
+cancel.
+
+**Bangladesh hydro may generate up to 11% above observed output from 2025.**
+Bangladesh's hydro capacity factors were divided by an availability of 0.9,
+while the model's availability for `PWRHYDBGDXX` is 1, and from 2025 Bangladesh
+has no generation upper limit
+([Where the base-year values come from](../reference/base_year_value_sources.md),
+A5 and A16). Bangladesh's existing hydro can therefore produce more than BPDB
+reports. Compare Bangladesh hydro output from 2025 with BPDB's figures; an
+`AvailabilityFactor` of 0.9 for `PWRHYDBGDXX` would remove the difference.
 
 **Bhutan hydro capacities have no capacity source.** The Bhutan hydro
 residual capacities on `Secondary_Techs` are the year-end capacity of the
@@ -65,6 +76,8 @@ ASSUMPTIONs, and the regional capacities have no public locator.
 **Some base-year values have no retrievable reference.** The notes of a few
 `Secondary_Techs` rows (Bangladesh, Bhutan and Nepal solar, Nepal hydro) say
 that their base-year value has no retrievable reference.
+[Where the base-year values come from](../reference/base_year_value_sources.md)
+cites a published document for each of these values.
 
 ## Reserve margin and storage
 
@@ -123,6 +136,26 @@ copy hosted by Power Division.
 technology stated for the India to Sri Lanka link in the interconnector
 direction references have no source that states them.
 
+**Dorjilung's link flows to Bangladesh in `B_Opt_DirContractual`.** The
+scenario sets `TRNBTNXXBGDXX` to flow from Bhutan to Bangladesh for Dorjilung,
+while its sponsors, Tata Power and DGPC
+([21 November 2025](https://www.tatapower.com/news-and-media/media-releases/tata-power-and-druk-green-power-corporation-limited--dgpc--sign-commercial-agreements-for-the-implementation-of-1125-mw-dorjilung-hydroelectric-power-project-in-bhutan)),
+and the World Bank
+([5 May 2026](https://www.worldbank.org/en/news/press-release/2026/05/05/the-royal-government-of-bhutan-and-the-world-bank-sign-financing-agreements-for-the-dorjilung-hydroelectric-power-projec))
+name India as the main export market, with about 80 per cent of its output
+going to India. The scenario can therefore send Bhutan hydropower to Bangladesh
+that the project documents assign to India. To test the documented market,
+leave the link out of the scenario's `set_interconnector_direction.yaml`.
+
+**The India to Sri Lanka link flows one way in `B_Opt_DirContractual`.** The
+scenario sets `TRNINDSOLKAXX` to flow only from India to Sri Lanka, while the
+base case of CEB's
+[Long Term Generation Expansion Plan 2025-2044](https://www.ceb.lk/front_img/img_reports/1748839124LTGEP-2025-2044-FINAL_c.pdf)
+adds the link as 500 MW in 2039 with Sri Lanka both importing and exporting
+(Table 10.6). The scenario therefore cannot export Sri Lankan surplus to India.
+To let the link run both ways, leave it out of the scenario's
+`set_interconnector_direction.yaml`.
+
 **Internal text in two sets of source cells.** The rows of
 `Interconnector_Params` for `TotalAnnualMinCapacityInvestment` and
 `MinimumInvestmentClampBoundary` carry fixed internal wording in their `Source`
@@ -141,6 +174,17 @@ frozen.
 `examples/unescap_training/config/scenarios/C_Target_VRE/relax_interconnectors.yaml`
 describes the values as pipeline caps without saying they cap yearly
 investment.
+
+**Many workbook source cells cite a home page.** Many source cells of the
+scenario workbook cite a website's home page rather than the document that
+holds the value. This does not change results, but a reader cannot check those
+values from the workbook alone. The reference pages cite the documents for the
+base-year values
+([Where the base-year values come from](../reference/base_year_value_sources.md))
+and for the two provenance pages
+([VRE ceilings](../reference/scenarios/vre_ceiling_provenance.md) and
+[interconnector directions](../reference/scenarios/interconnector_direction_references.md));
+use them to trace a value.
 
 **The `Capacities_CF` sheet holds a template.** Its 12-slice values are
 replaced by the 20-slice timeslice workbook in stage A3; its notes describe
