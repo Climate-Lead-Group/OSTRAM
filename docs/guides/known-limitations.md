@@ -217,9 +217,3 @@ values that may not reach the model. Read capacity factors from the compiled
 **Clone fuel codes.** A cloned generator whose own fuel the Primary sheets do
 not produce keeps its template fuel without a warning. Check the fuels of a new
 clone in the compiled `InputActivityRatio.csv`.
-
-**Some CEA references may not open.** CEA changes the addresses of its
-reports. 20 references on
-[Where the base-year values come from](../reference/base_year_value_sources.md) have no
-archived copy; each gives the report's title and month, which CEA's report
-listings use.
