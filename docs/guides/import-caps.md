@@ -129,7 +129,37 @@ check                   = 0.15 x 431.644               = 64.7466 PJ
 Bangladesh may receive at most 64.7466 PJ in 2027, 15 per cent of its
 published requirement.
 
-### Step by step: cap one country's gross imports
+### Cap one country's gross imports
+
+The tree shows where this section edits and where it checks.
+
+```text
+OSTRAM/
+├── config/
+│   ├── execution/
+│   │   └── Config_MOMF_T1_AB.yaml
+│   │       └── del_files                                 <- DO NOT EDIT: False keeps the LP file
+│   ├── scenarios/
+│   │   └── B_Opt_GrossImportCap20BGD/ (new-scenario copies it from B_Opt_Clipped)
+│   │       └── scenario.yaml
+│   │           ├── description                           <- EDIT rewrite it
+│   │           └── gross_import_cap:                     <- EDIT add the block at the end
+│   └── setups/
+│       └── south_asia.yaml
+│           └── decision_scenarios:                       <- EDIT add the scenario as the last line
+└── workspace/
+    └── execution/
+        ├── A2_Outputs_Params_otoole/
+        │   └── B_Opt_GrossImportCap20BGD/
+        │       └── SpecifiedAnnualDemand.csv             <- CHECK row ELCBGDXX03 of the year
+        └── Executables/
+            └── B_Opt_GrossImportCap20BGD_0/
+                ├── Pre_processed_<scenario>_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt
+                │                                         <- CHECK the D4Import lines
+                └── Outputs/
+                    ├── ProductionByTechnologyAnnual.csv  <- CHECK the four flows into ELCBGDXX04
+                    └── Demand.csv                        <- CHECK FUEL ELCBGDXX03
+```
 
 This example caps Bangladesh at 20 per cent from 2027 to 2050. It copies
 `B_Opt_Clipped`, which has the parent `B_Optimised_VRE`, the shared VRE
@@ -220,6 +250,19 @@ ceilings and no import cap.
 
 ### Cap another node
 
+The tree shows where this section edits and where it checks.
+
+```text
+OSTRAM/
+└── config/
+    └── scenarios/
+        └── <name>/
+            └── scenario.yaml
+                ├── edits:                  <- EDIT for one Indian region, a per-corridor cap
+                └── gross_import_cap:
+                    └── countries:          <- EDIT list the country codes
+```
+
 - **Another country**: list its code in `countries`. Several countries can
   share one block and one fraction. Bhutan, Nepal and Sri Lanka are bus-bar
   countries, so their fraction is divided by 0.97; the Maldives keeps the
@@ -296,6 +339,35 @@ holds its result. The run stops before A3 when the folder is missing. The
 describes the rule.
 
 ### Check a per-corridor cap
+
+The tree shows where this section edits and where it checks.
+
+```text
+OSTRAM/
+├── config/
+│   └── scenarios/
+│       └── B_Opt_TradeCap15/
+│           └── scenario.yaml
+│               └── edits:                    <- EDIT the edit in "The edit"
+└── workspace/
+    ├── preparation/
+    │   └── A1_Outputs/
+    │       └── A1_Outputs_<scenario>/
+    │           └── apply_patches_CHANGES_<stamp>.json
+    │                                         <- CHECK the limits
+    └── execution/
+        ├── A2_Outputs_Params_otoole/
+        │   └── <scenario>/
+        │       └── TotalTechnologyAnnualActivityUpperLimit.csv
+        │                                     <- CHECK the limits
+        └── Executables/
+            └── <scenario>_0/
+                ├── Pre_processed_<scenario>_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt
+                │                             <- CHECK block TotalTechnologyAnnualActivityUpperLimit
+                └── Outputs/
+                    └── TotalTechnologyAnnualActivity.csv
+                                              <- CHECK at most the limit
+```
 
 The limits appear in the edit log, in
 `workspace/execution/A2_Outputs_Params_otoole/<scenario>/TotalTechnologyAnnualActivityUpperLimit.csv`,
