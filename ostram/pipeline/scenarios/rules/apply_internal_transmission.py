@@ -87,6 +87,8 @@ from datetime import datetime
 from pathlib import Path
 
 import yaml
+
+from ostram import yaml_io
 from openpyxl import load_workbook, Workbook
 from ostram.pipeline.scenarios.rules.config_keys import INTERNAL_TRANSMISSION_KEYS, check_keys
 from ostram.pipeline.scenarios.rules.apply_internal_tx_losses import bus_bar_fuels, read_loss, resolve_workbook
@@ -194,7 +196,7 @@ def resolve_config(explicit: Path | None) -> Path:
 def has_config_block(config_path: Path) -> bool:
     """True when the configuration file has an ``internal_transmission`` block."""
     with open(config_path, "r", encoding="utf-8") as fh:
-        data = yaml.safe_load(fh) or {}
+        data = yaml_io.safe_load(fh) or {}
     return bool(data.get(CONFIG_BLOCK))
 
 
@@ -232,7 +234,7 @@ def read_config(config_path: Path) -> dict:
     default: the residual part stops when it is absent.
     """
     with open(config_path, "r", encoding="utf-8") as fh:
-        data = yaml.safe_load(fh) or {}
+        data = yaml_io.safe_load(fh) or {}
     blk = data.get(CONFIG_BLOCK, {}) or {}
     check_keys(blk, INTERNAL_TRANSMISSION_KEYS, config_path, CONFIG_BLOCK)
     knobs = dict(DEFAULTS)

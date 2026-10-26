@@ -10,7 +10,7 @@ import shutil
 import sys
 import os
 import re
-import yaml
+from ostram import yaml_io
 import pandas as pd
 from typing import List
 from pathlib import Path
@@ -35,7 +35,7 @@ def load_country_region_pairs(yaml_path):
     5-letter codes ⇒ the last 2 letters are the region
     """
     with open(yaml_path, 'r', encoding='utf-8') as fh:
-        data = yaml.safe_load(fh)
+        data = yaml_io.safe_load(fh)
 
     codes = data.get('countries', [])
     if not isinstance(codes, list):
@@ -707,7 +707,7 @@ def main():
 
         # Optional detailed values from YAML per tech/parameter
         with open(args.yaml,'r',encoding='utf-8') as fh:
-            yaml_data = yaml.safe_load(fh)
+            yaml_data = yaml_io.safe_load(fh)
             if not isinstance(yaml_data, dict):
                 yaml_data = {}
 

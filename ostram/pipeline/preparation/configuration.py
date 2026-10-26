@@ -5,7 +5,7 @@ Single source of truth: Config_country_codes.yaml
 
 Author: Climate Lead Group, Andrey Salazar-Vargas
 """
-import yaml
+from ostram import yaml_io
 import unicodedata
 from pathlib import Path
 from ostram.paths import resolve_paths
@@ -22,7 +22,7 @@ def _load_raw():
     global _cached_config
     if _cached_config is None:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            _cached_config = yaml.safe_load(f)
+            _cached_config = yaml_io.safe_load(f)
     return _cached_config
 
 

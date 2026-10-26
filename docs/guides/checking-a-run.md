@@ -1,8 +1,7 @@
 # Checking a run
 
 A run can finish without an error and still not do what you meant: an edit
-that changes the wrong rows, a cap block that is never read, a limit that the
-model never reaches. These checks confirm a scenario before and after the
+that changes the wrong rows, a limit that the model never reaches. These checks confirm a scenario before and after the
 solve. Paths are under the workspace folder `workspace/`; `<S>` is the scenario
 name.
 

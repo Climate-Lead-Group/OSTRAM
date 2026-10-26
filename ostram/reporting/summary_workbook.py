@@ -965,9 +965,9 @@ def _default_output() -> Path:
 
 
 def _load_manifest_metadata(path: Path) -> Mapping[str, object]:
-    import yaml
+    from ostram import yaml_io
 
-    document = yaml.safe_load(path.read_text(encoding="utf-8"))
+    document = yaml_io.load_file(path)
     if not isinstance(document, Mapping):
         raise ValueError(f"not a mapping document: {path}")
     metadata = document.get("metadata", document)

@@ -15,7 +15,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 import warnings
 from typing import List, Dict, Any
 from pathlib import Path
-import yaml
+from ostram import yaml_io
 from ostram.paths import resolve_paths
 from ostram.setups import setup_policy
 from .configuration import (
@@ -485,7 +485,7 @@ def load_region_consolidation_config() -> Dict[str, Any]:
         return {"enabled": False}
 
     with open(REGION_CONSOLIDATION_CONFIG, "r", encoding="utf-8") as f:
-        config = yaml.safe_load(f)
+        config = yaml_io.safe_load(f)
     return config
 
 

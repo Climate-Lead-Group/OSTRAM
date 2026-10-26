@@ -15,8 +15,7 @@ from pathlib import Path, PurePosixPath
 import re
 from typing import Any, Mapping
 
-import yaml
-
+from ostram import yaml_io
 from ostram.paths import ProjectPaths
 
 
@@ -46,31 +45,11 @@ class AuthorityResolutionError(SetupError):
     """Raised when a namespaced authority reference is unsafe."""
 
 
-class _UniqueKeyLoader(yaml.SafeLoader):
-    pass
-
-
-def _construct_unique_mapping(loader, node, deep=False):
-    mapping: dict[Any, Any] = {}
-    for key_node, value_node in node.value:
-        key = loader.construct_object(key_node, deep=deep)
-        if key in mapping:
-            raise SetupManifestError(f"duplicate mapping key/authority role: {key!r}")
-        mapping[key] = loader.construct_object(value_node, deep=deep)
-    return mapping
-
-
-_UniqueKeyLoader.add_constructor(
-    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-    _construct_unique_mapping,
-)
-
-
 def _load_mapping(path: Path) -> Mapping[str, Any]:
     try:
-        raw = yaml.load(path.read_text(encoding="utf-8"), Loader=_UniqueKeyLoader)
-    except SetupError:
-        raise
+        raw = yaml_io.load_file(path)
+    except yaml_io.DuplicateKeyError as error:
+        raise SetupManifestError(f"duplicate mapping key/authority role: {error}") from error
     except Exception as error:
         raise SetupManifestError(f"could not parse {path}: {error}") from error
     if not isinstance(raw, Mapping):

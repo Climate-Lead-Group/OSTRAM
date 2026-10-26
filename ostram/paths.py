@@ -657,8 +657,8 @@ class ProjectPaths:
         if missing:
             raise FileNotFoundError("Required project resources are missing: " + ", ".join(missing))
 
-        import yaml
-        registry = yaml.safe_load(self.scenario_registry.read_text(encoding="utf-8"))
+        from ostram import yaml_io
+        registry = yaml_io.load_file(self.scenario_registry)
         registry = registry.get("scenario_registry", registry)
         with self.scenario_workbook.open("rb") as stream:
             workbook_signature = stream.read(4).hex()

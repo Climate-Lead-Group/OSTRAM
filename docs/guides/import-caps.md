@@ -132,20 +132,20 @@ published requirement.
 ### Step by step: cap one country's gross imports
 
 This example caps Bangladesh at 20 per cent from 2027 to 2050. It copies
-`B_Opt_Clipped_GrossImportCap15` and keeps that scenario's parent,
-`B_Optimised_VRE`.
+`B_Opt_Clipped`, which has the parent `B_Optimised_VRE`, the shared VRE
+ceilings and no import cap.
 
 1. **Copy the scenario folder.**
 
    ```powershell
-   python -m ostram new-scenario B_Opt_GrossImportCap20BGD --from B_Opt_Clipped_GrossImportCap15
+   python -m ostram new-scenario B_Opt_GrossImportCap20BGD --from B_Opt_Clipped
    ```
 
    The command copies the folder and sets the `scenario` line to the new name.
 
 2. **Edit `config/scenarios/B_Opt_GrossImportCap20BGD/scenario.yaml`.** Rewrite
-   the `description`, and replace the whole `gross_import_cap` block of the
-   copied file with:
+   the `description`, and add this `gross_import_cap` block at the end of the
+   file:
 
    ```yaml
    gross_import_cap:
@@ -156,13 +156,12 @@ This example caps Bangladesh at 20 per cent from 2027 to 2050. It copies
      note: "ASSUMPTION: test case, a 20 per cent share"
    ```
 
-   Delete every line of the copied block. If its lines stay below the new
-   ones, the last value of each repeated key is read and the run uses the old
-   cap without an error.
+   The lines `base_scenario: B_Optimised_VRE`, `apply_vre_ceiling_layer: true`
+   and `edits: []` come with the copy. Keep them to compare with
+   `B_Opt_Clipped`, which has the same parent and ceilings and no cap.
 
-   Keep `base_scenario: B_Optimised_VRE`, `apply_vre_ceiling_layer: true` and
-   `edits: []` to compare with `B_Opt_Clipped`, which has the same parent and
-   ceilings and no cap.
+   If the file holds a key twice or a key the model does not know, the run
+   stops before building and names the file, the key and the line.
 
 3. **Register it.** Add `- B_Opt_GrossImportCap20BGD` as the last line of
    `decision_scenarios` in `config/setups/south_asia.yaml`. The run builds only
@@ -194,9 +193,7 @@ This example caps Bangladesh at 20 per cent from 2027 to 2050. It copies
    year's `ELCBGDXX03` row of `SpecifiedAnnualDemand.csv` in
    `workspace/execution/A2_Outputs_Params_otoole/B_Opt_GrossImportCap20BGD/`;
    for 2027 it is 0.20 / 0.97 x 418.69468 = 86.3288 PJ. An empty
-   `set D4ImportCountry := ;` means the block was not read: check its spelling.
-   A line that lists `BGD BTN IND LKA MDV NPL` means the copied block is still
-   in the file (step 2).
+   `set D4ImportCountry := ;` means the file has no `gross_import_cap` block.
    The compiled CSV files of the new scenario equal those of `B_Opt_Clipped`,
    because the cap lives only in the datafile.
 

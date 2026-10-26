@@ -9,7 +9,8 @@ import math
 from pathlib import Path
 
 import pandas as pd
-import yaml
+
+from ostram import yaml_io
 
 
 def read_config(
@@ -22,7 +23,7 @@ def read_config(
     if opener is None:
         opener = open
     if loader is None:
-        loader = yaml.safe_load
+        loader = yaml_io.safe_load
     with opener(path, "r", encoding="utf-8") as stream:
         return loader(stream)
 
@@ -157,7 +158,7 @@ def allocate_country_fuel_costs(tables, config_path, audit_path):
         config_path = Path(config_path)
         if not config_path.exists():
             return tables
-        config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        config = yaml_io.load_file(config_path)
     if config.get("schema") != "fuel-cost-allocation-v1":
         raise ValueError("Unsupported fuel cost allocation schema")
     if config.get("upstream_base") != "minimum_country_price":

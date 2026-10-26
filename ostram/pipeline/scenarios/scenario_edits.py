@@ -63,7 +63,6 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import yaml
 import math
 import shutil
 import sys
@@ -73,7 +72,9 @@ from difflib import get_close_matches
 from pathlib import Path
 
 from openpyxl import load_workbook, Workbook
+from ostram import yaml_io
 from ostram.paths import resolve_paths
+from .registry import load_scenario_file
 from .transformations import interconnector_authority as _authority
 
 # --------------------------------------------------------------------------
@@ -790,7 +791,7 @@ def apply_ceiling_layer(wb, log, ceiling_path=CEIL_BASE):
     annual investment rows to it and scale its activity lower limit where the ceiling binds.
     """
     ceiling_path = Path(ceiling_path)
-    base = yaml.safe_load(ceiling_path.read_text(encoding="utf-8"))
+    base = yaml_io.load_file(ceiling_path)
     base = base.get("vre_ceilings", base)
     sheet, param = base["sheet"], base["param"]
     ceilings = base["ceilings_gw"]
@@ -851,7 +852,7 @@ def reused_edits(scenario, scenario_inputs, configs=CONFIGS):
     path = Path(configs) / str(name) / "scenario.yaml"
     if not path.is_file():
         raise ScenarioEditError(f"{prefix}, which is not a derived scenario (no file {path}).")
-    other = yaml.safe_load(path.read_text(encoding="utf-8"))
+    other = load_scenario_file(path)
     if other.get("base_scenario") != scenario_inputs.get("base_scenario"):
         raise ScenarioEditError(
             f"{prefix}, whose base_scenario {other.get('base_scenario')} is not "
@@ -902,7 +903,7 @@ def build_scenario(
     scenario_path = configs / scenario / "scenario.yaml"
     if not scenario_path.is_file():
         raise FileNotFoundError(f"scenario YAML not found: {scenario_path}")
-    scenario_inputs = yaml.safe_load(scenario_path.read_text(encoding="utf-8"))
+    scenario_inputs = load_scenario_file(scenario_path)
     declared_source = scenario_inputs.get("base_scenario")
     if not declared_source:
         raise ValueError(f"{scenario_path} does not declare base_scenario")

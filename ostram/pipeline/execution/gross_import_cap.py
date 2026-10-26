@@ -6,8 +6,8 @@ Domestic transfers (including all Indian interregional corridors) are excluded.
 from pathlib import Path
 import math
 import pandas as pd
-import yaml
 from ostram.paths import resolve_paths
+from ostram.pipeline.scenarios.registry import load_scenario_file
 from ostram.pipeline.scenarios.rules.apply_internal_tx_losses import read_loss, read_measured_at, BUS_BAR
 
 def render_policy(input_folder, scenario_name):
@@ -25,7 +25,7 @@ def render_policy(input_folder, scenario_name):
     a country whose demand rows are measured at both points.
     """
     scenario_file = resolve_paths().scenario_config_root / scenario_name / 'scenario.yaml'
-    cfg = yaml.safe_load(scenario_file.read_text(encoding='utf8')) if scenario_file.is_file() else {}
+    cfg = load_scenario_file(scenario_file) if scenario_file.is_file() else {}
     policy = cfg.get('gross_import_cap')
     if not policy:
         return 'set D4ImportCountry := ;\n'

@@ -9,7 +9,7 @@ import argparse
 import re
 import os
 import pandas as pd
-import yaml
+from ostram import yaml_io
 import subprocess
 import sys
 import shutil
@@ -312,7 +312,7 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
             handle.write(";\n")
 
     with open(config_file, encoding="utf-8") as stream:
-        user_config = yaml.safe_load(stream)
+        user_config = yaml_io.safe_load(stream)
     validate_config(user_config)
     context = Context(ReadCsv(user_config=user_config),
                       PreciseDatafile(user_config=user_config))
@@ -323,7 +323,8 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
         # The import cap is written only beside the trade parameters, so a
         # model file without them would drop the scenario's cap.
         scenario_file = resolve_paths().scenario_config_root / scenario_name / 'scenario.yaml'
-        cfg = yaml.safe_load(scenario_file.read_text(encoding='utf8')) if scenario_file.is_file() else {}
+        from ostram.pipeline.scenarios.registry import load_scenario_file
+        cfg = load_scenario_file(scenario_file) if scenario_file.is_file() else {}
         if cfg.get('gross_import_cap'):
             raise ValueError(
                 f"Scenario '{scenario_name}' has a gross_import_cap block, but the model file "
@@ -1063,7 +1064,7 @@ def _orchestration_dependencies():
         delete_files=delete_files,
         concatenate_all_scenarios=concatenate_all_scenarios,
         load_annualizer=_load_annualizer,
-        yaml_safe_load=yaml.safe_load,
+        yaml_safe_load=yaml_io.safe_load,
         mp_module=mp,
     )
 
