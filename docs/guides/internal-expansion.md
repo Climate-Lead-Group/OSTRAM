@@ -190,6 +190,21 @@ In Bhutan the renewable capacity at peak is larger than the peak, so
 
 ### Check the base-year grid of a node
 
+The tree shows where this section reads.
+
+```text
+OSTRAM/
+└── workspace/
+    └── execution/
+        └── A2_Outputs_Params_otoole/
+            └── <scenario>/
+                ├── ResidualCapacity.csv        <- CHECK 2023 rows of RNWTRN<node>, PWRTRN<node>
+                ├── SpecifiedAnnualDemand.csv   <- CHECK input to recompute them
+                ├── SpecifiedDemandProfile.csv  <- CHECK input to recompute them
+                ├── YearSplit.csv               <- CHECK input to recompute them
+                └── CapacityFactor.csv          <- CHECK input to recompute them
+```
+
 After a compile-only build, open
 `workspace/execution/A2_Outputs_Params_otoole/<scenario>/ResidualCapacity.csv`
 and read the 2023 rows of `RNWTRN<node>` and `PWRTRN<node>`. To recompute
@@ -198,6 +213,22 @@ them, take from the same folder `SpecifiedAnnualDemand.csv`,
 2023 `ResidualCapacity` of the node's plants, and apply the formula above.
 
 ### Change the base-year grid
+
+The tree shows where this section edits and where it checks.
+
+```text
+OSTRAM/
+├── config/
+│   └── preparation/
+│       └── Config_country_codes.yaml
+│           └── internal_transmission:
+│               └── residual_peak_margin        <- EDIT the margin of the base-year grid
+└── workspace/
+    └── execution/
+        └── A2_Outputs_Params_otoole/
+            └── <scenario>/
+                └── ResidualCapacity.csv        <- CHECK 2023 rows of RNWTRN<node>, PWRTRN<node>
+```
 
 Change `residual_peak_margin` in the `internal_transmission` block. The
 residuals of every node scale with it. No file holds the residuals

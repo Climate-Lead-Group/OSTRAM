@@ -103,6 +103,29 @@ the scenario's `A-O_Parametrization.xlsx` and `OperationalLife` on its
 
 ### Change the internal grid cost for every scenario
 
+The tree shows where this section edits and where it checks.
+
+```text
+OSTRAM/
+├── config/
+│   └── preparation/
+│       └── Config_country_codes.yaml
+│           ├── RNWTRN:, RNWRPO:, RNWNLI:,
+│           │   PWRTRN:, TRNRPO:, TRNNLI:             <- DO NOT EDIT: the rule overwrites them
+│           └── internal_transmission:
+│               └── esmap_capital_cost_usd2010_per_kw  <- EDIT one key, with its source comment
+└── workspace/
+    └── execution/
+        ├── A2_Outputs_Params_otoole/
+        │   └── A_Calibrated_BAU/
+        │       ├── CapitalCost.csv                    <- CHECK rows PWRTRNBGDXX, RNWTRNBGDXX
+        │       └── FixedCost.csv                      <- CHECK the same rows
+        └── Executables/
+            └── A_Calibrated_BAU_0/
+                └── Pre_processed_A_Calibrated_BAU_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt
+                                                       <- CHECK block CapitalCost
+```
+
 1. Edit one input key of the `internal_transmission` block, for example
    `esmap_capital_cost_usd2010_per_kw`, and its source comment. Use only the
    keys in the table above. Any other key in the block stops the run with the
@@ -127,6 +150,30 @@ Every root runs the rule, so every scenario built after the edit takes the new
 cost.
 
 ### Change the internal grid cost for one scenario only
+
+The tree shows where this section edits and where it checks.
+
+```text
+OSTRAM/
+├── config/
+│   ├── scenarios/
+│   │   └── <scenario>/
+│   │       └── scenario.yaml
+│   │           └── edits:               <- EDIT sheet Demand Techs, prefixes RNWTRN, RNWRPO, RNWNLI
+│   └── setups/
+│       └── south_asia.yaml
+│           └── decision_scenarios:      <- EDIT add the scenario as the last line
+└── workspace/
+    ├── preparation/
+    │   └── A1_Outputs/
+    │       └── A1_Outputs_<scenario>/
+    │           └── apply_patches_CHANGES_<stamp>.json
+    │                                    <- CHECK each changed cell, old and new
+    └── execution/
+        └── A2_Outputs_Params_otoole/
+            └── <scenario>/
+                └── CapitalCost.csv      <- CHECK rows of the three families
+```
 
 A derived scenario can replace the root's values with a scenario edit on the
 `Demand Techs` sheet. `tech_prefix` matches every technology whose name starts
@@ -223,6 +270,29 @@ corridor holds `GLOBAL,TRNBGDXXINDEA,<year>,637.71` in every year.
 
 ### Change an interconnector cost for every scenario
 
+The tree shows where this section edits and where it checks.
+
+```text
+OSTRAM/
+├── inputs/
+│   └── scenarios/
+│       └── OSTRAM_Scenario_Inputs.xlsx
+│           ├── Interconnector_Params
+│           │   ├── 2023 to 2050                  <- EDIT the BAU row of the corridor and parameter
+│           │   └── Source                        <- EDIT the same row
+│           └── Transmission_Cost_Basis
+│               ├── Capital_USD 2023_per_kW       <- EDIT the corridor's row, the same value
+│               └── Fixed_USD 2023_per_kW_year    <- EDIT the corridor's row, the same value
+├── tests/
+│   └── regression/
+│       └── test_interconnector_costs.py          <- CHECK runs with the solver-free checks
+└── workspace/
+    └── execution/
+        └── A2_Outputs_Params_otoole/
+            └── A_Calibrated_BAU/
+                └── CapitalCost.csv               <- CHECK the corridor's rows, every year
+```
+
 1. On `Interconnector_Params`, find the `BAU` row of the corridor and
    parameter, and type the new value in every year column from 2023 to 2050.
    Update its `Source` cell.
@@ -283,6 +353,35 @@ factor (0.75 or 1.25), the transfer-capacity factor (1.25 or 0.75), all-flat or
 all-mountain line rates and 15 or 30 million USD per endpoint together.
 
 ### Make your own cost sensitivity
+
+The tree shows where this section edits and where it checks.
+
+```text
+OSTRAM/
+├── config/
+│   ├── scenarios/
+│   │   └── B_Opt_TxCapex120/ (new-scenario copies it from B_Optimised_VRE_TxCostHigh)
+│   │       └── scenario.yaml
+│   │           ├── description                   <- EDIT rewrite it
+│   │           └── edits:                        <- EDIT replace the list
+│   └── setups/
+│       └── south_asia.yaml
+│           └── decision_scenarios:               <- EDIT add the scenario as the last line
+└── workspace/
+    ├── preparation/
+    │   └── A1_Outputs/
+    │       └── A1_Outputs_B_Opt_TxCapex120/
+    │           └── apply_patches_CHANGES_<stamp>.json
+    │                                             <- CHECK each changed cell, old and new
+    └── execution/
+        ├── A2_Outputs_Params_otoole/
+        │   └── B_Opt_TxCapex120/
+        │       └── CapitalCost.csv               <- CHECK only the interconnector rows differ
+        └── Executables/
+            └── B_Opt_TxCapex120_0/
+                └── Pre_processed_B_Opt_TxCapex120_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt
+                                                  <- CHECK block CapitalCost
+```
 
 This example raises the capital cost of every interconnector by 20 per cent in
 `B_Optimised_VRE`.

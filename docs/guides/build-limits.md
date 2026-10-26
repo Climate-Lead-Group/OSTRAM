@@ -118,6 +118,22 @@ set the most that may be built; the model still chooses what it builds.
 
 ### Change a build cap setting
 
+The tree shows where this section edits and where it checks.
+
+```text
+OSTRAM/
+├── config/
+│   └── scenarios/
+│       └── <root>/ (A_Calibrated_BAU, B_Optimised_VRE or C_Target_VRE)
+│           └── build_cap_rule.yaml         <- EDIT one value: the root and every derived scenario
+└── workspace/
+    └── execution/
+        └── A2_Outputs_Params_otoole/
+            └── B_Optimised_VRE/
+                └── TotalAnnualMaxCapacityInvestment.csv
+                                            <- CHECK the rows you expect to change
+```
+
 1. Edit one value in `config/scenarios/<root>/build_cap_rule.yaml`. A root's
    file changes the root and every scenario derived from it.
 2. Build without solving, for example

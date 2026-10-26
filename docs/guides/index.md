@@ -83,6 +83,42 @@ The places you will open are, under the workspace folder `workspace/`:
 | Results of a solved scenario | `execution/Executables/<scenario>_0/Outputs/<Variable>.csv` |
 | The edit log of a derived scenario | `preparation/A1_Outputs/A1_Outputs_<scenario>/apply_patches_CHANGES_<stamp>.json` |
 
+Every place this guide edits:
+
+```text
+OSTRAM/
+├── config/
+│   ├── preparation/
+│   │   └── Config_country_codes.yaml
+│   │       └── internal_transmission:   [1]
+│   ├── scenarios/
+│   │   ├── <root>/
+│   │   │   └── build_cap_rule.yaml      [2]
+│   │   └── <name>/
+│   │       └── scenario.yaml
+│   │           ├── edits:               [3]
+│   │           └── gross_import_cap:    [4]
+│   └── setups/
+│       └── south_asia.yaml
+│           └── decision_scenarios:      [5]
+├── inputs/
+│   └── scenarios/
+│       └── OSTRAM_Scenario_Inputs.xlsx
+│           ├── Interconnector_Params    [6]
+│           └── Transmission_Cost_Basis  [7]
+└── workspace/                           <- DO NOT EDIT: the results appear here
+```
+
+| Number | What you change there | Sections |
+|---|---|---|
+| 1 | One input key, such as `esmap_capital_cost_usd2010_per_kw` or `residual_peak_margin` | [Change the internal grid cost for every scenario](transmission-costs.md#change-the-internal-grid-cost-for-every-scenario), [Change the base-year grid](internal-expansion.md#change-the-base-year-grid) |
+| 2 | One build cap setting of a root | [Change a build cap setting](build-limits.md#change-a-build-cap-setting) |
+| 3 | Scenario edits, such as a cost change or a per-corridor cap | [Change the internal grid cost for one scenario only](transmission-costs.md#change-the-internal-grid-cost-for-one-scenario-only), [Make your own cost sensitivity](transmission-costs.md#make-your-own-cost-sensitivity), [Cap another node](import-caps.md#cap-another-node), [Check a per-corridor cap](import-caps.md#check-a-per-corridor-cap) |
+| 4 | The gross import cap block and its countries | [Cap one country's gross imports](import-caps.md#cap-one-countrys-gross-imports), [Cap another node](import-caps.md#cap-another-node) |
+| 5 | A new scenario, added as the last line | [Change the internal grid cost for one scenario only](transmission-costs.md#change-the-internal-grid-cost-for-one-scenario-only), [Make your own cost sensitivity](transmission-costs.md#make-your-own-cost-sensitivity), [Cap one country's gross imports](import-caps.md#cap-one-countrys-gross-imports) |
+| 6 | The `BAU` row of an interconnector cost, every year, and its `Source` | [Change an interconnector cost for every scenario](transmission-costs.md#change-an-interconnector-cost-for-every-scenario) |
+| 7 | The same value, in the corridor's row | [Change an interconnector cost for every scenario](transmission-costs.md#change-an-interconnector-cost-for-every-scenario) |
+
 ## Units
 
 Capacity is in GW and energy in PJ. A capital cost in USD per kW equals the

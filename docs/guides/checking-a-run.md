@@ -104,6 +104,33 @@ busiest time slice.
 
 ## A checklist
 
+The tree shows where this section reads.
+
+```text
+OSTRAM/
+├── config/
+│   ├── scenarios/
+│   │   └── <S>/
+│   │       └── scenario.yaml                       <- CHECK the scenario file loads
+│   └── setups/
+│       └── south_asia.yaml
+│           └── decision_scenarios:                 <- CHECK the scenario is the last line
+└── workspace/
+    ├── preparation/
+    │   └── A1_Outputs/
+    │       └── A1_Outputs_<S>/
+    │           └── apply_patches_CHANGES_<stamp>.json
+    │                                               <- CHECK only the intended cells
+    └── execution/
+        ├── A2_Outputs_Params_otoole/
+        │   └── <S>/                                <- CHECK only the intended files and rows differ
+        └── Executables/
+            └── <S>_0/
+                ├── Pre_processed_<S>_0_StorageDelayN5_OpenBCK_RMCarefulXLSX.txt
+                │                                   <- CHECK the intended values
+                └── Outputs/                        <- CHECK no backstop, import share, build caps
+```
+
 - The scenario file loads, and the scenario is the last line of
   `decision_scenarios`.
 - The edit log lists only the intended cells and no skipped members you did not
