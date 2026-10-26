@@ -1,11 +1,11 @@
 scenario: C_Target_VRE_TxCostHigh
 base_scenario: C_Target_VRE
 description: >-
-  C_Target_VRE with the capital and fixed costs of the 18 interconnectors at the high bounding
-  values of the reviewed corridor proposal, constant in real 2023 USD for 2023 to 2050. Each
-  bound sets route length, line rate, endpoint allowance and usable transfer capacity of every
-  corridor to their highest-cost values together. Everything else equals C_Target_VRE, whose
-  costs are the central case.
+  C_Target_VRE with the capital and fixed costs of the 18 interconnectors at their high
+  bounding values, constant in real 2023 USD for 2023 to 2050; the bounds are an ASSUMPTION
+  stated in the Costs section of docs/rules.md. Each bound sets route length, line rate,
+  endpoint allowance and usable transfer capacity of every corridor to their highest-cost
+  values together. Everything else equals C_Target_VRE, whose costs are the central case.
 apply_vre_ceiling_layer: false
 edits:
 - sheet: Secondary Techs
