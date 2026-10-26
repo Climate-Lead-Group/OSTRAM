@@ -14,7 +14,7 @@ The applied values are the `vre_ceilings` section of `config/setups/south_asia.y
 - The applied India wind ceilings sum to 1,140 GW (INDNO 285, INDSO 445, INDWE 410, INDEA 0 and INDNE 0), close to the NIWE 150 m national total.
 
 **Non-India (per country):**
-- **BANGLADESH**: SREDA/Power Division (NREL/USAID), National Solar Energy Roadmap 2021-2041 https://rise.esmap.org/sites/default/files/library/bangladesh/Renewable%20Energy/Bangladesh_National-Solar-Energy-Roadmap.pdf ; land-screened solar ~53 GW (2019), printed p. 87 (PDF p. 87). Wind: NREL, Assessing the Wind Energy Potential in Bangladesh (NREL/TP-5000-71077, September 2018), printed p. 62 (PDF p. 72): more than 20,000 km² with a gross wind potential of over 30,000 MW at 5.75 to 7.75 m/s, which the report calls not realistic once unsuitable land is screened out https://docs.nlr.gov/docs/fy18osti/71077.pdf
+- **BANGLADESH**: SREDA, Power Division and UNDP SREPGen, National Solar Energy Roadmap 2021-2041 (draft, 14 December 2020) https://rise.esmap.org/sites/default/files/library/bangladesh/Renewable%20Energy/Bangladesh_National-Solar-Energy-Roadmap.pdf ; ~53 GW of low-cost utility-scale PV potential, which the roadmap quotes from Shiraishi, Shirley and Kammen, Applied Energy 235 (2019), printed p. 87 (PDF p. 87). Wind: NREL, Assessing the Wind Energy Potential in Bangladesh (NREL/TP-5000-71077, September 2018), printed p. 62 (PDF p. 72): more than 20,000 km² with a gross wind potential of over 30,000 MW at 5.75 to 7.75 m/s, which the report calls not realistic once unsuitable land is screened out https://docs.nlr.gov/docs/fy18osti/71077.pdf
 - **SRI LANKA**: ADB & UNDP, "100% RE by 2050" (2017): 2050 mix ~15,000 MW wind + ~16,000 MW solar https://www.adb.org/sites/default/files/publication/354591/sri-lanka-power-2050v2.pdf ; ADB Energy Sector Assessment, Strategy, and Road Map (2019), PDF p. 12: national solar technical potential 6,000 MW and national exploitable wind potential 5,600 MW https://www.adb.org/sites/default/files/institutional-document/547381/sri-lanka-energy-assessment-strategy-road-map.pdf ; SLSEA RE Resource Development Plan 2021–2026 https://www.energy.gov.lk/images/renewable-energy/renewable-energy-resource-development-plan-en.pdf
 - **NEPAL**: SWERA GIS report (UNEP/NREL/Risø) https://policy.asiapacificenergy.org/node/358 ; provincial assessment: Neupane et al., Solar and wind energy potential assessment at provincial level in Nepal, Renewable Energy 181 (2022), 278-291, up to about 47,628 MW of solar and 1,686 MW of wind https://doi.org/10.1016/j.renene.2021.09.027
 - **BHUTAN**: Cowlin & Gilman, NREL/TP-6A2-46547 (2009) https://www.osti.gov/biblio/964607 ; Bhutan's Renewable Energy Management Master Plan (2016): 12 GW of solar and 760 MW of wind in technical terms, as reported in IRENA and Bhutan's Department of Renewable Energy, Renewables Readiness Assessment: Kingdom of Bhutan (December 2019), printed p. II (PDF p. 4) https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2019/Dec/IRENA_RRA_Bhutan_2019.pdf
@@ -34,7 +34,7 @@ The applied values are the `vre_ceilings` section of `config/setups/south_asia.y
 | INDSO | Solar | 500 | ASSUMPTION; see the NISE vintage note (NISE-2025, 880.41 GWp) |
 | INDEA | Solar | 150 | ASSUMPTION; see the NISE vintage note (NISE-2025, 247.87 GWp) |
 | INDNE | Solar | 25 | ASSUMPTION; see the NISE vintage note (NISE-2025, 46.51 GWp) |
-| BGD | Solar | 40 | ASSUMPTION: 40 GW in every year, a round value below the ~53 GW of land-screened solar in the National Solar Energy Roadmap, so the model cannot use all of the screened land |
+| BGD | Solar | 40 | ASSUMPTION: 40 GW in every year, a round value below the ~53 GW of low-cost utility-scale PV potential in the National Solar Energy Roadmap, so the model cannot use all of that potential |
 | LKA | Solar | 16 ★ | ADB/UNDP 2050 (~16,000 MW) |
 | NPL | Solar | 40 | ASSUMPTION: 40 GW in every year, a round value below the 47,628 MW of solar potential in Neupane et al. (2022), so the model cannot use all of the assessed potential |
 | BTN | Solar | 1.8102 | ASSUMPTION; see the `B_Optimised_VRE` limits below (RE Master Plan, 12 GW) |
@@ -57,7 +57,7 @@ Each ceiling in `south_asia.yaml` is the lower of an atlas-based figure and the
 
 - ASSUMPTION: Bhutan solar is limited to 1.8102 GW in every year, the `B_Optimised_VRE` limit,
   so the scenarios that apply the ceilings build no more Bhutan solar than `B_Optimised_VRE`.
-  Bhutan's Renewable Energy Master Plan gives 12 GW of solar in technical terms (IRENA, 2019, above).
+  Bhutan's Renewable Energy Management Master Plan (2016) gives 12 GW of solar in technical terms (IRENA, 2019, above).
 - ASSUMPTION: India East, India North-East and Nepal build no onshore wind (0 GW in every year),
   as in `B_Optimised_VRE`. NIWE's 150 m atlas gives 17,449 MW for Odisha, West Bengal, Bihar and
   Jharkhand and 760 MW for Arunachal Pradesh, Assam and Meghalaya, with 0 for the other
