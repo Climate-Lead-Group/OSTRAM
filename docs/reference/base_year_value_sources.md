@@ -22,7 +22,7 @@ Capacity factors use four seasons, S1 January, February and December (90 days), 
 
 **A8.** Each region's thermal generation (CEA) is split between coal and oil in proportion to installed capacity times a utilisation of 0.65 for coal and 0.25 for oil. Oil receives 0% in East, North and West, 1.8% in North-East and 0.35% in South, so the split moves less than 2% of any region's thermal total.
 
-**A9.** NEA publishes national generation, not generation by technology. Each year's total is split across hydro, solar, bagasse and thermal by day-weighted in-service capacity times a typical capacity factor (hydro 0.45, solar 0.1925, bagasse 0.17, thermal 0.25), each share capped at its physical maximum, which gives hydro about 97.5%. Because the split is an allocation, hydro, solar and bagasse have only a lower limit of 98% of their share, and thermal has no limit.
+**A9.** NEA publishes national generation, not generation by technology. Each year's total is split across hydro, solar, bagasse and thermal by day-weighted in-service capacity times a typical capacity factor (hydro 0.45, solar 0.1925, bagasse 0.17, thermal 0.25), each share capped at its physical maximum (for solar, a capacity factor of 0.2021, the 2014 to 2022 mean of the Renewables.ninja profile at 27.717 N, 85.317 E, MERRA-2), which gives hydro about 97.5%. Because the split is an allocation, hydro, solar and bagasse have only a lower limit of 98% of their share, and thermal has no limit.
 
 **A10.** Waste-to-energy in India East and North-East has a minimum generation of zero in 2023 to 2026, because CEA's generation categories cannot be matched to the plants in these two regions. Zero means no required minimum, not zero output.
 
@@ -658,15 +658,15 @@ Capacity factors use four seasons, S1 January, February and December (90 days), 
 
 - Values: 0.034042864464 to 48.055541258592 (9 distinct values); PJ per year; 9 rows.
 - Label: `NEPAL_NATIONAL_TOTAL_AND_OFFICIAL_OPERATING_ROSTER`.
-- Sources: [R105] PDF p.13 (printed 11), Managing Director's review; same figures on PDF p.127; [R104] PDF p.12 (printed 2), Managing Director's review; same figures on PDF p.162; [R103] PDF p.119, Operational Performance.
-- Derivation: NEA's national generation is NEA plants + subsidiaries + IPP purchases: 2,930 + 2,488 + 5,118 = 10,536 GWh in FY2022-23, 12,072 GWh in FY2023-24 and 13,959 GWh in FY2024-25. Each total is split by day-weighted capacity times a typical capacity factor (hydro 0.45, solar 0.1925, bagasse 0.17, thermal 0.25), each share capped at its physical maximum, and the lower limit is 0.98 x share x 0.0036 PJ/GWh. Example: 2023 hydro, 10,268.02 GWh x 0.98 x 0.0036 = 36.225563 PJ per year.
+- Sources: [R105] PDF p.13 (printed 11), Managing Director's review; same figures on PDF p.127; [R104] PDF p.12 (printed 2), Managing Director's review; same figures on PDF p.162; [R103] PDF p.119, Operational Performance; [R98] and [R99], Renewables.ninja solar profile at 27.717 N, 85.317 E, MERRA-2, 2014 to 2022, for the solar cap.
+- Derivation: NEA's national generation is NEA plants + subsidiaries + IPP purchases: 2,930 + 2,488 + 5,118 = 10,536 GWh in FY2022-23, 12,072 GWh in FY2023-24 and 13,959 GWh in FY2024-25. Each total is split by day-weighted capacity times a typical capacity factor (hydro 0.45, solar 0.1925, bagasse 0.17, thermal 0.25), each share capped at its physical maximum (for solar, a capacity factor of 0.2021), and the lower limit is 0.98 x share x 0.0036 PJ/GWh. Solar reaches its cap in all three years (123.71, 172.19 and 201.85 GWh), and the other shares scale up to fill each total. Example: 2023 hydro, 10,268.02 GWh x 0.98 x 0.0036 = 36.225563 PJ per year.
 - Assumptions: A3, A4, A9.
 
 ### `PWRSPVNPLXX` ResidualCapacity, 2023 to 2050
 
 - Values: 0 to 0.1419404 (11 distinct values); GW; 28 rows.
 - Label: `NEA_OFFICIAL_ROSTER_COD_WEIGHTED_ONCE`.
-- Sources: [R103] PDF p.154 (printed 144) Total Solar (NEA) and Total Solar (IPPs), p.161 solar IPP list with COD; FY2022/23 PDF p.168 and FY2023/24 PDF p.206 solar IPP lists; [R106] PDF p.14, Component 1 paragraph; [R107] PDF p.3, indicator IN01163233 table; p.1 component narrative.
+- Sources: [R103] PDF p.154 (printed 144) Total Solar (NEA) and Total Solar (IPPs), p.161 solar IPP list with COD; [R105] PDF p.168 and [R104] PDF p.206 solar IPP lists; [R106] PDF p.14, Component 1 paragraph; [R107] PDF p.3, indicator IN01163233 table; p.1 component narrative.
 - Derivation: NEA solar is 19.4 MW all year plus 5.6 MW for 319 of 365 days in 2023, and IPP solar plants are weighted by their days in service: 2023 = 19.400 + 4.894 + 45.568 = 69.862 MW, and 2026 = 25,000 + 116,940.4 kW = 0.1419404 GW. Each IPP plant retires 25 years after its commissioning year and the NEA 25 MW in 2048, so 2048 = 0.055 GW, 2049 = 0.035 GW and 2050 = 0.
 - Assumptions: A3, A4, A11. The last 5.6 MW of the NEA solar farms counts from 1 September 2022, since the World Bank reports the final site in operation in August 2022 without a day.
 
