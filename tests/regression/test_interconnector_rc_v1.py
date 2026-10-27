@@ -631,7 +631,7 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
             (
                 True,
                 "set_retirement_schedule.py, build_cap_rule.py, "
-                "relax_interconnectors.py, add_storage_min_investment.py",
+                "relax_interconnectors.py",
                 None,
             ),
         )

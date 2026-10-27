@@ -87,9 +87,13 @@ scenario_registry:
     dependencies:
     - type: restrictions
       scenario: BAU
+  # B takes the looser of its own bounds and those of A_Calibrated_BAU built in
+  # the same run, so B can always reproduce A's plan and never costs more.
   - name: B_Optimised_VRE
     role: decision
-    dependencies: []
+    dependencies:
+    - type: relaxation
+      scenario: A_Calibrated_BAU
   - name: C_Target_VRE
     role: decision
     dependencies:
@@ -119,6 +123,7 @@ scenario_registry:
   - A_Calibrated_BAU_TxCostHigh
   - B_Optimised_VRE_TxCostLow
   - B_Optimised_VRE_TxCostHigh
+  - B_Opt_ATBAdvanced
   - C_Target_VRE_TxCostLow
   - C_Target_VRE_TxCostHigh
   # Derived scenarios whose edits read a solved parent of the same run. Each
