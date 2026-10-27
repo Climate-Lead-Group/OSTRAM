@@ -305,6 +305,21 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 | Secondary Techs | `CapitalCost` | set_flat | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDNONPLXX, TRNINDEANPLXX, TRNINDSOLKAXX, TRNINDEAINDNO, TRNINDNOINDWE, TRNINDEAINDNE, TRNINDEAINDSO, TRNINDSOINDWE, TRNMDVXXINDSO, TRNNPLXXBGDXX, TRNBTNXXBGDXX, TRNINDEAINDWE, TRNINDNEINDNO, TRNLKAXXMDVXX |
 | Secondary Techs | `FixedCost` | set_flat | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDNONPLXX, TRNINDEANPLXX, TRNINDSOLKAXX, TRNINDEAINDNO, TRNINDNOINDWE, TRNINDEAINDNE, TRNINDEAINDSO, TRNINDSOINDWE, TRNMDVXXINDSO, TRNNPLXXBGDXX, TRNBTNXXBGDXX, TRNINDEAINDWE, TRNINDNEINDNO, TRNLKAXXMDVXX |
 
+### B_Opt_ATBAdvanced
+
+- Parent: `B_Optimised_VRE`.
+- Shared VRE ceilings: skipped.
+- Scenario edits: 346.
+- Overlay: none.
+- B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
+- Seed needs: none.
+- Description: B_Optimised_VRE with every cost that follows an NREL ATB 2025 path on the Advanced case instead of the Moderate case: in 2024 to 2050 the capital and fixed costs of solar PV, onshore and offshore wind, CSP, geothermal, biomass, battery storage and pumped storage equal their local 2023 value x ATB_Advanced(y) / ATB_Advanced(2023), with the same ATB sheet, class and financial case (Without Tax Credits) as B_Optimised_VRE. Each edit multiplies the B_Optimised_VRE value of one year by [ATB_Advanced(y) / ATB_Advanced(2023)] / [ATB_Moderate(y) / ATB_Moderate(2023)]. The energy cost of storage stays on the Moderate case, because scenario edits do not reach it. Everything else equals B_Optimised_VRE.
+
+| Sheet | Parameter | Operation | Technologies |
+|---|---|---|---|
+| Secondary Techs | `CapitalCost` | multiply | PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE, PWRGEOINDNO, PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX, PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX, PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX, PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX, PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX |
+| Secondary Techs | `FixedCost` | multiply | PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE, PWRGEOINDNO, PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX, PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX, PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX, PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX |
+
 ### C_Target_VRE_TxCostLow
 
 - Parent: `C_Target_VRE`.
@@ -344,7 +359,7 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 | `BAU` | The support root. It runs only the build-cap rule on its defaults and supplies the restrictions that `A_Calibrated_BAU` inherits. At the end of its A3 run, its interconnector ceilings are set to residual capacity plus committed additions. |
 | `A_Calibrated_BAU` | The calibrated business-as-usual root: retirement, the build cap with a flat cap multiplier, the minimum capacity floors, which list nothing on `main`, and interconnector relaxation, with the `BAU` restrictions inherited and the base-year pin applied last. |
 | `A_Calibrated_BAU_Clipped` | `A_Calibrated_BAU` with the shared VRE ceilings and nothing else. |
-| `B_Optimised_VRE` | The least-cost root: retirement, the build cap with a rising cap multiplier, interconnector relaxation and storage minimum investments. |
+| `B_Optimised_VRE` | The least-cost root: retirement, the build cap with a rising cap multiplier and interconnector relaxation; then every bound takes the looser of its own value and that of `A_Calibrated_BAU` of the same run, so no limit is tighter than in A. |
 | `B_Opt_Clipped` | `B_Optimised_VRE` with the shared VRE ceilings and nothing else. The other B variants are compared with it. |
 | `B_Opt_DirBidir` | `B_Opt_Clipped` with an overlay that lists no corridor, so every interconnector flows both ways. It is the reference case for `B_Opt_DirContractual`. |
 | `B_Opt_DirContractual` | `B_Opt_Clipped` with an overlay that sets seven corridors to one direction, from their contracts and physical flows, and leaves the two Nepal to India and the two Bhutan to India corridors bidirectional. The justification is in the [direction references](interconnector_direction_references.md). |
@@ -363,5 +378,6 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 | `A_Calibrated_BAU_TxCostHigh` | `A_Calibrated_BAU` with the capital and fixed costs of the 18 interconnectors at their high bounding values; the bounds are an ASSUMPTION stated in the Costs section of [the rules page](../../rules.md). Its parent is the central case. |
 | `B_Optimised_VRE_TxCostLow` | `B_Optimised_VRE` with the capital and fixed costs of the 18 interconnectors at their low bounding values; the bounds are an ASSUMPTION stated in the Costs section of [the rules page](../../rules.md). Its parent is the central case. |
 | `B_Optimised_VRE_TxCostHigh` | `B_Optimised_VRE` with the capital and fixed costs of the 18 interconnectors at their high bounding values; the bounds are an ASSUMPTION stated in the Costs section of [the rules page](../../rules.md). Its parent is the central case. |
+| `B_Opt_ATBAdvanced` | `B_Optimised_VRE` with the 2024 to 2050 capital and fixed costs that follow NREL ATB 2025 on the Advanced case instead of the Moderate case; the storage energy cost stays on the Moderate case. |
 | `C_Target_VRE_TxCostLow` | `C_Target_VRE` with the capital and fixed costs of the 18 interconnectors at their low bounding values; the bounds are an ASSUMPTION stated in the Costs section of [the rules page](../../rules.md). Its parent is the central case. |
 | `C_Target_VRE_TxCostHigh` | `C_Target_VRE` with the capital and fixed costs of the 18 interconnectors at their high bounding values; the bounds are an ASSUMPTION stated in the Costs section of [the rules page](../../rules.md). Its parent is the central case. |

@@ -3,7 +3,9 @@
 A3 builds each root scenario by running rule scripts in the order that the
 Control sheet of the scenario workbook lists them, followed by three shared
 rules, for three of the roots the base-year pin, and then the internal
-transmission residuals. A derived scenario is
+transmission residuals. `B_Optimised_VRE` then takes the looser of its own
+bounds and those of `A_Calibrated_BAU`; see
+[B as a relaxation of A](#b-as-a-relaxation-of-a). A derived scenario is
 then built from its root by the
 [scenario edits](scenario-edits.md). Terms are in the [glossary](glossary.md).
 
@@ -19,7 +21,7 @@ settings files live in `config/scenarios/<root>/`.
 | `set_min_capacity_floors.py` | `bau_calibration.yaml` | Writes minimum capacity or activity floors and maximum ceilings listed in the file. On `main` the A file lists none. The C file lists one ceiling, the annual hydro investment of NPLXX. |
 | `set_vre_targets.py` | `set_vre_targets.yaml` | C only. Converts fixed renewable generation shares per country-region into activity floors sized from the solved A result, and writes a bounded capacity envelope for solar and onshore wind in place of their build caps. |
 | `relax_interconnectors.py` | `relax_interconnectors.yaml` | Opens the build cap of interconnectors above their residual capacity, by a factor, by a fixed headroom or by per-corridor schedules. Each schedule value is a build cap: the most new capacity the corridor may add in that year. It sets `TotalAnnualMaxCapacity` of an overridden corridor with new investment to 9999, so cost sets the total size of the link. See [Interconnector build caps](#interconnector-build-caps). |
-| `add_storage_min_investment.py` | `storage_floors.yaml` | Writes small minimum investments for the storage families per year. |
+| `add_storage_min_investment.py` | `storage_floors.yaml` | C only. Writes small minimum investments for the storage families per year. |
 | `apply_interconnector_costs.py` | the `Interconnector_Params` sheet of the scenario workbook | Overwrites `CapitalCost`, `FixedCost` and `OperationalLife` of the interconnectors with the sheet's values. The sheet holds one central capital and fixed cost per corridor, constant in real 2023 USD over 2023 to 2050. The `Transmission_Cost_Basis` sheet of the same workbook holds their sources, assumptions and calculations; B1 does not read it. The six cost bounding scenarios replace these costs through their scenario edits; see [Costs](#costs). |
 | `apply_internal_transmission.py` | `Config_country_codes.yaml` | Writes `CapitalCost`, `FixedCost` and `OperationalLife` of the six internal transmission families, 60 technologies in all, and, after the base-year pin, their `ResidualCapacity`, computed as described [below](#internal-transmission-residuals). |
 | `apply_internal_tx_losses.py` | `Config_country_codes.yaml` and the `Measured_at` column of the `Demand_Projection` sheet | Sets the output activity ratio of the internal transmission families to 1 minus the loss setting `internal_transmission.transmission_loss`, which is 0.03 on `main`, writes each demand row measured at the bus bar as its workbook value times 1 minus the loss, and sets the input of each interconnector mode sent from a bus-bar node to 1 minus the loss, as described [below](#internal-transmission-losses-and-bus-bar-demand). |
@@ -36,7 +38,7 @@ inheritance.
 |---|---|
 | `BAU` | build cap |
 | `A_Calibrated_BAU` | retirement, build cap, minimum capacity floors, relax interconnectors |
-| `B_Optimised_VRE` | retirement, build cap, relax interconnectors, storage minimum investment |
+| `B_Optimised_VRE` | retirement, build cap, relax interconnectors |
 | `C_Target_VRE` | retirement, minimum capacity floors, build cap, VRE targets, relax interconnectors, storage minimum investment |
 
 After the chain, every root runs interconnector costs, internal transmission
@@ -44,7 +46,9 @@ and internal transmission losses, in that order. The base-year pin then runs
 for the roots listed in `PWR_MIN_PIN_ROOT_SCENARIOS` in
 `ostram/pipeline/scenarios/orchestrator.py`: `A_Calibrated_BAU`,
 `B_Optimised_VRE` and `C_Target_VRE`. Support `BAU` does not run it. Every
-root then computes its internal transmission residuals. A derived
+root then computes its internal transmission residuals. After that,
+`B_Optimised_VRE` takes the looser of its own bounds and those of
+`A_Calibrated_BAU` built in the same run. A derived
 scenario then receives the shared VRE ceilings, its scenario edits and the
 base-year pin again. The two direction variants receive their overlay last.
 
@@ -67,6 +71,10 @@ The order is load-bearing in these places.
 - The storage minimum investment rule writes `TotalAnnualMinCapacityInvestment`
   for the storage families, which the build-cap rule exempts. The reason for
   its position is not recorded.
+- The relaxation of `B_Optimised_VRE` runs after its base-year pin, so that
+  every bound of the delivered workbooks, the pinned ones included, is at
+  least as loose as in `A_Calibrated_BAU`. Derived B scenarios are built from
+  the relaxed B, so they inherit its bounds.
 - The internal transmission rule runs after the stage 1 template merge,
   because that merge rewrites `OperationalLife`, and the rule has to win.
 - The internal transmission residuals are computed after the base-year pin,
@@ -75,6 +83,39 @@ The order is load-bearing in these places.
 - The base-year pin runs after the other rules, so that reviewed values are the final values.
   A derived scenario applies it again after its edits, so that the shared
   ceilings and the edits cannot replace a reviewed value.
+
+## B as a relaxation of A
+
+`B_Optimised_VRE` is the least-cost plan of the portfolio: no limit in it is
+tighter than in `A_Calibrated_BAU`. B can then always reproduce A's plan, so
+its least-cost solution never costs more than A's, whatever the costs.
+
+The rule `relax_to_reference.py` runs every time B is built. The registry
+declares it in `config/setups/south_asia.yaml` as a `relaxation` dependency
+of B on A, so a run that builds B builds A's inputs first, in the same run,
+even when only B or a scenario derived from B is selected. After B's A3
+build, the rule reads A's delivered parameter workbook and, cell by cell,
+gives B the looser of its own value and A's:
+
+```text
+upper bound of B(cell) = max(B(cell), A(cell)), where -1 or no row counts as no bound
+lower bound of B(cell) = min(B(cell), A(cell)), where no row counts as 0
+```
+
+Upper bounds are `TotalAnnualMaxCapacity`,
+`TotalAnnualMaxCapacityInvestment`, `TotalTechnologyAnnualActivityUpperLimit`,
+`TotalTechnologyModelPeriodActivityUpperLimit`, `AnnualEmissionLimit` and
+`ModelPeriodEmissionLimit`. Lower bounds and requirements are
+`TotalAnnualMinCapacity`, `TotalAnnualMinCapacityInvestment`,
+`TotalTechnologyAnnualActivityLowerLimit`,
+`TotalTechnologyModelPeriodActivityLowerLimit`, `REMinProductionTarget` and
+`ReserveMargin`. Every other parameter of B is left as it is. B has no storage
+minimum investment, because A has none.
+
+B's own rules give some build caps that are tighter than A's, for coal,
+biomass, waste, gas, oil, nuclear and two hydro plants in some years; the rule
+raises them to A's caps. The B2 steps after A3 treat both scenarios alike, so
+the relation also holds in the final solver datafile.
 
 ## Base-year pin
 
@@ -348,6 +389,7 @@ treats it as follows.
 | A3 stage 1b | `add_max_capacity_investment_rule` with `--fill-zeros` writes 9999 into the blank and 0 build caps of allowed technologies, those with residual capacity or planned additions, and 0 into the rest. |
 | A3 build-cap rule | Treats blank, 0 and 9999 as placeholders and replaces them with the computed cap. Storage is exempt and receives 9999 for both caps. |
 | A3 base-year pin | Writes the reviewed values, including zeros. |
+| A3 relaxation of `B_Optimised_VRE` | A 0 build cap of B below A's cap takes A's value. |
 | B1 | Exports a row only when its `Projection.Mode` is a text other than `EMPTY`, `Zero`, blank or `According to demand`. A 0 on an exported row stays 0. An omitted row receives -1 from the otoole conversion configuration. |
 | B2 base-year build lock | Sets the 2023 to 2026 build caps of plants, storage and interconnectors to the minimum investment of the same cell, and to 0 where there is none. See [Base-year build lock](#base-year-build-lock). |
 | B2 storage delay | Sets both caps of the 20 storage-linked technologies to 0 in 2023 to 2027 and to -1 from 2028. |
@@ -390,6 +432,8 @@ both of their caps are set to 9999. Interconnectors are skipped.
 | Technology top-up | 0.0 GW | 0.1 GW | 0.1 GW |
 | Adequacy top-up | none | 0.0 to 2040, 0.08 in 2045, 0.20 in 2050 | 0.0 to 2040, 0.08 in 2045, 0.20 in 2050 |
 | Exempt families | PWRSDS, PWRLDS | PWRSDS, PWRLDS | PWRSDS, PWRLDS |
+| Storage minimum investment | none | none | `storage_floors.yaml` |
+| Bounds after the rules | as written | the looser of B's and A's, cell by cell | as written |
 
 In A the cap multiplier stays at 1.0, so the family limits there only decide
 which families are locked, and the technology top-up of 0.0 GW raises

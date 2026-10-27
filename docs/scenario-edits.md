@@ -103,7 +103,7 @@ the scenario and the parent.
 | `A_Calibrated_BAU_Clipped_TxFreeze2026` | `A_Calibrated_BAU_Clipped` | `OSTRAM_A_CALIBRATED_BAU_CLIPPED_RESULT` |
 
 So the parent is solved first, as `A_Calibrated_BAU` is for `C_Target_VRE`; the
-[portfolio sequence](pipeline.md#23-scenario-portfolio) gives the order. The
+[portfolio sequence](pipeline.md#24-scenario-portfolio) gives the order. The
 factor 1.5 of `B_Opt_TxCap150` and the share 0.15 of `B_Opt_TradeCap15` are the
 scenarios' design settings and stay in their files.
 
