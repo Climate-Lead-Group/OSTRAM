@@ -268,7 +268,7 @@ Three values set what an interconnector can build. All come from the sheet
 `Interconnector_Params` of the scenario workbook, except the yearly build caps
 of B and C.
 
-- **Existing capacity** is `ResidualCapacity`, flat from 2023 to 2050.
+- **Existing capacity** is `ResidualCapacity`. It is flat from 2023 to 2050, except Nepal to Bangladesh (`TRNNPLXXBGDXX`): 0 in 2023 and 2024, then 0.04 GW, the 40 MW sale through the Indian grid that began in November 2024.
 - **Forced builds** are `TotalAnnualMinCapacityInvestment`: the capacity the
   model must add in a year. The `BAU` rows hold the committed projects and
   apply to support `BAU`, `A_Calibrated_BAU` and `B_Optimised_VRE`. The

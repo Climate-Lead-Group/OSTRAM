@@ -245,9 +245,9 @@ value and the build years with CEA's growth statements, on one rating basis.
 
 **The data gap.** Bangladesh's master plan, IEPMP 2023, names dedicated lines from Nepal and Bhutan only as options to study, with no route, size or year (section 5.5.4 and Figure 5.5-4, p. 95). No signed agreement names either line.
 
-**What we assumed and why.** Neither link has a forced build, because a forced build stands for a committed or officially planned project and neither line is one. In `A_Calibrated_BAU` both links stay at their existing capacity, which is zero, as A allows only existing capacity plus committed projects. In B and C the model may build either link, up to its yearly build cap, when that lowers cost.
+**What we assumed and why.** Neither link has a forced build, because a forced build stands for a committed or officially planned project and neither line is one. In `A_Calibrated_BAU` both links stay at their existing capacity, as A allows only existing capacity plus committed projects: zero for Bhutan to Bangladesh, and for Nepal to Bangladesh 0.04 GW from 2025, the 40 MW sale through the Indian grid that began in November 2024. In B and C the model may build either link, up to its yearly build cap, when that lowers cost.
 
-**Effect on results.** Cost decides whether and when B and C build each link; A builds neither.
+**Effect on results.** Cost decides whether and when B and C build each link; A builds neither line.
 
 **How to test or improve.** When a line becomes committed or planned, add its forced build to the link's `TotalAnnualMinCapacityInvestment` row in `Interconnector_Params`, with its source.
 
