@@ -261,8 +261,12 @@ seed boundary; no result is discovered through caller CWD.
 The `south_asia` setup rule is: **BAU permits existing transmission
 plus already committed additions, with no discretionary expansion beyond those
 commitments.** Existing `TotalAnnualMinCapacityInvestment` values for the 18
-interconnector `TRN` technologies are interpreted as the commitments. Their
-year is their commissioning year. No investment minimum is removed or changed.
+interconnector `TRN` technologies are interpreted as the commitments: for the
+cross-border links, the committed projects of the `BAU` rows of
+`Interconnector_Params`. Their year is their commissioning year. No investment
+minimum is removed or changed. `A_Calibrated_BAU` applies the same ceiling to
+its 11 cross-border links (see
+[Interconnector build caps](rules.md#interconnector-build-caps)).
 
 For technology `t` and model year `y`, the final ceiling is:
 

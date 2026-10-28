@@ -225,15 +225,15 @@ origin table is out of date. Terms are in the [glossary](../../glossary.md).
 - Overlay: none.
 - B2 policy: the historical trade constraints are active; flows from IND to NPL on `TRNINDEANPLXX` and `TRNINDNONPLXX` capped at existing link capacity from 2027.
 - Seed needs: none.
-- Description: The shared VRE ceilings applied to A_Calibrated_BAU. From 2027, the capacity of each of the eleven international interconnectors has an upper limit equal to its capacity at the end of 2026 (TotalCapacityAnnual 2026) in the solved A_Calibrated_BAU_Clipped of the same run, including interconnectors with no capacity. New investment in these interconnectors in 2023 to 2026 is fixed to that result's NewCapacity. The committed investments after 2026 in TRNBTNXXBGDXX (2035) and TRNNPLXXBGDXX (2033) are set to zero, because the capacity is frozen. The run stops when the solved A_Calibrated_BAU_Clipped result is missing.
+- Description: The shared VRE ceilings applied to A_Calibrated_BAU. From 2027, the capacity of each of the eleven international interconnectors has an upper limit equal to its capacity at the end of 2026 (TotalCapacityAnnual 2026) in the solved A_Calibrated_BAU_Clipped of the same run, including interconnectors with no capacity. New investment in these interconnectors in 2023 to 2026 is fixed to that result's NewCapacity. The committed investments after 2026 in TRNINDEANPLXX (2027) and TRNINDNONPLXX (2028) are set to zero, because the capacity is frozen. The run stops when the solved A_Calibrated_BAU_Clipped result is missing.
 
 | Sheet | Parameter | Operation | Technologies |
 |---|---|---|---|
 | Secondary Techs | `TotalAnnualMaxCapacity` | from_result | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNLKAXXMDVXX, TRNMDVXXINDSO, TRNNPLXXBGDXX |
 | Secondary Techs | `TotalAnnualMinCapacityInvestment` | from_result | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNLKAXXMDVXX, TRNMDVXXINDSO, TRNNPLXXBGDXX |
 | Secondary Techs | `TotalAnnualMaxCapacityInvestment` | from_result | TRNBGDXXINDEA, TRNBGDXXINDNE, TRNBTNXXBGDXX, TRNBTNXXINDEA, TRNBTNXXINDNE, TRNINDEANPLXX, TRNINDNONPLXX, TRNINDSOLKAXX, TRNLKAXXMDVXX, TRNMDVXXINDSO, TRNNPLXXBGDXX |
-| Secondary Techs | `TotalAnnualMinCapacityInvestment` | values | TRNBTNXXBGDXX, TRNNPLXXBGDXX |
-| Secondary Techs | `TotalAnnualMaxCapacityInvestment` | values | TRNBTNXXBGDXX, TRNNPLXXBGDXX |
+| Secondary Techs | `TotalAnnualMinCapacityInvestment` | values | TRNINDEANPLXX, TRNINDNONPLXX |
+| Secondary Techs | `TotalAnnualMaxCapacityInvestment` | values | TRNINDEANPLXX, TRNINDNONPLXX |
 
 ### B_Opt_Clipped_GrossImportCap15
 
