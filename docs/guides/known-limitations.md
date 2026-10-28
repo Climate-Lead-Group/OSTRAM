@@ -76,20 +76,19 @@ output already reflects outages and maintenance. The statistics give no
 separate availability.
 
 **What we assumed and why.** From 2027, Bhutan's hydro capacity factors come
-from observed output, and an availability of 0.95 applies on top. New Bhutan
-hydro capacity carries the same factors. In 2023 to 2026 the base-year capacity
-factors divide observed output by 0.95, so the two cancel and existing plants
+from observed output, and the availability is 1, because that output already
+reflects outages and maintenance. New Bhutan hydro capacity carries the same
+factors. In 2023 to 2026 the base-year capacity factors divide observed output
+by 0.95 and the availability is 0.95, so the two cancel and existing plants
 can produce the published amount
 ([Where the base-year values come from](../reference/base_year_value_sources.md),
 A5).
 
 **Effect on results.** From 2027, the most Bhutan's hydro fleet can produce is
-lower than its observed factors allow. This lowers what Bhutan can generate and
-export.
+what its observed factors allow, with no further allowance for outages.
 
-**How to test or improve.** Set the `AvailabilityFactor` of `PWRHYDBTNXX` to 1
-from 2027, or divide the capacity factors from 2027 by 0.95, as in the base
-years.
+**How to test or improve.** To test a further allowance for outages, set the
+`AvailabilityFactor` of `PWRHYDBTNXX` below 1 from 2027.
 
 ### Bangladesh hydro output from 2025
 
@@ -98,16 +97,16 @@ availability.
 
 **What we assumed and why.** Bangladesh's hydro capacity factors divide
 observed output by an availability of 0.9. The model's availability for
-Bangladesh hydro is 1, and from 2025 Bangladesh has no generation upper limit
+Bangladesh hydro is also 0.9, so the two cancel, and from 2025 Bangladesh has
+no generation upper limit
 ([Where the base-year values come from](../reference/base_year_value_sources.md),
 A5 and A16).
 
-**Effect on results.** From 2025, Bangladesh's existing hydro can produce up to
-11 per cent more than BPDB reports.
+**Effect on results.** From 2025, the most Bangladesh's existing hydro can
+produce is the output BPDB reports.
 
 **How to test or improve.** Compare Bangladesh hydro output from 2025 with
-BPDB's figures. An `AvailabilityFactor` of 0.9 for `PWRHYDBGDXX` removes the
-difference.
+BPDB's figures.
 
 ### Maldives demand, 2023 to 2025
 
@@ -247,9 +246,9 @@ value and the build years with CEA's growth statements, on one rating basis.
 
 **What we assumed and why.** Neither link has a forced build, because a forced build stands for a committed or officially planned project and neither line is one. In `A_Calibrated_BAU` both links stay at their existing capacity, as A allows only existing capacity plus committed projects: zero for Bhutan to Bangladesh, and for Nepal to Bangladesh 0.04 GW from 2025, the 40 MW sale through the Indian grid that began in November 2024. In B and C the model may build either link, up to its yearly build cap, when that lowers cost.
 
-**Effect on results.** Cost decides whether and when B and C build each link; A builds neither line.
+**Effect on results.** Cost decides whether and when B and C build each link; A builds neither line. Nothing limits the Nepal to Bangladesh link by season or contract, so the model may use its 0.04 GW in every hour, up to about 0.35 TWh a year (0.04 GW x 8,760 h), against about 15 GWh that Bangladesh received in 2025.
 
-**How to test or improve.** When a line becomes committed or planned, add its forced build to the link's `TotalAnnualMinCapacityInvestment` row in `Interconnector_Params`, with its source.
+**How to test or improve.** When a line becomes committed or planned, add its forced build to the link's `TotalAnnualMinCapacityInvestment` row in `Interconnector_Params`, with its source. A yearly limit on the link's activity, from a contract or seasonal source, would bring its use closer to the sale.
 
 Source: [IEPMP 2023, Power Division copy](https://objectstorage.ap-dcc-gazipur-1.oraclecloud15.com/n/axvjbnqprylg/b/V2Ministry/o/office-powerdivision/2024/12/6aa63b99c7bf4b9083c7dc1b6bb07c28.pdf), section 5.5.4 and Figure 5.5-4 (printed p. 95, PDF p. 148).
 
@@ -270,22 +269,42 @@ and B; in C the planned Katihar-Parbotipur-Bornagar corridor is a forced build
 on both links in 2031. In 2023 to 2026 the base-year build lock sets these caps
 instead ([Build limits](build-limits.md#the-base-year-build-lock)).
 
-ASSUMPTION: Bangladesh gas plants cost 1,013.1 USD/kW and 17.061 USD/kW-year,
-and coal plants 6,336.94 USD/kW and 98.56 USD/kW-year, in constant 2023 USD,
-flat from 2023 to 2050. These are the figures of the EIA and Sargent & Lundy
-capital cost study for a single-shaft combined-cycle plant, 921 USD/kW and
-15.51 USD/kW-year, and an ultra-supercritical coal plant, 4,103 USD/kW and
-61.60 USD/kW-year (EIA,
+ASSUMPTION: Bangladesh gas plants cost 858.46 USD/kW and 71.54 USD/kW-year,
+and coal plants 1,708.18 USD/kW and 41.70 USD/kW-year, in constant 2023 USD,
+flat from 2023 to 2050. The capital costs divide the investment of Bangladesh's
+master plan by its capacity, 52.6 billion USD for 71.2 GW of gas and 14.7
+billion USD for 10.0 GW of coal (Power Division,
+[IEPMP 2023](https://objectstorage.ap-dcc-gazipur-1.oraclecloud15.com/n/axvjbnqprylg/b/V2Ministry/o/office-powerdivision/2024/12/6aa63b99c7bf4b9083c7dc1b6bb07c28.pdf),
+Table 7.1-1, printed p. 144, PDF p. 190). The plan states no price year; its
+figures are taken as 2020 prices and carried to 2023 with the US GDP implicit
+price deflator (BEA,
+[NIPA Table 1.1.9](https://apps.bea.gov/national/Release/TXT/NipaDataA.txt),
+line 1). The fixed costs are the capital costs times the ratio of fixed O&M to
+capital cost of CEA's Indian Technology Catalogue: Generation and Storage,
+January 2022, for combined-cycle gas (datasheet 02b, printed p. 51) and
+supercritical coal (datasheet 01b, printed p. 36) ([CEA](https://cea.nic.in)),
+because the plan prints no O&M cost. The plan gives no cost path, so the costs
+stay flat in real terms. For comparison, the EIA and Sargent & Lundy capital
+cost study prices a single-shaft combined-cycle plant built in the United
+States at 921 USD/kW and an ultra-supercritical coal plant at 4,103 USD/kW
+(EIA,
 [Capital Cost and Performance Characteristics for Utility-Scale Electric Power Generating Technologies](https://www.eia.gov/analysis/studies/powerplants/capitalcost/pdf/capital_cost_AEO2025.pdf#page=24),
-January 2024, Table 1-2, PDF p. 24), times a Bangladesh factor of 1.1 for gas
-and about 1.544 (capital) and 1.6 (fixed) for coal. The study prices plants
-built in the United States, and the factor carries its figures to Bangladesh.
+January 2024, Table 1-2, PDF p. 24).
 
-ASSUMPTION: Bangladesh utility solar costs 840 USD/kW in 2023, falling to
-466.5 USD/kW in 2050, in constant 2023 USD. This is 82 USD/kW, about 11 per
+ASSUMPTION: Bangladesh utility solar costs 1,037.48 USD/kW in 2023, falling to
+413.50 USD/kW in 2050, and 6.68 USD/kW-year in 2023 and 4.67 USD/kW-year in
+2050, in constant 2023 USD. The 2023 capital cost is the EPC contract price of
+EGCB's Sonagazi 75 MW solar plant, 70 million USD for 75 MW of AC capacity,
+signed on 15 June 2021
+([EGCB](https://egcb.gov.bd/pages/static-pages/6922dbad933eb65569e0bc77)),
+taken as 2021 prices and carried to 2023 with the same deflator. The fixed
+cost uses the catalogue's ratio for large photovoltaics (datasheet 06a,
+printed p. 111). Later years follow the relative change of NREL's Annual
+Technology Baseline 2025, Moderate case, utility-scale PV Class 5
+([NREL ATB 2025](https://data.openei.org/submissions/8759)), because the local
+sources give no cost path. The 2023 capital cost is 279 USD/kW, about 37 per
 cent, above IRENA's 2023 global weighted average of 758 USD/kW (IRENA,
-[Renewable Power Generation Costs in 2023](https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2024/Sep/IRENA_Renewable_power_generation_costs_in_2023.pdf)),
-to allow for land and grid connection costs in Bangladesh.
+[Renewable Power Generation Costs in 2023](https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2024/Sep/IRENA_Renewable_power_generation_costs_in_2023.pdf)).
 
 **Effect on results.** In B and C the build caps limit how fast Bangladesh's
 imports from India can grow; within them, cost sets the size of each link. In A
@@ -296,7 +315,8 @@ set how Bangladesh's own gas, coal and solar compare with imports.
 `relax_interconnectors.yaml` of B or C, its forced builds in
 `Interconnector_Params`, or the costs of `PWRNGSBGDXX`, `PWRCOABGDXX` and
 `PWRSPVBGDXX` in `Secondary_Techs`. A possible future calibration refinement
-replaces the scaled costs with costs of plants built in Bangladesh.
+replaces the plan averages for gas and coal with costs of plants built in
+Bangladesh.
 
 ### Dorjilung's export direction in `B_Opt_DirContractual`
 
