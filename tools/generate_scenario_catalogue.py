@@ -27,8 +27,10 @@ def origin_rows(page):
 def _edits(edits):
     groups = {}
     for e in edits:
-        tech = e.get("tech") or (", ".join(e["techs"]) if "techs" in e else e["tech_prefix"] + "*")
-        groups.setdefault((e["sheet"], e["param"], "values" if "values" in e else e.get("op", "")), []).append(tech)
+        techs = [e["tech"]] if e.get("tech") else (list(e["techs"]) if "techs" in e else [e["tech_prefix"] + "*"])
+        listed = groups.setdefault((e["sheet"], e["param"], "values" if "values" in e else e.get("op", "")), [])
+        # An edit per year names the same technologies again; list each once.
+        listed += [tech for tech in techs if tech not in listed]
     rows = [f"| {s} | `{p}` | {op} | {', '.join(t)} |" for (s, p, op), t in groups.items()]
     return ["", "| Sheet | Parameter | Operation | Technologies |", "|---|---|---|---|"] + rows
 

@@ -1,6 +1,8 @@
 """Materialize an exact canonical scenario selection through A3.
 
-Root scenarios are rebuilt by the maintained A3 entrypoint.  Derived
+Root scenarios are rebuilt by the maintained A3 entrypoint.  A root with a
+declared ``relaxation`` dependency then takes the looser of its own bounds
+and those of the reference root built just before it.  Derived
 scenarios are then rebuilt from the root declared in
 ``south_asia.yaml::scenario_registry``, receive their scenario edits, and finally receive any
 declared direction overlay.  This module stops before B1, B2, or a solver.
@@ -70,6 +72,7 @@ class MaterializationPaths:
 
 RootMaterializer = Callable[[str, Mapping[str, str]], None]
 DirectionApplier = Callable[[Path, Path, int | None], dict]
+RelaxationApplier = Callable[[Path, Path], dict]
 
 
 def validate_control_roots(
@@ -238,6 +241,18 @@ def _default_direction_applier(
     return apply
 
 
+def _default_relaxation_applier() -> RelaxationApplier:
+    from .rules import relax_to_reference
+
+    def apply(target: Path, reference: Path) -> dict:
+        """Loosen the bounds of ``target`` to those of ``reference`` and return the change log."""
+        log = relax_to_reference.run(target, reference)
+        relax_to_reference.print_summary(log)
+        return log
+
+    return apply
+
+
 def materialize_scenarios(
     requested: str | Sequence[str] | None,
     *,
@@ -246,6 +261,7 @@ def materialize_scenarios(
     environment: MutableMapping[str, str] | None = None,
     root_materializer: RootMaterializer | None = None,
     direction_applier: DirectionApplier | None = None,
+    relaxation_applier: RelaxationApplier | None = None,
     write_provenance: bool = True,
 ) -> dict:
     """Materialize roots and accepted derived scenarios deterministically."""
@@ -326,6 +342,11 @@ def materialize_scenarios(
         if direction_applier is None
         else direction_applier
     )
+    apply_relaxation = (
+        _default_relaxation_applier()
+        if relaxation_applier is None
+        else relaxation_applier
+    )
 
     try:
         root_records: list[dict] = []
@@ -353,6 +374,18 @@ def materialize_scenarios(
                 raise FileNotFoundError(
                     f"A3 did not materialize required files for {root}: {missing}"
                 )
+            # The reference root was materialized earlier in this loop, so its
+            # bounds come from this run.
+            relaxation_record: dict | None = None
+            for reference in active_registry.roots_by_name[root].relaxation_dependencies:
+                relaxation_log = apply_relaxation(
+                    target,
+                    active_paths.a1_outputs / f"A1_Outputs_{reference}",
+                )
+                relaxation_record = {
+                    "reference": reference,
+                    "changes": len(relaxation_log.get("changes", [])),
+                }
             root_records.append(
                 {
                     "scenario": root,
@@ -360,6 +393,7 @@ def materialize_scenarios(
                         active_paths.a1_outputs / f"_post_a2_snapshot_{root}"
                     ),
                     "target": str(target),
+                    "relaxation": relaxation_record,
                 }
             )
 

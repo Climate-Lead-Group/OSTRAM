@@ -65,7 +65,7 @@ are under the workspace. Terms are in the [glossary](glossary.md).
 | DVC | `dvc init` and `dvc pull`; skipped with `--skip-pull` | `dvc.yaml`, `.dvc/config` | `.dvc/` |
 | A1 | `python -B -m ostram.pipeline.preparation.base_inputs`, from `preparation/` | `inputs/osemosys_global/*.csv`, `config/preparation/Config_country_codes.yaml`, `config/preparation/Config_region_consolidation.yaml`, `inputs/preparation/secondary_technologies/Tech_Country_Matrix.xlsx`, the six templates in `inputs/preparation/workbook_templates/`, `config/compilation/Config_MOMF_T1_A.yaml` | `preparation/og_csvs_inputs/`, `preparation/extra_inputs/`, `preparation/A1_Outputs/A1_Outputs_<root>/` for all four roots, a runtime copy of the compilation configuration |
 | A2 | `python -B -m ostram.pipeline.preparation.transmission`, from `preparation/` | `config/preparation/Config_country_codes.yaml` and the A-O workbooks of each root | the A-O workbooks in place, and `preparation/A1_Outputs/_post_a2_snapshot_<root>/` |
-| A3 | `python -B -m ostram.pipeline.scenarios.materializer --scenarios B_Opt_TxCap150`, from `scenarios/` | the scenario registry, then the files in the A3 table below | `A1_Outputs_B_Optimised_VRE/`, `A1_Outputs_B_Opt_TxCap150/` and `_scenario_materialization.json` under `preparation/A1_Outputs/` |
+| A3 | `python -B -m ostram.pipeline.scenarios.materializer --scenarios B_Opt_TxCap150`, from `scenarios/` | the scenario registry, then the files in the A3 table below | `A1_Outputs_BAU/`, `A1_Outputs_A_Calibrated_BAU/`, `A1_Outputs_B_Optimised_VRE/`, `A1_Outputs_B_Opt_TxCap150/` and `_scenario_materialization.json` under `preparation/A1_Outputs/` |
 | B1 | `python -B -m ostram.pipeline.compilation.runner --scenarios B_Opt_TxCap150`, from `compilation/`; it runs `python -B -m ostram.pipeline.compilation.compiler` once per scenario | the four A-O workbooks of the scenario, `preparation/extra_inputs/`, `preparation/og_csvs_inputs/EMISSION.csv`, the runtime compilation configuration | the completed workbooks in `A1_Outputs_B_Opt_TxCap150/`, `compilation/A2_Structure_Lists.xlsx`, `compilation/A2_Output_Params/B_Opt_TxCap150/*.csv` |
 | B2 | `python -B -m ostram.pipeline.execution.runner --scenarios B_Opt_TxCap150`, from `execution/`, with `--compile-only` when `run` has it | `config/execution/Config_MOMF_T1_AB.yaml`, or `execution/Config_MOMF_T1_AB.yaml` when that copy exists; the runtime compilation configuration; `ostram/resources/compilation/conversion_format.yaml` and `templates/*.csv`; `config/setups/south_asia.yaml` for the gross import policy and the historical trade roots; `model/osemosys_fast_preprocessed.txt`; `inputs/execution/firm_capacity_fallbacks_by_cr.xlsx` | the files in the B2 table below |
 
@@ -91,6 +91,7 @@ in a working folder `scenarios/_run_<stamp>/`. The modules are in
 | Stage 5 | the root's rule chain in `ostram/pipeline/scenarios/rules/` | `config/scenarios/<root>/*.yaml` | the A-O workbooks in `stage5/` |
 | Shared rules | `apply_interconnector_costs`, `apply_internal_transmission`, `apply_internal_tx_losses` in `rules/`, then `apply_base_year_pin` for `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE`, then the residual part of `apply_internal_transmission` for every root | the merged workbook, `config/preparation/Config_country_codes.yaml`, `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | the A-O workbooks in `stage5/` |
 | Stage 6 | `sync_og_to_ts20`, then `transform` | `SOASIA_OSeMOSYS_WV.xlsx`, the change records of stage 5 | the timeslice sets and parameters in `preparation/og_csvs_inputs/`, `_scenario_run_state_<root>.xlsx`, the four A-O workbooks in `A1_Outputs_<root>/`; `BAU` also receives its transmission ceilings |
+| Relaxation, `B_Optimised_VRE` only | `relax_to_reference` in `rules/` | `A1_Outputs_A_Calibrated_BAU/A-O_Parametrization.xlsx`, built earlier in the same run | `A1_Outputs_B_Optimised_VRE/A-O_Parametrization.xlsx` in place: every bound takes the looser of B's and A's value; see [B as a relaxation of A](rules.md#b-as-a-relaxation-of-a) |
 | Derived scenario | `ostram/pipeline/scenarios/scenario_edits.py` | `A1_Outputs_<parent>/`, `config/scenarios/<scenario>/scenario.yaml`, the shared VRE ceilings in `config/setups/south_asia.yaml`, the base-year pin table | `A1_Outputs_<scenario>/` with its edit log; the overlay for the two direction variants |
 
 The [rules page](rules.md) lists the rule chain of each root and the
@@ -298,18 +299,21 @@ if ($LASTEXITCODE -ne 0) { throw 'Support BAU preparation/compilation/solve/expo
 This performs A1, A2, A3, B1, B2, export and cost reconciliation from maintained
 checkout inputs, without an A-result seed.
 Support `BAU` is a separate case; it is neither `A_Calibrated_BAU` nor a member
-of the 23-case portfolio. A full portfolio run still needs the A-first
+of the 24-case portfolio. A full portfolio run still needs the A-first
 sequence below.
 
-### 23-scenario portfolio
+### 24-scenario portfolio
 
-The `south_asia` registry distinguishes support `BAU` from the 23 decision
+The `south_asia` registry distinguishes support `BAU` from the 24 decision
 scenarios. A1, A2, A3, B1 and B2
 name stages; B1 does not mean `B_Optimised_VRE`.
 
 Support BAU has its own [committed-transmission policy and execution command](#support-bau).
 Selecting A applies its existing declared transformations and preserves BAU
-restriction inheritance. The portfolio does not require a BAU solve.
+restriction inheritance. Selecting B, or a scenario derived from it, also
+builds the inputs of A in the same A3 pass, because B takes the looser of its
+own bounds and A's ([B as a relaxation of A](rules.md#b-as-a-relaxation-of-a)).
+The portfolio does not require a BAU solve.
 
 Use an empty, local workspace and an editable installation of this checkout.
 The runner's default selection includes support BAU, and its single A3 pass
@@ -329,7 +333,7 @@ $aResult = Join-Path $workspace 'execution\Executables\A_Calibrated_BAU_0'
 python -m ostram --workspace $workspace run --skip-pull --scenarios "B_Optimised_VRE,A_Calibrated_BAU_Clipped" --a-result-seed $aResult --verbose
 if ($LASTEXITCODE -ne 0) { throw 'Parents of the corridor scenarios failed' }
 
-$remaining = python -c "from ostram.pipeline.scenarios.registry import load_registry; r=load_registry(); assert len(r.decision_scenarios)==23; print(','.join(n for n in r.decision_scenarios if n not in ('A_Calibrated_BAU','B_Optimised_VRE','A_Calibrated_BAU_Clipped')))"
+$remaining = python -c "from ostram.pipeline.scenarios.registry import load_registry; r=load_registry(); assert len(r.decision_scenarios)==24; print(','.join(n for n in r.decision_scenarios if n not in ('A_Calibrated_BAU','B_Optimised_VRE','A_Calibrated_BAU_Clipped')))"
 if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve the scenario selection' }
 python -m ostram --workspace $workspace run --skip-pull --scenarios $remaining --a-result-seed $aResult --verbose
 if ($LASTEXITCODE -ne 0) { throw 'Remaining portfolio failed' }

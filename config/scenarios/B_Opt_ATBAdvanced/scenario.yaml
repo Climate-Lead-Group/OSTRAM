@@ -1,0 +1,2437 @@
+scenario: B_Opt_ATBAdvanced
+base_scenario: B_Optimised_VRE
+description: >-
+  B_Optimised_VRE with every cost that follows an NREL ATB 2025 path on the
+  Advanced case instead of the Moderate case: in 2024 to 2050 the capital and
+  fixed costs of solar PV, onshore and offshore wind, CSP, geothermal, biomass,
+  battery storage and pumped storage equal their local 2023 value x
+  ATB_Advanced(y) / ATB_Advanced(2023), with the same ATB sheet, class and
+  financial case (Without Tax Credits) as B_Optimised_VRE. Each edit multiplies
+  the B_Optimised_VRE value of one year by [ATB_Advanced(y) / ATB_Advanced(2023)]
+  / [ATB_Moderate(y) / ATB_Moderate(2023)]. The energy cost of storage stays on
+  the Moderate case, because scenario edits do not reach it. Everything else
+  equals B_Optimised_VRE.
+apply_vre_ceiling_layer: false
+edits:
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9797299167095062
+  years: [2024]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2024: Advanced ratio 0.9344782609497571 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.953812111901482 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9573967938609753
+  years: [2025]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2025: Advanced ratio 0.8689565218995141 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.907624223802964 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9326687876385622
+  years: [2026]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2026: Advanced ratio 0.8034347828492712 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.861436335704446 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.905138851801553
+  years: [2027]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2027: Advanced ratio 0.7379130437990282 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.8152484476059281 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.874302155319807
+  years: [2028]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2028: Advanced ratio 0.6723913047487853 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.76906055950741 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8395248426195756
+  years: [2029]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2029: Advanced ratio 0.6068695656985423 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7228726714088921 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8
+  years: [2030]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2030: Advanced ratio 0.5413478266482992 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.676684783310374 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7956822544242654
+  years: [2031]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2031: Advanced ratio 0.5345809788151954 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.671852332815948 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7913019461205066
+  years: [2032]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2032: Advanced ratio 0.5278141309820917 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.6670198823215221 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7868577053951681
+  years: [2033]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2033: Advanced ratio 0.5210472831489881 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.662187431827096 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.782348122278274
+  years: [2034]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2034: Advanced ratio 0.5142804353158843 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.6573549813326701 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7777717450320344
+  years: [2035]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2035: Advanced ratio 0.5075135874827806 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.6525225308382442 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7731270785926838
+  years: [2036]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2036: Advanced ratio 0.5007467396496769 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.6476900803438183 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.768412582942046
+  years: [2037]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2037: Advanced ratio 0.49397989181657315 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.6428576298493922 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7636266714050917
+  years: [2038]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2038: Advanced ratio 0.4872130439834695 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.6380251793549663 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7587677088695427
+  years: [2039]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2039: Advanced ratio 0.48044619615036577 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.6331927288605403 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7538340099233207
+  years: [2040]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2040: Advanced ratio 0.47367934831726205 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.6283602783661144 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7488238369053853
+  years: [2041]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2041: Advanced ratio 0.46691250048415833 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.6235278278716884 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7437353978652264
+  years: [2042]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2042: Advanced ratio 0.4601456526510546 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.6186953773772624 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7385668444259772
+  years: [2043]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2043: Advanced ratio 0.4533788048179509 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.6138629268828365 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7333162695457943
+  years: [2044]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2044: Advanced ratio 0.4466119569848472 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.6090304763884106 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7279817051718087
+  years: [2045]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2045: Advanced ratio 0.43984510915174346 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.6041980258939845 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.722561119780585
+  years: [2046]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2046: Advanced ratio 0.43307826131863975 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.5993655753995586 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7170524157986334
+  years: [2047]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2047: Advanced ratio 0.42631141348553603 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.5945331249051327 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7114534268960894
+  years: [2048]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2048: Advanced ratio 0.4195445656524323 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.5897006744107067 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7057619151462305
+  years: [2049]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2049: Advanced ratio 0.41277771781932865 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.5848682239162807 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6999755680430002
+  years: [2050]
+  note: 'NREL ATB 2025 v1, Summary_OCC, CSP Class2, Without Tax Credits, 2050: Advanced ratio 0.4060108699862244 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.5800357734218556 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.9801106231230395
+  years: [2024]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2024: Advanced ratio 0.9432819117632871 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.9624239239011604 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.9586050566407012
+  years: [2025]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2025: Advanced ratio 0.8865638235265743 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.9248478478023208 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.9352779630266304
+  years: [2026]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2026: Advanced ratio 0.8298457352898614 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.8872717717034813 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.909887682204854
+  years: [2027]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2027: Advanced ratio 0.7731276470531486 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.8496956956046416 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.8821478284841726
+  years: [2028]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2028: Advanced ratio 0.7164095588164358 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.812119619505802 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.8517164415030264
+  years: [2029]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2029: Advanced ratio 0.6596914705797229 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7745435434069624 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.8181818181818182
+  years: [2030]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2030: Advanced ratio 0.6029733823430098 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.736967467308123 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.8158614402917047
+  years: [2031]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2031: Advanced ratio 0.5996235302188819 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7349575560336463 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.8135283363802561
+  years: [2032]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2032: Advanced ratio 0.5962736780947542 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7329476447591696 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.8111824014665445
+  years: [2033]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2033: Advanced ratio 0.5929238259706263 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7309377334846929 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.8088235294117647
+  years: [2034]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2034: Advanced ratio 0.5895739738464985 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7289278222102162 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.8064516129032258
+  years: [2035]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2035: Advanced ratio 0.5862241217223706 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7269179109357395 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.8040665434380776
+  years: [2036]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2036: Advanced ratio 0.5828742695982427 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7249079996612628 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.8016682113067655
+  years: [2037]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2037: Advanced ratio 0.5795244174741149 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7228980883867862 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.7992565055762082
+  years: [2038]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2038: Advanced ratio 0.5761745653499871 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7208881771123095 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.7968313140726933
+  years: [2039]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2039: Advanced ratio 0.5728247132258593 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7188782658378329 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.7943925233644857
+  years: [2040]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2040: Advanced ratio 0.5694748611017314 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7168683545633562 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.7919400187441422
+  years: [2041]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2041: Advanced ratio 0.5661250089776035 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7148584432888795 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.789473684210526
+  years: [2042]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2042: Advanced ratio 0.5627751568534757 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7128485320144028 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.7869934024505181
+  years: [2043]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2043: Advanced ratio 0.5594253047293478 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7108386207399261 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.7844990548204155
+  years: [2044]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2044: Advanced ratio 0.55607545260522 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7088287094654494 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.781990521327014
+  years: [2045]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2045: Advanced ratio 0.5527256004810922 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7068187981909727 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.7794676806083647
+  years: [2046]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2046: Advanced ratio 0.5493757483569643 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.704808886916496 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.7769304099142036
+  years: [2047]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2047: Advanced ratio 0.5460258962328365 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7027989756420193 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.7743785850860416
+  years: [2048]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2048: Advanced ratio 0.5426760441087086 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.7007890643675426 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.7718120805369123
+  years: [2049]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2049: Advanced ratio 0.5393261919845808 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.6987791530930659 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRCSPINDEA, PWRCSPINDNE, PWRCSPINDNO, PWRCSPINDSO, PWRCSPINDWE]
+  param: FixedCost
+  op: multiply
+  factor: 0.7692307692307692
+  years: [2050]
+  note: 'NREL ATB 2025 v1, Summary_FOM, CSP Class2, Without Tax Credits, 2050: Advanced ratio 0.5359763398604531 (key WA3CSSPClass2, workbook row 2) / Moderate ratio 0.6967692418185891 (key WM3CSSPClass2, workbook row 3), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9869275978715066
+  years: [2024]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2024: Advanced ratio 0.9764704374453339 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9894043286977429 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9745295815673058
+  years: [2025]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2025: Advanced ratio 0.954499301439861 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9794462061426286 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9627483562799289
+  years: [2026]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2026: Advanced ratio 0.9339223911478071 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9700586711531706 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9515329165708432
+  years: [2027]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2027: Advanced ratio 0.9145987157040021 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9611845263325778 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9408379368800054
+  years: [2028]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2028: Advanced ratio 0.8964064426796616 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9527745507927892 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9306230027586735
+  years: [2029]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2029: Advanced ratio 0.879239678327293 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9447861010537421 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9208519602082608
+  years: [2030]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2030: Advanced ratio 0.863005885105168 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9371820036197672 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9114923637881263
+  years: [2031]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2031: Advanced ratio 0.8476237926287254 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9299296695213489 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9025150072335363
+  years: [2032]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2032: Advanced ratio 0.8330216943997424 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9230003797423707 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8938935230388155
+  years: [2033]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2033: Advanced ratio 0.8191360488778702 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9163687036160579 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8856040397752556
+  years: [2034]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2034: Advanced ratio 0.8059103226668356 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9100120217059485 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8776248893156917
+  years: [2035]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2035: Advanced ratio 0.7932940278314135 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9039101300442455 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8776248893156917
+  years: [2036]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2036: Advanced ratio 0.7893275576922564 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.8993905793940242 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8776248893156919
+  years: [2037]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2037: Advanced ratio 0.7853809199037951 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.894893626497054 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8776248893156918
+  years: [2038]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2038: Advanced ratio 0.781454015304276 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.8904191583645686 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8776248893156917
+  years: [2039]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2039: Advanced ratio 0.7775467452277547 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.8859670625727459 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8776248893156916
+  years: [2040]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2040: Advanced ratio 0.7736590115016159 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.8815372272598823 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8776248893156917
+  years: [2041]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2041: Advanced ratio 0.7697907164441079 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.8771295411235829 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8776248893156917
+  years: [2042]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2042: Advanced ratio 0.7659417628618873 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.8727438934179649 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8776248893156918
+  years: [2043]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2043: Advanced ratio 0.7621120540475779 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.868380173950875 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8776248893156918
+  years: [2044]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2044: Advanced ratio 0.75830149377734 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.8640382730811207 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8776248893156918
+  years: [2045]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2045: Advanced ratio 0.7545099863084533 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.8597180817157151 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8776248893156919
+  years: [2046]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2046: Advanced ratio 0.750737436376911 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.8554194913071363 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8776248893156919
+  years: [2047]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2047: Advanced ratio 0.7469837491950265 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.8511423938506008 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8776248893156919
+  years: [2048]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2048: Advanced ratio 0.7432488304490514 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.8468866818813477 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8776248893156919
+  years: [2049]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2049: Advanced ratio 0.7395325862968062 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.842652248471941 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8776248893156918
+  years: [2050]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Geothermal HydroFlash, Without Tax Credits, 2050: Advanced ratio 0.7358349233653221 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.8384389872295813 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.9955331566865805
+  years: [2024]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2024: Advanced ratio 0.9909051003131417 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9953511780673963 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.9910243924893833
+  years: [2025]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2025: Advanced ratio 0.9818102006262834 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9907023561347925 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.9864731144911361
+  years: [2026]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2026: Advanced ratio 0.9727153009394252 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9860535342021888 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.9818787185401929
+  years: [2027]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2027: Advanced ratio 0.9636204012525669 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.981404712269585 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.9772405889831869
+  years: [2028]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2028: Advanced ratio 0.9545255015657087 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9767558903369813 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.9725580983900116
+  years: [2029]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2029: Advanced ratio 0.9454306018788504 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9721070684043776 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.9678306072708744
+  years: [2030]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2030: Advanced ratio 0.9363357021919921 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9674582464717738 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.9630574637851511
+  years: [2031]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2031: Advanced ratio 0.9272408025051339 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.96280942453917 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.9582380034417662
+  years: [2032]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2032: Advanced ratio 0.9181459028182756 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9581606026065662 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.9533715487908084
+  years: [2033]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2033: Advanced ratio 0.9090510031314173 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9535117806739625 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.9484574091060807
+  years: [2034]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2034: Advanced ratio 0.899956103444559 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9488629587413587 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.943494880058271
+  years: [2035]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2035: Advanced ratio 0.8908612037577004 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9442141368087552 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.943494880058271
+  years: [2036]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2036: Advanced ratio 0.8908612037577004 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9442141368087552 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.943494880058271
+  years: [2037]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2037: Advanced ratio 0.8908612037577004 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9442141368087552 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.943494880058271
+  years: [2038]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2038: Advanced ratio 0.8908612037577004 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9442141368087552 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.943494880058271
+  years: [2039]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2039: Advanced ratio 0.8908612037577004 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9442141368087552 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.943494880058271
+  years: [2040]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2040: Advanced ratio 0.8908612037577004 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9442141368087552 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.943494880058271
+  years: [2041]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2041: Advanced ratio 0.8908612037577004 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9442141368087552 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.943494880058271
+  years: [2042]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2042: Advanced ratio 0.8908612037577004 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9442141368087552 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.943494880058271
+  years: [2043]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2043: Advanced ratio 0.8908612037577004 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9442141368087552 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.943494880058271
+  years: [2044]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2044: Advanced ratio 0.8908612037577004 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9442141368087552 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.943494880058271
+  years: [2045]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2045: Advanced ratio 0.8908612037577004 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9442141368087552 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.943494880058271
+  years: [2046]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2046: Advanced ratio 0.8908612037577004 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9442141368087552 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.943494880058271
+  years: [2047]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2047: Advanced ratio 0.8908612037577004 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9442141368087552 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.943494880058271
+  years: [2048]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2048: Advanced ratio 0.8908612037577004 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9442141368087552 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.943494880058271
+  years: [2049]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2049: Advanced ratio 0.8908612037577004 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9442141368087552 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRGEOINDNO]
+  param: FixedCost
+  op: multiply
+  factor: 0.943494880058271
+  years: [2050]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Geothermal HydroFlash, Without Tax Credits, 2050: Advanced ratio 0.8908612037577004 (key WA3GealHydroh, workbook row 293) / Moderate ratio 0.9442141368087552 (key WM3GealHydroh, workbook row 294), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9897951168423119
+  years: [2025]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2025: Advanced ratio 0.9897951168423119 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.979590233684624
+  years: [2026]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2026: Advanced ratio 0.979590233684624 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.979590233684624
+  years: [2027]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2027: Advanced ratio 0.979590233684624 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.969385350526936
+  years: [2028]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2028: Advanced ratio 0.969385350526936 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9591837402631407
+  years: [2029]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2029: Advanced ratio 0.9591837402631407 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9591837402631407
+  years: [2030]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2030: Advanced ratio 0.9591837402631407 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9489788571054527
+  years: [2031]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2031: Advanced ratio 0.9489788571054527 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9489788571054527
+  years: [2032]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2032: Advanced ratio 0.9489788571054527 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9387739739477645
+  years: [2033]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2033: Advanced ratio 0.9387739739477645 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9387739739477645
+  years: [2034]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2034: Advanced ratio 0.9387739739477645 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9285690907900765
+  years: [2035]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2035: Advanced ratio 0.9285690907900765 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9285690907900765
+  years: [2036]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2036: Advanced ratio 0.9285690907900765 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9285690907900765
+  years: [2037]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2037: Advanced ratio 0.9285690907900765 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9183674805262814
+  years: [2038]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2038: Advanced ratio 0.9183674805262814 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9183674805262814
+  years: [2039]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2039: Advanced ratio 0.9183674805262814 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9183674805262814
+  years: [2040]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2040: Advanced ratio 0.9183674805262814 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9183674805262814
+  years: [2041]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2041: Advanced ratio 0.9183674805262814 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9081625973685934
+  years: [2042]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2042: Advanced ratio 0.9081625973685934 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9081625973685934
+  years: [2043]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2043: Advanced ratio 0.9081625973685934 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9081625973685934
+  years: [2044]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2044: Advanced ratio 0.9081625973685934 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9081625973685934
+  years: [2045]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2045: Advanced ratio 0.9081625973685934 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9081625973685934
+  years: [2046]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2046: Advanced ratio 0.9081625973685934 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8979577142109052
+  years: [2047]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2047: Advanced ratio 0.8979577142109052 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8979577142109052
+  years: [2048]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2048: Advanced ratio 0.8979577142109052 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8979577142109052
+  years: [2049]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2049: Advanced ratio 0.8979577142109052 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRLDSBGDXX, PWRLDSBTNXX, PWRLDSINDEA, PWRLDSINDNE, PWRLDSINDNO, PWRLDSINDSO, PWRLDSINDWE, PWRLDSLKAXX, PWRLDSMDVXX, PWRLDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8979577142109052
+  years: [2050]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Pumped Storage Hydropower NatlClass3, Without Tax Credits, 2050: Advanced ratio 0.8979577142109052 (key WA*PuerNatlC3, workbook row 434) / Moderate ratio 1.0 (key WM*PuerNatlC3, workbook row 435), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9184487852452778
+  years: [2025]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2025: Advanced ratio 0.6789682888997155 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.739255470536 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8300046045844365
+  years: [2026]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2026: Advanced ratio 0.5887058085686618 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.7092801718412307 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8099678550668957
+  years: [2027]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2027: Advanced ratio 0.5610416204061353 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.6926714645481807 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7889466273947168
+  years: [2028]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2028: Advanced ratio 0.5333774322436086 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.6760627572551309 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7668665377218643
+  years: [2029]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2029: Advanced ratio 0.5057132440810822 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.6594540499620808 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7436455150063666
+  years: [2030]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2030: Advanced ratio 0.4780490559185557 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.6428453426690309 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7191927816321803
+  years: [2031]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2031: Advanced ratio 0.45038486775602915 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.626236635375981 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6934076673993812
+  years: [2032]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2032: Advanced ratio 0.4227206795935028 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.6096279280829309 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6661782242146802
+  years: [2033]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2033: Advanced ratio 0.39505649143097626 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.593019220789881 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6373796012838852
+  years: [2034]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2034: Advanced ratio 0.3673923032684497 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.576410513496831 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6068721310667828
+  years: [2035]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2035: Advanced ratio 0.33972811510592293 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.5598018062037813 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6066919831642117
+  years: [2036]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2036: Advanced ratio 0.333622872636625 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.5499048642387024 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6065052319757873
+  years: [2037]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2037: Advanced ratio 0.3275176301673271 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.5400079222736237 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6063115076600656
+  years: [2038]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2038: Advanced ratio 0.32141238769802927 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.530110980308545 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6061104122310381
+  years: [2039]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2039: Advanced ratio 0.3153071452287314 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.5202140383434662 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6059015168289953
+  years: [2040]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2040: Advanced ratio 0.3092019027594335 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.5103170963783874 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6056843586675388
+  years: [2041]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2041: Advanced ratio 0.3030966602901356 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.5004201544133087 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6054584376110075
+  years: [2042]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2042: Advanced ratio 0.29699141782083766 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.49052321244823 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6052232123290419
+  years: [2043]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2043: Advanced ratio 0.29088617535153977 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.48062627048315126 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6049780959660522
+  years: [2044]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2044: Advanced ratio 0.2847809328822418 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.4707293285180726 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6047224512526692
+  years: [2045]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2045: Advanced ratio 0.278675690412944 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.4608323865529938 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6044555849734394
+  years: [2046]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2046: Advanced ratio 0.27257044794364615 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.450935444587915 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.604176741689652
+  years: [2047]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2047: Advanced ratio 0.26646520547434815 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.44103850262283617 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.603885096597601
+  years: [2048]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2048: Advanced ratio 0.2603599630050504 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.43114156065775755 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6035797473800973
+  years: [2049]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2049: Advanced ratio 0.2542547205357525 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.42124461869267876 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.6032597048816751
+  years: [2050]
+  note: 'NREL ATB 2025 v1, Summary_OCC, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2050: Advanced ratio 0.24814947806645468 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.4113476767276 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.918448785245278
+  years: [2025]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2025: Advanced ratio 0.6789682888997155 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.7392554705359999 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.8300046045844363
+  years: [2026]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2026: Advanced ratio 0.5887058085686617 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.7092801718412307 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.8099678550668957
+  years: [2027]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2027: Advanced ratio 0.5610416204061353 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.6926714645481807 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.7889466273947169
+  years: [2028]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2028: Advanced ratio 0.5333774322436086 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.6760627572551308 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.7668665377218643
+  years: [2029]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2029: Advanced ratio 0.5057132440810822 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.6594540499620808 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.7436455150063668
+  years: [2030]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2030: Advanced ratio 0.47804905591855573 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.6428453426690308 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.7191927816321803
+  years: [2031]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2031: Advanced ratio 0.45038486775602915 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.626236635375981 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.6934076673993812
+  years: [2032]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2032: Advanced ratio 0.4227206795935028 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.6096279280829309 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.6661782242146801
+  years: [2033]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2033: Advanced ratio 0.3950564914309762 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.593019220789881 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.6373796012838852
+  years: [2034]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2034: Advanced ratio 0.3673923032684497 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.576410513496831 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.606872131066783
+  years: [2035]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2035: Advanced ratio 0.33972811510592293 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.5598018062037812 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.6066919831642117
+  years: [2036]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2036: Advanced ratio 0.333622872636625 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.5499048642387024 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.6065052319757873
+  years: [2037]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2037: Advanced ratio 0.3275176301673271 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.5400079222736237 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.6063115076600655
+  years: [2038]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2038: Advanced ratio 0.3214123876980292 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.530110980308545 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.606110412231038
+  years: [2039]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2039: Advanced ratio 0.3153071452287313 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.5202140383434662 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.6059015168289953
+  years: [2040]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2040: Advanced ratio 0.3092019027594335 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.5103170963783874 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.6056843586675389
+  years: [2041]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2041: Advanced ratio 0.3030966602901356 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.5004201544133086 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.6054584376110074
+  years: [2042]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2042: Advanced ratio 0.2969914178208376 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.49052321244823 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.605223212329042
+  years: [2043]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2043: Advanced ratio 0.29088617535153977 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.4806262704831512 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.6049780959660522
+  years: [2044]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2044: Advanced ratio 0.2847809328822418 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.47072932851807253 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.6047224512526692
+  years: [2045]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2045: Advanced ratio 0.278675690412944 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.46083238655299374 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.6044555849734394
+  years: [2046]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2046: Advanced ratio 0.2725704479436461 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.45093544458791496 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.604176741689652
+  years: [2047]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2047: Advanced ratio 0.26646520547434815 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.44103850262283617 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.6038850965976011
+  years: [2048]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2048: Advanced ratio 0.2603599630050504 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.4311415606577575 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.6035797473800973
+  years: [2049]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2049: Advanced ratio 0.25425472053575243 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.4212446186926787 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSDSBGDXX, PWRSDSBTNXX, PWRSDSINDEA, PWRSDSINDNE, PWRSDSINDNO, PWRSDSINDSO, PWRSDSINDWE, PWRSDSLKAXX, PWRSDSMDVXX, PWRSDSNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.603259704881675
+  years: [2050]
+  note: 'NREL ATB 2025 v1, Summary_FOM, Utility-Scale Battery Storage 4Hr Battery Storage, Without Tax Credits, 2050: Advanced ratio 0.24814947806645463 (key WA*Utge4Hr Be, workbook row 329) / Moderate ratio 0.4113476767276 (key WM*Utge4Hr Be, workbook row 330), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9685058638801524
+  years: [2025]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2025: Advanced ratio 0.8082947565070872 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.8345791044246166 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9341698304877825
+  years: [2026]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2026: Advanced ratio 0.7459815163940472 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.7985502122291066 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8965890635699019
+  years: [2027]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2027: Advanced ratio 0.6836682762810077 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.7625213200335964 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8552808155440949
+  years: [2028]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2028: Advanced ratio 0.621355036167968 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.7264924278380863 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8096615783404971
+  years: [2029]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2029: Advanced ratio 0.5590417960549282 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.690463535642576 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7590193473339044
+  years: [2030]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2030: Advanced ratio 0.4967285559418882 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.6544346434470656 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.769780037133421
+  years: [2031]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2031: Advanced ratio 0.48988726773237634 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.636399028424619 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7811684343761455
+  years: [2032]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2032: Advanced ratio 0.4830459795228644 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.6183634134021726 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7932411136026356
+  years: [2033]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2033: Advanced ratio 0.4762046913133524 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.600327798379726 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8060616585949448
+  years: [2034]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2034: Advanced ratio 0.46936340310384045 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.5822921833572795 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8197017825760877
+  years: [2035]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2035: Advanced ratio 0.4625221148943286 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.564256568334833 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8342426703360288
+  years: [2036]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2036: Advanced ratio 0.4556808266848166 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.5462209533123864 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8497765953301044
+  years: [2037]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2037: Advanced ratio 0.4488395384753046 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.52818533828994 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8664088797986743
+  years: [2038]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2038: Advanced ratio 0.44199825026579265 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.5101497232674934 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8842602859083153
+  years: [2039]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2039: Advanced ratio 0.4351569620562808 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.4921141082450469 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9034699526975933
+  years: [2040]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2040: Advanced ratio 0.4283156738467688 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.47407849322260004 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9018743449268849
+  years: [2041]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2041: Advanced ratio 0.4207486016983726 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.4665268549494916 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9002262312592461
+  years: [2042]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2042: Advanced ratio 0.4131815295499764 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.4589752166763833 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8985229766603559
+  years: [2043]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2043: Advanced ratio 0.4056144574015801 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.4514235784032749 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8967617667754699
+  years: [2044]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2044: Advanced ratio 0.39804738525318384 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.4438719401301666 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8949395924114292
+  years: [2045]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2045: Advanced ratio 0.39048031310478754 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.43632030185705833 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.893053232378815
+  years: [2046]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2046: Advanced ratio 0.3829132409563913 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.42876866358395005 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8910992344884546
+  years: [2047]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2047: Advanced ratio 0.3753461688079951 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.42121702531084176 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8890738944664252
+  years: [2048]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2048: Advanced ratio 0.3677790966595988 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.4136653870377335 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8869732325166214
+  years: [2049]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2049: Advanced ratio 0.36021202451120254 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.406113748764625 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8847929672188761
+  years: [2050]
+  note: 'NREL ATB 2025 v1, Summary_OCC, UtilityPV Class5, Without Tax Credits, 2050: Advanced ratio 0.3526449523628064 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.39856211049151646 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9856261584058567
+  years: [2025]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2025: Advanced ratio 1.018782953887249 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 1.033640336347221 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9704932539455486
+  years: [2026]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2026: Advanced ratio 0.9724854394464012 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 1.002052755640241 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9545407723651013
+  years: [2027]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2027: Advanced ratio 0.9270057512495143 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.971153645907275 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9377029609989546
+  years: [2028]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2028: Advanced ratio 0.8822751495907379 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.9408897980345842 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9199079337190548
+  years: [2029]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2029: Advanced ratio 0.8382323884009185 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.9112133482880903 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.901076669714614
+  years: [2030]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2030: Advanced ratio 0.7948227211937514 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.8820811235135907 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9014177024759601
+  years: [2031]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2031: Advanced ratio 0.7837999432913515 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.8695191376189494 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9018926614997129
+  years: [2032]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2032: Advanced ratio 0.7729111541526172 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.8569879622563746 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9025021115973744
+  years: [2033]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2033: Advanced ratio 0.7621513395629379 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.8444870430430085 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9032469063177821
+  years: [2034]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2034: Advanced ratio 0.7515157324187826 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.8320158388169256 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9041281925822339
+  years: [2035]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2035: Advanced ratio 0.7409997976902766 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.8195738212453538 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.905147416899268
+  years: [2036]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2036: Advanced ratio 0.7305992184686564 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.8071604744467422 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9063063332224408
+  years: [2037]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2037: Advanced ratio 0.7203098830083774 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.7947752946261128 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9076070125314907
+  years: [2038]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2038: Advanced ratio 0.7101278726821219 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.7824177897231518 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9090518542356572
+  years: [2039]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2039: Advanced ratio 0.7000494507745406 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.7700874790725238 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9106435995179423
+  years: [2040]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2040: Advanced ratio 0.690071052047376 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.7577838930759208 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9095256946276806
+  years: [2041]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2041: Advanced ratio 0.683788623060628 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.75180792263438 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9084073658645555
+  years: [2042]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2042: Advanced ratio 0.6775451149372375 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.7458604370654786 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9072882180091331
+  years: [2043]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2043: Advanced ratio 0.6713396866191731 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.7399409286855912 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9061678581264578
+  years: [2044]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2044: Advanced ratio 0.6651715211081548 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.7340489018043813 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9050458951583275
+  years: [2045]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2045: Advanced ratio 0.6590398246114295 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.7281838723727243 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9039219395207908
+  years: [2046]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2046: Advanced ratio 0.6529438257236856 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.7223453676429628 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9027956027060332
+  years: [2047]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2047: Advanced ratio 0.6468827746433344 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.7165329258409905 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9016664968878225
+  years: [2048]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2048: Advanced ratio 0.6408559424214841 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.7107460958496874 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9005342345297108
+  years: [2049]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2049: Advanced ratio 0.6348626202420293 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.7049844369032521 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRSPVBGDXX, PWRSPVBTNXX, PWRSPVINDEA, PWRSPVINDNE, PWRSPVINDNO, PWRSPVINDSO, PWRSPVINDWE, PWRSPVLKAXX, PWRSPVMDVXX, PWRSPVNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.8993984279951934
+  years: [2050]
+  note: 'NREL ATB 2025 v1, Summary_FOM, UtilityPV Class5, Without Tax Credits, 2050: Advanced ratio 0.6289021187313589 (key WA3UtPVClass5, workbook row 65) / Moderate ratio 0.6992475182919932 (key WM3UtPVClass5, workbook row 66), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9760571748092159
+  years: [2024]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2024: Advanced ratio 0.9527901288959744 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.9761622100490277 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.960342371297318
+  years: [2025]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2025: Advanced ratio 0.9198351605543738 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.9578200317369904 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8773409073193372
+  years: [2026]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2026: Advanced ratio 0.8273214681051695 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.9429874535692184 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7951887452649615
+  years: [2027]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2027: Advanced ratio 0.7399877426118187 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.9305812576173351 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.7620787621561472
+  years: [2028]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2028: Advanced ratio 0.6560626245312842 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8608855896667269 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8098765998729285
+  years: [2029]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2029: Advanced ratio 0.6418585784140595 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.792538738018568 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8680065175038228
+  years: [2030]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2030: Advanced ratio 0.6295224257969588 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.7252508052673536 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.937599598086615
+  years: [2031]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2031: Advanced ratio 0.6129922804791919 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.6537889753047483 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 1.025397363624911
+  years: [2032]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2032: Advanced ratio 0.5990379718964967 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5842008114579315 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 1.0207355448211846
+  years: [2033]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2033: Advanced ratio 0.5870022206116087 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5750776717728993 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 1.0165857105615363
+  years: [2034]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2034: Advanced ratio 0.5764470423637507 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.567042243831399 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 1.0128480253426622
+  years: [2035]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2035: Advanced ratio 0.5670667187391696 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5598734504589887 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 1.0103219598730737
+  years: [2036]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2036: Advanced ratio 0.5607943807980295 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5550650219148773 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 1.0079556048472096
+  years: [2037]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2037: Advanced ratio 0.5549676308197661 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5505873752285851 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 1.0057303351477205
+  years: [2038]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2038: Advanced ratio 0.5495311215669973 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5464000660637156 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 1.0036304623366152
+  years: [2039]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2039: Advanced ratio 0.5444390379796104 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5424696224465603 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 1.0016428635291104
+  years: [2040]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2040: Advanced ratio 0.5396529758520747 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5387678537944188 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9997563650356159
+  years: [2041]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2041: Advanced ratio 0.5351405368015325 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5352709475197673 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9979612903085889
+  years: [2042]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2042: Advanced ratio 0.5308740334344698 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5319585424704332 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9962493202058639
+  years: [2043]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2043: Advanced ratio 0.5268297179566495 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5288131266657085 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9946132958033724
+  years: [2044]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2044: Advanced ratio 0.5229870934319771 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5258195276884452 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9930467675638361
+  years: [2045]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2045: Advanced ratio 0.5193282250413713 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5229645188971297 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9915442686796436
+  years: [2046]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2046: Advanced ratio 0.5158374921359538 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5202364719659479 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9901007920194164
+  years: [2047]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2047: Advanced ratio 0.5125010923434355 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5176251715728202 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9887119617588367
+  years: [2048]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2048: Advanced ratio 0.5093068487206 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5151215605954491 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9873739050244952
+  years: [2049]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2049: Advanced ratio 0.5062439342568489 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5127175547993541 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9860830949312568
+  years: [2050]
+  note: 'NREL ATB 2025 v1, Summary_OCC, OffShoreWind Class3, Without Tax Credits, 2050: Advanced ratio 0.5033026790266865 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.5104059501818895 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9844975969997813
+  years: [2024]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2024: Advanced ratio 0.95990930518428 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.9750245283579836 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9750125162634041
+  years: [2025]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2025: Advanced ratio 0.9319234426279791 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.9558066456412706 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9684934740324862
+  years: [2026]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2026: Advanced ratio 0.9106417767123838 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.9402663013523188 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9636771292465216
+  years: [2027]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2027: Advanced ratio 0.8935869516490933 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.9272679868907646 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9599391413301213
+  years: [2028]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2028: Advanced ratio 0.8794259140853014 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.9161267378541745 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9569336176543064
+  years: [2029]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2029: Advanced ratio 0.8673635507822546 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.9063988711237762 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9544517279863783
+  years: [2030]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2030: Advanced ratio 0.856887874877017 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8977802121903081 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.952601055011403
+  years: [2031]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2031: Advanced ratio 0.8428507051026451 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8847887588079103 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9510633259400456
+  years: [2032]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2032: Advanced ratio 0.8310006865814613 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8737595740642059 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9497557564496824
+  years: [2033]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2033: Advanced ratio 0.8207798244144593 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8642009472863288 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9486249217490572
+  years: [2034]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2034: Advanced ratio 0.8118165152333788 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8557824031615852 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9476326323328326
+  years: [2035]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2035: Advanced ratio 0.8038500468338214 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8482718085118548 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9469781999187104
+  years: [2036]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2036: Advanced ratio 0.7985237318887597 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.843233489384767 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9463764787011668
+  years: [2037]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2037: Advanced ratio 0.7935760984713536 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8385416547550709 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9458178018430529
+  years: [2038]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2038: Advanced ratio 0.7889587791590675 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8341551381478288 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9453010833361014
+  years: [2039]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2039: Advanced ratio 0.7846352034616919 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8300373471408741 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9448186189111526
+  years: [2040]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2040: Advanced ratio 0.7805699805822495 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8261585503911958 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9443687658283313
+  years: [2041]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2041: Advanced ratio 0.7767383369628562 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8224947341217476 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9439471090974385
+  years: [2042]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2042: Advanced ratio 0.7731154990456284 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8190241715818676 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9435508864069589
+  years: [2043]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2043: Advanced ratio 0.7696814120456117 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8157285665604723 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9431760168409712
+  years: [2044]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2044: Advanced ratio 0.7664172008710856 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8125919098728642 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9428243782568445
+  years: [2045]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2045: Advanced ratio 0.763311068589724 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8096004793607304 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9424893062551685
+  years: [2046]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2046: Advanced ratio 0.7603464994962711 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8067428398921438 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9421726795596528
+  years: [2047]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2047: Advanced ratio 0.7575128763516337 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8040064128219847 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9418724621099915
+  years: [2048]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2048: Advanced ratio 0.754800761609951 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.8013831935579041 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9415850874599155
+  years: [2049]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2049: Advanced ratio 0.7521995380321301 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.7988651775075529 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWOFBGDXX, PWRWOFINDEA, PWRWOFINDNE, PWRWOFINDNO, PWRWOFINDSO, PWRWOFINDWE, PWRWOFLKAXX, PWRWOFMDVXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9413127161680381
+  years: [2050]
+  note: 'NREL ATB 2025 v1, Summary_FOM, OffShoreWind Class3, Without Tax Credits, 2050: Advanced ratio 0.7497021274587757 (key WA3OfndClass3, workbook row 17) / Moderate ratio 0.7964432165653894 (key WM3OfndClass3, workbook row 18), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9971107446326931
+  years: [2024]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2024: Advanced ratio 0.9712638469188257 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.9740782076083347 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9940635096818577
+  years: [2025]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2025: Advanced ratio 0.9425276938376513 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.9481564152166696 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9908449738715465
+  years: [2026]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2026: Advanced ratio 0.913791540756477 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.9222346228250043 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9874402748953243
+  years: [2027]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2027: Advanced ratio 0.8850553876753026 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.8963128304333391 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9838327799431318
+  years: [2028]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2028: Advanced ratio 0.8563192345941282 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.8703910380416738 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9800038139647553
+  years: [2029]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2029: Advanced ratio 0.8275830815129481 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.8444692456500085 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9759323363011528
+  years: [2030]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2030: Advanced ratio 0.7988469284317737 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.8185474532583433 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9715945538635978
+  years: [2031]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2031: Advanced ratio 0.7701107753505995 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.7926256608666781 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9669634558438214
+  years: [2032]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2032: Advanced ratio 0.7413746222694251 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.7667038684750128 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9620082507342814
+  years: [2033]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2033: Advanced ratio 0.7126384691882507 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.7407820760833477 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9566936808620379
+  years: [2034]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2034: Advanced ratio 0.6839023161070763 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.7148602836916824 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9509791821757742
+  years: [2035]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2035: Advanced ratio 0.6551661630259019 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.688938491300017 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9477500757518262
+  years: [2036]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2036: Advanced ratio 0.6445041238580835 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.6800359507719529 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9444353015593852
+  years: [2037]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2037: Advanced ratio 0.6338420846902708 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.6711334102438943 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9410314046366799
+  years: [2038]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2038: Advanced ratio 0.6231800455224579 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.6622308697158302 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9375347417065824
+  years: [2039]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2039: Advanced ratio 0.6125180063546452 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.653328329187766 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9339414681690299
+  years: [2040]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2040: Advanced ratio 0.6018559671868268 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.6444257886597017 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9302475240001898
+  years: [2041]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2041: Advanced ratio 0.591193928019014 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.6355232481316375 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9264486184495276
+  years: [2042]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2042: Advanced ratio 0.5805318888512012 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.626620707603579 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9225402134137286
+  years: [2043]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2043: Advanced ratio 0.5698698496833827 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.6177181670755149 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9185175053518254
+  years: [2044]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2044: Advanced ratio 0.5592078105155729 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.6088156265474506 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9143754055900558
+  years: [2045]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2045: Advanced ratio 0.5485457713477584 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.5999130860193863 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9101085188467877
+  years: [2046]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2046: Advanced ratio 0.5378837321799445 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.5910105454913279 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.905711119786787
+  years: [2047]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2047: Advanced ratio 0.5272216930121301 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.5821080049632636 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.9011771273906137
+  years: [2048]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2048: Advanced ratio 0.5165596538443156 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.5732054644351994 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8965000768979736
+  years: [2049]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2049: Advanced ratio 0.5058976146765011 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.5643029239071385 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: CapitalCost
+  op: multiply
+  factor: 0.8916730890527222
+  years: [2050]
+  note: 'NREL ATB 2025 v1, Summary_OCC, LandbasedWind Class5, Without Tax Credits, 2050: Advanced ratio 0.4952355755086866 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.5554003833790756 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9981224551823217
+  years: [2024]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2024: Advanced ratio 0.9718628979332303 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.973691046511628 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9961406309199646
+  years: [2025]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2025: Advanced ratio 0.9437257958664628 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.9473820930232559 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9940455914956354
+  years: [2026]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2026: Advanced ratio 0.9155886937996954 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.9210731395348837 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9918273502363855
+  years: [2027]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2027: Advanced ratio 0.8874515917329279 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.8947641860465116 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9894747103255352
+  years: [2028]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2028: Advanced ratio 0.8593144896661605 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.8684552325581396 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9869750757760415
+  years: [2029]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2029: Advanced ratio 0.831177387599393 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.8421462790697652 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9843142258297018
+  years: [2030]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2030: Advanced ratio 0.8030402855326255 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.8158373255813953 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9814760442510837
+  years: [2031]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2031: Advanced ratio 0.7749031834658582 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.7895283720930233 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9784421926323086
+  years: [2032]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2032: Advanced ratio 0.7467660813990906 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.7632194186046511 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9751917137164404
+  years: [2033]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2033: Advanced ratio 0.7186289793323233 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.736910465116279 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9717005466027225
+  years: [2034]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2034: Advanced ratio 0.6904918772655558 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.7106015116279046 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9679409301185574
+  years: [2035]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2035: Advanced ratio 0.6623547751987884 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.6842925581395348 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9568331910780083
+  years: [2036]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2036: Advanced ratio 0.6493457515011186 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.6786404961240302 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9455388763796071
+  years: [2037]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2037: Advanced ratio 0.6363367278034465 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.6729884341085256 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9340532453682746
+  years: [2038]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2038: Advanced ratio 0.6233277041057768 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.667336372093021 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9223713954115124
+  years: [2039]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2039: Advanced ratio 0.6103186804081047 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.6616843100775186 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.9104882549218402
+  years: [2040]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2040: Advanced ratio 0.5973096567104349 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.656032248062014 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.8983985760153168
+  years: [2041]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2041: Advanced ratio 0.5843006330127628 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.6503801860465116 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.8860969267840064
+  years: [2042]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2042: Advanced ratio 0.571291609315093 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.644728124031007 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.8735776831582819
+  years: [2043]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2043: Advanced ratio 0.558282585617421 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.6390760620155023 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.8608350203335383
+  years: [2044]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2044: Advanced ratio 0.5452735619197512 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.633424 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.8478629037337201
+  years: [2045]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2045: Advanced ratio 0.5322645382220791 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.6277719379844954 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.8346550794822883
+  years: [2046]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2046: Advanced ratio 0.5192555145244093 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.6221198759689908 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.8212050643489601
+  years: [2047]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2047: Advanced ratio 0.5062464908267372 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.6164678139534884 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.8075061351383518
+  years: [2048]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2048: Advanced ratio 0.4932374671290674 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.6108157519379837 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.7935513174838896
+  years: [2049]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2049: Advanced ratio 0.4802284434313953 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.605163689922479 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
+- sheet: Secondary Techs
+  techs: [PWRWONBGDXX, PWRWONBTNXX, PWRWONINDEA, PWRWONINDNE, PWRWONINDNO, PWRWONINDSO, PWRWONINDWE, PWRWONLKAXX, PWRWONMDVXX, PWRWONNPLXX]
+  param: FixedCost
+  op: multiply
+  factor: 0.7793333740079172
+  years: [2050]
+  note: 'NREL ATB 2025 v1, Summary_FOM, LandbasedWind Class5, Without Tax Credits, 2050: Advanced ratio 0.4672194197337232 (key WA3LandClass5, workbook row 95) / Moderate ratio 0.5995116279069768 (key WM3LandClass5, workbook row 96), each ATB(y) / ATB(2023); https://data.openei.org/submissions/8759'
