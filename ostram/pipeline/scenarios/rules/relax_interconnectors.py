@@ -38,6 +38,21 @@ of config/scenarios/technology_types.csv staged in the run folder:
         of support_bau_transmission.apply_commitment_ceiling. Both limits
         come from the workbook values in every run.
 
+    cross_border_limit == "lead_time_then_rate" (B_Optimised_VRE, C_Target_VRE):
+        needs lead_time_end_year and build_rate_gw. A cross-border link may
+        keep an override only when every value of it is 0; it then stays as
+        the override sets it. Every other cross-border link gets
+            year <= lead_time_end_year:
+                MaxCapInv = max(ResidualCapacity, MinCapInv(year))
+                MaxCap    = ResidualCapacity plus the surviving MinCapInv
+                            vintages (apply_commitment_ceiling)
+            year > lead_time_end_year:
+                MaxCapInv = max(build_rate_gw, MinCapInv(year)), with no
+                            ResidualCapacity floor
+                MaxCap    = 9999
+        MinCapInv is the scenario's own forced builds, so a root's planned
+        projects count in that root.
+
     Second pass (MaxCap opening):
         For any overridden tech whose schedule has at least one non-zero
         investment value, TotalAnnualMaxCapacity is set to 9999 across
@@ -72,6 +87,7 @@ from __future__ import annotations
 import argparse
 import gc
 import json
+import math
 import shutil
 import sys
 import tempfile
@@ -130,7 +146,11 @@ INTERCONNECTOR_CATEGORY = "INTERCONNECTORS"
 # TRN tech naming: 13 chars, e.g. TRNINDEAINDNE
 TRN_TECH_LENGTH = 13
 
-CROSS_BORDER_LIMITS = ("existing_plus_committed",)
+EXISTING_PLUS_COMMITTED = "existing_plus_committed"
+LEAD_TIME_THEN_RATE = "lead_time_then_rate"
+CROSS_BORDER_LIMITS = (EXISTING_PLUS_COMMITTED, LEAD_TIME_THEN_RATE)
+# The keys lead_time_then_rate needs; no other value takes them.
+RATE_KEYS = ("lead_time_end_year", "build_rate_gw")
 
 
 def is_cross_border(tech: str) -> bool:
@@ -154,14 +174,16 @@ def load_config(yaml_path: Path) -> dict:
         headroom_factor  : float (used by multiplicative)
         headroom_gw      : float (used by additive)
         overrides        : dict {tech: {year: value}}
-        cross_border_limit : None or "existing_plus_committed"
+        cross_border_limit : None, "existing_plus_committed" or "lead_time_then_rate"
+        lead_time_end_year : int or None (lead_time_then_rate only)
+        build_rate_gw    : float or None (lead_time_then_rate only)
     """
     cfg = _load_yaml(yaml_path)
     if cfg is None:
         cfg = {}
     check_keys(cfg, {
         "mode", "headroom_factor", "headroom_gw", "overrides", "capacity_ceiling",
-        "cross_border_limit",
+        "cross_border_limit", *RATE_KEYS,
     }, yaml_path)
 
     mode = cfg.get("mode", "multiplicative")
@@ -210,6 +232,33 @@ def load_config(yaml_path: Path) -> dict:
             f"Invalid cross_border_limit {cross_border_limit!r} in {yaml_path}. "
             f"Expected one of {list(CROSS_BORDER_LIMITS)}."
         )
+    lead_time_end_year = build_rate_gw = None
+    if cross_border_limit == LEAD_TIME_THEN_RATE:
+        missing = [key for key in RATE_KEYS if key not in cfg]
+        if missing:
+            raise ValueError(
+                f"cross_border_limit {LEAD_TIME_THEN_RATE} in {yaml_path} needs {missing}."
+            )
+        lead_time_end_year = cfg["lead_time_end_year"]
+        if isinstance(lead_time_end_year, bool) or not isinstance(lead_time_end_year, int):
+            raise ValueError(
+                f"lead_time_end_year in {yaml_path} must be a year, got {lead_time_end_year!r}."
+            )
+        build_rate_gw = cfg["build_rate_gw"]
+        if (isinstance(build_rate_gw, bool) or not isinstance(build_rate_gw, (int, float))
+                or not math.isfinite(build_rate_gw) or build_rate_gw < 0):
+            raise ValueError(
+                f"build_rate_gw in {yaml_path} must be a number of GW, 0 or more, "
+                f"got {build_rate_gw!r}."
+            )
+        build_rate_gw = float(build_rate_gw)
+    else:
+        given = [key for key in RATE_KEYS if key in cfg]
+        if given:
+            raise ValueError(
+                f"{given} in {yaml_path} apply only with cross_border_limit "
+                f"{LEAD_TIME_THEN_RATE}, not {cross_border_limit!r}."
+            )
 
     return {
         "mode": mode,
@@ -218,6 +267,8 @@ def load_config(yaml_path: Path) -> dict:
         "overrides": overrides,
         "capacity_ceiling": capacity_ceiling,
         "cross_border_limit": cross_border_limit,
+        "lead_time_end_year": lead_time_end_year,
+        "build_rate_gw": build_rate_gw,
     }
 
 
@@ -501,10 +552,16 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
             if tech in interp_overrides:
                 proposed = interp_overrides[tech].get(year, rescap)
                 reason = "override"
+            elif tech in committed_techs and _in_rate_period(config, year):
+                # After the lead time: the build rate, or the year's forced
+                # build where it is larger; no residual floor.
+                proposed = max(config["build_rate_gw"],
+                               _min_inv(ws, min_inv_row_map, tech, col))
+                reason = LEAD_TIME_THEN_RATE
             elif tech in committed_techs:
                 # Existing plus committed: the year's forced build fits.
                 proposed = max(rescap, _min_inv(ws, min_inv_row_map, tech, col))
-                reason = "existing_plus_committed"
+                reason = EXISTING_PLUS_COMMITTED
             elif mode == "multiplicative":
                 proposed = rescap * headroom_factor
                 reason = "multiplicative"
@@ -523,6 +580,8 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
             if tech in freeze_techs:
                 proposed = 0.0
                 reason = "freeze"
+            elif reason == LEAD_TIME_THEN_RATE:
+                pass
             elif proposed < rescap:
                 proposed = rescap
                 reason = f"{reason}_clamped_to_rescap"
@@ -631,6 +690,34 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
                     mode_cell.value = PROJ_MODE_USER
 
     # ------------------------------------------------------------------
+    # Rate period of lead_time_then_rate: TotalAnnualMaxCapacity = 9999
+    # ------------------------------------------------------------------
+    # The lead-time years get their ceiling from apply_commitment_ceiling
+    # in run(); after them the build rate is the only limit.
+    rate_years = [y for y in sorted_years if _in_rate_period(config, y)]
+    if committed_techs and rate_years:
+        log["maxcap_rate_period"] = []
+        for row_idx in range(2, ws.max_row + 1):
+            tech = ws.cell(row=row_idx, column=tech_col_idx).value
+            param = ws.cell(row=row_idx, column=param_col_idx).value
+            if tech not in committed_techs or param != MAX_CAP_PARAM:
+                continue
+            for year in rate_years:
+                cell = ws.cell(row=row_idx, column=year_cols[year])
+                if values_differ(cell.value, PLACEHOLDER_VALUE):
+                    log["maxcap_rate_period"].append({
+                        "tech": tech,
+                        "year": year,
+                        "old": cell.value,
+                        "new": PLACEHOLDER_VALUE,
+                    })
+                    cell.value = PLACEHOLDER_VALUE
+            if proj_mode_col_idx is not None:
+                mode_cell = ws.cell(row=row_idx, column=proj_mode_col_idx)
+                if mode_cell.value == PROJ_MODE_EMPTY:
+                    mode_cell.value = PROJ_MODE_USER
+
+    # ------------------------------------------------------------------
     # Second-pass B: cap ResidualCapacity when capacity_ceiling < ResCap
     # ------------------------------------------------------------------
     # OSeMOSYS requires ResidualCapacity <= TotalAnnualMaxCapacity.
@@ -731,17 +818,41 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
 
 
 def committed_cross_border_techs(trn_techs: set, config: dict) -> set:
-    """Cross-border links under cross_border_limit; none may be overridden."""
-    if config.get("cross_border_limit") is None:
+    """Cross-border links under cross_border_limit.
+
+    existing_plus_committed allows no cross-border override.
+    lead_time_then_rate allows one only when all its values are 0; that link
+    stays as its override sets it and is left out of the returned set.
+    """
+    limit = config.get("cross_border_limit")
+    if limit is None:
         return set()
     techs = {tech for tech in trn_techs if is_cross_border(tech)}
-    overridden = sorted(techs & set(config["overrides"]))
+    overridden = techs & set(config["overrides"])
+    if limit == LEAD_TIME_THEN_RATE:
+        non_zero = sorted(
+            tech for tech in overridden
+            if any(value != 0 for value in config["overrides"][tech].values())
+        )
+        if non_zero:
+            raise ValueError(
+                f"cross_border_limit {LEAD_TIME_THEN_RATE} sets the limits of every "
+                "cross-border link; a cross-border override may only hold 0 in every "
+                f"year. Remove the non-zero overrides: {non_zero}"
+            )
+        return techs - overridden
     if overridden:
         raise ValueError(
             "cross_border_limit sets the limits of every cross-border link; "
-            f"remove their overrides: {overridden}"
+            f"remove their overrides: {sorted(overridden)}"
         )
     return techs
+
+
+def _in_rate_period(config: dict, year: int) -> bool:
+    """True for a year after lead_time_end_year under lead_time_then_rate."""
+    return (config.get("cross_border_limit") == LEAD_TIME_THEN_RATE
+            and year > config["lead_time_end_year"])
 
 
 def _min_inv(ws, min_inv_row_map: dict, tech: str, col: int) -> float:
@@ -824,11 +935,14 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
     if committed_techs:
         if "Secondary Techs" not in sheets:
             raise ValueError("cross_border_limit needs the 'Secondary Techs' sheet")
+        rate = config["cross_border_limit"] == LEAD_TIME_THEN_RATE
         log["commitment_ceiling"] = apply_commitment_ceiling(
             paramfile,
             techs=committed_techs,
-            scenario="cross-border existing plus committed",
+            scenario=("cross-border lead time" if rate
+                      else "cross-border existing plus committed"),
             record_name=None,
+            through_year=config["lead_time_end_year"] if rate else None,
         )
     log["backup_dir"] = str(backup_dir) if backup_dir else None
     log["timestamp"] = datetime.now().isoformat()

@@ -5,7 +5,8 @@ year is the commissioning year; OSeMOSYS keeps vintage v alive in year y when
 0 <= y - v < OperationalLife. Never export this policy as inherited Restrictions.
 
 ``relax_interconnectors`` applies the same ceiling to the cross-border links of
-A_Calibrated_BAU, through ``techs``.
+A_Calibrated_BAU, through ``techs``, and to those of B_Optimised_VRE and
+C_Target_VRE up to their lead-time end year, through ``through_year``.
 """
 from __future__ import annotations
 
@@ -30,11 +31,13 @@ def _number(value: object, label: str, *, blank_zero: bool = False) -> float:
 
 
 def apply_commitment_ceiling(path: Path, techs=TRN_TECHS, scenario: str = "BAU",
-                             record_name: str | None = "support_bau_transmission.json") -> dict:
+                             record_name: str | None = "support_bau_transmission.json",
+                             through_year: int | None = None) -> dict:
     """Change only allowlisted TRN total-capacity ceilings, fail before saving.
 
     ``techs`` is a subset of the TRN allowlist; ``record_name=None`` writes no
-    record file and only returns the record.
+    record file and only returns the record. With ``through_year`` only the
+    ceilings of that year and earlier are written.
     """
     techs = frozenset(techs)
     if not techs or not techs <= TRN_TECHS:
@@ -84,6 +87,8 @@ def apply_commitment_ceiling(path: Path, techs=TRN_TECHS, scenario: str = "BAU",
                 for year, col in years.items()
             }
             for year, col in sorted(years.items()):
+                if through_year is not None and year > through_year:
+                    continue
                 residual = _number(sheet.cell(rows[tech, "ResidualCapacity"], col).value,
                                    f"{tech} residual {year}")
                 surviving = math.fsum(value for vintage, value in commitments.items()
