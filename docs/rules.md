@@ -20,7 +20,7 @@ settings files live in `config/scenarios/<root>/`.
 | `build_cap_rule.py` | `build_cap_rule.yaml` | Writes the build cap of every generation technology that has residual capacity or a minimum investment in at least one year, from residual capacity, demand growth and the five steps below. |
 | `set_min_capacity_floors.py` | `bau_calibration.yaml` | Writes minimum capacity or activity floors and maximum ceilings listed in the file. On `main` the A file lists none. The C file lists one ceiling, the annual hydro investment of NPLXX. |
 | `set_vre_targets.py` | `set_vre_targets.yaml` | C only. Converts fixed renewable generation shares per country-region into activity floors sized from the solved A result, and writes a bounded capacity envelope for solar and onshore wind in place of their build caps. |
-| `relax_interconnectors.py` | `relax_interconnectors.yaml` and, in A, the `Interconnector_Params` sheet of the scenario workbook | Opens the build cap of interconnectors above their residual capacity, by a factor, by a fixed headroom or by per-corridor schedules. Each schedule value is a build cap: the most new capacity the corridor may add in that year. It sets `TotalAnnualMaxCapacity` of an overridden corridor with new investment to 9999, so cost sets the total size of the link. In A, `cross_border_limit: existing_plus_committed` limits each cross-border link to its existing capacity plus its committed forced builds instead. See [Interconnector build caps](#interconnector-build-caps). |
+| `relax_interconnectors.py` | `relax_interconnectors.yaml` and, in A, B and C, the `Interconnector_Params` sheet of the scenario workbook | Opens the build cap of interconnectors above their residual capacity, by a factor, by a fixed headroom or by per-corridor schedules. Each schedule value is a build cap: the most new capacity the corridor may add in that year. It sets `TotalAnnualMaxCapacity` of an overridden corridor with new investment to 9999, so cost sets the total size of the link. The cross-border links take `cross_border_limit` instead: in A, `existing_plus_committed` limits each to its existing capacity plus its committed forced builds; in B and C, `lead_time_then_rate` does the same up to `lead_time_end_year` and then lets each add at most `build_rate_gw` a year, or its forced build where larger. See [Interconnector build caps](#interconnector-build-caps). |
 | `add_storage_min_investment.py` | `storage_floors.yaml` | C only. Writes small minimum investments for the storage families per year. |
 | `apply_interconnector_costs.py` | the `Interconnector_Params` sheet of the scenario workbook | Overwrites `CapitalCost`, `FixedCost` and `OperationalLife` of the interconnectors with the sheet's values. The sheet holds one central capital and fixed cost per corridor, constant in real 2023 USD over 2023 to 2050. The `Transmission_Cost_Basis` sheet of the same workbook holds their sources, assumptions and calculations; B1 does not read it. The six cost bounding scenarios replace these costs through their scenario edits; see [Costs](#costs). |
 | `apply_internal_transmission.py` | `Config_country_codes.yaml` | Writes `CapitalCost`, `FixedCost` and `OperationalLife` of the six internal transmission families, 60 technologies in all, and, after the base-year pin, their `ResidualCapacity`, computed as described [below](#internal-transmission-residuals). |
@@ -58,9 +58,9 @@ The order is load-bearing in these places.
   rule reads the `ResidualCapacity` that retirement writes.
 - The build-cap rule skips interconnectors. The relaxation rule sets their
   build caps afterwards, from the per-corridor schedules, from their
-  residual capacity or, for the cross-border links of A, from their residual
-  capacity and forced builds, and the direction overlay runs after the
-  relaxation rule.
+  residual capacity or, for the cross-border links of A, B and C, from their
+  residual capacity and forced builds and, in B and C, the build rate, and the
+  direction overlay runs after the relaxation rule.
 - The relaxation rule of A runs after stage 3 has written the forced builds,
   so A's cross-border limits include them, and before B takes the looser of
   its own bounds and A's, so B sees A's final limits.
@@ -91,7 +91,8 @@ The order is load-bearing in these places.
 ## B as a relaxation of A
 
 `B_Optimised_VRE` is the least-cost plan of the portfolio: no limit in it is
-tighter than in `A_Calibrated_BAU`. B can then always reproduce A's plan, so
+tighter than in `A_Calibrated_BAU`, except cross-border build caps that A
+cannot use (below). B can then always reproduce A's plan, so
 its least-cost solution never costs more than A's, whatever the costs.
 
 The rule `relax_to_reference.py` runs every time B is built. The registry
@@ -120,6 +121,22 @@ B's own rules give some build caps that are tighter than A's, for coal,
 biomass, waste, gas, oil, nuclear and two hydro plants in some years; the rule
 raises them to A's caps. The B2 steps after A3 treat both scenarios alike, so
 the relation also holds in the final solver datafile.
+
+One kind of cell is compared differently. For the yearly build cap
+(`TotalAnnualMaxCapacityInvestment`) of a cross-border link, A's value counts
+only up to the most new capacity A can add in that year:
+
+```text
+room of A[t,y] = TotalAnnualMaxCapacity[t,y] - ResidualCapacity[t,y]
+  - sum(TotalAnnualMinCapacityInvestment[t,v]
+        for model years v < y where y-v < OperationalLife[t])
+upper bound of B(cell) = max(B(cell), min(A(cell), room of A[t,y]))
+```
+
+A's total cap on these links is its existing capacity plus its forced builds,
+so A adds only its forced builds and B's build rate allows each of them. From
+2031 B's yearly cap of 1 GW is below A's on the links whose residual capacity
+is above 1 GW, and B can still reproduce A's plan.
 
 ## Base-year pin
 
@@ -265,8 +282,9 @@ reinforcement inside the shared cost, and it is one value for every node.
 ### Interconnector build caps
 
 Three values set what an interconnector can build. All come from the sheet
-`Interconnector_Params` of the scenario workbook, except the yearly build caps
-of B and C.
+`Interconnector_Params` of the scenario workbook, except the schedules of the
+India-internal corridors and the two rule settings of B and C, which
+`relax_interconnectors.yaml` holds.
 
 - **Existing capacity** is `ResidualCapacity`. It is flat from 2023 to 2050, except Nepal to Bangladesh (`TRNNPLXXBGDXX`): 0 in 2023 and 2024, then 0.04 GW, the 40 MW sale through the Indian grid that began in November 2024.
 - **Forced builds** are `TotalAnnualMinCapacityInvestment`: the capacity the
@@ -299,25 +317,70 @@ cleared, and the total cap is the ceiling that support `BAU` uses (see
 [Support BAU](pipeline.md#support-bau)). A change to a forced build in the
 workbook changes A's limits with no other edit.
 
-The `overrides` of `relax_interconnectors.yaml` give each listed corridor a
-pipeline total in GW for some years: existing capacity plus the projects
-listed with commissioning dates by that year. `B_Optimised_VRE` and
-`C_Target_VRE` list the same 15 corridors with the same values, the 11
-cross-border links and four India-internal corridors; `A_Calibrated_BAU`
-lists the four India-internal corridors with the same values.
-`relax_interconnectors.py` interpolates each schedule linearly
-between the listed years, holds it at the last value after the last listed
-year, raises it to the link's residual capacity where it is lower, and writes
-the result as the build cap, `TotalAnnualMaxCapacityInvestment`. Each value is
-therefore the most new capacity the link may add in that year, not its total
-size. For
-every listed corridor with new investment in some year, the rule sets
+In `B_Optimised_VRE` and `C_Target_VRE`, `relax_interconnectors.yaml` sets
+`cross_border_limit: lead_time_then_rate`, `lead_time_end_year: 2030` and
+`build_rate_gw: 1.0`. Nine cross-border links take the rule; Sri Lanka to the
+Maldives and the Maldives to India South keep a schedule of 0 in every year, so
+they add no capacity and stay at their 2023 residual capacity. The rule
+computes, in every run, from the scenario's own forced builds:
+
+```text
+y <= lead_time_end_year:
+  TotalAnnualMaxCapacityInvestment[t,y] = max(ResidualCapacity[t,y],
+                                              TotalAnnualMinCapacityInvestment[t,y])
+  TotalAnnualMaxCapacity[t,y] = ResidualCapacity[t,y]
+    + sum(TotalAnnualMinCapacityInvestment[t,v]
+          for model years v where 0 <= y-v < OperationalLife[t])
+y > lead_time_end_year:
+  TotalAnnualMaxCapacityInvestment[t,y] = max(build_rate_gw,
+                                              TotalAnnualMinCapacityInvestment[t,y])
+  TotalAnnualMaxCapacity[t,y] = 9999
+```
+
+Up to 2030 the limits are A's. After 2030 the build cap has no residual
+floor, and the total cap of 9999, a finite cap, lets cost set the total size of
+the link. Because C's forced builds are its own rows, its planned projects
+count in C. For example, Bangladesh to India East (`TRNBGDXXINDEA`) in B has a
+total of 2.496 GW through 2030, then may add at most 1.0 GW a year; in C the
+same link may add 2.0 GW in 2031, its forced build there. A cross-border
+override with a non-zero value, a missing or non-numeric `lead_time_end_year`
+or `build_rate_gw`, or either key with any other `cross_border_limit` stops the
+build. B's yearly cap from 2031 is below A's on links whose residual capacity
+is above 1 GW; [B as a relaxation of A](#b-as-a-relaxation-of-a) explains why
+the relaxation keeps it.
+
+ASSUMPTION: until 2030, each cross-border link has only its existing capacity
+and the scenario's forced builds; no other cross-border line enters service
+before 2031. A new cross-border line takes several years from agreement to
+service, and the next Bangladesh to India line in the national plans, the
+Katihar-Parbotipur-Bornagar 765 kV corridor, is due in 2031 (Central
+Electricity Authority, National Electricity Plan, Volume II: Transmission,
+October 2024, section 9.4.2, printed p. 107, and Annex scheme ER-11, printed
+p. 442,
+<https://cea.nic.in/wp-content/uploads/psp___a_i/2025/02/NEP_Vol_II_Transmission.pdf>).
+
+ASSUMPTION: from 2031, each cross-border link may add at most 1 GW a year, or
+more only where a forced build requires it; cost sets its total size. 1 GW is
+about one large line: New Butwal-Gorakhpur, the largest committed cross-border
+line, carries 1,000 MW (Nepal Electricity Authority, A Year in Review, Fiscal
+Year 2025/2026, August 2026, MD's Report printed p. 5, Business Development
+printed p. 99 and Transmission printed pp. 25-26,
+<https://nea.org.np/uploads/shares/td_tender/A%20Year%20In%20Review%20Annual%20Report%202025_2026_compressed.pdf>).
+
+The `overrides` of `relax_interconnectors.yaml` give each listed India-internal
+corridor a pipeline total in GW for some years: existing capacity plus the
+projects listed with commissioning dates by that year. `A_Calibrated_BAU`,
+`B_Optimised_VRE` and `C_Target_VRE` list the same four India-internal
+corridors with the same values. `relax_interconnectors.py` interpolates each
+schedule linearly between the listed years, holds it at the last value after
+the last listed year, raises it to the corridor's residual capacity where it
+is lower, and writes the result as the build cap,
+`TotalAnnualMaxCapacityInvestment`. Each value is therefore the most new
+capacity the corridor may add in that year, not its total size. For every
+listed corridor with new investment in some year, the rule sets
 `TotalAnnualMaxCapacity` to 9999 in every year, a finite cap, so cost decides
-how large the link becomes. Two corridors, Sri Lanka to the Maldives and the
-Maldives to India South, have a schedule of 0 in every year in B and C: they
-add no capacity and stay at their 2023 residual capacity. A forced build
-above a build cap is set to 0; the forced builds of B and C fit within their
-caps.
+how large the corridor becomes. A forced build above a build cap is set to 0;
+the forced builds of A, B and C fit within their caps.
 
 The three India-internal corridors without a schedule (India East to India
 West, India North-East to India North and India North to India West) take
@@ -331,14 +394,14 @@ derived scenarios can replace the build caps; the
 [scenario catalogue](reference/scenarios/scenario_catalogue.md) lists them.
 
 ASSUMPTION: in B and C, in every year the base-year build lock does not cover,
-each interconnector with a schedule may add, in any one year, at most the
-corridor's pipeline total for that year: existing capacity plus the projects
-the cited national plans list with commissioning dates by that year,
+each India-internal corridor with a schedule may add, in any one year, at most
+the corridor's pipeline total for that year: existing capacity plus the
+projects the cited national plans list with commissioning dates by that year,
 interpolated linearly between commissioning years, held at the last total
-after it and never below the link's residual capacity. Total link size is
-capped only at 9999 GW, a finite cap, and is set by cost. National plans list
-announced projects, not physical maxima, so the build cap sets how fast a link
-can grow, not how large it becomes.
+after it and never below the corridor's residual capacity. Total corridor size
+is capped only at 9999 GW, a finite cap, and is set by cost. National plans
+list announced projects, not physical maxima, so the build cap sets how fast a
+corridor can grow, not how large it becomes.
 
 ### Capacity factor and losses
 
