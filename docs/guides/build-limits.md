@@ -269,6 +269,9 @@ change that root only. Check `TotalAnnualMaxCapacityInvestment.csv`,
 `TotalAnnualMaxCapacity.csv` and `TotalAnnualMinCapacityInvestment.csv` after
 a compile-only build. Derived scenarios can replace the caps with scenario
 edits; `B_Opt_TxCap150` and `A_Calibrated_BAU_Clipped_TxFreeze2026` do so.
+The cap of `B_Opt_TxCap150` holds India North to Nepal (`TRNINDNONPLXX`) at
+0.75 GW (1.5 x 0.5 GW), so the committed 2028 build of 1.15 GW is lowered to
+0.25 GW in that scenario.
 
 ## The base-year build lock
 

@@ -47,7 +47,16 @@ variable, with zero values left out. A missing row means zero.
 
 The solver log sits beside the datafile; with CPLEX it is
 `Pre_processed_<S>_0_StorageDelayN5_OpenBCK_RMCarefulXLSX_output.cplex.log`.
-Require an optimal status. The run log of the whole run is
+Require an optimal status. CPLEX may report "optimal with unscaled
+infeasibilities". The solution is optimal; after CPLEX undoes its internal
+scaling, a few variables sit slightly outside their bounds. Accept the run
+when the largest unscaled infeasibility is below 1e-5, and look into it
+otherwise. The status is `solutionStatusString` in the header of the solution
+file beside the log, `..._output.sol`, and the log prints the largest
+unscaled infeasibility near its end, on the lines
+`Maximum unscaled bound infeasibility =` and
+`Maximum unscaled reduced-cost infeasibility =`, which appear only for a run
+with that status. The run log of the whole run is
 `<workspace>/logs/<run-id>/run.log`.
 
 ### Zero backstop
