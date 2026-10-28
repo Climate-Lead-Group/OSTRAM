@@ -41,7 +41,7 @@ from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 from ostram.setups import DEFAULT_SETUP, active_setup_id
 from .interconnector_authority import (
-    MINIMUM_CONTRIBUTION_TECHS,
+    BAU_SCENARIO,
     load_minimum_boundary_authority,
     load_minimum_contribution_authority,
     validate_minimum_contribution_authority,
@@ -463,8 +463,9 @@ def build_minimum_contribution_plan(
 ) -> Tuple[List[TechFix], List[str], List[str]]:
     """Build the exact v18 minimum-contribution participation/write plan.
 
-    The 11 authority rows participate even when their complete contribution is
-    zero. An explicit override replaces the authority schedule for that
+    Every authority row participates even when its complete contribution is
+    zero: the 11 BAU rows, plus any cross-border link a root scenario's row
+    adds. An explicit override replaces the authority schedule for that
     technology. As in the predecessor route, overrides for skipped flat input
     technologies do not expand the minimum-investment write domain.
     """
@@ -476,14 +477,14 @@ def build_minimum_contribution_plan(
             f"available years: {sorted(year_cols)}"
         )
     profiles = _read_residual_profile(ws, meta_cols, year_cols)
-    missing_profiles = sorted(MINIMUM_CONTRIBUTION_TECHS - set(profiles))
+    missing_profiles = sorted(set(contribution_authority) - set(profiles))
     if missing_profiles:
         raise ValueError(
             "model workbook missing minimum-contribution technologies: "
             f"{missing_profiles}"
         )
 
-    plan_techs = set(MINIMUM_CONTRIBUTION_TECHS)
+    plan_techs = set(contribution_authority)
     if overrides:
         plan_techs.update(
             tech
@@ -730,8 +731,13 @@ def run_fix(
     cutoff_year: int = DEFAULT_CUTOFF_YEAR,
     override_path: Optional[Path] = None,
     authority_path: Optional[Path] = None,
+    scenario: str = BAU_SCENARIO,
 ) -> Tuple[List[DiffEntry], List[TechFix], List[str], List[str]]:
-    """Validate v18 authority, apply the selected plan, and save."""
+    """Validate v18 authority, apply the selected plan, and save.
+
+    ``scenario`` is the root scenario being built; its own minimum rows in the
+    authority replace the BAU rows.
+    """
     if mode not in ("min", "max"):
         raise ValueError(f"mode must be 'min' or 'max', got {mode!r}")
     if authority_path is None:
@@ -743,7 +749,7 @@ def run_fix(
     strict_full = active_setup_id() == DEFAULT_SETUP
     if strict_full:
         contribution_authority = load_minimum_contribution_authority(
-            authority_path
+            authority_path, scenario
         )
         load_minimum_boundary_authority(authority_path)
     else:
@@ -824,6 +830,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--authority", type=Path, required=True,
                    help="raw or materialized v18 workbook containing the "
                         "validated interconnector authorities")
+    p.add_argument("--scenario", default=BAU_SCENARIO,
+                   help="root scenario being built; its minimum rows in the "
+                        f"authority replace the BAU rows (default {BAU_SCENARIO})")
     args = p.parse_args(argv)
 
     diffs, plans, skipped, warnings = run_fix(
@@ -833,6 +842,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         cutoff_year=args.cutoff_year,
         override_path=args.override,
         authority_path=args.authority,
+        scenario=args.scenario,
     )
 
     if args.diff_csv:

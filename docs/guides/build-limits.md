@@ -162,10 +162,50 @@ To change one technology in one derived scenario only, use a scenario edit on
 
 ## Build caps of interconnectors
 
-The rule `relax_interconnectors.py` sets the build caps of the
+Every interconnector value except the yearly build caps of B and C comes from
+the sheet `Interconnector_Params` of the scenario workbook, the one place to
+edit it:
+
+- existing capacity is `ResidualCapacity`;
+- forced builds are `TotalAnnualMinCapacityInvestment`: the committed projects
+  in the `BAU` rows, which apply to support `BAU`, A and B, and the committed
+  plus officially planned projects in the `C_Target_VRE` rows, which replace
+  the `BAU` rows of their links for C and the scenarios derived from it.
+
+The rule `relax_interconnectors.py` then sets the limits of the
 interconnectors in each root, from `config/scenarios/<root>/relax_interconnectors.yaml`.
-`A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE` list the same 15
-corridors under `overrides`, with the same values.
+
+### A: existing plus committed
+
+In `A_Calibrated_BAU` each of the 11 cross-border links is limited to its
+existing capacity plus its committed projects. A's file sets
+`cross_border_limit: existing_plus_committed` and has no cross-border
+override, so the rule computes both limits from the workbook in every run:
+
+1. the build cap, `TotalAnnualMaxCapacityInvestment`, is the larger of the
+   link's residual capacity and that year's forced build, so no forced build
+   is cleared;
+2. the total cap, `TotalAnnualMaxCapacity`, is the residual capacity plus the
+   forced builds still in service under the link's `OperationalLife`.
+
+Worked example, India North to Nepal (`TRNINDNONPLXX`), with a residual
+capacity of 0.5 GW and a forced build of 1.15 GW in 2028 (the New
+Butwal-Gorakhpur and Nanpara-Kohalpur lines):
+
+```text
+build cap 2027: max(0.5, 0)    = 0.5 GW;  total cap 2027: 0.5 GW
+build cap 2028: max(0.5, 1.15) = 1.15 GW; total cap 2028: 0.5 + 1.15 = 1.65 GW
+build cap 2029: max(0.5, 0)    = 0.5 GW;  total cap 2029: 1.65 GW
+```
+
+The four India-internal corridors with project data keep their overrides in
+A's file, as described below.
+
+### B and C: schedules in the YAML files
+
+`B_Optimised_VRE` and `C_Target_VRE` list the same 15 corridors under
+`overrides`, with the same values: the 11 cross-border links and four
+India-internal corridors.
 
 Each override is a schedule of pipeline totals in GW: the link's existing
 capacity plus the projects listed with commissioning dates by that year. The
@@ -181,7 +221,8 @@ rule:
    link becomes.
 
 Each value is therefore the most new capacity the link may add in that year,
-not its total size.
+not its total size. A forced build above the build cap of its year would be set
+to 0; every forced build of B and C fits within its cap.
 
 ```mermaid
 flowchart LR
@@ -207,6 +248,8 @@ Two corridors, Sri Lanka to the Maldives (`TRNLKAXXMDVXX`) and the Maldives to
 India South (`TRNMDVXXINDSO`), have a schedule of 0 in every year: they add no
 capacity and keep their residual capacity.
 
+### India-internal corridors without an override
+
 The three India-internal corridors without an override, India East to India
 West (`TRNINDEAINDWE`), India North-East to India North (`TRNINDNEINDNO`) and
 India North to India West (`TRNINDNOINDWE`), take `headroom_factor` times their
@@ -214,16 +257,17 @@ residual capacity as their build cap: 1.0 in `A_Calibrated_BAU` and 1.5 in
 `B_Optimised_VRE` and `C_Target_VRE`. The rule leaves their
 `TotalAnnualMaxCapacity` as earlier stages wrote it.
 
-ASSUMPTION (`docs/rules.md`, "Interconnector build caps"): in every year the
-base-year build lock does not cover, each interconnector with a schedule may
-add, in any one year, at most the corridor's pipeline total for that year.
-National plans list announced projects, not physical maxima, so the build cap
-sets how fast a link can grow, not how large it becomes.
+ASSUMPTION (`docs/rules.md`, "Interconnector build caps"): in B and C, in every
+year the base-year build lock does not cover, each interconnector with a
+schedule may add, in any one year, at most the corridor's pipeline total for
+that year. National plans list announced projects, not physical maxima, so the
+build cap sets how fast a link can grow, not how large it becomes.
 
-To change a corridor, edit its schedule in the three files, or in one root's
-file to change that root only, and check
-`TotalAnnualMaxCapacityInvestment.csv` and `TotalAnnualMaxCapacity.csv` after a
-compile-only build. Derived scenarios can replace the caps with scenario
+To change a forced build or an existing capacity, edit `Interconnector_Params`.
+To change a B or C schedule, edit it in both files, or in one root's file to
+change that root only. Check `TotalAnnualMaxCapacityInvestment.csv`,
+`TotalAnnualMaxCapacity.csv` and `TotalAnnualMinCapacityInvestment.csv` after
+a compile-only build. Derived scenarios can replace the caps with scenario
 edits; `B_Opt_TxCap150` and `A_Calibrated_BAU_Clipped_TxFreeze2026` do so.
 
 ## The base-year build lock

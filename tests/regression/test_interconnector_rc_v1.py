@@ -54,6 +54,16 @@ AUTHORITY = {
     "TRNNPLXXBGDXX": Decimal("0"),
 }
 ZERO_TECHS = frozenset(tech for tech, value in AUTHORITY.items() if value == 0)
+# Links whose workbook residual changes in a later year: {tech: (first year, value from then)}.
+AUTHORITY_STEPS = {"TRNNPLXXBGDXX": (2025, Decimal("0.04"))}
+
+
+def _expected_rc(tech: str, year: int) -> Decimal:
+    """The workbook ResidualCapacity of ``tech`` in ``year``."""
+    step = AUTHORITY_STEPS.get(tech)
+    if step is not None and year >= step[0]:
+        return step[1]
+    return AUTHORITY[tech]
 MINIMUM_CONTRIBUTION_TECHS = frozenset({
     "TRNBTNXXBGDXX",
     "TRNBTNXXINDEA",
@@ -68,17 +78,15 @@ MINIMUM_CONTRIBUTION_TECHS = frozenset({
     "TRNNPLXXBGDXX",
 })
 MINIMUM_CONTRIBUTION_NONZERO = {
-    ("TRNBTNXXBGDXX", 2035): Decimal("0.75"),
     ("TRNINDEAINDWE", 2025): Decimal("1.599999999999998"),
+    ("TRNINDEANPLXX", 2027): Decimal("0.4"),
+    ("TRNINDNONPLXX", 2028): Decimal("1.15"),
     ("TRNINDNOINDWE", 2024): Decimal("1.600000000000001"),
     ("TRNINDNOINDWE", 2026): Decimal("8.399999999999999"),
     ("TRNINDNOINDWE", 2028): Decimal("4.200000000000003"),
     ("TRNINDSOINDWE", 2024): Decimal("4.199999999999999"),
     ("TRNINDSOINDWE", 2025): Decimal("4.199999999999999"),
     ("TRNINDSOINDWE", 2026): Decimal("1.600000000000001"),
-    ("TRNINDSOLKAXX", 2030): Decimal("0.5"),
-    ("TRNLKAXXMDVXX", 2030): Decimal("0.5"),
-    ("TRNNPLXXBGDXX", 2033): Decimal("1"),
 }
 MINIMUM_BOUNDARIES = {
     "TRNBGDXXINDEA": Decimal("2.5"),
@@ -303,7 +311,8 @@ class InterconnectorAuthorityWorkbookTests(unittest.TestCase):
         for tech, expected in AUTHORITY.items():
             with self.subTest(tech=tech):
                 self.assertEqual(set(values[tech]), set(YEARS))
-                self.assertEqual({_decimal(v) for v in values[tech].values()}, {expected})
+                self.assertEqual({y: _decimal(v) for y, v in values[tech].items()},
+                                 {y: _expected_rc(tech, y) for y in YEARS})
                 self.assertEqual(metadata[tech]["scenario"], "BAU")
                 self.assertIsInstance(metadata[tech]["Tech.ID"], int)
                 self.assertIsInstance(metadata[tech]["Tech.Name"], str)
@@ -321,7 +330,8 @@ class InterconnectorAuthorityWorkbookTests(unittest.TestCase):
         self.assertEqual(set(loaded), set(AUTHORITY))
         for tech, expected in AUTHORITY.items():
             self.assertEqual(set(loaded[tech]), set(YEARS))
-            self.assertEqual({_decimal(v) for v in loaded[tech].values()}, {expected})
+            self.assertEqual({y: _decimal(v) for y, v in loaded[tech].items()},
+                             {y: _expected_rc(tech, y) for y in YEARS})
 
     def test_v18_contains_exact_minimum_contribution_and_boundary_domains(
         self,
@@ -603,7 +613,8 @@ class InterconnectorRuntimeRouteTests(unittest.TestCase):
         module.apply_rc_authority(worksheet, authority)
         residual = _snapshot_parameter(worksheet, module.RESIDUAL_PARAM)
         for tech, expected in AUTHORITY.items():
-            self.assertEqual({_decimal(value) for value in residual[tech]}, {expected})
+            self.assertEqual([_decimal(value) for value in residual[tech]],
+                             [_expected_rc(tech, y) for y in YEARS])
         workbook.close()
         self.assertFalse(unavailable.exists())
 

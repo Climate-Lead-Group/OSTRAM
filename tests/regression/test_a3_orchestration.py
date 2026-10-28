@@ -870,7 +870,7 @@ class A3EffectAndFailureCharacterizationTests(unittest.TestCase):
                     ("stage_1_scripts_1_to_5", harness.paths["s1"], template_value, harness.caller),
                     ("stage_1b", harness.workdir, harness.paths["s1"], harness.paths["s1b"], template_value, harness.caller),
                     ("stage_2_and_2_5", harness.workdir, harness.paths["s1b"], harness.paths["s2"], template_value, harness.caller),
-                    ("stage_3_fix_2", harness.paths["s2"], harness.paths["s3"], template_value, harness.caller),
+                    ("stage_3_fix_2", harness.paths["s2"], harness.paths["s3"], "A_Calibrated_BAU", template_value, harness.caller),
                     (
                         "stage_4_consolidate",
                         harness.paths["s1"],

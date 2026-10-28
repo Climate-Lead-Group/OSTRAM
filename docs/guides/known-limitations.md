@@ -200,8 +200,8 @@ India North and India North to India West.
 `TotalAnnualMaxCapacity` keeps the value set before the build-cap rule runs.
 
 **Effect on results.** For some of these corridors the total cap, not cost,
-limits growth. Cost sets the size only of the 13 listed corridors with new
-investment.
+limits growth. In B and C cost sets the size only of the 13 listed corridors
+with new investment; in A, only of the four listed India-internal corridors.
 
 **How to test or improve.** Compare their capacity in the results with their
 `TotalAnnualMaxCapacity`. To let cost set a corridor's size, give it a schedule
@@ -243,21 +243,15 @@ value and the build years with CEA's growth statements, on one rating basis.
 
 ### Nepal and Bhutan import lines to Bangladesh
 
-**The data gap.** Bangladesh's master plan, IEPMP 2023, plans hydropower imports from Nepal and Bhutan over dedicated lines. It gives no size or date for either line.
+**The data gap.** Bangladesh's master plan, IEPMP 2023, names dedicated lines from Nepal and Bhutan only as options to study, with no route, size or year (section 5.5.4 and Figure 5.5-4, p. 95). No signed agreement names either line.
 
-**What we assumed and why.**
+**What we assumed and why.** Neither link has a forced build, because a forced build stands for a committed or officially planned project and neither line is one. In `A_Calibrated_BAU` both links stay at their existing capacity, as A allows only existing capacity plus committed projects: zero for Bhutan to Bangladesh, and for Nepal to Bangladesh 0.04 GW from 2025, the 40 MW sale through the Indian grid that began in November 2024. In B and C the model may build either link, up to its yearly build cap, when that lowers cost.
 
-Nepal. ASSUMPTION: The model must build a 1.0 GW line from Nepal to Bangladesh in 2033. IEPMP 2023 names a dedicated line from Nepal as a candidate for its first step toward 2030. The plan gives no size or date for this line (section 5.5.4 and Figure 5.5-4, p. 95). The model places the line in 2033, three years after that first step. IEPMP allows about 3 GW at one connection point (section 5.3.8, p. 77), so 1.0 GW sits well within that limit. The model fixes only this first line. In other years it may add more, up to a yearly limit, when that lowers cost.
+**Effect on results.** Cost decides whether and when B and C build each link; A builds neither line.
 
-Bhutan. ASSUMPTION: The model must build a 0.75 GW line from Bhutan to Bangladesh in 2035. IEPMP 2023 also names a dedicated line from Bhutan as a first-step candidate, with its own connection point. The plan expects a second step around 2040 and gives no size or date for this line either. The model places the line in 2035, between the two steps and two years after the Nepal line. 0.75 GW is a quarter of the 3 GW limit. The model fixes only this first line. In other years it may add more, up to a yearly limit, when that lowers cost.
+**How to test or improve.** When a line becomes committed or planned, add its forced build to the link's `TotalAnnualMinCapacityInvestment` row in `Interconnector_Params`, with its source.
 
-Both lines. Two sensitivity scenarios set both lines to 0, because they freeze or cap interconnectors from 2027.
-
-**Effect on results.** In the main scenarios, Bangladesh pays for 1.0 GW of import capacity from Nepal in 2033 and 0.75 GW from Bhutan in 2035, whether or not the model would choose them. Beyond these lines, cost decides how far each link grows.
-
-**How to test or improve.** Set a line's minimum build to 0 to remove it, or move it to another year.
-
-Source: [IEPMP 2023, Power Division copy](https://objectstorage.ap-dcc-gazipur-1.oraclecloud15.com/n/axvjbnqprylg/b/V2Ministry/o/office-powerdivision/2024/12/6aa63b99c7bf4b9083c7dc1b6bb07c28.pdf), section 5.5.4 and Figure 5.5-4 (printed p. 95, PDF p. 148), section 5.3.8 (printed p. 77, PDF p. 130).
+Source: [IEPMP 2023, Power Division copy](https://objectstorage.ap-dcc-gazipur-1.oraclecloud15.com/n/axvjbnqprylg/b/V2Ministry/o/office-powerdivision/2024/12/6aa63b99c7bf4b9083c7dc1b6bb07c28.pdf), section 5.5.4 and Figure 5.5-4 (printed p. 95, PDF p. 148).
 
 ### Bangladesh import limits and plant costs
 
@@ -267,12 +261,14 @@ leaves the projects, their sizes and their years open.
 **What we assumed and why.** ASSUMPTION: Bangladesh to India East may add at
 most 2.50 GW in 2023, rising to 8.50 GW in 2033, and Bangladesh to India
 North-East at most 0.16 GW in 2023, rising to 2.66 GW in 2035, in
-`A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE`. Values between listed
-years are interpolated and held after the last year. Each value is the most new
-capacity the link may add that year, and follows the projects listed by
-commissioning year. No minimum build applies to either link. In 2023 to 2026
-the base-year build lock sets these caps instead
-([Build limits](build-limits.md#the-base-year-build-lock)).
+`B_Optimised_VRE` and `C_Target_VRE`. Values between listed years are
+interpolated and held after the last year. Each value is the most new capacity
+the link may add that year, and follows the projects listed by commissioning
+year. In `A_Calibrated_BAU` both links stay at their existing capacity, because
+neither has a committed project. No forced build applies to either link in A
+and B; in C the planned Katihar-Parbotipur-Bornagar corridor is a forced build
+on both links in 2031. In 2023 to 2026 the base-year build lock sets these caps
+instead ([Build limits](build-limits.md#the-base-year-build-lock)).
 
 ASSUMPTION: Bangladesh gas plants cost 1,013.1 USD/kW and 17.061 USD/kW-year,
 and coal plants 6,336.94 USD/kW and 98.56 USD/kW-year, in constant 2023 USD,
@@ -291,12 +287,14 @@ cent, above IRENA's 2023 global weighted average of 758 USD/kW (IRENA,
 [Renewable Power Generation Costs in 2023](https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2024/Sep/IRENA_Renewable_power_generation_costs_in_2023.pdf)),
 to allow for land and grid connection costs in Bangladesh.
 
-**Effect on results.** The build caps limit how fast Bangladesh's imports from
-India can grow; within them, cost sets the size of each link. The plant costs
+**Effect on results.** In B and C the build caps limit how fast Bangladesh's
+imports from India can grow; within them, cost sets the size of each link. In A
+the two links keep their existing capacity. The plant costs
 set how Bangladesh's own gas, coal and solar compare with imports.
 
-**How to test or improve.** Change a link's schedule in
-`relax_interconnectors.yaml`, or the costs of `PWRNGSBGDXX`, `PWRCOABGDXX` and
+**How to test or improve.** Change a link's schedule in the
+`relax_interconnectors.yaml` of B or C, its forced builds in
+`Interconnector_Params`, or the costs of `PWRNGSBGDXX`, `PWRCOABGDXX` and
 `PWRSPVBGDXX` in `Secondary_Techs`. A possible future calibration refinement
 replaces the scaled costs with costs of plants built in Bangladesh.
 

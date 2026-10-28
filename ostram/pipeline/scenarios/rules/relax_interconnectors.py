@@ -29,6 +29,15 @@ of config/scenarios/technology_types.csv staged in the run folder:
 
     Safety floor: MaxCapInv = max(MaxCapInv, ResidualCapacity)
 
+    cross_border_limit == "existing_plus_committed" (A_Calibrated_BAU):
+        every cross-border link (origin and destination countries differ)
+        must have no override, and
+            MaxCapInv(tech, year) = max(ResidualCapacity, MinCapInv(year))
+        so no committed build is cleared; afterwards TotalAnnualMaxCapacity
+        is ResidualCapacity plus the surviving MinCapInv vintages, the rule
+        of support_bau_transmission.apply_commitment_ceiling. Both limits
+        come from the workbook values in every run.
+
     Second pass (MaxCap opening):
         For any overridden tech whose schedule has at least one non-zero
         investment value, TotalAnnualMaxCapacity is set to 9999 across
@@ -74,6 +83,9 @@ import pandas as pd
 from openpyxl import load_workbook, Workbook
 from ostram.paths import resolve_paths
 from ostram.pipeline.scenarios.rules.config_keys import check_keys
+from ostram.pipeline.scenarios.transformations.support_bau_transmission import (
+    apply_commitment_ceiling,
+)
 
 # Try to import yaml; fall back to a minimal parser if unavailable.
 try:
@@ -118,6 +130,17 @@ INTERCONNECTOR_CATEGORY = "INTERCONNECTORS"
 # TRN tech naming: 13 chars, e.g. TRNINDEAINDNE
 TRN_TECH_LENGTH = 13
 
+CROSS_BORDER_LIMITS = ("existing_plus_committed",)
+
+
+def is_cross_border(tech: str) -> bool:
+    """True for a 13-character TRN code whose two countries differ."""
+    return (
+        len(tech) == TRN_TECH_LENGTH
+        and tech.startswith("TRN")
+        and tech[3:6] != tech[8:11]
+    )
+
 
 # ---------------------------------------------------------------------------
 # YAML config loader
@@ -131,12 +154,14 @@ def load_config(yaml_path: Path) -> dict:
         headroom_factor  : float (used by multiplicative)
         headroom_gw      : float (used by additive)
         overrides        : dict {tech: {year: value}}
+        cross_border_limit : None or "existing_plus_committed"
     """
     cfg = _load_yaml(yaml_path)
     if cfg is None:
         cfg = {}
     check_keys(cfg, {
         "mode", "headroom_factor", "headroom_gw", "overrides", "capacity_ceiling",
+        "cross_border_limit",
     }, yaml_path)
 
     mode = cfg.get("mode", "multiplicative")
@@ -179,12 +204,20 @@ def load_config(yaml_path: Path) -> dict:
             )
         capacity_ceiling[tech] = {int(y): float(v) for y, v in year_map.items()}
 
+    cross_border_limit = cfg.get("cross_border_limit")
+    if cross_border_limit is not None and cross_border_limit not in CROSS_BORDER_LIMITS:
+        raise ValueError(
+            f"Invalid cross_border_limit {cross_border_limit!r} in {yaml_path}. "
+            f"Expected one of {list(CROSS_BORDER_LIMITS)}."
+        )
+
     return {
         "mode": mode,
         "headroom_factor": headroom_factor,
         "headroom_gw": headroom_gw,
         "overrides": overrides,
         "capacity_ceiling": capacity_ceiling,
+        "cross_border_limit": cross_border_limit,
     }
 
 
@@ -403,6 +436,7 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
     headroom_gw = config["headroom_gw"]
     overrides = config["overrides"]
     capacity_ceiling = config.get("capacity_ceiling", {})
+    committed_techs = committed_cross_border_techs(trn_techs, config)
 
     headers = find_named_columns(ws, ["Tech", "Parameter", PROJ_MODE_COL])
     tech_col_idx = headers.get("Tech")
@@ -467,6 +501,10 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
             if tech in interp_overrides:
                 proposed = interp_overrides[tech].get(year, rescap)
                 reason = "override"
+            elif tech in committed_techs:
+                # Existing plus committed: the year's forced build fits.
+                proposed = max(rescap, _min_inv(ws, min_inv_row_map, tech, col))
+                reason = "existing_plus_committed"
             elif mode == "multiplicative":
                 proposed = rescap * headroom_factor
                 reason = "multiplicative"
@@ -692,6 +730,31 @@ def apply_trn_relax(ws, trn_techs: set, config: dict,
     return log
 
 
+def committed_cross_border_techs(trn_techs: set, config: dict) -> set:
+    """Cross-border links under cross_border_limit; none may be overridden."""
+    if config.get("cross_border_limit") is None:
+        return set()
+    techs = {tech for tech in trn_techs if is_cross_border(tech)}
+    overridden = sorted(techs & set(config["overrides"]))
+    if overridden:
+        raise ValueError(
+            "cross_border_limit sets the limits of every cross-border link; "
+            f"remove their overrides: {overridden}"
+        )
+    return techs
+
+
+def _min_inv(ws, min_inv_row_map: dict, tech: str, col: int) -> float:
+    """The MinCapInv cell of ``tech`` in column ``col``, 0 when absent."""
+    row_idx = min_inv_row_map.get(tech)
+    if row_idx is None:
+        return 0.0
+    value = ws.cell(row=row_idx, column=col).value
+    if value is None or pd.isna(value):
+        return 0.0
+    return float(value)
+
+
 def edit_parametrization(filepath: Path, sheets: list,
                          trn_techs: set, config: dict) -> dict:
     """Apply the TRN relaxation rule to the parametrization workbook."""
@@ -757,6 +820,16 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
         raise FileNotFoundError(f"{paramfile} not found")
 
     log = edit_parametrization(paramfile, sheets, trn_techs, config)
+    committed_techs = committed_cross_border_techs(trn_techs, config)
+    if committed_techs:
+        if "Secondary Techs" not in sheets:
+            raise ValueError("cross_border_limit needs the 'Secondary Techs' sheet")
+        log["commitment_ceiling"] = apply_commitment_ceiling(
+            paramfile,
+            techs=committed_techs,
+            scenario="cross-border existing plus committed",
+            record_name=None,
+        )
     log["backup_dir"] = str(backup_dir) if backup_dir else None
     log["timestamp"] = datetime.now().isoformat()
     log["config"] = config

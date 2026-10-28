@@ -521,9 +521,12 @@ def stage_2_and_2_5(wd: Path, s1b: Path, s2: Path) -> None:
     ], label="clear PWRPET values")
 
 
-def stage_3_fix_2(s2: Path, s3: Path) -> Path:
+def stage_3_fix_2(s2: Path, s3: Path, scenario: str) -> Path:
     """Stage 3: run ``fix_trn_residuals``, ``clear_stale_unbinding_caps`` and
     ``cap_trn_to_residual`` in ``s3``.
+
+    ``scenario`` is the root being built: its own interconnector minimum rows
+    replace the BAU rows.
 
     Returns the path of the POST_TRN_CAP workbook. Raises RuntimeError when
     neither the setup authorities nor ``OSTRAM_TEMPLATE_PATH`` are set,
@@ -568,6 +571,7 @@ def stage_3_fix_2(s2: Path, s3: Path) -> Path:
         "--diff-md", "diff_log.md",
         "--mode", "min",
         "--cutoff-year", "2023",
+        "--scenario", scenario,
     ], cwd=s3, label="fix transmission residuals")
 
     # clear_stale_unbinding_caps

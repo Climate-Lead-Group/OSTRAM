@@ -250,7 +250,7 @@ def _run_stage3_chain(root: Path) -> tuple[Path, Path]:
     os.environ["OSTRAM_TEMPLATE_PATH"] = str(authority)
     try:
         with mock.patch.object(transform, "run_subproc", side_effect=_stage3_dispatch):
-            final_stage3 = transform.stage_3_fix_2(stage2, stage3)
+            final_stage3 = transform.stage_3_fix_2(stage2, stage3, "A_Calibrated_BAU")
         transform.stage_4_consolidate(stage1, stage3, stage5, final_stage3)
     finally:
         if previous is None:
