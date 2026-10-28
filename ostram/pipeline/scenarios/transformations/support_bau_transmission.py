@@ -3,6 +3,9 @@
 Required annual investment minima are committed additions. Their
 year is the commissioning year; OSeMOSYS keeps vintage v alive in year y when
 0 <= y - v < OperationalLife. Never export this policy as inherited Restrictions.
+
+``relax_interconnectors`` applies the same ceiling to the cross-border links of
+A_Calibrated_BAU, through ``techs``.
 """
 from __future__ import annotations
 
@@ -26,8 +29,16 @@ def _number(value: object, label: str, *, blank_zero: bool = False) -> float:
     return result
 
 
-def apply_commitment_ceiling(path: Path) -> dict:
-    """Change only allowlisted TRN total-capacity ceilings, fail before saving."""
+def apply_commitment_ceiling(path: Path, techs=TRN_TECHS, scenario: str = "BAU",
+                             record_name: str | None = "support_bau_transmission.json") -> dict:
+    """Change only allowlisted TRN total-capacity ceilings, fail before saving.
+
+    ``techs`` is a subset of the TRN allowlist; ``record_name=None`` writes no
+    record file and only returns the record.
+    """
+    techs = frozenset(techs)
+    if not techs or not techs <= TRN_TECHS:
+        raise ValueError(f"commitment ceiling: techs outside the TRN allowlist: {sorted(techs - TRN_TECHS)}")
     workbook = load_workbook(path)
     try:
         sheet = workbook["Secondary Techs"]
@@ -42,7 +53,7 @@ def apply_commitment_ceiling(path: Path) -> dict:
         for row in sheet.iter_rows(min_row=2):
             tech = row[headers["Tech"] - 1].value
             parameter = row[headers["Parameter"] - 1].value
-            if tech in TRN_TECHS and parameter in parameters:
+            if tech in techs and parameter in parameters:
                 key = (tech, parameter)
                 if key in rows:
                     raise ValueError(f"support BAU: duplicate parameter {key}")
@@ -52,14 +63,14 @@ def apply_commitment_ceiling(path: Path) -> dict:
         lives = {}
         for row in fixed.iter_rows(min_row=2, values_only=True):
             tech = row[columns["Tech"]]
-            if tech in TRN_TECHS and row[columns["Parameter"]] == "OperationalLife":
+            if tech in techs and row[columns["Parameter"]] == "OperationalLife":
                 if tech in lives:
                     raise ValueError(f"support BAU: duplicate OperationalLife for {tech}")
                 lives[tech] = _number(row[columns["Value"]], f"{tech} OperationalLife")
                 if lives[tech] <= 0:
                     raise ValueError(f"{tech}: OperationalLife must be positive")
         changes, evidence, projection_modes = [], [], []
-        for tech in sorted(TRN_TECHS):
+        for tech in sorted(techs):
             if tech not in lives or any((tech, p) not in rows for p in parameters):
                 raise ValueError(f"support BAU: incomplete transmission parameters for {tech}")
             mode = sheet.cell(rows[tech, "TotalAnnualMaxCapacity"], headers["Projection.Mode"])
@@ -89,12 +100,13 @@ def apply_commitment_ceiling(path: Path) -> dict:
         workbook.save(path)
     finally:
         workbook.close()
-    record = dict(schema="ostram-support-bau-transmission-v1", scenario="BAU",
+    record = dict(schema="ostram-support-bau-transmission-v1", scenario=scenario,
                   commitment_source="TotalAnnualMinCapacityInvestment (unchanged)",
                   survival_rule="0 <= year - commissioning_year < OperationalLife",
                   projection_modes=projection_modes,
                   cells=evidence)
-    path.with_name("support_bau_transmission.json").write_text(
-        json.dumps(record, indent=2), encoding="utf-8")
-    print(f"Support BAU: {len(TRN_TECHS)} transmission ceilings include surviving commitments")
+    if record_name is not None:
+        path.with_name(record_name).write_text(json.dumps(record, indent=2), encoding="utf-8")
+    label = "Support BAU" if scenario == "BAU" else scenario
+    print(f"{label}: {len(techs)} transmission ceilings include surviving commitments")
     return record

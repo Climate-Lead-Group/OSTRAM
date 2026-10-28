@@ -11,6 +11,11 @@ Both supported workbook shapes are accepted:
 
 Either shape may end with the audit-only ``IEEE Reference`` column. The loader does not consume that column and continues
 to reject every other schema extension.
+
+In the raw sheet, ``TotalAnnualMinCapacityInvestment`` rows may name a registered
+root scenario instead of ``BAU``. A root's row replaces the BAU row of the same
+link for that root, and so for every scenario derived from it. Every other
+parameter keeps ``BAU`` rows only.
 """
 from __future__ import annotations
 
@@ -20,6 +25,8 @@ from typing import Dict, Mapping
 
 from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
+
+from ..registry import ROOT_SCENARIOS
 
 
 AUTHORITY_SHEET_NAME = "Interconnector_Params"
@@ -40,9 +47,12 @@ MINIMUM_CONTRIBUTION_TECHS = frozenset({
     "TRNLKAXXMDVXX",
     "TRNNPLXXBGDXX",
 })
-MINIMUM_CONTRIBUTION_SOURCE = (
-    "Effective predecessor Stage 3 additive FUTURE contribution"
-)
+# Cross-border links without a BAU row. A root scenario's row may add one.
+ROOT_ONLY_CONTRIBUTION_TECHS = frozenset({
+    "TRNBGDXXINDEA",
+    "TRNBGDXXINDNE",
+    "TRNMDVXXINDSO",
+})
 
 MINIMUM_BOUNDARY_PARAMETER = "MinimumInvestmentClampBoundary"
 MINIMUM_BOUNDARY_TECHS = frozenset({
@@ -115,6 +125,18 @@ _CONTRIBUTION_TECH_METADATA = {
         205,
         "Transmission interconnection from Nepal, region XX to Bangladesh, region XX",
     ),
+    "TRNBGDXXINDEA": (
+        205,
+        "Transmission interconnection from Bangladesh, region XX to India, region EA",
+    ),
+    "TRNBGDXXINDNE": (
+        95,
+        "Transmission interconnection from Bangladesh, region XX to India, region NE",
+    ),
+    "TRNMDVXXINDSO": (
+        141,
+        "Transmission interconnection from Maldives, region XX to India, region SO",
+    ),
 }
 _BOUNDARY_TECH_METADATA = {
     "TRNBGDXXINDEA": (
@@ -181,16 +203,19 @@ def _validate_mapping(
     *,
     label: str,
     techs: frozenset[str],
+    optional_techs: frozenset[str] = frozenset(),
 ) -> None:
     actual_techs = set(authority)
-    if actual_techs != set(techs):
+    missing = techs - actual_techs
+    extra = actual_techs - techs - optional_techs
+    if missing or extra:
         raise ValueError(
             f"{label} technology domain mismatch: "
-            f"missing={sorted(techs - actual_techs)}, "
-            f"extra={sorted(actual_techs - techs)}"
+            f"missing={sorted(missing)}, "
+            f"extra={sorted(extra)}"
         )
     expected_years = set(AUTHORITY_YEARS)
-    for tech in sorted(techs):
+    for tech in sorted(actual_techs):
         actual_years = set(authority[tech])
         if actual_years != expected_years:
             raise ValueError(
@@ -210,6 +235,7 @@ def validate_minimum_contribution_authority(
         authority,
         label="minimum contribution authority",
         techs=MINIMUM_CONTRIBUTION_TECHS,
+        optional_techs=ROOT_ONLY_CONTRIBUTION_TECHS,
     )
 
 
@@ -229,13 +255,25 @@ def _load_family(
     *,
     parameter: str,
     techs: frozenset[str],
-    source: str,
+    source: str | None,
     tech_metadata: Mapping[str, tuple[int, str]],
     label: str,
+    scenario: str = BAU_SCENARIO,
+    root_techs: frozenset[str] | None = None,
 ) -> Dict[str, Dict[int, float]]:
+    """Load one dense family; ``source=None`` asks for any non-blank Source.
+
+    ``root_techs`` is the domain of rows that may name a root scenario; when
+    it is None every raw row must be a BAU row.
+    """
     path = Path(authority_path)
     if not path.is_file():
         raise FileNotFoundError(f"{label} workbook not found: {path}")
+    if scenario not in ROOT_SCENARIOS:
+        raise ValueError(
+            f"{label}: {scenario!r} is not a registered root scenario "
+            f"{list(ROOT_SCENARIOS)}"
+        )
 
     workbook = load_workbook(
         path, data_only=False, read_only=True, keep_links=False
@@ -248,7 +286,9 @@ def _load_family(
         worksheet = workbook[AUTHORITY_SHEET_NAME]
         columns, raw_shape = _header_columns(worksheet)
 
-        authority: Dict[str, Dict[int, float]] = {}
+        # {row scenario: {tech: profile}}; a materialized sheet has one
+        # already-merged scenario.
+        by_scenario: Dict[str, Dict[str, Dict[int, float]]] = {}
         for row_index, values in enumerate(
             worksheet.iter_rows(min_row=2, values_only=True), start=2
         ):
@@ -260,13 +300,29 @@ def _load_family(
                 raise ValueError(
                     f"{label} row {row_index}: Tech must be non-blank text"
                 )
-            if tech in authority:
+            row_scenario = (
+                values[columns["scenario"]] if raw_shape else scenario
+            )
+            if raw_shape and row_scenario != BAU_SCENARIO:
+                if root_techs is None:
+                    raise ValueError(
+                        f"{label} {tech}: scenario must be {BAU_SCENARIO!r}"
+                    )
+                if row_scenario not in ROOT_SCENARIOS:
+                    raise ValueError(
+                        f"{label} {tech} row {row_index}: scenario "
+                        f"{row_scenario!r} is not a registered root scenario "
+                        f"{list(ROOT_SCENARIOS)}"
+                    )
+                if tech not in root_techs:
+                    raise ValueError(
+                        f"{label} {tech} row {row_index}: a "
+                        f"{row_scenario!r} row is not allowed for {tech}"
+                    )
+            rows = by_scenario.setdefault(row_scenario, {})
+            if tech in rows:
                 raise ValueError(
                     f"{label} duplicate row for {tech} at row {row_index}"
-                )
-            if raw_shape and values[columns["scenario"]] != BAU_SCENARIO:
-                raise ValueError(
-                    f"{label} {tech}: scenario must be {BAU_SCENARIO!r}"
                 )
             if tech not in tech_metadata:
                 raise ValueError(f"{label} unexpected technology {tech!r}")
@@ -278,8 +334,9 @@ def _load_family(
                 "Parameter.ID": 7,
                 "Unit": None,
                 "Projection.Mode": "User defined",
-                "Source": source,
             }
+            if source is not None:
+                metadata_checks["Source"] = source
             for field, expected in metadata_checks.items():
                 actual = values[columns[field]]
                 if actual != expected:
@@ -287,6 +344,14 @@ def _load_family(
                         f"{label} {tech}: {field} must be {expected!r}, "
                         f"got {actual!r}"
                     )
+            row_source = values[columns["Source"]]
+            if source is None and (
+                not isinstance(row_source, str) or not row_source.strip()
+            ):
+                raise ValueError(
+                    f"{label} {tech} row {row_index}: Source must name the "
+                    "row's external source"
+                )
 
             projection_parameter = _numeric_decimal(
                 values[columns["Projection.Parameter"]],
@@ -303,25 +368,43 @@ def _load_family(
                     values[columns[year]], f"{label} {tech}/{year}"
                 )
                 profile[year] = float(number)
-            authority[tech] = profile
+            rows[tech] = profile
     finally:
         workbook.close()
 
-    _validate_mapping(authority, label=label, techs=techs)
+    optional = frozenset(root_techs or ()) - techs
+    if raw_shape:
+        bau = by_scenario.get(BAU_SCENARIO, {})
+        _validate_mapping(bau, label=label, techs=techs)
+        authority = dict(bau)
+        if scenario != BAU_SCENARIO:
+            authority.update(by_scenario.get(scenario, {}))
+    else:
+        authority = by_scenario.get(scenario, {})
+    _validate_mapping(
+        authority, label=label, techs=techs, optional_techs=optional
+    )
     return authority
 
 
 def load_minimum_contribution_authority(
     authority_path: Path,
+    scenario: str = BAU_SCENARIO,
 ) -> Dict[str, Dict[int, float]]:
-    """Load the exact 11-row additive minimum/FUTURE authority."""
+    """Load the additive minimum (forced build) authority of a root scenario.
+
+    The 11 BAU rows apply to every root; a row of ``scenario`` replaces the BAU
+    row of its link or adds a cross-border link that has no BAU row.
+    """
     return _load_family(
         authority_path,
         parameter=MINIMUM_CONTRIBUTION_PARAMETER,
         techs=MINIMUM_CONTRIBUTION_TECHS,
-        source=MINIMUM_CONTRIBUTION_SOURCE,
+        source=None,
         tech_metadata=_CONTRIBUTION_TECH_METADATA,
         label="minimum contribution authority",
+        scenario=scenario,
+        root_techs=MINIMUM_CONTRIBUTION_TECHS | ROOT_ONLY_CONTRIBUTION_TECHS,
     )
 
 

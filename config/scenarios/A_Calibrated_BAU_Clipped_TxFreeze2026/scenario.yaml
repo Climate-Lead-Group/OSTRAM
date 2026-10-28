@@ -7,7 +7,7 @@ description: >-
   A_Calibrated_BAU_Clipped of the same run, including interconnectors with no
   capacity. New investment in these interconnectors in 2023 to 2026 is fixed to
   that result's NewCapacity. The committed investments after 2026 in
-  TRNBTNXXBGDXX (2035) and TRNNPLXXBGDXX (2033) are set to zero, because the
+  TRNINDEANPLXX (2027) and TRNINDNONPLXX (2028) are set to zero, because the
   capacity is frozen. The run stops when the solved A_Calibrated_BAU_Clipped
   result is missing.
 apply_vre_ceiling_layer: true
@@ -106,111 +106,111 @@ edits:
   note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
     vintages fixed to its NewCapacity; original retirement schedule retained.
 - sheet: Secondary Techs
-  tech: TRNBTNXXBGDXX
+  tech: TRNBTNXXINDEA
+  param: TotalAnnualMaxCapacity
+  op: from_result
+  result: A_Calibrated_BAU_Clipped
+  variable: TotalCapacityAnnual
+  result_year: 2026
+  years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
+  create_if_absent: true
+  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
+    vintages fixed to its NewCapacity; original retirement schedule retained.
+- sheet: Secondary Techs
+  tech: TRNBTNXXINDEA
   param: TotalAnnualMinCapacityInvestment
-  values: {'2035': 0}
+  op: from_result
+  result: A_Calibrated_BAU_Clipped
+  variable: NewCapacity
+  years: [2023, 2024, 2025, 2026]
+  create_if_absent: true
+  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
+    vintages fixed to its NewCapacity; original retirement schedule retained.
+- sheet: Secondary Techs
+  tech: TRNBTNXXINDEA
+  param: TotalAnnualMaxCapacityInvestment
+  op: from_result
+  result: A_Calibrated_BAU_Clipped
+  variable: NewCapacity
+  years: [2023, 2024, 2025, 2026]
+  create_if_absent: true
+  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
+    vintages fixed to its NewCapacity; original retirement schedule retained.
+- sheet: Secondary Techs
+  tech: TRNBTNXXINDNE
+  param: TotalAnnualMaxCapacity
+  op: from_result
+  result: A_Calibrated_BAU_Clipped
+  variable: TotalCapacityAnnual
+  result_year: 2026
+  years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
+  create_if_absent: true
+  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
+    vintages fixed to its NewCapacity; original retirement schedule retained.
+- sheet: Secondary Techs
+  tech: TRNBTNXXINDNE
+  param: TotalAnnualMinCapacityInvestment
+  op: from_result
+  result: A_Calibrated_BAU_Clipped
+  variable: NewCapacity
+  years: [2023, 2024, 2025, 2026]
+  create_if_absent: true
+  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
+    vintages fixed to its NewCapacity; original retirement schedule retained.
+- sheet: Secondary Techs
+  tech: TRNBTNXXINDNE
+  param: TotalAnnualMaxCapacityInvestment
+  op: from_result
+  result: A_Calibrated_BAU_Clipped
+  variable: NewCapacity
+  years: [2023, 2024, 2025, 2026]
+  create_if_absent: true
+  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
+    vintages fixed to its NewCapacity; original retirement schedule retained.
+- sheet: Secondary Techs
+  tech: TRNINDEANPLXX
+  param: TotalAnnualMaxCapacity
+  op: from_result
+  result: A_Calibrated_BAU_Clipped
+  variable: TotalCapacityAnnual
+  result_year: 2026
+  years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
+  create_if_absent: true
+  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
+    vintages fixed to its NewCapacity; original retirement schedule retained.
+- sheet: Secondary Techs
+  tech: TRNINDEANPLXX
+  param: TotalAnnualMinCapacityInvestment
+  op: from_result
+  result: A_Calibrated_BAU_Clipped
+  variable: NewCapacity
+  years: [2023, 2024, 2025, 2026]
+  create_if_absent: true
+  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
+    vintages fixed to its NewCapacity; original retirement schedule retained.
+- sheet: Secondary Techs
+  tech: TRNINDEANPLXX
+  param: TotalAnnualMaxCapacityInvestment
+  op: from_result
+  result: A_Calibrated_BAU_Clipped
+  variable: NewCapacity
+  years: [2023, 2024, 2025, 2026]
+  create_if_absent: true
+  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
+    vintages fixed to its NewCapacity; original retirement schedule retained.
+- sheet: Secondary Techs
+  tech: TRNINDEANPLXX
+  param: TotalAnnualMinCapacityInvestment
+  values: {'2027': 0}
   create_if_absent: true
   note: committed investment after 2026 set to zero; the capacity is frozen.
 - sheet: Secondary Techs
-  tech: TRNBTNXXBGDXX
+  tech: TRNINDEANPLXX
   param: TotalAnnualMaxCapacityInvestment
-  values: {'2035': 0}
+  values: {'2027': 0}
   create_if_absent: true
   note: committed investment after 2026 set to zero; the capacity is frozen.
 - sheet: Secondary Techs
-  tech: TRNBTNXXINDEA
-  param: TotalAnnualMaxCapacity
-  op: from_result
-  result: A_Calibrated_BAU_Clipped
-  variable: TotalCapacityAnnual
-  result_year: 2026
-  years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
-  create_if_absent: true
-  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
-    vintages fixed to its NewCapacity; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNBTNXXINDEA
-  param: TotalAnnualMinCapacityInvestment
-  op: from_result
-  result: A_Calibrated_BAU_Clipped
-  variable: NewCapacity
-  years: [2023, 2024, 2025, 2026]
-  create_if_absent: true
-  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
-    vintages fixed to its NewCapacity; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNBTNXXINDEA
-  param: TotalAnnualMaxCapacityInvestment
-  op: from_result
-  result: A_Calibrated_BAU_Clipped
-  variable: NewCapacity
-  years: [2023, 2024, 2025, 2026]
-  create_if_absent: true
-  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
-    vintages fixed to its NewCapacity; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNBTNXXINDNE
-  param: TotalAnnualMaxCapacity
-  op: from_result
-  result: A_Calibrated_BAU_Clipped
-  variable: TotalCapacityAnnual
-  result_year: 2026
-  years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
-  create_if_absent: true
-  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
-    vintages fixed to its NewCapacity; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNBTNXXINDNE
-  param: TotalAnnualMinCapacityInvestment
-  op: from_result
-  result: A_Calibrated_BAU_Clipped
-  variable: NewCapacity
-  years: [2023, 2024, 2025, 2026]
-  create_if_absent: true
-  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
-    vintages fixed to its NewCapacity; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNBTNXXINDNE
-  param: TotalAnnualMaxCapacityInvestment
-  op: from_result
-  result: A_Calibrated_BAU_Clipped
-  variable: NewCapacity
-  years: [2023, 2024, 2025, 2026]
-  create_if_absent: true
-  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
-    vintages fixed to its NewCapacity; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNINDEANPLXX
-  param: TotalAnnualMaxCapacity
-  op: from_result
-  result: A_Calibrated_BAU_Clipped
-  variable: TotalCapacityAnnual
-  result_year: 2026
-  years: [2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046, 2047, 2048, 2049, 2050]
-  create_if_absent: true
-  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
-    vintages fixed to its NewCapacity; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNINDEANPLXX
-  param: TotalAnnualMinCapacityInvestment
-  op: from_result
-  result: A_Calibrated_BAU_Clipped
-  variable: NewCapacity
-  years: [2023, 2024, 2025, 2026]
-  create_if_absent: true
-  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
-    vintages fixed to its NewCapacity; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNINDEANPLXX
-  param: TotalAnnualMaxCapacityInvestment
-  op: from_result
-  result: A_Calibrated_BAU_Clipped
-  variable: NewCapacity
-  years: [2023, 2024, 2025, 2026]
-  create_if_absent: true
-  note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
-    vintages fixed to its NewCapacity; original retirement schedule retained.
-- sheet: Secondary Techs
   tech: TRNINDNONPLXX
   param: TotalAnnualMaxCapacity
   op: from_result
@@ -241,6 +241,18 @@ edits:
   create_if_absent: true
   note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
     vintages fixed to its NewCapacity; original retirement schedule retained.
+- sheet: Secondary Techs
+  tech: TRNINDNONPLXX
+  param: TotalAnnualMinCapacityInvestment
+  values: {'2028': 0}
+  create_if_absent: true
+  note: committed investment after 2026 set to zero; the capacity is frozen.
+- sheet: Secondary Techs
+  tech: TRNINDNONPLXX
+  param: TotalAnnualMaxCapacityInvestment
+  values: {'2028': 0}
+  create_if_absent: true
+  note: committed investment after 2026 set to zero; the capacity is frozen.
 - sheet: Secondary Techs
   tech: TRNINDSOLKAXX
   param: TotalAnnualMaxCapacity
@@ -365,15 +377,3 @@ edits:
   create_if_absent: true
   note: end-2026 capacity of the solved A_Calibrated_BAU_Clipped; 2023-2026 new
     vintages fixed to its NewCapacity; original retirement schedule retained.
-- sheet: Secondary Techs
-  tech: TRNNPLXXBGDXX
-  param: TotalAnnualMinCapacityInvestment
-  values: {'2033': 0}
-  create_if_absent: true
-  note: committed investment after 2026 set to zero; the capacity is frozen.
-- sheet: Secondary Techs
-  tech: TRNNPLXXBGDXX
-  param: TotalAnnualMaxCapacityInvestment
-  values: {'2033': 0}
-  create_if_absent: true
-  note: committed investment after 2026 set to zero; the capacity is frozen.

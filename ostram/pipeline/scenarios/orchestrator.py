@@ -57,7 +57,7 @@ class A3Dependencies:
     stage_1_scripts_1_to_5: Callable[[Path], object]
     stage_1b: Callable[[Path, Path, Path], object]
     stage_2_and_2_5: Callable[[Path, Path, Path], object]
-    stage_3_fix_2: Callable[[Path, Path], Path]
+    stage_3_fix_2: Callable[[Path, Path, str], Path]
     stage_4_consolidate: Callable[[Path, Path, Path, Path], object]
     stage_4_5_apply_inherited_restrictions: Callable[
         [Path, Path, list[str]], object
@@ -217,7 +217,9 @@ def execute_plan(
     dependencies.stage_1_scripts_1_to_5(stage1)
     dependencies.stage_1b(workdir, stage1, stage1b)
     dependencies.stage_2_and_2_5(workdir, stage1b, stage2)
-    parameter_for_stage4 = dependencies.stage_3_fix_2(stage2, stage3)
+    parameter_for_stage4 = dependencies.stage_3_fix_2(
+        stage2, stage3, plan.scenario
+    )
     dependencies.stage_4_consolidate(
         stage1,
         stage3,
