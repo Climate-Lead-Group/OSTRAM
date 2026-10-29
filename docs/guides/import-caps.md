@@ -290,6 +290,9 @@ OSTRAM/
   demand_fuel: ELCBGDXX03
   importer: BGDXX
   years: [2027, 2028, ..., 2050]
+  create_if_absent: false
+  note: import <= 15% of demand x the interconnector's import share in the solved
+    B_Optimised_VRE (strict cap, no export allowance); study period 2027+ only
 ```
 
 For each listed link and year, the edit writes:

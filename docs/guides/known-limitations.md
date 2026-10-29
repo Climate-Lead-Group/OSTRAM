@@ -198,13 +198,26 @@ India North and India North to India West.
 ([Interconnector build caps](../rules.md#interconnector-build-caps)). Their
 `TotalAnnualMaxCapacity` keeps the value set before the build-cap rule runs.
 
+That value is the corridor's residual capacity plus its forced builds. India
+East to India West has 21.19 GW to 2024 and 22.79 GW from 2025, after a forced
+build of 1.6 GW in 2025. India North to India West has 29.22 GW in 2023 and
+30.82 GW after a forced build of 1.6 GW in 2024. From 2028 it has 47.62 GW in
+`A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE`, which force one build
+of 12.6 GW in 2028, and 43.42 GW in `BAU`, which forces 8.4 GW in 2026 and
+4.2 GW in 2028. India North-East to India North has no total cap in A, B and C.
+
 **Effect on results.** For some of these corridors the total cap, not cost,
 limits growth. In B and C cost sets the size only of the 13 listed corridors
 with new investment; in A, only of the four listed India-internal corridors.
+On India East to India West, and on India North to India West before 2028, the
+total cap leaves no room beyond the forced builds, so the headroom of the build
+cap does not apply there. From 2028, A, B and C may add 4.2 GW on India North
+to India West beyond its forced builds.
 
 **How to test or improve.** Compare their capacity in the results with their
-`TotalAnnualMaxCapacity`. To let cost set a corridor's size, give it a schedule
-in `relax_interconnectors.yaml`.
+`TotalAnnualMaxCapacity`. Compare the forced builds of the four roots in the
+compiled `TotalAnnualMinCapacityInvestment.csv`. To let cost set a corridor's
+size, give it a schedule in `relax_interconnectors.yaml`.
 
 ### India South to West corridor, 2023 to 2026
 
@@ -362,6 +375,95 @@ India. Other scenarios are unaffected.
 `TRNINDSOLKAXX` out of the scenario's `set_interconnector_direction.yaml`, or
 read `B_Opt_DirBidir`.
 
+### Existing capacity from Bhutan to India North-East
+
+**The data gap.** The `Interconnectors` sheet lists three existing 132 kV lines
+from Bhutan to India North-East: Kurichhu to Gelephu to Salakati (60 MW, row
+NO 3), Deothang to Motanga (60 MW, row NO 38) and Gelephu to Salakati (50 MW,
+row NO 39). Row NO 39 is marked as a duplicate of row NO 3.
+
+**What we assumed and why.** The residual capacity of `TRNBTNXXINDNE` is
+0.17 GW, the sum of the three rows.
+
+**Effect on results.** The link's existing capacity counts the Gelephu to
+Salakati line twice, so Bhutan can send up to 0.05 GW more to India North-East
+than its existing lines carry.
+
+**How to test or improve.** Set the `ResidualCapacity` row of `TRNBTNXXINDNE`
+in `Interconnector_Params` to 0.12 GW, the two distinct lines.
+
+### India's coal capital cost
+
+**The data gap.** Published costs of new coal plants in India sit on
+different bases. NTPC's board approvals for new units give a current estimated
+cost that includes interest during construction and financing charges (CERC,
+[Order in Petition No. 402/GT/2019](https://cercind.gov.in/2023/orders/402-GT-2019.pdf),
+26 July 2023, para 3).
+
+**What we assumed and why.** ASSUMPTION: a new coal unit in India costs
+1,381.15 USD/kW in constant 2023 USD, in every India node and every year to
+2050. The value is the median of six NTPC approvals for new 800 MW units,
+approved from March 2024 to July 2026, which range from 1,274 to 1,432 USD/kW.
+It includes interest during construction and financing charges, because NTPC
+states its approved costs that way. Other plant costs in the workbook are
+taken as published, and the note on each cost row says whether its value
+includes interest during construction.
+
+**Effect on results.** New coal in India carries interest during construction
+in its capital cost, while technologies whose published cost leaves it out do
+not. New coal in India is therefore slightly dearer against those technologies
+than it would be on one basis.
+
+**How to test or improve.** Take the interest during construction out of the
+`CapitalCost` rows of `PWRCOAINDEA`, `PWRCOAINDNE`, `PWRCOAINDNO`,
+`PWRCOAINDSO` and `PWRCOAINDWE` in `Secondary_Techs`, or add it to the costs
+published without it, so that all costs sit on one basis.
+
+### Nuclear and biomass fuel costs
+
+**The data gap.** The workbook prices nuclear fuel and biomass feedstock with
+stated values, not with a calculation from a cited price.
+
+**What we assumed and why.** ASSUMPTION: nuclear fuel costs 0.56 USD/GJ of
+reactor heat for national supply and 2.6 USD/GJ for international supply,
+constant in 2023 USD, an allowance for fabricated fuel over the whole fuel
+cycle. ASSUMPTION: biomass residue costs 4 USD/GJ in 2023, rising to 4.5
+USD/GJ in 2050 in real terms, for collection, processing and transport. The
+notes on the `MINURN` and `RNWBIO` rows of `VariableCost` state these values
+and what they cover, with no derivation. The biomass notes compare the value
+with the feedstock price of CERC's 2024 renewable energy tariff regulations,
+3.75 USD/GJ in 2023 USD.
+
+**Effect on results.** These costs set the running cost of nuclear and biomass
+plants, so they affect how much those plants run and how much new capacity of
+each the model builds.
+
+**How to test or improve.** Change the `MINURN` and `RNWBIO` rows of
+`VariableCost`. A possible future calibration refinement derives each value
+from a published fuel price.
+
+### Coal stock in India North and Sri Lanka
+
+**The data gap.** The workbook's plant inventory and its coal stock differ for
+two nodes, and the stock rows carry no note that gives their basis.
+
+**What we assumed and why.** The model's coal stock is 45.865 GW in India North
+(`PWRCOAINDNO`) and 0.81 GW in Sri Lanka (`PWRCOALKAXX`) in 2023, from the
+`ResidualCapacity` rows of `Secondary_Techs`. The `Existing_Generation` sheet
+lists 42 operating units of 51,849 MW in India North and the three 300 MW
+Lakvijaya units, 900 MW, in Sri Lanka. The 2025 coal and oil split of India
+North also weights coal at 51.849 GW (see India's coal and oil split, under
+Standard simplifications).
+
+**Effect on results.** The model has 5.984 GW less existing coal in India North
+and 0.09 GW less in Sri Lanka than the inventory. In 2023 to 2026 the
+generation bounds set coal output. In later years the model has less existing
+coal to run, so it may generate less from coal or build more new capacity than
+with the inventory's stock.
+
+**How to test or improve.** Set the two `ResidualCapacity` rows to the
+inventory totals, with the inventory's retirement years.
+
 ## Standard simplifications
 
 ### One internal grid loss for every node
@@ -402,6 +504,23 @@ and reporting differences.
 
 **How to test or improve.** Read 2023 imports as an allowed range, not a point.
 To test, narrow the band toward the reference.
+
+### Nepal's 2023 values and the fiscal year
+
+**The data gap.** Nepal publishes its electricity statistics by fiscal year,
+which runs from mid-July to mid-July.
+
+**What we assumed and why.** Model year 2023 takes NEA's fiscal year 2022/23.
+Nepal's 2023 demand and the bound on its 2023 exports both come from that
+fiscal year, 1,346 GWh of exports among them (NEA,
+[A Year in Review, Fiscal Year 2023/2024](https://www.nea.org.np/uploads/shares/annual_report/60896609.pdf),
+Highlights, printed p. 157).
+
+**Effect on results.** Nepal's 2023 values describe a year that starts in
+mid-2022, about half a year before calendar 2023.
+
+**How to test or improve.** Compare Nepal's 2023 results with statistics for
+fiscal year 2022/23, whatever year label a publication gives it.
 
 ### Pumped storage in India
 
@@ -581,6 +700,28 @@ and for the two provenance pages
 ([VRE ceilings](../reference/scenarios/vre_ceiling_provenance.md) and
 [interconnector directions](../reference/scenarios/interconnector_direction_references.md)).
 
+### Workbook notes that name a document without a link
+
+**What you will see.** Some cost and stock notes in `Secondary_Techs` name a
+document but give no link to it: the Bangladesh Power Development Board plant
+cohorts (J4), the statement of Bhutan's Ministry of Energy and Natural
+Resources of 19 July 2025 and the Ministry of Finance budget 2026-27 (J13), the
+Nepal Electricity Authority plant roster (J67 and J238), CEB's Statistical
+Digest 2023 (J76 and other Sri Lanka notes), BPC's PDB 2024 (the Bhutan hydro
+notes, such as J251), and CERC's orders 17/SM/2015 and SM/004/2015 (J964 to
+J973). The note on the Nepal run-of-river cost (J236) links to a folder, not
+to MoEWRI's Energy Development Roadmap 2081 itself. Some stock notes give only
+"Source: CEA" or "Source: BPDB" (for example J49 and J94), and some point to
+the workbook's `Existing_Generation` sheet (for example J265).
+
+**Effect on results.** None. A reader cannot open those documents from the
+workbook alone.
+
+**What to do.** Trace base-year values through
+[Where the base-year values come from](../reference/base_year_value_sources.md),
+which links each document it cites. Find the other documents by the title the
+note gives.
+
 ### The `Capacities_CF` template sheet
 
 **What you will see.** The `Capacities_CF` sheet holds 12-slice capacity
@@ -601,3 +742,144 @@ its own.
 
 **What to do.** Check the fuels of a new clone in the compiled
 `InputActivityRatio.csv`.
+
+### Placeholder technology names
+
+**What you will see.** In `Secondary_Techs` column D (`Tech.Name`, 68 cells)
+and `VariableCost` column E (24 cells), some technologies are named "H2
+existing technology monetary authority: " followed by their code. They include
+the backstops (`PWRBCK...`), coal with carbon capture (`PWRCCS...`),
+concentrated solar (`PWRCSP...`), `PWRPET...`, `PWRCOAINDNE`, `PWRWOFINDNE` and
+`PWRWOFINDNO`, and supply technologies such as `MINPET...`, `MINCOG...` and
+`MINOTH...`. The name does not describe the technology.
+
+**Effect on results.** None. The name is a label; the model works with the
+technology codes.
+
+**What to do.** Read each technology from its code.
+
+### The `Interconnectors` inventory sheet
+
+**What you will see.** Most rows of the `Interconnectors` sheet give a status
+that starts with "Operating before 2024", "Committed", "Planned" or "Other".
+Rows NO 48 to 51 use "Planning", "DPR Stage" and "Under Construction" instead.
+Rows NO 53 to 55 give no capacity, and row NO 36 gives no commissioning date.
+Row NO 10, Raxaul to Parwanipur, names India North as its Indian node, while
+Raxaul is in Bihar, which is part of the model's India East node. Rows NO 15
+and NO 27 are marked "Committed", but their capacity is already part of the
+residual capacity of their links: 0.15 GW of the 0.5 GW from India North to
+Nepal, and the 0.04 GW from Nepal to Bangladesh.
+
+**Effect on results.** None. The model takes residual capacities and forced
+builds from `Interconnector_Params`, not from this sheet.
+
+**What to do.** Read the sheet as an inventory of projects. Check a link's
+capacity in `Interconnector_Params` or in the compiled `ResidualCapacity.csv`.
+
+### Waste-to-energy in Nepal
+
+**What you will see.** `Secondary_Techs` has no cost rows for `PWRWASNPLXX`.
+The model takes its capital and fixed costs from `inputs/osemosys_global`
+(6,662.5 USD/kW and 252.5 USD/kW-year in 2023), values that the workbook does
+not source.
+
+**Effect on results.** None. Its `TotalAnnualMaxCapacity` is 0 in every year,
+so the model cannot build it.
+
+**What to do.** Add sourced cost rows to `Secondary_Techs` before allowing the
+plant to be built.
+
+### Variable cost of long-duration storage
+
+**What you will see.** `VariableCost` has no row for long-duration storage
+(`PWRLDS...`). The model takes 0.0161 MUSD/PJ (0.0161 USD/GJ) for each unit
+discharged, in every year and node, from `inputs/osemosys_global/VariableCost.csv`,
+a value that the workbook does not source.
+
+**Effect on results.** Small. The cost is a little over one hundredth of a US
+dollar for each GJ that long-duration storage discharges.
+
+**What to do.** Add a sourced `VariableCost` row for `PWRLDS` to the workbook.
+
+### Costs of coal with carbon capture
+
+**What you will see.** The fixed O&M of coal with carbon capture (`PWRCCS...`)
+is the capture plant's capital cost times the coal plant's ratio of fixed O&M
+to capital cost. In India this is 1,980.94 x 26.53 / 1,381.15 = 38.05
+USD/kW-year, and in Bangladesh 2,307.97 x 41.70 / 1,708.18 = 56.34
+USD/kW-year, in constant 2023 USD. The notes on these rows state the formula
+as an ASSUMPTION.
+
+**Effect on results.** None. `TotalAnnualMaxCapacity` of every `PWRCCS`
+technology is 0 in every year in `A_Calibrated_BAU`, `B_Optimised_VRE` and
+`C_Target_VRE`, so the model cannot build them.
+
+**What to do.** Source the fixed O&M of a capture plant before allowing it to
+be built.
+
+### Backstop costs in the input files
+
+**What you will see.** `CapitalCost.csv`, `FixedCost.csv` and
+`VariableCost.csv` in `inputs/osemosys_global`, and the same files of the
+Maldives country template in `ostram/resources/preparation/country_templates/MDV/`,
+hold 999,999 for the backstop technologies (`PWRBCK...`).
+
+**Effect on results.** None. The `PWRBCK` rows of `Secondary_Techs` and
+`VariableCost` set the costs the model uses: 50,000 USD/kW, 2,000 USD/kW-year
+and 416.67 MUSD/PJ.
+
+**What to do.** Read backstop costs from the workbook or from the compiled
+`CapitalCost.csv`, `FixedCost.csv` and `VariableCost.csv`.
+
+### `B_Opt_DirBidir` and `B_Opt_Clipped`
+
+**What you will see.** `B_Opt_DirBidir` applies the direction step with no
+one-way corridor. It compiles to the same solver datafile as `B_Opt_Clipped`,
+so the two scenarios give the same result.
+
+**Effect on results.** None. The scenario shows that the direction step
+changes nothing when no corridor is one-way.
+
+**What to do.** Compare `B_Opt_DirContractual` with either scenario.
+
+### Storage energy cost in `B_Opt_ATBAdvanced`
+
+**What you will see.** `B_Opt_ATBAdvanced` moves the 2024 to 2050 capital and
+fixed costs to the Advanced case of NREL ATB 2025, but the storage energy cost
+stays on the Moderate case. Scenario edits cannot reach the storage energy
+cost, which every scenario takes from `inputs/osemosys_global/CapitalCostStorage.csv`.
+
+**Effect on results.** In this scenario the power cost of storage follows the
+Advanced case and its energy cost the Moderate case, so storage with a long
+duration is dearer against other technologies than in a full Advanced case.
+
+**What to do.** Read the scenario's storage results with this in mind. To test
+a full Advanced case, scale `CapitalCostStorage.csv` to the Advanced case in a
+copy of the inputs.
+
+### `ostram transform` and the relaxation of B
+
+**What you will see.** `python -m ostram transform --scenario B_Optimised_VRE`
+builds B's workbook without the step that gives B the looser of its own bounds
+and A's ([B as a relaxation of A](../rules.md#b-as-a-relaxation-of-a)). That
+step runs only when `python -m ostram run` builds the scenarios.
+
+**Effect on results.** None for runs started with `python -m ostram run`. A
+workbook of B built with `ostram transform` is not the B that a run solves.
+
+**What to do.** Build B, and the scenarios derived from it, with
+`python -m ostram run`.
+
+### `B_Opt_Clipped_GrossImportCap15` reaches its cap only in Bangladesh
+
+**What you will see.** The scenario caps the gross imports of all six countries
+at 15 per cent of their yearly requirement from 2027 to 2050. In its solved
+result only Bangladesh imports up to the cap; the other five countries stay
+below it in every year.
+
+**Effect on results.** Only Bangladesh's cap shapes the result. For the other
+countries the cap does not change what the model chooses.
+
+**What to do.** Read the scenario as a cap on Bangladesh's imports. To test a
+cap on another country, give it a fraction low enough to bind
+([Import caps](import-caps.md)).

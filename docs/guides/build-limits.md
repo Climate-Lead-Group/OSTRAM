@@ -14,7 +14,7 @@ and interconnectors. The internal grid has no build cap (see
 flowchart TB
     subgraph A3["Stage A3, each root"]
         R["Build-cap rule: plants"] --> I["Interconnector build caps"]
-        I --> X["B only: the looser of B's and A's limits"]
+        I --> X["B only: the looser of B's and A's limits, with one exception"]
     end
     subgraph DS["Derived scenarios"]
         E["Scenario edits can replace caps"]
@@ -92,8 +92,10 @@ envelope of `config/scenarios/C_Target_VRE/set_vre_targets.yaml`.
 After its rules, `B_Optimised_VRE` takes, cell by cell, the larger of its own
 build cap and that of `A_Calibrated_BAU` built in the same run, and the
 smaller of the two minimum investments; the same holds for every other limit.
-No limit of B is then tighter than A's, so B can reproduce A's plan and costs
-no more. The [rules](../rules.md#b-as-a-relaxation-of-a) page gives the rule.
+For the yearly build cap of a cross-border link, A's value counts only up to
+the room A has left in that year. No limit of B is then tighter than any limit
+A can use, so B can reproduce A's plan and costs no more. The
+[rules](../rules.md#b-as-a-relaxation-of-a) page gives the rule.
 
 `margin_factor` 1.1 leaves 10 per cent to spare above each technology's share
 of the required growth. It is a model margin and has no link to energy

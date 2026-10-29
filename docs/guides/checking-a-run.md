@@ -148,7 +148,7 @@ OSTRAM/
   scenario.
 - The datafile holds the intended values, and for a gross cap a non-empty
   `set D4ImportCountry` with one `D4ImportFraction` line per capped year.
-- The solve is optimal.
+- The solve is optimal, or optimal with unscaled infeasibilities below 1e-5.
 - No backstop production in any node or year.
 - The import share and the binding build caps are where you expect them.
 - The solver-free checks listed under Tests in `CONTRIBUTING.md` pass.
