@@ -198,13 +198,26 @@ India North and India North to India West.
 ([Interconnector build caps](../rules.md#interconnector-build-caps)). Their
 `TotalAnnualMaxCapacity` keeps the value set before the build-cap rule runs.
 
+That value is the corridor's residual capacity plus its forced builds. India
+East to India West has 21.19 GW to 2024 and 22.79 GW from 2025, after a forced
+build of 1.6 GW in 2025. India North to India West has 29.22 GW in 2023 and
+30.82 GW after a forced build of 1.6 GW in 2024. From 2028 it has 47.62 GW in
+`A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE`, which force one build
+of 12.6 GW in 2028, and 43.42 GW in `BAU`, which forces 8.4 GW in 2026 and
+4.2 GW in 2028. India North-East to India North has no total cap in A, B and C.
+
 **Effect on results.** For some of these corridors the total cap, not cost,
 limits growth. In B and C cost sets the size only of the 13 listed corridors
 with new investment; in A, only of the four listed India-internal corridors.
+On India East to India West, and on India North to India West before 2028, the
+total cap leaves no room beyond the forced builds, so the headroom of the build
+cap does not apply there. From 2028, A, B and C may add 4.2 GW on India North
+to India West beyond its forced builds.
 
 **How to test or improve.** Compare their capacity in the results with their
-`TotalAnnualMaxCapacity`. To let cost set a corridor's size, give it a schedule
-in `relax_interconnectors.yaml`.
+`TotalAnnualMaxCapacity`. Compare the forced builds of the four roots in the
+compiled `TotalAnnualMinCapacityInvestment.csv`. To let cost set a corridor's
+size, give it a schedule in `relax_interconnectors.yaml`.
 
 ### India South to West corridor, 2023 to 2026
 
@@ -361,6 +374,23 @@ India. Other scenarios are unaffected.
 **How to test or improve.** To let the link run both ways, leave
 `TRNINDSOLKAXX` out of the scenario's `set_interconnector_direction.yaml`, or
 read `B_Opt_DirBidir`.
+
+### Existing capacity from Bhutan to India North-East
+
+**The data gap.** The `Interconnectors` sheet lists three existing 132 kV lines
+from Bhutan to India North-East: Kurichhu to Gelephu to Salakati (60 MW, row
+NO 3), Deothang to Motanga (60 MW, row NO 38) and Gelephu to Salakati (50 MW,
+row NO 39). Row NO 39 is marked as a duplicate of row NO 3.
+
+**What we assumed and why.** The residual capacity of `TRNBTNXXINDNE` is
+0.17 GW, the sum of the three rows.
+
+**Effect on results.** The link's existing capacity counts the Gelephu to
+Salakati line twice, so Bhutan can send up to 0.05 GW more to India North-East
+than its existing lines carry.
+
+**How to test or improve.** Set the `ResidualCapacity` row of `TRNBTNXXINDNE`
+in `Interconnector_Params` to 0.12 GW, the two distinct lines.
 
 ## Standard simplifications
 
@@ -601,3 +631,59 @@ its own.
 
 **What to do.** Check the fuels of a new clone in the compiled
 `InputActivityRatio.csv`.
+
+### The `Interconnectors` inventory sheet
+
+**What you will see.** Most rows of the `Interconnectors` sheet give a status
+that starts with "Operating before 2024", "Committed", "Planned" or "Other".
+Rows NO 48 to 51 use "Planning", "DPR Stage" and "Under Construction" instead.
+Rows NO 53 to 55 give no capacity, and row NO 36 gives no commissioning date.
+Row NO 10, Raxaul to Parwanipur, names India North as its Indian node, while
+Raxaul is in Bihar, which is part of the model's India East node. Rows NO 15
+and NO 27 are marked "Committed", but their capacity is already part of the
+residual capacity of their links: 0.15 GW of the 0.5 GW from India North to
+Nepal, and the 0.04 GW from Nepal to Bangladesh.
+
+**Effect on results.** None. The model takes residual capacities and forced
+builds from `Interconnector_Params`, not from this sheet.
+
+**What to do.** Read the sheet as an inventory of projects. Check a link's
+capacity in `Interconnector_Params` or in the compiled `ResidualCapacity.csv`.
+
+### Waste-to-energy in Nepal
+
+**What you will see.** `Secondary_Techs` has no cost rows for `PWRWASNPLXX`.
+The model takes its capital and fixed costs from `inputs/osemosys_global`
+(6,662.5 USD/kW and 252.5 USD/kW-year in 2023), values that the workbook does
+not source.
+
+**Effect on results.** None. Its `TotalAnnualMaxCapacity` is 0 in every year,
+so the model cannot build it.
+
+**What to do.** Add sourced cost rows to `Secondary_Techs` before allowing the
+plant to be built.
+
+### Backstop costs in the input files
+
+**What you will see.** `CapitalCost.csv`, `FixedCost.csv` and
+`VariableCost.csv` in `inputs/osemosys_global`, and the same files of the
+Maldives country template in `ostram/resources/preparation/country_templates/MDV/`,
+hold 999,999 for the backstop technologies (`PWRBCK...`).
+
+**Effect on results.** None. The `PWRBCK` rows of `Secondary_Techs` and
+`VariableCost` set the costs the model uses: 50,000 USD/kW, 2,000 USD/kW-year
+and 416.67 MUSD/PJ.
+
+**What to do.** Read backstop costs from the workbook or from the compiled
+`CapitalCost.csv`, `FixedCost.csv` and `VariableCost.csv`.
+
+### `B_Opt_DirBidir` and `B_Opt_Clipped`
+
+**What you will see.** `B_Opt_DirBidir` applies the direction step with no
+one-way corridor. It compiles to the same solver datafile as `B_Opt_Clipped`,
+so the two scenarios give the same result.
+
+**Effect on results.** None. The scenario shows that the direction step
+changes nothing when no corridor is one-way.
+
+**What to do.** Compare `B_Opt_DirContractual` with either scenario.

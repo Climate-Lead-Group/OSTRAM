@@ -539,7 +539,7 @@ both of their caps are set to 9999. Interconnectors are skipped.
 | Adequacy top-up | none | 0.0 to 2040, 0.08 in 2045, 0.20 in 2050 | 0.0 to 2040, 0.08 in 2045, 0.20 in 2050 |
 | Exempt families | PWRSDS, PWRLDS | PWRSDS, PWRLDS | PWRSDS, PWRLDS |
 | Storage minimum investment | none | none | `storage_floors.yaml` |
-| Bounds after the rules | as written | the looser of B's and A's, cell by cell | as written |
+| Bounds after the rules | as written | the looser of B's and A's, cell by cell; for the yearly build cap of a cross-border link, A's value counts only up to the room A has left in that year ([B as a relaxation of A](#b-as-a-relaxation-of-a)) | as written |
 
 In A the cap multiplier stays at 1.0, so the family limits there only decide
 which families are locked, and the technology top-up of 0.0 GW raises
