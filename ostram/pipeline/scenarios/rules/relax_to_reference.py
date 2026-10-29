@@ -18,6 +18,14 @@ For every cell of A-O_Parametrization.xlsx that holds a bound:
                     reference's; a row the compiler does not export counts
                     as 0
 
+A cross-border link's TotalAnnualMaxCapacityInvestment is compared with the
+most new capacity the reference can add in that year: the smaller of its
+yearly cap and its TotalAnnualMaxCapacity less its ResidualCapacity and less
+its forced builds (TotalAnnualMinCapacityInvestment) of earlier years still in
+service under OperationalLife. Under a total cap of existing capacity plus
+forced builds the reference adds only its forced builds, so a yearly cap above
+them gives the target no room the reference can use.
+
 Every other cell is left as it is. A row is exported when its
 Projection.Mode is set and is not EMPTY, Zero or According to demand (the
 B1 compiler's rule). When the reference row is not exported and the target
@@ -43,6 +51,8 @@ from pathlib import Path
 
 from openpyxl import load_workbook
 
+from ostram.pipeline.scenarios.rules.relax_interconnectors import is_cross_border
+
 PARAM_FILE_NAME = "A-O_Parametrization.xlsx"
 
 # The bounds of model/osemosys_fast_preprocessed.txt. An upper bound limits a
@@ -66,6 +76,12 @@ LOWER_BOUNDS = (
 NOT_EXPORTED_MODES = ("EMPTY", "Zero", "", None, "According to demand")
 EXPORTED_MODE = "User defined"
 NO_BOUND = -1
+YEARLY_CAP = "TotalAnnualMaxCapacityInvestment"
+TOTAL_CAP = "TotalAnnualMaxCapacity"
+MIN_INV = "TotalAnnualMinCapacityInvestment"
+RESIDUAL = "ResidualCapacity"
+FIXED_SHEET = "Fixed Horizon Parameters"
+ROOM_TOLERANCE = 1e-9  # GW
 
 
 class RelaxationError(ValueError):
@@ -122,6 +138,56 @@ def _value(values: tuple, column: int):
     return values[column] if column < len(values) else None
 
 
+def _residual_rows(ws, layout: dict) -> dict:
+    """Return {tech: row values} of the ResidualCapacity rows of a sheet."""
+    rows: dict = {}
+    if layout["tech"] is None:
+        return rows
+    for values in ws.iter_rows(min_row=2, values_only=True):
+        if layout["parameter"] < len(values) and values[layout["parameter"]] == RESIDUAL:
+            rows[values[layout["tech"]]] = values
+    return rows
+
+
+def _lives(workbook) -> dict:
+    """Return {tech: OperationalLife} from the Fixed Horizon Parameters sheet, empty when absent."""
+    if FIXED_SHEET not in workbook.sheetnames:
+        return {}
+    rows = workbook[FIXED_SHEET].iter_rows(values_only=True)
+    header = list(next(rows, ()))
+    if not {"Tech", "Parameter", "Value"} <= set(header):
+        return {}
+    tech, parameter, value = (header.index(n) for n in ("Tech", "Parameter", "Value"))
+    width = max(tech, parameter, value)
+    return {r[tech]: r[value] for r in rows
+            if len(r) > width and r[parameter] == "OperationalLife"
+            and isinstance(r[value], (int, float))}
+
+
+def _room(sheet: str, layout: dict, rows: dict, residuals: dict, life, tech, year: int):
+    """The most new capacity the reference can add to ``tech`` in ``year``.
+
+    Its total cap less its residual capacity and less the forced builds of
+    earlier years still in service under OperationalLife, each of which the
+    reference must build. None when the reference has no total cap there.
+    """
+    total = rows.get((tech, TOTAL_CAP))
+    if total is None or not _exported(sheet, layout, *total):
+        return None
+    cap = _value(total[1], layout["years"][year])
+    if cap is None or cap == NO_BOUND:
+        return None
+    residual = residuals.get(tech)
+    existing = _value(residual, layout["years"][year]) if residual is not None else None
+    built = 0
+    forced = rows.get((tech, MIN_INV))
+    if life is not None and forced is not None and _exported(sheet, layout, *forced):
+        for vintage, c in layout["years"].items():
+            if vintage < year and year - vintage < life:
+                built += _value(forced[1], c) or 0
+    return max(cap - (existing or 0) - built, 0)
+
+
 def _looser(parameter: str, own, reference):
     """Return the looser of two bound values of the same cell."""
     if parameter in UPPER_BOUNDS:
@@ -138,6 +204,7 @@ def relax(target, reference) -> list[dict]:
     opened for reading. Returns one record per changed cell or row.
     """
     changes: list[dict] = []
+    lives = _lives(reference)
     for name in target.sheetnames:
         if name not in reference.sheetnames:
             continue
@@ -149,6 +216,7 @@ def relax(target, reference) -> list[dict]:
         if rlayout is None or rlayout["years"].keys() != layout["years"].keys():
             raise RelaxationError(f"{name}: the year columns differ from the reference")
         trows, rrows = _bound_rows(tws, layout), _bound_rows(rws, rlayout)
+        rresiduals = _residual_rows(rws, rlayout)
         for (tech, parameter), (r, values) in trows.items():
             if not _exported(name, layout, r, values):
                 continue
@@ -176,6 +244,14 @@ def relax(target, reference) -> list[dict]:
                         f"{name}: {tech} {parameter} {year} is blank in one scenario "
                         f"(own {own!r}, reference {ref!r})"
                     )
+                if parameter == YEARLY_CAP and is_cross_border(str(tech)) and ref != NO_BOUND:
+                    room = _room(name, rlayout, rrows, rresiduals, lives.get(tech), tech, year)
+                    if room is not None:
+                        ref = min(ref, room)
+                        # The room is a sum of workbook values; a difference
+                        # below ROOM_TOLERANCE is rounding, not room.
+                        if own != NO_BOUND and ref - own <= ROOM_TOLERANCE:
+                            continue
                 new = _looser(parameter, own, ref)
                 if new != own:
                     tws.cell(row=r, column=c + 1).value = new

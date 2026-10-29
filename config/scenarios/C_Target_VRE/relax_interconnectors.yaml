@@ -1,36 +1,49 @@
 ## relax_interconnectors.yaml: C_Target_VRE
-## The same settings and overrides as B_Optimised_VRE. Each override value is
-## the corridor's pipeline total for that year, in GW (existing capacity plus
-## listed projects by commissioning year), used as the most new capacity the
-## link may add in that year. Total link size is set by cost: the rule sets
-## TotalAnnualMaxCapacity of each overridden link with new investment to 9999,
-## a finite cap. The B_Optimised_VRE file explains the rule in full.
-##
-## Sources: IEPMP 2023 + BPC PDB 2024 + NEA Annual 2024/25 + NEP Vol.II + LTGEP 2025-2044.
+## The same settings and overrides as B_Optimised_VRE. With
+## cross_border_limit: lead_time_then_rate, each cross-border link without an
+## override keeps its ResidualCapacity plus its forced builds
+## (TotalAnnualMinCapacityInvestment) up to and including lead_time_end_year;
+## after it, the link may add the larger of build_rate_gw and that year's
+## forced build each year, and its TotalAnnualMaxCapacity is 9999, a finite
+## cap, so cost sets the total size. The forced builds are C_Target_VRE's own
+## rows of Interconnector_Params, so its planned projects count here. Each
+## India-internal override value is the corridor's pipeline total for that
+## year, in GW, used as the most new capacity the corridor may add in that
+## year. The B_Optimised_VRE file explains the rule in full.
 
 mode: multiplicative
 headroom_factor: 1.5
+cross_border_limit: lead_time_then_rate
+
+# ASSUMPTION: until 2030, each cross-border link has only its existing capacity
+# and the scenario's forced builds; no other cross-border line enters service
+# before 2031. A new cross-border line takes several years from agreement to
+# service, and the next Bangladesh to India line in the national plans, the
+# Katihar-Parbotipur-Bornagar 765 kV corridor, is due in 2031.
+# Central Electricity Authority, Ministry of Power, India, "National Electricity
+# Plan, Volume II: Transmission," Oct. 2024,
+# https://cea.nic.in/wp-content/uploads/psp___a_i/2025/02/NEP_Vol_II_Transmission.pdf,
+# Sec 9.4.2, printed p.107; Annex scheme ER-11, printed p.442 gives 2031-32.
+lead_time_end_year: 2030
+
+# ASSUMPTION: from 2031, each cross-border link may add at most 1 GW a year, or
+# more only where a forced build requires it; cost sets its total size. 1 GW is
+# about one large line: New Butwal-Gorakhpur, the largest committed
+# cross-border line, carries 1,000 MW.
+# Nepal Electricity Authority, "A Year in Review, Fiscal Year 2025/2026,"
+# Aug. 2026,
+# https://nea.org.np/uploads/shares/td_tender/A%20Year%20In%20Review%20Annual%20Report%202025_2026_compressed.pdf,
+# MD's Report printed p.5; Business Development printed p.99; Transmission
+# printed pp.25-26.
+build_rate_gw: 1.0
 
 overrides:
-  # FROZEN CORRIDORS
-  TRNBTNXXBGDXX: {2023: 0, 2033: 0, 2035: 0.75}
-  TRNINDSOLKAXX: {2023: 0, 2037: 0, 2039: 0.5, 2040: 1.0}
+  # CROSS-BORDER LINKS HELD AT THEIR RESIDUAL CAPACITY
   TRNLKAXXMDVXX: {2023: 0}
   TRNMDVXXINDSO: {2023: 0}
-
-  # CORRIDORS WHERE 3x UNDERSHOOTS THE PIPELINE
-  TRNBGDXXINDNE: {2023: 0.16, 2028: 1.16, 2032: 1.91, 2035: 2.66}
-  TRNBTNXXINDNE: {2023: 0.17, 2027: 0.77, 2029: 1.27, 2030: 2.40}
-  TRNNPLXXBGDXX: {2023: 0.04, 2025: 0.08, 2033: 1.04}
-  TRNINDEANPLXX: {2023: 1.35, 2027: 2.35, 2030: 4.35}
-  TRNINDNONPLXX: {2023: 0.50, 2025: 1.50, 2028: 2.65}
 
   # INDIA-INTERNAL CORRIDORS
   TRNINDEAINDNO: {2023: 22.53, 2029: 25.53}
   TRNINDEAINDSO: {2023: 7.83, 2029: 13.83}
   TRNINDSOINDWE: {2023: 18.12, 2028: 23.12}
   TRNINDEAINDNE: {2023: 3.53, 2027: 5.53}
-
-  # MAJOR CROSS-BORDER CORRIDORS
-  TRNBGDXXINDEA: {2023: 2.50, 2028: 6.50, 2029: 7.00, 2030: 7.75, 2033: 8.50}
-  TRNBTNXXINDEA: {2023: 5.53, 2028: 6.20, 2030: 8.60, 2035: 15.26}

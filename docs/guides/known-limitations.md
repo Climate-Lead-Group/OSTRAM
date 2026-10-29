@@ -244,7 +244,7 @@ value and the build years with CEA's growth statements, on one rating basis.
 
 **The data gap.** Bangladesh's master plan, IEPMP 2023, names dedicated lines from Nepal and Bhutan only as options to study, with no route, size or year (section 5.5.4 and Figure 5.5-4, p. 95). No signed agreement names either line.
 
-**What we assumed and why.** Neither link has a forced build, because a forced build stands for a committed or officially planned project and neither line is one. In `A_Calibrated_BAU` both links stay at their existing capacity, as A allows only existing capacity plus committed projects: zero for Bhutan to Bangladesh, and for Nepal to Bangladesh 0.04 GW from 2025, the 40 MW sale through the Indian grid that began in November 2024. In B and C the model may build either link, up to its yearly build cap, when that lowers cost.
+**What we assumed and why.** Neither link has a forced build, because a forced build stands for a committed or officially planned project and neither line is one. In `A_Calibrated_BAU` both links stay at their existing capacity, as A allows only existing capacity plus committed projects: zero for Bhutan to Bangladesh, and for Nepal to Bangladesh 0.04 GW from 2025, the 40 MW sale through the Indian grid that began in November 2024. In B and C both links also stay at their existing capacity until 2030; from 2031 the model may build either link, by at most 1 GW a year, when that lowers cost ([Interconnector build caps](../rules.md#interconnector-build-caps)).
 
 **Effect on results.** Cost decides whether and when B and C build each link; A builds neither line. Nothing limits the Nepal to Bangladesh link by season or contract, so the model may use its 0.04 GW in every hour, up to about 0.35 TWh a year (0.04 GW x 8,760 h), against about 15 GWh that Bangladesh received in 2025.
 
@@ -257,13 +257,14 @@ Source: [IEPMP 2023, Power Division copy](https://objectstorage.ap-dcc-gazipur-1
 **The data gap.** IEPMP 2023 plans Bangladesh's imports by connection point. It
 leaves the projects, their sizes and their years open.
 
-**What we assumed and why.** ASSUMPTION: Bangladesh to India East may add at
-most 2.50 GW in 2023, rising to 8.50 GW in 2033, and Bangladesh to India
-North-East at most 0.16 GW in 2023, rising to 2.66 GW in 2035, in
-`B_Optimised_VRE` and `C_Target_VRE`. Values between listed years are
-interpolated and held after the last year. Each value is the most new capacity
-the link may add that year, and follows the projects listed by commissioning
-year. In `A_Calibrated_BAU` both links stay at their existing capacity, because
+**What we assumed and why.** In `B_Optimised_VRE` and `C_Target_VRE`,
+Bangladesh to India East and Bangladesh to India North-East keep their existing
+capacity plus the scenario's forced builds until 2030, then may each add at
+most 1 GW a year, or a larger forced build of that year, with cost setting
+their total size. The two ASSUMPTIONs behind these limits, the lead time to
+2030 and the rate of 1 GW a year, are stated with their sources in
+[Interconnector build caps](../rules.md#interconnector-build-caps). In
+`A_Calibrated_BAU` both links stay at their existing capacity, because
 neither has a committed project. No forced build applies to either link in A
 and B; in C the planned Katihar-Parbotipur-Bornagar corridor is a forced build
 on both links in 2031. In 2023 to 2026 the base-year build lock sets these caps
