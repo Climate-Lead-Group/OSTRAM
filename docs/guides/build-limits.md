@@ -14,7 +14,7 @@ and interconnectors. The internal grid has no build cap (see
 flowchart TB
     subgraph A3["Stage A3, each root"]
         R["Build-cap rule: plants"] --> I["Interconnector build caps"]
-        I --> X["B only: the looser of B's and A's limits"]
+        I --> X["B only: the looser of B's and A's limits, with one exception"]
     end
     subgraph DS["Derived scenarios"]
         E["Scenario edits can replace caps"]

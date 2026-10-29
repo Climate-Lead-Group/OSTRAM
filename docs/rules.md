@@ -4,7 +4,8 @@ A3 builds each root scenario by running rule scripts in the order that the
 Control sheet of the scenario workbook lists them, followed by three shared
 rules, for three of the roots the base-year pin, and then the internal
 transmission residuals. `B_Optimised_VRE` then takes the looser of its own
-bounds and those of `A_Calibrated_BAU`; see
+bounds and those of `A_Calibrated_BAU`, with one exception for the yearly
+build cap of a cross-border link; see
 [B as a relaxation of A](#b-as-a-relaxation-of-a). A derived scenario is
 then built from its root by the
 [scenario edits](scenario-edits.md). Terms are in the [glossary](glossary.md).
@@ -48,7 +49,9 @@ for the roots listed in `PWR_MIN_PIN_ROOT_SCENARIOS` in
 `B_Optimised_VRE` and `C_Target_VRE`. Support `BAU` does not run it. Every
 root then computes its internal transmission residuals. After that,
 `B_Optimised_VRE` takes the looser of its own bounds and those of
-`A_Calibrated_BAU` built in the same run. A derived
+`A_Calibrated_BAU` built in the same run,
+[with one exception for the yearly build cap of a cross-border link](#b-as-a-relaxation-of-a).
+A derived
 scenario then receives the shared VRE ceilings, its scenario edits and the
 base-year pin again. The two direction variants receive their overlay last.
 
@@ -63,7 +66,9 @@ The order is load-bearing in these places.
   direction overlay runs after the relaxation rule.
 - The relaxation rule of A runs after stage 3 has written the forced builds,
   so A's cross-border limits include them, and before B takes the looser of
-  its own bounds and A's, so B sees A's final limits.
+  its own bounds and A's,
+  [with one exception for the yearly build cap of a cross-border link](#b-as-a-relaxation-of-a),
+  so B sees A's final limits.
 - In C the VRE targets run after the build-cap rule. They overwrite the solar
   and onshore wind build caps that the rule wrote with the capacity envelope,
   for each target marked `cap_envelope`. The reason for that position is not

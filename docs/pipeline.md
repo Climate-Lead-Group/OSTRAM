@@ -316,7 +316,8 @@ Support BAU has its own [committed-transmission policy and execution command](#s
 Selecting A applies its existing declared transformations and preserves BAU
 restriction inheritance. Selecting B, or a scenario derived from it, also
 builds the inputs of A in the same A3 pass, because B takes the looser of its
-own bounds and A's ([B as a relaxation of A](rules.md#b-as-a-relaxation-of-a)).
+own bounds and A's, with one exception for the yearly build cap of a
+cross-border link ([B as a relaxation of A](rules.md#b-as-a-relaxation-of-a)).
 The portfolio does not require a BAU solve.
 
 Use an empty, local workspace and an editable installation of this checkout.
