@@ -1,0 +1,28 @@
+---
+title: The rules behind a result
+summary: A stepper through the A3 rules that turn settings into the limits each scenario solves with.
+---
+<h1>The rules behind a result</h1>
+<p class="lead">A result is only as meaningful as the limits it was solved under. In OSTRAM those limits are not typed
+by hand into the model: rule scripts write them, in a fixed order, from settings files and workbook sheets. Step through
+the order for each root scenario below. Each card names the module, its settings and what it writes.</p>
+
+<h2 id="step-through-the-rules">Step through the rules</h2>
+{{block:rules_stepper}}
+
+<h2 id="why-the-order-matters">Why the order matters</h2>
+<p>Each rule reads what earlier rules wrote. The retirement rule shrinks existing capacity first, because the build-cap
+rule sizes caps from it. The interconnector rules run after the build-cap rule, which skips interconnectors. The base-year
+pin runs last, so reviewed historical values are the final values; a derived scenario applies it again after its edits.
+The full list of reasons is in the rules reference below.</p>
+
+<h2 id="reading-a-verdict">Reading a cap in a solved run</h2>
+<p>Once a scenario is solved, compare what was built with the cap of that year. Built equal to the cap means the cap
+decided; built below it means cost decided. A cap of <code>9999</code> means no practical limit, and a cap of
+<code>0</code> allows nothing. The <a href="~/transmission/build-caps.html">build caps page</a> explains where each value
+comes from.</p>
+
+<h2 id="the-rule-modules">The rule modules in the code</h2>
+{{block:rule_modules}}
+
+{{doc:rules.md}}

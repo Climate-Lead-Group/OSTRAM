@@ -1,0 +1,39 @@
+---
+title: Repowering and new lines
+summary: The repowered and new-line families of the internal grid, and how the Latin America and the Caribbean application will use them.
+---
+<h1>Repowering and new lines</h1>
+<p class="lead">An internal grid can grow in two ways: by upgrading lines that already exist (repowering, for example
+with new conductors) or by building new corridors. OSTRAM gives each side of each node's grid a family for each, next to
+the family of existing lines.</p>
+
+<h2 id="the-latin-america-and-caribbean-application">The Latin America and the Caribbean application</h2>
+{{block:lac_status lac}}
+<p>This page is where the Latin America and the Caribbean application will show how its data distinguish repowered and
+new lines. The families below are filled from each registered application.</p>
+
+<h2 id="the-families-in-each-application">The families in each application</h2>
+{{block:repowering}}
+
+<h2 id="how-the-families-behave-today">How the families behave today</h2>
+<ul>
+  <li><strong>Same cost, life and loss.</strong> In South Asia the repowered and new-line families carry the same cost,
+  a life of {{v:south_asia.internal.operational_life}} years and the same loss as the existing line. Only the existing line
+  starts with capacity.</li>
+  <li><strong>The split carries no meaning.</strong> Because the three families of a side are identical, the solver can
+  move new capacity between them at no change in cost. Read and report their sum.</li>
+  <li><strong>No build cap.</strong> Neither family has a build cap of its own. A scenario can switch them off with an
+  edit, which is how the trade and transmission cap scenarios hold a node's grid at its existing size.</li>
+</ul>
+
+<h2 id="design-questions">Design questions for a new application</h2>
+<p>An application with data on its grid can make the families mean more. The questions to settle are listed here, not
+answered.</p>
+<ul>
+  <li>Should repowering cost less than a new line, as reconductoring usually does?</li>
+  <li>Should new lines carry a lead time or a yearly build limit?</li>
+  <li>Should existing lines retire, so that repowering replaces something?</li>
+  <li>How should the base-year grid be sized when line data exist?</li>
+</ul>
+<p>See <a href="~/transmission/internal-grid.html">internal grid families and losses</a> for how the families fit in
+the chain of a node.</p>

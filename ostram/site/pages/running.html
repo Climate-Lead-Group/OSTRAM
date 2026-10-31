@@ -1,0 +1,35 @@
+---
+title: Running the model
+summary: Install OSTRAM, check the installation, run a first scenario without a solver, and the full command line.
+---
+<h1>Running the model</h1>
+<p class="lead">OSTRAM runs from one command, <code>python -m ostram</code>, in a conda environment. Install it, check
+that it finds its files, then build a first scenario without a solver before running a full solve.</p>
+
+<h2 id="in-five-steps">In five steps</h2>
+<ol class="steps static">
+  <li class="step"><span class="step-n">1</span><div><h4>Get the tools</h4><p>Git, conda (Miniforge) and a solver.
+  Use a short local path, not a synced cloud folder.</p></div></li>
+  <li class="step"><span class="step-n">2</span><div><h4>Clone and create the environment</h4>
+  <pre><code>git clone https://github.com/Climate-Lead-Group/OSTRAM
+cd OSTRAM
+conda env create -f environment.yaml
+conda activate OSTRAM-env
+python -m pip install -e .</code></pre></div></li>
+  <li class="step"><span class="step-n">3</span><div><h4>Check the installation</h4>
+  <pre><code>python -m ostram --help
+python -m ostram inspect-resources</code></pre></div></li>
+  <li class="step"><span class="step-n">4</span><div><h4>Build a scenario without a solver</h4><p>The quickstart below
+  shows a compile-only run, which prepares and compiles the model inputs and stops before the solve.</p></div></li>
+  <li class="step"><span class="step-n">5</span><div><h4>Solve and read the results</h4><p>Run the configured workflow,
+  then check the run as <a href="https://ostram.readthedocs.io/en/latest/guides/checking-a-run.html" rel="noopener">checking
+  a run</a> describes.</p></div></li>
+</ol>
+
+<h2 id="the-command-line">The command line</h2>
+{{block:cli}}
+<p>To build this website locally, run <code>python -m ostram site --out _site</code> and open
+<code>_site/index.html</code> in a browser.</p>
+
+{{doc:installation.md}}
+{{doc:quickstart.md}}

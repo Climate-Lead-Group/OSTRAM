@@ -1,0 +1,26 @@
+---
+title: Internal transmission costs
+summary: How the cost of the internal grid is computed from sourced inputs, worked with the released values.
+---
+<h1>Internal transmission costs</h1>
+<p class="lead">Every gigawatt of internal grid the model builds costs money, and that cost competes with plants placed
+closer to demand and with imports. OSTRAM computes the cost in every run from a small set of sourced inputs, so the
+same formula can be reused with another region's data.</p>
+
+<h2 id="the-formula-worked">The formula, worked with the released inputs</h2>
+<p>The base cost is a published regional line cost brought to the model's cost year with the World Bank manufactures unit value index. Renewable plants pay an add-on for the
+pooling stations and connection lines that remote parks need, taken from India's Green Energy Corridor programme. The
+fixed cost is a share of the capital cost paid every year. The internal grid of every node uses the same values.</p>
+{{block:internal_cost_calc}}
+
+<h2 id="two-ways-to-change-it">Two ways to change it</h2>
+<ul>
+  <li><strong>For every scenario:</strong> change a key of the <code>internal_transmission</code> block of the country
+  configuration. The flat placeholder blocks of the internal families in the same file are overwritten by the rule, so editing
+  them changes nothing.</li>
+  <li><strong>For one scenario:</strong> add a scenario edit that sets the cost of the internal families in that scenario
+  only.</li>
+</ul>
+
+{{doc:guides/transmission-costs.md#internal-grid-costs}}
+{{doc:guides/transmission-costs.md#a-cost-sensitivity-as-a-derived-scenario}}

@@ -1,0 +1,89 @@
+# Site configuration for python -m ostram site.
+# Text and page order only: every count and value on the site is read from the
+# repository when the site is built (see ostram/site/values.py).
+
+description: >-
+  OSTRAM, OSeMOSYS for Transmission: an open framework that plans power systems
+  with internal transmission and the interconnectors between countries, built for
+  the Global South.
+repository_url: https://github.com/Climate-Lead-Group/OSTRAM
+docs_url: https://ostram.readthedocs.io/en/latest/
+mermaid_url: https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs
+glossary_page: glossary.html
+
+# The applications the site presents. A setup that is not registered shows its
+# placeholder page until it is added to config/setups/registry.json.
+applications:
+  - setup: south_asia
+    name: South Asia
+    route: Custom-built dataset
+    summary: >-
+      Bangladesh, Bhutan, the regions of India, Nepal, Sri Lanka and the Maldives,
+      built from national statistics, plant lists and corridor studies on top of
+      OSeMOSYS Global.
+    placeholder: The South Asia setup is the reference application.
+  - setup: lac
+    name: Latin America and the Caribbean
+    route: Built from OLADE data
+    summary: >-
+      The same framework fed from the regional energy statistics of OLADE, the
+      Latin American Energy Organization.
+    placeholder: >-
+      The Latin America and the Caribbean application is being built from OLADE
+      data with the same framework. Its counts, scenarios and transmission pages
+      appear here when its setup is registered.
+
+worked_example:
+  setup: south_asia
+  node: BGDXX
+
+sections:
+  - Start
+  - The model
+  - Transmission
+  - Scenarios
+  - Applications
+  - Use the model
+  - Evidence
+  - Project
+
+top_nav:
+  - {label: Model, path: model/choices.html, section: The model}
+  - {label: Transmission, path: transmission/internal-grid.html, section: Transmission}
+  - {label: Scenarios, path: scenarios.html, section: Scenarios}
+  - {label: Applications, path: applications/index.html, section: Applications}
+  - {label: Run it, path: running.html, section: Use the model}
+  - {label: Sources, path: data.html, section: Evidence}
+  - {label: Paper, path: paper.html, section: Project}
+
+pages:
+  - {path: index.html, template: home.html, section: Start}
+  - {path: model/choices.html, template: choices.html, section: The model}
+  - {path: model/rules.html, template: rules.html, section: The model}
+  - {path: model/node.html, template: node.html, section: The model}
+  - {path: transmission/internal-grid.html, template: internal-grid.html, section: Transmission}
+  - {path: transmission/interconnectors.html, template: interconnectors.html, section: Transmission}
+  - {path: transmission/import-caps.html, template: import-caps.html, section: Transmission}
+  - {path: transmission/build-caps.html, template: build-caps.html, section: Transmission}
+  - {path: transmission/repowering.html, template: repowering.html, section: Transmission}
+  - {path: transmission/internal-costs.html, template: internal-costs.html, section: Transmission}
+  - {path: scenarios.html, template: scenarios.html, section: Scenarios}
+  - {path: applications/index.html, template: applications.html, section: Applications}
+  - {path: "applications/{setup}.html", template: application.html, placeholder: application-placeholder.html, section: Applications, per_setup: true}
+  - {path: running.html, template: running.html, section: Use the model}
+  - {path: code-map.html, template: code-map.html, section: Use the model}
+  - {path: data.html, template: data.html, section: Evidence}
+  - {path: limitations.html, template: limitations.html, section: Evidence}
+  - {path: glossary.html, template: glossary.html, section: Evidence}
+  - {path: paper.html, template: paper.html, section: Project}
+  - {path: roadmap.html, template: roadmap.html, section: Project}
+
+# Pipeline stages and the package folder of each, for the code map.
+stages:
+  - {stage: A1, does: Prepare the base model from the OSeMOSYS Global inputs and the country data., folder: ostram/pipeline/preparation/base_inputs.py}
+  - {stage: A2, does: Add the internal grid families and the interconnectors., folder: ostram/pipeline/preparation/transmission.py}
+  - {stage: A3, does: Build each scenario from its rules and edits., folder: ostram/pipeline/scenarios}
+  - {stage: B1, does: Compile the scenario workbooks into model input files., folder: ostram/pipeline/compilation}
+  - {stage: B2, does: Write the model datafile, apply the run-time constraints, solve and collect results., folder: ostram/pipeline/execution}
+  - {stage: Reports, does: Read results into the summary workbook and dashboard., folder: ostram/reporting}
+  - {stage: Site, does: Build this website., folder: ostram/site}
