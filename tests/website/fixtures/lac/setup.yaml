@@ -1,0 +1,17 @@
+# Test fixture: a minimal setup with the id ``lac``, used only by
+# tests/website/test_site.py to check that the site fills the Latin America and the
+# Caribbean pages when such a setup is registered. Its values are test values and
+# describe no real system.
+schema: ostram-setup-v1
+id: lac
+metadata:
+  title: Test fixture for the Latin America and the Caribbean pages
+policies: {}
+authorities:
+  scenario_registry: setup:config/scenarios/registry.json
+  scenario_config_root:
+    path: setup:config/scenarios
+    kind: directory
+  interconnector_taxonomy: setup:config/scenarios/technology_types.csv
+  country_config: setup:config/preparation/Config_country_codes.yaml
+  compilation_config: setup:config/compilation/Config_MOMF_T1_A.yaml

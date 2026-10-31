@@ -1,0 +1,40 @@
+---
+title: Scenarios
+summary: Roots, the support scenario and the decision scenarios of each application, and how a scenario is built from rules and edits.
+---
+<h1>Scenarios</h1>
+<p class="lead">Every scenario of an application starts from the same calibrated data. Scenarios differ only in the rules
+that write their limits and in the edits applied on top, so each difference in a result can be traced to a stated
+assumption.</p>
+
+<h2 id="three-kinds-of-scenario">Three kinds of scenario</h2>
+<div class="cards three">
+  <article class="card"><p class="eyebrow">Support</p><h3>BAU</h3><p>Runs only the build-cap rule. It is not a decision
+  scenario: it exists so that the calibrated root can inherit its limits.</p></article>
+  <article class="card"><p class="eyebrow">Roots</p><h3>A, B and C</h3><p><code>A_Calibrated_BAU</code> grows the
+  fleet in proportion and is the calibration anchor. <code>B_Optimised_VRE</code> takes the looser of its own limits and
+  A's, cell by cell, so it never costs more than A. <code>C_Target_VRE</code> turns renewable share targets into
+  generation floors sized from a solved A.</p></article>
+  <article class="card"><p class="eyebrow">Derived</p><h3>Edits on a root</h3><p>A copy of a root with the shared
+  renewable ceilings and a list of edits applied, then the base-year pin again. Clipped, trade, direction, cost and freeze
+  variants are all built this way.</p></article>
+</div>
+
+<h2 id="how-a-scenario-is-built">How a derived scenario is built</h2>
+<ol class="steps static">
+  <li class="step"><span class="step-n">1</span><div><h4>Copy the parent</h4><p>The root is built first, with its
+  rules in their order (see <a href="~/model/rules.html">the rules behind a result</a>).</p></div></li>
+  <li class="step"><span class="step-n">2</span><div><h4>Apply the shared ceilings</h4><p>Unless the scenario opts out,
+  the solar and wind ceilings of the setup are written. "Clipped" in a name means a root plus these ceilings.</p></div></li>
+  <li class="step"><span class="step-n">3</span><div><h4>Apply the edits</h4><p>The edits of <code>scenario.yaml</code>
+  run in list order: set a value, scale it, cap imports, zero a family.</p></div></li>
+  <li class="step"><span class="step-n">4</span><div><h4>Pin the base years again</h4><p>Reviewed base-year values are
+  written again, so no edit can replace them.</p></div></li>
+  <li class="step"><span class="step-n">5</span><div><h4>Log every change</h4><p>An edit log records each cell that
+  changed, for checking.</p></div></li>
+</ol>
+
+<h2 id="the-scenarios-of-each-application">The scenarios of each application</h2>
+{{block:scenarios}}
+
+{{doc:scenario-edits.md}}

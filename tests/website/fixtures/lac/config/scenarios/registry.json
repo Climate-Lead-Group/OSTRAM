@@ -1,0 +1,10 @@
+{
+  "schema": "ostram-scenario-registry-v1",
+  "setup": "lac",
+  "support_scenarios": ["BAU"],
+  "root_scenarios": [
+    {"name": "BAU", "role": "support", "dependencies": []},
+    {"name": "A_Calibrated_BAU", "role": "decision", "dependencies": [{"type": "restrictions", "scenario": "BAU"}]}
+  ],
+  "decision_scenarios": ["A_Calibrated_BAU"]
+}

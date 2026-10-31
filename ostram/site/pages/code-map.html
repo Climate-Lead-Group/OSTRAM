@@ -1,0 +1,23 @@
+---
+title: Pipeline and code map
+summary: The stages of a run, where each lives in the code, and counts read from the repository.
+---
+<h1>Pipeline and code map</h1>
+<p class="lead">A run goes through the stages A1 to B2. The A stages prepare and change workbooks;
+the B stages compile them into model files and solve. A3 is the stage that applies your scenario's rules and edits, so it is where
+most of your numbers change.</p>
+
+<pre class="mermaid">flowchart LR
+  A1["A1 base model"] --> A2["A2 transmission network"] --> A3["A3 scenarios"] --> B1["B1 compile"] --> B2["B2 solve and results"]
+</pre>
+
+<h2 id="stages-and-code">Stages and where they live</h2>
+{{block:code_map}}
+
+<h2 id="where-to-confirm-an-edit">Where to confirm an edit</h2>
+<p>A workbook cell can be rewritten by a later stage. Confirm a change in the compiled input files of the scenario and
+in the solver datafile, not in the file you edited. The pipeline reference below lists what each stage reads and
+writes.</p>
+
+{{doc:pipeline.md#stages-of-one-scenario-run}}
+{{doc:file-map.md#the-ostram-package}}

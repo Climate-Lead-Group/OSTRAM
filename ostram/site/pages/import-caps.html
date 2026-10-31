@@ -1,0 +1,31 @@
+---
+title: Import caps
+summary: Gross import caps on a country's annual demand and caps on single links, and how imports are counted.
+---
+<h1>Import caps</h1>
+<p class="lead">Countries often limit how much of their electricity may come from abroad. OSTRAM can express that limit
+in two ways: as a share of a country's annual demand, counted over all its imports (the gross cap), or as a limit on
+single links. Both are scenario settings; the base model has no import cap of either kind.</p>
+
+<h2 id="two-kinds-of-cap">Two kinds of cap</h2>
+<div class="cards two">
+  <article class="card"><p class="eyebrow">Gross</p><h3>A share of demand</h3><p>All power a country receives in a year,
+  after the link losses, stays below a fraction of its annual demand. Transit counts as an import and an export; links
+  between regions of the same country never count.</p></article>
+  <article class="card"><p class="eyebrow">Per link</p><h3>A limit on a corridor</h3><p>The flow on one link in one
+  direction stays below a limit. A setup policy can hold a link at what its existing capacity carries; a scenario edit
+  can share an import limit across links in the pattern of a solved parent scenario.</p></article>
+</div>
+
+<h2 id="the-caps-in-each-application">The caps in each application</h2>
+{{block:import_caps}}
+
+<h2 id="worked-example">Worked example: why the cap is divided by one minus the loss</h2>
+<p>Demand measured at the bus bar enters the model already reduced by the internal loss. A cap written as a share of
+that reduced demand would be tighter than intended. The model therefore receives the fraction divided by one minus the
+loss, so that the cap equals the fraction times the published demand. With the South Asia loss of
+{{v:south_asia.internal.transmission_loss|pct}}, a share of {{v:south_asia.gross_import_cap.B_Opt_Clipped_GrossImportCap15.fraction|pct}}
+becomes that share divided by {{v:south_asia.internal.efficiency}} in the model. The guide below gives the full
+calculation for one country and year.</p>
+
+{{doc:guides/import-caps.md}}
