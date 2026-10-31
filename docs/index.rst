@@ -25,6 +25,7 @@ Developed by `Climate Lead Group <https://github.com/Climate-Lead-Group>`_.
    secondary-techs-editor
    country-management
    auxiliary-tools
+   site
    rules
    scenario-edits
    adding-a-scenario
