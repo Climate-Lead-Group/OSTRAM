@@ -1,0 +1,84 @@
+---
+title: Build caps and the base-year build lock
+summary: How the most a technology may build each year is set, why build years can spike, and the lock on the base years.
+---
+<h1>Build caps and the base-year build lock</h1>
+<p class="lead">A model that only minimises cost would rebuild the whole fleet at once around the cheapest technology.
+Real systems change slowly: plants take years to plan, finance and build. A build cap is the most new capacity a
+technology may add in one year. Between the minimum investment and the cap, cost decides.</p>
+
+<h2 id="three-limits">Three limits and three special values</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Limit</th><th>OSeMOSYS parameter</th><th>What it bounds</th></tr></thead>
+<tbody>
+<tr><td>Build cap</td><td><code>TotalAnnualMaxCapacityInvestment</code></td><td>New capacity in one year</td></tr>
+<tr><td>Minimum investment</td><td><code>TotalAnnualMinCapacityInvestment</code></td><td>New capacity that must be built in one year</td></tr>
+<tr><td>Total capacity cap</td><td><code>TotalAnnualMaxCapacity</code></td><td>All capacity standing in one year</td></tr>
+</tbody></table></div>
+<p>In the final model a cap of <code>0</code> allows nothing, <code>9999</code> is a cap so large that it never binds,
+and <code>-1</code> or a missing row means no constraint at all. Older training material said that a cap of
+<code>0</code> means no limit; that is not how the model reads it.</p>
+
+<h2 id="how-a-cap-is-set">How a cap is set</h2>
+<p>The build-cap rule writes the cap of every plant that has existing capacity or a minimum investment. It starts from
+how much the existing fleet would have to grow to keep up with demand, then applies, in order, a multiplier per scenario,
+limits per technology family, a top-up for technologies left with too little room, and a top-up for nodes whose caps add
+up to too little of the demand-scaled fleet. Each step reads the result of the step before. The settings of each root
+are in its <code>build_cap_rule.yaml</code>; the guide below lists the released values.</p>
+
+<h2 id="investment-surges">Investment surges</h2>
+<p>Sometimes a build year spikes: far more capacity appears in one year than in the years around it. A spike is rarely
+the optimiser's own idea. It usually comes from the inputs.</p>
+<figure class="surge-figure">
+  <svg viewBox="0 0 560 200" role="img" aria-label="Schematic: forced builds collapsed onto one year make a spike; spreading them over earlier years keeps the total and removes the spike">
+    <g class="surge-before">
+      <text class="s-label" x="10" y="20">Forced builds on one date</text>
+      <rect x="20" y="150" width="22" height="20"/><rect x="50" y="150" width="22" height="20"/>
+      <rect x="80" y="40" width="22" height="130"/><rect x="110" y="150" width="22" height="20"/>
+      <rect x="140" y="145" width="22" height="25"/><rect x="170" y="140" width="22" height="30"/>
+      <rect x="200" y="140" width="22" height="30"/>
+      <line x1="10" y1="170" x2="240" y2="170" class="axis"/>
+    </g>
+    <g class="surge-after" transform="translate(300 0)">
+      <text class="s-label" x="10" y="20">The same total, spread back</text>
+      <rect x="20" y="115" width="22" height="55"/><rect x="50" y="115" width="22" height="55"/>
+      <rect x="80" y="115" width="22" height="55"/><rect x="110" y="150" width="22" height="20"/>
+      <rect x="140" y="145" width="22" height="25"/><rect x="170" y="140" width="22" height="30"/>
+      <rect x="200" y="140" width="22" height="30"/>
+      <line x1="10" y1="170" x2="240" y2="170" class="axis"/>
+    </g>
+  </svg>
+  <figcaption>Schematic, not model output. Bars are new capacity per year.</figcaption>
+</figure>
+<ol class="steps static">
+  <li class="step"><span class="step-n">1</span><div><h4>A minimum investment sits in one year column</h4><p>A plant list
+  that gives a whole programme one commissioning date, or a placeholder date for projects whose date is unknown, puts all of
+  it into one year of the workbook.</p></div></li>
+  <li class="step"><span class="step-n">2</span><div><h4>The cap follows the minimum</h4><p>A cap below its minimum would
+  make the model infeasible, so the build-cap rule raises the cap just above the minimum of the same year.</p></div></li>
+  <li class="step"><span class="step-n">3</span><div><h4>The solver must build it</h4><p>The minimum is a rule, so the
+  capacity appears in that year whatever it costs.</p></div></li>
+  <li class="step"><span class="step-n">4</span><div><h4>Every scenario inherits the spike</h4><p>The roots take their
+  forced builds from the same rows, so the spike shows in all of them. That is the sign that it comes from the data.</p></div></li>
+</ol>
+<p><strong>What smooths it.</strong> The fix is in the data: spread the minimums back over the years of construction,
+keeping their total, so the capacity still exists by its deadline. The model's own structure smooths the rest:</p>
+<ul>
+  <li><strong>Retirement.</strong> The retirement rule draws existing thermal plants down year by year over their lives
+  instead of all at once, so replacement needs arrive gradually.</li>
+  <li><strong>Build caps.</strong> Each year can add only so much, so a need is spread over several years.</li>
+  <li><strong>The top-ups.</strong> Late in the horizon the retired fleet is small and the formula would give little room;
+  the top-ups keep enough room open that demand can still be met without the backstop.</li>
+  <li><strong>The lock and the delays.</strong> The base years build only what is listed, storage waits for its delay to
+  end, and cross-border links grow at a set rate after their lead time. Each of these moves building out of the early
+  years, so a first free year can show catch-up building; check it in a solved run.</li>
+</ul>
+<p>Smooth demand growth and steady retirement do not create spikes on their own; when a spike appears, look first for
+forced builds in the year it appears.</p>
+
+<h2 id="lock-in-brief">The base-year build lock in brief</h2>
+<p>The first years of the horizon are history or already under construction. In those years no plant, storage unit or
+interconnector may add more than the workbook lists for it; the backstop stays open. The lock years and the checks that
+run with them are in the guide below.</p>
+
+{{doc:guides/build-limits.md}}

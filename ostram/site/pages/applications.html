@@ -1,0 +1,15 @@
+---
+title: Applications
+summary: The setups OSTRAM is applied to, with their counts read from the repository.
+---
+<h1>Applications</h1>
+<p class="lead">An application is a setup: a manifest in the repository that names every input of one model. The
+pipeline, the rules and this site are shared; the data are not. Every setup in the setup registry gets a page here.</p>
+{{block:setup_list}}
+<p>The training setup is a reduced model used in the OSTRAM training. It shares the framework and is listed for
+completeness.</p>
+<h2 id="adding-an-application">Adding an application</h2>
+<p>A new region needs its own manifest, inputs and scenario registry, and an entry in
+<code>config/setups/registry.json</code>. Once registered, its page, its headline counts on the home page and its rows
+in the transmission pages fill themselves.</p>
+{{doc:adapting.md}}

@@ -1,0 +1,37 @@
+---
+title: Interconnector costs and direction
+summary: What each interconnector costs, where the cost comes from, how losses and direction are set.
+---
+<h1>Interconnector costs and direction</h1>
+<p class="lead">An interconnector is a technology that takes power from the demand fuel of one node and delivers it,
+minus its own loss, to the import fuel of another. Like any technology it has a capital cost, a fixed cost, a life and a
+capacity that the model may expand. South Asia has {{v:south_asia.interconnectors}} of them.</p>
+
+<h2 id="how-a-link-works">How a link works</h2>
+<ul>
+  <li><strong>Two modes.</strong> Mode 1 carries power from the first node in the name to the second, mode 2 the other
+  way. One technology serves both directions and shares one capacity.</li>
+  <li><strong>Loss, not cost.</strong> The share of power lost on the way is set by the output ratio of the link, from
+  distance and line type. It is not part of the cost.</li>
+  <li><strong>Direction.</strong> A scenario can make a link one-way by zeroing one of its modes; see
+  <a href="#direction">direction</a> below.</li>
+</ul>
+
+<h2 id="corridor-costs">Corridor costs in each application</h2>
+<p>The capital and fixed cost of each corridor are one value in real US dollars of the workbook's cost year, held constant over the horizon.
+The build-up of each value, with its assumptions, is in the workbook; the table shows the result and the documents behind it.</p>
+{{block:corridor_table}}
+
+<h2 id="worked-example">Worked example: reading a corridor cost</h2>
+<p>Take the first row of the South Asia table. Its capital cost is the sum of the parts of the project (converter,
+line, substation), each brought to the cost year with the World Bank manufactures unit value index, divided by the
+usable transfer capacity. Its fixed cost is a share of the capital cost paid every year. The low and high values bound
+the cost sensitivity scenarios. The guide below works the arithmetic through for one corridor.</p>
+
+<h2 id="direction">Direction</h2>
+<p>Some scenarios study a link that may only run one way, for example when a contract fixes the direction of trade. The
+direction rule zeroes one mode of each listed link; the scenario files that use it are listed on the
+<a href="~/scenarios.html">scenarios page</a>, and the sources for each direction are in the reference below.</p>
+
+{{doc:guides/transmission-costs.md#interconnector-costs}}
+{{doc:reference/scenarios/interconnector_direction_references.md}}

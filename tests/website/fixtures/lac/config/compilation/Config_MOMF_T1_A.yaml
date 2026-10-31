@@ -1,0 +1,20 @@
+# Test fixture values, not a real system.
+initial_year: '2025'
+final_year: '2040'
+sets:
+  Season:
+  - '1'
+  - '2'
+  DayType:
+  - '1'
+  DailyTimeBracket:
+  - '1'
+  - '2'
+  - '3'
+  Timeslices:
+  - 'S1D1'
+  - 'S1D2'
+  - 'S1D3'
+  - 'S2D1'
+  - 'S2D2'
+  - 'S2D3'

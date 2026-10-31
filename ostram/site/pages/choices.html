@@ -1,0 +1,72 @@
+---
+title: The model as choices and rules
+summary: OSTRAM as a spreadsheet of choices the solver fills and rules it must keep, worked for one node and one year.
+---
+<h1>The model as choices and rules</h1>
+<p class="lead">An OSeMOSYS model answers one question: what is the cheapest way to meet electricity demand in every year
+from {{v:south_asia.first_year}} to {{v:south_asia.last_year}}? It answers by filling in a very large spreadsheet. Some
+cells are choices the solver makes; every rule ties some of those cells together. Nothing in the model forecasts or
+simulates: it picks the cheapest set of numbers that keeps every rule.</p>
+
+<h2 id="two-kinds-of-choice">Two kinds of choice</h2>
+<div class="cards two">
+  <article class="card"><p class="eyebrow">Build</p><h3>New capacity</h3>
+    <p>How many gigawatts of each technology to add in each year: a power plant, a storage unit, a piece of internal grid
+    or an interconnector. In OSeMOSYS this is <code>NewCapacity</code>.</p></article>
+  <article class="card"><p class="eyebrow">Run</p><h3>Activity</h3>
+    <p>How much each technology produces or carries in each time slice of each year. In OSeMOSYS this is
+    <code>RateOfActivity</code>. Fuel use, emissions and flows on the grid all follow from it.</p></article>
+</div>
+<p>Everything else you edit is either a cost that the solver weighs or a limit that it must respect.</p>
+
+<h2 id="what-you-fix-and-what-the-solver-decides">What you fix and what the solver decides</h2>
+<div class="stack-figure">
+  <svg viewBox="0 0 520 200" role="img" aria-label="Capacity of one technology in one year: existing, floor, cap">
+    <rect class="s-existing" x="40" y="120" width="120" height="60"/><text x="100" y="155">existing</text>
+    <rect class="s-floor" x="40" y="90" width="120" height="30"/><text x="100" y="110">floor</text>
+    <rect class="s-room" x="40" y="30" width="120" height="60"/><text x="100" y="65">solver's room</text>
+    <line class="s-cap" x1="30" y1="30" x2="170" y2="30"/><text class="s-label" x="180" y="34">build cap</text>
+    <text class="s-label" x="180" y="94">minimum investment</text>
+    <text class="s-label" x="180" y="154">residual capacity, fixed by the data</text>
+  </svg>
+  <p>You set the capacity that already exists (residual capacity), the least that must be built (minimum investment) and
+  the most that may be built (the build cap). Cost decides everything in between. If a floor is above its cap, no plan
+  can keep both rules and the model has no solution.</p>
+</div>
+
+<h2 id="the-ratios-on-each-technology">The ratios on each technology</h2>
+<p>Each technology converts what goes in to what comes out. Three ratios describe it: fuel in per unit of activity
+(<code>InputActivityRatio</code>, the inverse of efficiency), output per unit of activity
+(<code>OutputActivityRatio</code>) and emissions per unit of activity (<code>EmissionActivityRatio</code>). In OSTRAM the
+internal grid is a technology like any other: its output ratio is {{v:south_asia.internal.efficiency}}, which is how the
+internal loss enters the model.</p>
+
+<h2 id="worked-example">Worked example: one node, one year</h2>
+<p>Take one node of the South Asia model in one year. The sheet below lists every technology of the node as a row. The
+first column is the build choice for that year; the other columns are the run choices, one per time slice. Each rule on
+the left ties some of these cells together. Pick a rule to see which.</p>
+{{block:choices_sheet}}
+<p>Two things the sheet does not show. First, the node is not alone: the energy balance of each node includes flows on
+its interconnectors, so the sheets of neighbouring nodes are linked. Second, the year is not alone: what is built in one
+year stays for the life of the technology, so the sheets of later years start from it. The solver fills every sheet of
+every node and year at once.</p>
+
+<h2 id="time-slices">Time slices</h2>
+<p>Rather than every hour of the year, the model works with {{v:south_asia.timeslices}} time slices:
+{{v:south_asia.seasons}} seasons, each with {{v:south_asia.daily_time_brackets}} parts of the day. Each time slice has a
+weight, its share of the year (<code>YearSplit</code>), and demand and capacity factors are given per time slice. Fewer
+time slices solve faster; more catch more of the daily and seasonal pattern.</p>
+{{block:timeslice_grid}}
+
+<h2 id="common-mistakes">Common mistakes</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td>A plant burns far too little fuel</td><td>Efficiency entered where the input ratio belongs</td><td>Enter fuel in per unit out: the inverse of efficiency.</td></tr>
+<tr><td>Fuel cost has no effect</td><td>Cost placed on the plant instead of the fuel supply technology</td><td>Put fuel prices on the supply (<code>MIN</code>) technology.</td></tr>
+<tr><td>The model has no solution</td><td>A floor above its cap in some year</td><td>Check minimum investment against the build cap year by year.</td></tr>
+<tr><td>A value stays flat for every year</td><td>A projection mode that keeps only the first year</td><td>Use the projection mode the workbook documents for yearly values.</td></tr>
+<tr><td>An edit disappears</td><td>The cell is rewritten by a later stage</td><td>Check the compiled input files, not the workbook; see <a href="~/model/rules.html">the rules</a>.</td></tr>
+</tbody></table></div>
+
+{{doc:guides/index.md}}

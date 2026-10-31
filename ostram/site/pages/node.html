@@ -1,0 +1,37 @@
+---
+title: Inside a node
+summary: The chain inside one node, from supply through the internal grid to demand, with hover notes.
+---
+<h1>Inside a node</h1>
+<p class="lead">A node is a country, or a region of a large country. Inside it, power does not go straight from a plant to
+a consumer: it is collected, crosses the node's own grid, and only then meets demand or leaves for a neighbour. OSTRAM
+models each of those steps as fuels and technologies, so the internal grid costs money, has a capacity and loses energy.</p>
+
+<h2 id="the-chain">The chain</h2>
+{{block:node_chain}}
+
+<h2 id="how-to-read-the-names">How to read the names</h2>
+<p>Every technology and fuel carries the node in its name. A technology code is a type prefix, a family and the node:
+<code>PWRSPVBGDXX</code> is a power plant (<code>PWR</code>) of the solar family (<code>SPV</code>) in Bangladesh
+(<code>BGDXX</code>). A country modelled as one node ends in <code>XX</code>; a country split into regions carries the
+region instead, as in <code>INDEA</code>. Electricity is a fuel with a tier number: <code>ELCBGDXX00</code> to
+<code>ELCBGDXX04</code> are the stages of the chain above. An interconnector names both ends:
+<code>TRNBGDXXINDEA</code> links Bangladesh and India East; mode 1 runs from the first to the second, mode 2 back.</p>
+
+<h2 id="what-the-chain-means-for-results">What the chain means for results</h2>
+<ul>
+  <li><strong>Imports pay the receiving grid.</strong> A received import arrives on <code>ELC..04</code> and goes to
+  <code>ELC..01</code>, so it crosses the receiving node's grid like the node's own thermal output.</li>
+  <li><strong>Exports leave from the demand fuel.</strong> They do not cross the sending node's grid a second time.</li>
+  <li><strong>The grid has to be built.</strong> If plants and imports grow, the internal grid must grow with them, at
+  the internal transmission cost. See <a href="~/transmission/internal-grid.html">internal grid families and losses</a>
+  and <a href="~/transmission/internal-costs.html">internal transmission costs</a>.</li>
+  <li><strong>Small hydro sits on the other side.</strong> The renewable side collects the fuels listed as renewable in
+  the country configuration; small hydro is not among them, so it joins the other plants.</li>
+</ul>
+
+<h2 id="the-nodes-of-each-application">The nodes of each application</h2>
+<p>Each application page lists its nodes and interconnectors, read from the setup's taxonomy:
+<a href="~/applications/south_asia.html#nodes">South Asia</a>.</p>
+
+{{doc:data-reference.md#model-architecture}}

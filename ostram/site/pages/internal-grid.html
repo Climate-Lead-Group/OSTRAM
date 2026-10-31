@@ -1,0 +1,43 @@
+---
+title: Internal grid families and losses
+summary: The internal transmission families of each node, where the internal loss applies, and how the base-year grid is sized.
+---
+<h1>Internal grid families and losses</h1>
+<p class="lead">Most power-system models treat a country as a copper plate: power made anywhere reaches demand anywhere
+at no cost. OSTRAM gives each node an internal grid with a capacity, a cost and a loss. The grid is split into families
+so that renewable output and other output can be tracked separately.</p>
+
+<h2 id="the-families">The families</h2>
+<p>Each side of the grid has an existing line, a repowered line and a new line. Within a side the three have the same
+cost, life and loss; only the existing line starts with capacity. Read the grid of a node as the sum of its side.</p>
+{{block:families_table}}
+
+<h2 id="where-the-loss-applies">Where the loss applies</h2>
+<div class="cards three">
+  <article class="card"><h3>On the grid</h3><p>The output ratio of every internal family is one minus the loss: what
+  leaves the grid is {{v:south_asia.internal.efficiency}} of what enters it in South Asia.</p></article>
+  <article class="card"><h3>On bus-bar demand</h3><p>Published demand measured at the bus bar already includes grid
+  losses. The rule writes it as its published value times one minus the loss, so the grid loss is not counted twice.</p></article>
+  <article class="card"><h3>On exports from a bus-bar node</h3><p>An interconnector sent from such a node draws one
+  minus the loss per unit of activity, for the same reason.</p></article>
+</div>
+
+<h2 id="how-much-grid-gets-built">How much grid gets built</h2>
+<p>The internal grid has no build rule and no fixed ratio to plants or demand. Its capacity must carry the busiest time
+slice, so it grows when the peak flow through the node grows, and each new gigawatt costs the internal transmission cost.
+What a rule does set is the grid of the base year: a margin of {{v:south_asia.internal.residual_peak_margin}} times the
+base-year peak, split between the renewable and the other side, computed in every run.</p>
+
+<h2 id="worked-example">Worked example: one unit of power through a node</h2>
+<ol class="steps static">
+  <li class="step"><span class="step-n">1</span><div><h4>A plant sends one unit</h4><p>It enters the grid on the
+  renewable or the other side, depending on the plant.</p></div></li>
+  <li class="step"><span class="step-n">2</span><div><h4>The grid delivers less</h4><p>{{v:south_asia.internal.efficiency}}
+  of the unit reaches <code>ELC..02</code>; the rest is the loss of {{v:south_asia.internal.transmission_loss|pct}}.</p></div></li>
+  <li class="step"><span class="step-n">3</span><div><h4>Dispatch passes it to demand</h4><p><code>DSPTRN</code> mode 1
+  moves it to the demand fuel at no cost.</p></div></li>
+  <li class="step"><span class="step-n">4</span><div><h4>Demand takes it, or a link sends it on</h4><p>A neighbour that
+  receives it as an import puts it through its own grid and loses its own share again.</p></div></li>
+</ol>
+
+{{doc:guides/internal-expansion.md}}

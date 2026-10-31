@@ -1,0 +1,24 @@
+---
+title: Trade-offs and known limitations
+summary: What OSTRAM's modelling choices gain and lose, and the known limitations of the current release.
+---
+<h1>Trade-offs and known limitations</h1>
+<p class="lead">Every model simplifies. The useful question is what each simplification buys and what it costs, so that
+a reader knows which results to trust for which purpose.</p>
+
+<h2 id="trade-offs">Trade-offs</h2>
+<div class="table-wrap"><table class="tradeoffs">
+<thead><tr><th>Choice</th><th>What it gains</th><th>What it loses</th></tr></thead>
+<tbody>
+<tr><td>Energy balance with corridors, not power flow</td><td>Trade between countries and regions, solved fast over decades</td><td>Loop flows, impedance and voltage limits; a corridor result is a transfer, not a power-flow solution</td></tr>
+<tr><td>One node per country, regions for India</td><td>A model that solves and that national planners can read</td><td>Congestion and siting inside a node</td></tr>
+<tr><td>{{v:south_asia.timeslices}} time slices</td><td>Solve times that allow many scenarios</td><td>Ramps, short peaks and multi-day weather inside a time slice</td></tr>
+<tr><td>An internal grid with one loss and one cost for every node</td><td>Internal transmission enters the trade-off at all, with sourced values</td><td>Differences in distance, voltage and loss between nodes</td></tr>
+<tr><td>Build caps from a proportional rule</td><td>Transparent, calibrated limits with no hand entry</td><td>The rule sees the existing fleet, not the fleet the model builds, so it needs top-ups</td></tr>
+<tr><td>One reserve margin for the whole system</td><td>Simplicity</td><td>Adequacy country by country</td></tr>
+<tr><td>Base-year lock and pin</td><td>The first years match history</td><td>No optimisation in those years</td></tr>
+<tr><td>B as a relaxation of A</td><td>B never costs more than A</td><td>B keeps A's limit wherever its own was tighter</td></tr>
+<tr><td>C targets as generation floors</td><td>Policy targets met as stated</td><td>Least-cost freedom: C buys a given shape of system</td></tr>
+</tbody></table></div>
+
+{{doc:guides/known-limitations.md}}

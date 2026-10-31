@@ -1,0 +1,77 @@
+---
+title: OSTRAM for the Global South
+summary: An open power-system planning framework with internal transmission and interconnectors, for the Global South.
+---
+<section class="hero">
+  <p class="eyebrow">OSeMOSYS for Transmission</p>
+  <h1>Plan power systems with the grid inside each country and the links between them</h1>
+  <p class="lead">OSTRAM is an open framework for long-term power planning in the Global South. It builds on
+  <a href="https://osemosys.readthedocs.io/" rel="noopener">OSeMOSYS</a> and
+  <a href="https://github.com/OSeMOSYS/osemosys_global" rel="noopener">OSeMOSYS Global</a>, and it adds what national
+  and regional plans most often leave out: the internal grid of each node, with its losses and costs, and the
+  interconnectors between countries, with their costs, direction and limits, in one least-cost optimisation.</p>
+  <div class="hero-actions">
+    <a class="button" href="~/model/choices.html">How the model decides</a>
+    <a class="button ghost" href="~/transmission/internal-grid.html">Transmission in depth</a>
+    <a class="button ghost" href="~/running.html">Run it yourself</a>
+  </div>
+</section>
+
+<h2 id="applications">The applications side by side</h2>
+<p>Each application is a setup in the repository: a manifest that names every input file. The counts below are read from
+those files when this site is built.</p>
+{{block:app_cards}}
+
+<h2 id="storyline">The storyline</h2>
+<div class="cards four">
+  <article class="card">
+    <h3>Internal transmission and interconnectors together</h3>
+    <p>Power crosses a country's own grid before it reaches demand or a border. OSTRAM models the internal grid of every
+    node, with a loss of {{v:south_asia.internal.transmission_loss|pct}} in South Asia, and the interconnectors between
+    nodes in the same energy balance, so the cost of moving power inside a country competes with the cost of trading it.</p>
+    <a href="~/model/node.html">Inside a node</a>
+  </article>
+  <article class="card">
+    <h3>One framework</h3>
+    <p>The same pipeline, rules and scenario logic serve every region. A region is a setup: change the inputs, keep the
+    method. The rules that turn settings into limits are written down and run the same way each time.</p>
+    <a href="~/model/rules.html">The rules behind a result</a>
+  </article>
+  <article class="card">
+    <h3>Two data routes</h3>
+    <p>South Asia uses a custom-built dataset from national sources. Latin America and the Caribbean is being built from
+    the regional statistics of <a href="https://www.olade.org/" rel="noopener">OLADE</a>. The site shows how far each
+    route has come.</p>
+    <a href="~/applications/index.html">Applications</a>
+  </article>
+  <article class="card">
+    <h3>Replication</h3>
+    <p>Everything is in a public repository: inputs, settings, rules, tests and this site. The repository's
+    <a href="https://github.com/Climate-Lead-Group/OSTRAM/blob/main/CONTRIBUTING.md" rel="noopener">contribution checks</a>
+    compare the compiled model inputs of two builds byte for byte, and every value on this site names the file it comes from.</p>
+    <a href="~/data.html">Data and sources</a>
+  </article>
+</div>
+
+<h2 id="the-model-at-a-glance">The model at a glance</h2>
+<p>For each year from {{v:south_asia.first_year}} to {{v:south_asia.last_year}} and each of
+{{v:south_asia.timeslices}} time slices, the solver chooses what to build and how much to run so that demand is met at
+the lowest total cost, within the limits that the scenario sets.</p>
+<pre class="mermaid">flowchart LR
+  I["Inputs: workbooks, OSeMOSYS Global data, settings"] --> A1["A1 base model"]
+  A1 --> A2["A2 internal grid and interconnectors"]
+  A2 --> A3["A3 scenario rules and edits"]
+  A3 --> B1["B1 model input files"]
+  B1 --> B2["B2 solve and results"]
+</pre>
+<p><a href="~/code-map.html">Pipeline and code map</a> shows where each stage lives in the code.</p>
+
+<h2 id="where-to-start">Where to start</h2>
+<div class="cards three">
+  <article class="card"><h3>New to OSeMOSYS</h3><p>Read the model as choices and rules, then the chain inside a node.</p>
+    <a href="~/model/choices.html">Choices and rules</a></article>
+  <article class="card"><h3>Working on transmission</h3><p>Internal grid losses, interconnector costs, import caps and build caps, one page each.</p>
+    <a href="~/transmission/internal-grid.html">Transmission pages</a></article>
+  <article class="card"><h3>Running scenarios</h3><p>Install, run a first scenario without a solver, then build your own scenario from edits.</p>
+    <a href="~/running.html">Running the model</a></article>
+</div>
