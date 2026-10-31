@@ -1,0 +1,14 @@
+# Test fixture values, not a real system.
+country_data:
+  AAA:
+    english_name: "Test country A"
+  BBB:
+    english_name: "Test country B"
+first_year: 2025
+countries:
+  - "AAA"
+  - "BBB"
+internal_transmission:
+  transmission_loss: 0.05
+  residual_peak_margin: 1.1
+  operational_life: 35

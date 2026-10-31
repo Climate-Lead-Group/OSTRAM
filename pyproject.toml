@@ -9,6 +9,7 @@ description = "OSTRAM energy-system scenario preparation and compilation"
 requires-python = ">=3.10"
 dependencies = [
     "dvc",
+    "markdown-it-py>=3",
     "numpy>=1.26",
     "openpyxl>=3.1",
     "otoole>=1.1.1",
@@ -31,4 +32,7 @@ ostram = [
     "resources/compilation/*.yaml",
     "resources/compilation/templates/*.csv",
     "resources/preparation/country_templates/*/*.csv",
+    "site/content/*.yaml",
+    "site/pages/*.html",
+    "site/static/*",
 ]

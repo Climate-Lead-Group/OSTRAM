@@ -85,6 +85,12 @@ EXTENDED_ROUTES = {
         help="Create a derived scenario as a copy of an existing one.",
         exit_policy="main-result",
     ),
+    "site": Route(
+        module_name="ostram.site.build",
+        program="python -m ostram site",
+        help="Build the static website from docs/ and the registered setups.",
+        exit_policy="main-result",
+    ),
 }
 
 
