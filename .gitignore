@@ -38,3 +38,6 @@ OSTRAM_Guia_instalacion_ejecucion.pdf
 # Raw/candidate regression artifacts; compact baselines remain tracked.
 tests/regression/artifacts/
 tests/regression/candidates/
+
+# Website build output (python -m ostram site --out _site).
+/_site/
