@@ -43,13 +43,16 @@ family_limits:
   URN: 1.5
   HYD: 3.0
 
-## The nine technologies below keep an open build cap (9999 GW per year, the
+## The technologies below keep an open build cap (9999 GW per year, the
 ## rule's exempt value). ASSUMPTION: their generation floors in the ported BAU
-## (TotalTechnologyAnnualActivityLowerLimit, which grow with demand) need more
-## capacity than their residual capacity plus planned builds, so a tighter cap
-## would make the floors unreachable. Without this list the solve is infeasible
-## (first row: the 2023 floor of PWROILPERXX, 2.8841 PJ, whose residual capacity
-## starts in 2046).
+## (TotalTechnologyAnnualActivityLowerLimit, calibrated to 2023 generation and,
+## for some, growing with demand) need more capacity than their residual
+## capacity plus planned builds can supply at their capacity factors, so a
+## tighter cap makes the floors unreachable. The list is the same in A, B and C
+## (B takes the looser of its caps and A's in any case). Without it the solves
+## are infeasible: the 2023 floors of PWROILPERXX (2.8841 PJ, residual capacity
+## from 2046 only) and PWRSPVARGXX (8.9476 PJ against about 7.44 PJ from
+## residual capacity).
 exempt_prefixes:
   - PWRBIOARGXX
   - PWRBIODOMXX
@@ -57,8 +60,24 @@ exempt_prefixes:
   - PWROILPERXX
   - PWRPETCRIXX
   - PWRPETHNDXX
+  - PWRSPVARGXX
+  - PWRSPVBOLXX
+  - PWRSPVCOLXX
+  - PWRSPVCRIXX
+  - PWRSPVDOMXX
+  - PWRSPVECUXX
+  - PWRSPVPANXX
+  - PWRSPVPERXX
+  - PWRSPVSLVXX
+  - PWRSPVURYXX
   - PWRWONARGXX
+  - PWRWONBOLXX
+  - PWRWONCOLXX
+  - PWRWONCRIXX
   - PWRWONECUXX
+  - PWRWONPANXX
+  - PWRWONPERXX
+  - PWRWONSLVXX
   - PWRWONURYXX
 
 adequacy_share_schedule:
