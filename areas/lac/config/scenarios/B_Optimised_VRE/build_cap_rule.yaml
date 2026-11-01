@@ -1,0 +1,53 @@
+## build_cap_rule.yaml: LAC B_Optimised_VRE (least cost, no targets)
+##
+## Same rule, keys and values as config/scenarios/B_Optimised_VRE/build_cap_rule.yaml,
+## with the LAC generation families. With the setup policy
+## build_cap_replaces_workbook_values, the computed caps replace the build caps
+## of the ported BAU workbook for every generation technology with residual
+## capacity or a planned build. After its rules, B takes the looser of its own
+## bounds and those of A_Calibrated_BAU built in the same run (relaxation
+## dependency in areas/lac/setup.yaml), so B can always reproduce A's plan.
+##
+## ASSUMPTION (every number below, all LAC countries): the South Asia B values
+## are used unchanged. The build cap of a technology is its share of the node's
+## 2024 fleet times the year-on-year growth of the demand-scaled fleet times
+## margin_factor 1.1, multiplied by the cap multiplier (1.0 to 2027, rising to
+## 25.0 in 2050) up to the family ceiling; a family absent from family_limits
+## (SPV, WON, WOF, CSP, GEO, WAV, CCS, COG, OTH) takes the full multiplier.
+## Caps below 0.1 GW are raised to 0.1 GW outside locked families, and from
+## 2045 each node's caps are scaled up to at least the adequacy share of its
+## demand-scaled fleet. They loosen the build limits so the model can choose
+## the least-cost mix; the study sets no number for this scenario.
+
+rule_mode: proportional
+margin_factor: 1.1
+
+cap_multiplier_schedule:
+  2023: 1.0
+  2027: 1.0
+  2030: 3.0
+  2035: 6.0
+  2040: 10.0
+  2045: 15.0
+  2050: 25.0
+
+technology_top_up_gw: 0.1
+
+family_limits:
+  COA: 1.0
+  PET: 1.01
+  OIL: 1.01
+  BIO: 1.0
+  WAS: 1.0
+  NGS: 1.2
+  URN: 1.5
+  HYD: 3.0
+
+## No exempt prefixes: LAC storage is not in the GENERATION category, so the
+## rule leaves it to the storage delay.
+exempt_prefixes: []
+
+adequacy_share_schedule:
+  2040: 0.0
+  2045: 0.08
+  2050: 0.20

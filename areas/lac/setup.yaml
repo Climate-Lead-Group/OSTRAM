@@ -146,6 +146,9 @@ policies:
   reconcile_variable_cost_exports: true
   # The base-year pin is a South Asia calibration rule.
   apply_pwr_min_pin: false
+  # The computed build cap replaces the build-cap numbers of the ported BAU
+  # workbook when a root lists a cap multiplier schedule (A, B and C).
+  build_cap_replaces_workbook_values: true
 
 authorities:
   scenario_registry: project:areas/lac/setup.yaml
@@ -197,4 +200,24 @@ scenario_registry:
   - name: BAU
     role: support
     dependencies: []
-  decision_scenarios: []
+  - name: A_Calibrated_BAU
+    role: decision
+    dependencies: []
+  # B takes the looser of its own bounds and those of A_Calibrated_BAU built in
+  # the same run, so B can always reproduce A's plan and never costs more.
+  - name: B_Optimised_VRE
+    role: decision
+    dependencies:
+    - type: relaxation
+      scenario: A_Calibrated_BAU
+  - name: C_Target_VRE
+    role: decision
+    dependencies:
+    - type: result
+      scenario: A_Calibrated_BAU
+      environment: OSTRAM_A_CALIBRATED_BAU_RESULT
+      default_path: Executables/A_Calibrated_BAU_0
+  decision_scenarios:
+  - A_Calibrated_BAU
+  - B_Optimised_VRE
+  - C_Target_VRE
