@@ -373,10 +373,12 @@ def build_workdir(
 
     # Stage 1 assets. The merge module and decision overlay
     # read the materialized per-scenario template through OSTRAM_TEMPLATE_PATH.
-    shutil.copy(
-        _PROJECT_PATHS.timeslice_workbook,
-        s1 / "OSTRAM_Timeslice_Inputs.xlsx",
-    )
+    # Prepared root workbooks skip stage 1 and carry their own time slices.
+    if not setup_policy("prepared_root_workbooks", False):
+        shutil.copy(
+            _PROJECT_PATHS.timeslice_workbook,
+            s1 / "OSTRAM_Timeslice_Inputs.xlsx",
+        )
 
     # Stage 2 inputs.
     shutil.copy(
@@ -999,6 +1001,7 @@ def _orchestration_paths() -> _orchestrator.A3Paths:
         preparation_workspace=PREPARATION_WORKSPACE,
         process_dir=A3_WORKSPACE,
         default_soasia=SOASIA_V18,
+        prepared_workbooks=bool(setup_policy("prepared_root_workbooks", False)),
     )
 
 

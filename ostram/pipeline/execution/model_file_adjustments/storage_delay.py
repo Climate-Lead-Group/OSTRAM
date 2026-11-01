@@ -367,13 +367,18 @@ def adjust_data_lines(
     exact_storages: list[str],
     storage_prefixes: list[str],
     allowed_value: str,
+    cap_params: tuple[str, ...] = TECH_CAP_PARAMS,
 ) -> tuple[list[str], dict[str, object]]:
     """Apply the storage delay to the datafile lines.
 
-    Writes StorageBuildAllowed, rewrites both capacity caps of the
-    storage-linked technologies and drops their minimum rows in the
-    blocked years. Returns the new lines and a summary of the changes.
+    Writes StorageBuildAllowed, rewrites the capacity caps in ``cap_params``
+    (by default both) of the storage-linked technologies and drops their
+    minimum rows in the blocked years. Returns the new lines and a summary of
+    the changes.
     """
+    unknown = [name for name in cap_params if name not in TECH_CAP_PARAMS]
+    if unknown:
+        raise ValueError(f"unsupported storage-delay cap parameters: {unknown}")
     eol = detect_eol(lines)
     regions = find_set_members(lines, "REGION")
     years = sorted(find_set_members(lines, "YEAR"), key=year_key)
@@ -389,7 +394,7 @@ def adjust_data_lines(
     )
 
     cap_stats: dict[str, dict[str, int]] = {}
-    for param_name in TECH_CAP_PARAMS:
+    for param_name in cap_params:
         out, removed, injected = rewrite_tech_cap_block(
             out,
             param_name,
@@ -464,6 +469,16 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--cap-params",
+        nargs="+",
+        default=list(TECH_CAP_PARAMS),
+        choices=list(TECH_CAP_PARAMS),
+        help=(
+            "Capacity caps of the storage-linked PWR techs to rewrite. "
+            "Defaults to both."
+        ),
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Parse and report the adjustment without writing output files.",
@@ -488,6 +503,7 @@ def main() -> int:
         exact_storages=args.storages,
         storage_prefixes=args.storage_prefixes,
         allowed_value=str(args.allowed_value),
+        cap_params=tuple(args.cap_params),
     )
     adjusted_model = adjust_model_lines(model_lines)
 

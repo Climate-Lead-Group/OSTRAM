@@ -27,6 +27,10 @@ class A3Paths:
     preparation_workspace: Path
     process_dir: Path
     default_soasia: Path
+    # True for a setup whose roots start from ready-made A-O workbooks
+    # (policy ``prepared_root_workbooks``); A3 then applies only the
+    # inherited restrictions and the scenario's rule scripts.
+    prepared_workbooks: bool = False
 
 
 @dataclass(frozen=True)
@@ -42,6 +46,7 @@ class A3Plan:
     snapshot_dir: Path
     workdir_base: Path
     keep_workdir: bool
+    prepared_workbooks: bool = False
 
 
 @dataclass(frozen=True)
@@ -132,6 +137,7 @@ def resolve_plan(
         ),
         workdir_base=paths.process_dir,
         keep_workdir=cli_args.keep_workdir,
+        prepared_workbooks=paths.prepared_workbooks,
     )
 
 
@@ -184,6 +190,34 @@ def execute_plan(
     stage3 = runtime_paths["s3"]
     stage5 = runtime_paths["s5"]
     dependencies.emit(f"  workdir           : {workdir}")
+
+    if plan.prepared_workbooks:
+        # Ready-made workbooks are final model inputs: skip the template
+        # materialization, the preparation stages 1 to 4 and the late
+        # calibration stages, which rebuild workbooks from the scenario
+        # workbook and would change them.
+        dependencies.banner(
+            "Prepared root workbooks: stages 0 to 4 and the late "
+            "calibration stages are skipped"
+        )
+        for filename in input_files:
+            source = plan.input_dir / filename
+            if not source.exists():
+                raise SystemExit(f"ERROR: input file missing: {source}")
+            dependencies.copy_file(source, stage5 / filename)
+        dependencies.stage_4_5_apply_inherited_restrictions(
+            stage5,
+            plan.soasia,
+            inherit_from,
+        )
+        dependencies.stage_5_rules_scripts(
+            workdir,
+            stage5,
+            rules_scripts,
+        )
+        return _finish_plan(
+            plan, dependencies, workdir, stage5, rules_scripts, t_start
+        )
 
     materialized_template: Path | None = None
     if plan.soasia.is_file():
@@ -247,6 +281,20 @@ def execute_plan(
         dependencies.stage_base_year_pin(stage5, plan.scenario)
     dependencies.stage_internal_tx_residuals(stage5)
     dependencies.stage_6_sync_og_to_ts20(workdir, stage1)
+    return _finish_plan(
+        plan, dependencies, workdir, stage5, rules_scripts, t_start
+    )
+
+
+def _finish_plan(
+    plan: A3Plan,
+    dependencies: A3Dependencies,
+    workdir: Path,
+    stage5: Path,
+    rules_scripts: list[str],
+    t_start: float,
+) -> int:
+    """Persist the run restrictions, deliver the outputs and clean up."""
     scenario_run_state = (
         workdir / f"_scenario_run_state_{plan.scenario}.xlsx"
     )

@@ -296,19 +296,22 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
 
     # Keep otoole's reader, default omission and GMPL structure, but preserve
     # binary64 parameter precision. The stock %g writer truncates calibrated
-    # bounds and physical profiles to six significant digits.
+    # bounds and physical profiles to six significant digits. A setup whose
+    # reference model was written with that writer sets
+    # datafile_float_format: '%g' to reproduce it.
+    float_format = params.get('datafile_float_format', '%.17g')
     from otoole.input import Context
     from otoole.read_strategies import ReadCsv
     from otoole.write_strategies import WriteDatafile
     from otoole.utils import validate_config
 
     class PreciseDatafile(WriteDatafile):
-        """otoole datafile writer that writes parameter values with ``%.17g``."""
+        """otoole datafile writer that writes parameter values with ``float_format``."""
         def _write_parameter(self, df, parameter_name, handle, default, **kwargs):
             df = self._form_parameter(df, default)
             handle.write(f"param default {default} : {parameter_name} :=\n")
             df.to_csv(handle, sep=" ", header=False, index=True,
-                      float_format="%.17g", lineterminator="\n")
+                      float_format=float_format, lineterminator="\n")
             handle.write(";\n")
 
     with open(config_file, encoding="utf-8") as stream:
@@ -354,7 +357,7 @@ def run_otoole_conversion(base_output_path, scenario_name, params):
         if count != 1:
             raise ValueError("Expected one otoole data terminator for trade activation")
         datafile.write_text(text, encoding="utf-8")
-    print(f"Scenario '{scenario_name}' converted with full parameter precision.")
+    print(f"Scenario '{scenario_name}' converted with parameter format {float_format}.")
     print('#------------------------------------------------------------------------------#')
     return True
 
@@ -448,6 +451,9 @@ def run_storage_delay_adjustment(params, scenario_name):
         storage_delay_storage_prefixes: list  -- e.g. ["SDS", "LDS"]
         storage_delay_storages:         list  -- exact storage names (optional, overrides prefixes)
         storage_delay_allowed_value:    str   -- PWR cap value in open years (default "-1")
+        storage_delay_cap_params:       list  -- PWR caps to rewrite (default both
+                                                 TotalAnnualMaxCapacity and
+                                                 TotalAnnualMaxCapacityInvestment)
         storage_delay_suffix:           str   -- chained filename suffix (default "StorageDelayN5")
         storage_delay_model_input:      str   -- source OSeMOSYS model file (default params['osemosys_model'])
         storage_delay_model_output:     str   -- adjusted model file written next to B2 (default "osemosys_fast_preprocessed_storage_delay.txt")
@@ -505,6 +511,9 @@ def run_storage_delay_adjustment(params, scenario_name):
         command += ['--storages'] + list(exact_storages)
     elif storage_prefixes:
         command += ['--storage-prefixes'] + list(storage_prefixes)
+    cap_params = params.get('storage_delay_cap_params')
+    if cap_params:
+        command += ['--cap-params'] + list(cap_params)
 
     safe_print(
         f"Applying storage-delay adjustment for '{scenario_name}_0' "

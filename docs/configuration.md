@@ -482,6 +482,7 @@ annualize_capital: False
 | `base_scenario` | `"BAU"` | Name of the base/reference scenario |
 | `prefix_final_files` | `"OSTRAM_"` | Prefix for final output file names (overridden when `storage_delay_active: true` -- see below) |
 | `osemosys_model` | `"osemosys_fast_preprocessed.txt"` | OSeMOSYS model file (GMPL) |
+| `datafile_float_format` | absent (`"%.17g"`) | Format of the parameter values in the solver datafile. Without the key, values keep full binary64 precision. The `lac` setup sets `"%g"`, otoole's six significant digits, as its reference model was written. |
 
 ### Model-File Adjustment Chain
 
@@ -507,6 +508,8 @@ storage_delay_model_output: "osemosys_fast_preprocessed_storage_delay.txt"
 storage_delay_prefix_final_files: "OSTRAM_StorageDelay_"
 storage_delay_root_datafile: "OSTRAM_data_storage_delay.txt"
 ```
+
+The optional `storage_delay_cap_params` lists the caps of the storage-linked PWR technologies that the step rewrites. Without it, both `TotalAnnualMaxCapacity` and `TotalAnnualMaxCapacityInvestment` are rewritten. The `lac` setup lists only `TotalAnnualMaxCapacityInvestment`, because some of its storage technologies hold residual capacity in the blocked years.
 
 **Storage stripping** -- a diagnostic that removes storage entirely (`mode: "all"`), a single technology (`mode: "tech"`), or a whole storage class (`mode: "class"`):
 

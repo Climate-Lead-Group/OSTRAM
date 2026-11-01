@@ -436,6 +436,34 @@ class ProjectPaths:
         )
 
     @property
+    def root_workbooks(self) -> Path:
+        """Return the folder of ready-made root A-O workbooks.
+
+        The default is ``<project_root>/inputs/scenarios/root_workbooks``. The
+        active setup's ``root_workbooks`` authority replaces it when a setup is
+        active. Only setups with the ``prepared_root_workbooks`` policy read it.
+        """
+
+        return self.authority(
+            "root_workbooks",
+            self.inputs_root / "scenarios" / "root_workbooks",
+        )
+
+    @property
+    def extra_input_workbooks(self) -> Path:
+        """Return the folder of ready-made A-Xtra workbooks.
+
+        The default is ``<project_root>/inputs/preparation/extra_inputs``. The
+        active setup's ``extra_inputs`` authority replaces it when a setup is
+        active. Only setups with the ``prepared_root_workbooks`` policy read it.
+        """
+
+        return self.authority(
+            "extra_inputs",
+            self.inputs_root / "preparation" / "extra_inputs",
+        )
+
+    @property
     def timeslice_workbook(self) -> Path:
         """Return the timeslice workbook.
 

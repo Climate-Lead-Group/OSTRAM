@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import Sequence
 
 from ostram.paths import ProjectPaths, resolve_paths
-from ostram.setups import SETUP_MANIFEST_ENV, active_setup_id
+from ostram.setups import SETUP_MANIFEST_ENV, active_setup_id, setup_policy
 from ostram.terminal import RunReporter, activate_reporter, active_reporter
 
 from ostram.pipeline.scenarios.registry import (
@@ -491,6 +491,7 @@ def main() -> None:
     pipeline_dir = paths.package_root / "pipeline"
     a1_script = pipeline_dir / "preparation" / "base_inputs.py"
     a2_script = pipeline_dir / "preparation" / "transmission.py"
+    seed_script = pipeline_dir / "preparation" / "prepared_roots.py"
     a3_script = pipeline_dir / "scenarios" / "materializer.py"
     b1_script = pipeline_dir / "compilation" / "runner.py"
     b2_script = pipeline_dir / "execution" / "runner.py"
@@ -549,6 +550,17 @@ def main() -> None:
                     f"All required post-A2 root snapshots exist in "
                     f"{a1_outputs_dir}/: {list(required_roots)}. "
                     "Skipping base-model and transmission preparation."
+                )
+            elif setup_policy("prepared_root_workbooks", False):
+                # The setup ships ready-made root workbooks: copy them into
+                # every root's snapshot instead of building them.
+                reporter.stage_start("A1")
+                run_pipeline_script(env_name, seed_script)
+                reporter.stage_complete(
+                    "A1", detail="roots seeded from prepared root workbooks"
+                )
+                reporter.stage_skip(
+                    "A2", "prepared root workbooks already hold the network"
                 )
             else:
                 print(
