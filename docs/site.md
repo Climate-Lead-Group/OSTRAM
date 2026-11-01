@@ -12,8 +12,47 @@ builds plain HTML, CSS and JavaScript from three sources:
 - the page templates, configuration and static files in `ostram/site/`.
 
 Every count and value on the site is read from those files when the site is
-built. Each value carries the file it came from; the site's "Values on this
-site" table lists them all, and `values.json` in the output holds the same list.
+built. Each value carries the file it came from and its source entry, described
+below; the site's "Values on this site" table lists them all, and `values.json`
+in the output holds the same list.
+
+## How sources are shown
+
+Every value on the site shows the source or assumption that the repository
+already records for it. The site writes no source of its own: the source map
+`ostram/site/content/sources.yaml` holds only the places where each record lives,
+and `ostram/site/sources.py` reads the record from there at build time. Each
+value gets one entry of four kinds:
+
+| Kind | What the entry holds | Where it is read from |
+|---|---|---|
+| External source | The citation text and its URL or DOI. Any `ASSUMPTION:` sentence of the same record is shown with it. | The `Basis` column of the `internal_transmission` table in `docs/rules.md`; the comment lines above a key in a YAML file; the `IEEE Reference` (or `Source`) column of the `Interconnector_Params` sheet of the scenario workbook, by scenario, technology and parameter; the tables and reference list of `docs/reference/scenarios/vre_ceiling_provenance.md`. |
+| Assumption | The sentence as the repository records it, shown after the word *assumption*, without the leading `ASSUMPTION:`. | The same records. |
+| Computed | The formula in words and the keys of its inputs. Each input has its own entry. | The inputs listed under `computed` in the source map. |
+| Model setting | A link to the file the value is read from, at the commit being built, labelled "model definition", "scenario setting" or "counted from the repository". | The file of the value. |
+
+A record that names its source only in short, such as "ESMAP (2026)", takes the
+URL of the one full citation in the same table or reference list that holds the
+same words. A docs table is used only for the file it documents, and only when
+its value equals the value in that file; otherwise the build stops.
+
+A value whose record is missing or empty is not printed: the page keeps its
+prose without the number, and the value is left out of `values.json`. A value
+that the source map does not name stops the build, so a new value needs a
+decision about its record first.
+
+On a page:
+
+- the hover on a value shows its entry in one line, then the file it is read from;
+- each page that prints values ends with "Sources on this page": one numbered
+  entry per distinct source, with external links, assumption sentences in full and
+  links to the files of model settings;
+- the values table on the Data page has a "Source" column with the same entry.
+
+Every link to a repository file, from entries, embedded docs pages and the code
+map, points to `blob/<commit>/<path>`, where the commit is `git rev-parse HEAD` of
+the tree being built. Without Git, the links point to `blob/main` and the page
+footer says so. A template links to a repository file with `href="repo:<path>"`.
 
 ## Build and preview
 
@@ -39,6 +78,8 @@ draw diagrams in the browser.
 |---|---|
 | `ostram/site/build.py` | The command: page list, layout, docs embedding, glossary links, search index. |
 | `ostram/site/values.py` | Every value the site shows, read from the setups and their authority files. |
+| `ostram/site/sources.py` | The source entry of each value, read from the records the source map names. |
+| `ostram/site/content/sources.yaml` | The source map: where the record of each value lives. Locations only. |
 | `ostram/site/blocks.py` | Generated parts of pages: the worked example, the rules stepper, the node diagram and the tables. |
 | `ostram/site/markdown.py` | The MyST subset that `docs/` uses, rendered with `markdown-it-py`. |
 | `ostram/site/content/site.yaml` | Page order, navigation, the applications and the Mermaid version. |
@@ -70,4 +111,10 @@ must be set to "GitHub Actions" once, by an owner, under Settings, Pages.
 `tests/website/test_site.py` builds the site twice and compares the output byte
 for byte, reads every value back from the setup files, checks every internal
 link and anchor and the hosts that pages load, and builds once more with a test
-`lac` setup to check that the placeholder pages fill.
+`lac` setup to check that the placeholder pages fill. It also checks that every
+printed value has an entry of one of the four kinds, that every external entry
+has a URL or DOI, that every assumption sentence is the repository's own, that
+every computed entry names inputs with entries, that no entry holds a local path,
+a sheet-and-cell reference or the name of an internal document, that values with
+no record are left out, and that repository links are pinned to the built
+commit, or fall back to `main` without Git.

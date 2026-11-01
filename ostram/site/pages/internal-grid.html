@@ -3,8 +3,8 @@ title: Internal grid families and losses
 summary: The internal transmission families of each node, where the internal loss applies, and how the base-year grid is sized.
 ---
 <h1>Internal grid families and losses</h1>
-<p class="lead">Most power-system models treat a country as a copper plate: power made anywhere reaches demand anywhere
-at no cost. OSTRAM gives each node an internal grid with a capacity, a cost and a loss. The grid is split into families
+<p class="lead">OSTRAM does not treat a node as a copper plate, where power made anywhere reaches demand anywhere at no
+cost: it gives each node an internal grid with a capacity, a cost and a loss. The grid is split into families
 so that renewable output and other output can be tracked separately.</p>
 
 <h2 id="the-families">The families</h2>
@@ -16,8 +16,8 @@ cost, life and loss; only the existing line starts with capacity. Read the grid 
 <div class="cards three">
   <article class="card"><h3>On the grid</h3><p>The output ratio of every internal family is one minus the loss: what
   leaves the grid is {{v:south_asia.internal.efficiency}} of what enters it in South Asia.</p></article>
-  <article class="card"><h3>On bus-bar demand</h3><p>Published demand measured at the bus bar already includes grid
-  losses. The rule writes it as its published value times one minus the loss, so the grid loss is not counted twice.</p></article>
+  <article class="card"><h3>On bus-bar demand</h3><p>The model treats a published demand row measured at the bus bar
+  as one that already includes grid losses. The rule writes it as its published value times one minus the loss, so the grid loss is not counted twice.</p></article>
   <article class="card"><h3>On exports from a bus-bar node</h3><p>An interconnector sent from such a node draws one
   minus the loss per unit of activity, for the same reason.</p></article>
 </div>

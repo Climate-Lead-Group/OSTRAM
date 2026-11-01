@@ -1,0 +1,109 @@
+# Where the repository records the source or assumption of each value the site shows.
+#
+# Locations only. The builder (ostram/site/sources.py) reads every citation, URL and
+# ASSUMPTION sentence from these places when the site is built; no source text is
+# written here. Keys are value names without the setup id, matched with fnmatch.
+# A value whose key no entry names stops the build. A value whose record is empty
+# or missing is not printed.
+
+# Values computed from other values: the inputs of each. The entry of a computed
+# value names these inputs; each input has its own entry.
+computed:
+  internal.base_capital_cost:
+    - internal.esmap_capital_cost_usd2010_per_kw
+    - internal.muv_2023
+    - internal.muv_2010
+  internal.base_fixed_cost:
+    - internal.fixed_cost_share
+    - internal.base_capital_cost
+  internal.re_add_on:
+    - internal.gec2_cost_rs_crore
+    - internal.gec2_capacity_mw
+    - internal.inr_per_usd_2022
+    - internal.muv_2023
+    - internal.muv_2022
+  internal.re_capital_cost:
+    - internal.base_capital_cost
+    - internal.re_add_on
+  internal.re_multiplier:
+    - internal.base_capital_cost
+    - internal.re_add_on
+  internal.efficiency:
+    - internal.transmission_loss
+
+# Values whose record is a docs table row, YAML comment lines or a workbook cell.
+records:
+  - keys: ["internal.*"]
+    # The table of internal_transmission keys and their basis. It documents one
+    # file; a setup with another country configuration reads only its comments.
+    markdown_table:
+      file: docs/rules.md
+      header: [Key, Value, Basis]
+      documents: config/preparation/Config_country_codes.yaml
+    yaml_comments:
+      role: country_config
+      block: internal_transmission
+  - keys: ["corridor.*.capital", "corridor.*.low", "corridor.*.high"]
+    workbook: {role: scenario_workbook, sheet: Interconnector_Params, scenario: BAU, parameter: CapitalCost}
+  - keys: ["corridor.*.fixed"]
+    workbook: {role: scenario_workbook, sheet: Interconnector_Params, scenario: BAU, parameter: FixedCost}
+  - keys: ["corridor.*.residual"]
+    workbook: {role: scenario_workbook, sheet: Interconnector_Params, scenario: BAU, parameter: ResidualCapacity}
+  - keys: ["effective.TRNBGDXXINDEA_residual_capacity_gw"]
+    workbook:
+      role: scenario_workbook
+      sheet: Interconnector_Params
+      scenario: BAU
+      parameter: ResidualCapacity
+      technology: TRNBGDXXINDEA
+  - keys: ["vre_ceiling.*"]
+    vre_table:
+      file: docs/reference/scenarios/vre_ceiling_provenance.md
+      documents: config/setups/south_asia.yaml
+      table_section: "2."
+      reference_section: "1."
+      header: [Node, Tech, Value (GW), Best source]
+      technologies: {Solar: PWRSPV, Wind: PWRWON}
+  - keys: ["link_import_cap.first_year"]
+    yaml_comments:
+      role: manifest
+      block: policies
+      key: link_import_cap
+  # Recorded nowhere in the setup's files.
+  - keys: ["effective.interconnector_capacity_gw"]
+    none: true
+
+# Workbook columns that hold a record, in order of preference.
+workbook_columns: [IEEE Reference, Source]
+
+# Values that are settings of the model or counts of the repository: the entry is
+# a permalink to the file the value is read from, with this label.
+settings:
+  - label: scenario setting
+    keys: ["gross_import_cap.*"]
+  - label: counted from the repository
+    keys: ["repo.*"]
+  - label: model definition
+    keys:
+      - nodes
+      - interconnectors
+      - internal_grid_technologies
+      - internal_families
+      - countries
+      - first_year_config
+      - first_year
+      - last_year
+      - years
+      - timeslices
+      - seasons
+      - day_types
+      - daily_time_brackets
+      - scenarios
+      - support_scenarios
+      - root_scenarios
+      - decision_scenarios
+      - derived_scenarios
+      - link_import_cap.links
+      - vre_ceilings
+      - corridor_costs
+      - effective.*_relaxed_total_annual_max_capacity_gw

@@ -2,8 +2,9 @@
 
 The site is built into temporary folders. The tests compare two builds byte for
 byte, read every value the site shows back from the setup manifests and their
-authority files, check every internal link and anchor and every external host,
-and build once more with a fixture ``lac`` setup registered.
+authority files, check that every value carries a source entry read from the
+repository's records, check every internal link and anchor and every external
+host, and build once more with a fixture ``lac`` setup registered.
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ import posixpath
 import re
 import tempfile
 import unittest
+from unittest import mock
 
 import yaml
 from openpyxl import load_workbook
@@ -25,10 +27,18 @@ from ostram.paths import resolve_paths
 from ostram.setups import load_manifest, load_setup
 from ostram.site.blocks import format_value
 from ostram.site.build import build_site
+from ostram.site.sources import git_commit
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = Path(__file__).resolve().parent / "fixtures" / "lac" / "setup.yaml"
 ALLOWED_SCRIPT_HOSTS = {"cdn.jsdelivr.net"}
+REPOSITORY_URL = "https://github.com/Climate-Lead-Group/OSTRAM"
+KINDS = {"external", "assumption", "computed", "setting"}
+SPAN = re.compile(r'<span class="v" data-v="([^"]+)"(?: data-f="([^"]*)")? data-s="([^"]*)" title="[^"]*">([^<]*)</span>')
+FORBIDDEN = re.compile(
+    r"(?<![A-Za-z])[A-Za-z]:[\\/](?!/)|[\\/]Users[\\/]|OneDrive|Desktop|\b\w+!\$?[A-Z]{1,3}\$?\d+|\b(?:handover|chat|hub)\b",
+    re.IGNORECASE,
+)
 
 
 def _files(folder: Path) -> list[str]:
@@ -42,6 +52,26 @@ def _pages(folder: Path) -> dict[str, str]:
 def _taxonomy(path: Path) -> list[tuple[str, str]]:
     with open(path, encoding="utf-8-sig", newline="") as handle:
         return [(row[0], row[1]) for row in list(csv.reader(handle))[1:] if len(row) > 1 and row[0]]
+
+
+def _normal(text: str) -> str:
+    """Return text without Markdown marks and comment signs, on one line."""
+
+    text = re.sub(r"<(https?://[^>\s]+)>", r"\1", text)
+    text = re.sub(r"(?m)^\s*#\s?", "", text)
+    return " ".join(text.replace("*", "").replace("`", "").split())
+
+
+def _record_text(url: str) -> str:
+    """Return the normalised text of the repository file a record permalink points to."""
+
+    path = ROOT / url.split("/blob/", 1)[1].split("/", 1)[1]
+    if path.suffix == ".xlsx":
+        workbook = load_workbook(path, read_only=True, data_only=True)
+        cells = [str(cell) for sheet in workbook.worksheets for row in sheet.iter_rows(values_only=True) for cell in row if cell]
+        workbook.close()
+        return "\n".join(_normal(cell) for cell in cells)
+    return _normal(path.read_text(encoding="utf-8"))
 
 
 def expected_values(setup_id: str, paths, manifest=None) -> dict[str, object]:
@@ -157,10 +187,9 @@ class SiteBuildTest(unittest.TestCase):
         self.assertEqual(checked, self.values["south_asia.interconnectors"]["value"])
 
     def test_every_value_on_a_page_matches_its_source(self):
-        span = re.compile(r'<span class="v" data-v="([^"]+)"(?: data-f="([^"]*)")? title="[^"]*">([^<]*)</span>')
         seen = 0
         for name, text in self.pages.items():
-            for key, kind, shown in span.findall(text):
+            for key, kind, _, shown in SPAN.findall(text):
                 with self.subTest(page=name, key=key):
                     self.assertIn(key, self.values)
                     self.assertEqual(html.unescape(shown), format_value(self.values[key]["value"], kind))
@@ -207,6 +236,115 @@ class SiteBuildTest(unittest.TestCase):
         self.assertNotIn('data-v="lac.', page)
         self.assertNotIn('data-v="lac.', self.pages["index.html"])
 
+    def test_every_printed_value_has_an_entry_and_its_page_lists_it(self):
+        for name, text in self.pages.items():
+            spans = SPAN.findall(text)
+            self.assertEqual(len(spans), text.count('<span class="v"'), name)
+            listed = set(re.findall(r'<li id="src-(\d+)">', text))
+            self.assertEqual(bool(spans), 'id="sources-on-this-page"' in text, name)
+            for key, _, numbers, _ in spans:
+                with self.subTest(page=name, key=key):
+                    self.assertIn(self.values[key]["entry"]["kind"], KINDS)
+                    self.assertTrue(numbers.split())
+                    self.assertLessEqual(set(numbers.split()), listed)
+        for key, item in self.values.items():
+            self.assertIn(item["entry"]["kind"], KINDS, key)
+
+    def test_external_entries_carry_a_url_or_doi(self):
+        for key, item in self.values.items():
+            entry = item["entry"]
+            if entry["kind"] == "external":
+                with self.subTest(key=key):
+                    urls = [url for citation in entry["citations"] for url in citation["urls"]]
+                    self.assertTrue(urls)
+                    for url in urls:
+                        self.assertRegex(url, r"^https?://[^\s]+$")
+        for name, text in self.pages.items():
+            for listed in re.findall(r'<ol class="page-sources">(.*?)</ol>', text, re.DOTALL):
+                for target in re.findall(r'href="([^"]+)"', listed):
+                    self.assertNotRegex(html.unescape(target), r"[.,;:]$", name)
+
+    def test_assumption_text_is_the_repository_sentence(self):
+        checked = 0
+        for key, item in self.values.items():
+            entry = item["entry"]
+            for sentence in entry.get("assumptions", []):
+                with self.subTest(key=key):
+                    record = _record_text(entry["record"])
+                    self.assertNotIn("ASSUMPTION", sentence[:12])
+                    self.assertIn("ASSUMPTION: " + _normal(sentence), record)
+                checked += 1
+        self.assertGreater(checked, 10)
+
+    def test_computed_entries_name_inputs_with_entries(self):
+        computed = [key for key, item in self.values.items() if item["entry"]["kind"] == "computed"]
+        self.assertTrue(computed)
+        for key in computed:
+            for name in self.values[key]["entry"]["inputs"]:
+                with self.subTest(key=key, input=name):
+                    self.assertIn(name, self.values)
+                    self.assertIn(self.values[name]["entry"]["kind"], KINDS)
+
+    def test_entries_hold_no_local_or_internal_text(self):
+        for key, item in self.values.items():
+            with self.subTest(key=key):
+                self.assertIsNone(FORBIDDEN.search(json.dumps(item["entry"], ensure_ascii=False)))
+        for name, text in self.pages.items():
+            for title in re.findall(r'<span class="v"[^>]* title="([^"]*)"', text):
+                self.assertIsNone(FORBIDDEN.search(html.unescape(title).split("\n")[0]), name)
+
+    def test_values_without_a_record_are_left_out(self):
+        workbook = load_workbook(ROOT / "inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx", read_only=True, data_only=True)
+        rows = list(workbook["Interconnector_Params"].iter_rows(values_only=True))
+        workbook.close()
+        header = [str(cell) for cell in rows[0]]
+        source, reference = header.index("Source"), header.index("IEEE Reference")
+        for row in rows[1:]:
+            if row[0] == "BAU" and row[5] == "ResidualCapacity":
+                key = f"south_asia.corridor.{row[2]}.residual"
+                with self.subTest(key=key):
+                    if row[source] or row[reference]:
+                        self.assertIn(key, self.values)
+                    else:
+                        self.assertNotIn(key, self.values)
+                        self.assertFalse(any(f'data-v="{key}"' in text for text in self.pages.values()))
+        self.assertNotIn("unescap_training.corridor.TRNBGDXXINDEA.residual", self.values)
+
+    def test_repository_links_are_pinned_to_the_built_commit(self):
+        commit = git_commit(ROOT)
+        if commit is None:
+            self.skipTest("the repository has no Git metadata")
+        pinned = 0
+        for name, text in self.pages.items():
+            for target in re.findall(r'href="(' + re.escape(REPOSITORY_URL) + r'/(?:blob|tree)/[^"]+)"', text):
+                with self.subTest(page=name, link=target):
+                    self.assertTrue(target.startswith(f"{REPOSITORY_URL}/blob/{commit}/"))
+                pinned += 1
+            self.assertNotIn("Git was not available", text)
+        self.assertGreater(pinned, 100)
+        for item in self.values.values():
+            for url in (item["entry"].get("url"), item["entry"].get("record")):
+                if url:
+                    self.assertTrue(url.startswith(f"{REPOSITORY_URL}/blob/{commit}/"), url)
+
+    def test_data_page_has_a_source_column(self):
+        self.assertIn("<th>Source</th>", self.pages["data.html"])
+
+
+class NoGitTest(unittest.TestCase):
+    """Without Git, repository links fall back to the main branch and the footer says so."""
+
+    def test_links_fall_back_to_main(self):
+        paths = resolve_paths(project_root=ROOT)
+        with tempfile.TemporaryDirectory() as tmp, mock.patch("ostram.site.sources.git_commit", return_value=None):
+            out = Path(tmp) / "site"
+            build_site(out, paths=paths)
+            pages = _pages(out)
+        for name, text in pages.items():
+            self.assertEqual(text.count("Git was not available when this site was built"), 1, name)
+            for target in re.findall(r'href="(' + re.escape(REPOSITORY_URL) + r'/blob/[^"]+)"', text):
+                self.assertTrue(target.startswith(f"{REPOSITORY_URL}/blob/main/"), target)
+
 
 class LacFixtureTest(unittest.TestCase):
     """With a ``lac`` setup registered, the same templates fill its pages."""
@@ -235,7 +373,14 @@ class LacFixtureTest(unittest.TestCase):
             manifest = load_manifest(FIXTURE, expected_setup="lac")
             for key, value in expected_values("lac", paths, manifest).items():
                 with self.subTest(key=key):
-                    self.assertEqual(values[key]["value"], value)
+                    if key.startswith("lac.internal."):
+                        # The fixture's configuration records no source for these: left out.
+                        self.assertNotIn(key, values)
+                        self.assertFalse(any(f'data-v="{key}"' in text for text in pages.values()))
+                    else:
+                        self.assertEqual(values[key]["value"], value)
+                        self.assertEqual(values[key]["entry"]["kind"], "setting")
+            self.assertFalse([key for key in values if key.startswith("lac.internal.")])
             lac = pages["applications/lac.html"]
             self.assertNotIn('class="placeholder"', lac)
             self.assertIn('data-v="lac.nodes"', lac)

@@ -3,9 +3,8 @@ title: Build caps and the base-year build lock
 summary: How the most a technology may build each year is set, why build years can spike, and the lock on the base years.
 ---
 <h1>Build caps and the base-year build lock</h1>
-<p class="lead">A model that only minimises cost would rebuild the whole fleet at once around the cheapest technology.
-Real systems change slowly: plants take years to plan, finance and build. A build cap is the most new capacity a
-technology may add in one year. Between the minimum investment and the cap, cost decides.</p>
+<p class="lead">Without a limit on yearly building, the least-cost solve of OSTRAM could add any amount of the cheapest
+technology in a single year. A build cap is the most new capacity a technology may add in one year. Between the minimum investment and the cap, cost decides.</p>
 
 <h2 id="three-limits">Three limits and three special values</h2>
 <div class="table-wrap"><table>
@@ -27,8 +26,8 @@ up to too little of the demand-scaled fleet. Each step reads the result of the s
 are in its <code>build_cap_rule.yaml</code>; the guide below lists the released values.</p>
 
 <h2 id="investment-surges">Investment surges</h2>
-<p>Sometimes a build year spikes: far more capacity appears in one year than in the years around it. A spike is rarely
-the optimiser's own idea. It usually comes from the inputs.</p>
+<p>Sometimes a build year spikes: far more capacity appears in one year than in the years around it. In OSTRAM a spike
+can come from the inputs, as the steps below show.</p>
 <figure class="surge-figure">
   <svg viewBox="0 0 560 200" role="img" aria-label="Schematic: forced builds collapsed onto one year make a spike; spreading them over earlier years keeps the total and removes the spike">
     <g class="surge-before">

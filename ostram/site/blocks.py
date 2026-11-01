@@ -3,6 +3,8 @@
 Each block is a function ``block_<name>(site, page, argument)`` that returns HTML.
 Every number a block prints is a value from :mod:`ostram.site.values`, printed
 with :func:`value_span`, so the page names its source and the tests can check it.
+The source entries come from :mod:`ostram.site.sources`; :func:`page_sources`
+lists the ones a page used.
 """
 
 from __future__ import annotations
@@ -12,6 +14,7 @@ import importlib
 import posixpath
 import re
 
+from ostram.site import sources
 from ostram.site.values import INTERNAL_CATEGORIES, literal_assignment, rule_modules, code_counts
 
 e = html.escape
@@ -63,13 +66,98 @@ def format_value(value, kind: str = "") -> str:
 
 
 def value_span(site, key: str, kind: str = "") -> str:
-    """Return one value wrapped so that readers and tests can see where it came from."""
+    """Return one value wrapped so that readers and tests can see its source and file.
 
+    A value left out for want of a record prints nothing.
+    """
+
+    if key in site.left_out:
+        return ""
     item = site.value(key)
     text = e(format_value(item.value, kind))
-    title = e(f"Read from {item.source}" + (f" ({item.note})" if item.note else ""))
+    title = e(
+        sources.one_line_entry(site, key) + "\n"
+        + f"Read from {item.source}" + (f" ({item.note})" if item.note else "")
+    )
     kind_attr = f' data-f="{kind}"' if kind else ""
-    return f'<span class="v" data-v="{e(key)}"{kind_attr} title="{title}">{text}</span>'
+    numbers = " ".join(str(n) for n in refs(site, key))
+    return f'<span class="v" data-v="{e(key)}"{kind_attr} data-s="{numbers}" title="{title}">{text}</span>'
+
+
+def refs(site, key: str) -> list[int]:
+    """Return the numbers of a value's sources in the list at the end of the page, adding new ones."""
+
+    numbers = []
+    for unit in sources.units(site, key):
+        if unit not in site.page_units:
+            site.page_units.append(unit)
+        numbers.append(site.page_units.index(unit) + 1)
+    return numbers
+
+
+def _ref_links(numbers: list[int]) -> str:
+    return " ".join(f'<a href="#src-{n}">[{n}]</a>' for n in numbers)
+
+
+def _linkify_entry(text: str) -> str:
+    """Return record text with each URL a link, ending each URL as :func:`sources.urls_of` does."""
+
+    parts, last = [], 0
+    for url in sources.urls_of(text):
+        start = text.find(url, last)
+        if start < 0:
+            continue
+        parts.append(e(text[last:start]))
+        parts.append(f'<a href="{e(url)}" rel="noopener">{e(url)}</a>')
+        last = start + len(url)
+    parts.append(e(text[last:]))
+    return "".join(parts)
+
+
+def _linkify_urls(text: str, urls) -> str:
+    out = _linkify_entry(text)
+    missing = [url for url in urls if url not in text]
+    return out + "".join(f' <a href="{e(url)}" rel="noopener">{e(url)}</a>' for url in missing)
+
+
+def _unit_html(unit: tuple) -> str:
+    if unit[0] == "citation":
+        return _linkify_urls(unit[1], unit[2])
+    if unit[0] == "assumption":
+        return f"<em>assumption</em> {_linkify_entry(unit[1])}"
+    _, label, path, url = unit
+    return f'{e(label)}: <a href="{e(url)}" rel="noopener"><code>{e(path)}</code></a>'
+
+
+def entry_html(site, key: str) -> str:
+    """Return the entry of a value for a table cell, with links to the list of sources."""
+
+    entry = site.entries[key]
+    numbers = refs(site, key)
+    if entry["kind"] == "setting":
+        return f'<a href="{e(entry["url"])}" rel="noopener">{e(entry["label"])}</a> {_ref_links(numbers)}'
+    if entry["kind"] == "computed":
+        inputs = ", ".join(_code(name) for name in entry["inputs"])
+        return f"computed: {e(entry['formula'])}, from {inputs} {_ref_links(numbers)}"
+    if entry["kind"] == "assumption":
+        sentences = " ".join(_linkify_entry(sentence) for sentence in entry["assumptions"])
+        return f"<em>assumption</em> {sentences} {_ref_links(numbers)}"
+    return f"source {_ref_links(numbers)}"
+
+
+def page_sources(site) -> str:
+    """Return the section "Sources on this page" for the sources the page's values used."""
+
+    if not site.page_units:
+        return ""
+    items = "".join(f'<li id="src-{n}">{_unit_html(unit)}</li>' for n, unit in enumerate(site.page_units, 1))
+    return (
+        '\n<h2 id="sources-on-this-page">Sources on this page</h2>\n'
+        "<p>Each value on this page names its sources in its hover text. External sources link to the "
+        "document; an <em>assumption</em> is quoted as the repository records it; a model definition, "
+        "scenario setting or repository count links to the file it is read from.</p>"
+        f'<ol class="page-sources">{items}</ol>'
+    )
 
 
 def rel(from_page: str, to_page: str) -> str:
@@ -106,7 +194,7 @@ def _code(text: str) -> str:
 
 
 def _source_link(site, path: str) -> str:
-    return f'<a href="{site.config["repository_url"]}/blob/main/{e(path)}" rel="noopener"><code>{e(path)}</code></a>'
+    return f'<a href="{e(site.blob(path))}" rel="noopener"><code>{e(path)}</code></a>'
 
 
 def _years(site, setup_id: str) -> str:
@@ -815,10 +903,10 @@ def block_values_table(site, page, argument):
     rows = []
     for setup_id, info in site.setups.items():
         for key, item in sorted(info.values.items()):
-            rows.append([_code(key), value_span(site, key), _code(item.source), e(item.note)])
+            rows.append([_code(key), value_span(site, key), entry_html(site, key), _code(item.source), e(item.note)])
     for key, item in sorted(site.repo.items()):
-        rows.append([_code(key), value_span(site, key), _code(item.source), e(item.note)])
-    return _table(["Key", "Value", "Read from", "Field"], rows, "values")
+        rows.append([_code(key), value_span(site, key), entry_html(site, key), _code(item.source), e(item.note)])
+    return _table(["Key", "Value", "Source", "Read from", "Field"], rows, "values")
 
 
 def render(name: str, argument: str, *, site, page) -> str:
@@ -830,4 +918,4 @@ def render(name: str, argument: str, *, site, page) -> str:
     return function(site, page, argument)
 
 
-__all__ = ["render", "format_value", "value_span"]
+__all__ = ["render", "format_value", "value_span", "entry_html", "page_sources"]

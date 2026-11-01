@@ -11,6 +11,11 @@ Template directives, replaced at build time:
   ``@`` in a key stands for the setup of a per-setup page.
 - ``{{doc:<path>}}`` or ``{{doc:<path>#<anchor>}}``: a docs page, or one section of it.
 - ``{{block:<name>}}`` or ``{{block:<name> <argument>}}``: generated HTML from :mod:`ostram.site.blocks`.
+
+A link written ``href="repo:<path>"`` points to that repository file at the commit
+being built. Every value carries the source entry that :mod:`ostram.site.sources`
+reads from the repository's records, and each page that prints values ends with
+the sources it used.
 """
 
 from __future__ import annotations
@@ -28,7 +33,7 @@ from typing import Sequence
 
 from ostram import yaml_io
 from ostram.paths import ProjectPaths, resolve_paths
-from ostram.site import blocks
+from ostram.site import blocks, sources
 from ostram.site.blocks import value_span
 from ostram.site.markdown import MarkdownRenderer, headings_of, section, slugify
 from ostram.site.values import SetupInfo, registered_setups, repository_values, setup_info
@@ -69,6 +74,15 @@ class Site:
     glossary: list[tuple[str, str]] = field(default_factory=list)
     uses_mermaid: set[str] = field(default_factory=set)
     repo: dict = field(default_factory=dict)
+    commit: str | None = None
+    entries: dict = field(default_factory=dict)
+    left_out: dict = field(default_factory=dict)
+    page_units: list = field(default_factory=list)
+
+    def blob(self, path: str) -> str:
+        """Return the address of a repository file at the commit being built, or on ``main`` without Git."""
+
+        return f"{self.config['repository_url']}/blob/{self.commit or 'main'}/{path}"
 
     @property
     def docs_root(self) -> Path:
@@ -210,11 +224,17 @@ def _render_doc(site: Site, page: Page, argument: str) -> str:
     rendered = renderer.render(text)
     if 'class="mermaid"' in rendered.html:
         site.uses_mermaid.add(page.path)
-    origin = site.config["repository_url"] + "/blob/main/docs/" + doc
+    origin = site.blob("docs/" + doc)
+    # A docs link to a repository file on main points to the commit being built.
+    body = re.sub(
+        r'href="' + re.escape(site.config["repository_url"]) + r'/(?:blob|tree)/main/([^"]*)"',
+        lambda m: f'href="{html.escape(site.blob(m.group(1)))}"',
+        rendered.html,
+    )
     return (
         f'<div class="doc" data-doc="{html.escape(doc)}">'
         f'<p class="doc-origin">From <a href="{origin}" rel="noopener">docs/{html.escape(doc)}</a>'
-        f"{' (one section)' if anchor else ''}.</p>{rendered.html}</div>"
+        f"{' (one section)' if anchor else ''}.</p>{body}</div>"
     )
 
 
@@ -235,12 +255,14 @@ def _render_body(site: Site, page: Page) -> str:
 
     body = _DIRECTIVE.sub(replace, text)
     body = _SITE_LINK.sub(lambda m: f'{m.group(1)}="{_site_href(page.path, m.group(2))}"', body)
+    body = _REPO_LINK.sub(lambda m: f'href="{html.escape(site.blob(m.group(1)))}"', body)
     if 'class="mermaid"' in body:
         site.uses_mermaid.add(page.path)
     return body
 
 
 _SITE_LINK = re.compile(r'(href|src)="~/([^"]*)"')
+_REPO_LINK = re.compile(r'href="repo:([^"]*)"')
 
 
 def _site_href(from_page: str, target: str) -> str:
@@ -376,6 +398,10 @@ def _layout(site: Site, page: Page, body: str) -> str:
             "</script>"
         )
     description = html.escape(page.summary or site.config["description"])
+    pinned = (
+        "" if site.commit else
+        " Git was not available when this site was built, so links to repository files point to the main branch."
+    )
     return (
         "<!doctype html>\n"
         '<html lang="en">\n<head>\n<meta charset="utf-8">\n'
@@ -404,8 +430,9 @@ def _layout(site: Site, page: Page, body: str) -> str:
         '<footer class="footer"><p>Generated from the '
         f'<a href="{site.config["repository_url"]}" rel="noopener">OSTRAM repository</a> by '
         "<code>python -m ostram site</code>. Every count and value on this site is read from the "
-        f'repository when the site is built; <a href="{rel(page.path, "data.html")}#values-on-this-site">'
-        "the values table</a> names the file of each one.</p></footer>\n"
+        "repository when the site is built. Hover over a value for its source; "
+        f'<a href="{rel(page.path, "data.html")}#values-on-this-site">'
+        f"the values table</a> lists the source and the file of each one.{pinned}</p></footer>\n"
         '<div class="search" hidden><div class="search-box" role="dialog" aria-modal="true" aria-label="Search">'
         '<input type="search" placeholder="Search the site" aria-label="Search the site">'
         '<ol class="search-results"></ol><p class="search-hint">Enter opens the first result. Esc closes.</p>'
@@ -492,15 +519,18 @@ def build_site(
         len(setups),
         "config/setups/registry.json" if registry_path is None else Path(registry_path).name,
     )
+    site.commit = sources.git_commit(paths.project_root)
+    sources.resolve(site)
     site.glossary = _glossary_terms(site)
     _register_anchors(site)
 
     for page in site.pages:
         if page.setup is not None:
             page.title = _setup_name(site_config, page.setup, setups)
+        site.page_units = []
         body = _render_body(site, page)
         body = _glossary_ids(site, body) if page.path == site_config["glossary_page"] else body
-        page.body = _link_terms(site, page, body)
+        page.body = _link_terms(site, page, body) + blocks.page_sources(site)
         page.headings = _headings(page.body)
         ids = re.findall(r'\sid="([^"]+)"', page.body)
         repeated = sorted({anchor for anchor in ids if ids.count(anchor) > 1})
@@ -524,11 +554,14 @@ def build_site(
         for source in sorted(explainers.glob("*.html")):
             _write(out / "explainers" / source.name, source.read_text(encoding="utf-8").replace("\r\n", "\n"))
     values = {
-        key: {"value": item.value, "source": item.source, "note": item.note}
+        key: {"value": item.value, "source": item.source, "note": item.note, "entry": site.entries[key]}
         for info in setups.values()
         for key, item in sorted(info.values.items())
     }
-    values.update({key: {"value": item.value, "source": item.source, "note": item.note} for key, item in site.repo.items()})
+    values.update({
+        key: {"value": item.value, "source": item.source, "note": item.note, "entry": site.entries[key]}
+        for key, item in site.repo.items()
+    })
     _write(out / "values.json", json.dumps(values, ensure_ascii=False, indent=1, sort_keys=True) + "\n")
     _write(out / ".nojekyll", "")
     _write(out / MARKER, "Written by python -m ostram site. The next build replaces this folder.\n")
