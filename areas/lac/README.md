@@ -76,7 +76,7 @@ areas/lac/
 | Scenario | Rule scripts | Settings |
 |---|---|---|
 | `BAU` (support) | none | The OSTRAM-LAC `BAU` model. Internal repowering is open from 2028 and unplanned internal lines from 2030. |
-| `A_Calibrated_BAU` | `build_cap_rule.py` | `BAU` plus a build lock: generation technologies with residual capacity or a planned build may build only their planned capacity (cap multiplier 0, so each cap is the planned build times 1.01). The study's Tendencial scenario (section 2.3.2). |
+| `A_Calibrated_BAU` | `build_cap_rule.py` | `BAU` plus a build lock: generation technologies with residual capacity or a planned build may build only their planned capacity (cap multiplier 0, so each cap is the planned build times 1.01). 25 technologies whose ported generation floors need more than residual capacity plus planned builds keep an open cap (`exempt_prefixes`, the same list in A, B and C). The study's Tendencial scenario (section 2.3.2). |
 | `B_Optimised_VRE` | `build_cap_rule.py` | `BAU` with the South Asia B build-cap relaxation and family ceilings on the LAC families; B also takes the looser of its bounds and A's. Least cost without targets. |
 | `C_Target_VRE` | `build_cap_rule.py`, `set_vre_targets.py` | The A settings plus each country's renewable share target from its NDC (`set_vre_targets.yaml`), as generation floors scaled to the solved A. The study's NDC scenario (section 2.3.3). |
 

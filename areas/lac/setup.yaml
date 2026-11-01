@@ -141,9 +141,10 @@ policies:
   # inputs/scenarios/root_workbooks: preparation (A1, A2) copies them into
   # every root, and A3 applies only each root's rule scripts.
   prepared_root_workbooks: true
-  # Include compiled default variable costs omitted by sparse otoole CSVs in
-  # the reported outputs.
-  reconcile_variable_cost_exports: true
+  # Off: the reconciliation of reported variable costs requires the solver
+  # datafile to hold the compiled costs at full precision, and this setup
+  # writes it with six significant digits (datafile_float_format).
+  reconcile_variable_cost_exports: false
   # The base-year pin is a South Asia calibration rule.
   apply_pwr_min_pin: false
   # The computed build cap replaces the build-cap numbers of the ported BAU
