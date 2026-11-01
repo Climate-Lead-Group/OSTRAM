@@ -47,6 +47,20 @@ family_limits:
   WOF: 1.0
   WON: 1.0
 
-## No exempt prefixes: LAC storage is not in the GENERATION category, so the
-## rule leaves it to the storage delay.
-exempt_prefixes: []
+## The nine technologies below keep an open build cap (9999 GW per year, the
+## rule's exempt value). ASSUMPTION: their generation floors in the ported BAU
+## (TotalTechnologyAnnualActivityLowerLimit, which grow with demand) need more
+## capacity than their residual capacity plus planned builds, so a tighter cap
+## would make the floors unreachable. Without this list the solve is infeasible
+## (first row: the 2023 floor of PWROILPERXX, 2.8841 PJ, whose residual capacity
+## starts in 2046).
+exempt_prefixes:
+  - PWRBIOARGXX
+  - PWRBIODOMXX
+  - PWRBIOURYXX
+  - PWROILPERXX
+  - PWRPETCRIXX
+  - PWRPETHNDXX
+  - PWRWONARGXX
+  - PWRWONECUXX
+  - PWRWONURYXX
