@@ -36,6 +36,17 @@ URL of the one full citation in the same table or reference list that holds the
 same words. A docs table is used only for the file it documents, and only when
 its value equals the value in that file; otherwise the build stops.
 
+When the workbook cells of an interconnector's existing capacity are empty, the
+value takes a second record: the block of
+`docs/reference/base_year_value_sources.md` for the same corridor, parameter
+`TotalAnnualMaxCapacity` and first model year, with each `[Rn]` resolved to its
+entry under "Documents" and each `An` to its sentence, used only when the
+block's value is the one the site shows. The loss setting
+`internal_transmission.transmission_loss` may be one number or a mapping of node
+to number: one number, or a mapping whose nodes all hold the same number, prints
+as one value, and different numbers print as a short list by node, each value
+with its own entry.
+
 A value whose record is missing or empty is not printed: the page keeps its
 prose without the number, and the value is left out of `values.json`. A value
 that the source map does not name stops the build, so a new value needs a
