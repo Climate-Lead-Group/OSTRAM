@@ -26,6 +26,8 @@ Capacity converts to energy at 31.536 PJ per GW-year (8 760 hours x 3.6 TJ per G
 
 **LA10.** International prices of coal, crude oil and natural gas are multiplied by 1.3 in the 19 countries in 2023 to 2050. Reason: OSeMOSYS Global applies this surcharge to imported fuels, to reflect the extra cost of importing fuel over the international benchmark price.
 
+**LA14.** A transmission-only loss of 3% (fraction 0.03 of the energy entering the grid) inside each country's internal transmission network (`RNWTRN*`, `RNWRPO*`, `RNWNLI*`, `PWRTRN*`, `TRNRPO*`, `TRNNLI*`), uniform across the 19 countries, 2023 to 2050, the same value the South Asia application uses: their `OutputActivityRatio` is 0.97 and their `InputActivityRatio` 1. Every country's demand row is measured at the bus bar (`Measured_at` = `bus-bar`), so its `SpecifiedAnnualDemand` is the workbook value x 0.97, and every interconnector mode sent from a country's `ELC{ISO}XX03` draws 0.97 per unit of activity. Reason: the demand series are generation plus net imports, so they already hold the energy the networks lose; the model delivers them after the internal grid, so the internal loss is taken out of the workbook value once. The value is set in `config/preparation/Config_country_codes.yaml` and can be set per country. Check: IDB (2014), Power Lost: Sizing Electricity Losses in Transmission and Distribution Systems in Latin America and the Caribbean, p. 33, https://doi.org/10.18235/0012798, reports transmission losses of 1.6% (Bolivia) to 3.7% (Honduras) for 15 countries of the region, Paraguay (8%) excepted.
+
 ## A-O_Parametrization, Primary Techs
 
 ### `MIN*` fuel supply
@@ -339,9 +341,9 @@ Capacity converts to energy at 31.536 PJ per GW-year (8 760 hours x 3.6 TJ per G
 - Technologies: `RNWTRN*`, `PWRTRN*` (existing lines), `RNWRPO*`, `TRNRPO*` (repowering), `RNWNLI*`, `TRNNLI*` (new lines), internal transmission network of each of the 19 countries.
 - Parameters: `CapitalCost`, `FixedCost`.
 - Years: 2023-2050 (constant value).
-- Source: needs source.
+- Source: the national transmission planning documents of each country, listed by country in the MinCapInv Tx blocks below (for example EPE PET/PELP 2024 for Brazil, CNE 2024 for Chile, UPME 2024-2038 for Colombia, ICE PET 2024-2034 for Costa Rica).
 - Detail: Values differ by country. Capital cost of new lines between 20 and 463 million USD per GW depending on the country (lowest in Barbados, the Dominican Republic and Haiti; highest in Chile); existing lines = 1.2 x new lines; repowering = 0.45 x new lines; annual fixed cost proportional.
-- Needs source: the country capital costs of new lines, the factors 1.2 and 0.45, and the fixed cost ratio.
+- Needs source: the factors 1.2 and 0.45, and the fixed cost ratio.
 
 ### Internal transmission network, residual and maximum capacity
 
@@ -562,6 +564,15 @@ Capacity converts to energy at 31.536 PJ per GW-year (8 760 hours x 3.6 TJ per G
 - Assumptions: ASSUMPTION LA8.
 
 ## A-O_Demand, Demand_Projection
+
+### `ELC{ISO}XX03` demand, point of measurement, and internal transmission loss
+
+- Technologies: `ELC{ISO}XX03` (demand of each of the 19 countries); `RNWTRN*`, `RNWRPO*`, `RNWNLI*`, `PWRTRN*`, `TRNRPO*`, `TRNNLI*` (internal transmission network); `TRN{A}XX{B}XX` (interconnector modes sent from `ELC{ISO}XX03`).
+- Parameters: `Measured_at` column of `Demand_Projection` (`bus-bar` on all 19 rows); `SpecifiedAnnualDemand`; `OutputActivityRatio` and `InputActivityRatio` of the internal network; `InputActivityRatio` of the interconnector modes.
+- Years: 2023-2050.
+- Source: ASSUMPTION LA14; loss value `internal_transmission.transmission_loss` in `config/preparation/Config_country_codes.yaml`.
+- Detail: Computed every run by the A3 stage `stage_internal_tx_losses` (setup policy `apply_internal_tx_losses`) from the root workbook values: `SpecifiedAnnualDemand` = workbook value x (1 - 0.03); internal network `OutputActivityRatio` = 1 - 0.03 with `InputActivityRatio` = 1 in both activity-ratio workbooks; interconnector input from `ELC{ISO}XX03` = 1 - 0.03.
+- Assumptions: ASSUMPTION LA14.
 
 ### `ELC{ISO}XX03` demand, 2023 and 2024
 

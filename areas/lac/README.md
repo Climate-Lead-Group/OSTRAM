@@ -54,7 +54,8 @@ areas/lac/
 - **Ready-made root workbooks.** The policy `prepared_root_workbooks` makes
   preparation copy `inputs/scenarios/root_workbooks` into every root instead of
   building workbooks from the OSeMOSYS Global CSVs (A1 and A2), and makes A3
-  apply only each root's rule scripts. The workbooks are the OSTRAM-LAC `BAU`
+  apply only each root's rule scripts and, with the policy
+  `apply_internal_tx_losses`, the internal transmission loss. The workbooks are the OSTRAM-LAC `BAU`
   workbooks: the documentation sheet `Fuentes` is removed, and the year cells of
   the eight parameters OSTRAM compiles at full precision are rounded to four
   decimals as OSTRAM-LAC compiles them.
@@ -66,18 +67,20 @@ areas/lac/
   only the build cap of storage technologies (`storage_delay_cap_params`); the
   datafile is written with six significant digits (`datafile_float_format`), as
   OSTRAM-LAC writes it; OSTRAM's reserve-margin repair is off.
-- **Internal losses.** Internal transmission losses are input activity ratios
-  above 1 in the activity-ratio workbooks, per country (for example Argentina
-  1.042 for renewable lines and 1.012 for other lines). The South Asia loss rule
-  does not run for this setup.
+- **Internal losses.** South Asia's loss rule (`apply_internal_tx_losses.py`)
+  runs after the rule scripts (setup policy `apply_internal_tx_losses`) with a
+  3% loss in every country (ASSUMPTION LA14): the internal grid delivers 0.97 of
+  what enters it, every demand row is measured at the bus bar (the `Measured_at`
+  column of the root `A-O_Demand.xlsx`) and is multiplied by 0.97, and an
+  interconnector sent from a country draws 0.97 per unit of activity.
 
 ## Scenarios
 
 | Scenario | Rule scripts | Settings |
 |---|---|---|
 | `BAU` (support) | none | The OSTRAM-LAC `BAU` model. Internal repowering is open from 2028 and unplanned internal lines from 2030. |
-| `A_Calibrated_BAU` | `build_cap_rule.py` | `BAU` plus a build lock: generation technologies with residual capacity or a planned build may build only their planned capacity (cap multiplier 0, so each cap is the planned build times 1.01). 25 technologies whose ported generation floors need more than residual capacity plus planned builds keep an open cap (`exempt_prefixes`, the same list in A, B and C). The study's Tendencial scenario (section 2.3.2). |
-| `B_Optimised_VRE` | `build_cap_rule.py` | `BAU` with the South Asia B build-cap relaxation and family ceilings on the LAC families; B also takes the looser of its bounds and A's. Least cost without targets. |
+| `A_Calibrated_BAU` | `build_cap_rule.py` | `BAU` with South Asia A's build-cap settings: planned projects plus today's mix growing with demand (each technology's share of the 2024 fleet times the growth of the demand-scaled fleet times 1.1), and a floor top-up computed every run that raises a generation technology's caps where residual capacity plus its caps cannot reach its generation floor. The study's Tendencial scenario (section 2.3.2). |
+| `B_Optimised_VRE` | `build_cap_rule.py` | `BAU` with the South Asia B build-cap relaxation and family ceilings on the LAC families and the same floor top-up; B also takes the looser of its bounds and A's. Least cost without targets. |
 | `C_Target_VRE` | `build_cap_rule.py`, `set_vre_targets.py` | The A settings plus each country's renewable share target from its NDC (`set_vre_targets.yaml`), as generation floors scaled to the solved A. The study's NDC scenario (section 2.3.3). |
 
 ### Renewable targets in `C_Target_VRE`
@@ -117,7 +120,7 @@ python -m ostram --workspace workspace/lac --setup lac run --scenarios "B_Optimi
 python -m ostram --workspace workspace/lac --setup lac run --scenarios "C_Target_VRE" --skip-pull --a-result-seed <workspace>/setups/lac/execution/Executables/A_Calibrated_BAU_0
 ```
 
-`C_Target_VRE` needs a solved `A_Calibrated_BAU`. Preparation seeds the roots
+Solve them in that order: `C_Target_VRE` needs a solved `A_Calibrated_BAU`. Preparation seeds the roots
 only when their snapshots are missing: after changing a root workbook, start
 from a new workspace.
 
