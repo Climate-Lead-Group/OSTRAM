@@ -93,6 +93,24 @@ Cell-by-cell, for each MaxInv cell of an ALLOWED tech:
 This guarantees Max_inv > Min_inv per year, eliminating that class of solver
 infeasibility.
 
+FLOOR TOP-UP (opt-in, YAML key floor_top_up: true)
+--------------------------------------------------
+After the caps above, every GENERATION tech t with a generation floor
+L(t, y) = TotalTechnologyAnnualActivityLowerLimit > 0, in the allowed set or
+not, gets build caps large enough to reach its floor, from the workbook values
+of the same run:
+    out(t, y)     = CapacityToActivityUnit(t)
+                    x sum over time slices l of CapacityFactor(t, l, y) x YearSplit(l, y)
+                    x AvailabilityFactor(t, y)          (PJ per GW; absent factor = 1)
+    need(t, y)    = UNTIE_MULTIPLIER x L(t, y) / out(t, y)        (GW)
+    deficit(t, y) = need(t, y) - ResidualCapacity(t, y)
+                    - sum of the caps of t from the first model year through y
+Going through the years in order, a positive deficit raises the cap of year y
+by the deficit. A blank or -1 cap is unbounded: t is skipped in that year and
+every later one. New builds count as lasting to the last model year. The
+product in out(t, y) never overstates what a GW can produce in the model, so
+the raised caps always reach the floor.
+
 SCOPE
 -----
 - ALLOWED set: techs with residual > 0 OR min-cap-investment > 0 in any year.
@@ -357,6 +375,21 @@ def _exempt_max_cap_for(tech: str, year: int) -> float:
 # negative.  Default 0.0 = no floor (BAU behaviour unchanged).
 TECHNOLOGY_TOP_UP_GW: float = 0.0
 
+# --- Floor top-up (opt-in) ---------------------------------------------------
+# When True, the build caps of every GENERATION tech with a generation floor are
+# raised where residual capacity plus the cumulative caps cannot reach the
+# floor (see FLOOR TOP-UP in the module docstring). Default False: no change.
+FLOOR_TOP_UP: bool = False
+FLOOR_PARAM = "TotalTechnologyAnnualActivityLowerLimit"
+AVAILABILITY_PARAM = "AvailabilityFactor"
+CAPACITY_FACTOR_PARAM = "CapacityFactor"
+CAPACITY_TO_ACTIVITY_PARAM = "CapacityToActivityUnit"
+OPERATIONAL_LIFE_PARAM = "OperationalLife"
+FIXED_HORIZON_SHEET = "Fixed Horizon Parameters"
+CAPACITY_FACTOR_SHEET = "Capacities"
+YEAR_SPLIT_SHEET = "Yearsplit"
+TIMESLICE_COL = "Timeslices"
+
 # --- Adequacy floor (used by both modes) ------------------------------------
 # Year-keyed schedule: minimum total gen MaxCapInv in each (cr, year) as a
 # fraction of scaled_pool.  When the sum of per-tech build caps in a cr is below
@@ -506,7 +539,7 @@ def load_config(yaml_path: Path) -> dict:
     check_keys(cfg, {
         "rule_mode", "percentage_default", "percentage_by_year", "margin_factor",
         "ramp_from_demand", "exempt_prefixes", "exempt_max_cap", "cap_multiplier_schedule",
-        "technology_top_up_gw", "family_limits", "adequacy_share_schedule",
+        "technology_top_up_gw", "family_limits", "adequacy_share_schedule", "floor_top_up",
     }, yaml_path)
 
     out: dict = {}
@@ -575,6 +608,11 @@ def load_config(yaml_path: Path) -> dict:
             str(k).strip().upper(): float(v) for k, v in raw_frc.items()
         }
 
+    if "floor_top_up" in cfg:
+        if not isinstance(cfg["floor_top_up"], bool):
+            raise ValueError(f"{yaml_path}: floor_top_up must be true or false")
+        out["floor_top_up"] = cfg["floor_top_up"]
+
     if "adequacy_share_schedule" in cfg:
         raw_afs = cfg["adequacy_share_schedule"] or {}
         expanded_afs: dict = {}
@@ -597,7 +635,7 @@ def apply_config(cfg: dict) -> None:
     global MARGIN_FACTOR, RAMP_FROM_DEMAND
     global EXEMPT_PREFIXES, CAP_MULTIPLIER_SCHEDULE, EXEMPT_MAX_CAP
     global TECHNOLOGY_TOP_UP_GW, FAMILY_LIMITS
-    global ADEQUACY_SHARE_SCHEDULE
+    global ADEQUACY_SHARE_SCHEDULE, FLOOR_TOP_UP
     if "rule_mode" in cfg:
         BUILD_CAP_RULE_MODE = cfg["rule_mode"]
     if "percentage_default" in cfg:
@@ -624,6 +662,8 @@ def apply_config(cfg: dict) -> None:
         ADEQUACY_SHARE_SCHEDULE = {
             int(k): float(v) for k, v in cfg["adequacy_share_schedule"].items()
         }
+    if "floor_top_up" in cfg:
+        FLOOR_TOP_UP = bool(cfg["floor_top_up"])
 
 
 def relaxation_multiplier_for_year(year: int) -> float:
@@ -1368,6 +1408,168 @@ def apply_build_cap_to_sheet(ws, allowed: set, pool_map: dict,
     return log
 
 
+def _year_of(header) -> int | None:
+    """Return the year of an int or digit-string column header, else None."""
+    if isinstance(header, int) and 1900 <= header <= 2200:
+        return header
+    if isinstance(header, str) and header.strip().isdigit() and 1900 <= int(header) <= 2200:
+        return int(header)
+    return None
+
+
+def _number(value) -> float | None:
+    """Return a cell value as a float, or None when it is blank or not a number."""
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        out = float(value)
+    except (TypeError, ValueError):
+        return None
+    return None if pd.isna(out) else out
+
+
+def _sheet_rows(wb, sheet: str) -> tuple[dict, dict, list]:
+    """Return ({header: column}, {year: column}, rows as value tuples) of a sheet,
+    or empty results when the workbook has no such sheet."""
+    if sheet not in wb.sheetnames:
+        return {}, {}, []
+    rows = list(wb[sheet].iter_rows(values_only=True))
+    if not rows:
+        return {}, {}, []
+    header = rows[0]
+    names = {h: i for i, h in enumerate(header) if h is not None}
+    years = {y: i for i, h in enumerate(header) if (y := _year_of(h)) is not None}
+    return names, years, rows[1:]
+
+
+def _active(row, names) -> bool:
+    """False for a row whose Projection.Mode is EMPTY (the compiler skips it)."""
+    mode_col = names.get(PROJ_MODE_COL)
+    return mode_col is None or row[mode_col] != PROJ_MODE_EMPTY
+
+
+def output_per_gw(wb, ws) -> dict:
+    """Return {(tech, year): PJ a year per GW} for the techs on ``ws``:
+    CapacityToActivityUnit x sum over time slices of CapacityFactor x YearSplit
+    x AvailabilityFactor, each absent factor counting as 1."""
+    names, years, rows = _sheet_rows(wb, FIXED_HORIZON_SHEET)
+    cau = {}
+    for r in rows:
+        if r[names["Parameter"]] == CAPACITY_TO_ACTIVITY_PARAM and _number(r[names["Value"]]) is not None:
+            cau[r[names["Tech"]]] = _number(r[names["Value"]])
+    names, ys_years, rows = _sheet_rows(wb, YEAR_SPLIT_SHEET)
+    year_split = {}
+    for r in rows:
+        for y, c in ys_years.items():
+            if _number(r[c]) is not None:
+                year_split[(r[names[TIMESLICE_COL]], y)] = _number(r[c])
+    slices = sorted({l for (l, _) in year_split})
+    names, cf_years, rows = _sheet_rows(wb, CAPACITY_FACTOR_SHEET)
+    cf = {}
+    for r in rows:
+        if r[names["Parameter"]] != CAPACITY_FACTOR_PARAM or not _active(r, names):
+            continue
+        for y, c in cf_years.items():
+            if _number(r[c]) is not None:
+                cf[(r[names["Tech"]], r[names[TIMESLICE_COL]], y)] = _number(r[c])
+    names, af_years, rows = _sheet_rows(wb, ws.title)
+    af, techs = {}, set()
+    for r in rows:
+        tech = r[names["Tech"]]
+        techs.add(tech)
+        if r[names["Parameter"]] != AVAILABILITY_PARAM or not _active(r, names):
+            continue
+        for y, c in af_years.items():
+            if _number(r[c]) is not None:
+                af[(tech, y)] = _number(r[c])
+    out = {}
+    for tech in techs:
+        for y in af_years:
+            weighted = sum(cf.get((tech, l, y), 1.0) * year_split.get((l, y), 0.0) for l in slices)
+            out[(tech, y)] = cau.get(tech, 1.0) * weighted * af.get((tech, y), 1.0)
+    return out
+
+
+def apply_floor_top_up(wb, ws, generation_techs: set | None = None) -> list:
+    """Raise the TotalAnnualMaxCapacityInvestment cells of ``ws`` so every
+    GENERATION tech with a generation floor can reach it (FLOOR TOP-UP in the
+    module docstring); return one change record per raised cell."""
+    year_cols = find_year_columns(ws)
+    headers = find_named_columns(ws, ["Tech", "Parameter", PROJ_MODE_COL])
+    tech_col, param_col = headers["Tech"], headers["Parameter"]
+    proj_mode_col = headers.get(PROJ_MODE_COL)
+    first_year, last_year = min(year_cols), max(year_cols)
+    rows: dict = {}
+    for r in range(2, ws.max_row + 1):
+        tech = ws.cell(row=r, column=tech_col).value
+        param = ws.cell(row=r, column=param_col).value
+        if not isinstance(tech, str) or len(tech) != PWR_TECH_LENGTH:
+            continue
+        if generation_techs is not None and RESTRICT_TO_GENERATION and tech not in generation_techs:
+            continue
+        if param in (FLOOR_PARAM, RES_PARAM, MAX_INV_PARAM):
+            empty = proj_mode_col is not None and ws.cell(row=r, column=proj_mode_col).value == PROJ_MODE_EMPTY
+            rows.setdefault(tech, {})[param] = (r, empty)
+    names, _, fixed = _sheet_rows(wb, FIXED_HORIZON_SHEET)
+    life = {row[names["Tech"]]: _number(row[names["Value"]]) for row in fixed
+            if names and row[names["Parameter"]] == OPERATIONAL_LIFE_PARAM}
+    out = output_per_gw(wb, ws)
+    changes = []
+
+    def values(tech, param):
+        """Return {year: number or None} of a row; an EMPTY row reads as blank."""
+        if param not in rows[tech]:
+            return {y: None for y in year_cols}
+        r, empty = rows[tech][param]
+        return {y: (None if empty else _number(ws.cell(row=r, column=c).value)) for y, c in year_cols.items()}
+
+    for tech in sorted(rows):
+        floors = values(tech, FLOOR_PARAM)
+        if not any((v or 0.0) > 0 for v in floors.values()) or MAX_INV_PARAM not in rows[tech]:
+            continue
+        residual = values(tech, RES_PARAM)
+        caps = values(tech, MAX_INV_PARAM)
+        cap_row = rows[tech][MAX_INV_PARAM][0]
+        cumulative, unbounded, raised = 0.0, False, False
+        for y in sorted(year_cols):
+            cap = caps[y]
+            if cap is None or cap == -1:
+                unbounded = True
+            if unbounded:
+                continue
+            cumulative += cap
+            floor = floors[y] or 0.0
+            if floor <= 0:
+                continue
+            per_gw = out.get((tech, y), 0.0)
+            if per_gw <= 0:
+                changes.append({"tech": tech, "year": y, "reason": "floor_unreachable_no_output",
+                                "floor": floor, "out_per_gw": per_gw})
+                continue
+            need = UNTIE_MULTIPLIER * floor / per_gw
+            deficit = need - (residual[y] or 0.0) - cumulative
+            if deficit <= 0:
+                continue
+            new = cap + deficit
+            ws.cell(row=cap_row, column=year_cols[y]).value = new
+            caps[y] = new
+            cumulative += deficit
+            raised = True
+            changes.append({"tech": tech, "country_region": country_region_for(tech), "year": y,
+                            "old": cap, "new": new, "reason": "floor_top_up", "floor": floor,
+                            "out_per_gw": per_gw, "need": need, "deficit": deficit,
+                            "operational_life": life.get(tech)})
+        if raised:
+            first_build = min(y for y, v in caps.items() if (v or 0.0) > 0)
+            span = last_year - first_build + 1
+            for change in changes:
+                if change["tech"] == tech and change["reason"] == "floor_top_up":
+                    change["counted_span_years"] = span
+            if proj_mode_col is not None and ws.cell(row=cap_row, column=proj_mode_col).value == PROJ_MODE_EMPTY:
+                ws.cell(row=cap_row, column=proj_mode_col).value = PROJ_MODE_USER
+    return changes
+
+
 def edit_parametrization(filepath: Path, sheets: list,
                          generation_techs: set | None = None,
                          demand_mult_map: dict | None = None) -> dict:
@@ -1417,6 +1619,10 @@ def edit_parametrization(filepath: Path, sheets: list,
                 adequacy_scale_factors=adequacy_sf_map,
             )
             sheet_log["allowed_techs"] = sorted(allowed)
+            if FLOOR_TOP_UP:
+                top_up = apply_floor_top_up(wb, ws, generation_techs)
+                sheet_log["changes"].extend(c for c in top_up if c["reason"] == "floor_top_up")
+                sheet_log["floor_top_up"] = top_up
             file_log["sheets"].append(sheet_log)
 
         wb.save(filepath)
@@ -1495,6 +1701,8 @@ def run(input_dir, sheets: list = None, skip_backup: bool = False,
     log["technology_top_up_gw"] = TECHNOLOGY_TOP_UP_GW
     log["family_limits"] = dict(FAMILY_LIMITS)
     log["adequacy_share_schedule"] = dict(ADEQUACY_SHARE_SCHEDULE)
+    if FLOOR_TOP_UP:
+        log["floor_top_up"] = True
     log["generation_techs_count"] = (
         len(generation_techs) if generation_techs is not None else None
     )
@@ -1603,9 +1811,10 @@ def print_summary(log: dict) -> None:
         n_floor_suppressed = reason_counts.get("top_up_skipped_locked_family", 0)
         n_adequacy = reason_counts.get("adequacy_top_up", 0)
         n_untie = reason_counts.get("untie_min_inv", 0)
+        n_floor_top_up = reason_counts.get("floor_top_up", 0)
         n_other = (sum(reason_counts.values())
                    - n_build_cap - n_relaxed - n_family_capped - n_floor
-                   - n_floor_suppressed - n_adequacy - n_untie)
+                   - n_floor_suppressed - n_adequacy - n_untie - n_floor_top_up)
         print(f"  MaxInv cells written:")
         print(f"    - filled with build cap (pct * pool)    : {n_build_cap}")
         if n_relaxed:
@@ -1619,6 +1828,13 @@ def print_summary(log: dict) -> None:
         if n_adequacy:
             print(f"    - adequacy-floor scaled up          : {n_adequacy}")
         print(f"    - bumped by untie rule (>= MinInv) : {n_untie}")
+        if "floor_top_up" in s:
+            unreachable = [c for c in s["floor_top_up"] if c["reason"] != "floor_top_up"]
+            print(f"    - raised by the floor top-up       : {n_floor_top_up} "
+                  f"({len({c['tech'] for c in s['floor_top_up'] if c['reason'] == 'floor_top_up'})} techs)")
+            if unreachable:
+                print(f"    - floor with no output per GW      : {len(unreachable)} "
+                      f"({', '.join(sorted({c['tech'] for c in unreachable}))})")
         if n_other:
             print(f"    - other                            : {n_other}")
         print(f"  Manual values preserved              : {len(s['preserved'])}")

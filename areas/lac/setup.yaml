@@ -141,6 +141,9 @@ policies:
   # inputs/scenarios/root_workbooks: preparation (A1, A2) copies them into
   # every root, and A3 applies only each root's rule scripts.
   prepared_root_workbooks: true
+  # After the rule scripts, A3 applies the internal transmission loss of
+  # config/preparation/Config_country_codes.yaml (stage_internal_tx_losses).
+  apply_internal_tx_losses: true
   # Off: the reconciliation of reported variable costs requires the solver
   # datafile to hold the compiled costs at full precision, and this setup
   # writes it with six significant digits (datafile_float_format).

@@ -26,6 +26,10 @@ Capacity converts to energy at 31.536 PJ per GW-year (8 760 hours x 3.6 TJ per G
 
 **LA10.** International prices of coal, crude oil and natural gas are multiplied by 1.3 in the 19 countries in 2023 to 2050. Reason: OSeMOSYS Global applies this surcharge to imported fuels, to reflect the extra cost of importing fuel over the international benchmark price.
 
+**LA14.** A transmission-only loss of 3% (fraction 0.03 of the energy entering the grid) inside each country's internal transmission network (`RNWTRN*`, `RNWRPO*`, `RNWNLI*`, `PWRTRN*`, `TRNRPO*`, `TRNNLI*`), uniform across the 19 countries, 2023 to 2050, the same value the South Asia application uses: their `OutputActivityRatio` is 0.97 and their `InputActivityRatio` 1. Every country's demand row is measured at the bus bar (`Measured_at` = `bus-bar`), so its `SpecifiedAnnualDemand` is the workbook value x 0.97, and every interconnector mode sent from a country's `ELC{ISO}XX03` draws 0.97 per unit of activity. Reason: the demand series are generation plus net imports, so they already hold the energy the networks lose; the model delivers them after the internal grid, so the internal loss is taken out of the workbook value once. The value is set in `config/preparation/Config_country_codes.yaml` and can be set per country. Check: IDB (2014), Power Lost: Sizing Electricity Losses in Transmission and Distribution Systems in Latin America and the Caribbean, p. 33, https://doi.org/10.18235/0012798, reports transmission losses of 1.6% (Bolivia) to 3.7% (Honduras) for 15 countries of the region, Paraguay (8%) excepted.
+
+**LA15.** In Barbados, the existing internal lines (`PWRTRNBRBXX`, `RNWTRNBRBXX`) may add capacity up to their maximum total capacity in every year from 2023 to 2050: their `TotalAnnualMaxCapacityInvestment` is `TotalAnnualMaxCapacity` - `ResidualCapacity`, 0.0087 GW and 0.0007 GW a year, so they can reach 0.182 GW and 0.0304 GW in total. In the other 18 countries existing lines grow only by their planned builds. Reason: Barbados' demand grows from 3.87 PJ in 2023 to 6.29 PJ in 2029 (A-O_Demand), faster than repowering (1% of the stock a year from 2028) can add capacity before new lines open in 2030; without room on the existing lines, the grid cannot carry the 2029 demand of the highest time slice and only the backstop could meet it. The maximum total capacity of these lines already allows this growth.
+
 ## A-O_Parametrization, Primary Techs
 
 ### `MIN*` fuel supply
@@ -339,9 +343,9 @@ Capacity converts to energy at 31.536 PJ per GW-year (8 760 hours x 3.6 TJ per G
 - Technologies: `RNWTRN*`, `PWRTRN*` (existing lines), `RNWRPO*`, `TRNRPO*` (repowering), `RNWNLI*`, `TRNNLI*` (new lines), internal transmission network of each of the 19 countries.
 - Parameters: `CapitalCost`, `FixedCost`.
 - Years: 2023-2050 (constant value).
-- Source: needs source.
+- Source: the national transmission planning documents of each country, listed by country in the MinCapInv Tx blocks below (for example EPE PET/PELP 2024 for Brazil, CNE 2024 for Chile, UPME 2024-2038 for Colombia, ICE PET 2024-2034 for Costa Rica).
 - Detail: Values differ by country. Capital cost of new lines between 20 and 463 million USD per GW depending on the country (lowest in Barbados, the Dominican Republic and Haiti; highest in Chile); existing lines = 1.2 x new lines; repowering = 0.45 x new lines; annual fixed cost proportional.
-- Needs source: the country capital costs of new lines, the factors 1.2 and 0.45, and the fixed cost ratio.
+- Needs source: the factors 1.2 and 0.45, and the fixed cost ratio.
 
 ### Internal transmission network, residual and maximum capacity
 
@@ -562,6 +566,15 @@ Capacity converts to energy at 31.536 PJ per GW-year (8 760 hours x 3.6 TJ per G
 - Assumptions: ASSUMPTION LA8.
 
 ## A-O_Demand, Demand_Projection
+
+### `ELC{ISO}XX03` demand, point of measurement, and internal transmission loss
+
+- Technologies: `ELC{ISO}XX03` (demand of each of the 19 countries); `RNWTRN*`, `RNWRPO*`, `RNWNLI*`, `PWRTRN*`, `TRNRPO*`, `TRNNLI*` (internal transmission network); `TRN{A}XX{B}XX` (interconnector modes sent from `ELC{ISO}XX03`).
+- Parameters: `Measured_at` column of `Demand_Projection` (`bus-bar` on all 19 rows); `SpecifiedAnnualDemand`; `OutputActivityRatio` and `InputActivityRatio` of the internal network; `InputActivityRatio` of the interconnector modes.
+- Years: 2023-2050.
+- Source: ASSUMPTION LA14; loss value `internal_transmission.transmission_loss` in `config/preparation/Config_country_codes.yaml`.
+- Detail: Computed every run by the A3 stage `stage_internal_tx_losses` (setup policy `apply_internal_tx_losses`) from the root workbook values: `SpecifiedAnnualDemand` = workbook value x (1 - 0.03); internal network `OutputActivityRatio` = 1 - 0.03 with `InputActivityRatio` = 1 in both activity-ratio workbooks; interconnector input from `ELC{ISO}XX03` = 1 - 0.03.
+- Assumptions: ASSUMPTION LA14.
 
 ### `ELC{ISO}XX03` demand, 2023 and 2024
 
@@ -847,8 +860,8 @@ The OSTRAM-LAC model changes some `BAU` solver inputs after compilation, in step
 - Parameters: `CapitalCost`, `TotalAnnualMaxCapacityInvestment`, `TotalAnnualMaxCapacity` (repowering), `TotalAnnualMinCapacityInvestment` (`RNWTRNBRAXX`).
 - Years: 2023-2050.
 - Source: IEA, Latin America Energy Outlook 2023, https://www.iea.org/reports/latin-america-energy-outlook-2023 (regional grid investment, the calibration anchor); IEA, Building the Future Transmission Grid (2025), https://www.iea.org/reports/building-the-future-transmission-grid (line replacement rates).
-- Detail: `CapitalCost` of the six internal families = OSeMOSYS Global base cost x m x 1.003^(year - 2025) from 2025, where m = 1.7954 scales the planned internal transmission builds of 2024-2029 to an average investment of 3 080 million USD per year. Repowering (`TRNRPO*`, `RNWRPO*`) may add up to 1% of the 2023 internal stock of its family per year from 2028, nothing before, with no total cap. Existing internal lines (`PWRTRN*`, `RNWTRN*`) may grow only by their planned builds. Interconnectors may grow only by their planned builds from 2027. Unplanned new lines (`TRNNLI*`, `RNWNLI*`) keep a total capacity of zero until 2029. The Brazil bipole planned build is 5.23 GW in 2029 and 5.0 GW in 2030.
-- Assumptions: ASSUMPTION LA13.
+- Detail: `CapitalCost` of the six internal families = OSeMOSYS Global base cost x m x 1.003^(year - 2025) from 2025, where m = 1.7954 scales the planned internal transmission builds of 2024-2029 to an average investment of 3 080 million USD per year. Repowering (`TRNRPO*`, `RNWRPO*`) may add up to 1% of the 2023 internal stock of its family per year from 2028, nothing before, with no total cap. Existing internal lines (`PWRTRN*`, `RNWTRN*`) may grow only by their planned builds, except in Barbados (ASSUMPTION LA15). Interconnectors may grow only by their planned builds from 2027. Unplanned new lines (`TRNNLI*`, `RNWNLI*`) keep a total capacity of zero until 2029. The Brazil bipole planned build is 5.23 GW in 2029 and 5.0 GW in 2030.
+- Assumptions: ASSUMPTION LA13, ASSUMPTION LA15.
 
 **LA11.** Regional reserve margin 0.15 (fraction, every year, the single model region), backstop reserve credit 1.0, carbon capture reserve credit 0.9, and a build cap of 0.5 GW per year for oil, diesel and gas plants that had no finite cap, from 2026, in the 19 countries. Reason: the backstop and capture plants are dispatchable firm capacity, and the 0.5 GW cap gives dispatchable plants a bounded build allowance so the reserve constraint can be met.
 

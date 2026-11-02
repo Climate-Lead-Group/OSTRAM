@@ -1002,6 +1002,7 @@ def _orchestration_paths() -> _orchestrator.A3Paths:
         process_dir=A3_WORKSPACE,
         default_soasia=SOASIA_V18,
         prepared_workbooks=bool(setup_policy("prepared_root_workbooks", False)),
+        prepared_loss_stage=bool(setup_policy("apply_internal_tx_losses", False)),
     )
 
 

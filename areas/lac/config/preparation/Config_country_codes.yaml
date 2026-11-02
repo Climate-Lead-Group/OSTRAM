@@ -284,6 +284,22 @@ implausible_combinations:
   # GAS (Natural Gas) - No PWRGAS technology in model; gas generation modeled via CCG/OCG -> NGS
   GAS: [ARG, BOL, BRA, BRB, CHL, COL, CRI, DOM, ECU, GTM, HND, HTI, MEX, NIC, PAN, PER, PRY, SLV, URY]
 
+# Internal transmission losses, read by the A3 stage stage_internal_tx_losses
+# (setup policy apply_internal_tx_losses).
+internal_transmission:
+  # ASSUMPTION: a transmission-only loss of 3% inside each country, uniform across
+  # the 19 countries, 2023 to 2050, the same value the South Asia application uses.
+  # It lies inside the range of transmission losses, 1.6% (Bolivia) to 3.7%
+  # (Honduras), that IDB (2014), Power Lost: Sizing Electricity Losses in
+  # Transmission and Distribution Systems in Latin America and the Caribbean, p. 33
+  # (https://doi.org/10.18235/0012798), reports for 15 countries of the region,
+  # Paraguay (8%) excepted.
+  # Demand rows measured at the bus bar are multiplied by 1 - loss; an
+  # interconnector sent from a bus-bar node draws 1 - loss per unit of activity.
+  # OutputActivityRatio of the six internal families = 1 - loss. The value can be
+  # set per country with a mapping of node code to loss (for example ARGXX: 0.03).
+  transmission_loss: 0.03
+
 # Technology parameters
 # Renewable transmission technologies
 #Existing renewable transmission technologies

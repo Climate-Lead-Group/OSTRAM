@@ -31,6 +31,9 @@ class A3Paths:
     # (policy ``prepared_root_workbooks``); A3 then applies only the
     # inherited restrictions and the scenario's rule scripts.
     prepared_workbooks: bool = False
+    # True when such a setup also runs the internal transmission loss stage
+    # after the rule scripts (policy ``apply_internal_tx_losses``).
+    prepared_loss_stage: bool = False
 
 
 @dataclass(frozen=True)
@@ -47,6 +50,7 @@ class A3Plan:
     workdir_base: Path
     keep_workdir: bool
     prepared_workbooks: bool = False
+    prepared_loss_stage: bool = False
 
 
 @dataclass(frozen=True)
@@ -138,6 +142,7 @@ def resolve_plan(
         workdir_base=paths.process_dir,
         keep_workdir=cli_args.keep_workdir,
         prepared_workbooks=paths.prepared_workbooks,
+        prepared_loss_stage=paths.prepared_loss_stage,
     )
 
 
@@ -195,7 +200,8 @@ def execute_plan(
         # Ready-made workbooks are final model inputs: skip the template
         # materialization, the preparation stages 1 to 4 and the late
         # calibration stages, which rebuild workbooks from the scenario
-        # workbook and would change them.
+        # workbook and would change them. The internal transmission loss
+        # stage alone runs, after the rule scripts, when the setup asks.
         dependencies.banner(
             "Prepared root workbooks: stages 0 to 4 and the late "
             "calibration stages are skipped"
@@ -215,6 +221,8 @@ def execute_plan(
             stage5,
             rules_scripts,
         )
+        if plan.prepared_loss_stage:
+            dependencies.stage_internal_tx_losses(stage5)
         return _finish_plan(
             plan, dependencies, workdir, stage5, rules_scripts, t_start
         )

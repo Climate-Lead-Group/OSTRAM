@@ -163,7 +163,18 @@ figures cannot meet calendar demand.
 Each node carries electricity from its plants to its demand through its
 internal grid, the six internal transmission families. They lose
 `internal_transmission.transmission_loss` of what they carry: their
-`OutputActivityRatio` is 1 - loss.
+`OutputActivityRatio` is 1 - loss. The setting is one number for every node,
+or a mapping of node code to number (for example `ARGXX: 0.03`) that names
+every node with internal families; each node's families, bus-bar demand rows
+and interconnector modes then take that node's 1 - loss. A missing or unknown
+node, or a value outside [0, 1), stops the run.
+
+A setup with ready-made root workbooks (policy `prepared_root_workbooks`) runs
+this stage alone of the late stages, after its rule scripts, when its policy
+`apply_internal_tx_losses` is true. Its scenario workbook has no
+`Demand_Projection` sheet, so the rule reads the demand rows and their
+`Measured_at` column from the setup's root `A-O_Demand.xlsx` and scales the
+copy in the run, once per build.
 
 The `Measured_at` column of the `Demand_Projection` sheet of the scenario
 workbook says where each demand row is measured, `bus-bar` or `consumption`. A
@@ -534,6 +545,21 @@ settings are in `config/scenarios/<root>/build_cap_rule.yaml`.
 If a cap would be at or below the minimum investment of the same year, the
 rule sets it to 1.01 times that minimum. The storage families are exempt:
 both of their caps are set to 9999. Interconnectors are skipped.
+
+With `floor_top_up: true` (off by default, on in the LAC A, B and C), a last
+step raises the caps of every generation technology with a generation floor,
+in the allowed set or not, from the same run's workbook values:
+
+```text
+out(t, y)     = CapacityToActivityUnit(t) x sum over l of [CapacityFactor(t, l, y) x YearSplit(l, y)]
+                x AvailabilityFactor(t, y)                  (PJ per GW; an absent factor counts as 1)
+need(t, y)    = 1.01 x TotalTechnologyAnnualActivityLowerLimit(t, y) / out(t, y)
+deficit(t, y) = need(t, y) - ResidualCapacity(t, y) - sum of the caps of t from the first year through y
+```
+
+In year order, a positive deficit raises the cap of year y by the deficit. A
+blank or -1 cap is unbounded, so the technology is skipped from that year on,
+and new builds count as lasting to the last model year.
 
 | Setting | `A_Calibrated_BAU` | `B_Optimised_VRE` | `C_Target_VRE` |
 |---|---|---|---|

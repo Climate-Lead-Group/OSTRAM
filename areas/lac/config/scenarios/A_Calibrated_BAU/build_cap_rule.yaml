@@ -1,85 +1,48 @@
 ## build_cap_rule.yaml: LAC A_Calibrated_BAU (the study's Tendencial scenario)
 ##
-## Study design (RELAC IDB study, section 2.3.2): "Only generation and
-## transmission projects included in current national plans are included."
+## The settings below are South Asia A's, copied value for value from
+## config/scenarios/A_Calibrated_BAU/build_cap_rule.yaml, which states their
+## reasons and carries their ASSUMPTIONs: each generation technology with
+## residual capacity or a planned build may build, each year, its share of its
+## country's 2024 fleet times the year-on-year growth of the demand-scaled fleet
+## times margin_factor 1.1 (zero in 2024 and before), raised to the planned build
+## times 1.01 where a planned build exists; the families listed are held at that
+## proportion. With the setup policy build_cap_replaces_workbook_values, these
+## caps replace the build caps of the ported BAU workbook.
 ##
-## Same rule and keys as config/scenarios/A_Calibrated_BAU/build_cap_rule.yaml.
-## The cap multiplier is 0 in every year, so the computed build cap of every
-## generation technology with residual capacity or a planned build is zero, and
-## the rule's untie step raises it to the planned build
-## (TotalAnnualMinCapacityInvestment) times 1.01 in the years with a planned
-## build. With the setup policy build_cap_replaces_workbook_values, these caps
-## replace the build caps of the ported BAU workbook.
-## ASSUMPTION: the multiplier 0 (all years, all LAC generation families) turns
-## the build cap into a lock on planned projects; the factor 1.01 is the rule's
-## fixed untie margin (UNTIE_MULTIPLIER), which keeps each cap above its planned
-## build so the two limits never tie.
-##
-## Storage and transmission are not generation technologies and are not
-## touched: the storage delay (B2) and the ported transmission limits apply.
+## floor_top_up: after those caps, every generation technology with a generation
+## floor L(t,y) (TotalTechnologyAnnualActivityLowerLimit) gets caps large enough
+## to reach it, computed every run from the workbook values:
+##   out(t,y)     = CapacityToActivityUnit(t) x sum over time slices l of
+##                  [CapacityFactor(t,l,y) x YearSplit(l,y)] x AvailabilityFactor(t,y)
+##                  (PJ per GW; an absent factor counts as 1)
+##   need(t,y)    = 1.01 x L(t,y) / out(t,y)   (GW)
+##   deficit(t,y) = need(t,y) - ResidualCapacity(t,y) - sum of the caps of t
+##                  from 2023 through y
+## In year order, a positive deficit raises the cap of year y by the deficit; a
+## blank cap is unbounded and skipped. New builds count as lasting to 2050.
+## ASSUMPTION: 1.01 (all technologies, all years) is the rule's untie margin
+## (UNTIE_MULTIPLIER), so the reachable output sits 1% above each floor and the
+## two limits never tie.
 
 rule_mode: proportional
 margin_factor: 1.1
 
 cap_multiplier_schedule:
-  2023: 0.0
-  2050: 0.0
+  2023: 1.0
+  2050: 1.0
 
 technology_top_up_gw: 0.0
 
-## All LAC generation families locked (ceiling 1.0, as in South Asia A).
 family_limits:
-  BIO: 1.0
-  CCS: 1.0
   COA: 1.0
-  COG: 1.0
-  CSP: 1.0
-  GEO: 1.0
-  HYD: 1.0
-  NGS: 1.0
-  OIL: 1.0
-  OTH: 1.0
   PET: 1.0
-  SPV: 1.0
-  URN: 1.0
+  OIL: 1.0
+  BIO: 1.0
   WAS: 1.0
-  WAV: 1.0
-  WOF: 1.0
-  WON: 1.0
 
-## The technologies below keep an open build cap (9999 GW per year, the
-## rule's exempt value). ASSUMPTION: their generation floors in the ported BAU
-## (TotalTechnologyAnnualActivityLowerLimit, calibrated to 2023 generation and,
-## for some, growing with demand) need more capacity than their residual
-## capacity plus planned builds can supply at their capacity factors, so a
-## tighter cap makes the floors unreachable. The list is the same in A, B and C
-## (B takes the looser of its caps and A's in any case). Without it the solves
-## are infeasible: the 2023 floors of PWROILPERXX (2.8841 PJ, residual capacity
-## from 2046 only) and PWRSPVARGXX (8.9476 PJ against about 7.44 PJ from
-## residual capacity).
 exempt_prefixes:
-  - PWRBIOARGXX
-  - PWRBIODOMXX
-  - PWRBIOURYXX
-  - PWROILPERXX
-  - PWRPETCRIXX
-  - PWRPETHNDXX
-  - PWRSPVARGXX
-  - PWRSPVBOLXX
-  - PWRSPVCOLXX
-  - PWRSPVCRIXX
-  - PWRSPVDOMXX
-  - PWRSPVECUXX
-  - PWRSPVPANXX
-  - PWRSPVPERXX
-  - PWRSPVSLVXX
-  - PWRSPVURYXX
-  - PWRWONARGXX
-  - PWRWONBOLXX
-  - PWRWONCOLXX
-  - PWRWONCRIXX
-  - PWRWONECUXX
-  - PWRWONPANXX
-  - PWRWONPERXX
-  - PWRWONSLVXX
-  - PWRWONURYXX
+  - PWRSDS
+  - PWRLDS
+
+floor_top_up: true

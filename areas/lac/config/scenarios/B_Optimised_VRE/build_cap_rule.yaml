@@ -18,6 +18,11 @@
 ## 2045 each node's caps are scaled up to at least the adequacy share of its
 ## demand-scaled fleet. They loosen the build limits so the model can choose
 ## the least-cost mix; the study sets no number for this scenario.
+##
+## floor_top_up: after those caps, every generation technology with a generation
+## floor gets caps large enough to reach it, by the formula in
+## areas/lac/config/scenarios/A_Calibrated_BAU/build_cap_rule.yaml (same 1.01
+## ASSUMPTION).
 
 rule_mode: proportional
 margin_factor: 1.1
@@ -43,44 +48,15 @@ family_limits:
   URN: 1.5
   HYD: 3.0
 
-## The technologies below keep an open build cap (9999 GW per year, the
-## rule's exempt value). ASSUMPTION: their generation floors in the ported BAU
-## (TotalTechnologyAnnualActivityLowerLimit, calibrated to 2023 generation and,
-## for some, growing with demand) need more capacity than their residual
-## capacity plus planned builds can supply at their capacity factors, so a
-## tighter cap makes the floors unreachable. The list is the same in A, B and C
-## (B takes the looser of its caps and A's in any case). Without it the solves
-## are infeasible: the 2023 floors of PWROILPERXX (2.8841 PJ, residual capacity
-## from 2046 only) and PWRSPVARGXX (8.9476 PJ against about 7.44 PJ from
-## residual capacity).
+## Storage-linked technologies keep the rule's exempt value 9999, as in South
+## Asia B.
 exempt_prefixes:
-  - PWRBIOARGXX
-  - PWRBIODOMXX
-  - PWRBIOURYXX
-  - PWROILPERXX
-  - PWRPETCRIXX
-  - PWRPETHNDXX
-  - PWRSPVARGXX
-  - PWRSPVBOLXX
-  - PWRSPVCOLXX
-  - PWRSPVCRIXX
-  - PWRSPVDOMXX
-  - PWRSPVECUXX
-  - PWRSPVPANXX
-  - PWRSPVPERXX
-  - PWRSPVSLVXX
-  - PWRSPVURYXX
-  - PWRWONARGXX
-  - PWRWONBOLXX
-  - PWRWONCOLXX
-  - PWRWONCRIXX
-  - PWRWONECUXX
-  - PWRWONPANXX
-  - PWRWONPERXX
-  - PWRWONSLVXX
-  - PWRWONURYXX
+  - PWRSDS     # Short-duration storage
+  - PWRLDS     # Long-duration storage
 
 adequacy_share_schedule:
   2040: 0.0
   2045: 0.08
   2050: 0.20
+
+floor_top_up: true
