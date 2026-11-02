@@ -40,6 +40,8 @@ family_limits:
   OIL: 1.0
   BIO: 1.0
   WAS: 1.0
+  ## ASSUMPTION LA16 (areas/lac/data_sources.md): hydro builds only its committed plants.
+  HYD: 0.0
 
 exempt_prefixes:
   - PWRSDS

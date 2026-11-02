@@ -46,7 +46,8 @@ family_limits:
   WAS: 1.0
   NGS: 1.2
   URN: 1.5
-  HYD: 3.0
+  ## ASSUMPTION LA16 (areas/lac/data_sources.md): hydro builds only its committed plants.
+  HYD: 0.0
 
 ## Storage-linked technologies keep the rule's exempt value 9999, as in South
 ## Asia B.

@@ -83,6 +83,8 @@ areas/lac/
 | `B_Optimised_VRE` | `build_cap_rule.py` | `BAU` with the South Asia B build-cap relaxation and family ceilings on the LAC families and the same floor top-up; B also takes the looser of its bounds and A's. Least cost without targets. |
 | `C_Target_VRE` | `build_cap_rule.py`, `set_vre_targets.py` | The A settings plus each country's renewable share target from its NDC (`set_vre_targets.yaml`), as generation floors scaled to the solved A. The study's NDC scenario (section 2.3.3). |
 
+In A, B and C hydro builds only its committed plants, 1.16 GW in all (ASSUMPTION LA16 in `data_sources.md`).
+
 ### Renewable targets in `C_Target_VRE`
 
 | Country | Target | Document |
