@@ -153,6 +153,20 @@ def _node_labels(country_config: Path, nodes: list[str], countries: Mapping) -> 
     return labels
 
 
+def node_losses(setting: Any) -> dict[str, Any]:
+    """Return the internal grid loss by node, from one number or a mapping of node to number.
+
+    One number, or a mapping whose nodes all hold the same number, gives one value under
+    the empty node name; a mapping with different numbers gives one value per node.
+    """
+
+    if not isinstance(setting, Mapping):
+        return {"": setting}
+    if len(set(setting.values())) == 1:
+        return {"": next(iter(setting.values()))}
+    return {str(node): setting[node] for node in sorted(setting)}
+
+
 def _workbook_tables(path: Path) -> tuple[list[dict], dict[str, float], dict[str, str]]:
     """Return the corridor cost rows, the first-year residual capacity and the references."""
 
@@ -296,7 +310,14 @@ def setup_info(manifest: SetupManifest, paths: ProjectPaths) -> SetupInfo:
         internal = country.get("internal_transmission") or {}
         info.internal = dict(internal)
         for name, value in internal.items():
-            info.add(f"internal.{name}", value, source, f"internal_transmission.{name}")
+            if name != "transmission_loss" or not isinstance(value, Mapping):
+                info.add(f"internal.{name}", value, source, f"internal_transmission.{name}")
+                continue
+            for node, loss in node_losses(value).items():
+                if node:
+                    info.add(f"internal.{name}.{node}", loss, source, f"internal_transmission.{name}.{node}")
+                else:
+                    info.add(f"internal.{name}", loss, source, f"internal_transmission.{name}, the same for every node")
         if {"esmap_capital_cost_usd2010_per_kw", "muv_2023", "muv_2010"} <= set(internal):
             base = internal["esmap_capital_cost_usd2010_per_kw"] * internal["muv_2023"] / internal["muv_2010"]
             info.add("internal.base_capital_cost", base, source, "computed: ESMAP cost x MUV 2023 / MUV 2010")
@@ -313,8 +334,9 @@ def setup_info(manifest: SetupManifest, paths: ProjectPaths) -> SetupInfo:
                 info.add("internal.re_multiplier", (base + add_on) / base, source,
                          "computed: (base + RE add-on) / base")
         if "transmission_loss" in internal:
-            info.add("internal.efficiency", 1 - internal["transmission_loss"], source,
-                     "computed: 1 - transmission_loss")
+            for node, loss in node_losses(internal["transmission_loss"]).items():
+                info.add("internal.efficiency" + (f".{node}" if node else ""), 1 - loss, source,
+                         "computed: 1 - transmission_loss")
         for family in ("RNWTRN", "RNWNLI", "RNWRPO", "PWRTRN", "TRNNLI", "TRNRPO", "DSPTRN"):
             if isinstance(country.get(family), Mapping):
                 info.family_parameters[family] = dict(country[family])

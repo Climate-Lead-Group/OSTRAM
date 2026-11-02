@@ -30,8 +30,12 @@ computed:
     - internal.re_add_on
   internal.efficiency:
     - internal.transmission_loss
+  # With a loss set per node: the efficiency of each node from the loss of that node.
+  internal.efficiency.*:
+    - internal.transmission_loss.*
 
-# Values whose record is a docs table row, YAML comment lines or a workbook cell.
+# Values whose record is a docs table row, YAML comment lines, a workbook cell or a
+# block of the base-year value record.
 records:
   - keys: ["internal.*"]
     # The table of internal_transmission keys and their basis. It documents one
@@ -49,6 +53,14 @@ records:
     workbook: {role: scenario_workbook, sheet: Interconnector_Params, scenario: BAU, parameter: FixedCost}
   - keys: ["corridor.*.residual"]
     workbook: {role: scenario_workbook, sheet: Interconnector_Params, scenario: BAU, parameter: ResidualCapacity}
+    # When the workbook cells are empty: the block of the base-year value record for
+    # the corridor's capacity in the first model year, used only when its value is
+    # the one the site shows.
+    value_sources:
+      file: docs/reference/base_year_value_sources.md
+      documents: config/setups/south_asia.yaml
+      parameter: TotalAnnualMaxCapacity
+      unit: GW
   - keys: ["effective.TRNBGDXXINDEA_residual_capacity_gw"]
     workbook:
       role: scenario_workbook

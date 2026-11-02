@@ -12,7 +12,8 @@ mermaid_url: https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mj
 glossary_page: glossary.html
 
 # The applications the site presents. A setup that is not registered shows its
-# placeholder page until it is added to config/setups/registry.json.
+# placeholder page until it is added to config/setups/registry.json. A summary is
+# HTML: a link written href="repo:<path>" points to that file at the built commit.
 applications:
   - setup: south_asia
     name: South Asia
@@ -24,14 +25,17 @@ applications:
     placeholder: The South Asia setup is the reference application.
   - setup: lac
     name: Latin America and the Caribbean
-    route: Built from OLADE data
+    route: Base year from OLADE statistics
     summary: >-
-      The same framework fed from the regional energy statistics of OLADE, the
-      Latin American Energy Organization.
+      The model takes its base-year demand and its 2023 generation shares from the
+      statistics of <a href="https://www.olade.org/" rel="noopener">OLADE</a>, the
+      Latin American Energy Organization, as the record of
+      <a href="repo:areas/lac/data_sources.md" rel="noopener">where the LAC values
+      come from</a> lists.
     placeholder: >-
-      The Latin America and the Caribbean application is being built from OLADE
-      data with the same framework. Its counts, scenarios and transmission pages
-      appear here when its setup is registered.
+      The Latin America and the Caribbean setup is not in the setup registry this
+      site was built from. Its counts, scenarios and transmission pages appear here
+      when it is registered.
 
 worked_example:
   setup: south_asia

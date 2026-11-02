@@ -4,7 +4,8 @@ The site is built into temporary folders. The tests compare two builds byte for
 byte, read every value the site shows back from the setup manifests and their
 authority files, check that every value carries a source entry read from the
 repository's records, check every internal link and anchor and every external
-host, and build once more with a fixture ``lac`` setup registered.
+host, and build again with registries that leave ``lac`` out, register a fixture
+``lac`` setup, or give that fixture a loss set per node.
 """
 
 from __future__ import annotations
@@ -72,6 +73,27 @@ def _record_text(url: str) -> str:
         workbook.close()
         return "\n".join(_normal(cell) for cell in cells)
     return _normal(path.read_text(encoding="utf-8"))
+
+
+def _github_anchors(path: Path) -> set[str]:
+    """Return the anchors GitHub gives the headings of a Markdown file."""
+
+    return {
+        re.sub(r"[^\w\- ]", "", heading.strip().lower()).replace(" ", "-")
+        for heading in re.findall(r"^#{1,6} (.+)$", path.read_text(encoding="utf-8"), re.MULTILINE)
+    }
+
+
+def _build_with(setups: dict[str, str]) -> tuple[dict[str, str], dict]:
+    """Build the site with a registry that lists ``setups``; return its pages and values."""
+
+    paths = resolve_paths(project_root=ROOT)
+    with tempfile.TemporaryDirectory() as tmp:
+        registry = Path(tmp) / "registry.json"
+        registry.write_text(json.dumps({"schema": "ostram-setup-registry-v1", "setups": setups}), encoding="utf-8")
+        out = Path(tmp) / "site"
+        build_site(out, paths=paths, registry_path=registry)
+        return _pages(out), json.loads((out / "values.json").read_text(encoding="utf-8"))
 
 
 def expected_values(setup_id: str, paths, manifest=None) -> dict[str, object]:
@@ -230,11 +252,40 @@ class SiteBuildTest(unittest.TestCase):
             if path.is_file() and path.suffix in (".html", ".yaml", ".css", ".js", ".py"):
                 self.assertNotIn("\u2014", path.read_text(encoding="utf-8"), path.name)
 
-    def test_lac_is_a_placeholder_without_a_lac_setup(self):
+    def test_lac_is_a_real_application(self):
         page = self.pages["applications/lac.html"]
-        self.assertIn('class="placeholder"', page)
-        self.assertNotIn('data-v="lac.', page)
-        self.assertNotIn('data-v="lac.', self.pages["index.html"])
+        self.assertNotIn('class="placeholder"', page)
+        self.assertIn('data-v="lac.nodes"', page)
+        self.assertIn('data-v="lac.', self.pages["index.html"])
+        record = f'{REPOSITORY_URL}/blob/{git_commit(ROOT) or "main"}/areas/lac/data_sources.md'
+        for name in ("applications/lac.html", "index.html", "paper.html"):
+            with self.subTest(page=name):
+                self.assertIn(f'href="{record}"', self.pages[name])
+                self.assertIn('href="https://www.olade.org/"', self.pages[name])
+
+    def test_bus_bar_note_states_the_model_rule(self):
+        note = re.search(r'data-note-for="demand"[^>]*>(.*?)</div>', self.pages["model/node.html"], re.DOTALL).group(1)
+        self.assertIn('data-v="south_asia.internal.transmission_loss"', note)
+        self.assertRegex(
+            note,
+            r'href="' + re.escape(REPOSITORY_URL)
+            + r'/blob/[^/"]+/docs/rules\.md#internal-transmission-losses-and-bus-bar-demand"',
+        )
+        self.assertIn("internal-transmission-losses-and-bus-bar-demand", _github_anchors(ROOT / "docs/rules.md"))
+
+    def test_east_west_residual_cites_the_base_year_record(self):
+        key = "south_asia.corridor.TRNINDEAINDWE.residual"
+        entry = self.values[key]["entry"]
+        record = (ROOT / "docs/reference/base_year_value_sources.md").read_text(encoding="utf-8")
+        documents = dict(re.findall(r"^- \*\*(R\d+)\*\* .*?<(https?://[^>]+)>", record, re.MULTILINE))
+        self.assertEqual(entry["kind"], "external")
+        self.assertTrue(entry["record"].endswith("/docs/reference/base_year_value_sources.md"))
+        self.assertEqual(
+            [url for citation in entry["citations"] for url in citation["urls"]],
+            [documents["R100"], documents["R101"], documents["R102"]],
+        )
+        self.assertEqual([sentence.split(".", 1)[0] for sentence in entry["assumptions"]], ["A14"])
+        self.assertIn(f'data-v="{key}"', self.pages["transmission/interconnectors.html"])
 
     def test_every_printed_value_has_an_entry_and_its_page_lists_it(self):
         for name, text in self.pages.items():
@@ -272,7 +323,11 @@ class SiteBuildTest(unittest.TestCase):
                 with self.subTest(key=key):
                     record = _record_text(entry["record"])
                     self.assertNotIn("ASSUMPTION", sentence[:12])
-                    self.assertIn("ASSUMPTION: " + _normal(sentence), record)
+                    if re.match(r"A\d+\. ", sentence):
+                        # The base-year value record labels its assumptions A1, A2 and so on.
+                        self.assertIn(_normal(sentence), record)
+                    else:
+                        self.assertIn("ASSUMPTION: " + _normal(sentence), record)
                 checked += 1
         self.assertGreater(checked, 10)
 
@@ -299,12 +354,21 @@ class SiteBuildTest(unittest.TestCase):
         workbook.close()
         header = [str(cell) for cell in rows[0]]
         source, reference = header.index("Source"), header.index("IEEE Reference")
+        first_year = next(i for i, name in enumerate(header) if re.fullmatch(r"\d{4}", name))
+        record = (ROOT / "docs/reference/base_year_value_sources.md").read_text(encoding="utf-8")
         for row in rows[1:]:
             if row[0] == "BAU" and row[5] == "ResidualCapacity":
                 key = f"south_asia.corridor.{row[2]}.residual"
+                block = re.search(
+                    rf"^### `{row[2]}` TotalAnnualMaxCapacity, {header[first_year]}(?: to \d{{4}})?\n\n- Values: ([\d.]+); GW;",
+                    record, re.MULTILINE,
+                )
                 with self.subTest(key=key):
                     if row[source] or row[reference]:
                         self.assertIn(key, self.values)
+                    elif block and float(block.group(1)) == float(row[first_year]):
+                        self.assertIn(key, self.values)
+                        self.assertTrue(self.values[key]["entry"]["record"].endswith("/base_year_value_sources.md"))
                     else:
                         self.assertNotIn(key, self.values)
                         self.assertFalse(any(f'data-v="{key}"' in text for text in self.pages.values()))
@@ -344,6 +408,55 @@ class NoGitTest(unittest.TestCase):
             self.assertEqual(text.count("Git was not available when this site was built"), 1, name)
             for target in re.findall(r'href="(' + re.escape(REPOSITORY_URL) + r'/blob/[^"]+)"', text):
                 self.assertTrue(target.startswith(f"{REPOSITORY_URL}/blob/main/"), target)
+
+
+class LacPlaceholderTest(unittest.TestCase):
+    """Without a ``lac`` setup in the registry, the LAC page is the placeholder."""
+
+    def test_lac_is_a_placeholder_without_a_lac_setup(self):
+        pages, _ = _build_with({"south_asia": "project:config/setups/south_asia.yaml"})
+        page = pages["applications/lac.html"]
+        self.assertIn('class="placeholder"', page)
+        self.assertNotIn('data-v="lac.', page)
+        self.assertNotIn('data-v="lac.', pages["index.html"])
+
+
+class LossByNodeTest(unittest.TestCase):
+    """The loss setting may be one number or a mapping of node to number.
+
+    ASSUMPTION: the fixtures of tests/website/fixtures/lac_loss give the fixture ``lac``
+    setup a loss mapping, the same 5% in both nodes or 4% and 6%; they are test values.
+    """
+
+    FIXTURES = "project:tests/website/fixtures/lac_loss"
+    SOUTH_ASIA = "project:config/setups/south_asia.yaml"
+
+    def test_a_mapping_with_one_number_prints_one_value(self):
+        pages, values = _build_with({"south_asia": self.SOUTH_ASIA, "lac": f"{self.FIXTURES}/setup_equal.yaml"})
+        self.assertEqual(values["lac.internal.transmission_loss"]["value"], 0.05)
+        self.assertEqual(values["lac.internal.transmission_loss"]["entry"]["kind"], "assumption")
+        self.assertAlmostEqual(values["lac.internal.efficiency"]["value"], 0.95)
+        self.assertEqual(values["lac.internal.efficiency"]["entry"]["inputs"], ["lac.internal.transmission_loss"])
+        self.assertFalse([k for k in values if k.startswith(("lac.internal.transmission_loss.", "lac.internal.efficiency."))])
+        self.assertIn('data-v="lac.internal.transmission_loss"', pages["transmission/internal-grid.html"])
+        self.assertIn('data-v="south_asia.internal.transmission_loss"', pages["index.html"])
+
+    def test_a_mapping_with_different_numbers_prints_a_value_per_node(self):
+        pages, values = _build_with({"south_asia": self.SOUTH_ASIA, "lac": f"{self.FIXTURES}/setup_by_node.yaml"})
+        grid = pages["transmission/internal-grid.html"]
+        self.assertNotIn("lac.internal.transmission_loss", values)
+        self.assertNotIn("lac.internal.efficiency", values)
+        for node, loss in {"AAAXX": 0.04, "BBBXX": 0.06}.items():
+            with self.subTest(node=node):
+                key = f"lac.internal.transmission_loss.{node}"
+                self.assertEqual(values[key]["value"], loss)
+                self.assertEqual(values[key]["entry"]["kind"], "assumption")
+                efficiency = values[f"lac.internal.efficiency.{node}"]
+                self.assertAlmostEqual(efficiency["value"], 1 - loss)
+                self.assertEqual(efficiency["entry"]["kind"], "computed")
+                self.assertEqual(efficiency["entry"]["inputs"], [key])
+                self.assertIn(f'<code>{node}</code> <span class="v" data-v="{key}" data-f="pct"', grid)
+        self.assertNotIn('data-v="lac.internal.transmission_loss"', grid)
 
 
 class LacFixtureTest(unittest.TestCase):

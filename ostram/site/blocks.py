@@ -68,11 +68,15 @@ def format_value(value, kind: str = "") -> str:
 def value_span(site, key: str, kind: str = "") -> str:
     """Return one value wrapped so that readers and tests can see its source and file.
 
-    A value left out for want of a record prints nothing.
+    A value left out for want of a record prints nothing. A value set per node, such as a
+    loss given as a mapping with different numbers, prints as a list of its nodes.
     """
 
     if key in site.left_out:
         return ""
+    nodes = per_node(site, key)
+    if nodes is not None:
+        return ", ".join(f"{_code(node)} {value_span(site, f'{key}.{node}', kind)}" for node in nodes)
     item = site.value(key)
     text = e(format_value(item.value, kind))
     title = e(
@@ -82,6 +86,20 @@ def value_span(site, key: str, kind: str = "") -> str:
     kind_attr = f' data-f="{kind}"' if kind else ""
     numbers = " ".join(str(n) for n in refs(site, key))
     return f'<span class="v" data-v="{e(key)}"{kind_attr} data-s="{numbers}" title="{title}">{text}</span>'
+
+
+def per_node(site, key: str) -> list[str] | None:
+    """Return the nodes with a value of their own when ``key`` is set per node, or None when it is not.
+
+    The list holds the nodes whose values have a record; it is empty when every one is left out.
+    """
+
+    setup_id = key.split(".", 1)[0]
+    info = site.setups.get(setup_id)
+    if info is None or key in info.values:
+        return None
+    named = [node for node in info.nodes if f"{key}.{node}" in info.values or f"{key}.{node}" in site.left_out]
+    return [node for node in named if f"{key}.{node}" in info.values] if named else None
 
 
 def refs(site, key: str) -> list[int]:
@@ -180,7 +198,7 @@ def app_config(site, setup_id: str) -> dict:
 
 def has(site, key: str) -> bool:
     setup_id = key.split(".", 1)[0]
-    return setup_id in site.setups and key in site.setups[setup_id].values
+    return setup_id in site.setups and (key in site.setups[setup_id].values or bool(per_node(site, key)))
 
 
 def _table(header: list[str], rows: list[list[str]], css: str = "") -> str:
@@ -227,7 +245,7 @@ def block_app_cards(site, page, argument):
         tiles = "".join(f'<div class="stat"><span class="num">{num}</span><span class="lbl">{label}</span></div>' for num, label in stats)
         cards.append(
             f'<article class="card app"><p class="eyebrow">{e(app["route"])}</p>'
-            f'<h3><a href="{link}">{e(app["name"])}</a></h3><p>{e(app["summary"])}</p>'
+            f'<h3><a href="{link}">{e(app["name"])}</a></h3><p>{app["summary"]}</p>'
             f'<div class="stats">{tiles}</div></article>'
         )
     return f'<div class="apps">{"".join(cards)}</div>'
@@ -326,7 +344,7 @@ def block_setup_intro(site, page, argument):
     app = app_config(site, page.setup) if page.setup in site.setups else next(
         a for a in site.config["applications"] if a["setup"] == page.setup)
     if "route" in app:
-        return f'<p class="eyebrow">{e(app["route"])}</p><p class="lead">{e(app["summary"])}</p>'
+        return f'<p class="eyebrow">{e(app["route"])}</p><p class="lead">{app["summary"]}</p>'
     info = site.setups[page.setup]
     from ostram.setups import load_manifest
 
@@ -557,7 +575,12 @@ def block_node_chain(site, page, argument):
         "e02": "<code>ELC&lt;node&gt;02</code>: power that has crossed the internal grid.",
         "dsp1": "<code>DSPTRN</code> mode 1 moves power from <code>ELC&lt;node&gt;02</code> to the demand fuel. It has no cost and never limits a flow.",
         "e03": "<code>ELC&lt;node&gt;03</code>: the demand fuel. Demand is met here and exports leave from here.",
-        "demand": f"Demand measured at the bus bar is written as its published value times one minus the loss ({loss}), because the published figure already includes grid losses.",
+        "demand": (
+            "A demand row measured at the bus bar holds a requirement that includes the losses of the internal grid, so the "
+            f"model writes it as its workbook value times one minus the loss ({loss}). "
+            f'See <a href="{e(site.blob("docs/rules.md"))}#internal-transmission-losses-and-bus-bar-demand" '
+            'rel="noopener">Internal transmission losses and bus-bar demand</a>.'
+        ),
         "export": "Interconnector out: an export consumes <code>ELC&lt;node&gt;03</code> of the sending node.",
         "import": "Interconnector in: a received import arrives on <code>ELC&lt;node&gt;04</code> after the link's own loss.",
         "e04": "<code>ELC&lt;node&gt;04</code>: imports as received.",
