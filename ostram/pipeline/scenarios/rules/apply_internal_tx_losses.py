@@ -19,8 +19,11 @@ internal families' output activity to (1 - loss), so B1 compiles
 OutputActivityRatio = 1 - loss for them.
 
 Loss value: `internal_transmission.transmission_loss` in Config_country_codes.yaml,
-0.03, an ASSUMPTION explained beside the key. Uniform across nodes, as the costs
-of stage_internal_transmission are.
+an ASSUMPTION explained beside the key: one number for every node (0.03), or a
+mapping of node code to number (for example `ARGXX: 0.03`). A mapping names every
+node that has internal families and no other; each node's internal families,
+bus-bar demand rows and interconnector modes sent from its `ELC<node>03` take
+that node's 1 - loss.
 
 Scope: the 6 internal families on the two AR files' "Demand Techs" sheet, and
 the interconnector input rows on their "Secondary" sheet. DSPTRN, generators and
@@ -38,8 +41,11 @@ Demand: when the configuration has an `internal_transmission` block, every
 Demand row whose `Measured_at` is `bus-bar` in the scenario workbook's
 Demand_Projection sheet gets SpecifiedAnnualDemand = workbook value x (1 - loss)
 in A-O_Demand.xlsx, every year. Rows measured at `consumption` keep the workbook
-value. A cell that already holds the scaled value is left as it is, so a second
-run changes nothing; the same holds for the interconnector input cells.
+value. A setup whose scenario workbook has no Demand_Projection sheet (prepared
+root workbooks) gives the rows, with their `Measured_at` column, in its root
+A-O_Demand.xlsx; the rule reads that tracked file, never the copy it scales. A
+cell that already holds the scaled value is left as it is, so a second run
+changes nothing; the same holds for the interconnector input cells.
 
 OUTPUT: timestamped backup, in-place edit of the two AR files and A-O_Demand.xlsx,
 JSON change log.
@@ -128,17 +134,77 @@ def resolve_config(explicit):
     raise FileNotFoundError("Config_country_codes.yaml not found; tried " + ", ".join(map(str, cands)))
 
 
-def read_loss(config_path) -> float:
-    """Return `internal_transmission.transmission_loss` from the config, or DEFAULT_LOSS when absent; raise ValueError outside [0, 1)."""
+def _check_loss(loss, where="") -> float:
+    """Return ``loss`` as a float; raise ValueError when it is outside [0, 1)."""
+    loss = float(loss)
+    if not (0.0 <= loss < 1.0):
+        raise ValueError(f"transmission_loss{where} must be in [0,1); got {loss}")
+    return loss
+
+
+def read_losses(config_path):
+    """Return `internal_transmission.transmission_loss` from the config: one float,
+    or {node: float} for the per-node mapping form; DEFAULT_LOSS when absent.
+    Raise ValueError for a value outside [0, 1)."""
     with open(config_path, "r", encoding="utf-8") as fh:
         data = yaml_io.safe_load(fh) or {}
     blk = data.get("internal_transmission", {}) or {}
     check_keys(blk, INTERNAL_TRANSMISSION_KEYS, config_path, "internal_transmission")
     loss = blk.get("transmission_loss", DEFAULT_LOSS)
-    loss = float(loss)
-    if not (0.0 <= loss < 1.0):
-        raise ValueError(f"transmission_loss must be in [0,1); got {loss}")
+    if isinstance(loss, dict):
+        return {str(node).strip(): _check_loss(value, f" of {node}") for node, value in loss.items()}
+    return _check_loss(loss)
+
+
+def read_loss(config_path) -> float:
+    """Return `internal_transmission.transmission_loss` from the config, or DEFAULT_LOSS when absent; raise ValueError outside [0, 1) or for the per-node mapping form."""
+    loss = read_losses(config_path)
+    if isinstance(loss, dict):
+        raise ValueError(f"{config_path}: transmission_loss is a per-node mapping; this step needs one number")
     return loss
+
+
+def internal_nodes(*paths) -> set:
+    """Return the node codes (chars 6..10) of the internal-family technologies on
+    the 'Demand Techs' sheet of the given AR workbooks."""
+    nodes = set()
+    for path in paths:
+        if not Path(path).exists():
+            continue
+        wb = load_workbook(path, read_only=True, data_only=True)
+        try:
+            if SHEET not in wb.sheetnames:
+                continue
+            rows = wb[SHEET].iter_rows(values_only=True)
+            hdr = list(next(rows, ()))
+            if COL_TECH not in hdr:
+                continue
+            tc = hdr.index(COL_TECH)
+            nodes.update(r[tc][6:11] for r in rows if _is_internal(r[tc]))
+        finally:
+            wb.close()
+    return nodes
+
+
+def node_output_ratios(losses: dict, nodes) -> dict:
+    """Return {node: 1 - loss} for the per-node mapping form; raise ValueError when
+    the mapping misses a node of ``nodes`` or names a node outside it."""
+    missing, unknown = sorted(set(nodes) - set(losses)), sorted(set(losses) - set(nodes))
+    if missing or unknown:
+        raise ValueError(
+            "transmission_loss mapping must name every node with internal transmission families"
+            + (f"; missing: {', '.join(missing)}" if missing else "")
+            + (f"; unknown: {', '.join(unknown)}" if unknown else ""))
+    return {node: round(1.0 - loss, 6) for node, loss in losses.items()}
+
+
+def _oar_for(oar, node, where):
+    """Return ``oar`` (one number) or its value for ``node`` (per-node mapping)."""
+    if not isinstance(oar, dict):
+        return oar
+    if node not in oar:
+        raise ValueError(f"{where}: node {node} has no transmission_loss")
+    return oar[node]
 
 
 def has_loss_block(config_path) -> bool:
@@ -168,6 +234,23 @@ def resolve_workbook(explicit=None) -> Path:
         if c.is_file():
             return c
     raise FileNotFoundError("scenario workbook not found; tried " + ", ".join(map(str, cands)))
+
+
+def demand_workbook(explicit=None) -> Path:
+    """Return the workbook whose Demand_Projection sheet gives the demand rows:
+    the scenario workbook (resolve_workbook) or, when it has no such sheet, the
+    setup's root A-O_Demand.xlsx (prepared root workbooks), the tracked file and
+    never the copy the rule scales."""
+    workbook = resolve_workbook(explicit)
+    wb = load_workbook(workbook, read_only=True)
+    try:
+        has_sheet = DEMAND_SHEET in wb.sheetnames
+    finally:
+        wb.close()
+    if has_sheet:
+        return workbook
+    root = Path(resolve_paths().root_workbooks) / DEMAND_FILE
+    return root if root.is_file() else workbook
 
 
 def read_demand_rows(workbook, scenario=None) -> dict:
@@ -260,15 +343,17 @@ def edit_projections(path: Path, oar: float) -> dict:
         if tc is None or dc is None or not ycols:
             log["skipped"] = f"missing Tech/Direction/year cols (tc={tc} dc={dc} yrs={len(ycols)})"; return log
         for r in range(2, ws.max_row + 1):
-            if not _is_internal(ws.cell(row=r, column=tc).value):
+            tech = ws.cell(row=r, column=tc).value
+            if not _is_internal(tech):
                 continue
             if str(ws.cell(row=r, column=dc).value) != "Output":
                 continue
+            value = _oar_for(oar, tech[6:11], f"{path} {tech}")
             touched = False
             for y, c in ycols.items():
                 cell = ws.cell(row=r, column=c)
-                if _values_differ(cell.value, oar):
-                    cell.value = oar
+                if _values_differ(cell.value, value):
+                    cell.value = value
                     log["cells"] += 1
                     touched = True
             if touched:
@@ -292,11 +377,13 @@ def edit_base_year(path: Path, oar: float) -> dict:
         if tc is None or vo is None:
             log["skipped"] = f"missing Tech/Value.Fuel.O cols (tc={tc} vo={vo})"; return log
         for r in range(2, ws.max_row + 1):
-            if not _is_internal(ws.cell(row=r, column=tc).value):
+            tech = ws.cell(row=r, column=tc).value
+            if not _is_internal(tech):
                 continue
+            value = _oar_for(oar, tech[6:11], f"{path} {tech}")
             cell = ws.cell(row=r, column=vo)
-            if cell.value is not None and _values_differ(cell.value, oar):
-                cell.value = oar
+            if cell.value is not None and _values_differ(cell.value, value):
+                cell.value = value
                 log["cells"] += 1
                 log["rows"] += 1
         wb.save(path)
@@ -330,6 +417,7 @@ def edit_demand(path: Path, rows: dict, oar: float) -> dict:
             if fuel not in wanted:
                 continue
             seen.add(fuel)
+            factor = _oar_for(oar, fuel[3:8], f"{path} {fuel}")
             touched = False
             for y, c in ycols.items():
                 cell = ws.cell(row=r, column=c)
@@ -338,13 +426,13 @@ def edit_demand(path: Path, rows: dict, oar: float) -> dict:
                 if y not in wanted[fuel]:
                     raise ValueError(f"{path} {fuel} {y}: no workbook value to scale")
                 stat = wanted[fuel][y]
-                scaled = stat * oar
+                scaled = stat * factor
                 if not _values_differ(cell.value, scaled, 1e-12 * max(1.0, abs(scaled))):
                     continue
                 if _values_differ(cell.value, stat, 1e-12 * max(1.0, abs(stat))):
                     raise ValueError(
                         f"{path} {fuel} {y}: holds {cell.value}, neither the workbook value "
-                        f"{stat} nor {stat} x {oar}")
+                        f"{stat} nor {stat} x {factor}")
                 cell.value = scaled
                 log["cells"] += 1
                 touched = True
@@ -392,10 +480,11 @@ def edit_link_projections(path: Path, bus_bar: set, iar: float) -> dict:
                 continue
             if fuel not in bus_bar:
                 continue
+            value = _oar_for(iar, fuel[3:8], f"{path} {tech} {fuel}")
             cells = 0
             for y, c in ycols.items():
                 cell = ws.cell(row=r, column=c)
-                new = _link_input_value(cell.value, iar, f"{path} {tech} {fuel} {y}")
+                new = _link_input_value(cell.value, value, f"{path} {tech} {fuel} {y}")
                 if new is not None:
                     cell.value = new
                     cells += 1
@@ -430,7 +519,8 @@ def edit_link_base_year(path: Path, bus_bar: set, iar: float) -> dict:
             if not _is_interconnector(tech) or fuel not in bus_bar:
                 continue
             cell = ws.cell(row=r, column=vc)
-            new = _link_input_value(cell.value, iar, f"{path} {tech} {fuel}")
+            value = _oar_for(iar, fuel[3:8], f"{path} {tech} {fuel}")
+            new = _link_input_value(cell.value, value, f"{path} {tech} {fuel}")
             if new is not None:
                 cell.value = new
                 log["cells"] += 1
@@ -474,17 +564,21 @@ def run(input_dir, skip_backup=False, config=None, template=None) -> dict:
     """Set the output activity of the internal transmission families to 1 - loss in
     both AR workbooks and, when the configuration has an `internal_transmission`
     block, scale the bus-bar demand rows by 1 - loss and set the input of each
-    interconnector mode sent from a bus-bar node to 1 - loss; return the change log."""
+    interconnector mode sent from a bus-bar node to 1 - loss; return the change log.
+    With the per-node mapping form each node takes its own 1 - loss."""
     input_dir = Path(input_dir)
     config_path = resolve_config(config)
-    loss = read_loss(config_path)
-    oar = round(1.0 - loss, 6)
+    loss = read_losses(config_path)
     proj, base = input_dir / PROJ_FILE, input_dir / BASE_FILE
     if not proj.exists():
         raise FileNotFoundError(proj)
+    if isinstance(loss, dict):
+        oar = node_output_ratios(loss, internal_nodes(proj, base))
+    else:
+        oar = round(1.0 - loss, 6)
     demand_rows = None
     if has_loss_block(config_path):
-        demand_rows = read_demand_rows(resolve_workbook(template))
+        demand_rows = read_demand_rows(demand_workbook(template))
     backup = None if skip_backup else make_backup(input_dir)
     log = {"loss": loss, "oar": oar, "families": list(INTERNAL_FAMILIES),
            "timestamp": datetime.now().isoformat(),
@@ -507,28 +601,37 @@ def run(input_dir, skip_backup=False, config=None, template=None) -> dict:
     return log
 
 
+def _oar_text(oar) -> str:
+    """Return the output ratio of a run log as text: the number, or 'per node'."""
+    return "per node" if isinstance(oar, dict) else str(oar)
+
+
 def print_summary(log):
     """Print the loss, output activity ratio and cell counts of a run log."""
     print("=" * 68)
-    print(f"apply_internal_tx_losses  loss={log['loss']:.3f}  OAR={log['oar']}")
+    if isinstance(log["loss"], dict):
+        values = ", ".join(f"{v:.3f}" for v in sorted(set(log["loss"].values())))
+        print(f"apply_internal_tx_losses  loss per node ({len(log['loss'])} nodes; values {values})")
+    else:
+        print(f"apply_internal_tx_losses  loss={log['loss']:.3f}  OAR={log['oar']}")
     print("=" * 68)
     for k in ("projections", "base_year"):
         s = log[k]
         if "skipped" in s:
             print(f"  {k}: SKIPPED ({s['skipped']})")
         else:
-            print(f"  {k}: {s['cells']} cells / {s['rows']} rows -> {log['oar']}")
+            print(f"  {k}: {s['cells']} cells / {s['rows']} rows -> {_oar_text(log['oar'])}")
     for k in ("link_projections", "link_base_year"):
         s = log[k]
         if "skipped" in s:
             print(f"  {k}: SKIPPED ({s['skipped']})")
         else:
-            print(f"  {k}: {s['cells']} interconnector input cells / {s['rows']} rows -> {log['oar']}")
+            print(f"  {k}: {s['cells']} interconnector input cells / {s['rows']} rows -> {_oar_text(log['oar'])}")
     s = log["demand"]
     if "skipped" in s:
         print(f"  demand: SKIPPED ({s['skipped']})")
     else:
-        print(f"  demand: {s['cells']} cells / {s['rows']} rows x {log['oar']} "
+        print(f"  demand: {s['cells']} cells / {s['rows']} rows x {_oar_text(log['oar'])} "
               f"(bus-bar fuels: {', '.join(s['fuels'])})")
     print(f"  backup: {log.get('backup_dir', '(skipped)')}")
 

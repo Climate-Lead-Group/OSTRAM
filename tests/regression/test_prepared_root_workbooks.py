@@ -63,7 +63,7 @@ class SeedRootSnapshotsTests(unittest.TestCase):
 
 
 class PreparedA3PathTests(unittest.TestCase):
-    def _run(self, prepared: bool):
+    def _run(self, prepared: bool, loss_stage: bool = False):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         root = Path(temp.name)
@@ -117,7 +117,9 @@ class PreparedA3PathTests(unittest.TestCase):
             banner=lambda message: None,
             emit=lambda message: None,
         )
-        paths = orchestrator.A3Paths(prep, process, soasia, prepared_workbooks=prepared)
+        paths = orchestrator.A3Paths(
+            prep, process, soasia, prepared_workbooks=prepared, prepared_loss_stage=loss_stage
+        )
         args = SimpleNamespace(soasia=None, input_dir=None, output_dir=None, keep_workdir=True)
         orchestrator.orchestrate_a3(args, paths, deps, ROOT_WORKBOOKS)
         return calls, stages["stage5"]
@@ -126,6 +128,10 @@ class PreparedA3PathTests(unittest.TestCase):
         calls, stage5 = self._run(prepared=True)
         self.assertEqual(calls, ["stage_4_5", "stage_5", "stage_6", "deliver"])
         self.assertEqual(sorted(p.name for p in stage5.iterdir()), sorted(ROOT_WORKBOOKS))
+
+    def test_prepared_loss_policy_adds_only_the_loss_stage_after_the_rules(self) -> None:
+        calls, _ = self._run(prepared=True, loss_stage=True)
+        self.assertEqual(calls, ["stage_4_5", "stage_5", "internal_tx_losses", "stage_6", "deliver"])
 
     def test_default_path_keeps_every_stage(self) -> None:
         calls, _ = self._run(prepared=False)
