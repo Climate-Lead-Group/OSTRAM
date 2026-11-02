@@ -1,0 +1,16 @@
+# Test fixture: the fixture ``lac`` setup of tests/website/fixtures/lac with its loss
+# setting given as a mapping of node to number, the same number for every node. Used only by
+# tests/website/test_site.py. Its values are test values and describe no real system.
+schema: ostram-setup-v1
+id: lac
+metadata:
+  title: Test fixture for a loss set per node
+policies: {}
+authorities:
+  scenario_registry: project:tests/website/fixtures/lac/config/scenarios/registry.json
+  scenario_config_root:
+    path: project:tests/website/fixtures/lac/config/scenarios
+    kind: directory
+  interconnector_taxonomy: project:tests/website/fixtures/lac/config/scenarios/technology_types.csv
+  country_config: setup:Config_country_codes_equal.yaml
+  compilation_config: project:tests/website/fixtures/lac/config/compilation/Config_MOMF_T1_A.yaml

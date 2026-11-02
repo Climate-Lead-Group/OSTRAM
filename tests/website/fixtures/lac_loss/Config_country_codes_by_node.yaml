@@ -1,0 +1,15 @@
+# Test fixture values, not a real system.
+country_data:
+  AAA:
+    english_name: "Test country A"
+  BBB:
+    english_name: "Test country B"
+first_year: 2025
+countries:
+  - "AAA"
+  - "BBB"
+internal_transmission:
+  # ASSUMPTION: a test loss of 4% in node AAAXX and 6% in node BBBXX of the fixture.
+  transmission_loss:
+    AAAXX: 0.04
+    BBBXX: 0.06

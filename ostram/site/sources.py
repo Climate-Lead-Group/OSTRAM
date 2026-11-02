@@ -1,8 +1,9 @@
 """The source entry of each value the site shows, read from the repository's own records.
 
 ``content/sources.yaml`` names where the record of each value lives: a docs table
-row, the comment lines above a YAML key, a workbook cell, or the file a setting is
-read from. This module reads those records when the site is built and turns each
+row, the comment lines above a YAML key, a workbook cell, a block of the base-year
+value record (its sources resolved to its list of documents, its assumption labels
+to their sentences), or the file a setting is read from. This module reads those records when the site is built and turns each
 into one entry of four kinds:
 
 - ``external``: citations with their URLs or DOIs, as the record gives them, and any
@@ -359,6 +360,10 @@ class SourceMap:
 
         for computed, inputs in (self.data.get("computed") or {}).items():
             if fnmatchcase(name, computed):
+                if computed.endswith(".*"):
+                    # A value per node: each input is the input of the same node.
+                    node = name[len(computed) - 1:]
+                    inputs = [n[:-1] + node if n.endswith(".*") else n for n in inputs]
                 return "computed", inputs
         for spec in self.data.get("records") or []:
             if any(fnmatchcase(name, pattern) for pattern in spec["keys"]):
@@ -382,7 +387,11 @@ class SourceMap:
             if entry:
                 return entry
         if "workbook" in spec:
-            return self._workbook_entry(spec["workbook"], name, info)
+            entry = self._workbook_entry(spec["workbook"], name, info)
+            if entry or "value_sources" not in spec:
+                return entry
+        if "value_sources" in spec:
+            return self._value_sources_entry(spec["value_sources"], name, value, info)
         if "vre_table" in spec:
             return self._vre_entry(spec["vre_table"], name, value, info)
         return None
@@ -393,7 +402,7 @@ class SourceMap:
     def _table_entry(self, spec: dict, name: str, value: Any, info) -> dict | None:
         if info.sources.get("country_config") != spec["documents"]:
             return None
-        key = name.split(".", 1)[1]
+        key = name.split(".")[1]
         header = list(spec["header"])
         rows = markdown_table(self.root / spec["file"], header)
         pool = [c for row in rows for c in parse_record(row[header[2]])[0] if c["urls"]]
@@ -411,7 +420,7 @@ class SourceMap:
         path = self._file(spec["role"], info)
         if path is None:
             return None
-        key = spec.get("key") or name.split(".", 1)[1]
+        key = spec.get("key") or name.split(".")[1]
         text = yaml_comments(self.root / path, spec["block"], key)
         entry = entry_from_record(text) if text else None
         if entry:
@@ -463,6 +472,84 @@ class SourceMap:
         if entry:
             entry["record"] = self.blob(spec["file"])
         return entry
+
+    def _value_sources_entry(self, spec: dict, name: str, value: Any, info) -> dict | None:
+        """Return the entry of the block for the technology, parameter and first model year, if its value is ``value``."""
+
+        if info.manifest != spec["documents"] or not info.years:
+            return None
+        tech = name.split(".")[1]
+        text = (self.root / spec["file"]).read_text(encoding="utf-8")
+        blocks = [
+            fields for techs, parameter, years, fields in value_blocks(text)
+            if tech in techs and parameter == spec["parameter"] and years[0] <= info.years[0] <= years[-1]
+        ]
+        if len(blocks) != 1:
+            return None
+        fields = blocks[0]
+        shown = re.fullmatch(r"\s*(-?\d[\d,]*(?:\.\d+)?)\s*", fields.get("Values", "").split(";")[0])
+        unit = (fields.get("Values", "").split(";") + ["", ""])[1].strip()
+        if shown is None or float(shown.group(1).replace(",", "")) != float(value) or unit != spec["unit"]:
+            return None
+        documents = value_documents(text)
+        citations = []
+        for label, part in re.findall(r"\[(R\d+)\]\s*(.*?)\s*(?=\[R\d+\]|$)", fields.get("Sources", "")):
+            if label not in documents:
+                return None
+            where = part.strip().rstrip(";.").strip()
+            cited = documents[label] + (f" Part used: {where}." if where else "")
+            citations.append({"text": cited, "urls": urls_of(documents[label])})
+        statements = value_assumptions(text)
+        labels = re.match(r"\s*(A\d+(?:\s*,\s*A\d+)*)", fields.get("Assumptions", fields.get("Assumption", "")))
+        assumptions = [statements.get(n) for n in re.findall(r"A\d+", labels.group(1))] if labels else []
+        if not any(c["urls"] for c in citations) or any(a is None for a in assumptions):
+            return None
+        return {"kind": "external", "citations": citations, "assumptions": assumptions, "record": self.blob(spec["file"])}
+
+
+def value_blocks(text: str) -> list[tuple[list[str], str, list[int], dict[str, str]]]:
+    """Return the technologies, parameter, years and fields of each block of a base-year value record.
+
+    A block is a level-3 heading such as ``### `TECH` Parameter, 2023 to 2024`` followed by
+    bullets ``- Field: text``.
+    """
+
+    found = []
+    parts = re.split(r"^### (.+)$", text, flags=re.MULTILINE)
+    for heading, body in zip(parts[1::2], parts[2::2]):
+        match = re.fullmatch(r"((?:`[^`]+`,?\s*)+)(\w+),\s*(\d{4})(?:\s+to\s+(\d{4}))?", heading.strip())
+        if not match:
+            continue
+        fields = {}
+        for block in _blocks(re.split(r"^#", body, maxsplit=1, flags=re.MULTILINE)[0]):
+            field = re.match(r"^([A-Z][A-Za-z ]*):\s*(.*)$", block)
+            if field:
+                fields[field.group(1)] = field.group(2)
+        years = [int(match.group(3)), int(match.group(4) or match.group(3))]
+        found.append((re.findall(r"`([^`]+)`", match.group(1)), match.group(2), years, fields))
+    return found
+
+
+def value_documents(text: str) -> dict[str, str]:
+    """Return the entry of each document ``Rn`` listed under the heading "Documents", in plain text."""
+
+    documents = {}
+    for block in _blocks(_section(text, "Documents")):
+        match = re.match(r"^\*\*(R\d+)\*\*\s+(.+)$", block)
+        if match:
+            documents[match.group(1)] = plain(match.group(2)).strip()
+    return documents
+
+
+def value_assumptions(text: str) -> dict[str, str]:
+    """Return each assumption ``An`` of a base-year value record with its label, as the record gives it."""
+
+    statements = {}
+    for block in _blocks(_section(text, "Assumptions")):
+        match = re.match(r"^\*\*(A\d+)\.\*\*\s+(.+)$", block)
+        if match:
+            statements[match.group(1)] = f"{match.group(1)}. {plain(match.group(2)).strip()}"
+    return statements
 
 
 def markdown_table_text(text: str, header: list[str]) -> list[dict[str, str]]:
