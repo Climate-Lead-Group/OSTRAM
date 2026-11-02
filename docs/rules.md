@@ -657,6 +657,7 @@ its effect.
 The settings are in `config/execution/Config_MOMF_T1_AB.yaml`:
 `storage_delay_active` switches the step on, `storage_delay_first_n_years`
 sets the number of blocked years from the first model year, and
-`storage_delay_storage_prefixes` selects the storage families. The output
+`storage_delay_storage_prefixes` selects the storage families, and the
+optional `storage_delay_cap_params` the caps rewritten (both by default). The output
 file names keep the suffix `StorageDelayN5` whatever number of years is set,
 because the suffix is the separate setting `storage_delay_suffix`.

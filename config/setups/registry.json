@@ -2,6 +2,7 @@
   "schema": "ostram-setup-registry-v1",
   "setups": {
     "south_asia": "project:config/setups/south_asia.yaml",
-    "unescap_training": "project:examples/unescap_training/setup.yaml"
+    "unescap_training": "project:examples/unescap_training/setup.yaml",
+    "lac": "project:areas/lac/setup.yaml"
   }
 }

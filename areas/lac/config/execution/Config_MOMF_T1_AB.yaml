@@ -1,0 +1,100 @@
+    # Model external dependencies: Directories, Files, sheets and columns
+########################################################################################
+# LAC setup (areas/lac/setup.yaml). Keys follow config/execution/Config_MOMF_T1_AB.yaml;
+# values follow the execution config of the OSTRAM-LAC model, so the solver datafile
+# of the BAU support scenario is the same as that model's.
+#
+# Directories
+A2_output: 'A2_Output_Params'
+A2_output_otoole: 'A2_Outputs_Params_otoole'
+Miscellaneous: 'Miscellaneous'
+templates: 'templates'
+executables: 'Executables'
+outputs: 'Outputs'
+
+# Files
+otoole_config: 'conversion_format.yaml'
+preprocess_data: 'preprocess_data.py'
+osemosys_model: 'osemosys_fast_preprocessed.txt'
+conv_format: 'conversion_format.yaml'
+inputs_file: 'Inputs.csv'
+outputs_file: 'Outputs.csv'
+
+# Prefixes and suffixes
+prefix_final_files: 'OSTRAM_LAC_'
+preprocess_data_name: 'Pre_processed_'
+output_files: '_output'
+
+base_scenario: 'BAU'
+
+# Configuration parameters
+########################################################################################
+solver: 'cplex' # Could you use: 'glpk', 'cbc', 'cplex' and 'gurobi'
+
+# For CBC use
+iteration_time: 20000
+cbc_random_seed: 12345        # Random seed for reproducibility
+
+# For CPLEX use
+cplex_threads: 8
+cplex_random_seed: 12345      # Random seed for reproducibility
+cplex_numerical_emphasis_scenarios: []
+
+# For Gurobi use
+gurobi_threads: 8
+gurobi_seed: 12345            # Random seed for reproducibility
+
+# Run switches
+del_files: False
+only_main_scenario: False
+parallel: False
+max_x_per_iter: 4
+A2_otoole_outputs: True
+write_txt_model: True
+create_matrix: True
+execute_model: True
+reuse_existing_sol: False
+concat_otoole_csv: True
+concat_scenarios_csv: True
+annualize_capital: False
+
+# The OSTRAM-LAC model writes its datafile with otoole's stock writer, which
+# prints parameter values with six significant digits.
+datafile_float_format: '%g'
+
+# No base-year build lock: the LAC model has none.
+base_year_lock_active: False
+
+# Storage delay: no storage build in the first five model years (2023-2027).
+# Only the build cap of the storage-linked PWR techs is rewritten; their stock
+# cap stays, because six LAC storage techs hold residual capacity in those years.
+storage_delay_active: True
+storage_delay_first_n_years: 5
+storage_delay_storage_prefixes:
+  - SDS
+  - LDS
+  - BDS
+storage_delay_cap_params:
+  - TotalAnnualMaxCapacityInvestment
+storage_delay_allowed_value: "-1"     # PWR cap value applied in open years (-1 skips the constraint)
+storage_delay_suffix: "StorageDelayN5"
+storage_delay_model_output: "osemosys_fast_preprocessed_storage_delay.txt"
+storage_delay_prefix_final_files: "OSTRAM_LAC_StorageDelay_"
+storage_delay_root_datafile: "OSTRAM_LAC_data_storage_delay.txt"
+
+strip_storage_active: False
+strip_storage_mode: "all"
+strip_storage_targets: []
+strip_storage_suffix: "NoStorage"
+
+open_pwrbck_active: True
+open_pwrbck_value: 9999
+open_pwrbck_pattern: "PWRBCK"
+open_pwrbck_suffix: "OpenBCK"
+
+reserve_margin_repair_active: False
+
+# The reserve-margin repair of the OSTRAM-LAC model sets a regional reserve
+# margin and works from 2026 on; OSTRAM's repair has neither setting. Its
+# results are carried in the root workbooks instead (areas/lac/README.md).
+reserve_margin_xlsx_active: False

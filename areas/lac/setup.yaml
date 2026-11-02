@@ -1,0 +1,224 @@
+# OSTRAM Latin America and the Caribbean (LAC) setup.
+#
+# Every authority is a project: path under areas/lac/. The roots start from
+# ready-made A-O workbooks (policy prepared_root_workbooks), carried from the
+# OSTRAM-LAC model, instead of being built from the OSeMOSYS Global CSVs.
+
+schema: ostram-setup-v1
+id: lac
+metadata:
+  title: OSTRAM Latin America and the Caribbean model
+  description: >-
+    Nineteen Latin American and Caribbean countries, each one node, joined by
+    26 cross-border interconnectors, over 2023-2050 in twelve time slices.
+  country_regions:
+    - region: ARGXX
+      label: Argentina
+    - region: BOLXX
+      label: Bolivia
+    - region: BRAXX
+      label: Brazil
+    - region: BRBXX
+      label: Barbados
+    - region: CHLXX
+      label: Chile
+    - region: COLXX
+      label: Colombia
+    - region: CRIXX
+      label: Costa Rica
+    - region: DOMXX
+      label: Dominican Republic
+    - region: ECUXX
+      label: Ecuador
+    - region: GTMXX
+      label: Guatemala
+    - region: HNDXX
+      label: Honduras
+    - region: HTIXX
+      label: Haiti
+    - region: MEXXX
+      label: Mexico
+    - region: NICXX
+      label: Nicaragua
+    - region: PANXX
+      label: Panama
+    - region: PERXX
+      label: Peru
+    - region: PRYXX
+      label: Paraguay
+    - region: SLVXX
+      label: El Salvador
+    - region: URYXX
+      label: Uruguay
+  interconnectors:
+    - technology: TRNARGXXBOLXX
+    - technology: TRNARGXXBRAXX
+    - technology: TRNARGXXCHLXX
+    - technology: TRNARGXXPRYXX
+    - technology: TRNARGXXURYXX
+    - technology: TRNBOLXXBRAXX
+    - technology: TRNBOLXXCHLXX
+    - technology: TRNBOLXXPERXX
+    - technology: TRNBOLXXPRYXX
+    - technology: TRNBRAXXCOLXX
+    - technology: TRNBRAXXPERXX
+    - technology: TRNBRAXXPRYXX
+    - technology: TRNBRAXXURYXX
+    - technology: TRNCHLXXPERXX
+    - technology: TRNCOLXXECUXX
+    - technology: TRNCOLXXPANXX
+    - technology: TRNCOLXXPERXX
+    - technology: TRNCRIXXNICXX
+    - technology: TRNCRIXXPANXX
+    - technology: TRNDOMXXHTIXX
+    - technology: TRNECUXXPERXX
+    - technology: TRNGTMXXHNDXX
+    - technology: TRNGTMXXMEXXX
+    - technology: TRNGTMXXSLVXX
+    - technology: TRNHNDXXNICXX
+    - technology: TRNHNDXXSLVXX
+  year_range:
+    start: 2023
+    end: 2050
+    count: 28
+  timeslices:
+    count: 12
+    seasons: 4
+    day_types: 1
+    daily_time_brackets: 3
+  storage:
+    - BDSCHLXX01
+    - BDSPERXX01
+    - LDSARGXX01
+    - LDSBOLXX01
+    - LDSBRAXX01
+    - LDSBRBXX01
+    - LDSCHLXX01
+    - LDSCOLXX01
+    - LDSCRIXX01
+    - LDSDOMXX01
+    - LDSECUXX01
+    - LDSGTMXX01
+    - LDSHNDXX01
+    - LDSHTIXX01
+    - LDSMEXXX01
+    - LDSNICXX01
+    - LDSPANXX01
+    - LDSPERXX01
+    - LDSPRYXX01
+    - LDSSLVXX01
+    - LDSURYXX01
+    - SDSARGXX01
+    - SDSBOLXX01
+    - SDSBRAXX01
+    - SDSBRBXX01
+    - SDSCHLXX01
+    - SDSCOLXX01
+    - SDSCRIXX01
+    - SDSDOMXX01
+    - SDSECUXX01
+    - SDSGTMXX01
+    - SDSHNDXX01
+    - SDSHTIXX01
+    - SDSMEXXX01
+    - SDSNICXX01
+    - SDSPANXX01
+    - SDSPERXX01
+    - SDSPRYXX01
+    - SDSSLVXX01
+    - SDSURYXX01
+  compiled_set_sizes:
+    TECHNOLOGY: 852
+    FUEL: 406
+    STORAGE: 40
+    EMISSION: 172
+    REGION: 1
+  reporting:
+    result_glob: execution/**/*Combined_Inputs_Outputs.csv
+
+policies:
+  # The roots start from the ready-made workbooks in
+  # inputs/scenarios/root_workbooks: preparation (A1, A2) copies them into
+  # every root, and A3 applies only each root's rule scripts.
+  prepared_root_workbooks: true
+  # Off: the reconciliation of reported variable costs requires the solver
+  # datafile to hold the compiled costs at full precision, and this setup
+  # writes it with six significant digits (datafile_float_format).
+  reconcile_variable_cost_exports: false
+  # The base-year pin is a South Asia calibration rule.
+  apply_pwr_min_pin: false
+  # The computed build cap replaces the build-cap numbers of the ported BAU
+  # workbook when a root lists a cap multiplier schedule (A, B and C).
+  build_cap_replaces_workbook_values: true
+
+authorities:
+  scenario_registry: project:areas/lac/setup.yaml
+  scenario_inputs:
+    path: project:areas/lac/inputs/scenarios
+    kind: directory
+  scenario_config_root:
+    path: project:areas/lac/config/scenarios
+    kind: directory
+  scenario_workbook: project:areas/lac/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
+  root_workbooks:
+    path: project:areas/lac/inputs/scenarios/root_workbooks
+    kind: directory
+  extra_inputs:
+    path: project:areas/lac/inputs/preparation/extra_inputs
+    kind: directory
+  ao_decisions: project:areas/lac/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
+  interconnector_authority: project:areas/lac/inputs/scenarios/OSTRAM_Scenario_Inputs.xlsx
+  interconnector_taxonomy: project:areas/lac/config/scenarios/technology_types.csv
+  compilation_config: project:areas/lac/config/compilation/Config_MOMF_T1_A.yaml
+  execution_config: project:areas/lac/config/execution/Config_MOMF_T1_AB.yaml
+  execution_inputs:
+    path: project:areas/lac/inputs/execution
+    kind: directory
+  country_config: project:areas/lac/config/preparation/Config_country_codes.yaml
+  region_config: project:areas/lac/config/preparation/Config_region_consolidation.yaml
+  osemosys_inputs:
+    path: project:areas/lac/inputs/osemosys_global
+    kind: directory
+  preparation_inputs:
+    path: project:areas/lac/inputs/preparation
+    kind: directory
+  preparation_config:
+    path: project:areas/lac/config/preparation
+    kind: directory
+  maintained_model: project:areas/lac/model/osemosys_fast_preprocessed.txt
+  preparation_resources:
+    path: package:resources/preparation
+    kind: directory
+  compilation_resources:
+    path: package:resources/compilation
+    kind: directory
+
+scenario_registry:
+  schema: ostram-scenario-registry-v1
+  support_scenarios:
+  - BAU
+  root_scenarios:
+  - name: BAU
+    role: support
+    dependencies: []
+  - name: A_Calibrated_BAU
+    role: decision
+    dependencies: []
+  # B takes the looser of its own bounds and those of A_Calibrated_BAU built in
+  # the same run, so B can always reproduce A's plan and never costs more.
+  - name: B_Optimised_VRE
+    role: decision
+    dependencies:
+    - type: relaxation
+      scenario: A_Calibrated_BAU
+  - name: C_Target_VRE
+    role: decision
+    dependencies:
+    - type: result
+      scenario: A_Calibrated_BAU
+      environment: OSTRAM_A_CALIBRATED_BAU_RESULT
+      default_path: Executables/A_Calibrated_BAU_0
+  decision_scenarios:
+  - A_Calibrated_BAU
+  - B_Optimised_VRE
+  - C_Target_VRE

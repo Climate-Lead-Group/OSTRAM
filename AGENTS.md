@@ -4,7 +4,7 @@ Instructions for AI coding agents working on OSTRAM. People should start with `R
 
 ## Project
 
-OSTRAM (OSeMOSYS for Transmission – Framework to represent power systems connectivity) builds on OSeMOSYS and OSeMOSYS Global. It adds detail on internal transmission and interconnectors, and supports "what if" comparisons between scenarios. The South Asia model, the default `south_asia` setup, is the reference application. `examples/unescap_training` is a separate, reduced two-region training setup.
+OSTRAM (OSeMOSYS for Transmission – Framework to represent power systems connectivity) builds on OSeMOSYS and OSeMOSYS Global. It adds detail on internal transmission and interconnectors, and supports "what if" comparisons between scenarios. The South Asia model, the default `south_asia` setup, is the reference application. `examples/unescap_training` is a separate, reduced two-region training setup. `areas/lac` is the Latin America and the Caribbean area, setup `lac`, carried from OSTRAM-LAC; `areas/lac/README.md` describes it.
 
 The pipeline runs in this order:
 

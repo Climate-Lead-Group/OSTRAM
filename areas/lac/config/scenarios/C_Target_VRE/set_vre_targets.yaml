@@ -1,0 +1,90 @@
+## set_vre_targets.yaml: LAC C_Target_VRE (the study's NDC scenario)
+##
+## Study design (RELAC IDB study, section 2.3.3): the NDC scenario adds the
+## countries' NDC renewable energy share targets to the baseline. C carries
+## only these targets: no storage floor, no regional target.
+##
+## Each country target below is a renewable share of electricity generation in
+## a target year, from the country's NDC or national law (URL on each target).
+## set_vre_targets.py writes generation floors per technology, so each target
+## is expressed as a solar PV share:
+##   solar share (target year) = solar share 2023 + (target - renewable share 2023)
+## The 2023 shares are each country's 2023 generation by technology in the
+## ported BAU model (TotalTechnologyAnnualActivityLowerLimit of 2023, built from
+## OLADE generation by source, see areas/lac/data_sources.md), with hydro, solar,
+## wind, geothermal and biomass as renewable. The schedule holds the 2023 solar
+## share from 2023 to 2027, rises linearly to the target year and is held to
+## 2050. The rule turns each share into a floor with the generation of the
+## solved A_Calibrated_BAU in the same country and year.
+## ASSUMPTION: solar PV supplies the renewable generation above each country's
+## 2023 renewable share (all target countries, from 2027); the other renewable
+## technologies keep the output the model chooses. Solar can be built in every
+## target country, so each target can be met; the split across renewable
+## technologies is to be refined.
+##
+## Countries with no target here (no retrievable renewable generation share in
+## force over 2027-2050, a capacity or "clean energy" target, or a target already
+## met in 2023) are listed in areas/lac/README.md.
+
+bau_results_path: ../Executables/A_Calibrated_BAU_0
+constraint_type: activity
+
+## ASSUMPTION (rule settings, all targets): the South Asia C values are used
+## unchanged. A floor is at most 95% of the country's generation; solar gets a
+## capacity envelope 20% above the floor-implied capacity with at least 2 GW of
+## build allowance a year, a capacity factor of 0.10 where A built no solar, and
+## a generation upper limit 1% above the floor (or A's generation, if higher).
+max_floor_share: 0.95
+cap_envelope_headroom: 0.20
+cap_envelope_min_inv_gw: 2.0
+default_capacity_factor: 0.10
+pin_generation_to_target: true
+pin_slack: 0.01
+
+targets:
+## Chile: at least 80% of generation from renewables by 2030 (unconditional).
+## Gobierno de Chile, NDC 2025, https://unfccc.int/sites/default/files/2025-09/NDC-2025-220925%201.pdf
+## 2023: renewable share 0.6253, solar 0.1990 -> 0.1990 + (0.80 - 0.6253) = 0.3737
+- cr: CHLXX
+  tech: PWRSPV*
+  schedule: {2023: 0.1990, 2027: 0.1990, 2030: 0.3737, 2050: 0.3737}
+  cap_envelope: true
+## Bolivia: at least 75% of generation in the national interconnected system
+## from renewables by 2035. Estado Plurinacional de Bolivia, NDC 3.0 2026-2035,
+## https://unfccc.int/sites/default/files/2025-09/Bolivia_NDC3.0_2026-2035%20final%2029.09.2024.pdf
+## 2023: renewable share 0.3003, solar 0.0310 -> 0.0310 + (0.75 - 0.3003) = 0.4807
+- cr: BOLXX
+  tech: PWRSPV*
+  schedule: {2023: 0.0310, 2027: 0.0310, 2035: 0.4807, 2050: 0.4807}
+  cap_envelope: true
+## Honduras: 70% renewables in the generation mix by 2030 (conditional).
+## Gobierno de Honduras, NDC 3.0 (January 2026),
+## https://unfccc.int/sites/default/files/2026-01/HON%20NDC%203.0%202026%20Oficial.pdf
+## 2023: renewable share 0.5970, solar 0.1056 -> 0.1056 + (0.70 - 0.5970) = 0.2086
+- cr: HNDXX
+  tech: PWRSPV*
+  schedule: {2023: 0.1056, 2027: 0.1056, 2030: 0.2086, 2050: 0.2086}
+  cap_envelope: true
+## Costa Rica: 95% renewable generation in 2027, kept to 2035 (conditional).
+## Gobierno de Costa Rica, NDC 2025-2035, https://unfccc.int/sites/default/files/2025-11/CND-2025-2035.pdf
+## 2023: renewable share 0.9491, solar 0.0007 -> 0.0007 + (0.95 - 0.9491) = 0.0016
+- cr: CRIXX
+  tech: PWRSPV*
+  schedule: {2023: 0.0007, 2026: 0.0007, 2027: 0.0016, 2050: 0.0016}
+  cap_envelope: true
+## Barbados: 95% renewable electricity by 2035 (conditional).
+## Government of Barbados, Second NDC (2025),
+## https://unfccc.int/sites/default/files/2025-09/Barbados%20Second%20NDC.pdf
+## 2023: renewable share 0.1044, all solar -> 0.1044 + (0.95 - 0.1044) = 0.95
+- cr: BRBXX
+  tech: PWRSPV*
+  schedule: {2023: 0.1044, 2027: 0.1044, 2035: 0.95, 2050: 0.95}
+  cap_envelope: true
+## El Salvador: 85.7% to 86.1% of generation from renewables by 2030 (lower
+## value used). Gobierno de El Salvador, updated NDC (December 2021),
+## https://unfccc.int/sites/default/files/NDC/2022-06/El%20Salvador%20NDC-%20Updated%20Dic.2021.pdf
+## 2023: renewable share 0.6075, solar 0.1457 -> 0.1457 + (0.857 - 0.6075) = 0.3952
+- cr: SLVXX
+  tech: PWRSPV*
+  schedule: {2023: 0.1457, 2027: 0.1457, 2030: 0.3952, 2050: 0.3952}
+  cap_envelope: true
