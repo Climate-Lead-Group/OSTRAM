@@ -78,7 +78,7 @@ areas/lac/
 
 | Scenario | Rule scripts | Settings |
 |---|---|---|
-| `BAU` (support) | none | The OSTRAM-LAC `BAU` model. Internal repowering is open from 2028 and unplanned internal lines from 2030. |
+| `BAU` (support) | none | The OSTRAM-LAC `BAU` model. Internal repowering is open from 2028 and unplanned internal lines from 2030; Barbados' existing internal lines may grow to their total cap (ASSUMPTION LA15 in `data_sources.md`). |
 | `A_Calibrated_BAU` | `build_cap_rule.py` | `BAU` with South Asia A's build-cap settings: planned projects plus today's mix growing with demand (each technology's share of the 2024 fleet times the growth of the demand-scaled fleet times 1.1), and a floor top-up computed every run that raises a generation technology's caps where residual capacity plus its caps cannot reach its generation floor. The study's Tendencial scenario (section 2.3.2). |
 | `B_Optimised_VRE` | `build_cap_rule.py` | `BAU` with the South Asia B build-cap relaxation and family ceilings on the LAC families and the same floor top-up; B also takes the looser of its bounds and A's. Least cost without targets. |
 | `C_Target_VRE` | `build_cap_rule.py`, `set_vre_targets.py` | The A settings plus each country's renewable share target from its NDC (`set_vre_targets.yaml`), as generation floors scaled to the solved A. The study's NDC scenario (section 2.3.3). |
