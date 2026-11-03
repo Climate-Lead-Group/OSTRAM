@@ -14,7 +14,7 @@ and interconnectors. The internal grid has no build cap (see
 flowchart TB
     subgraph A3["Stage A3, each root"]
         R["Build-cap rule: plants"] --> I["Interconnector build caps"]
-        I --> X["B only: the looser of B's and A's limits, with one exception"]
+        I --> X["B: the looser of B's and A's limits, with one exception; C: coal, gas and biomass build caps at least A's"]
     end
     subgraph DS["Derived scenarios"]
         E["Scenario edits can replace caps"]
@@ -96,6 +96,15 @@ For the yearly build cap of a cross-border link, A's value counts only up to
 the room A has left in that year. No limit of B is then tighter than any limit
 A can use, so B can reproduce A's plan and costs no more. The
 [rules](../rules.md#b-as-a-relaxation-of-a) page gives the rule.
+
+`C_Target_VRE` takes the same rule for one parameter and three families only:
+after its own rules, the adequacy top-up included, each build cap of a coal,
+gas or biomass plant becomes the larger of C's cap and that of
+`A_Calibrated_BAU` in the same node and year. C's family limits measure these
+caps on C's fleet after retirements, while A inherits them from BAU, whose
+fleet does not retire. A cap of -1 or 0 in C stays as it is, and every other
+limit of C is left as written. The
+[rules](../rules.md#cs-coal-gas-and-biomass-build-caps) page gives the rule.
 
 `margin_factor` 1.1 leaves 10 per cent to spare above each technology's share
 of the required growth. It is a model margin and has no link to energy
