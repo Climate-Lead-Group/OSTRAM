@@ -256,7 +256,7 @@ Capacity factors use four seasons, S1 January, February and December (90 days), 
 
 - Values: 0.14927271697391 to 0.6348967227908 (12 distinct values); capacity factor (fraction); 80 rows.
 - Label: `CEA_MONTHLY_PLF_WITH_RETAINED_AF_DECOMPOSITION`.
-- Sources: [R33], [R38] to [R54] tab Large Hydro, Eastern Region Sub Total, monthly current/prior and cumulative current/prior; [R55] to [R90] PDF p.1, Sub-report 2, Summary - Region Wise, EASTERN REGION HYDRO, Monitored Capacity (MW).
+- Sources: [R33], [R39] to [R54] tab Large Hydro, Eastern Region Sub Total, monthly current/prior and cumulative current/prior, May 2023 from [R45], prior-year columns May'2023 and April'2023-May'2023; [R55] to [R90] PDF p.1, Sub-report 2, Summary - Region Wise, EASTERN REGION HYDRO, Monitored Capacity (MW).
 - Derivation: Seasonal generation is read from the Large Hydro tab of CEA's monthly renewable generation reports for the Eastern Region, and each capacity factor is seasonal GWh / (stock GW x season hours x availability 0.95). Example: 2023 S1, 2,148.54 GWh / (5.988 GW x 2,160 h x 0.95) = 0.174858. The 5.988 GW stock is CEA's monitored large hydro capacity for the Eastern Region, 5,987.75 MW, in each of the 36 monthly 18-column reports for January 2023 to December 2025.
 - Assumptions: A5, A6.
 
@@ -352,7 +352,7 @@ Capacity factors use four seasons, S1 January, February and December (90 days), 
 
 - Values: 0.14892589599877 to 0.45101053559251 (12 distinct values); capacity factor (fraction); 80 rows.
 - Label: `CEA_MONTHLY_PLF_WITH_RETAINED_AF_DECOMPOSITION`.
-- Sources: [R33], [R38] to [R54], [R92] and [R93] tab Small Hydro, Eastern Region Sub Total, monthly current/prior and cumulative current/prior; [R94] PDF p.1, Small Hydro Power column; Andaman & Nicobar, Bihar, Jharkhand, Odisha, Sikkim, West Bengal.
+- Sources: [R33], [R39] to [R54], [R92] and [R93] tab Small Hydro, Eastern Region Sub Total, monthly current/prior and cumulative current/prior, May 2023 from [R45], prior-year columns May'2023 and April'2023-May'2023; [R94] PDF p.1, Small Hydro Power column; Andaman & Nicobar, Bihar, Jharkhand, Odisha, Sikkim, West Bengal.
 - Derivation: Seasonal generation is read from the Small Hydro tab of CEA's monthly renewable generation reports for the Eastern Region, and each capacity factor is seasonal GWh / (stock GW x season hours x availability 0.9). Example: 2023 S1, 108.01 GWh / (0.3442 GW x 2,160 h x 0.9) = 0.161420.
 - Assumptions: A5, A6. India East small hydro stock is 0.3442 GW (344.20 MW) in 2023 to 2026; MNRE's state-wise installed capacity at 31 December 2023 gives 349.24 MW for Andaman and Nicobar, Bihar, Jharkhand, Odisha, Sikkim and West Bengal, so the model stock is 1.44% lower. Without Andaman and Nicobar (5.25 MW), which is not connected to the mainland grid, MNRE's figure is 343.99 MW, 0.06% below the model stock. The stock only scales the capacity factor, which the model multiplies back by the same stock in its annual limit (A5), so generation still equals the published amount.
 
@@ -376,7 +376,7 @@ Capacity factors use four seasons, S1 January, February and December (90 days), 
 
 - Values: 0.093513984742035 to 0.29461222093325 (12 distinct values); capacity factor (fraction); 80 rows.
 - Label: `CEA_MONTHLY_PLF_WITH_RETAINED_AF_DECOMPOSITION`.
-- Sources: [R33], [R38] to [R54], [R92] and [R93] tab Small Hydro, North Eastern Region Sub Total, monthly current/prior and cumulative current/prior; [R94] PDF p.1, Small Hydro Power column; Arunachal Pradesh, Assam, Manipur, Meghalaya, Mizoram, Nagaland, Tripura.
+- Sources: [R33], [R39] to [R54], [R92] and [R93] tab Small Hydro, North Eastern Region Sub Total, monthly current/prior and cumulative current/prior, May 2023 from [R45], prior-year columns May'2023 and April'2023-May'2023; [R94] PDF p.1, Small Hydro Power column; Arunachal Pradesh, Assam, Manipur, Meghalaya, Mizoram, Nagaland, Tripura.
 - Derivation: Seasonal generation is read from the Small Hydro tab of CEA's monthly renewable generation reports for the North Eastern Region, and each capacity factor is seasonal GWh / (stock GW x season hours x availability 0.9). Example: 2023 S1, 62.65 GWh / (0.29935 GW x 2,160 h x 0.9) = 0.107666.
 - Assumptions: A5, A6. India North-East small hydro stock is 0.29935 GW (299.35 MW) in 2023 to 2026; MNRE's state-wise installed capacity at 31 December 2023 gives 321.85 MW for Arunachal Pradesh, Assam, Manipur, Meghalaya, Mizoram, Nagaland and Tripura, so the model stock is 6.99% lower. The stock only scales the capacity factor, which the model multiplies back by the same stock in its annual limit (A5), so generation still equals the published amount.
 
@@ -384,7 +384,7 @@ Capacity factors use four seasons, S1 January, February and December (90 days), 
 
 - Values: 0.18503094440003 to 0.51663796463992 (12 distinct values); capacity factor (fraction); 80 rows.
 - Label: `CEA_MONTHLY_PLF_WITH_RETAINED_AF_DECOMPOSITION`.
-- Sources: [R33], [R38] to [R54], [R92] and [R93] tab Small Hydro, Northern Region Sub Total, monthly current/prior and cumulative current/prior; [R94] PDF p.1, Small Hydro Power column; Chandigarh, Delhi, Haryana, Himachal Pradesh, Jammu & Kashmir, Ladakh, Punjab, Rajasthan, Uttar Pradesh, Uttarakhand.
+- Sources: [R33], [R39] to [R54], [R92] and [R93] tab Small Hydro, Northern Region Sub Total, monthly current/prior and cumulative current/prior, May 2023 from [R45], prior-year columns May'2023 and April'2023-May'2023; [R94] PDF p.1, Small Hydro Power column; Chandigarh, Delhi, Haryana, Himachal Pradesh, Jammu & Kashmir, Ladakh, Punjab, Rajasthan, Uttar Pradesh, Uttarakhand.
 - Derivation: Seasonal generation is read from the Small Hydro tab of CEA's monthly renewable generation reports for the Northern Region, and each capacity factor is seasonal GWh / (stock GW x season hours x availability 0.9). Example: 2023 S1, 699.21 GWh / (1.7189 GW x 2,160 h x 0.9) = 0.209249. The 1.7189 GW stock is MNRE's small hydro capacity at 31 December 2023 summed over the region's states, 1,713.50 MW, 0.32% below it.
 - Assumptions: A5, A6.
 
@@ -408,7 +408,7 @@ Capacity factors use four seasons, S1 January, February and December (90 days), 
 
 - Values: 0.055665835651173 to 0.48579570070472 (12 distinct values); capacity factor (fraction); 80 rows.
 - Label: `CEA_MONTHLY_PLF_WITH_RETAINED_AF_DECOMPOSITION`.
-- Sources: [R33], [R38] to [R54], [R92] and [R93] tab Small Hydro, Southern Region Sub Total, monthly current/prior and cumulative current/prior; [R94] PDF p.1, Small Hydro Power column; Andhra Pradesh, Karnataka, Kerala, Lakshadweep, Pondicherry, Tamil Nadu, Telangana.
+- Sources: [R33], [R39] to [R54], [R92] and [R93] tab Small Hydro, Southern Region Sub Total, monthly current/prior and cumulative current/prior, May 2023 from [R45], prior-year columns May'2023 and April'2023-May'2023; [R94] PDF p.1, Small Hydro Power column; Andhra Pradesh, Karnataka, Kerala, Lakshadweep, Pondicherry, Tamil Nadu, Telangana.
 - Derivation: Seasonal generation is read from the Small Hydro tab of CEA's monthly renewable generation reports for the Southern Region, and each capacity factor is seasonal GWh / (stock GW x season hours x availability 0.9). Example: 2023 S1, 530.78 GWh / (1.9333 GW x 2,160 h x 0.9) = 0.141226. The 1.9333 GW stock is MNRE's small hydro capacity at 31 December 2023 summed over the region's states, 1,928.48 MW, 0.25% below it.
 - Assumptions: A5, A6.
 
@@ -416,7 +416,7 @@ Capacity factors use four seasons, S1 January, February and December (90 days), 
 
 - Values: 0.25264712262053 to 0.43925890821833 (12 distinct values); capacity factor (fraction); 80 rows.
 - Label: `CEA_MONTHLY_PLF_WITH_RETAINED_AF_DECOMPOSITION`.
-- Sources: [R33], [R38] to [R54], [R92] and [R93] tab Small Hydro, Western Region Sub Total, monthly current/prior and cumulative current/prior; [R94] PDF p.1, Small Hydro Power column; Chhatisgarh, Goa, Gujarat, Madhya Pradesh, Maharashtra, Dadar & Nagar Haveli/Daman & Diu.
+- Sources: [R33], [R39] to [R54], [R92] and [R93] tab Small Hydro, Western Region Sub Total, monthly current/prior and cumulative current/prior, May 2023 from [R45], prior-year columns May'2023 and April'2023-May'2023; [R94] PDF p.1, Small Hydro Power column; Chhatisgarh, Goa, Gujarat, Madhya Pradesh, Maharashtra, Dadar & Nagar Haveli/Daman & Diu.
 - Derivation: Seasonal generation is read from the Small Hydro tab of CEA's monthly renewable generation reports for the Western Region, and each capacity factor is seasonal GWh / (stock GW x season hours x availability 0.9). Example: 2023 S1, 390.70 GWh / (0.6739 GW x 2,160 h x 0.9) = 0.298230. The 0.6739 GW stock is MNRE's small hydro capacity at 31 December 2023 summed over the region's states, 673.68 MW, 0.03% below it.
 - Assumptions: A5, A6.
 
@@ -440,7 +440,7 @@ Capacity factors use four seasons, S1 January, February and December (90 days), 
 
 - Values: 0 to 0.52945116045079 (31 distinct values); capacity factor (fraction); 80 rows.
 - Label: `CEA_GENERATION_MNRE_GRID_STOCK_NINJA_DAYLIGHT_SHAPE`.
-- Sources: [R94] to [R96] PDF p.1; Ground Mounted Solar, Rooftop/RTS, Hybrid Solar and Off-grid columns; Haryana, Himachal Pradesh, Jammu & Kashmir, Ladakh, Punjab, Rajasthan, Uttar Pradesh, Uttarakhand, Chandigarh, Delhi; [R33], [R38] to [R54], [R92] and [R93] tab Solar, Northern Region Sub Total; monthly current/prior and cumulative current/prior; [R97] Section 2; Section 4; printed p.1263, Figure 18; [R98] Renewables.ninja PV model; [R99] PV simulation at Delhi 28.67 N 77.23 E (North), MERRA-2, 2014 to 2022, 10% system losses, tilt equal to latitude, azimuth 180.
+- Sources: [R94] to [R96] PDF p.1; Ground Mounted Solar, Rooftop/RTS, Hybrid Solar and Off-grid columns; Haryana, Himachal Pradesh, Jammu & Kashmir, Ladakh, Punjab, Rajasthan, Uttar Pradesh, Uttarakhand, Chandigarh, Delhi; [R33], [R39] to [R54], [R92] and [R93] tab Solar, Northern Region Sub Total; monthly current/prior and cumulative current/prior, May 2023 from [R45], prior-year columns May'2023 and April'2023-May'2023; [R97] Section 2; Section 4; printed p.1263, Figure 18; [R98] Renewables.ninja PV model; [R99] PV simulation at Delhi 28.67 N 77.23 E (North), MERRA-2, 2014 to 2022, 10% system losses, tilt equal to latitude, azimuth 180.
 - Derivation: Seasonal solar generation for the Northern Region (CEA, Solar tab) is divided by the grid-connected stock at 31 December of the same year (MNRE ground-mounted + rooftop + hybrid solar, off-grid left out) and the season hours, then spread over the five day parts with the Renewables.ninja daily shape for Delhi, scaled so that its seasonal mean is the seasonal factor. Example: 2023 S1, day part 06:00 to 17:00, 10,650.44 GWh / (23.61227 GW x 2,160 h) x 0.378969 / 0.173696 = 0.455607.
 - Assumptions: A6, A7.
 
@@ -464,7 +464,7 @@ Capacity factors use four seasons, S1 January, February and December (90 days), 
 
 - Values: 0 to 0.43376060151633 (25 distinct values); capacity factor (fraction); 80 rows.
 - Label: `CEA_GENERATION_MNRE_GRID_STOCK_NINJA_DAYLIGHT_SHAPE`.
-- Sources: [R94] to [R96] PDF p.1; Ground Mounted Solar, Rooftop/RTS, Hybrid Solar and Off-grid columns; Andhra Pradesh, Karnataka, Kerala, Tamil Nadu, Telangana, Lakshadweep, Puducherry; [R33], [R38] to [R54], [R92] and [R93] tab Solar, Southern Region Sub Total; monthly current/prior and cumulative current/prior; [R97] Section 2; Section 4; printed p.1263, Figure 18; [R98] Renewables.ninja PV model; [R99] PV simulation at Bangalore 12.9724 N 77.5806 E (South), MERRA-2, 2014 to 2022, 10% system losses, tilt equal to latitude, azimuth 180.
+- Sources: [R94] to [R96] PDF p.1; Ground Mounted Solar, Rooftop/RTS, Hybrid Solar and Off-grid columns; Andhra Pradesh, Karnataka, Kerala, Tamil Nadu, Telangana, Lakshadweep, Puducherry; [R33], [R39] to [R54], [R92] and [R93] tab Solar, Southern Region Sub Total; monthly current/prior and cumulative current/prior, May 2023 from [R45], prior-year columns May'2023 and April'2023-May'2023; [R97] Section 2; Section 4; printed p.1263, Figure 18; [R98] Renewables.ninja PV model; [R99] PV simulation at Bangalore 12.9724 N 77.5806 E (South), MERRA-2, 2014 to 2022, 10% system losses, tilt equal to latitude, azimuth 180.
 - Derivation: Seasonal solar generation for the Southern Region (CEA, Solar tab) is divided by the grid-connected stock at 31 December of the same year (MNRE ground-mounted + rooftop + hybrid solar, off-grid left out) and the season hours, then spread over the five day parts with the Renewables.ninja daily shape for Bangalore, scaled so that its seasonal mean is the seasonal factor. Example: 2023 S1, day part 06:00 to 17:00, 10,683.67 GWh / (26.74001 GW x 2,160 h) x 0.469493 / 0.215343 = 0.403277.
 - Assumptions: A6, A7.
 
@@ -823,7 +823,6 @@ Each document carries the date it was last retrieved. A document whose address n
 - **R35** Central Electricity Authority / National Power Portal. 18-column actual generation report, February 2023, sub-report 16 (state-wise details). <https://npp.gov.in/public-reports/cea/monthly/generation/18_col_act/2023/FEB//18_col_act-16_2023-FEB.pdf>. Retrieved 23 October 2026.
 - **R36** Central Electricity Authority / National Power Portal. 18-column actual generation report, December 2025, sub-report 2 (region-wise summary). <https://npp.gov.in/public-reports/cea/monthly/generation/18_col_act/2025/DEC//18_col_act-2_2025-DEC.pdf>. Retrieved 23 October 2026.
 - **R37** Central Electricity Authority / National Power Portal. 18-column actual generation report, December 2025, sub-report 16 (state-wise details). <https://npp.gov.in/public-reports/cea/monthly/generation/18_col_act/2025/DEC//18_col_act-16_2025-DEC.pdf>. Retrieved 23 October 2026.
-- **R38** Central Electricity Authority. Monthly Report of Renewable Generation, May 2023 (Internet Archive copy). <https://web.archive.org/web/20261026034452/https://cea.nic.in/api/dashboardReports/download-excel/en/0b4b687d-0e26-4a58-9500-dd36fd0a3ed0>. Retrieved 26 October 2026.
 - **R39** Central Electricity Authority. Monthly Report of Renewable Generation, September 2023 (Internet Archive copy). <https://web.archive.org/web/20261026034535/https://cea.nic.in/api/dashboardReports/download-excel/en/a779d54c-472b-4b09-a3a0-fb10c7a7a7df>. Retrieved 26 October 2026.
 - **R40** Central Electricity Authority. Monthly Report of Renewable Generation, November 2023 (Internet Archive copy). <https://web.archive.org/web/20261026034619/https://cea.nic.in/api/dashboardReports/download-excel/en/062e52e9-a6cb-4824-ba91-55590a713c53>. Retrieved 26 October 2026.
 - **R41** Central Electricity Authority. Monthly Report of Renewable Generation, December 2023 (Internet Archive copy). <https://web.archive.org/web/20261026034702/https://cea.nic.in/api/dashboardReports/download-excel/en/867dabcb-be51-4179-a917-d9d4d07a654e>. Retrieved 26 October 2026.

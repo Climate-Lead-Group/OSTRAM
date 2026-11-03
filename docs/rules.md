@@ -370,10 +370,10 @@ and the scenario's forced builds; no other cross-border line enters service
 before 2031. A new cross-border line takes several years from agreement to
 service, and the next Bangladesh to India line in the national plans, the
 Katihar-Parbotipur-Bornagar 765 kV corridor, is due in 2031 (Central
-Electricity Authority, National Electricity Plan, Volume II: Transmission,
-October 2024, section 9.4.2, printed p. 107, and Annex scheme ER-11, printed
-p. 442,
-<https://cea.nic.in/wp-content/uploads/psp___a_i/2025/02/NEP_Vol_II_Transmission.pdf>).
+Electricity Authority, National Electricity Plan, Volume II: Transmission
+(copy in the Prayas Energy Group archive), October 2024, section 9.4.2,
+printed p. 107, and Annex scheme ER-11, printed p. 442,
+<https://archive.prayaspune.org/collection/5/document/1361>).
 
 ASSUMPTION: from 2031, each cross-border link may add at most 1 GW a year, or
 more only where a forced build requires it; cost sets its total size. 1 GW is
