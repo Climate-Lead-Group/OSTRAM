@@ -38,9 +38,8 @@ FILTER
 A filter limits the rule to some cells: a list of parameters, a list of
 technology-code prefixes, or both. Only the cells of a bound row whose
 parameter is listed and whose technology starts with a listed prefix are
-compared; every other cell is left as it is. Within the filter, a target cell
-of -1 or 0 counts as no bound and is left as it is. With no filter the rule
-compares every bound cell, as above.
+compared, by the rule above; every other cell is left as it is. With no filter
+the rule compares every bound cell.
 
 The reference folder is read only. The target workbook is edited in place.
 
@@ -93,8 +92,6 @@ MIN_INV = "TotalAnnualMinCapacityInvestment"
 RESIDUAL = "ResidualCapacity"
 FIXED_SHEET = "Fixed Horizon Parameters"
 ROOM_TOLERANCE = 1e-9  # GW
-# Target values a filtered relaxation leaves as they are: no bound.
-FILTER_NO_BOUND = (NO_BOUND, 0)
 
 
 class RelaxationError(ValueError):
@@ -218,19 +215,15 @@ def _selected(tech, parameter, parameters, prefixes) -> bool:
 
 
 def relax(target, reference, parameters: Iterable[str] | None = None,
-          prefixes: Iterable[str] | None = None,
-          kept: list[dict] | None = None) -> list[dict]:
+          prefixes: Iterable[str] | None = None) -> list[dict]:
     """Loosen the bounds of the target workbook to the reference workbook, in place.
 
     ``target`` is an openpyxl workbook opened for writing; ``reference`` one
     opened for reading. ``parameters`` and ``prefixes`` filter the compared
-    cells; a filtered target cell of -1 or 0 is left as it is and, where the
-    reference differs, recorded in ``kept``. Returns one record per changed
-    cell or row.
+    cells. Returns one record per changed cell or row.
     """
     parameters = None if parameters is None else tuple(parameters)
     prefixes = None if prefixes is None else tuple(prefixes)
-    filtered = parameters is not None or prefixes is not None
     changes: list[dict] = []
     lives = _lives(reference)
     for name in target.sheetnames:
@@ -269,11 +262,6 @@ def relax(target, reference, parameters: Iterable[str] | None = None,
                 ref = _value(ref_row[1], rlayout["years"][year])
                 if own == ref:
                     continue
-                if filtered and own in FILTER_NO_BOUND:
-                    if kept is not None:
-                        kept.append({"sheet": name, "tech": tech, "parameter": parameter,
-                                     "year": year, "own": own, "reference": ref})
-                    continue
                 if own is None or ref is None:
                     raise RelaxationError(
                         f"{name}: {tech} {parameter} {year} is blank in one scenario "
@@ -308,9 +296,8 @@ def run(input_dir: Path, reference_dir: Path, parameters: Iterable[str] | None =
             raise FileNotFoundError(f"Parametrization file not found: {path}")
     reference = load_workbook(reference_path, read_only=True, data_only=True)
     target = load_workbook(target_path)
-    kept: list[dict] = []
     try:
-        changes = relax(target, reference, parameters, prefixes, kept)
+        changes = relax(target, reference, parameters, prefixes)
         if changes:
             target.save(target_path)
     finally:
@@ -320,7 +307,6 @@ def run(input_dir: Path, reference_dir: Path, parameters: Iterable[str] | None =
     if parameters is not None or prefixes is not None:
         log["filter"] = {"parameters": None if parameters is None else list(parameters),
                          "prefixes": None if prefixes is None else list(prefixes)}
-        log["kept"] = kept
     return log
 
 
@@ -336,7 +322,6 @@ def print_summary(log: dict) -> None:
     if "filter" in log:
         print(f"  filter: parameters {log['filter']['parameters']}, "
               f"prefixes {log['filter']['prefixes']}")
-        print(f"  kept at -1 or 0 where the reference differs: {len(log['kept'])}")
 
 
 def _split(text: str | None) -> list[str] | None:

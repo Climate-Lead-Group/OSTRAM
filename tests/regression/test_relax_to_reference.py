@@ -3,7 +3,8 @@
 The rule runs every time B is built, on the A3 output of A built in the same
 run: an upper bound of B is never below A's, a lower bound never above A's.
 C_Target_VRE takes the same rule through a filter: the larger of its own and
-A's build cap of coal, gas and biomass plants, with -1 and 0 left as they are.
+A's build cap of coal, gas and biomass plants, where -1 is no bound and a 0
+takes A's value.
 """
 
 from __future__ import annotations
@@ -172,6 +173,7 @@ class RelaxationFilterTests(unittest.TestCase):
         self.assertEqual(values[("PWRCOAINDWE", YEARLY_CAP)][1:], (8.0, 7.0))
         self.assertEqual(values[("PWRNGSINDWE", YEARLY_CAP)][1:], (2.0, -1))
         self.assertEqual(values[("PWRBIOINDWE", YEARLY_CAP)][1:], (0.5, 0.5))
+        self.assertEqual(values[("PWRCOABGDXX", YEARLY_CAP)][1:], (1.0, 1.0))
         # Another prefix and other parameters of a listed prefix stay as they are.
         self.assertEqual(values[("PWRPETINDWE", YEARLY_CAP)][1:], (0.5, 0.5))
         self.assertEqual(values[("PWRCOAINDWE", "TotalAnnualMaxCapacity")][1:], (60.0, 60.0))
@@ -180,23 +182,21 @@ class RelaxationFilterTests(unittest.TestCase):
         )
         self.assertEqual(
             sorted((c["tech"], c["year"]) for c in log["changes"]),
-            [("PWRBIOINDWE", 2023), ("PWRCOAINDWE", 2023), ("PWRNGSINDWE", 2023)],
+            [("PWRBIOINDWE", 2023), ("PWRCOABGDXX", 2023), ("PWRCOABGDXX", 2024),
+             ("PWRCOAINDWE", 2023), ("PWRNGSINDWE", 2023)],
         )
         self.assertEqual(log["filter"], FILTER)
 
-    def test_minus_one_and_zero_stay_as_they_are(self) -> None:
+    def test_minus_one_stays_and_zero_takes_the_reference_value(self) -> None:
         target, reference = _filter_fixture(self.root)
 
-        log = rule.run(target, reference, **FILTER)
+        rule.run(target, reference, **FILTER)
 
         values = _values(target / rule.PARAM_FILE_NAME)
-        self.assertEqual(values[("PWRCOABGDXX", YEARLY_CAP)][1:], (0, 0.0))
+        # A 0 build cap allows no new capacity, so it is a bound and takes A's larger value.
+        self.assertEqual(values[("PWRCOABGDXX", YEARLY_CAP)][1:], (1.0, 1.0))
+        # -1 is no bound and stays, though A's value is finite.
         self.assertEqual(values[("PWRNGSINDWE", YEARLY_CAP)][2], -1)
-        self.assertEqual(
-            sorted((k["tech"], k["year"], k["own"], k["reference"]) for k in log["kept"]),
-            [("PWRCOABGDXX", 2023, 0, 1.0), ("PWRCOABGDXX", 2024, 0.0, 1.0),
-             ("PWRNGSINDWE", 2024, -1, 2.0)],
-        )
 
     def test_a_cell_never_becomes_tighter(self) -> None:
         target, reference = _filter_fixture(self.root)
