@@ -33,13 +33,23 @@ row breaks it, the target row is not exported either. A blank year cell in
 an exported row that differs from the other scenario cannot be compared, so
 the rule stops with an error.
 
+FILTER
+------
+A filter limits the rule to some cells: a list of parameters, a list of
+technology-code prefixes, or both. Only the cells of a bound row whose
+parameter is listed and whose technology starts with a listed prefix are
+compared; every other cell is left as it is. Within the filter, a target cell
+of -1 or 0 counts as no bound and is left as it is. With no filter the rule
+compares every bound cell, as above.
+
 The reference folder is read only. The target workbook is edited in place.
 
 USAGE
 -----
     python -m ostram.pipeline.scenarios.rules.relax_to_reference \\
         --input-dir A1_Outputs/A1_Outputs_B_Optimised_VRE \\
-        --reference-dir A1_Outputs/A1_Outputs_A_Calibrated_BAU
+        --reference-dir A1_Outputs/A1_Outputs_A_Calibrated_BAU \\
+        [--parameters TotalAnnualMaxCapacityInvestment --prefixes PWRCOA,PWRNGS]
 """
 
 from __future__ import annotations
@@ -48,6 +58,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Iterable
 
 from openpyxl import load_workbook
 
@@ -82,6 +93,8 @@ MIN_INV = "TotalAnnualMinCapacityInvestment"
 RESIDUAL = "ResidualCapacity"
 FIXED_SHEET = "Fixed Horizon Parameters"
 ROOM_TOLERANCE = 1e-9  # GW
+# Target values a filtered relaxation leaves as they are: no bound.
+FILTER_NO_BOUND = (NO_BOUND, 0)
 
 
 class RelaxationError(ValueError):
@@ -197,12 +210,27 @@ def _looser(parameter: str, own, reference):
     return min(own, reference)
 
 
-def relax(target, reference) -> list[dict]:
+def _selected(tech, parameter, parameters, prefixes) -> bool:
+    """True when the filter covers the row; no filter covers every row."""
+    if parameters is not None and parameter not in parameters:
+        return False
+    return prefixes is None or str(tech).startswith(tuple(prefixes))
+
+
+def relax(target, reference, parameters: Iterable[str] | None = None,
+          prefixes: Iterable[str] | None = None,
+          kept: list[dict] | None = None) -> list[dict]:
     """Loosen the bounds of the target workbook to the reference workbook, in place.
 
     ``target`` is an openpyxl workbook opened for writing; ``reference`` one
-    opened for reading. Returns one record per changed cell or row.
+    opened for reading. ``parameters`` and ``prefixes`` filter the compared
+    cells; a filtered target cell of -1 or 0 is left as it is and, where the
+    reference differs, recorded in ``kept``. Returns one record per changed
+    cell or row.
     """
+    parameters = None if parameters is None else tuple(parameters)
+    prefixes = None if prefixes is None else tuple(prefixes)
+    filtered = parameters is not None or prefixes is not None
     changes: list[dict] = []
     lives = _lives(reference)
     for name in target.sheetnames:
@@ -218,6 +246,8 @@ def relax(target, reference) -> list[dict]:
         trows, rrows = _bound_rows(tws, layout), _bound_rows(rws, rlayout)
         rresiduals = _residual_rows(rws, rlayout)
         for (tech, parameter), (r, values) in trows.items():
+            if not _selected(tech, parameter, parameters, prefixes):
+                continue
             if not _exported(name, layout, r, values):
                 continue
             upper = parameter in UPPER_BOUNDS
@@ -238,6 +268,11 @@ def relax(target, reference) -> list[dict]:
                 own = _value(values, c)
                 ref = _value(ref_row[1], rlayout["years"][year])
                 if own == ref:
+                    continue
+                if filtered and own in FILTER_NO_BOUND:
+                    if kept is not None:
+                        kept.append({"sheet": name, "tech": tech, "parameter": parameter,
+                                     "year": year, "own": own, "reference": ref})
                     continue
                 if own is None or ref is None:
                     raise RelaxationError(
@@ -260,8 +295,12 @@ def relax(target, reference) -> list[dict]:
     return changes
 
 
-def run(input_dir: Path, reference_dir: Path) -> dict:
-    """Apply the rule to ``input_dir`` with ``reference_dir`` as the reference."""
+def run(input_dir: Path, reference_dir: Path, parameters: Iterable[str] | None = None,
+        prefixes: Iterable[str] | None = None) -> dict:
+    """Apply the rule to ``input_dir`` with ``reference_dir`` as the reference.
+
+    ``parameters`` and ``prefixes`` are the optional filter; see FILTER above.
+    """
     target_path = Path(input_dir) / PARAM_FILE_NAME
     reference_path = Path(reference_dir) / PARAM_FILE_NAME
     for path in (target_path, reference_path):
@@ -269,14 +308,20 @@ def run(input_dir: Path, reference_dir: Path) -> dict:
             raise FileNotFoundError(f"Parametrization file not found: {path}")
     reference = load_workbook(reference_path, read_only=True, data_only=True)
     target = load_workbook(target_path)
+    kept: list[dict] = []
     try:
-        changes = relax(target, reference)
+        changes = relax(target, reference, parameters, prefixes, kept)
         if changes:
             target.save(target_path)
     finally:
         reference.close()
         target.close()
-    return {"file": str(target_path), "reference": str(reference_path), "changes": changes}
+    log = {"file": str(target_path), "reference": str(reference_path), "changes": changes}
+    if parameters is not None or prefixes is not None:
+        log["filter"] = {"parameters": None if parameters is None else list(parameters),
+                         "prefixes": None if prefixes is None else list(prefixes)}
+        log["kept"] = kept
+    return log
 
 
 def print_summary(log: dict) -> None:
@@ -288,6 +333,14 @@ def print_summary(log: dict) -> None:
     for parameter, n in sorted(counts.items()):
         side = "upper" if parameter in UPPER_BOUNDS else "lower"
         print(f"  {parameter} ({side} bound): {n}")
+    if "filter" in log:
+        print(f"  filter: parameters {log['filter']['parameters']}, "
+              f"prefixes {log['filter']['prefixes']}")
+        print(f"  kept at -1 or 0 where the reference differs: {len(log['kept'])}")
+
+
+def _split(text: str | None) -> list[str] | None:
+    return None if text is None else [part.strip() for part in text.split(",") if part.strip()]
 
 
 def main() -> int:
@@ -297,11 +350,16 @@ def main() -> int:
     )
     parser.add_argument("--input-dir", type=Path, required=True)
     parser.add_argument("--reference-dir", type=Path, required=True)
+    parser.add_argument("--parameters", default=None,
+                        help="Comma-separated parameters to compare; default every bound.")
+    parser.add_argument("--prefixes", default=None,
+                        help="Comma-separated technology-code prefixes to compare; default every technology.")
     parser.add_argument("--log", type=Path, default=None,
                         help="Write the per-cell change list to this JSON file.")
     args = parser.parse_args()
     try:
-        log = run(args.input_dir, args.reference_dir)
+        log = run(args.input_dir, args.reference_dir,
+                  _split(args.parameters), _split(args.prefixes))
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1

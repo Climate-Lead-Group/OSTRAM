@@ -101,6 +101,23 @@ scenario_registry:
       scenario: A_Calibrated_BAU
       environment: OSTRAM_A_CALIBRATED_BAU_RESULT
       default_path: Executables/A_Calibrated_BAU_0
+    # C takes the larger of its own build cap and that of A_Calibrated_BAU
+    # built in the same run, for coal, gas and biomass plants only, after its
+    # own rules. A cap of -1 or 0 in C stays as it is.
+    # ASSUMPTION: in National Pledges, the yearly build cap on new coal, gas
+    # and biomass plants in each node is at least the Business-as-Usual cap for
+    # the same node and year. The national commitments in this scenario set
+    # requirements for renewable generation only, so new fossil plants keep at
+    # least the room they have in Business-as-Usual; where the scenario's own
+    # rule allows more, as from 2045, the scenario's own cap applies.
+    - type: relaxation
+      scenario: A_Calibrated_BAU
+      parameters:
+      - TotalAnnualMaxCapacityInvestment
+      prefixes:
+      - PWRCOA
+      - PWRNGS
+      - PWRBIO
   decision_scenarios:
   - A_Calibrated_BAU
   - A_Calibrated_BAU_Clipped
