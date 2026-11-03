@@ -37,3 +37,9 @@ OSTRAM_Guia_instalacion_ejecucion.pdf
 # Raw/candidate regression artifacts; compact baselines remain tracked.
 tests/regression/artifacts/
 tests/regression/candidates/
+
+# Local leftovers from the pre-migration layout (removed in a8617bc7) and root-level run artifacts.
+/t1_confection/
+/concatenate_files/
+/cplex.log
+/OSTRAM_data_storage_delay.txt
