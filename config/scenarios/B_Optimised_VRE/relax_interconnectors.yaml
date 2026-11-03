@@ -37,8 +37,8 @@ cross_border_limit: lead_time_then_rate
 # service, and the next Bangladesh to India line in the national plans, the
 # Katihar-Parbotipur-Bornagar 765 kV corridor, is due in 2031.
 # Central Electricity Authority, Ministry of Power, India, "National Electricity
-# Plan, Volume II: Transmission," Oct. 2024,
-# https://cea.nic.in/wp-content/uploads/psp___a_i/2025/02/NEP_Vol_II_Transmission.pdf,
+# Plan, Volume II: Transmission" (copy in the Prayas Energy Group archive),
+# Oct. 2024, https://archive.prayaspune.org/collection/5/document/1361,
 # Sec 9.4.2, printed p.107; Annex scheme ER-11, printed p.442 gives 2031-32.
 lead_time_end_year: 2030
 
