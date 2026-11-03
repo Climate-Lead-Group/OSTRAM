@@ -102,8 +102,8 @@ after its own rules, the adequacy top-up included, each build cap of a coal,
 gas or biomass plant becomes the larger of C's cap and that of
 `A_Calibrated_BAU` in the same node and year. C's family limits measure these
 caps on C's fleet after retirements, while A inherits them from BAU, whose
-fleet does not retire. A cap of -1 or 0 in C stays as it is, and every other
-limit of C is left as written. The
+fleet does not retire. A cap of -1 in C is no bound and stays, a cap of 0
+below A's takes A's value, and every other limit of C is left as written. The
 [rules](../rules.md#cs-coal-gas-and-biomass-build-caps) page gives the rule.
 
 `margin_factor` 1.1 leaves 10 per cent to spare above each technology's share

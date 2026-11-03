@@ -91,7 +91,7 @@ in a working folder `scenarios/_run_<stamp>/`. The modules are in
 | Stage 5 | the root's rule chain in `ostram/pipeline/scenarios/rules/` | `config/scenarios/<root>/*.yaml` | the A-O workbooks in `stage5/` |
 | Shared rules | `apply_interconnector_costs`, `apply_internal_transmission`, `apply_internal_tx_losses` in `rules/`, then `apply_base_year_pin` for `A_Calibrated_BAU`, `B_Optimised_VRE` and `C_Target_VRE`, then the residual part of `apply_internal_transmission` for every root | the merged workbook, `config/preparation/Config_country_codes.yaml`, `config/scenarios/rules/pwr_min_2023_2026_pin.csv` | the A-O workbooks in `stage5/` |
 | Stage 6 | `sync_og_to_ts20`, then `transform` | `SOASIA_OSeMOSYS_WV.xlsx`, the change records of stage 5 | the timeslice sets and parameters in `preparation/og_csvs_inputs/`, `_scenario_run_state_<root>.xlsx`, the four A-O workbooks in `A1_Outputs_<root>/`; `BAU` also receives its transmission ceilings |
-| Relaxation, `B_Optimised_VRE` only | `relax_to_reference` in `rules/` | `A1_Outputs_A_Calibrated_BAU/A-O_Parametrization.xlsx`, built earlier in the same run | `A1_Outputs_B_Optimised_VRE/A-O_Parametrization.xlsx` in place: every bound takes the looser of B's and A's value; for the yearly build cap of a cross-border link, A's value counts only up to the room A has left in that year; see [B as a relaxation of A](rules.md#b-as-a-relaxation-of-a) |
+| Relaxation, `B_Optimised_VRE` and `C_Target_VRE` | `relax_to_reference` in `rules/` | `A1_Outputs_A_Calibrated_BAU/A-O_Parametrization.xlsx`, built earlier in the same run | `A1_Outputs_B_Optimised_VRE/A-O_Parametrization.xlsx` in place: every bound takes the looser of B's and A's value; for the yearly build cap of a cross-border link, A's value counts only up to the room A has left in that year; see [B as a relaxation of A](rules.md#b-as-a-relaxation-of-a). `A1_Outputs_C_Target_VRE/A-O_Parametrization.xlsx` in place: the build cap of each coal, gas and biomass plant takes the larger of C's and A's value; see [C's coal, gas and biomass build caps](rules.md#cs-coal-gas-and-biomass-build-caps) |
 | Derived scenario | `ostram/pipeline/scenarios/scenario_edits.py` | `A1_Outputs_<parent>/`, `config/scenarios/<scenario>/scenario.yaml`, the shared VRE ceilings in `config/setups/south_asia.yaml`, the base-year pin table | `A1_Outputs_<scenario>/` with its edit log; the overlay for the two direction variants |
 
 The [rules page](rules.md) lists the rule chain of each root and the
@@ -318,6 +318,10 @@ restriction inheritance. Selecting B, or a scenario derived from it, also
 builds the inputs of A in the same A3 pass, because B takes the looser of its
 own bounds and A's, with one exception for the yearly build cap of a
 cross-border link ([B as a relaxation of A](rules.md#b-as-a-relaxation-of-a)).
+Selecting C, or a scenario derived from it, also builds the inputs of A in the
+same A3 pass, because C takes the larger of its own build cap and A's for
+coal, gas and biomass plants
+([C's coal, gas and biomass build caps](rules.md#cs-coal-gas-and-biomass-build-caps)).
 The portfolio does not require a BAU solve.
 
 Use an empty, local workspace and an editable installation of this checkout.

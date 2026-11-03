@@ -158,8 +158,10 @@ does not retire. The registry therefore declares a `relaxation` dependency of
 C on A with a filter: the parameter `TotalAnnualMaxCapacityInvestment` and the
 prefixes `PWRCOA`, `PWRNGS` and `PWRBIO`. The same rule
 `relax_to_reference.py` then gives each of these cells of C the larger of its
-own value and A's, and leaves every other cell as it is. A build cap of -1 or
-0 in C stays as it is. Where C's own rule allows more than A, as the adequacy
+own value and A's, and leaves every other cell as it is. A build cap of -1 in
+C is no bound and stays. A build cap of 0 allows no new capacity, so it is a
+bound and takes A's value where A's is larger. Where C's own rule allows more
+than A, as the adequacy
 top-up does from 2045, C's cap applies. The ASSUMPTION beside the dependency in
 `config/setups/south_asia.yaml` gives the reason.
 
@@ -532,7 +534,7 @@ treats it as follows.
 | A3 build-cap rule | Treats blank, 0 and 9999 as placeholders and replaces them with the computed cap. Storage is exempt and receives 9999 for both caps. |
 | A3 base-year pin | Writes the reviewed values, including zeros. |
 | A3 relaxation of `B_Optimised_VRE` | A 0 build cap of B below A's cap takes A's value. |
-| A3 relaxation of `C_Target_VRE` | A 0 build cap of a coal, gas or biomass plant of C stays 0. |
+| A3 relaxation of `C_Target_VRE` | A 0 build cap of a coal, gas or biomass plant of C below A's cap takes A's value. |
 | B1 | Exports a row only when its `Projection.Mode` is a text other than `EMPTY`, `Zero`, blank or `According to demand`. A 0 on an exported row stays 0. An omitted row receives -1 from the otoole conversion configuration. |
 | B2 base-year build lock | Sets the 2023 to 2026 build caps of plants, storage and interconnectors to the minimum investment of the same cell, and to 0 where there is none. See [Base-year build lock](#base-year-build-lock). |
 | B2 storage delay | Sets both caps of the 20 storage-linked technologies to 0 in 2023 to 2027 and to -1 from 2028. |
