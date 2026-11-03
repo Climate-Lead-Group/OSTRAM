@@ -1,5 +1,8 @@
 ## build_cap_rule.yaml: A_Calibrated_BAU scenario override
 ##
+## Coal, gas and biomass build caps are inherited from BAU (Control,
+## inherit_restrictions_from); this file only fills cells BAU leaves empty.
+##
 ## Key differences from B_Optimised_VRE:
 ##   - NO relaxation (flat 1.0×, pure BAU proportions for all families)
 ##   - ALL generation families locked at 1.0

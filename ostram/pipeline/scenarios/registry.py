@@ -57,6 +57,14 @@ class ResultDependency:
 
 
 @dataclass(frozen=True)
+class RelaxationFilter:
+    """The cells a ``relaxation`` dependency compares; ``None`` compares all."""
+
+    parameters: tuple[str, ...] | None = None
+    prefixes: tuple[str, ...] | None = None
+
+
+@dataclass(frozen=True)
 class RootScenario:
     """One hand-maintained scenario from the workbook Control contract."""
 
@@ -65,6 +73,7 @@ class RootScenario:
     dependencies: tuple[ResultDependency, ...]
     restriction_dependencies: tuple[str, ...] = ()
     relaxation_dependencies: tuple[str, ...] = ()
+    relaxation_filter: RelaxationFilter | None = None
 
 
 @dataclass(frozen=True)
@@ -268,6 +277,30 @@ def _result_dependency(owner, dependency: Mapping) -> ResultDependency:
     )
 
 
+def _relaxation_filter(owner, dependency: Mapping) -> RelaxationFilter | None:
+    """Return the optional ``parameters`` and ``prefixes`` filter of a relaxation dependency."""
+
+    lists: dict[str, tuple[str, ...] | None] = {}
+    for key in ("parameters", "prefixes"):
+        if key not in dependency:
+            lists[key] = None
+            continue
+        value = dependency[key]
+        if (
+            not isinstance(value, list)
+            or not value
+            or not all(isinstance(item, str) and item.strip() for item in value)
+        ):
+            raise ValueError(
+                f"relaxation dependency {key} for {owner} must be a "
+                "non-empty list of names"
+            )
+        lists[key] = tuple(item.strip() for item in value)
+    if lists["parameters"] is None and lists["prefixes"] is None:
+        return None
+    return RelaxationFilter(**lists)
+
+
 def _duplicates(values: Sequence[str]) -> list[str]:
     return sorted({value for value in values if values.count(value) > 1})
 
@@ -363,6 +396,7 @@ def load_registry(
         dependencies: list[ResultDependency] = []
         restriction_dependencies: list[str] = []
         relaxation_dependencies: list[str] = []
+        relaxation_filter: RelaxationFilter | None = None
         for dependency in entry.get("dependencies", ()):
             if dependency.get("type") in ("restrictions", "relaxation"):
                 kind = dependency.get("type")
@@ -377,6 +411,8 @@ def load_registry(
                     if kind == "restrictions"
                     else relaxation_dependencies
                 ).append(str(scenario).strip())
+                if kind == "relaxation":
+                    relaxation_filter = _relaxation_filter(entry.get("name"), dependency)
                 continue
             dependencies.append(_result_dependency(entry.get("name"), dependency))
         roots.append(
@@ -386,6 +422,7 @@ def load_registry(
                 dependencies=tuple(dependencies),
                 restriction_dependencies=tuple(restriction_dependencies),
                 relaxation_dependencies=tuple(relaxation_dependencies),
+                relaxation_filter=relaxation_filter,
             )
         )
 

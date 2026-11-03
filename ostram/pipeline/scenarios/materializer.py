@@ -2,7 +2,8 @@
 
 Root scenarios are rebuilt by the maintained A3 entrypoint.  A root with a
 declared ``relaxation`` dependency then takes the looser of its own bounds
-and those of the reference root built just before it.  Derived
+and those of the reference root built just before it, in the cells its
+optional filter of parameters and technology prefixes selects.  Derived
 scenarios are then rebuilt from the root declared in
 ``south_asia.yaml::scenario_registry``, receive their scenario edits, and finally receive any
 declared direction overlay.  This module stops before B1, B2, or a solver.
@@ -24,6 +25,7 @@ from typing import Callable, Mapping, MutableMapping, Sequence
 from ostram.paths import resolve_paths
 
 from .registry import (
+    RelaxationFilter,
     RootScenario,
     ScenarioRegistry,
     load_registry,
@@ -72,7 +74,7 @@ class MaterializationPaths:
 
 RootMaterializer = Callable[[str, Mapping[str, str]], None]
 DirectionApplier = Callable[[Path, Path, int | None], dict]
-RelaxationApplier = Callable[[Path, Path], dict]
+RelaxationApplier = Callable[[Path, Path, RelaxationFilter | None], dict]
 
 
 def validate_control_roots(
@@ -244,9 +246,14 @@ def _default_direction_applier(
 def _default_relaxation_applier() -> RelaxationApplier:
     from .rules import relax_to_reference
 
-    def apply(target: Path, reference: Path) -> dict:
+    def apply(target: Path, reference: Path, cells: RelaxationFilter | None) -> dict:
         """Loosen the bounds of ``target`` to those of ``reference`` and return the change log."""
-        log = relax_to_reference.run(target, reference)
+        log = relax_to_reference.run(
+            target,
+            reference,
+            None if cells is None else cells.parameters,
+            None if cells is None else cells.prefixes,
+        )
         relax_to_reference.print_summary(log)
         return log
 
@@ -377,15 +384,24 @@ def materialize_scenarios(
             # The reference root was materialized earlier in this loop, so its
             # bounds come from this run.
             relaxation_record: dict | None = None
+            cells = active_registry.roots_by_name[root].relaxation_filter
             for reference in active_registry.roots_by_name[root].relaxation_dependencies:
                 relaxation_log = apply_relaxation(
                     target,
                     active_paths.a1_outputs / f"A1_Outputs_{reference}",
+                    cells,
                 )
                 relaxation_record = {
                     "reference": reference,
                     "changes": len(relaxation_log.get("changes", [])),
                 }
+                if cells is not None:
+                    relaxation_record["parameters"] = (
+                        None if cells.parameters is None else list(cells.parameters)
+                    )
+                    relaxation_record["prefixes"] = (
+                        None if cells.prefixes is None else list(cells.prefixes)
+                    )
             root_records.append(
                 {
                     "scenario": root,

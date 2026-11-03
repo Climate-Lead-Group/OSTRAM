@@ -510,6 +510,8 @@ def block_rules_stepper(site, page, argument):
         steps.append(("Internal transmission residuals", None))
         if root == "B_Optimised_VRE":
             steps.append(("B as a relaxation of A", "relax_to_reference.py"))
+        if root == "C_Target_VRE":
+            steps.append(("C's coal, gas and biomass build caps", "relax_to_reference.py"))
         cards = []
         for number, (stage, module) in enumerate(steps, 1):
             if module and module in modules:
@@ -517,6 +519,11 @@ def block_rules_stepper(site, page, argument):
                 body = f"<p>{_inline(site, page, what)}</p><p class=\"small\">Settings: {_inline(site, page, settings)}</p>"
             elif stage == "Internal transmission residuals":
                 body = (f'<p>{_inline(site, page, "Computes the base-year capacity of the internal grid of each node from the base-year inputs the model compiles; see [Internal transmission residuals](#internal-transmission-residuals).")}</p>')
+            elif module == "relax_to_reference.py" and root == "C_Target_VRE":
+                text = ("Takes the larger of its own build cap and that of `A_Calibrated_BAU` built in the same run "
+                        "for coal, gas and biomass plants; see "
+                        "[C's coal, gas and biomass build caps](#cs-coal-gas-and-biomass-build-caps).")
+                body = f"<p>{_inline(site, page, text)}</p>"
             elif module == "relax_to_reference.py":
                 body = f'<p>{_inline(site, page, "Takes the looser of its own bounds and those of `A_Calibrated_BAU` built in the same run; see [B as a relaxation of A](#b-as-a-relaxation-of-a).")}</p>'
             else:
@@ -552,7 +559,8 @@ def block_rule_modules(site, page, argument):
     rows = []
     for name, _doc in rule_modules(site.paths):
         described = "listed in the rules table" if name in modules else (
-            "B as a relaxation of A" if name == "relax_to_reference.py" else "helper, not a rule")
+            "B as a relaxation of A; C's coal, gas and biomass build caps"
+            if name == "relax_to_reference.py" else "helper, not a rule")
         rows.append([_source_link(site, f"ostram/pipeline/scenarios/rules/{name}"), described])
     return _table(["Module", "Role"], rows)
 

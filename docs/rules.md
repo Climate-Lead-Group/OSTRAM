@@ -6,7 +6,9 @@ rules, for three of the roots the base-year pin, and then the internal
 transmission residuals. `B_Optimised_VRE` then takes the looser of its own
 bounds and those of `A_Calibrated_BAU`, with one exception for the yearly
 build cap of a cross-border link; see
-[B as a relaxation of A](#b-as-a-relaxation-of-a). A derived scenario is
+[B as a relaxation of A](#b-as-a-relaxation-of-a). `C_Target_VRE` takes the
+larger of its own build cap and A's for coal, gas and biomass plants; see
+[C's coal, gas and biomass build caps](#cs-coal-gas-and-biomass-build-caps). A derived scenario is
 then built from its root by the
 [scenario edits](scenario-edits.md). Terms are in the [glossary](glossary.md).
 
@@ -50,7 +52,9 @@ for the roots listed in `PWR_MIN_PIN_ROOT_SCENARIOS` in
 root then computes its internal transmission residuals. After that,
 `B_Optimised_VRE` takes the looser of its own bounds and those of
 `A_Calibrated_BAU` built in the same run,
-[with one exception for the yearly build cap of a cross-border link](#b-as-a-relaxation-of-a).
+[with one exception for the yearly build cap of a cross-border link](#b-as-a-relaxation-of-a),
+and `C_Target_VRE` takes the larger of its own build cap and A's for coal,
+gas and biomass plants, after its adequacy top-up and base-year pin.
 A derived
 scenario then receives the shared VRE ceilings, its scenario edits and the
 base-year pin again. The two direction variants receive their overlay last.
@@ -84,6 +88,9 @@ The order is load-bearing in these places.
   every bound of the delivered workbooks, the pinned ones included, is at
   least as loose as in `A_Calibrated_BAU`. Derived B scenarios are built from
   the relaxed B, so they inherit its bounds.
+- The coal, gas and biomass build caps of `C_Target_VRE` take A's values
+  after C's own rules, so each ends as the larger of C's final cap, the
+  adequacy top-up included, and A's. Derived C scenarios inherit them.
 - The internal transmission rule runs after the stage 1 template merge,
   because that merge rewrites `OperationalLife`, and the rule has to win.
 - The internal transmission residuals are computed after the base-year pin,
@@ -142,6 +149,21 @@ A's total cap on these links is its existing capacity plus its forced builds,
 so A adds only its forced builds and B's build rate allows each of them. From
 2031 B's yearly cap of 1 GW is below A's on the links whose residual capacity
 is above 1 GW, and B can still reproduce A's plan.
+
+## C's coal, gas and biomass build caps
+
+`C_Target_VRE` measures its build caps on its own fleet after retirements,
+while A inherits its coal, gas and biomass build caps from BAU, whose fleet
+does not retire. The registry therefore declares a `relaxation` dependency of
+C on A with a filter: the parameter `TotalAnnualMaxCapacityInvestment` and the
+prefixes `PWRCOA`, `PWRNGS` and `PWRBIO`. The same rule
+`relax_to_reference.py` then gives each of these cells of C the larger of its
+own value and A's, and leaves every other cell as it is. A build cap of -1 in
+C is no bound and stays. A build cap of 0 allows no new capacity, so it is a
+bound and takes A's value where A's is larger. Where C's own rule allows more
+than A, as the adequacy
+top-up does from 2045, C's cap applies. The ASSUMPTION beside the dependency in
+`config/setups/south_asia.yaml` gives the reason.
 
 ## Base-year pin
 
@@ -512,6 +534,7 @@ treats it as follows.
 | A3 build-cap rule | Treats blank, 0 and 9999 as placeholders and replaces them with the computed cap. Storage is exempt and receives 9999 for both caps. |
 | A3 base-year pin | Writes the reviewed values, including zeros. |
 | A3 relaxation of `B_Optimised_VRE` | A 0 build cap of B below A's cap takes A's value. |
+| A3 relaxation of `C_Target_VRE` | A 0 build cap of a coal, gas or biomass plant of C below A's cap takes A's value. |
 | B1 | Exports a row only when its `Projection.Mode` is a text other than `EMPTY`, `Zero`, blank or `According to demand`. A 0 on an exported row stays 0. An omitted row receives -1 from the otoole conversion configuration. |
 | B2 base-year build lock | Sets the 2023 to 2026 build caps of plants, storage and interconnectors to the minimum investment of the same cell, and to 0 where there is none. See [Base-year build lock](#base-year-build-lock). |
 | B2 storage delay | Sets both caps of the 20 storage-linked technologies to 0 in 2023 to 2027 and to -1 from 2028. |
@@ -570,7 +593,7 @@ and new builds count as lasting to the last model year.
 | Adequacy top-up | none | 0.0 to 2040, 0.08 in 2045, 0.20 in 2050 | 0.0 to 2040, 0.08 in 2045, 0.20 in 2050 |
 | Exempt families | PWRSDS, PWRLDS | PWRSDS, PWRLDS | PWRSDS, PWRLDS |
 | Storage minimum investment | none | none | `storage_floors.yaml` |
-| Bounds after the rules | as written | the looser of B's and A's, cell by cell; for the yearly build cap of a cross-border link, A's value counts only up to the room A has left in that year ([B as a relaxation of A](#b-as-a-relaxation-of-a)) | as written |
+| Bounds after the rules | as written | the looser of B's and A's, cell by cell; for the yearly build cap of a cross-border link, A's value counts only up to the room A has left in that year ([B as a relaxation of A](#b-as-a-relaxation-of-a)) | as written, except the build caps of coal, gas and biomass plants: the larger of C's and A's, cell by cell ([C's coal, gas and biomass build caps](#cs-coal-gas-and-biomass-build-caps)) |
 
 In A the cap multiplier stays at 1.0, so the family limits there only decide
 which families are locked, and the technology top-up of 0.0 GW raises
